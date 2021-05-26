@@ -381,15 +381,14 @@ export class InteractiveClient {
     }
 
     private displayEventToCellOutput(disp: DisplayEvent): vscodeLike.NotebookCellOutput {
+        const encoder = new TextEncoder();
         let outputItems: Array<vscodeLike.NotebookCellOutputItem> = [];
         if (disp.formattedValues && disp.formattedValues.length > 0) {
             for (let formatted of disp.formattedValues) {
-                let value: any = formatted.mimeType === 'application/json'
-                    ? JSON.parse(formatted.value)
-                    : formatted.value;
+                let data = encoder.encode(formatted.value);
                 outputItems.push({
                     mime: formatted.mimeType,
-                    value,
+                    data,
                 });
             }
         }

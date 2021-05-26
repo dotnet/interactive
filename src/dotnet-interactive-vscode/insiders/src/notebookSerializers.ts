@@ -122,18 +122,18 @@ function contractCellOutputToVsCodeCellOutput(output: contracts.NotebookCellOutp
     const outputItems: Array<vscode.NotebookCellOutputItem> = [];
     if (utilities.isDisplayOutput(output)) {
         for (const mimeKey in output.data) {
-            outputItems.push(generateVsCodeNotebookCellOutputItem(mimeKey, output.data[mimeKey]));
+            outputItems.push(generateVsCodeNotebookCellOutputItem(output.data[mimeKey], mimeKey));
         }
     } else if (utilities.isErrorOutput(output)) {
-        outputItems.push(generateVsCodeNotebookCellOutputItem(vscodeLike.ErrorOutputMimeType, output.errorValue));
+        outputItems.push(generateVsCodeNotebookCellOutputItem(output.errorValue, vscodeLike.ErrorOutputMimeType));
     } else if (utilities.isTextOutput(output)) {
-        outputItems.push(generateVsCodeNotebookCellOutputItem('text/plain', output.text));
+        outputItems.push(generateVsCodeNotebookCellOutputItem(output.text, 'text/plain'));
     }
 
     return new vscode.NotebookCellOutput(outputItems);
 }
 
-function generateVsCodeNotebookCellOutputItem(mimeType: string, value: unknown): vscode.NotebookCellOutputItem {
-    const displayValue = utilities.reshapeOutputValueForVsCode(mimeType, value);
-    return new vscode.NotebookCellOutputItem(mimeType, displayValue);
+function generateVsCodeNotebookCellOutputItem(value: Uint8Array | string, mime: string): vscode.NotebookCellOutputItem {
+    const displayValue = utilities.reshapeOutputValueForVsCode(value, mime);
+    return new vscode.NotebookCellOutputItem(displayValue, mime);
 }

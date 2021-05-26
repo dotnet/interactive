@@ -94,7 +94,7 @@ export function vsCodeCellOutputToContractCellOutput(output: vscode.NotebookCell
         const errorOutputItem = errorOutputItems[0];
         const error: NotebookCellErrorOutput = {
             errorName: 'Error',
-            errorValue: '' + errorOutputItem.value,
+            errorValue: '' + errorOutputItem.data,
             stackTrace: [],
         };
         return error;
@@ -102,7 +102,7 @@ export function vsCodeCellOutputToContractCellOutput(output: vscode.NotebookCell
         //otherwise build the mime=>value dictionary
         const data: { [key: string]: any } = {};
         for (const outputItem of output.outputs) {
-            data[outputItem.mime] = outputItem.value;
+            data[outputItem.mime] = outputItem.data;
         }
 
         const cellOutput: NotebookCellDisplayOutput = {

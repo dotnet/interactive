@@ -39,9 +39,9 @@ export function createKernelTransportConfig(kernelTransportCreator: (notebookUri
     const defaultClientMapperConfig = {
         kernelTransportCreator: defaultKernelTransportCreator,
         createErrorOutput: (message: string, outputId?: string) => {
-            const errorItem = {
+            const errorItem: vscodeLike.NotebookCellOutputItem = {
                 mime: 'application/vnd.code.notebook.error',
-                value: encoder.encode(JSON.stringify({
+                data: encoder.encode(JSON.stringify({
                     name: 'Error',
                     message,
                 })),
@@ -58,15 +58,24 @@ export function createKernelTransportConfig(kernelTransportCreator: (notebookUri
     };
 }
 
-export function decodeNotebookCellOutputs(outputs: vscodeLike.NotebookCellOutput[]): any[] {
+export function decodeToString(data: Uint8Array): string {
     const decoder = new TextDecoder('utf-8');
+    const decoded = decoder.decode(data);
+    return decoded;
+}
+
+export function decodeNotebookCellOutputs(outputs: vscodeLike.NotebookCellOutput[]): any[] {
+    const jsonLikeMimes = new Set<string>();
+    jsonLikeMimes.add('application/json');
+    jsonLikeMimes.add(vscodeLike.ErrorOutputMimeType);
     return outputs.map(o => ({
         ...o, outputs: o.outputs.map(oi => {
-            let result = {
+            const decoded = decodeToString(oi.data);
+            let result = <any>{
                 ...oi,
-                decodedValue: JSON.parse(decoder.decode(<Uint8Array>oi.value))
+                decodedData: jsonLikeMimes.has(oi.mime) ? JSON.parse(decoded) : decoded,
             };
-            delete result.value;
+            delete result.data;
             return result;
         })
     }));

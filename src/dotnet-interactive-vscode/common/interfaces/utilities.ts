@@ -6,7 +6,7 @@ import {
     NotebookCellErrorOutput,
     NotebookCellTextOutput,
 } from './contracts';
-import * as notebook from './vscode-like';
+import * as vscodeLike from './vscode-like';
 
 export function isErrorOutput(arg: any): arg is NotebookCellErrorOutput {
     return arg
@@ -25,17 +25,19 @@ export function isTextOutput(arg: any): arg is NotebookCellTextOutput {
         && typeof arg.text === 'string';
 }
 
-export function reshapeOutputValueForVsCode(mimeType: string, value: unknown): unknown {
-    if (mimeType === notebook.ErrorOutputMimeType &&
-        typeof value === 'string') {
-        // this looks suspiciously like an error message; make sure it's the shape that vs code expects
-        return {
-            ename: 'Error',
-            evalue: value,
-            traceback: [],
-        };
+export function reshapeOutputValueForVsCode(value: Uint8Array | string, mime: string): Uint8Array {
+    if (typeof value === 'string') {
+        const encoder = new TextEncoder();
+        const dataString = mime === vscodeLike.ErrorOutputMimeType
+            ? JSON.stringify({
+                ename: 'Error',
+                evalue: value,
+                traceback: [],
+            })
+            : value;
+        const data = encoder.encode(dataString);
+        return data;
+    } else {
+        return value;
     }
-
-    // no change
-    return value;
 }

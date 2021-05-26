@@ -49,6 +49,18 @@ document.getElementById("output").innerText = `The value is ${x}.`;
 
 #!markdown
 
+# Execute the next cell, the output should be displayed as JSON like so:
+
+``` json
+{"Name":"Developer","Salary":42}
+```
+
+#!csharp
+
+display(new { Name = "Developer", Salary = 42 }, "application/json");
+
+#!markdown
+
 # Execute the next cell and verify the following error appears:
 
 ```
