@@ -3,7 +3,13 @@
 
 namespace Microsoft.DotNet.Interactive.Notebook
 {
-    public abstract class NotebookCellOutput
+    public class NotebookCellTextOutput : NotebookCellOutput
     {
+        public string Text { get; }
+
+        public NotebookCellTextOutput(string text)
+        {
+            Text = text;
+        }
     }
 }

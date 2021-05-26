@@ -12,6 +12,8 @@ namespace Microsoft.DotNet.Interactive.Formatting.TabularData
 
         public TableSchemaFieldDescriptor this[string name] => _descriptors[name];
 
+        public bool Contains(string name) => _descriptors.ContainsKey(name);
+
         public void Add(TableSchemaFieldDescriptor descriptor)
         {
             _descriptors.Add(descriptor.Name, descriptor);

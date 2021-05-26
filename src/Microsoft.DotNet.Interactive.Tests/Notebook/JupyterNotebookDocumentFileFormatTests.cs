@@ -764,7 +764,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                         {
                             new
                             {
-                                data = new Dictionary<string, object>()
+                                data = new Dictionary<string, object>
                                 {
                                     { "text/html", new object[] { "line 1", new { the_answer = 42 } } }
                                 },
@@ -1249,7 +1249,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
             {
                 new NotebookCell("csharp", "//", new[]
                 {
-                    new NotebookCellDisplayOutput(new Dictionary<string, object>()
+                    new NotebookCellDisplayOutput(new Dictionary<string, object>
                     {
                         { "text/html", "this is html" }
                     })
@@ -1298,7 +1298,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                             new
                             {
                                 output_type = "execute_result",
-                                data = new Dictionary<string, string>()
+                                data = new Dictionary<string, string>
                                 {
                                     { "text/html", "this is html" }
                                 },

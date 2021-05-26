@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     itemValue = ParseArray(ref reader, options);
                     break;
                 case JsonTokenType.StartObject:
-                    itemValue = JsonSerializer.Deserialize(ref reader, typeof(Dictionary<string, object>), options);
+                    itemValue = JsonSerializer.Deserialize(ref reader, typeof(IDictionary<string, object>), options);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

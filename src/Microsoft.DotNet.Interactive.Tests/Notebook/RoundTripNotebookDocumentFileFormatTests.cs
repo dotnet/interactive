@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
             var outputs = checkOutputs
                 ? new[]
                 {
-                    new NotebookCellDisplayOutput(new Dictionary<string, object>()
+                    new NotebookCellDisplayOutput(new Dictionary<string, object>
                     {
                         { "text/html", "This is html." }
                     })

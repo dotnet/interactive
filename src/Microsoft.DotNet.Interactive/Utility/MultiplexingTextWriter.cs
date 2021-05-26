@@ -79,12 +79,6 @@ namespace Microsoft.DotNet.Interactive.Utility
                 return observable;
             }
 
-            // FIX: (GetObservable) needed?
-            if (_defaultWriter is IObservable<string> observable3)
-            {
-                return observable3;
-            }
-
             return Observable.Empty<string>();
         }
 

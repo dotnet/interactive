@@ -140,29 +140,28 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         }
 
         [Fact]
-        public void Tabular_data_resource_with_differently_ordered_properties_are_aligned_to_the_correct_columns()
+        public void Tabular_data_resource_with_is_formatted_as_a_table()
         {
             var tabularDataResource = JsonDocument.Parse(@"
 [
   {
       ""name"": ""Granny Smith apple"", 
       ""deliciousness"": 12, 
-      ""color"":""green"", 
+      ""color"":""green"",
       ""available"":true 
   },
   { 
       ""name"": ""Rainier cherry"",
       ""deliciousness"": 9000, 
-      ""available"":true, 
-      ""color"":""yellow""  
+      ""color"":""yellow"",  
+      ""available"":true
   }
 ]").ToTabularDataResource();
 
             tabularDataResource
                 .ToDisplayString("text/html")
                 .Should()
-                .Be(
-                    "<table><thead><tr><td><span>name</span></td><td><span>deliciousness</span></td><td><span>color</span></td><td><span>available</span></td></tr></thead><tbody><tr><td>Granny Smith apple</td><td><div class=\"dni-plaintext\">12</div></td><td><div class=\"dni-plaintext\">green</div></td><td><div class=\"dni-plaintext\">True</div></td></tr><tr><td>Rainier cherry</td><td><div class=\"dni-plaintext\">9000</div></td><td><div class=\"dni-plaintext\">yellow</div></td><td><div class=\"dni-plaintext\">True</div></td></tr></tbody></table>");
+                .Be("<table><thead><tr><td><span>name</span></td><td><span>deliciousness</span></td><td><span>color</span></td><td><span>available</span></td></tr></thead><tbody><tr><td>Granny Smith apple</td><td><div class=\"dni-plaintext\">12</div></td><td>green</td><td><div class=\"dni-plaintext\">True</div></td></tr><tr><td>Rainier cherry</td><td><div class=\"dni-plaintext\">9000</div></td><td>yellow</td><td><div class=\"dni-plaintext\">True</div></td></tr></tbody></table>");
         }
 
         public void Dispose()

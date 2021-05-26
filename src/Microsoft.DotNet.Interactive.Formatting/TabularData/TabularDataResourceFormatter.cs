@@ -45,8 +45,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.TabularData
 
         private static (TableSchema schema, IEnumerable<IDictionary<string, object>> data) Generate<T>(IEnumerable<T> source)
         {
-            var schema = new TableSchema();
-            var fields = new HashSet<string>();
+            var fields = new Dictionary<string, TableSchemaFieldType?>();
             var data = new List<IDictionary<string, object>>();
             IDestructurer destructurer = default;
 
@@ -92,7 +91,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.TabularData
 
                         var dict = destructurer.Destructure(item);
 
-                        EnsureFieldsAreInitializedFromDictionary(dict);
+                        EnsureFieldsAreInitializedFromKeyValuePairs(dict);
 
                         data.Add(dict);
                     }
@@ -100,72 +99,40 @@ namespace Microsoft.DotNet.Interactive.Formatting.TabularData
                 }
             }
 
+            var schema = new TableSchema();
+
+            foreach (var field in fields)
+            {
+                schema.Fields.Add(new TableSchemaFieldDescriptor(field.Key, field.Value));
+            }
+
             return (schema, data);
-
-            // FIX: (Generate) these have a bug if the first item for a given field name is null
-
-            void EnsureFieldsAreInitializedFromDictionary(IDictionary<string, object> dictionary)
-            {
-                foreach (var key in dictionary.Keys)
-                {
-                    if (fields.Add(key))
-                    {
-                        var type = dictionary[key]?.GetType();
-                        schema.Fields.Add(new TableSchemaFieldDescriptor(key, type?.ToTableSchemaFieldType()));
-                    }
-                }
-            }
-
-            void EnsureFieldsAreInitializedFromValueTuples(IEnumerable<(string name, object value)> valueTuples)
-            {
-                foreach (var (name, value) in valueTuples)
-                {
-                    if (fields.Add(name))
-                    {
-                        schema.Fields.Add(new TableSchemaFieldDescriptor(name, value?.GetType().ToTableSchemaFieldType()));
-                    }
-                }
-            }
 
             void EnsureFieldsAreInitializedFromKeyValuePairs(IEnumerable<KeyValuePair<string, object>> keyValuePairs)
             {
                 foreach (var keyValuePair in keyValuePairs)
                 {
-                    if (fields.Add(keyValuePair.Key))
+                    if (!fields.ContainsKey(keyValuePair.Key))
                     {
-                        var fieldDescriptor = new TableSchemaFieldDescriptor(
-                            keyValuePair.Key,
-                            GetTableSchemaFieldType(keyValuePair.Value));
-
-                        schema.Fields.Add(fieldDescriptor);
+                        fields.Add(keyValuePair.Key, InferTableSchemaFieldTypeFromValue(keyValuePair.Value));
+                    }
+                    else if (InferTableSchemaFieldTypeFromValue(keyValuePair.Value) is {} type &&
+                             type != TableSchemaFieldType.Null)
+                    {
+                        fields[keyValuePair.Key] = type;
                     }
                 }
             }
-        }
 
-        private static TableSchemaFieldType GetTableSchemaFieldType(object value)
-        {
-            return value switch
-            {
-                JsonElement j => j.ValueKind.ToTableSchemaFieldType(),
-                null => TableSchemaFieldType.Null,
-                _ => value.GetType().ToTableSchemaFieldType()
-            };
-        }
+            void EnsureFieldsAreInitializedFromValueTuples(IEnumerable<(string name, object value)> valueTuples) => EnsureFieldsAreInitializedFromKeyValuePairs(valueTuples.Select(t => new KeyValuePair<string, object>(t.name, t.value)));
 
-        public static TableSchemaFieldType ToTableSchemaFieldType(this JsonValueKind kind) =>
-            kind switch
-            {
-                JsonValueKind.Undefined => TableSchemaFieldType.Any,
-                JsonValueKind.Object => TableSchemaFieldType.Object,
-                JsonValueKind.Array => TableSchemaFieldType.Array,
-                JsonValueKind.String => TableSchemaFieldType.String,
-                JsonValueKind.Number => TableSchemaFieldType.Number,
-                JsonValueKind.True => TableSchemaFieldType.Boolean,
-                JsonValueKind.False => TableSchemaFieldType.Boolean,
-                JsonValueKind.Null => TableSchemaFieldType.Null,
-                _ => TableSchemaFieldType.Any
-            };
+            TableSchemaFieldType? InferTableSchemaFieldTypeFromValue(object value) =>
+                value switch
+                {
+                    null => null,
+                    _ => value.GetType().ToTableSchemaFieldType()
+                };
+        }
 
         public static TableSchemaFieldType ToTableSchemaFieldType(this Type type) =>
             type switch

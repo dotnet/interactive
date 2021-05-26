@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.Json;
 
-using Assent;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Xunit;
@@ -15,15 +14,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 {
     public class TabularDataResourceTests
     {
-        private readonly Configuration _configuration;
-
-        public TabularDataResourceTests()
-        {
-            _configuration = new Configuration()
-                .SetInteractive(Debugger.IsAttached)
-                .UsingExtension("json");
-        }
-
         [Fact]
         public void can_create_from_JsonDocument()
         {
@@ -82,7 +72,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             tabularDataResource
                 .Schema
                 .Fields["deliciousness"]
-                .Type.Should().Be(TableSchemaFieldType.Integer);
+                .Type.Should().Be(TableSchemaFieldType.Number);
 
             tabularDataResource
                 .Schema
