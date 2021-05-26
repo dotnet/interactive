@@ -25,13 +25,15 @@ export function endExecution(cell: vscode.NotebookCell, success: boolean) {
 }
 
 export function createErrorOutput(message: string, outputId?: string): vscodeLike.NotebookCellOutput {
+    const errorObject = {
+        ename: 'Error',
+        evalue: message,
+        traceback: [],
+    };
     const errorItem: vscodeLike.NotebookCellOutputItem = {
         mime: 'application/x.notebook.error-traceback',
-        value: {
-            ename: 'Error',
-            evalue: message,
-            traceback: [],
-        },
+        data: new TextEncoder().encode(JSON.stringify(errorObject)),
+        value: errorObject,
     };
     const cellOutput = utilities.createOutput([errorItem], outputId);
     return cellOutput;

@@ -14,6 +14,7 @@ export interface NotebookCellOutputItem {
     readonly mime: string;
     readonly data: Uint8Array;
     readonly metadata?: { [key: string]: any };
+    [key: string]: any; // this is to make compilation on stable happy
 }
 
 export interface NotebookCellOutput {

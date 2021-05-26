@@ -179,7 +179,7 @@ export async function updateCellLanguages(document: vscode.NotebookDocument): Pr
 }
 
 async function updateCellOutputs(executionTask: vscode.NotebookCellExecutionTask, cell: vscode.NotebookCell, outputs: Array<vscodeLike.NotebookCellOutput>): Promise<void> {
-    const reshapedOutputs = outputs.map(o => new vscode.NotebookCellOutput(o.outputs.map(oi => generateVsCodeNotebookCellOutputItem(oi.mime, oi.value))));
+    const reshapedOutputs = outputs.map(o => new vscode.NotebookCellOutput(o.outputs.map(oi => generateVsCodeNotebookCellOutputItem(oi.mime, oi.data))));
     await executionTask.replaceOutput(reshapedOutputs, cell.index);
 }
 
@@ -196,8 +196,13 @@ export function endExecution(cell: vscode.NotebookCell, success: boolean) {
     }
 }
 
-function generateVsCodeNotebookCellOutputItem(mimeType: string, value: unknown): vscode.NotebookCellOutputItem {
-    const displayValue = reshapeOutputValueForVsCode(mimeType, value);
+function generateVsCodeNotebookCellOutputItem(mimeType: string, value: Uint8Array): vscode.NotebookCellOutputItem {
+    const decoder = new TextDecoder('utf-8');
+    const decodedValue = decoder.decode(value);
+    let displayValue: unknown = decodedValue;
+    if (mimeType === 'application/json' || mimeType === vscodeLike.ErrorOutputMimeType || mimeType === 'application/x.notebook.error-traceback') {
+        displayValue = JSON.parse(decodedValue);
+    }
     return new vscode.NotebookCellOutputItem(mimeType, displayValue);
 }
 

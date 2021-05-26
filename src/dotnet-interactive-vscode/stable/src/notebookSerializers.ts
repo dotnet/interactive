@@ -125,6 +125,7 @@ function contractCellOutputToVsCodeCellOutput(output: contracts.NotebookCellOutp
 }
 
 function generateVsCodeNotebookCellOutputItem(mimeType: string, value: unknown): vscode.NotebookCellOutputItem {
-    const displayValue = utilities.reshapeOutputValueForVsCode(mimeType, value);
+    const encodedValue = new TextEncoder().encode(JSON.stringify(value));
+    const displayValue = utilities.reshapeOutputValueForVsCode(encodedValue, mimeType);
     return new vscode.NotebookCellOutputItem(mimeType, displayValue);
 }

@@ -1410,6 +1410,8 @@ declare module 'vscode' {
 		value: unknown;
 		metadata?: Record<string, any>;
 
+		data: Uint8Array; // this is to make compilation on stable happy and will be removed on the next insiders => stable merge
+
 		constructor(mime: string, value: unknown, metadata?: Record<string, any>);
 	}
 
