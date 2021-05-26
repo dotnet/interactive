@@ -26,6 +26,8 @@ variables:
     value: $(Build.SourcesDirectory)/artifacts/.trydotnet/packages
   - name: NodeJSVersion
     value: '12.16.1'
+  - name: _TestArgs
+    value: ''
 
 stages:
 - stage: build
@@ -79,9 +81,9 @@ stages:
           - name: _BuildArgs
             value: /p:SignType=$(_SignType)
         # SkipTests
-        - ${{ if ne(variables['SkipTests'], 'true') }}:
-          - name: _TestArgs
-            value: -test
+        # - ${{ if ne(variables['SkipTests'], 'true') }}:
+        #   - name: _TestArgs
+        #     value: -test
         steps:
         - script: git config --global core.longpaths true
           displayName: Enable `git clean` to handle long paths
@@ -118,10 +120,23 @@ stages:
             -sign
             $(_TestArgs)
             $(_BuildArgs)
-          displayName: Build / Test
+          displayName: Build
           env:
             POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
+
+        - script: dotnet test -l trx --no-build --blame-hang-timeout 5m --blame-hang-dump-type full -c $(_BuildConfig) --results-directory $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
+          displayName: Test / Blame
+          workingDirectory: $(Build.SourcesDirectory)
+          condition: ne(variables['SkipTests'], 'true')
+
+        - task: PublishBuildArtifacts@1
+          displayName: Publish Test results and Blame dumps
+          inputs:
+            pathToPublish: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
+            artifactName: dumps
+            artifactType: container
+          condition: always()
 
         - script: npm run ciTest
           displayName: NPM tests
@@ -243,9 +258,9 @@ stages:
           - name: _BuildArgs
             value: /p:SignType=$(_SignType)
         # SkipTests
-        - ${{ if ne(variables['SkipTests'], 'true') }}:
-          - name: _TestArgs
-            value: --test
+        # - ${{ if ne(variables['SkipTests'], 'true') }}:
+        #   - name: _TestArgs
+        #     value: --test
         steps:
         - script: git config --global core.longpaths true
           displayName: Enable `git clean` to handle long paths
@@ -274,10 +289,23 @@ stages:
             --configuration $(_BuildConfig)
             --prepareMachine
             $(_TestArgs)
-          displayName: Build / Test
+          displayName: Build
           env:
             POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
+
+        - script: dotnet test -l trx --no-build --blame-hang-timeout 5m --blame-hang-dump-type full -c $(_BuildConfig) --results-directory $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
+          displayName: Test / Blame
+          workingDirectory: $(Build.SourcesDirectory)
+          condition: ne(variables['SkipTests'], 'true')
+
+        - task: PublishBuildArtifacts@1
+          displayName: Publish Test results and Blame dumps
+          inputs:
+            pathToPublish: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
+            artifactName: dumps
+            artifactType: container
+          condition: always()
 
         - script: npm run ciTest
           displayName: NPM tests

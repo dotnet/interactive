@@ -24,4 +24,8 @@
     <MicrosoftCodeAnalysisCommonVersion>3.9.0</MicrosoftCodeAnalysisCommonVersion>
     <TaskExtensionsVersion>0.1.8580001</TaskExtensionsVersion>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <XUnitCoreSettingsFile>$(MSBuildThisFileDirectory)xunit.runner.json</XUnitCoreSettingsFile>
+  </PropertyGroup>
 </Project>
