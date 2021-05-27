@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             foreach (var table in tables)
             {
                 var explorer = new NteractDataExplorer(table.ToTabularDataResource());
-                context.Display(explorer, HtmlFormatter.MimeType);
+                context.Display(explorer);
             }
         }
 
