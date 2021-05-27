@@ -7,7 +7,7 @@ using System.Collections.Concurrent;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    internal static class Destructurer
+    public static class Destructurer
     {
         private static ConcurrentDictionary<Type, IDestructurer> _cache;
 

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    internal interface IDestructurer<in T>
+    public interface IDestructurer<in T>
     {
         IDictionary<string, object> Destructure(T instance);
     }
