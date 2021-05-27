@@ -4,7 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text.Json;
 using Assent;
+using FluentAssertions;
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
@@ -136,10 +139,34 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             this.Assent(formattedData, _configuration);
         }
 
+        [Fact]
+        public void Tabular_data_resource_with_is_formatted_as_a_table()
+        {
+            var tabularDataResource = JsonDocument.Parse(@"
+[
+  {
+      ""name"": ""Granny Smith apple"", 
+      ""deliciousness"": 12, 
+      ""color"":""green"",
+      ""available"":true 
+  },
+  { 
+      ""name"": ""Rainier cherry"",
+      ""deliciousness"": 9000, 
+      ""color"":""yellow"",  
+      ""available"":true
+  }
+]").ToTabularDataResource();
+
+            tabularDataResource
+                .ToDisplayString("text/html")
+                .Should()
+                .Be("<table><thead><tr><td><span>name</span></td><td><span>deliciousness</span></td><td><span>color</span></td><td><span>available</span></td></tr></thead><tbody><tr><td>Granny Smith apple</td><td><div class=\"dni-plaintext\">12</div></td><td>green</td><td><div class=\"dni-plaintext\">True</div></td></tr><tr><td>Rainier cherry</td><td><div class=\"dni-plaintext\">9000</div></td><td>yellow</td><td><div class=\"dni-plaintext\">True</div></td></tr></tbody></table>");
+        }
+
         public void Dispose()
         {
             Formatter.ResetToDefault();
         }
-
     }
 }

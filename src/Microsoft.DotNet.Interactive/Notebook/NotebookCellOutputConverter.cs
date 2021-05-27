@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Notebook
         {
             EnsureStartObject(reader, typeToConvert);
             
-            Dictionary<string, object> data = null;
+            IDictionary<string, object> data = null;
             string text = null;
             string errorName = null;
             string errorValue = null;
@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.Interactive.Notebook
                     switch (reader.GetString())
                     {
                         case "data":
-                            data = JsonSerializer.Deserialize<Dictionary<string, object>>(ref reader, options);
+                            data = JsonSerializer.Deserialize<IDictionary<string, object>>(ref reader, options);
                             break;
                         case "text":
                             text = JsonSerializer.Deserialize<string>(ref reader, options);

@@ -4,14 +4,14 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting.TabularData
 {
     public class TableSchema
     {
         [JsonPropertyName("primaryKey")]
-        public List<string> PrimaryKey { get; } = new();
+        public List<string> PrimaryKey { get; init; } = new();
 
         [JsonPropertyName("fields")]
-        public TableDataFieldDescriptors Fields { get; } = new();
+        public TableDataFieldDescriptors Fields { get; init; } = new();
     }
 }

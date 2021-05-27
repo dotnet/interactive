@@ -4,7 +4,7 @@
 using Microsoft.DotNet.Interactive.Utility;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Tests
+namespace Microsoft.DotNet.Interactive.Tests.Utility
 {
     public class UtilityTests
     {

@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
         {
             _skipReason = TestConnectionAndReturnSkipReason();
         }
-
+        
         public MsSqlFact()
         {
             if (_skipReason is not null)
@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
         
         public static string GetConnectionStringForTests()
         {
-            return Environment.GetEnvironmentVariable(TEST_MSSQL_CONNECTION_STRING);
+            return "Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost"; // Environment.GetEnvironmentVariable(TEST_MSSQL_CONNECTION_STRING);
         }  
     }
 }

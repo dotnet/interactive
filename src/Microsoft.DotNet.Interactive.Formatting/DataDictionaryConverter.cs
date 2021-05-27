@@ -7,9 +7,9 @@ using System.Text.Json;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    public class DataDictionaryConverter : JsonConverter<Dictionary<string, object>>
+    public class DataDictionaryConverter : JsonConverter<IDictionary<string, object>>
     {
-        public override Dictionary<string, object> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override IDictionary<string, object> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             EnsureStartObject(reader, typeToConvert);
 
@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     itemValue = ParseArray(ref reader, options);
                     break;
                 case JsonTokenType.StartObject:
-                    itemValue = JsonSerializer.Deserialize(ref reader, typeof(Dictionary<string, object>), options);
+                    itemValue = JsonSerializer.Deserialize(ref reader, typeof(IDictionary<string, object>), options);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

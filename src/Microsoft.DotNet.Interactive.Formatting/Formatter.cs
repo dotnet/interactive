@@ -10,7 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text.Json;
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -19,15 +19,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
         private static int _defaultListExpansionLimit;
         private static int _recursionLimit;
 
-        internal static readonly RecursionCounter RecursionCounter = new();
-
-        private static string _defaultMimeType = HtmlFormatter.MimeType;
+        private static string _defaultMimeType;
 
         // user specification
         private static readonly ConcurrentStack<(Type type, string mimeType)> _preferredMimeTypes = new();
         private static readonly ConcurrentStack<(Type type, string mimeType)> _defaultPreferredMimeTypes = new();
         internal static readonly ConcurrentStack<ITypeFormatter> _userTypeFormatters = new();
         internal static readonly ConcurrentStack<ITypeFormatter> _defaultTypeFormatters = new();
+        internal static readonly ConcurrentDictionary<Type, bool> _typesThatHaveBeenCheckedForFormatters = new();
 
         // computed state
         private static readonly ConcurrentDictionary<Type, string> _preferredMimeTypesTable = new();
@@ -94,14 +93,17 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
         }
 
-        internal static event EventHandler Clearing;
+        internal static event Action Clearing;
 
         /// <summary>
         /// Resets all formatters and formatter settings to their default values.
         /// </summary>
         public static void ResetToDefault()
         {
+            DefaultMimeType = HtmlFormatter.MimeType;
             ClearComputedState();
+
+            _typesThatHaveBeenCheckedForFormatters.Clear();
             _userTypeFormatters.Clear();
             _preferredMimeTypes.Clear();
             _defaultTypeFormatters.Clear();
@@ -116,13 +118,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             // It is unclear if we need this default:
             _defaultPreferredMimeTypes.Push((typeof(string), PlainTextFormatter.MimeType));
-            _defaultPreferredMimeTypes.Push((typeof(JsonElement), JsonFormatter.MimeType));
 
             ListExpansionLimit = 20;
             RecursionLimit = 6;
             NullString = "<null>";
 
-            Clearing?.Invoke(null, EventArgs.Empty);
+            Clearing?.Invoke();
         }
 
         internal static void ClearComputedState()
@@ -174,14 +175,16 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 var type1 = _typeKey(inp1);
                 var type2 = _typeKey(inp2);
-                var index1 = _indexKey(inp1);
-                var index2 = _indexKey(inp2);
 
-                if (type1.IsRelevantFormatterFor(type2) && type2.IsRelevantFormatterFor(type1))
+                var isType1RelevantForType2 = type1.IsRelevantFormatterFor(type2);
+
+                if (isType1RelevantForType2 && type2.IsRelevantFormatterFor(type1))
                 {
+                    var index1 = _indexKey(inp1);
+                    var index2 = _indexKey(inp2);
                     return Comparer<int>.Default.Compare(index1, index2);
                 }
-                else if (type1.IsRelevantFormatterFor(type2))
+                else if (isType1RelevantForType2)
                 {
                     return 1;
                 }
@@ -478,7 +481,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
         }
 
-        public static ITypeFormatter GetPreferredFormatterFor(Type actualType, string mimeType = PlainTextFormatter.MimeType) =>
+        public static ITypeFormatter GetPreferredFormatterFor(Type actualType, string mimeType) =>
             _typeFormattersTable
                 .GetOrAdd(
                     (actualType, mimeType),
@@ -491,7 +494,34 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 return userFormatter;
             }
-            
+
+            if (!_typesThatHaveBeenCheckedForFormatters.ContainsKey(actualType))
+            {
+                var foundFormatter = false;
+                var customAttributes = actualType.GetCustomAttributes(typeof(TypeFormatterSourceAttribute));
+
+                foreach (var attribute in customAttributes)
+                {
+                    if (attribute is TypeFormatterSourceAttribute formatterSourceAttribute)
+                    {
+                        if (Activator.CreateInstance(formatterSourceAttribute.FormatterSourceType) is not ITypeFormatterSource source)
+                        {
+                            throw new InvalidOperationException($"The formatter source specified on '{actualType}' does not implement {nameof(ITypeFormatterSource)}");
+                        }
+
+                        var formatters = source.CreateTypeFormatters();
+
+                        foreach (var formatter in formatters)
+                        {
+                            _defaultTypeFormatters.Push(formatter);
+                            foundFormatter = true;
+                        }
+                    }
+                }
+
+                _typesThatHaveBeenCheckedForFormatters.TryAdd(actualType, foundFormatter);
+            }
+
             // Try to find a default built-in type formatter, use the most specific type with a matching mime type
             if (TryInferPreferredFormatter(actualType, mimeType, _defaultTypeFormatters) is { } defaultFormatter)
             {

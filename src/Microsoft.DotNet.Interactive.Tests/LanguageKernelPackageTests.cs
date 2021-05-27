@@ -285,7 +285,6 @@ json"
                                       && e.PackageReference.PackageVersion == "2.2.0");
         }
 
-
         [Fact]
         public async Task Loads_native_dependencies_from_nugets()
         {

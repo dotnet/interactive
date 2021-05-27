@@ -10,7 +10,7 @@ namespace Recipes
 #endif
     internal partial class VersionSensor
     {
-        private static readonly Lazy<BuildInfo> buildInfo = new Lazy<BuildInfo>(() =>
+        private static readonly Lazy<BuildInfo> buildInfo = new(() =>
         {
             var assembly = typeof(VersionSensor).GetTypeInfo().Assembly;
 
@@ -18,13 +18,11 @@ namespace Recipes
             {
                 AssemblyName = assembly.GetName().Name,
                 AssemblyInformationalVersion = assembly
-                                            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                                            .InformationalVersion,
+                                               .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                                               .InformationalVersion,
                 AssemblyVersion = assembly.GetName().Version.ToString(),
                 BuildDate = new FileInfo(assembly.Location).CreationTimeUtc.ToString("o")
             };
-
-            AssignServiceVersionTo(info);
 
             return info;
         });
@@ -40,9 +38,6 @@ namespace Recipes
             public string BuildDate { get; set; }
             public string AssemblyInformationalVersion { get; set; }
             public string AssemblyName { get; set; }
-            public string ServiceVersion { get; set; }
         }
-
-        static partial void AssignServiceVersionTo(BuildInfo buildInfo);
     }
 }

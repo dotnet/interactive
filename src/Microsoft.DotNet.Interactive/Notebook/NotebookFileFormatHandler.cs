@@ -18,6 +18,13 @@ namespace Microsoft.DotNet.Interactive.Notebook
     {
         private const string InteractiveNotebookCellSpecifier = "#!";
         public const string MetadataNamespace = "dotnet_interactive";
+        private static readonly JsonSerializerOptions _serializerOptions;
+
+        static NotebookFileFormatHandler()
+        {
+            _serializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.General);
+            _serializerOptions.Converters.Add(new DataDictionaryConverter());
+        }
 
         public static NotebookDocument Parse(string fileName, byte[] rawData, string defaultLanguage, IDictionary<string, string> kernelLanguageAliases)
         {
@@ -51,7 +58,7 @@ namespace Microsoft.DotNet.Interactive.Notebook
 
             NotebookCell CreateCell(string cellLanguage, IEnumerable<string> cellLines)
             {
-                return new NotebookCell(cellLanguage, string.Join("\n", cellLines));
+                return new(cellLanguage, string.Join("\n", cellLines));
             }
 
             void AddCell()
@@ -116,7 +123,7 @@ namespace Microsoft.DotNet.Interactive.Notebook
         {
             var content = Encoding.UTF8.GetString(rawData);
             var jupyter = JsonDocument.Parse(content).RootElement;
-            var notebookLanguage = jupyter.GetPropertyFromPath("metadata","kernelspec","language")?.GetString() ?? "C#";
+            var notebookLanguage = jupyter.GetPropertyFromPath("metadata", "kernelspec", "language")?.GetString() ?? "C#";
             var defaultLanguage = notebookLanguage switch
             {
                 "C#" => "csharp",
@@ -153,45 +160,44 @@ namespace Microsoft.DotNet.Interactive.Notebook
                         //
                         // gather cell outputs
                         //
-                       
-                        var outputs = Enumerable.Empty<NotebookCellOutput>();
+
+                        var outputs = Array.Empty<NotebookCellOutput>();
                         if (cell.TryGetProperty("outputs", out var cellOutputs))
                         {
-
-                            var serializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.General);
-                            serializerOptions.Converters.Add(new DataDictionaryConverter());
-
                             outputs = cellOutputs.EnumerateArray()
                                 .Select<JsonElement, NotebookCellOutput>(cellOutput =>
-                            {
-                                if (cellOutput.TryGetProperty("output_type", out var cellTypeProperty))
                                 {
-                                    return cellTypeProperty.GetString() switch
+                                    if (cellOutput.TryGetProperty("output_type", out var cellTypeProperty))
                                     {
-                                        // our concept of a notebook is heavily influenced by VS Code and they don't distinguish between execution results and displayed data
-                                        var type when
-                                            type == "display_data" ||
-                                            type == "execute_result" => new NotebookCellDisplayOutput(
-                                                JsonSerializer.Deserialize<Dictionary<string, object>>(cellOutput
-                                                    .GetPropertyFromPath("data").GetRawText(), serializerOptions)),
+                                        return cellTypeProperty.GetString() switch
+                                        {
+                                            // our concept of a notebook is heavily influenced by VS Code and they don't distinguish between execution results and displayed data
+                                            "display_data" or "execute_result" =>
+                                                new NotebookCellDisplayOutput(
+                                                    JsonSerializer.Deserialize<IDictionary<string, object>>(
+                                                        cellOutput.GetPropertyFromPath("data").GetRawText(), _serializerOptions)),
 
-                                        "stream" => new NotebookCellTextOutput(
-                                            GetTextAsSingleString(cellOutput.GetPropertyFromPath("text"))),
+                                            "stream" =>
+                                                new NotebookCellTextOutput(
+                                                    GetTextAsSingleString(cellOutput.GetPropertyFromPath("text"))),
 
-                                        "error" => new NotebookCellErrorOutput(
-                                            cellOutput.GetPropertyFromPath("ename").GetString(),
-                                            cellOutput.GetPropertyFromPath("evalue").GetString(),
-                                            cellOutput.GetPropertyFromPath("traceback").EnumerateArray()
-                                                .Select(s => s.GetString()).ToArray()),
+                                            "error" =>
+                                                new NotebookCellErrorOutput(
+                                                    cellOutput.GetPropertyFromPath("ename").GetString(),
+                                                    cellOutput.GetPropertyFromPath("evalue").GetString(),
+                                                    cellOutput.GetPropertyFromPath("traceback").EnumerateArray()
+                                                        .Select(s => s.GetString()).ToArray()),
 
-                                        _ => null
-                                    };
-                                }
+                                            _ => null
+                                        };
+                                    }
 
-                                return null;
-                            }).Where(x => x is not null);
+                                    return null;
+                                })
+                                .Where(x => x is not null)
+                                .ToArray();
                         }
-                        cells.Add(new NotebookCell(cellLanguage, source, outputs.ToArray()));
+                        cells.Add(new NotebookCell(cellLanguage, source, outputs));
                         break;
                     case "markdown":
                         var markdown = GetTextAsSingleString(cell.GetPropertyFromPath("source"));

@@ -41,28 +41,13 @@ namespace Microsoft.DotNet.Interactive
 
         private static IEnumerable<string> MimeTypesFor(Type type)
         {
-            var mimeTypes = new HashSet<string> ();
+            var mimeTypes = new HashSet<string>();
 
             if (type is not null)
             {
                 var preferredMimeType = Formatter.GetPreferredMimeTypeFor(type);
 
-                if (preferredMimeType is null)
-                {
-                    if (type?.IsPrimitive == true)
-                    {
-                        preferredMimeType = PlainTextFormatter.MimeType;
-                    }
-                    else
-                    {
-                        preferredMimeType = Formatter.DefaultMimeType;
-                    }
-                }
-
-                if (!string.IsNullOrWhiteSpace(preferredMimeType))
-                {
-                    mimeTypes.Add(preferredMimeType);
-                }
+                mimeTypes.Add(preferredMimeType);
             }
 
             return mimeTypes;

@@ -4,16 +4,18 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.IO;
 using FluentAssertions;
 using System.Reflection;
 using System.Text.Json;
+using Pocket.For.Xunit;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
 {
-    public class FormatterTests : FormatterTestBase
+    public sealed class FormatterTests : FormatterTestBase
     {
         public class Defaults : FormatterTestBase
         {
@@ -165,22 +167,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             }
 
             [Fact]
-            public void Can_Register_formatter_for_type_string()
-            {
-                var value = "hola!";
-
-                var defaultValue = value.ToDisplayString();
-
-                Formatter.Register<string>(e => "hello!");
-
-                value.ToDisplayString().Should().NotBe(defaultValue);
-
-                Formatter.ResetToDefault();
-
-                value.ToDisplayString().Should().Be(defaultValue);
-            }
-
-            [Fact]
             public void Check_default_formatting_of_strings_with_escapes()
             {
                 var value = "hola! \n \t \" \" ' ' the joy of escapes! and    white  space  ";
@@ -211,153 +197,212 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 text.Should().Be($"<div class=\"dni-plaintext\">{value.HtmlEncode()}</div>");
             }
-
         }
 
-        [Fact]
-        public void ToDisplayString_uses_actual_type_formatter_and_not_compiled_type()
+        public class Registration : FormatterTestBase
         {
-            Widget widget = new InheritedWidget();
-            var widgetFormatterCalled = false;
-            var inheritedWidgetFormatterCalled = false;
-
-            Formatter.Register<Widget>(w =>
+            [Fact]
+            public void Can_Register_formatter_for_type_string()
             {
-                widgetFormatterCalled = true;
-                return "";
-            });
-            Formatter.Register<InheritedWidget>(w =>
-            {
-                inheritedWidgetFormatterCalled = true;
-                return "";
-            });
+                var value = "hola!";
 
-            widget.ToDisplayString();
+                var defaultValue = value.ToDisplayString();
 
-            widgetFormatterCalled.Should().BeFalse();
-            inheritedWidgetFormatterCalled.Should().BeTrue();
-        }
+                Formatter.Register<string>(e => "hello!");
 
-        [Theory]
-        [InlineData("text/html", "<div class=\"dni-plaintext\"># { This is the &lt;input&gt; &quot;yes&quot;\t\b\n\r }</div>")]
-        [InlineData("text/plain", "# { This is the <input> \"yes\"\t\b\n\r }")]
-        [InlineData("text/markdown", "# { This is the <input> \"yes\"\t\b\n\r }")]
-        [InlineData("application/json", "\"# { This is the <input> \\\"yes\\\"\\t\\b\\n\\r }\"")]
-        public void When_input_is_a_string_with_unusual_characters_then_it_is_encoded_appropriately(string mimeType, string expected)
-        {
-            var input = "# { This is the <input> \"yes\"\t\b\n\r }";
+                value.ToDisplayString().Should().NotBe(defaultValue);
 
-            var result = input.ToDisplayString(mimeType);
+                Formatter.ResetToDefault();
 
-            result.Should().Be(expected);
-
-        }
-
-        [Theory]
-        [InlineData("text/plain", false)]
-        [InlineData("text/plain", true)]
-        [InlineData("text/html", false)]
-        [InlineData("text/html", true)]
-        public void Formatters_can_be_registered_for_concrete_types(string mimeType, bool useGenericRegisterMethod)
-        {
-            if (useGenericRegisterMethod)
-            {
-                Formatter.Register<FileInfo>(
-                    formatter: (filInfo, writer) => writer.Write("hello"),
-                    mimeType);
-            }
-            else
-            {
-                Formatter.Register(
-                    type: typeof(FileInfo),
-                    formatter: (filInfo, writer) => writer.Write("hello"),
-                    mimeType);
+                value.ToDisplayString().Should().Be(defaultValue);
             }
 
-            new FileInfo(@"c:\temp\foo.txt").ToDisplayString(mimeType)
-                                            .Should()
-                                            .Be("hello");
-        }
 
-        [Theory]
-        [InlineData("text/plain", false)]
-        [InlineData("text/plain", true)]
-        [InlineData("text/html", false)]
-        [InlineData("text/html", true)]
-        public void Formatters_can_be_registered_for_obj_type(string mimeType, bool useGenericRegisterMethod)
-        {
-            if (useGenericRegisterMethod)
+            [Fact]
+            public void ToDisplayString_uses_actual_type_formatter_and_not_compiled_type()
             {
-                Formatter.Register<object>(
-                    formatter: (filInfo, writer) => writer.Write("hello"),
-                    mimeType);
-            }
-            else
-            {
-                Formatter.Register(
-                    type: typeof(object),
-                    formatter: (filInfo, writer) => writer.Write("hello"),
-                    mimeType);
-            }
+                Widget widget = new InheritedWidget();
+                var widgetFormatterCalled = false;
+                var inheritedWidgetFormatterCalled = false;
 
-            new FileInfo(@"c:\temp\foo.txt").ToDisplayString(mimeType)
-                                            .Should()
-                                            .Be("hello");
-        }
+                Formatter.Register<Widget>(w =>
+                {
+                    widgetFormatterCalled = true;
+                    return "";
+                });
+                Formatter.Register<InheritedWidget>(w =>
+                {
+                    inheritedWidgetFormatterCalled = true;
+                    return "";
+                });
 
-        [Theory]
-        [InlineData("text/plain", false)]
-        [InlineData("text/plain", true)]
-        [InlineData("text/html", false)]
-        [InlineData("text/html", true)]
-        public void Formatters_choose_exact_type_amongst_user_defined_formatters(string mimeType, bool useGenericRegisterMethod)
-        {
-            if (useGenericRegisterMethod)
-            {
-                Formatter.Register<FileInfo>(
-                    formatter: (filInfo, writer) => writer.Write("hello"),
-                    mimeType);
-                Formatter.Register<object>(
-                    formatter: (filInfo, writer) => writer.Write("world"),
-                    mimeType);
-            }
-            else
-            {
-                Formatter.Register(
-                    type: typeof(FileInfo),
-                    formatter: (filInfo, writer) => writer.Write("hello"),
-                    mimeType);
-                Formatter.Register(
-                    type: typeof(object),
-                    formatter: (filInfo, writer) => writer.Write("world"),
-                    mimeType);
+                widget.ToDisplayString();
+
+                widgetFormatterCalled.Should().BeFalse();
+                inheritedWidgetFormatterCalled.Should().BeTrue();
             }
 
-            // The FileInfo formatter is chosen for FileInfo
-            new FileInfo(@"c:\temp\foo.txt").ToDisplayString(mimeType)
-                                            .Should()
-                                            .Be("hello");
+            [Theory]
+            [InlineData("text/html", "<div class=\"dni-plaintext\"># { This is the &lt;input&gt; &quot;yes&quot;\t\b\n\r }</div>")]
+            [InlineData("text/plain", "# { This is the <input> \"yes\"\t\b\n\r }")]
+            [InlineData("text/markdown", "# { This is the <input> \"yes\"\t\b\n\r }")]
+            [InlineData("application/json", "\"# { This is the <input> \\\"yes\\\"\\t\\b\\n\\r }\"")]
+            public void When_input_is_a_string_with_unusual_characters_then_it_is_encoded_appropriately(string mimeType, string expected)
+            {
+                var input = "# { This is the <input> \"yes\"\t\b\n\r }";
 
-            // The object formatter is chosen for System.Object
-            (new object()).ToDisplayString(mimeType)
-                                            .Should()
-                                            .Be("world");
+                var result = input.ToDisplayString(mimeType);
 
-            // The object formatter is chosen for DirectoryInfo (which is a FileSystemInfo but not a FileInfo).
-            new DirectoryInfo(@"c:\temp").ToDisplayString(mimeType)
-                                          .Should()
-                                          .Be("world");
+                result.Should().Be(expected);
 
-        }
+            }
 
-        [Theory]
-        [InlineData("text/plain", false)]
-        [InlineData("text/plain", true)]
-        [InlineData("text/html", false)]
-        [InlineData("text/html", true)]
-        public void Formatters_choose_most_specific_type_amongst_user_defined_formatters(string mimeType, bool useGenericRegisterMethod)
-        {
-            if (useGenericRegisterMethod)
+            [Theory]
+            [InlineData("text/plain", false)]
+            [InlineData("text/plain", true)]
+            [InlineData("text/html", false)]
+            [InlineData("text/html", true)]
+            public void Formatters_can_be_registered_for_concrete_types(string mimeType, bool useGenericRegisterMethod)
+            {
+                if (useGenericRegisterMethod)
+                {
+                    Formatter.Register<FileInfo>(
+                        formatter: (filInfo, writer) => writer.Write("hello"),
+                        mimeType);
+                }
+                else
+                {
+                    Formatter.Register(
+                        type: typeof(FileInfo),
+                        formatter: (filInfo, writer) => writer.Write("hello"),
+                        mimeType);
+                }
+
+                new FileInfo(@"c:\temp\foo.txt").ToDisplayString(mimeType)
+                                                .Should()
+                                                .Be("hello");
+            }
+
+            [Theory]
+            [InlineData("text/plain", false)]
+            [InlineData("text/plain", true)]
+            [InlineData("text/html", false)]
+            [InlineData("text/html", true)]
+            public void Formatters_can_be_registered_for_obj_type(string mimeType, bool useGenericRegisterMethod)
+            {
+                if (useGenericRegisterMethod)
+                {
+                    Formatter.Register<object>(
+                        formatter: (filInfo, writer) => writer.Write("hello"),
+                        mimeType);
+                }
+                else
+                {
+                    Formatter.Register(
+                        type: typeof(object),
+                        formatter: (filInfo, writer) => writer.Write("hello"),
+                        mimeType);
+                }
+
+                new FileInfo(@"c:\temp\foo.txt").ToDisplayString(mimeType)
+                                                .Should()
+                                                .Be("hello");
+            }
+
+            [Theory]
+            [InlineData("text/plain", false)]
+            [InlineData("text/plain", true)]
+            [InlineData("text/html", false)]
+            [InlineData("text/html", true)]
+            public void Formatters_choose_exact_type_amongst_user_defined_formatters(string mimeType, bool useGenericRegisterMethod)
+            {
+                if (useGenericRegisterMethod)
+                {
+                    Formatter.Register<FileInfo>(
+                        formatter: (filInfo, writer) => writer.Write("hello"),
+                        mimeType);
+                    Formatter.Register<object>(
+                        formatter: (filInfo, writer) => writer.Write("world"),
+                        mimeType);
+                }
+                else
+                {
+                    Formatter.Register(
+                        type: typeof(FileInfo),
+                        formatter: (filInfo, writer) => writer.Write("hello"),
+                        mimeType);
+                    Formatter.Register(
+                        type: typeof(object),
+                        formatter: (filInfo, writer) => writer.Write("world"),
+                        mimeType);
+                }
+
+                // The FileInfo formatter is chosen for FileInfo
+                new FileInfo(@"c:\temp\foo.txt").ToDisplayString(mimeType)
+                                                .Should()
+                                                .Be("hello");
+
+                // The object formatter is chosen for System.Object
+                (new object()).ToDisplayString(mimeType)
+                              .Should()
+                              .Be("world");
+
+                // The object formatter is chosen for DirectoryInfo (which is a FileSystemInfo but not a FileInfo).
+                new DirectoryInfo(@"c:\temp").ToDisplayString(mimeType)
+                                             .Should()
+                                             .Be("world");
+
+            }
+
+            [Theory]
+            [InlineData("text/plain", false)]
+            [InlineData("text/plain", true)]
+            [InlineData("text/html", false)]
+            [InlineData("text/html", true)]
+            public void Formatters_choose_most_specific_type_amongst_user_defined_formatters(string mimeType, bool useGenericRegisterMethod)
+            {
+                if (useGenericRegisterMethod)
+                {
+                    Formatter.Register<IComparable>(
+                        formatter: (filInfo, writer) => writer.Write("hello"),
+                        mimeType);
+                    Formatter.Register<object>(
+                        formatter: (filInfo, writer) => writer.Write("world"),
+                        mimeType);
+                }
+                else
+                {
+                    Formatter.Register(
+                        type: typeof(IComparable),
+                        formatter: (filInfo, writer) => writer.Write("hello"),
+                        mimeType);
+                    Formatter.Register(
+                        type: typeof(object),
+                        formatter: (filInfo, writer) => writer.Write("world"),
+                        mimeType);
+                }
+
+                // The IComparable formatter is chosen for System.Int32, which supports 'IComparable'
+                (100).ToDisplayString(mimeType)
+                     .Should()
+                     .Be("hello");
+
+                // The IComparable formatter is chosen for System.DateTime, which supports 'IComparable'
+                DateTime.Now.ToDisplayString(mimeType)
+                        .Should()
+                        .Be("hello");
+
+                // The object formatter is chosen for something not supporting 'IComparable'
+                // Note System.Type doesn't support IComparable.
+                typeof(int).ToDisplayString(mimeType)
+                           .Should()
+                           .Be("world");
+            }
+
+            [Theory]
+            [InlineData("text/plain")]
+            [InlineData("text/html")]
+            public void Formatters_choose_most_recently_registered_formatter_is_preferred(string mimeType)
             {
                 Formatter.Register<IComparable>(
                     formatter: (filInfo, writer) => writer.Write("hello"),
@@ -365,157 +410,123 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 Formatter.Register<object>(
                     formatter: (filInfo, writer) => writer.Write("world"),
                     mimeType);
-            }
-            else
-            {
-                Formatter.Register(
-                    type: typeof(IComparable),
-                    formatter: (filInfo, writer) => writer.Write("hello"),
+
+                // The first IComparable formatter is chosen for System.Int32, which supports 'IComparable'
+                (100).ToDisplayString(mimeType)
+                     .Should()
+                     .Be("hello");
+
+                Formatter.Register<IComparable>(
+                    formatter: (filInfo, writer) => writer.Write("hello again!"),
                     mimeType);
-                Formatter.Register(
-                    type: typeof(object),
-                    formatter: (filInfo, writer) => writer.Write("world"),
-                    mimeType);
+
+                // Now the second IComparable formatter is chosen for System.Int32, which supports 'IComparable'
+                (100).ToDisplayString(mimeType)
+                     .Should()
+                     .Be("hello again!");
+
+                // The object formatter is chosen for something not supporting 'IComparable'
+                // Note System.Type doesn't support IComparable.
+                typeof(int).ToDisplayString(mimeType)
+                           .Should()
+                           .Be("world");
             }
 
-            // The IComparable formatter is chosen for System.Int32, which supports 'IComparable'
-            (100).ToDisplayString(mimeType)
-                  .Should()
-                  .Be("hello");
-
-            // The IComparable formatter is chosen for System.DateTime, which supports 'IComparable'
-            DateTime.Now.ToDisplayString(mimeType)
-                                            .Should()
-                                            .Be("hello");
-
-            // The object formatter is chosen for something not supporting 'IComparable'
-            // Note System.Type doesn't support IComparable.
-            typeof(int).ToDisplayString(mimeType)
-                                            .Should()
-                                            .Be("world");
-
-        }
-
-        [Theory]
-        [InlineData("text/plain")]
-        [InlineData("text/html")]
-        public void Formatters_choose_most_recently_registered_formatter_is_preferred(string mimeType)
-        {
-            Formatter.Register<IComparable>(
-                formatter: (filInfo, writer) => writer.Write("hello"),
-                mimeType);
-            Formatter.Register<object>(
-                formatter: (filInfo, writer) => writer.Write("world"),
-                mimeType);
-
-            // The first IComparable formatter is chosen for System.Int32, which supports 'IComparable'
-            (100).ToDisplayString(mimeType)
-                  .Should()
-                  .Be("hello");
-
-            Formatter.Register<IComparable>(
-                formatter: (filInfo, writer) => writer.Write("hello again!"),
-                mimeType);
-
-            // Now the second IComparable formatter is chosen for System.Int32, which supports 'IComparable'
-            (100).ToDisplayString(mimeType)
-                  .Should()
-                  .Be("hello again!");
-
-            // The object formatter is chosen for something not supporting 'IComparable'
-            // Note System.Type doesn't support IComparable.
-            typeof(int).ToDisplayString(mimeType)
-                                            .Should()
-                                            .Be("world");
-
-        }
-
-        [Theory]
-        [InlineData("text/plain")]
-        [InlineData("text/html")]
-        public void Formatters_mime_type_preference_overrides_all_defaults(string mimeType)
-        {
-            Formatter.SetPreferredMimeTypeFor(typeof(object), mimeType);
-
-            Formatter.GetPreferredMimeTypeFor(typeof(int)).Should().Be(mimeType);
-            Formatter.GetPreferredMimeTypeFor(typeof(object)).Should().Be(mimeType);
-            Formatter.GetPreferredMimeTypeFor(typeof(string)).Should().Be(mimeType);
-            Formatter.GetPreferredMimeTypeFor(typeof(Type)).Should().Be(mimeType);
-            Formatter.GetPreferredMimeTypeFor(typeof(JsonElement)).Should().Be(mimeType);
-
-        }
-
-        [Theory]
-        [InlineData("text/plain")]
-        [InlineData("text/html")]
-        [InlineData("text/whacky")]
-        public void Formatters_multiple_mime_type_preference_overrides_all_defaults(string mimeType)
-        {
-            // the last one should win
-            Formatter.SetPreferredMimeTypeFor(typeof(object), mimeType);
-            Formatter.SetPreferredMimeTypeFor(typeof(object), "text/plain");
-            Formatter.SetPreferredMimeTypeFor(typeof(object), mimeType);
-            Formatter.SetPreferredMimeTypeFor(typeof(object), "text/html");
-            Formatter.SetPreferredMimeTypeFor(typeof(object), mimeType);
-
-            Formatter.GetPreferredMimeTypeFor(typeof(int)).Should().Be(mimeType);
-            Formatter.GetPreferredMimeTypeFor(typeof(object)).Should().Be(mimeType);
-            Formatter.GetPreferredMimeTypeFor(typeof(string)).Should().Be(mimeType);
-            Formatter.GetPreferredMimeTypeFor(typeof(Type)).Should().Be(mimeType);
-            Formatter.GetPreferredMimeTypeFor(typeof(JsonElement)).Should().Be(mimeType);
-
-        }
-
-        [Theory]
-        [InlineData("text/plain")]
-        [InlineData("text/html")]
-        [InlineData("text/whacky")]
-        public void Formatters_can_override_default_preference_for_single_type(string mimeType)
-        {
-            Formatter.SetPreferredMimeTypeFor(typeof(int), mimeType);
-
-            Formatter.GetPreferredMimeTypeFor(typeof(int)).Should().Be(mimeType);
-
-        }
-
-        [Theory]
-        [InlineData("text/plain")]
-        [InlineData("text/html")]
-        [InlineData("text/whacky")]
-        public void Formatters_can_clear_default_preference_for_single_type(string mimeType)
-        {
-            Formatter.SetPreferredMimeTypeFor(typeof(int), mimeType);
-            Formatter.ResetToDefault();
-
-            Formatter.GetPreferredMimeTypeFor(typeof(int)).Should().Be("text/html");
-
-        }
-
-        [Theory]
-        [InlineData("text/plain", false)]
-        [InlineData("text/plain", true)]
-        [InlineData("text/html", false)]
-        [InlineData("text/html", true)]
-        public void Formatters_can_be_registered_on_demand_for_non_generic_interfaces(string mimeType, bool useGenericRegisterMethod)
-        {
-            if (useGenericRegisterMethod)
+            [Theory]
+            [InlineData("text/plain", false)]
+            [InlineData("text/plain", true)]
+            [InlineData("text/html", false)]
+            [InlineData("text/html", true)]
+            public void Formatters_can_be_registered_on_demand_for_non_generic_interfaces(string mimeType, bool useGenericRegisterMethod)
             {
-                Formatter.Register<IEnumerable>(
-                    formatter: (obj, writer) =>
-                    {
-                        var i = 0;
-                        foreach (var item in obj)
+                if (useGenericRegisterMethod)
+                {
+                    Formatter.Register<IEnumerable>(
+                        formatter: (obj, writer) =>
                         {
-                            i++;
-                        }
+                            var i = 0;
+                            foreach (var item in obj)
+                            {
+                                i++;
+                            }
 
-                        writer.Write(i);
-                    }, mimeType);
+                            writer.Write(i);
+                        }, mimeType);
+                }
+                else
+                {
+                    Formatter.Register(
+                        type: typeof(IEnumerable),
+                        formatter: (obj, writer) =>
+                        {
+                            var i = 0;
+                            foreach (var item in (IEnumerable) obj)
+                            {
+                                i++;
+                            }
+
+                            writer.Write(i);
+                        }, mimeType);
+                }
+
+                var list = new ArrayList { 1, 2, 3, 4, 5 };
+
+                list.ToDisplayString(mimeType)
+                    .Should()
+                    .Be(list.Count.ToString());
             }
-            else
+
+            [Theory]
+            [InlineData("text/plain", false)]
+            [InlineData("text/plain", true)]
+            [InlineData("text/html", false)]
+            [InlineData("text/html", true)]
+            public void Formatters_can_be_registered_on_demand_for_abstract_classes(string mimeType, bool useGenericRegisterMethod)
+            {
+                if (useGenericRegisterMethod)
+                {
+                    Formatter.Register<AbstractClass>(
+                        (obj, writer) => writer.Write(obj.GetType().Name.ToUpperInvariant()), mimeType);
+                }
+                else
+                {
+                    Formatter.Register(
+                        type: typeof(AbstractClass),
+                        formatter: (obj, writer) => writer.Write(obj.GetType().Name.ToUpperInvariant()), mimeType);
+                }
+
+                var instanceOf1 = new ConcreteClass1InheritingAbstractClass();
+
+                instanceOf1.ToDisplayString(mimeType)
+                           .Should()
+                           .Be(instanceOf1.GetType().Name.ToUpperInvariant());
+
+                var instanceOf2 = new ConcreteClass2InheritingAbstractClass();
+
+                instanceOf2.ToDisplayString(mimeType)
+                           .Should()
+                           .Be(instanceOf2.GetType().Name.ToUpperInvariant());
+            }
+
+            public abstract class AbstractClass
+            {
+            };
+
+            public class ConcreteClass1InheritingAbstractClass : AbstractClass
+            {
+            };
+
+            public class ConcreteClass2InheritingAbstractClass : AbstractClass
+            {
+            };
+
+            [Theory]
+            [InlineData("text/plain")]
+            [InlineData("text/html")]
+            public void Formatters_can_be_registered_on_demand_for_open_generic_classes(string mimeType)
             {
                 Formatter.Register(
-                    type: typeof(IEnumerable),
+                    type: typeof(List<>),
                     formatter: (obj, writer) =>
                     {
                         var i = 0;
@@ -526,152 +537,197 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                         writer.Write(i);
                     }, mimeType);
+
+                var list = new List<int> { 1, 2, 3, 4, 5 };
+
+                list.ToDisplayString(mimeType)
+                    .Should()
+                    .Be(list.Count.ToString());
             }
 
-            var list = new ArrayList { 1, 2, 3, 4, 5 };
-
-            list.ToDisplayString(mimeType)
-                .Should()
-                .Be(list.Count.ToString());
-        }
-
-        [Theory]
-        [InlineData("text/plain", false)]
-        [InlineData("text/plain", true)]
-        [InlineData("text/html", false)]
-        [InlineData("text/html", true)]
-        public void Formatters_can_be_registered_on_demand_for_abstract_classes(string mimeType, bool useGenericRegisterMethod)
-        {
-            if (useGenericRegisterMethod)
-            {
-                Formatter.Register<AbstractClass>(
-                    (obj, writer) => writer.Write(obj.GetType().Name.ToUpperInvariant()), mimeType);
-            }
-            else
+            [Theory]
+            [InlineData("text/plain")]
+            [InlineData("text/html")]
+            public void Formatters_can_be_registered_on_demand_for_open_generic_interfaces(string mimeType)
             {
                 Formatter.Register(
-                    type: typeof(AbstractClass),
-                    formatter: (obj, writer) => writer.Write(obj.GetType().Name.ToUpperInvariant()), mimeType);
+                    type: typeof(IList<>),
+                    formatter: (obj, writer) =>
+                    {
+                        var i = 0;
+                        foreach (var _ in (IEnumerable) obj)
+                        {
+                            i++;
+                        }
+
+                        writer.Write(i);
+                    }, mimeType);
+
+                var list = new List<int> { 1, 2, 3, 4, 5 };
+
+                list.ToDisplayString(mimeType)
+                    .Should()
+                    .Be(list.Count.ToString());
             }
 
-            var instanceOf1 = new ConcreteClass1InheritingAbstractClass();
-
-            instanceOf1.ToDisplayString(mimeType)
-                       .Should()
-                       .Be(instanceOf1.GetType().Name.ToUpperInvariant());
-
-            var instanceOf2 = new ConcreteClass2InheritingAbstractClass();
-
-            instanceOf2.ToDisplayString(mimeType)
-                       .Should()
-                       .Be(instanceOf2.GetType().Name.ToUpperInvariant());
-        }
-
-        public abstract class AbstractClass
-        {
-        };
-
-        public class ConcreteClass1InheritingAbstractClass : AbstractClass
-        {
-        };
-
-        public class ConcreteClass2InheritingAbstractClass : AbstractClass
-        {
-        };
-
-        [Theory]
-        [InlineData("text/plain")]
-        [InlineData("text/html")]
-        public void Formatters_can_be_registered_on_demand_for_open_generic_classes(string mimeType)
-        {
-            Formatter.Register(
-                type: typeof(List<>),
-                formatter: (obj, writer) =>
-                {
-                    var i = 0;
-                    foreach (var item in (IEnumerable) obj)
-                    {
-                        i++;
-                    }
-
-                    writer.Write(i);
-                }, mimeType);
-
-            var list = new List<int> { 1, 2, 3, 4, 5 };
-
-            list.ToDisplayString(mimeType)
-                .Should()
-                .Be(list.Count.ToString());
-        }
-
-        [Theory]
-        [InlineData("text/plain")]
-        [InlineData("text/html")]
-        public void Formatters_can_be_registered_on_demand_for_open_generic_interfaces(string mimeType)
-        {
-            Formatter.Register(
-                type: typeof(IList<>),
-                formatter: (obj, writer) =>
-                {
-                    var i = 0;
-                    foreach (var _ in (IEnumerable) obj)
-                    {
-                        i++;
-                    }
-
-                    writer.Write(i);
-                }, mimeType);
-
-            var list = new List<int> { 1, 2, 3, 4, 5 };
-
-            list.ToDisplayString(mimeType)
-                .Should()
-                .Be(list.Count.ToString());
-        }
-
-        [Fact]
-        public void ListExpansionLimit_can_be_specified_per_type()
-        {
-            Formatter<Dictionary<string, int>>.ListExpansionLimit = 1000;
-            Formatter.ListExpansionLimit = 4;
-            var dictionary = new Dictionary<string, int>
+            [Fact]
+            public void ListExpansionLimit_can_be_specified_per_type()
             {
-                { "zero", 0 },
-                { "two", 2 },
-                { "three", 3 },
-                { "four", 4 },
-                { "five", 5 },
-                { "six", 6 },
-                { "seven", 7 },
-                { "eight", 8 },
-                { "nine", 9 },
-                { "ninety-nine", 99 }
-            };
+                Formatter<Dictionary<string, int>>.ListExpansionLimit = 1000;
+                Formatter.ListExpansionLimit = 4;
+                var dictionary = new Dictionary<string, int>
+                {
+                    { "zero", 0 },
+                    { "two", 2 },
+                    { "three", 3 },
+                    { "four", 4 },
+                    { "five", 5 },
+                    { "six", 6 },
+                    { "seven", 7 },
+                    { "eight", 8 },
+                    { "nine", 9 },
+                    { "ninety-nine", 99 }
+                };
 
-            var output = dictionary.ToDisplayString();
+                var output = dictionary.ToDisplayString();
 
-            output.Should().Contain("zero");
-            output.Should().Contain("0");
-            output.Should().Contain("ninety-nine");
-            output.Should().Contain("99");
+                output.Should().Contain("zero");
+                output.Should().Contain("0");
+                output.Should().Contain("ninety-nine");
+                output.Should().Contain("99");
+            }
+
+            [Fact]
+            public void Formatting_can_be_chosen_based_on_mime_type()
+            {
+                Formatter.Register(
+                    new PlainTextFormatter<DateTime>((time, c) => c.Writer.Write("plain")));
+                Formatter.Register(
+                    new HtmlFormatter<DateTime>((time, c) => c.Writer.Write("html")));
+
+                var now = DateTime.Now;
+
+                now.ToDisplayString(PlainTextFormatter.MimeType).Should().Be("plain");
+                now.ToDisplayString(HtmlFormatter.MimeType).Should().Be("html");
+            }
+
+            [Theory]
+            [InlineData("text/plain")]
+            [InlineData("text/html")]
+            public void Formatter_sources_can_provide_lazy_registration_of_custom_formatters(string mimeType)
+            {
+                var obj = new TypeWithCustomFormatter();
+
+                var formatted = obj.ToDisplayString(mimeType);
+
+                formatted.Should().Be($"Hello from {nameof(TypeWithCustomFormatter)} using MIME type {mimeType}");
+            }
+
+            [TypeFormatterSource(typeof(CustomFormatterSource))]
+            private class TypeWithCustomFormatter
+            {
+            }
+
+            private class CustomFormatterSource : ITypeFormatterSource
+            {
+                public IEnumerable<ITypeFormatter> CreateTypeFormatters()
+                {
+                    return new ITypeFormatter[]
+                    {
+                        new PlainTextFormatter<TypeWithCustomFormatter>(_ => $"Hello from {nameof(TypeWithCustomFormatter)} using MIME type text/plain"),
+                        new HtmlFormatter<TypeWithCustomFormatter>(_ => $"Hello from {nameof(TypeWithCustomFormatter)} using MIME type text/html")
+                    };
+                }
+            }
         }
 
-        [Fact]
-        public void Formatting_can_be_chosen_based_on_mime_type()
+        [LogToPocketLogger(@"c:\temp\text.log")]
+        public class MimeTypeSettings : FormatterTestBase
         {
-            Formatter.Register(
-                new PlainTextFormatter<DateTime>((time, c) => c.Writer.Write("plain")));
-            Formatter.Register(
-                new HtmlFormatter<DateTime>((time, c) => c.Writer.Write("html")));
+            [Theory]
+            [InlineData("text/plain")]
+            [InlineData("text/html")]
+            public void Default_mime_type_sets_mime_type_for_all_types(string mimeType)
+            {
+                Formatter.DefaultMimeType = mimeType;
 
-            var now = DateTime.Now;
+                Formatter.GetPreferredMimeTypeFor(typeof(int)).Should().Be(mimeType);
+                Formatter.GetPreferredMimeTypeFor(typeof(object)).Should().Be(mimeType);
+                Formatter.GetPreferredMimeTypeFor(typeof(Type)).Should().Be(mimeType);
+            }
 
-            now.ToDisplayString(PlainTextFormatter.MimeType).Should().Be("plain");
-            now.ToDisplayString(HtmlFormatter.MimeType).Should().Be("html");
+            [Theory]
+            [InlineData("text/plain")]
+            [InlineData("text/html")]
+            public void Type_specific_mime_type_preference_applies_to_derived_types(string mimeType)
+            {
+                Formatter.SetPreferredMimeTypeFor(typeof(object), mimeType);
+
+                Formatter.GetPreferredMimeTypeFor(typeof(int)).Should().Be(mimeType);
+                Formatter.GetPreferredMimeTypeFor(typeof(object)).Should().Be(mimeType);
+                Formatter.GetPreferredMimeTypeFor(typeof(string)).Should().Be(mimeType);
+                Formatter.GetPreferredMimeTypeFor(typeof(Type)).Should().Be(mimeType);
+                Formatter.GetPreferredMimeTypeFor(typeof(JsonElement)).Should().Be(mimeType);
+            }
+
+            [Theory]
+            [InlineData("text/plain")]
+            [InlineData("text/html")]
+            [InlineData("text/whacky")]
+            public void Last_specified_type_specific_mime_type_preference_applies_to_non_specified_derived_types(string mimeType)
+            {
+                // the last one should win
+                Formatter.SetPreferredMimeTypeFor(typeof(object), mimeType);
+                Formatter.SetPreferredMimeTypeFor(typeof(object), "text/plain");
+                Formatter.SetPreferredMimeTypeFor(typeof(object), mimeType);
+                Formatter.SetPreferredMimeTypeFor(typeof(object), "text/html");
+                Formatter.SetPreferredMimeTypeFor(typeof(object), mimeType);
+
+                Formatter.GetPreferredMimeTypeFor(typeof(int)).Should().Be(mimeType);
+                Formatter.GetPreferredMimeTypeFor(typeof(object)).Should().Be(mimeType);
+                Formatter.GetPreferredMimeTypeFor(typeof(string)).Should().Be(mimeType);
+                Formatter.GetPreferredMimeTypeFor(typeof(Type)).Should().Be(mimeType);
+                Formatter.GetPreferredMimeTypeFor(typeof(JsonElement)).Should().Be(mimeType);
+            }
+
+            [Theory]
+            [InlineData("text/plain")]
+            [InlineData("text/html")]
+            [InlineData("text/whacky")]
+            public void Formatters_can_override_default_preference_for_base_type(string mimeType)
+            {
+                Formatter.SetPreferredMimeTypeFor(typeof(object), "text/default");
+                Formatter.SetPreferredMimeTypeFor(typeof(int), mimeType);
+
+                Formatter.GetPreferredMimeTypeFor(typeof(int)).Should().Be(mimeType);
+            }
+
+            [Theory]
+            [InlineData("text/plain")]
+            [InlineData("text/html")]
+            [InlineData("text/whacky")]
+            public void Formatters_can_override_default_mime_type(string mimeType)
+            {
+                Formatter.DefaultMimeType = "text/default";
+                Formatter.SetPreferredMimeTypeFor(typeof(int), mimeType);
+
+                Formatter.GetPreferredMimeTypeFor(typeof(int)).Should().Be(mimeType);
+            }
+
+            [Theory]
+            [InlineData("text/plain")]
+            [InlineData("text/html")]
+            [InlineData("text/whacky")]
+            public void Formatters_can_clear_default_preference_for_single_type(string mimeType)
+            {
+                Formatter.SetPreferredMimeTypeFor(typeof(int), mimeType);
+                Formatter.ResetToDefault();
+
+                Formatter.GetPreferredMimeTypeFor(typeof(int)).Should().Be("text/html");
+            }
         }
     }
 }
-
 
 namespace Dummy
 {

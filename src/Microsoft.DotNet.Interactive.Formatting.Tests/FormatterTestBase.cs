@@ -8,7 +8,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 {
     public abstract class FormatterTestBase : IDisposable
     {
-        private static readonly object _lock = new object();
+        private static readonly object _lock = new();
 
         protected FormatterTestBase()
         {

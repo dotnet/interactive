@@ -4,7 +4,7 @@
 using System;
 using System.Text;
 using Microsoft.AspNetCore.Html;
-using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.Http;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         {
             var requireUri = new Uri("https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js");
             var divId = Id;
-            var data = Data.ToJson();
+            var data = Data.ToJsonString();
             var code = new StringBuilder();
             var functionName = $"renderSandDanceExplorer_{divId}";
 

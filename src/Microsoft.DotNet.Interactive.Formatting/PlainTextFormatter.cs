@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -13,10 +12,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
     {
         static PlainTextFormatter()
         {
-            Formatter.Clearing += (obj, sender) =>
-            {
-                MaxProperties = DefaultMaxProperties;
-            };
+            Formatter.Clearing += Initialize;
+
+            void Initialize() => MaxProperties = DefaultMaxProperties;
         }
 
         public static ITypeFormatter GetPreferredFormatterFor(Type type) =>
@@ -36,10 +34,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
         internal const int DefaultMaxProperties = 20;
 
         internal static ITypeFormatter GetDefaultFormatterForAnyObject(Type type, bool includeInternals = false) =>
-            FormattersForAnyObject.GetFormatter(type, includeInternals);
+            FormattersForAnyObject.GetOrCreateFormatterForType(type, includeInternals);
 
         internal static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
-            FormattersForAnyEnumerable.GetFormatter(type, false);
+            FormattersForAnyEnumerable.GetOrCreateFormatterForType(type, false);
 
         internal static FormatDelegate<T> CreateFormatDelegate<T>(MemberInfo[] forMembers)
         {
@@ -162,10 +160,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
         }
 
         internal static FormatterMapByType FormattersForAnyObject =
-            new FormatterMapByType(typeof(PlainTextFormatter<>), nameof(PlainTextFormatter<object>.CreateForAnyObject));
+            new(typeof(PlainTextFormatter<>), nameof(PlainTextFormatter<object>.CreateForAnyObject));
 
         internal static FormatterMapByType FormattersForAnyEnumerable =
-            new FormatterMapByType(typeof(PlainTextFormatter<>), nameof(PlainTextFormatter<object>.CreateForAnyEnumerable));
+            new(typeof(PlainTextFormatter<>), nameof(PlainTextFormatter<object>.CreateForAnyEnumerable));
 
     }
 }

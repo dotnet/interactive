@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         static Destructurer()
         {
             InitializeCache();
-            Formatter.Clearing += (sender, args) => InitializeCache();
+            Formatter.Clearing += InitializeCache;
         }
 
         private static void InitializeCache()

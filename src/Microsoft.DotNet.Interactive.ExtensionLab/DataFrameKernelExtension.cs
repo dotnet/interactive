@@ -16,6 +16,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.ExtensionLab;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.ML;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
@@ -217,7 +218,7 @@ namespace Microsoft.ML
         public static TabularDataResourceJsonString ToTabularJsonString(this IDataView source)
         {
             var tabularDataResource = source.ToTabularDataResource();
-            return tabularDataResource.ToJson();
+            return tabularDataResource.ToJsonString();
         }
     }
 }

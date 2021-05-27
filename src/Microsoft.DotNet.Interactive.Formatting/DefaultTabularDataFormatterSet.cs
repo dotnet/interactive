@@ -3,6 +3,7 @@
 
 using System.Collections;
 using System.Linq;
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -12,14 +13,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 new TabularDataResourceFormatter<IEnumerable>((value, context) =>
                 {
-                    var tabularData = value.Cast<object>().ToTabularDataResourceJsonString();
+                    var tabularDataSet = value.Cast<object>().ToTabularDataResource();
+                    var tabularData = tabularDataSet.ToJsonString();
                     context.Writer.Write(tabularData.ToString());
                     return true;
                 }),
 
                 new TabularDataResourceFormatter<TabularDataResource>((value, context) =>
                 {
-                    var tabularData = value.ToJson();
+                    var tabularData = value.ToJsonString();
                     context.Writer.Write(tabularData);
                     return true;
                 }),

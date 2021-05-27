@@ -30,14 +30,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             Initialize();
 
-            Formatter.Clearing += (o, e) => Initialize();
+            Formatter.Clearing += Initialize;
         }
 
         /// <summary>
         /// Formats an object and writes it to the specified writer.
         /// </summary>
         /// <param name="obj">The object to be formatted.</param>
-        /// <param name="writer">The writer.</param>
         /// <param name="context">The context for the current format operation.</param>
         /// <param name="mimeType">The mime type to format to.</param>
         public static void FormatTo(
@@ -52,9 +51,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 return;
             }
 
-            using var _ = Formatter.RecursionCounter.Enter();
-          
-            if (Formatter.RecursionCounter.Depth <= Formatter.RecursionLimit)
+            using var _ = context.IncrementDepth();
+
+            if (context.Depth <= Formatter.RecursionLimit)
             {
                 var formatter = Formatter.GetPreferredFormatterFor(typeof(T), mimeType);
                 formatter.Format(obj, context);

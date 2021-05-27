@@ -12,7 +12,6 @@ using FluentAssertions;
 
 using Microsoft.AspNetCore.Html;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Notebook;
@@ -178,7 +177,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 {
                     new NotebookCell("csharp", "user code", new NotebookCellOutput[]
                     {
-                        new NotebookCellDisplayOutput(new Dictionary<string, object>()
+                        new NotebookCellDisplayOutput(new Dictionary<string, object>
                         {
                             { "text/html", "<b></b>" }
                         }),

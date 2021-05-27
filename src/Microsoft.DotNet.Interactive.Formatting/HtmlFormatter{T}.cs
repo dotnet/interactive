@@ -4,7 +4,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Microsoft.AspNetCore.Html;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
@@ -31,12 +30,19 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
         }
 
+        public HtmlFormatter(Func<T, string> format)
+        {
+            _format = (instance, context) =>
+            {
+                context.Writer.Write(format(instance));
+                return true;
+            };
+        }
+
         public override bool Format(
             T value,
             FormatContext context)
         {
-            using var _ = context.IncrementDepth();
-
             if (value is null)
             {
                 HtmlFormatter.FormatAndStyleAsPlainText(Formatter.NullString, context);
