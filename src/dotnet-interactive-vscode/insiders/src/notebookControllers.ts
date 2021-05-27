@@ -194,7 +194,7 @@ export async function updateCellLanguages(document: vscode.NotebookDocument): Pr
 }
 
 async function updateCellOutputs(executionTask: vscode.NotebookCellExecutionTask, cell: vscode.NotebookCell, outputs: Array<vscodeLike.NotebookCellOutput>): Promise<void> {
-    const reshapedOutputs = outputs.map(o => new vscode.NotebookCellOutput(o.outputs.map(oi => generateVsCodeNotebookCellOutputItem(oi.mime, oi.value))));
+    const reshapedOutputs = outputs.map(o => new vscode.NotebookCellOutput(o.outputs.map(oi => generateVsCodeNotebookCellOutputItem(oi.data, oi.mime))));
     await executionTask.replaceOutput(reshapedOutputs, cell.index);
 }
 
@@ -211,9 +211,9 @@ export function endExecution(cell: vscode.NotebookCell, success: boolean) {
     }
 }
 
-function generateVsCodeNotebookCellOutputItem(mimeType: string, value: unknown): vscode.NotebookCellOutputItem {
-    const displayValue = reshapeOutputValueForVsCode(mimeType, value);
-    return new vscode.NotebookCellOutputItem(mimeType, displayValue);
+function generateVsCodeNotebookCellOutputItem(data: Uint8Array, mime: string): vscode.NotebookCellOutputItem {
+    const displayData = reshapeOutputValueForVsCode(data, mime);
+    return new vscode.NotebookCellOutputItem(displayData, mime);
 }
 
 async function updateDocumentKernelspecMetadata(document: vscode.NotebookDocument): Promise<void> {

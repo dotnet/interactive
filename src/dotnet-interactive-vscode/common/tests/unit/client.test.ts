@@ -75,13 +75,14 @@ describe('InteractiveClient tests', () => {
         const client = await clientMapper.getOrAddClient(createUri('test/path'));
         let result: Array<vscodeLike.NotebookCellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
-        expect(result).to.deep.equal([
+        const decodedResults = decodeNotebookCellOutputs(result);
+        expect(decodedResults).to.deep.equal([
             {
                 id: '1',
                 outputs: [
                     {
                         mime: 'text/plain',
-                        value: 'deferred output',
+                        decodedData: 'deferred output',
                     }
                 ]
             },
@@ -90,7 +91,7 @@ describe('InteractiveClient tests', () => {
                 outputs: [
                     {
                         mime: 'text/html',
-                        value: '2',
+                        decodedData: '2',
                     }
                 ]
             }
@@ -156,13 +157,14 @@ describe('InteractiveClient tests', () => {
         const client = await clientMapper.getOrAddClient(createUri('test/path'));
         let result: Array<vscodeLike.NotebookCellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
-        expect(result).to.deep.equal([
+        const decodedResults = decodeNotebookCellOutputs(result);
+        expect(decodedResults).to.deep.equal([
             {
                 id: '1',
                 outputs: [
                     {
                         mime: 'text/plain',
-                        value: 'deferred output',
+                        decodedData: 'deferred output',
                     }
                 ]
             },
@@ -171,7 +173,7 @@ describe('InteractiveClient tests', () => {
                 outputs: [
                     {
                         mime: 'text/html',
-                        value: '2',
+                        decodedData: '2',
                     }
                 ]
             }
@@ -252,13 +254,14 @@ describe('InteractiveClient tests', () => {
         const client = await clientMapper.getOrAddClient(createUri('test/path'));
         let result: Array<vscodeLike.NotebookCellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
-        expect(result).to.deep.equal([
+        const decodedResults = decodeNotebookCellOutputs(result);
+        expect(decodedResults).to.deep.equal([
             {
                 id: '1',
                 outputs: [
                     {
                         mime: 'text/plain',
-                        value: 'deferred output 1',
+                        decodedData: 'deferred output 1',
                     }
                 ]
             },
@@ -267,7 +270,7 @@ describe('InteractiveClient tests', () => {
                 outputs: [
                     {
                         mime: 'text/html',
-                        value: '2',
+                        decodedData: '2',
                     }
                 ]
             },
@@ -276,7 +279,7 @@ describe('InteractiveClient tests', () => {
                 outputs: [
                     {
                         mime: 'text/plain',
-                        value: 'deferred output 2',
+                        decodedData: 'deferred output 2',
                     }
                 ]
             }
@@ -335,13 +338,14 @@ describe('InteractiveClient tests', () => {
         // execute first command
         let result1: Array<vscodeLike.NotebookCellOutput> = [];
         await client.execute(code, 'csharp', outputs => result1 = outputs, _ => { }, { token: 'token 1' });
-        expect(result1).to.deep.equal([
+        let decodedResults1 = decodeNotebookCellOutputs(result1);
+        expect(decodedResults1).to.deep.equal([
             {
                 id: '1',
                 outputs: [
                     {
                         mime: 'text/html',
-                        value: '1',
+                        decodedData: '1',
                     }
                 ]
             }
@@ -353,13 +357,14 @@ describe('InteractiveClient tests', () => {
         expect(result2).to.deep.equal([]);
 
         // ensure first result array was updated
-        expect(result1).to.deep.equal([
+        decodedResults1 = decodeNotebookCellOutputs(result1);
+        expect(decodedResults1).to.deep.equal([
             {
                 id: '2',
                 outputs: [
                     {
                         mime: 'text/html',
-                        value: '2',
+                        decodedData: '2',
                     }
                 ]
             }
@@ -478,7 +483,7 @@ describe('InteractiveClient tests', () => {
                         id: '1',
                         outputs: [{
                             mime: vscodeLike.ErrorOutputMimeType,
-                            decodedValue: {
+                            decodedData: {
                                 name: 'Error',
                                 message: 'Error: expected exception during submit',
                             },

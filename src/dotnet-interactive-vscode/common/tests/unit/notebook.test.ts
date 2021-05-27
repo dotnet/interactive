@@ -22,7 +22,7 @@ import {
     ReturnValueProducedType,
     StandardOutputValueProducedType,
 } from '../../interfaces/contracts';
-import { createKernelTransportConfig, withFakeGlobalStorageLocation } from './utilities';
+import { createKernelTransportConfig, decodeNotebookCellOutputs, withFakeGlobalStorageLocation } from './utilities';
 import { createUri } from '../../utilities';
 import { backupNotebook, languageToCellKind } from '../../interactiveNotebook';
 import * as vscodeLike from '../../interfaces/vscode-like';
@@ -72,13 +72,14 @@ describe('Notebook tests', () => {
             const client = await clientMapper.getOrAddClient(createUri('test/path'));
             let result: Array<vscodeLike.NotebookCellOutput> = [];
             await client.execute(code, language, outputs => result = outputs, _ => { }, { token });
-            expect(result).to.deep.equal([
+            const decodedResults = decodeNotebookCellOutputs(result);
+            expect(decodedResults).to.deep.equal([
                 {
                     id: '1',
                     outputs: [
                         {
                             mime: 'text/html',
-                            value: '2',
+                            decodedData: '2',
                         }
                     ]
                 }
@@ -159,13 +160,14 @@ Console.WriteLine(1);
         const client = await clientMapper.getOrAddClient(createUri('test/path'));
         let result: Array<vscodeLike.NotebookCellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
-        expect(result).to.deep.equal([
+        const decodedResults = decodeNotebookCellOutputs(result);
+        expect(decodedResults).to.deep.equal([
             {
                 id: '1',
                 outputs: [
                     {
                         mime: 'text/plain',
-                        value: '1\r\n',
+                        decodedData: '1\r\n',
                     }
                 ],
             },
@@ -174,7 +176,7 @@ Console.WriteLine(1);
                 outputs: [
                     {
                         mime: 'text/plain',
-                        value: '2\r\n',
+                        decodedData: '2\r\n',
                     }
                 ]
             },
@@ -183,7 +185,7 @@ Console.WriteLine(1);
                 outputs: [
                     {
                         mime: 'text/plain',
-                        value: '3\r\n',
+                        decodedData: '3\r\n',
                     }
                 ]
             }
@@ -254,13 +256,14 @@ Console.WriteLine(1);
         const client = await clientMapper.getOrAddClient(createUri('test/path'));
         let result: Array<vscodeLike.NotebookCellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
-        expect(result).to.deep.equal([
+        const decodedResults = decodeNotebookCellOutputs(result);
+        expect(decodedResults).to.deep.equal([
             {
                 id: '2',
                 outputs: [
                     {
                         mime: 'text/plain',
-                        value: 'Installed package Newtonsoft.Json version 1.2.3.4',
+                        decodedData: 'Installed package Newtonsoft.Json version 1.2.3.4',
                     }
                 ]
             },
@@ -269,7 +272,7 @@ Console.WriteLine(1);
                 outputs: [
                     {
                         mime: 'text/plain',
-                        value: 'sentinel',
+                        decodedData: 'sentinel',
                     }
                 ]
             },
@@ -319,13 +322,14 @@ Console.WriteLine(1);
         const client = await clientMapper.getOrAddClient(createUri('test/path'));
         let result: Array<vscodeLike.NotebookCellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
-        expect(result).to.deep.equal([
+        const decodedResults = decodeNotebookCellOutputs(result);
+        expect(decodedResults).to.deep.equal([
             {
                 id: '1',
                 outputs: [
                     {
                         mime: 'application/json',
-                        value: {
+                        decodedData: {
                             a: 1,
                             b: false,
                         }

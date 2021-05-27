@@ -12,8 +12,9 @@ export const ErrorOutputMimeType = 'application/vnd.code.notebook.error';
 
 export interface NotebookCellOutputItem {
     readonly mime: string;
-    readonly value: Uint8Array | unknown;
+    readonly data: Uint8Array;
     readonly metadata?: { [key: string]: any };
+    [key: string]: any; // this is to make compilation on stable happy
 }
 
 export interface NotebookCellOutput {
