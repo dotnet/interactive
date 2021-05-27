@@ -161,7 +161,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                                 foreach (var table in tables)
                                 {
                                     var explorer = new NteractDataExplorer(table.ToTabularDataResource());
-                                    context.Display(explorer, HtmlFormatter.MimeType);
+                                    context.Display(explorer);
                                 }
                             }
                             else
