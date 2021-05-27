@@ -125,10 +125,15 @@ stages:
             POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
 
-        - script: dotnet test -l trx --no-build --blame-hang-timeout 5m --blame-hang-dump-type full -c $(_BuildConfig) --results-directory $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
+        - script: dotnet test -l trx --no-build --blame-hang-timeout 5m --blame-hang-dump-type mini -c $(_BuildConfig) --results-directory $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
           displayName: Test / Blame
           workingDirectory: $(Build.SourcesDirectory)
           condition: ne(variables['SkipTests'], 'true')
+
+        - pwsh: Get-ChildItem *.dmp -Recurse | Remove-Item
+          displayName: Delete dump files
+          workingDirectory: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
+          condition: ne(variables['KeepDumps'], 'true')
 
         - task: PublishBuildArtifacts@1
           displayName: Publish Test results and Blame dumps
@@ -136,7 +141,7 @@ stages:
             pathToPublish: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
             artifactName: Windows_test_results_and_dumps
             artifactType: container
-          condition: always()
+          condition: failed()
 
         - script: npm run ciTest
           displayName: NPM tests
@@ -294,10 +299,15 @@ stages:
             POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
 
-        - script: dotnet test -l trx --no-build --blame-hang-timeout 5m --blame-hang-dump-type full -c $(_BuildConfig) --results-directory $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
+        - script: dotnet test -l trx --no-build --blame-hang-timeout 5m --blame-hang-dump-type mini -c $(_BuildConfig) --results-directory $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
           displayName: Test / Blame
           workingDirectory: $(Build.SourcesDirectory)
           condition: ne(variables['SkipTests'], 'true')
+
+        - pwsh: Get-ChildItem *.dmp -Recurse | Remove-Item
+          displayName: Delete dump files
+          workingDirectory: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
+          condition: ne(variables['KeepDumps'], 'true')
 
         - task: PublishBuildArtifacts@1
           displayName: Publish Test results and Blame dumps
@@ -305,7 +315,7 @@ stages:
             pathToPublish: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
             artifactName: Linux_test_results_and_dumps
             artifactType: container
-          condition: always()
+          condition: failed()
 
         - script: npm run ciTest
           displayName: NPM tests
