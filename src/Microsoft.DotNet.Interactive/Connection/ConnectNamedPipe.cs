@@ -33,12 +33,12 @@ namespace Microsoft.DotNet.Interactive.Connection
             return proxyKernel;
         }
 
-        private static ProxyKernel2 CreateProxyKernel2(NamedPipeConnectionOptions options, NamedPipeClientStream clientStream)
+        private static ProxyKernel CreateProxyKernel2(NamedPipeConnectionOptions options, NamedPipeClientStream clientStream)
         {
             var receiver = new KernelCommandAndEventPipeStreamReceiver(clientStream);
 
             var sender = new KernelCommandAndEventPipeStreamSender(clientStream);
-            var proxyKernel = new ProxyKernel2(options.KernelName, receiver, sender);
+            var proxyKernel = new ProxyKernel(options.KernelName, receiver, sender);
 
             var _ = proxyKernel.RunAsync();
             return proxyKernel;

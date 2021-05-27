@@ -40,22 +40,24 @@ namespace Microsoft.DotNet.Interactive.Utility
             return new AddPackageResult(executionResult.ExitCode, executionResult.Output, executionResult.Error);
         }
 
-        public Task<CommandLineResult> AddReference(FileInfo projectToReference)
+        public Task<CommandLineResult> AddReference(FileInfo projectToReference, TimeSpan? timeout = null)
         {
-            return Execute($@"add reference ""{projectToReference.FullName}""");
+            return Execute($@"add reference ""{projectToReference.FullName}""", timeout);
         }
 
-        public Task<CommandLineResult> Build(string args = null) =>
-            Execute("build".AppendArgs(args));
+        public Task<CommandLineResult> Build(string args = null, TimeSpan? timeout = null) =>
+            Execute("build".AppendArgs(args), timeout);
 
-        public Task<CommandLineResult> Clean() =>
-            Execute("clean");
+        public Task<CommandLineResult> Clean(TimeSpan? timeout = null) =>
+            Execute("clean", timeout);
 
-        public Task<CommandLineResult> Execute(string args) =>
+
+        public Task<CommandLineResult> Execute(string args, TimeSpan? timeout = null) =>
             CommandLine.Execute(
                 Path,
                 args,
-                _workingDirectory);
+                _workingDirectory,
+                timeout);
 
         public Process StartProcess(string args, Action<string> output = null, Action<string> error = null) =>
             CommandLine.StartProcess(
@@ -65,8 +67,8 @@ namespace Microsoft.DotNet.Interactive.Utility
                 output,
                 error);
 
-        public Task<CommandLineResult> Publish(string args = null) =>
-            Execute("publish".AppendArgs(args));
+        public Task<CommandLineResult> Publish(string args = null, TimeSpan? timeout = null) =>
+            Execute("publish".AppendArgs(args), timeout);
 
         public Task<CommandLineResult> VSTest(string args) =>
             Execute("vstest".AppendArgs(args));
@@ -114,8 +116,8 @@ namespace Microsoft.DotNet.Interactive.Utility
                 .Select(s => s.Split(separator, StringSplitOptions.RemoveEmptyEntries)[2]);
         }
 
-        public Task<CommandLineResult> Pack(string args = null) =>
-            Execute("pack".AppendArgs(args));
+        public Task<CommandLineResult> Pack(string args = null, TimeSpan? timeout = null) =>
+            Execute("pack".AppendArgs(args), timeout);
 
         private static readonly Lazy<FileInfo> _getPath = new Lazy<FileInfo>(() =>
                                                                                  FindDotnetFromAppContext() ??

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,17 +13,72 @@ using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Tests.Utility
 {
+    public record ExtensionPackage(string PackageLocation, string Name, string Version);
     public static class KernelExtensionTestHelper
     {
+        private static readonly object _simpleExtensionPackageLock = new();
+        private static readonly object _fileProviderExtensionPackageLock = new();
+        private static ExtensionPackage _simpleExtensionPackage;
+        private static ExtensionPackage _fileProviderExtensionPackage;
+
         private static readonly string _microsoftDotNetInteractiveDllPath = typeof(IKernelExtension).Assembly.Location;
 
-        public static async Task<FileInfo> CreateExtensionNupkg(
+        public static ExtensionPackage GetOrCreateSimpleExtension()
+        {
+            lock (_simpleExtensionPackageLock)
+            {
+                if (_simpleExtensionPackage is null)
+                {
+                    var projectDir = DirectoryUtility.CreateDirectory();
+
+                    var packageName = $"MyTestExtension.{Path.GetRandomFileName()}";
+                    var packageVersion = "2.0.0-" + Guid.NewGuid().ToString("N");
+
+                    _simpleExtensionPackage = KernelExtensionTestHelper.CreateExtensionNupkg(
+                        projectDir,
+                        $"await kernel.SendAsync(new SubmitCode(\"\\\"SimpleExtension\\\"\"));",
+                        packageName,
+                        packageVersion,
+                        timeout: TimeSpan.FromMinutes(5)).Result;
+                }
+            }
+
+            return _simpleExtensionPackage;
+        }
+
+        public static ExtensionPackage GetOrCreateFileProviderExtension()
+        {
+            lock (_fileProviderExtensionPackageLock)
+            {
+                if (_fileProviderExtensionPackage is null)
+                {
+                    var projectDir = DirectoryUtility.CreateDirectory();
+                    var fileToEmbed = new FileInfo(Path.Combine(projectDir.FullName, "file.txt"));
+                    File.WriteAllText(fileToEmbed.FullName, "for testing only");
+                    var packageName = $"MyTestExtension.{Path.GetRandomFileName()}";
+                    var packageVersion = "2.0.0-" + Guid.NewGuid().ToString("N");
+
+                    _fileProviderExtensionPackage = KernelExtensionTestHelper.CreateExtensionNupkg(
+                        projectDir,
+                        $"await kernel.SendAsync(new SubmitCode(\"\\\"FileProviderExtension\\\"\"));",
+                        packageName,
+                        packageVersion,
+                        fileToEmbed: fileToEmbed,
+                        timeout: TimeSpan.FromMinutes(5)).Result;
+                }
+            }
+
+            return _fileProviderExtensionPackage;
+        }
+
+        public static async Task<ExtensionPackage> CreateExtensionNupkg(
             DirectoryInfo projectDir,
             string code,
             string packageName,
             string packageVersion,
             IReadOnlyCollection<PackageReference> packageReferences = null, 
-            FileInfo fileToEmbed = null)
+            FileInfo fileToEmbed = null,
+            TimeSpan? timeout = null)
         {
             var packageReferencesXml = GeneratePackageReferencesFragment(packageReferences);
             var embeddedResourcesXml = GenerateEmbeddedResourceFragment(fileToEmbed);
@@ -71,13 +127,15 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 
             var dotnet = new Dotnet(projectDir);
 
-            var pack = await dotnet.Pack(projectDir.FullName);
+            var pack = await dotnet.Pack(projectDir.FullName, timeout);
 
             pack.ThrowOnFailure();
 
-            return projectDir
+            var packageFile =  projectDir
                    .GetFiles("*.nupkg", SearchOption.AllDirectories)
                    .Single();
+
+            return new ExtensionPackage(packageFile.Directory.FullName, packageName, packageVersion);
         }
 
         private static string GeneratePackageReferencesFragment(IReadOnlyCollection<PackageReference> packageReferences = null)
@@ -131,11 +189,10 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
                 extensionName);
 
             var extensionDll = projectDir
-                               .GetDirectories("bin", SearchOption.AllDirectories)
-                               .Single()
-                               .GetFiles($"{extensionName}.dll", SearchOption.AllDirectories)
-                               .Where(f => f.Directory.Name != "ref")
-                               .Single();
+                .GetDirectories("bin", SearchOption.AllDirectories)
+                .Single()
+                .GetFiles($"{extensionName}.dll", SearchOption.AllDirectories)
+                .Single(f => f.Directory.Name != "ref");
 
             if (copyDllTo is not null)
             {

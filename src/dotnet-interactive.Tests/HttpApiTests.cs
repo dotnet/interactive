@@ -351,22 +351,11 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         {
             var server = await GetServer();
             var kernel = server.Kernel;
-            var projectDir = DirectoryUtility.CreateDirectory();
-            var fileToEmbed = new FileInfo(Path.Combine(projectDir.FullName, "file.txt"));
-            File.WriteAllText(fileToEmbed.FullName, "for testing only");
-            var packageName = $"MyTestExtension.{Path.GetRandomFileName()}";
-            var packageVersion = "2.0.0-" + Guid.NewGuid().ToString("N");
-            var guid = Guid.NewGuid().ToString();
 
-            var nupkg = await KernelExtensionTestHelper.CreateExtensionNupkg(
-                projectDir,
-                $"await kernel.SendAsync(new SubmitCode(\"\\\"{guid}\\\"\"));",
-                packageName,
-                packageVersion,
-                fileToEmbed: fileToEmbed);
+            var extensionPackage = KernelExtensionTestHelper.GetOrCreateFileProviderExtension();
 
-            await kernel.SubmitCodeAsync($@"#i ""nuget:{nupkg.Directory.FullName}""
-#r ""nuget:{packageName},{packageVersion}""");
+            await kernel.SubmitCodeAsync($@"#i ""nuget:{extensionPackage.PackageLocation}""
+#r ""nuget:{extensionPackage.Name},{extensionPackage.Version}""");
 
             var response = await server.HttpClient.GetAsync("extensions/TestKernelExtension/resources/file.txt");
 

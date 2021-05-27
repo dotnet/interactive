@@ -328,7 +328,7 @@ let x = 123
         public void Submissions_targeting_proxy_kernels_are_not_split_prior_to_sending()
         {
 
-            var proxyKernel = new ProxyKernel2(
+            var proxyKernel = new ProxyKernel(
                 "proxyKernel", 
                 new NullKernelCommandAndEventReceiver(), 
                 new NullKernelCommandAndEventSender());
@@ -370,7 +370,7 @@ var b = 22;";
         public void When_targeting_a_local_kernel_after_targeting_a_proxy_kernel_splitting_resumes()
         {
 
-            var proxyKernel = new ProxyKernel2(
+            var proxyKernel = new ProxyKernel(
                 "proxyKernel",
                 new NullKernelCommandAndEventReceiver(),
                 new NullKernelCommandAndEventSender());

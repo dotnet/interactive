@@ -124,7 +124,7 @@ namespace Microsoft.DotNet.Interactive.Http
                        .Value
                        .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 
-            if (segments[0] == "variables")
+            if (segments.FirstOrDefault() == "variables")
             {
                 var kernelName = segments[1];
                 var variableName = segments[2];

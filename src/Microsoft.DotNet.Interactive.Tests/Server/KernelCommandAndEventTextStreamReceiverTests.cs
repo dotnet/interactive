@@ -46,6 +46,22 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
             d.Command.Should().BeEquivalentTo(kernelCommand);
         }
+
+        [Fact]
+        public async Task when_invalid_json_is_received_it_produces_DiagnosticLogEntryProduced()
+        {
+            var invalidJson = " { hello";
+            using var stringReader = new StringReader(invalidJson);
+            var receiver = new KernelCommandAndEventTextReceiver(stringReader);
+
+            var d = await receiver.CommandsOrEventsAsync(CancellationToken.None).FirstAsync();
+
+            d.Event.Should().BeOfType<DiagnosticLogEntryProduced>()
+                .Which
+                .Message
+                .Should()
+                .Contain(invalidJson); ;
+        }
     }
 
     public class KernelCommandAndEventTextStreamSenderTests
