@@ -125,7 +125,7 @@ stages:
             POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
 
-        - script: dotnet test -l trx --no-build --blame-hang-timeout 5m --blame-hang-dump-type full -c $(_BuildConfig) --results-directory $(Build.SourcesDirectory)/artifacts/TestResults/Windows_$(_BuildConfig)
+        - script: dotnet test -l trx --no-build --blame-hang-timeout 5m --blame-hang-dump-type full -c $(_BuildConfig) --results-directory $(Build.SourcesDirectory)/artifacts/TestResults/(_BuildConfig)
           displayName: Test / Blame
           workingDirectory: $(Build.SourcesDirectory)
           condition: ne(variables['SkipTests'], 'true')
@@ -133,7 +133,7 @@ stages:
         - task: PublishBuildArtifacts@1
           displayName: Publish Test results and Blame dumps
           inputs:
-            pathToPublish: $(Build.SourcesDirectory)/artifacts/TestResults/Windows_$(_BuildConfig)
+            pathToPublish: $(Build.SourcesDirectory)/artifacts/TestResults/(_BuildConfig)
             artifactName: Windows_test_results_and_dumps
             artifactType: container
           condition: always()
@@ -294,7 +294,7 @@ stages:
             POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
 
-        - script: dotnet test -l trx --no-build --blame-hang-timeout 5m --blame-hang-dump-type full -c $(_BuildConfig) --results-directory $(Build.SourcesDirectory)/artifacts/TestResults/Linux_$(_BuildConfig)
+        - script: dotnet test -l trx --no-build --blame-hang-timeout 5m --blame-hang-dump-type full -c $(_BuildConfig) --results-directory $(Build.SourcesDirectory)/artifacts/TestResults/(_BuildConfig)
           displayName: Test / Blame
           workingDirectory: $(Build.SourcesDirectory)
           condition: ne(variables['SkipTests'], 'true')
@@ -302,7 +302,7 @@ stages:
         - task: PublishBuildArtifacts@1
           displayName: Publish Test results and Blame dumps
           inputs:
-            pathToPublish: $(Build.SourcesDirectory)/artifacts/TestResults/Linux_$(_BuildConfig)
+            pathToPublish: $(Build.SourcesDirectory)/artifacts/TestResults/(_BuildConfig)
             artifactName: Linux_test_results_and_dumps
             artifactType: container
           condition: always()
