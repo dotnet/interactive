@@ -253,7 +253,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         .RootCommand
                         .Children
                         .OfType<ChooseKernelDirective>()
-                        .SelectMany(c => c.Aliases.Select(kernelAlias => new ChooseKernelDirectiveInfo(kernelAlias, c.Kernel is ProxyKernel2)))
+                        .SelectMany(c => c.Aliases.Select(kernelAlias => new ChooseKernelDirectiveInfo(kernelAlias, c.Kernel is ProxyKernel)))
                         .ToDictionary(info => info.KernelAlias);
             }
 

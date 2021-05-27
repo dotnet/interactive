@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.Interactive.Http
                         .Value
                         .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 
-                if (segments[0] == "kernels")
+                if (segments.FirstOrDefault() == "kernels")
                 {
                     var targetKernel = _kernel;
                     var names = new List<string>

@@ -55,6 +55,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         {
             KernelCommandEnvelope.ResetToDefaults();
             KernelEventEnvelope.ResetToDefaults();
+            Kernel?.Dispose();
             _host.Value.Dispose();
             _host = null;
         }

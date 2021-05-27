@@ -41,6 +41,9 @@ namespace Microsoft.DotNet.Interactive.Http
         {
             var eventEnvelope = KernelEventEnvelope.Create(kernelEvent);
 
+            await hubContext.Clients.All.SendAsync("kernelEventFromServer", KernelEventEnvelope.Serialize(eventEnvelope));
+
+            //fis : remove this later
             await hubContext.Clients.All.SendAsync("kernelEvent", KernelEventEnvelope.Serialize(eventEnvelope));
         }
 

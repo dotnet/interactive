@@ -11,12 +11,12 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
-using static Microsoft.DotNet.Interactive.Tests.Utility.KernelExtensionTestHelper;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
     public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
     {
+
         public LanguageKernelExtensionLoadingTests(ITestOutputHelper output) : base(output)
         {
         }
@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 _ => throw new NotSupportedException("This test does not support the specified language.")
             };
 
-            await CreateExtensionAssembly(
+            await KernelExtensionTestHelper.CreateExtensionAssembly(
                 projectDir,
                 code,
                 dllDir);
@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var dllDir = projectDir.CreateSubdirectory("extension");
 
-            await CreateExtensionAssembly(
+            await KernelExtensionTestHelper.CreateExtensionAssembly(
                 projectDir,
                 "throw new Exception();",
                 dllDir);
@@ -90,23 +90,14 @@ namespace Microsoft.DotNet.Interactive.Tests
         [InlineData(Language.FSharp)]
         public async Task It_loads_extensions_found_in_nuget_packages(Language language)
         {
-            var projectDir = DirectoryUtility.CreateDirectory();
 
-            var packageName = $"MyTestExtension.{Path.GetRandomFileName()}";
-            var packageVersion = "2.0.0-" + Guid.NewGuid().ToString("N");
-            var guid = Guid.NewGuid().ToString();
-
-            var nupkg = await CreateExtensionNupkg(
-                            projectDir,
-                            $"await kernel.SendAsync(new SubmitCode(\"\\\"{guid}\\\"\"));",
-                            packageName,
-                            packageVersion);
+            var extensionPackage = KernelExtensionTestHelper.GetOrCreateSimpleExtension();
 
             var kernel = CreateKernel(language);
 
             await kernel.SubmitCodeAsync($@"
-#i ""nuget:{nupkg.Directory.FullName}""
-#r ""nuget:{packageName},{packageVersion}""");
+#i ""nuget:{extensionPackage.PackageLocation}""
+#r ""nuget:{extensionPackage.Name},{extensionPackage.Version}""");
 
             KernelEvents.Should()
                         .ContainSingle<ReturnValueProduced>()
@@ -114,7 +105,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                         .Value
                         .As<string>()
                         .Should()
-                        .Contain(guid);
+                        .Contain("SimpleExtension");
         }
     }
 }

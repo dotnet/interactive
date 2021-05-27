@@ -17,9 +17,13 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 {
     public class FileProviderTests : LanguageKernelTestBase
     {
+
+
         public FileProviderTests(ITestOutputHelper output) : base(output)
         {
         }
+
+     
 
         [Theory]
         [InlineData(Language.CSharp)]
@@ -44,23 +48,11 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var kernel = CreateKernel(language);
             var provider = new FileProvider(kernel, typeof(Program).Assembly);
 
-            var projectDir = DirectoryUtility.CreateDirectory();
-
-            var packageName = $"MyTestExtension.{Path.GetRandomFileName()}";
-            var packageVersion = "2.0.0-" + Guid.NewGuid().ToString("N");
-            var guid = Guid.NewGuid().ToString();
-
-            var nupkg = await KernelExtensionTestHelper.CreateExtensionNupkg(
-                projectDir,
-                $"await kernel.SendAsync(new SubmitCode(\"\\\"{guid}\\\"\"));",
-                packageName,
-                packageVersion);
-
-
+            var extensionPackage = KernelExtensionTestHelper.GetOrCreateSimpleExtension();
 
             await kernel.SubmitCodeAsync($@"
-#i ""nuget:{nupkg.Directory.FullName}""
-#r ""nuget:{packageName},{packageVersion}""            ");
+#i ""nuget:{extensionPackage.PackageLocation}""
+#r ""nuget:{extensionPackage.Name},{extensionPackage.Version}""            ");
 
             Action action = () => provider.GetFileInfo("extensions/TestKernelExtension/resources/file.txt");
 
@@ -76,23 +68,11 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var kernel = CreateKernel(language);
             var provider = new FileProvider(kernel, typeof(Program).Assembly);
 
-            var projectDir = DirectoryUtility.CreateDirectory();
-            var fileToEmbed = new FileInfo(Path.Combine(projectDir.FullName, "file.txt"));
-            File.WriteAllText(fileToEmbed.FullName, "for testing only");
-            var packageName = $"MyTestExtension.{Path.GetRandomFileName()}";
-            var packageVersion = "2.0.0-" + Guid.NewGuid().ToString("N");
-            var guid = Guid.NewGuid().ToString();
-
-            var nupkg = await KernelExtensionTestHelper.CreateExtensionNupkg(
-                projectDir,
-                $"await kernel.SendAsync(new SubmitCode(\"\\\"{guid}\\\"\"));",
-                packageName,
-                packageVersion,
-                fileToEmbed: fileToEmbed);
+            var extensionPackage = KernelExtensionTestHelper.GetOrCreateFileProviderExtension();
 
             await kernel.SubmitCodeAsync($@"
-#i ""nuget:{nupkg.Directory.FullName}""
-#r ""nuget:{packageName},{packageVersion}""            ");
+#i ""nuget:{extensionPackage.PackageLocation}""
+#r ""nuget:{extensionPackage.Name},{extensionPackage.Version}""            ");
 
             var file = provider.GetFileInfo("extensions/TestKernelExtension/resources/file.txt");
 

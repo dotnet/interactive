@@ -17,10 +17,13 @@ namespace Microsoft.DotNet.Interactive.Utility
         public static Task<CommandLineResult> Execute(
             FileInfo exePath,
             string args,
-            DirectoryInfo workingDir = null) =>
+            DirectoryInfo workingDir = null,
+            TimeSpan? timeout = null) =>
             Execute(exePath.FullName,
-                    args,
-                    workingDir);
+                args,
+                workingDir,
+                timeout);
+
 
         public static async Task<CommandLineResult> Execute(
             string command,

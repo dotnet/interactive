@@ -71,6 +71,11 @@ namespace Microsoft.DotNet.Interactive.Connection
                 KernelEvent kernelEvent = null;
 
                 var message = await ReadMessageAsync(cancellationToken);
+                
+                if (string.IsNullOrWhiteSpace(message))
+                {
+                    continue;
+                }
 
                 var isParseError = false;
                 try
@@ -96,7 +101,7 @@ namespace Microsoft.DotNet.Interactive.Connection
                 catch (Exception ex)
                 {
                     kernelEvent = new DiagnosticLogEntryProduced(
-                        $"Error while parsing Envelope: {ex.Message}\n{message}", KernelCommand.None);
+                        $"Error while parsing Envelope: {message} \n{ex.Message}", KernelCommand.None);
                     isParseError = true;
                 }
 

@@ -5,13 +5,13 @@ using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive.Http
 {
@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.Http
     {
         private readonly HtmlNotebookFrontendEnvironment _frontendEnvironment;
 
-        private readonly ConcurrentDictionary<Uri, string> _bootstrapperScripts = new ConcurrentDictionary<Uri, string>();
+        private readonly ConcurrentDictionary<Uri, string> _bootstrapperScripts = new();
 
         public HttpApiTunnelingRouter(HtmlNotebookFrontendEnvironment frontendEnvironment)
         {
@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.Interactive.Http
                     .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)
                     .Select(s => s.ToLower())
                     .ToArray();
-            if (segments[0] == "apitunnel")
+            if (segments.FirstOrDefault() == "apitunnel")
             {
                 context.Handler = async httpContext =>
                 {
@@ -86,15 +86,15 @@ namespace Microsoft.DotNet.Interactive.Http
                     .Path
                     .Value
                     .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-            if (segments[0] == "apitunnel")
+            if (segments.FirstOrDefault() == "apitunnel")
             {
                 using var reader = new StreamReader(context.HttpContext.Request.Body);
                 var source = await reader.ReadToEndAsync();
 
-                var requestBody = JObject.Parse(source);
+                var requestBody = JsonDocument.Parse(source).RootElement;
 
-                var apiUri = new Uri(requestBody["tunnelUri"].Value<string>());
-                var frontendType = requestBody["frontendType"].Value<string>();
+                var apiUri = new Uri(requestBody.GetProperty("tunnelUri").GetString());
+                var frontendType = requestBody.GetProperty("frontendType").GetString();
                 var hash = $"{Guid.NewGuid():N}";
                 var bootstrapperUri = new Uri(apiUri, $"apitunnel/{frontendType}/{hash}/bootstrapper.js");
                 _frontendEnvironment.SetApiUri(apiUri);
@@ -104,11 +104,11 @@ namespace Microsoft.DotNet.Interactive.Http
                 context.Handler = async httpContext =>
                 {
                     httpContext.Response.ContentType = "text/plain";
-                    var response = new JObject
+                    var response = new 
                     {
-                        {"bootstrapperUri",bootstrapperUri.ToString() }
+                        bootstrapperUri = bootstrapperUri.ToString() 
                     };
-                    await httpContext.Response.WriteAsync(response.ToString(Newtonsoft.Json.Formatting.None));
+                    await httpContext.Response.WriteAsync(JsonSerializer.Serialize( response));
                     await httpContext.Response.CompleteAsync();
                 };
             }

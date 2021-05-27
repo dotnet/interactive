@@ -11,38 +11,13 @@ using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public sealed class ProxyKernel : Kernel
-    {
-        private readonly KernelClientBase _client;
-
-        public ProxyKernel(string name, KernelClientBase client) : base(name)
-        {
-            _client = client ?? throw new ArgumentNullException(nameof(client));
-
-            RegisterForDisposal(client.KernelEvents.Subscribe(OnKernelEvents));
-        }
-
-        private void OnKernelEvents(KernelEvent kernelEvent)
-        {
-            PublishEvent(kernelEvent);
-        }
-
-        internal override async Task HandleAsync(KernelCommand command, KernelInvocationContext context)
-        {
-            var targetKernelName = command.TargetKernelName;
-            command.TargetKernelName = null;
-            await _client.SendAsync(command);
-            command.TargetKernelName = targetKernelName;
-        }
-    }
-
-    public sealed class ProxyKernel2 : Kernel
+  public sealed class ProxyKernel : Kernel
     {
         private readonly IKernelCommandAndEventReceiver _receiver;
         private readonly IKernelCommandAndEventSender _sender;
         private readonly CancellationTokenSource _cancellationTokenSource = new ();
 
-        public ProxyKernel2(string name, IKernelCommandAndEventReceiver receiver, IKernelCommandAndEventSender sender) : base(name)
+        public ProxyKernel(string name, IKernelCommandAndEventReceiver receiver, IKernelCommandAndEventSender sender) : base(name)
         {
             _receiver = receiver ?? throw new ArgumentNullException(nameof(receiver));
             _sender = sender ?? throw new ArgumentNullException(nameof(sender));
