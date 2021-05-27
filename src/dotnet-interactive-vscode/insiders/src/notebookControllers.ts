@@ -14,7 +14,7 @@ import { reshapeOutputValueForVsCode } from './common/interfaces/utilities';
 import { selectDotNetInteractiveKernelForJupyter } from './common/vscode/commands';
 import { ErrorOutputCreator } from './common/interactiveClient';
 
-const executionTasks: Map<string, vscode.NotebookCellExecutionTask> = new Map();
+const executionTasks: Map<string, vscode.NotebookCellExecution> = new Map();
 
 const viewType = 'dotnet-interactive';
 const legacyViewType = 'dotnet-interactive-legacy';
@@ -30,7 +30,7 @@ export class DotNetNotebookKernel {
     private disposables: { dispose(): void }[] = [];
 
     constructor(readonly config: DotNetNotebookKernelConfiguration) {
-        const preloads = config.preloadUris.map(uri => new vscode.NotebookKernelPreload(uri));
+        const preloads = config.preloadUris.map(uri => new vscode.NotebookRendererScript(uri));
 
         // .dib execution
         const dibController = vscode.notebook.createNotebookController(
@@ -110,7 +110,7 @@ export class DotNetNotebookKernel {
     }
 
     private async executeCell(cell: vscode.NotebookCell, controller: vscode.NotebookController): Promise<void> {
-        const executionTask = controller.createNotebookCellExecutionTask(cell);
+        const executionTask = controller.createNotebookCellExecution(cell);
         if (executionTask) {
             executionTasks.set(cell.document.uri.toString(), executionTask);
             try {
@@ -193,7 +193,7 @@ export async function updateCellLanguages(document: vscode.NotebookDocument): Pr
     await vscode.workspace.applyEdit(edit);
 }
 
-async function updateCellOutputs(executionTask: vscode.NotebookCellExecutionTask, cell: vscode.NotebookCell, outputs: Array<vscodeLike.NotebookCellOutput>): Promise<void> {
+async function updateCellOutputs(executionTask: vscode.NotebookCellExecution, cell: vscode.NotebookCell, outputs: Array<vscodeLike.NotebookCellOutput>): Promise<void> {
     const reshapedOutputs = outputs.map(o => new vscode.NotebookCellOutput(o.outputs.map(oi => generateVsCodeNotebookCellOutputItem(oi.data, oi.mime))));
     await executionTask.replaceOutput(reshapedOutputs, cell.index);
 }
