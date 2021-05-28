@@ -435,7 +435,7 @@ let x n =
                 ));
         }
 
-        [Fact(Skip = "The first failed sub-command cancels all subsequent command executions; the second kernel doesn't get a chance to report.")]
+        //[Fact(Skip = "The first failed sub-command cancels all subsequent command executions; the second kernel doesn't get a chance to report.")]
         public async Task diagnostics_can_be_produced_from_multiple_subkernels()
         {
             var kernel = CreateCompositeKernel(Language.FSharp);
