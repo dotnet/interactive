@@ -77,26 +77,6 @@ while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested
                 .ContainSingle<CommandSucceeded>(c => c.Command == cancelCommand);
         }
 
-        //[Fact(Skip = "intermittent deadlocks")]
-        public async Task can_cancel_user_infinite_loops()
-        {
-            var kernel = CreateKernel();
-
-            var cancelCommand = new Cancel();
-
-            var commandToRun = new SubmitCode("while(true){ await Task.Delay(10); }", targetKernelName:"csharp");
-           
-            var commandToInterrupt = kernel.SendAsync(commandToRun);
-
-            await kernel.SendAsync(cancelCommand);
-
-            await commandToInterrupt;
-
-            KernelEvents
-                .Should()
-                .ContainSingle<CommandFailed>(c => c.Command == commandToRun);
-        }
-
         [Fact]
         public async Task can_cancel_user_loop_using_CancellationToken()
         {

@@ -435,30 +435,6 @@ let x n =
                 ));
         }
 
-        //[Fact(Skip = "The first failed sub-command cancels all subsequent command executions; the second kernel doesn't get a chance to report.")]
-        public async Task diagnostics_can_be_produced_from_multiple_subkernels()
-        {
-            var kernel = CreateCompositeKernel(Language.FSharp);
-
-            var code = @"
-#!fsharp
-printfnnn """"
-
-#!csharp
-Console.WriteLin();
-";
-
-            await SubmitCode(kernel, code);
-
-            KernelEvents
-                .OfType<DiagnosticsProduced>()
-                .SelectMany(dp => dp.Diagnostics)
-                .Should()
-                .ContainSingle(d => d.Code.StartsWith("CS"))
-                .And
-                .ContainSingle(d => d.Code.StartsWith("FS"));
-        }
-
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
