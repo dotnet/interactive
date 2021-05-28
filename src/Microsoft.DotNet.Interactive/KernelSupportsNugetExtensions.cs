@@ -192,8 +192,8 @@ namespace Microsoft.DotNet.Interactive
                         return;
                     }
 
-                    InstallPackagesMessage.RegisterInstallPackagesMimeType(PlainTextFormatter.MimeType);
-
+                    System.Diagnostics.Debugger.Launch();
+                    System.Diagnostics.Debugger.Break();
                     var install = new InstallPackagesMessage(
                             kernel.RestoreSources.OrderBy(s => s).ToList(),
                             kernel.ResolvedPackageReferences.Select(s => $"{s.PackageName}, {s.PackageVersion}").OrderBy(s => s).ToList(),
