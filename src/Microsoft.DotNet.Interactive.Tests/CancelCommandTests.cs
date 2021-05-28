@@ -78,9 +78,8 @@ while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested
         }
 
      
-        // fix: does timeout
-        //[Fact]
-        private async Task can_cancel_user_loop_using_CancellationToken()
+        [Fact]
+        public async Task can_cancel_user_loop_using_CancellationToken()
         {
             var kernel = CreateKernel();
 
