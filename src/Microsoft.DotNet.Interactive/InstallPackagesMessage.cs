@@ -102,10 +102,12 @@ namespace Microsoft.DotNet.Interactive
     {
         public IEnumerable<ITypeFormatter> CreateTypeFormatters()
         {
+            System.Diagnostics.Debugger.Launch();
+            System.Diagnostics.Debugger.Break();
             return new ITypeFormatter[]
             {
-                new PlainTextFormatter<InstallPackagesMessage>(m => m.FormatAsPlainText()),
-                new HtmlFormatter<InstallPackagesMessage>(m => m.FormatAsHtml())
+                new PlainTextFormatter<InstallPackagesMessage>((m, ctxt) => m.FormatTo(ctxt, PlainTextFormatter.MimeType)),
+                new HtmlFormatter<InstallPackagesMessage>((m, ctxt) => m.FormatTo(ctxt, HtmlFormatter.MimeType))
             };
         }
     }
