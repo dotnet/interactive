@@ -6,7 +6,7 @@ namespace Microsoft.DotNet.Interactive.Commands
     internal class AnonymousKernelCommand : KernelCommand
     {
         public AnonymousKernelCommand(
-            KernelCommandInvocation handler, 
+            KernelCommandInvocation handler,
             string targetKernelName = null,
             KernelCommand parent = null)
             : base(targetKernelName, parent)
