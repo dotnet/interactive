@@ -9,12 +9,12 @@ using System.Reflection;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    internal class Destructurer<T> :
+    public class Destructurer<T> :
         IDestructurer<T>,
         IDestructurer
     {
-        private static readonly object lockObj = new();
-        private static IDictionary<string, Func<T, object>> getters;
+        private static readonly object _lockObj = new();
+        private static IDictionary<string, Func<T, object>> _getters;
 
         internal readonly IDictionary<string, Func<T, object>> _instanceGetters;
 
@@ -23,28 +23,28 @@ namespace Microsoft.DotNet.Interactive.Formatting
             EnsureInitialized();
 
             _instanceGetters = new Dictionary<string, Func<T, object>>(StringComparer.OrdinalIgnoreCase)
-                .Merge(getters,
+                .Merge(_getters,
                        comparer: StringComparer.OrdinalIgnoreCase);
         }
 
         private static void EnsureInitialized()
         {
-            if (getters is not null)
+            if (_getters is not null)
             {
                 return;
             }
 
-            lock (lockObj)
+            lock (_lockObj)
             {
                 // while the double-checked lock is not 100% reliable, multiple initialization is safe in this case. the static setters are not modified (per T) after initialization, so this is a performance optimization to avoid taking locks during read operations.
-                if (getters is not null)
+                if (_getters is not null)
                 {
                     return;
                 }
 
                 var members = typeof(T).GetMembersToFormat();
 
-                getters = members
+                _getters = members
                     .ToDictionary(member => member.Name,
                                   member => new Getter(member).GetValue,
                                   StringComparer.OrdinalIgnoreCase);
@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             public Func<T, object> GetValue { get; set; }
         }
 
-        public IDictionary<string, object> Destructure(object instance)
+        IDictionary<string, object> IDestructurer.Destructure(object instance)
         {
             return Destructure((T) instance);
         }

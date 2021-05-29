@@ -34,7 +34,7 @@ sequenceDiagram
     loop Healthcheck
         John->>John: Fight against hypochondria
     end
-    Note right of John: Rational thoughts <br/>prevail!
+    Note right of John: Rational thoughts prevail!
     John-->>Alice: Great!
     John->>Bob: How about you?
     Bob-->>John: Jolly good!
@@ -44,7 +44,7 @@ sequenceDiagram
 
 <pre>
     <code>
-typeof(List<string>).ExploreWithUmlClassDiagram().Display();
+typeof(List&lt;string&gt;).ExploreWithUmlClassDiagram().Display();
     </code>
 </pre>
     <img src=""https://mermaid-js.github.io/mermaid/img/header.png"" width=""30%"">

@@ -26,9 +26,6 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly DependencyProvider _dependencies;
 
-        // Resolution will  after 3 minutes by default
-        private int _resolutionTimeout = 180000;
-
         public PackageRestoreContext()
         {
             _dependencies = new DependencyProvider(AssemblyProbingPaths, NativeProbingRoots);
@@ -216,7 +213,7 @@ namespace Microsoft.DotNet.Interactive
                 throw new InvalidOperationException("Internal error - unable to locate the nuget package manager, please try to reinstall.");
             }
 
-            return _dependencies.Resolve(iDependencyManager, ".csx", packageManagerTextLines, reportError, executionTfm, default, default, default, default, _resolutionTimeout);
+            return _dependencies.Resolve(iDependencyManager, ".csx", packageManagerTextLines, reportError, executionTfm);
         }
 
         public async Task<PackageRestoreResult> RestoreAsync()

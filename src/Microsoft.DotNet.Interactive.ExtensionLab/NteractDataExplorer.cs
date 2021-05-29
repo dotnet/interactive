@@ -13,11 +13,22 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
     public class NteractDataExplorer: DataExplorer<TabularDataResource>
     {
         private static Uri _defaultLibraryUri;
+
         private static string _defaultLibraryVersion;
+
         private static string _defaultCacheBuster;
 
+        public NteractDataExplorer(TabularDataResource data) : base(data)
+        {
+            LibraryUri = _defaultLibraryUri;
+            LibraryVersion = _defaultLibraryVersion;
+            CacheBuster = _defaultCacheBuster;
+        }
+
         public Uri LibraryUri { get; set; }
+
         public string LibraryVersion { get; set; }
+
         public string CacheBuster { get; set; }
 
         public static void SetDefaultConfiguration(Uri libraryUri, string libraryVersion, string cacheBuster)
@@ -30,12 +41,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public static void ResetDefaultConfiguration()
         {
             SetDefaultConfiguration(null, null, null);
-        }
-        public NteractDataExplorer(TabularDataResource data) : base(data)
-        {
-            LibraryUri = _defaultLibraryUri;
-            LibraryVersion = _defaultLibraryVersion;
-            CacheBuster = _defaultCacheBuster;
         }
 
         protected override IHtmlContent ToHtml()
