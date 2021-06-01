@@ -24,6 +24,10 @@ export function endExecution(cell: vscode.NotebookCell, success: boolean) {
     notebookControllers.endExecution(cell, success);
 }
 
+export function getCellOutputItems(cellOutput: vscode.NotebookCellOutput): vscode.NotebookCellOutputItem[] {
+    return cellOutput.outputs;
+}
+
 export function createErrorOutput(message: string, outputId?: string): vscodeLike.NotebookCellOutput {
     const errorObject = {
         ename: 'Error',

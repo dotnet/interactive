@@ -108,7 +108,13 @@ export class DotNetNotebookKernel {
                 const client = await this.clientMapper.getOrAddClient(cell.notebook.uri);
                 executionTask.token.onCancellationRequested(() => {
                     const errorOutput = this.createErrorOutput("Cell execution cancelled by user");
-                    const resultPromise = () => updateCellOutputs(executionTask, cell, [...cell.outputs, errorOutput])
+                    // the API is changing between stable and insiders, and this is a temporary re-working of the shape
+                    const cellOutputs = cell.outputs.map(o => ({
+                        id: o.id,
+                        items: o.outputs, // this propery was renamed
+                        metadata: o.metadata,
+                    }));
+                    const resultPromise = () => updateCellOutputs(executionTask, cell, [...cellOutputs, errorOutput])
                         .then(() => endExecution(cell, false));
                     client.cancel()
                         .then(resultPromise)
@@ -179,7 +185,7 @@ export async function updateCellLanguages(document: vscode.NotebookDocument): Pr
 }
 
 async function updateCellOutputs(executionTask: vscode.NotebookCellExecutionTask, cell: vscode.NotebookCell, outputs: Array<vscodeLike.NotebookCellOutput>): Promise<void> {
-    const reshapedOutputs = outputs.map(o => new vscode.NotebookCellOutput(o.outputs.map(oi => generateVsCodeNotebookCellOutputItem(oi.mime, oi.data))));
+    const reshapedOutputs = outputs.map(o => new vscode.NotebookCellOutput(o.items.map(oi => generateVsCodeNotebookCellOutputItem(oi.mime, oi.data))));
     await executionTask.replaceOutput(reshapedOutputs, cell.index);
 }
 

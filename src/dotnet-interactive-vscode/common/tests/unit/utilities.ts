@@ -69,7 +69,7 @@ export function decodeNotebookCellOutputs(outputs: vscodeLike.NotebookCellOutput
     jsonLikeMimes.add('application/json');
     jsonLikeMimes.add(vscodeLike.ErrorOutputMimeType);
     return outputs.map(o => ({
-        ...o, outputs: o.outputs.map(oi => {
+        ...o, items: o.items.map(oi => {
             const decoded = decodeToString(oi.data);
             let result = <any>{
                 ...oi,

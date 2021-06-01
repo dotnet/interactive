@@ -32,6 +32,10 @@ export function endExecution(cell: vscode.NotebookCell, success: boolean) {
     notebookControllers.endExecution(cell, success);
 }
 
+export function getCellOutputItems(cellOutput: vscode.NotebookCellOutput): vscode.NotebookCellOutputItem[] {
+    return cellOutput.items;
+}
+
 export function createErrorOutput(message: string, outputId?: string): vscodeLike.NotebookCellOutput {
     const error = { name: 'Error', message };
     const errorItem = vscode.NotebookCellOutputItem.error(error);
@@ -79,7 +83,7 @@ export async function createNewBlankNotebook(extension: string, _openNotebook: (
         }
     });
     const content = new vscode.NotebookData([cell], documentMetadata);
-    const notebook = await vscode.notebook.openNotebookDocument(viewType, content);
+    const notebook = await vscode.notebooks.openNotebookDocument(viewType, content);
     const _editor = await vscode.window.showNotebookDocument(notebook);
 }
 
@@ -107,7 +111,7 @@ export async function openNotebookFromUrl(notebookUrl: string, clientMapper: Cli
             const content = new Uint8Array(arrayBuffer);
             const cancellationTokenSource = new vscode.CancellationTokenSource();
             const notebookData = await serializer.deserializeNotebook(content, cancellationTokenSource.token);
-            const notebook = await vscode.notebook.openNotebookDocument(viewType, notebookData);
+            const notebook = await vscode.notebooks.openNotebookDocument(viewType, notebookData);
             const _editor = await vscode.window.showNotebookDocument(notebook);
         } catch (e) {
             vscode.window.showWarningMessage(`Unable to read notebook from '${notebookUrl}': ${e}`);

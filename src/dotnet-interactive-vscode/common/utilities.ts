@@ -68,7 +68,7 @@ export function createOutput(outputItems: Array<NotebookCellOutputItem>, outputI
 
     const output: NotebookCellOutput = {
         id: outputId,
-        outputs: outputItems,
+        items: outputItems,
     };
     return output;
 }

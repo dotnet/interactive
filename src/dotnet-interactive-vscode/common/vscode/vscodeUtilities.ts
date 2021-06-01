@@ -8,6 +8,7 @@ import { Diagnostic, DiagnosticSeverity, LinePosition, LinePositionSpan, Noteboo
 
 import { getSimpleLanguage } from '../interactiveNotebook';
 import * as vscodeLike from '../interfaces/vscode-like';
+import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 
 export function isInsidersBuild(): boolean {
     return vscode.version.indexOf('-insider') >= 0;
@@ -88,7 +89,8 @@ export function toNotebookCell(cell: vscode.NotebookCell): NotebookCell {
 }
 
 export function vsCodeCellOutputToContractCellOutput(output: vscode.NotebookCellOutput): NotebookCellOutput {
-    const errorOutputItems = output.outputs.filter(oi => oi.mime === vscodeLike.ErrorOutputMimeType || oi.metadata?.mimeType === vscodeLike.ErrorOutputMimeType);
+    const outputItems = versionSpecificFunctions.getCellOutputItems(output);
+    const errorOutputItems = outputItems.filter(oi => oi.mime === vscodeLike.ErrorOutputMimeType || oi.metadata?.mimeType === vscodeLike.ErrorOutputMimeType);
     if (errorOutputItems.length > 0) {
         // any error-like output takes precedence
         const errorOutputItem = errorOutputItems[0];
@@ -101,7 +103,7 @@ export function vsCodeCellOutputToContractCellOutput(output: vscode.NotebookCell
     } else {
         //otherwise build the mime=>value dictionary
         const data: { [key: string]: any } = {};
-        for (const outputItem of output.outputs) {
+        for (const outputItem of outputItems) {
             data[outputItem.mime] = outputItem.data;
         }
 

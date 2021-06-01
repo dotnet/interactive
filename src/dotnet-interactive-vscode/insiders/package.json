@@ -62,7 +62,7 @@
   "contributes": {
     "notebooks": [
       {
-        "viewType": "dotnet-interactive",
+        "type": "dotnet-interactive",
         "displayName": ".NET Interactive Notebook",
         "selector": [
           {
@@ -71,7 +71,7 @@
         ]
       },
       {
-        "viewType": "dotnet-interactive-legacy",
+        "type": "dotnet-interactive-legacy",
         "displayName": ".NET Interactive Notebook",
         "selector": [
           {
