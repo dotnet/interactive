@@ -73,6 +73,7 @@ export class HoverProvider implements vscode.HoverProvider {
     }
 
     provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.ProviderResult<vscode.Hover> {
+
         const hoverPromise = provideHover(this.clientMapper, getSimpleLanguage(document.languageId), document, position, this.languageServiceDelay);
         return ensureErrorsAreRejected(hoverPromise, result => {
             const contents = result.isMarkdown
