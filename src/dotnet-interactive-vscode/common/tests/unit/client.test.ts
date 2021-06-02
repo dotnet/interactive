@@ -79,7 +79,7 @@ describe('InteractiveClient tests', () => {
         expect(decodedResults).to.deep.equal([
             {
                 id: '1',
-                outputs: [
+                items: [
                     {
                         mime: 'text/plain',
                         decodedData: 'deferred output',
@@ -88,7 +88,7 @@ describe('InteractiveClient tests', () => {
             },
             {
                 id: '2',
-                outputs: [
+                items: [
                     {
                         mime: 'text/html',
                         decodedData: '2',
@@ -161,7 +161,7 @@ describe('InteractiveClient tests', () => {
         expect(decodedResults).to.deep.equal([
             {
                 id: '1',
-                outputs: [
+                items: [
                     {
                         mime: 'text/plain',
                         decodedData: 'deferred output',
@@ -170,7 +170,7 @@ describe('InteractiveClient tests', () => {
             },
             {
                 id: '3',
-                outputs: [
+                items: [
                     {
                         mime: 'text/html',
                         decodedData: '2',
@@ -258,7 +258,7 @@ describe('InteractiveClient tests', () => {
         expect(decodedResults).to.deep.equal([
             {
                 id: '1',
-                outputs: [
+                items: [
                     {
                         mime: 'text/plain',
                         decodedData: 'deferred output 1',
@@ -267,7 +267,7 @@ describe('InteractiveClient tests', () => {
             },
             {
                 id: '4',
-                outputs: [
+                items: [
                     {
                         mime: 'text/html',
                         decodedData: '2',
@@ -276,7 +276,7 @@ describe('InteractiveClient tests', () => {
             },
             {
                 id: '3',
-                outputs: [
+                items: [
                     {
                         mime: 'text/plain',
                         decodedData: 'deferred output 2',
@@ -342,7 +342,7 @@ describe('InteractiveClient tests', () => {
         expect(decodedResults1).to.deep.equal([
             {
                 id: '1',
-                outputs: [
+                items: [
                     {
                         mime: 'text/html',
                         decodedData: '1',
@@ -361,7 +361,7 @@ describe('InteractiveClient tests', () => {
         expect(decodedResults1).to.deep.equal([
             {
                 id: '2',
-                outputs: [
+                items: [
                     {
                         mime: 'text/html',
                         decodedData: '2',
@@ -481,7 +481,7 @@ describe('InteractiveClient tests', () => {
                     const decodedOutputs = decodeNotebookCellOutputs(seenOutputs);
                     expect(decodedOutputs).to.deep.equal([{
                         id: '1',
-                        outputs: [{
+                        items: [{
                             mime: vscodeLike.ErrorOutputMimeType,
                             decodedData: {
                                 name: 'Error',

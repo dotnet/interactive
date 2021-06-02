@@ -46,7 +46,6 @@ abstract class DotNetNotebookSerializer implements vscode.NotebookSerializer {
         }
 
         const notebookData: vscode.NotebookData = {
-            metadata: new vscode.NotebookDocumentMetadata().with({ cellHasExecutionOrder: false }),
             cells: notebookCells.map(toVsCodeNotebookCellData)
         };
         return notebookData;
@@ -86,7 +85,7 @@ export class DotNetDibNotebookSerializer extends DotNetNotebookSerializer {
 
     static registerNotebookSerializer(context: vscode.ExtensionContext, notebookType: string, clientMapper: ClientMapper, outputChannel: OutputChannelAdapter) {
         const serializer = new DotNetDibNotebookSerializer(clientMapper, outputChannel);
-        const notebookSerializer = vscode.notebook.registerNotebookSerializer(notebookType, serializer);
+        const notebookSerializer = vscode.notebooks.registerNotebookSerializer(notebookType, serializer);
         context.subscriptions.push(notebookSerializer);
     }
 }
@@ -98,7 +97,7 @@ export class DotNetLegacyNotebookSerializer extends DotNetNotebookSerializer {
 
     static registerNotebookSerializer(context: vscode.ExtensionContext, notebookType: string, clientMapper: ClientMapper, outputChannel: OutputChannelAdapter) {
         const serializer = new DotNetLegacyNotebookSerializer(clientMapper, outputChannel);
-        const notebookSerializer = vscode.notebook.registerNotebookSerializer(notebookType, serializer);
+        const notebookSerializer = vscode.notebooks.registerNotebookSerializer(notebookType, serializer);
         context.subscriptions.push(notebookSerializer);
     }
 }

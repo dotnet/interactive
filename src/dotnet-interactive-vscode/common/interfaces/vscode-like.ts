@@ -13,13 +13,12 @@ export const ErrorOutputMimeType = 'application/vnd.code.notebook.error';
 export interface NotebookCellOutputItem {
     readonly mime: string;
     readonly data: Uint8Array;
-    readonly metadata?: { [key: string]: any };
     [key: string]: any; // this is to make compilation on stable happy
 }
 
 export interface NotebookCellOutput {
     id: string;
-    outputs: NotebookCellOutputItem[];
+    items: NotebookCellOutputItem[];
     metadata?: { [key: string]: any };
 }
 
@@ -28,21 +27,6 @@ export enum NotebookCellRunState {
     Idle = 2,
     Success = 3,
     Error = 4
-}
-
-export interface NotebookCellMetadata {
-    editable?: boolean,
-    breakpointMargin?: boolean,
-    runnable?: boolean,
-    hasExecutionOrder?: boolean,
-    executionOrder?: number,
-    runState?: NotebookCellRunState,
-    runStartTime?: number,
-    statusMessage?: string,
-    lastRunDuration?: number,
-    inputCollapsed?: boolean,
-    outputCollapsed?: boolean,
-    custom?: Record<string, any>,
 }
 
 export interface Uri {
@@ -72,7 +56,7 @@ export interface NotebookCellData {
     source: string;
     language: string;
     outputs: NotebookCellOutput[];
-    metadata?: NotebookCellMetadata;
+    metadata?: { [key: string]: any };
 }
 
 export interface NotebookDocumentBackup {

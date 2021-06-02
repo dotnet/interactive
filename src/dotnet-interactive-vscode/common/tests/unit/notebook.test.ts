@@ -76,7 +76,7 @@ describe('Notebook tests', () => {
             expect(decodedResults).to.deep.equal([
                 {
                     id: '1',
-                    outputs: [
+                    items: [
                         {
                             mime: 'text/html',
                             decodedData: '2',
@@ -164,7 +164,7 @@ Console.WriteLine(1);
         expect(decodedResults).to.deep.equal([
             {
                 id: '1',
-                outputs: [
+                items: [
                     {
                         mime: 'text/plain',
                         decodedData: '1\r\n',
@@ -173,7 +173,7 @@ Console.WriteLine(1);
             },
             {
                 id: '2',
-                outputs: [
+                items: [
                     {
                         mime: 'text/plain',
                         decodedData: '2\r\n',
@@ -182,7 +182,7 @@ Console.WriteLine(1);
             },
             {
                 id: '3',
-                outputs: [
+                items: [
                     {
                         mime: 'text/plain',
                         decodedData: '3\r\n',
@@ -260,7 +260,7 @@ Console.WriteLine(1);
         expect(decodedResults).to.deep.equal([
             {
                 id: '2',
-                outputs: [
+                items: [
                     {
                         mime: 'text/plain',
                         decodedData: 'Installed package Newtonsoft.Json version 1.2.3.4',
@@ -269,7 +269,7 @@ Console.WriteLine(1);
             },
             {
                 id: '3',
-                outputs: [
+                items: [
                     {
                         mime: 'text/plain',
                         decodedData: 'sentinel',
@@ -326,7 +326,7 @@ Console.WriteLine(1);
         expect(decodedResults).to.deep.equal([
             {
                 id: '1',
-                outputs: [
+                items: [
                     {
                         mime: 'application/json',
                         decodedData: {
