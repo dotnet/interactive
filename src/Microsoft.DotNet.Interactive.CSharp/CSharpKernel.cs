@@ -54,6 +54,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         internal ScriptOptions ScriptOptions;
 
         private readonly AssemblyBasedExtensionLoader _extensionLoader = new();
+        private readonly ScriptBasedExtensionLoader _scriptExtensionLoader = new();
 
         private string _workingDirectory;
 
@@ -428,6 +429,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
             KernelInvocationContext context)
         {
             await _extensionLoader.LoadFromDirectoryAsync(
+                directory,
+                this,
+                context);
+
+            await _scriptExtensionLoader.LoadFromDirectoryAsync(
                 directory,
                 this,
                 context);

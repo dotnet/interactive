@@ -107,5 +107,27 @@ namespace Microsoft.DotNet.Interactive.Tests
                         .Should()
                         .Contain("SimpleExtension");
         }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task it_loads_script_extension_found_in_nuget_package(Language language)
+        {
+            var extensionPackage = KernelExtensionTestHelper.GetOrCreateScriptBasedExtensionPackage();
+
+            var kernel = CreateKernel(language);
+
+            await kernel.SubmitCodeAsync($@"
+#i ""nuget:{extensionPackage.PackageLocation}""
+#r ""nuget:{extensionPackage.Name},{extensionPackage.Version}""");
+
+            KernelEvents.Should()
+                        .ContainSingle<ReturnValueProduced>()
+                        .Which
+                        .Value
+                        .As<string>()
+                        .Should()
+                        .Contain("ScriptExtension");
+        }
     }
 }

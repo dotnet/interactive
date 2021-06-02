@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Tests.Utility
@@ -18,8 +19,10 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
     {
         private static readonly object _simpleExtensionPackageLock = new();
         private static readonly object _fileProviderExtensionPackageLock = new();
+        private static readonly object _scriptBasedExtensionPackageLock = new();
         private static ExtensionPackage _simpleExtensionPackage;
         private static ExtensionPackage _fileProviderExtensionPackage;
+        private static ExtensionPackage _scriptBasedExtensionPackage;
 
         private static readonly string _microsoftDotNetInteractiveDllPath = typeof(IKernelExtension).Assembly.Location;
 
@@ -71,6 +74,36 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             return _fileProviderExtensionPackage;
         }
 
+        public static ExtensionPackage GetOrCreateScriptBasedExtensionPackage()
+        {
+            lock (_scriptBasedExtensionPackageLock)
+            {
+                if (_scriptBasedExtensionPackage is null)
+                {
+                    var projectDir = DirectoryUtility.CreateDirectory();
+                    var packageName = $"MyTestExtension.{Path.GetRandomFileName()}";
+                    var packageVersion = "2.0.0-" + Guid.NewGuid().ToString("N");
+
+                    var extensionScriptPath = new FileInfo(Path.Combine(projectDir.FullName, "extension.dib"));
+                    var extensionScriptContent = @"
+#! csharp
+""ScriptExtension""
+";
+                    File.WriteAllText(extensionScriptPath.FullName, extensionScriptContent);
+
+                    _scriptBasedExtensionPackage = KernelExtensionTestHelper.CreateExtensionNupkg(
+                        projectDir,
+                        "// this extension does nothing from the assembly",
+                        packageName,
+                        packageVersion,
+                        additionalPackageFiles: new[] { (extensionScriptPath, "interactive-extensions/dotnet") },
+                        timeout: TimeSpan.FromMinutes(5)).Result;
+                }
+            }
+
+            return _scriptBasedExtensionPackage;
+        }
+
         public static async Task<ExtensionPackage> CreateExtensionNupkg(
             DirectoryInfo projectDir,
             string code,
@@ -78,10 +111,16 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             string packageVersion,
             IReadOnlyCollection<PackageReference> packageReferences = null, 
             FileInfo fileToEmbed = null,
+            (FileInfo content, string packagePath)[] additionalPackageFiles = null,
             TimeSpan? timeout = null)
         {
             var packageReferencesXml = GeneratePackageReferencesFragment(packageReferences);
             var embeddedResourcesXml = GenerateEmbeddedResourceFragment(fileToEmbed);
+
+            additionalPackageFiles ??= Array.Empty<(FileInfo, string)>();
+            var allPackageFiles = new List<(string filePath, string packagePath)>();
+            allPackageFiles.Add(($"$(OutputPath)/{packageName}.dll", "interactive-extensions/dotnet"));
+            allPackageFiles.AddRange(additionalPackageFiles.Select(item => (item.content.FullName, item.packagePath)));
 
             var extensionCode = fileToEmbed is null 
                                     ? ExtensionCs(code) 
@@ -101,7 +140,12 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include=""$(OutputPath)/{packageName}.dll"" Pack=""true"" PackagePath=""interactive-extensions/dotnet"" />
+    {string.Join("\n", allPackageFiles.Select(item =>
+                                            new XElement("None",
+                                                new XAttribute("Include", item.filePath),
+                                                new XAttribute("Pack", "true"),
+                                                new XAttribute("PackagePath", item.packagePath)
+                                            ).ToString()))}
   </ItemGroup>
 
   {packageReferencesXml}

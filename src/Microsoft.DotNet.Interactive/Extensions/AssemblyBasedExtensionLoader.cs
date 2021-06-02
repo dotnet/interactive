@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.Interactive.Extensions
                 {
                     using var op = new ConfirmationLogger(
                         Log.Category,
-                        message: "Loading extensions in directory {directory}",
+                        message: $"Loading extensions in directory {directory}",
                         logOnStart: true,
                         args: new object[] { directory });
 
