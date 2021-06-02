@@ -8,7 +8,7 @@ import { debounceAndReject } from '../utilities';
 
 export function provideHover(clientMapper: ClientMapper, language: string, document: Document, position: PositionLike, languageServiceDelay: number, token?: string | undefined): Promise<HoverResult> {
     return debounceAndReject(`hover-${document.uri.toString()}`, languageServiceDelay, async () => {
-        const client = await clientMapper.getOrAddClient(document.uri);
+        const client = await clientMapper.getOrAddClient(document.notebook?.uri || document.uri);
         const hoverText = await client.hover(language, document.getText(), position.line, position.character, token);
         const content = hoverText.content.sort((a, b) => mimeTypeToPriority(a.mimeType) - mimeTypeToPriority(b.mimeType))[0];
         const hoverResult = {

@@ -38,6 +38,7 @@ export interface Uri {
 export interface Document {
     uri: Uri;
     getText: { (): string };
+    notebook?: NotebookDocument | undefined;
 }
 
 export interface NotebookCell {
@@ -48,7 +49,7 @@ export interface NotebookCell {
 }
 
 export interface NotebookDocument {
-    readonly cells: ReadonlyArray<NotebookCell>;
+    readonly uri: Uri;
 }
 
 export interface NotebookCellData {

@@ -25,7 +25,11 @@ export class ClientMapper {
     }
 
     static keyFromUri(uri: Uri): string {
-        return uri.toString();
+        const key = uri.toString();
+        if (key.startsWith("vscode-notebook-cell")) {
+            throw new Error("vscode-notebook-cell is not supported");
+        }
+        return key;
     }
 
     tryGetClient(uri: Uri): Promise<InteractiveClient | undefined> {
