@@ -28,6 +28,14 @@ export function getCellOutputItems(cellOutput: vscode.NotebookCellOutput): vscod
     return cellOutput.outputs;
 }
 
+export function getNotebookType(notebook: vscode.NotebookDocument): string {
+    return notebook.viewType;
+}
+
+export const onDidCloseNotebookDocument: vscode.Event<vscode.NotebookDocument> = vscode.notebook.onDidCloseNotebookDocument;
+
+export const notebookDocuments: ReadonlyArray<vscode.NotebookDocument> = vscode.notebook.notebookDocuments;
+
 export function createErrorOutput(message: string, outputId?: string): vscodeLike.NotebookCellOutput {
     const errorObject = {
         ename: 'Error',

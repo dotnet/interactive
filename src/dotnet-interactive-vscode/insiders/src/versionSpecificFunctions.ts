@@ -36,6 +36,14 @@ export function getCellOutputItems(cellOutput: vscode.NotebookCellOutput): vscod
     return cellOutput.items;
 }
 
+export function getNotebookType(notebook: vscode.NotebookDocument): string {
+    return notebook.notebookType;
+}
+
+export const onDidCloseNotebookDocument: vscode.Event<vscode.NotebookDocument> = vscode.notebooks.onDidCloseNotebookDocument;
+
+export const notebookDocuments: ReadonlyArray<vscode.NotebookDocument> = vscode.notebooks.notebookDocuments;
+
 export function createErrorOutput(message: string, outputId?: string): vscodeLike.NotebookCellOutput {
     const error = { name: 'Error', message };
     const errorItem = vscode.NotebookCellOutputItem.error(error);
@@ -58,7 +66,7 @@ export async function createNewBlankNotebook(extension: string, _openNotebook: (
     }
 
     const ipynbLanguageName = ipynbUtilities.mapIpynbLanguageName(notebookLanguage);
-    const cellMetadata = new vscode.NotebookCellMetadata().with({
+    const cellMetadata = {
         custom: {
             metadata: {
                 dotnet_interactive: {
@@ -66,9 +74,9 @@ export async function createNewBlankNotebook(extension: string, _openNotebook: (
                 }
             }
         }
-    });
+    };
     const cell = new vscode.NotebookCellData(vscode.NotebookCellKind.Code, '', `dotnet-interactive.${ipynbLanguageName}`, undefined, cellMetadata);
-    const documentMetadata = new vscode.NotebookDocumentMetadata().with({
+    const documentMetadata = {
         custom: {
             metadata: {
                 kernelspec: {
@@ -81,8 +89,9 @@ export async function createNewBlankNotebook(extension: string, _openNotebook: (
                 }
             }
         }
-    });
-    const content = new vscode.NotebookData([cell], documentMetadata);
+    };
+    const content = new vscode.NotebookData([cell]);
+    content.metadata = documentMetadata;
     const notebook = await vscode.notebooks.openNotebookDocument(viewType, content);
     const _editor = await vscode.window.showNotebookDocument(notebook);
 }

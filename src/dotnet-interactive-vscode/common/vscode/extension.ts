@@ -171,7 +171,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     registerFileCommands(context, clientMapper);
 
-    context.subscriptions.push(vscode.notebook.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
+    context.subscriptions.push(versionSpecificFunctions.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
     context.subscriptions.push(vscode.workspace.onDidRenameFiles(e => handleFileRenames(e, clientMapper)));
 
     // language registration
@@ -205,7 +205,7 @@ async function waitForSdkInstall(requiredSdkVersion: string): Promise<void> {
 async function updateNotebookCellLanguageInMetadata(candidateNotebookCellDocument: vscode.TextDocument) {
     const notebook = candidateNotebookCellDocument.notebook;
     if (notebook &&
-        isJupyterNotebookViewType(notebook.viewType) &&
+        isJupyterNotebookViewType(versionSpecificFunctions.getNotebookType(notebook)) &&
         isDotnetInteractiveLanguage(candidateNotebookCellDocument.languageId)) {
         const cell = notebook.getCells().find(c => c.document === candidateNotebookCellDocument);
         if (cell) {

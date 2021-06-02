@@ -90,7 +90,7 @@ export function toNotebookCell(cell: vscode.NotebookCell): NotebookCell {
 
 export function vsCodeCellOutputToContractCellOutput(output: vscode.NotebookCellOutput): NotebookCellOutput {
     const outputItems = versionSpecificFunctions.getCellOutputItems(output);
-    const errorOutputItems = outputItems.filter(oi => oi.mime === vscodeLike.ErrorOutputMimeType || oi.metadata?.mimeType === vscodeLike.ErrorOutputMimeType);
+    const errorOutputItems = outputItems.filter(oi => oi.mime === vscodeLike.ErrorOutputMimeType);
     if (errorOutputItems.length > 0) {
         // any error-like output takes precedence
         const errorOutputItem = errorOutputItems[0];

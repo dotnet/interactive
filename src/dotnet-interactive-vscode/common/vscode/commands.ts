@@ -131,7 +131,7 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.stopAllNotebookKernels', async () => {
-        vscode.notebook.notebookDocuments
+        versionSpecificFunctions.notebookDocuments
             .filter(document => clientMapper.isDotNetClient(document.uri))
             .forEach(async document => await vscode.commands.executeCommand('dotnet-interactive.stopCurrentNotebookKernel', document));
     }));

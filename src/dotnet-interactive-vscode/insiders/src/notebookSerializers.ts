@@ -46,7 +46,6 @@ abstract class DotNetNotebookSerializer implements vscode.NotebookSerializer {
         }
 
         const notebookData: vscode.NotebookData = {
-            metadata: new vscode.NotebookDocumentMetadata().with({ cellHasExecutionOrder: false }),
             cells: notebookCells.map(toVsCodeNotebookCellData)
         };
         return notebookData;
