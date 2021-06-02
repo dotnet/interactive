@@ -45,6 +45,7 @@ type FSharpKernel () as this =
     let script = lazy createScript ()
 
     let extensionLoader: AssemblyBasedExtensionLoader = AssemblyBasedExtensionLoader()
+    let scriptExtensionLoader: ScriptBasedExtensionLoader = ScriptBasedExtensionLoader()
 
     let mutable cancellationTokenSource = new CancellationTokenSource()
 
@@ -456,4 +457,7 @@ type FSharpKernel () as this =
 
     interface IExtensibleKernel with
         member this.LoadExtensionsFromDirectoryAsync(directory:DirectoryInfo, context:KernelInvocationContext) =
-            extensionLoader.LoadFromDirectoryAsync(directory, this, context)
+            async {
+                do! extensionLoader.LoadFromDirectoryAsync(directory, this, context) |> Async.AwaitTask
+                do! scriptExtensionLoader.LoadFromDirectoryAsync(directory, this, context) |> Async.AwaitTask
+            } |> Async.StartAsTask :> Task
