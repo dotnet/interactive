@@ -65,15 +65,15 @@ export function decodeToString(data: Uint8Array): string {
 }
 
 export function decodeNotebookCellOutputs(outputs: vscodeLike.NotebookCellOutput[]): any[] {
-    const jsonLikeMimes = new Set<string>();
-    jsonLikeMimes.add('application/json');
-    jsonLikeMimes.add(vscodeLike.ErrorOutputMimeType);
+    const jsonLikeMimeTypes = new Set<string>();
+    jsonLikeMimeTypes.add('application/json');
+    jsonLikeMimeTypes.add(vscodeLike.ErrorOutputMimeType);
     return outputs.map(o => ({
         ...o, items: o.items.map(oi => {
             const decoded = decodeToString(oi.data);
             let result = <any>{
                 ...oi,
-                decodedData: jsonLikeMimes.has(oi.mime) ? JSON.parse(decoded) : decoded,
+                decodedData: jsonLikeMimeTypes.has(oi.mime) ? JSON.parse(decoded) : decoded,
             };
             delete result.data;
             return result;
