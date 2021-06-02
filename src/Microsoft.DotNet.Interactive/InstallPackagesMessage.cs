@@ -48,17 +48,18 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private string FormatAsHtml()
+        public string FormatAsHtml()
         {
             string progress = new String('.', Progress);
             var items = new List<IHtmlContent>();
             items.Add(InstallMessage("Restore sources", RestoreSources));
             items.Add(InstallMessage("Installed Packages", InstalledPackages));
             items.Add(InstallMessage("Installing Packages", InstallingPackages, progress));
-            return div(items).ToDisplayString();
+            var r =  div(items).ToString();
+            return r;
         }
 
-        private string FormatAsPlainText()
+        public string FormatAsPlainText()
         {
             var result = new StringBuilder();
             if (RestoreSources.Count > 0)
@@ -104,8 +105,8 @@ namespace Microsoft.DotNet.Interactive
         {
             return new ITypeFormatter[]
             {
-                new PlainTextFormatter<InstallPackagesMessage>((m, ctxt) => m.FormatTo(ctxt, PlainTextFormatter.MimeType)),
-                new HtmlFormatter<InstallPackagesMessage>((m, ctxt) => m.FormatTo(ctxt, HtmlFormatter.MimeType))
+                new PlainTextFormatter<InstallPackagesMessage>((m, ctxt) => ctxt.Writer.Write(m.FormatAsPlainText())),
+                new HtmlFormatter<InstallPackagesMessage>((m, ctxt) => ctxt.Writer.Write(m.FormatAsHtml()))
             };
         }
     }
