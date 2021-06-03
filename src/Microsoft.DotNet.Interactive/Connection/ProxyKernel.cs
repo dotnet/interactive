@@ -5,17 +5,18 @@ using System;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-  public sealed class ProxyKernel : Kernel
+    public sealed class ProxyKernel : Kernel
     {
         private readonly IKernelCommandAndEventReceiver _receiver;
         private readonly IKernelCommandAndEventSender _sender;
-        private readonly CancellationTokenSource _cancellationTokenSource = new ();
+        private readonly CancellationTokenSource _cancellationTokenSource = new();
 
         public ProxyKernel(string name, IKernelCommandAndEventReceiver receiver, IKernelCommandAndEventSender sender) : base(name)
         {
@@ -49,9 +50,16 @@ namespace Microsoft.DotNet.Interactive.Connection
                 }
                 else if (d.Command is not null)
                 {
-                    var kernel = RootKernel;
-                    var result = await kernel.SendAsync(d.Command,_cancellationTokenSource.Token);
-                    result.KernelEvents.Subscribe(async e => await _sender.SendAsync(e, _cancellationTokenSource.Token));
+                    var _ = Task.Run(async () =>
+                    {
+                        var kernel = RootKernel;
+                        var eventSubscription = RootKernel.KernelEvents
+                            .Where(e => e.Command == d.Command)
+                            .Subscribe(async e => await _sender.SendAsync(e, _cancellationTokenSource.Token));
+                        var result = kernel.SendAsync(d.Command, _cancellationTokenSource.Token);
+                        await result;
+                        eventSubscription.Dispose();
+                    }, _cancellationTokenSource.Token);
                 }
             }
         }
@@ -61,7 +69,7 @@ namespace Microsoft.DotNet.Interactive.Connection
         {
             switch (command)
             {
-                case DirectiveCommand {DirectiveNode: KernelNameDirectiveNode}:
+                case DirectiveCommand { DirectiveNode: KernelNameDirectiveNode }:
                     await base.HandleAsync(command, context);
                     return;
             }
@@ -83,8 +91,8 @@ namespace Microsoft.DotNet.Interactive.Connection
 
                     }
                 });
-            
-            var _ =  _sender.SendAsync(command, context.CancellationToken);
+
+            var _ = _sender.SendAsync(command, context.CancellationToken);
             await completionSource.Task;
             sub.Dispose();
 
