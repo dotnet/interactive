@@ -40,9 +40,9 @@ export function getNotebookType(notebook: vscode.NotebookDocument): string {
     return notebook.notebookType;
 }
 
-export const onDidCloseNotebookDocument: vscode.Event<vscode.NotebookDocument> = vscode.notebooks.onDidCloseNotebookDocument;
+export const onDidCloseNotebookDocument: vscode.Event<vscode.NotebookDocument> = vscode.workspace.onDidCloseNotebookDocument;
 
-export const notebookDocuments: ReadonlyArray<vscode.NotebookDocument> = vscode.notebooks.notebookDocuments;
+export const notebookDocuments: ReadonlyArray<vscode.NotebookDocument> = vscode.workspace.notebookDocuments;
 
 export function createErrorOutput(message: string, outputId?: string): vscodeLike.NotebookCellOutput {
     const error = { name: 'Error', message };
@@ -75,7 +75,8 @@ export async function createNewBlankNotebook(extension: string, _openNotebook: (
             }
         }
     };
-    const cell = new vscode.NotebookCellData(vscode.NotebookCellKind.Code, '', `dotnet-interactive.${ipynbLanguageName}`, undefined, cellMetadata);
+    const cell = new vscode.NotebookCellData(vscode.NotebookCellKind.Code, '', `dotnet-interactive.${ipynbLanguageName}`);
+    cell.metadata = cellMetadata;
     const documentMetadata = {
         custom: {
             metadata: {
@@ -92,7 +93,7 @@ export async function createNewBlankNotebook(extension: string, _openNotebook: (
     };
     const content = new vscode.NotebookData([cell]);
     content.metadata = documentMetadata;
-    const notebook = await vscode.notebooks.openNotebookDocument(viewType, content);
+    const notebook = await vscode.workspace.openNotebookDocument(viewType, content);
     const _editor = await vscode.window.showNotebookDocument(notebook);
 }
 
@@ -120,7 +121,7 @@ export async function openNotebookFromUrl(notebookUrl: string, clientMapper: Cli
             const content = new Uint8Array(arrayBuffer);
             const cancellationTokenSource = new vscode.CancellationTokenSource();
             const notebookData = await serializer.deserializeNotebook(content, cancellationTokenSource.token);
-            const notebook = await vscode.notebooks.openNotebookDocument(viewType, notebookData);
+            const notebook = await vscode.workspace.openNotebookDocument(viewType, notebookData);
             const _editor = await vscode.window.showNotebookDocument(notebook);
         } catch (e) {
             vscode.window.showWarningMessage(`Unable to read notebook from '${notebookUrl}': ${e}`);

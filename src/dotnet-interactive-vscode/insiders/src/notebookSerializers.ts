@@ -85,7 +85,7 @@ export class DotNetDibNotebookSerializer extends DotNetNotebookSerializer {
 
     static registerNotebookSerializer(context: vscode.ExtensionContext, notebookType: string, clientMapper: ClientMapper, outputChannel: OutputChannelAdapter) {
         const serializer = new DotNetDibNotebookSerializer(clientMapper, outputChannel);
-        const notebookSerializer = vscode.notebooks.registerNotebookSerializer(notebookType, serializer);
+        const notebookSerializer = vscode.workspace.registerNotebookSerializer(notebookType, serializer);
         context.subscriptions.push(notebookSerializer);
     }
 }
@@ -97,7 +97,7 @@ export class DotNetLegacyNotebookSerializer extends DotNetNotebookSerializer {
 
     static registerNotebookSerializer(context: vscode.ExtensionContext, notebookType: string, clientMapper: ClientMapper, outputChannel: OutputChannelAdapter) {
         const serializer = new DotNetLegacyNotebookSerializer(clientMapper, outputChannel);
-        const notebookSerializer = vscode.notebooks.registerNotebookSerializer(notebookType, serializer);
+        const notebookSerializer = vscode.workspace.registerNotebookSerializer(notebookType, serializer);
         context.subscriptions.push(notebookSerializer);
     }
 }
@@ -109,12 +109,12 @@ export class DotNetJupyterNotebookSerializer extends DotNetNotebookSerializer {
 }
 
 function toVsCodeNotebookCellData(cell: contracts.NotebookCell): vscode.NotebookCellData {
-    return new vscode.NotebookCellData(
+    const cellData = new vscode.NotebookCellData(
         <number>languageToCellKind(cell.language),
         cell.contents,
-        getNotebookSpecificLanguage(cell.language),
-        cell.outputs.map(contractCellOutputToVsCodeCellOutput),
-    );
+        getNotebookSpecificLanguage(cell.language));
+    cellData.outputs = cell.outputs.map(contractCellOutputToVsCodeCellOutput);
+    return cellData;
 }
 
 function contractCellOutputToVsCodeCellOutput(output: contracts.NotebookCellOutput): vscode.NotebookCellOutput {
