@@ -146,11 +146,12 @@ namespace Microsoft.DotNet.Interactive.Utility
             GetCurrentWriter().Write(value);
         }
 
+#if NETSTANDARD2_1_OR_GREATER
         public override void Write(ReadOnlySpan<char> buffer)
         {
             GetCurrentWriter().Write(buffer);
         }
-
+#endif
         public override void Write(float value)
         {
             GetCurrentWriter().Write(value);
@@ -196,10 +197,12 @@ namespace Microsoft.DotNet.Interactive.Utility
             return GetCurrentWriter().WriteAsync(buffer, index, count);
         }
 
+#if NETSTANDARD2_1_OR_GREATER
         public override Task WriteAsync(ReadOnlyMemory<char> buffer, CancellationToken cancellationToken = new())
         {
             return GetCurrentWriter().WriteAsync(buffer, cancellationToken);
         }
+#endif
 
         public override Task WriteAsync(string value)
         {
@@ -246,10 +249,12 @@ namespace Microsoft.DotNet.Interactive.Utility
             GetCurrentWriter().WriteLine(value);
         }
 
+#if NETSTANDARD2_1_OR_GREATER
         public override void WriteLine(ReadOnlySpan<char> buffer)
         {
             GetCurrentWriter().WriteLine(buffer);
         }
+#endif
 
         public override void WriteLine(float value)
         {
@@ -306,11 +311,12 @@ namespace Microsoft.DotNet.Interactive.Utility
             return GetCurrentWriter().WriteLineAsync(buffer, index, count);
         }
 
+#if NETSTANDARD2_1_OR_GREATER
         public override Task WriteLineAsync(ReadOnlyMemory<char> buffer, CancellationToken cancellationToken = new())
         {
             return GetCurrentWriter().WriteLineAsync(buffer, cancellationToken);
         }
-
+#endif
         public override Task WriteLineAsync(string value)
         {
             return GetCurrentWriter().WriteLineAsync(value);
