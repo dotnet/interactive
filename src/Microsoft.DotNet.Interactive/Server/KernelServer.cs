@@ -6,6 +6,7 @@ using System.IO;
 using System.Reactive.Disposables;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 
@@ -36,7 +37,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
             _disposables.Add(_kernel.KernelEvents.Subscribe(async kernelEvent =>
             {
-                if (kernelEvent is ReturnValueProduced {Value: DisplayedValue})
+                if (kernelEvent is ReturnValueProduced { Value: DisplayedValue })
                 {
                     return;
                 }
@@ -60,16 +61,17 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public Task RunAsync()
         {
-            return Task.Run(async() =>
+            return Task.Run(async () =>
             {
                 await foreach (var commandOrEvent in _receiver.CommandsOrEventsAsync(_cancellationTokenSource.Token))
                 {
                     if (commandOrEvent.IsParseError)
                     {
-                       await _sender.SendAsync(commandOrEvent.Event, _cancellationTokenSource.Token);
-                    }else if (commandOrEvent.Command is { })
+                        var _ = _sender.SendAsync(commandOrEvent.Event, _cancellationTokenSource.Token);
+                    }
+                    else if (commandOrEvent.Command is { })
                     {
-                        await _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
+                        var _ = _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
                     }
                 }
             }, _cancellationTokenSource.Token);
@@ -80,5 +82,5 @@ namespace Microsoft.DotNet.Interactive.Server
             _disposables.Dispose();
         }
     }
-   
+
 }
