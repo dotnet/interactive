@@ -67,7 +67,7 @@ export class DotNetNotebookKernel {
             }
         });
         this.commonControllerInit(jupyterController);
-        this.disposables.push(vscode.notebooks.onDidOpenNotebookDocument(async notebook => {
+        this.disposables.push(vscode.workspace.onDidOpenNotebookDocument(async notebook => {
             if (notebook.notebookType === jupyterViewType && isDotNetNotebook(notebook)) {
                 jupyterController.updateNotebookAffinity(notebook, vscode.NotebookControllerAffinity.Preferred);
                 await selectDotNetInteractiveKernelForJupyter();
@@ -114,9 +114,8 @@ export class DotNetNotebookKernel {
         if (executionTask) {
             executionTasks.set(cell.document.uri.toString(), executionTask);
             try {
-                executionTask.start({
-                    startTime: Date.now(),
-                });
+                const startTime = Date.now();
+                executionTask.start(startTime);
 
 
                 executionTask.clearOutput(cell);
@@ -182,10 +181,9 @@ export async function updateCellLanguages(document: vscode.NotebookDocument): Pr
             const newCellData = new vscode.NotebookCellData(
                 cell.kind,
                 cellText,
-                newLanguage,
-                cell.outputs.concat(), // can't pass through a readonly property, so we have to make it a regular array
-                cell.metadata,
-            );
+                newLanguage);
+            newCellData.outputs = cell.outputs.concat(); // can't pass through a readonly property, so we have to make it a regular array
+            newCellData.metadata = cell.metadata;
             edit.replaceNotebookCells(document.uri, new vscode.NotebookRange(i, i + 1), [newCellData]);
         }
     }
@@ -204,10 +202,8 @@ export function endExecution(cell: vscode.NotebookCell, success: boolean) {
     const executionTask = executionTasks.get(key);
     if (executionTask) {
         executionTasks.delete(key);
-        executionTask.end({
-            success,
-            endTime: Date.now(),
-        });
+        const endTime = Date.now();
+        executionTask.end(success, endTime);
     }
 }
 
