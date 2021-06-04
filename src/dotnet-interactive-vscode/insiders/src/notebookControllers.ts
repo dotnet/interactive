@@ -60,7 +60,7 @@ export class DotNetNotebookKernel {
             this.executeHandler.bind(this),
             preloads
         );
-        jupyterController.onDidChangeNotebookAssociation(async e => {
+        jupyterController.onDidChangeSelectedNotebooks(async e => {
             // update metadata
             if (e.selected) {
                 await updateNotebookMetadata(e.notebook, this.config.clientMapper);
@@ -68,10 +68,15 @@ export class DotNetNotebookKernel {
         });
         this.commonControllerInit(jupyterController);
         this.disposables.push(vscode.workspace.onDidOpenNotebookDocument(async notebook => {
-            if (notebook.notebookType === jupyterViewType && isDotNetNotebook(notebook)) {
-                jupyterController.updateNotebookAffinity(notebook, vscode.NotebookControllerAffinity.Preferred);
-                await selectDotNetInteractiveKernelForJupyter();
-                await updateNotebookMetadata(notebook, this.config.clientMapper);
+            if (isDotNetNotebook(notebook)) {
+                // eagerly spin up the backing process
+                const _client = await config.clientMapper.getOrAddClient(notebook.uri);
+
+                if (notebook.notebookType === jupyterViewType) {
+                    jupyterController.updateNotebookAffinity(notebook, vscode.NotebookControllerAffinity.Preferred);
+                    await selectDotNetInteractiveKernelForJupyter();
+                    await updateNotebookMetadata(notebook, this.config.clientMapper);
+                }
             }
         }));
     }
@@ -116,32 +121,39 @@ export class DotNetNotebookKernel {
             try {
                 const startTime = Date.now();
                 executionTask.start(startTime);
-
-
                 executionTask.clearOutput(cell);
-                const client = await this.config.clientMapper.getOrAddClient(cell.notebook.uri);
-                executionTask.token.onCancellationRequested(() => {
-                    const errorOutput = this.config.createErrorOutput("Cell execution cancelled by user");
-                    const resultPromise = () => updateCellOutputs(executionTask, [...cell.outputs, errorOutput])
-                        .then(() => endExecution(cell, false));
-                    client.cancel()
-                        .then(resultPromise)
-                        .catch(resultPromise);
-                });
-                const source = cell.document.getText();
+                const controllerErrors: vscodeLike.NotebookCellOutput[] = [];
+
                 function outputObserver(outputs: Array<vscodeLike.NotebookCellOutput>) {
-                    updateCellOutputs(executionTask!, outputs).then(() => { });
+                    updateCellOutputs(executionTask!, [...outputs, ...controllerErrors]).then(() => { });
                 }
 
+                function displayOutputs() {
+                    outputObserver([...cell.outputs]);
+                }
+
+                const client = await this.config.clientMapper.getOrAddClient(cell.notebook.uri);
+                executionTask.token.onCancellationRequested(() => {
+                    client.cancel().catch(async err => {
+                        // command failed to cancel
+                        const cancelFailureMessage = typeof err?.message === 'string' ? <string>err.message : '' + err;
+                        const cancelFailureOutput = this.config.createErrorOutput(cancelFailureMessage);
+                        controllerErrors.push(cancelFailureOutput);
+                        displayOutputs();
+                    });
+                });
+                const source = cell.document.getText();
                 const diagnosticCollection = diagnostics.getDiagnosticCollection(cell.document.uri);
 
                 function diagnosticObserver(diags: Array<contracts.Diagnostic>) {
                     diagnosticCollection.set(cell.document.uri, diags.filter(d => d.severity !== contracts.DiagnosticSeverity.Hidden).map(vscodeUtilities.toVsCodeDiagnostic));
                 }
 
-                return client.execute(source, getSimpleLanguage(cell.document.languageId), outputObserver, diagnosticObserver, { id: cell.document.uri.toString() }).then(() =>
-                    endExecution(cell, true)
-                ).catch(() => endExecution(cell, false));
+                return client.execute(source, getSimpleLanguage(cell.document.languageId), outputObserver, diagnosticObserver, { id: cell.document.uri.toString() }).then(() => {
+                    endExecution(cell, true);
+                }).catch(() => {
+                    endExecution(cell, false);
+                });
             } catch (err) {
                 const errorOutput = this.config.createErrorOutput(`Error executing cell: ${err}`);
                 await updateCellOutputs(executionTask, [errorOutput]);
@@ -197,7 +209,6 @@ async function updateCellOutputs(executionTask: vscode.NotebookCellExecution, ou
 }
 
 export function endExecution(cell: vscode.NotebookCell, success: boolean) {
-
     const key = cell.document.uri.toString();
     const executionTask = executionTasks.get(key);
     if (executionTask) {
@@ -220,6 +231,10 @@ async function updateDocumentKernelspecMetadata(document: vscode.NotebookDocumen
 }
 
 function isDotNetNotebook(notebook: vscode.NotebookDocument): boolean {
+    if (notebook.uri.toString().endsWith('.dib')) {
+        return true;
+    }
+
     if (isDotNetNotebookMetadata(notebook.metadata)) {
         // metadata looked correct
         return true;
