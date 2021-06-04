@@ -317,13 +317,15 @@ export class InteractiveClient {
     }
 
     private submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string | undefined): Promise<void> {
-        return new Promise<void>(async (resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
+            let failureReported = false;
             token = token || this.getNextToken();
             let disposable = this.subscribeToKernelTokenEvents(token, eventEnvelope => {
                 switch (eventEnvelope.eventType) {
                     case CommandFailedType:
                         let err = <CommandFailed>eventEnvelope.event;
                         disposable.dispose();
+                        failureReported = true;
                         reject(err);
                         break;
                     case CommandSucceededType:
@@ -334,7 +336,12 @@ export class InteractiveClient {
                         break;
                 }
             });
-            await this.config.transport.submitCommand(command, commandType, token);
+            this.config.transport.submitCommand(command, commandType, token).catch(e => {
+                // only report a failure if it's not a `CommandFailed` event from above (which has already called `reject()`)
+                if (!failureReported) {
+                    reject(e);
+                }
+            });
         });
     }
 

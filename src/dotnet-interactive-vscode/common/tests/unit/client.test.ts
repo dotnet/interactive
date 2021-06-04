@@ -485,7 +485,7 @@ describe('InteractiveClient tests', () => {
                             mime: vscodeLike.ErrorOutputMimeType,
                             decodedData: {
                                 name: 'Error',
-                                message: 'Error: expected exception during submit',
+                                message: 'expected exception during submit',
                             },
                         }]
                     }]);
