@@ -129,6 +129,8 @@ export class InteractiveClient {
                 outputObserver(outputs);
             };
 
+            let failureReported = false;
+
             return this.submitCode(source, language, eventEnvelope => {
                 if (this.deferredOutput.length > 0) {
                     outputs.push(...this.deferredOutput);
@@ -146,6 +148,7 @@ export class InteractiveClient {
                             const errorOutput = this.config.createErrorOutput(err.message, this.getNextOutputId());
                             outputs.push(errorOutput);
                             reportOutputs();
+                            failureReported = true;
                             reject(err);
                         }
                         break;
@@ -199,10 +202,14 @@ export class InteractiveClient {
                         break;
                 }
             }, configuration?.token).catch(e => {
-                const errorOutput = this.config.createErrorOutput('' + e, this.getNextOutputId());
-                outputs.push(errorOutput);
-                reportOutputs();
-                reject(e);
+                // only report a failure if it's not a `CommandFailed` event from above (which has already called `reject()`)
+                if (!failureReported) {
+                    const errorMessage = typeof e?.message === 'string' ? <string>e.message : '' + e;
+                    const errorOutput = this.config.createErrorOutput(errorMessage, this.getNextOutputId());
+                    outputs.push(errorOutput);
+                    reportOutputs();
+                    reject(e);
+                }
             });
         });
     }
@@ -260,17 +267,13 @@ export class InteractiveClient {
         };
         token = token || this.getNextToken();
         let disposable = this.subscribeToKernelTokenEvents(token, observer);
-        await this.config.transport.submitCommand(command, SubmitCodeType, token);
+        await this.submitCommand(command, SubmitCodeType, token);
         return disposable;
     }
 
     cancel(token?: string | undefined): Promise<void> {
-        let command: Cancel = {
-
-        };
-
+        let command: Cancel = {};
         token = token || this.getNextToken();
-        //await this.submitCommandAndGetResult<DisplayedValueProduced>(command, CancelType, DisplayedValueProducedType, token);
         return this.submitCommand(command, CancelType, token);
     }
 
