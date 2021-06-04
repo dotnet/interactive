@@ -60,7 +60,7 @@ export class DotNetNotebookKernel {
             this.executeHandler.bind(this),
             preloads
         );
-        jupyterController.onDidChangeNotebookAssociation(async e => {
+        jupyterController.onDidChangeSelectedNotebooks(async e => {
             // update metadata
             if (e.selected) {
                 await updateNotebookMetadata(e.notebook, this.config.clientMapper);
