@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive
 {
     static class DotNetStandardHelpers
     {
-#if NETSTANDARD2_1_OR_GREATER
+#if !NETSTANDARD2_0
         static public bool GetIsCompletedSuccessfully(this Task task)
     {
         return task.IsCompletedSuccessfully;
