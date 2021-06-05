@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.Server
             try
             {
                 var byteMemory = new Memory<byte>(buffer);
-#if NETSTANDARD2_1_OR_GREATER
+#if !NETSTANDARD2_0
                 await using var ms = new MemoryStream();
                 do
                 {
