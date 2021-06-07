@@ -86,7 +86,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 
                     var extensionScriptPath = new FileInfo(Path.Combine(projectDir.FullName, "extension.dib"));
                     var extensionScriptContent = @"
-#! csharp
+#!csharp
 ""ScriptExtension""
 ";
                     File.WriteAllText(extensionScriptPath.FullName, extensionScriptContent);
