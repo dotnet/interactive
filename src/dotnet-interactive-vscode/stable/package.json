@@ -12,7 +12,7 @@
   "//version": "The version '42.42.42' is auto-set during CI package creation.",
   "version": "42.42.42",
   "engines": {
-    "vscode": "^1.56.0"
+    "vscode": "^1.57.0"
   },
   "bugs": {
     "url": "https://github.com/dotnet/interactive/issues"
@@ -42,6 +42,7 @@
   "activationEvents": [
     "onUri",
     "onNotebook:dotnet-interactive",
+    "onNotebook:dotnet-interactive-legacy",
     "onNotebook:*",
     "onCommand:dotnet-interactive.acquire",
     "onCommand:dotnet-interactive.newNotebook",
@@ -56,16 +57,25 @@
     "untrustedWorkspaces": {
       "supported": true
     },
-    "virtualWorkspaces": false
+    "virtualWorkspaces": true
   },
   "contributes": {
-    "notebookProvider": [
+    "notebooks": [
       {
-        "viewType": "dotnet-interactive",
+        "type": "dotnet-interactive",
         "displayName": ".NET Interactive Notebook",
         "selector": [
           {
-            "filenamePattern": "*.{dib,dotnet-interactive}"
+            "filenamePattern": "*.dib"
+          }
+        ]
+      },
+      {
+        "type": "dotnet-interactive-legacy",
+        "displayName": ".NET Interactive Notebook",
+        "selector": [
+          {
+            "filenamePattern": "*.dotnet-interactive"
           }
         ]
       }
@@ -124,7 +134,7 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.226101",
+          "default": "1.0.230401",
           "description": "The minimum required version of the .NET Interactive tool."
         }
       }
