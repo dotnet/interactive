@@ -111,11 +111,11 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
-        public async Task it_loads_script_extension_found_in_nuget_package(Language language)
+        public async Task it_loads_script_extension_found_in_nuget_package(Language defaultLanguage)
         {
             var extensionPackage = KernelExtensionTestHelper.GetOrCreateScriptBasedExtensionPackage();
 
-            var kernel = CreateKernel(language);
+            var kernel = CreateCompositeKernel(defaultLanguage);
 
             await kernel.SubmitCodeAsync($@"
 #i ""nuget:{extensionPackage.PackageLocation}""
