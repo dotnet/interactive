@@ -25,7 +25,7 @@ import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 import { ErrorOutputCreator } from '../../common/interactiveClient';
 
 import { isInsidersBuild, isStableBuild } from './vscodeUtilities';
-import { getDotNetMetadata } from '../ipynbUtilities';
+import { getDotNetMetadata, withDotNetCellMetadata } from '../ipynbUtilities';
 import fetch from 'node-fetch';
 
 export const KernelIdForJupyter = 'dotnet-interactive-for-jupyter';
@@ -268,15 +268,7 @@ async function updateNotebookCellLanguageInMetadata(candidateNotebookCellDocumen
 
             const dotnetMetadata = getDotNetMetadata(cell.metadata);
             if (dotnetMetadata.language !== cellLanguage) {
-                const newMetadata = cell.metadata.with({
-                    custom: {
-                        metadata: {
-                            dotnet_interactive: {
-                                language: cellLanguage
-                            }
-                        }
-                    }
-                });
+                const newMetadata = withDotNetCellMetadata(cell.metadata, cellLanguage);
                 const edit = new vscode.WorkspaceEdit();
                 edit.replaceNotebookCellMetadata(notebook.uri, cell.index, newMetadata);
                 await vscode.workspace.applyEdit(edit);
