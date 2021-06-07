@@ -14,8 +14,7 @@ import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 import * as notebookControllers from '../../notebookControllers';
 import * as ipynbUtilities from '../../common/ipynbUtilities';
 import { ReportChannel } from '../interfaces/vscode-like';
-import { IJupyterExtensionApi } from '../../jupyter';
-import { isJupyterNotebookViewType, jupyterViewType } from '../interactiveNotebook';
+import { jupyterViewType } from '../interactiveNotebook';
 
 export function registerAcquisitionCommands(context: vscode.ExtensionContext, diagnosticChannel: ReportChannel) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
@@ -245,30 +244,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
         const viewType = extension === '.dib' || extension === '.dotnet-interactive'
             ? 'dotnet-interactive'
             : jupyterViewType;
-
-        if (isJupyterNotebookViewType(viewType) && uri.scheme === 'untitled') {
-            await openNewNotebookWithJupyterExtension();
-        } else {
-            // const notebook = await vscode.notebook.openNotebookDocument(uri);
-            // await vscode.window.showNotebookDocument(notebook);
-            await vscode.commands.executeCommand('vscode.openWith', uri, viewType);
-        }
-    }
-
-    async function openNewNotebookWithJupyterExtension() {
-        const jupyterExtension = vscode.extensions.getExtension<IJupyterExtensionApi>('ms-toolsai.jupyter');
-
-        if (jupyterExtension) {
-            if (!jupyterExtension?.isActive) {
-                await jupyterExtension?.activate();
-            }
-
-            const jupyterExtensionExports = jupyterExtension?.exports;
-
-            if (jupyterExtensionExports) {
-                await jupyterExtensionExports.createBlankNotebook({ defaultCellLanguage: 'dotnet-interactive.csharp' });
-            }
-        }
+        await vscode.commands.executeCommand('vscode.openWith', uri, viewType);
     }
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.saveAsNotebook', async () => {
