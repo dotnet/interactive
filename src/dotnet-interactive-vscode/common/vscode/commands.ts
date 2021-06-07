@@ -216,6 +216,15 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
         const content = new vscode.NotebookData([cell]);
         content.metadata = documentMetadata;
         const notebook = await vscode.workspace.openNotebookDocument(viewType, content);
+
+        // The document metadata isn't preserved from the previous call.  This is addressed in the following issues:
+        // - https://github.com/microsoft/vscode-jupyter/issues/6187
+        // - https://github.com/microsoft/vscode-jupyter/issues/5622
+        // In the meantime, the metadata can be set again to ensure it's persisted.
+        const edit = new vscode.WorkspaceEdit();
+        edit.replaceNotebookMetadata(notebook.uri, documentMetadata);
+        await vscode.workspace.applyEdit(edit);
+
         const _editor = await vscode.window.showNotebookDocument(notebook);
     }
 

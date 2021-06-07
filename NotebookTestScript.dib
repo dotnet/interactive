@@ -116,7 +116,9 @@ let x = 1 +
    "outputs": [
     {
      "data": {
-      "text/html": "<div class=\"dni-plaintext\">2</div>"
+      "text/html": [
+       "<div class=\"dni-plaintext\">2</div>"
+      ]
      },
      "output_type": "unknown"
     }
@@ -128,18 +130,13 @@ let x = 1 +
  ],
  "metadata": {
   "kernelspec": {
-   "display_name": ".NET (C#)",
-   "language": "C#",
-   "name": ".net-csharp"
+   "display_name": ".NET (F#)",
+   "language": "F#",
+   "name": ".net-fsharp"
   },
   "language_info": {
-   "file_extension": ".cs",
-   "mimetype": "text/x-csharp",
-   "name": "C#",
-   "pygments_lexer": "csharp",
-   "version": "9.0"
-  },
-  "orig_nbformat": 2
+   "name": "F#"
+  }
  },
  "nbformat": 4,
  "nbformat_minor": 2
