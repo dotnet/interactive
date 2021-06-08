@@ -140,5 +140,14 @@ type KernelTests() =
 
         completionItem.Documentation.Should().Equals("Returns the average of the elements in the list.")
         
+    [<Fact>]
+    member _.``Completion items that need double backticks have the right display in tools but insert with the backticks``() =
+        let src = """
+type C() =
+    member _.``Yee Yee`` = 12
+C().
+        """
+        let completions = getCompletions 3 4 [src] |> Array.map (fun item -> item.DisplayText, item.InsertText)
 
-
+        let hasYeeYeeBackticked = completions |> Array.contains ("Yee Yee", "``Yee Yee``")
+        Assert.True(hasYeeYeeBackticked, $"Insert and display text aren't correct:\n%A{completions}")
