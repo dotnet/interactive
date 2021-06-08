@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _disposeWriter = disposeWriter;
         }
 
-        internal int Depth { get; private set; }
+        public int Depth { get; private set; }
 
         internal int TableDepth { get; private set; }
 
