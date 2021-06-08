@@ -156,7 +156,7 @@ type FSharpKernel () as this =
             let kind = getKindString declarationItem.Glyph
             let filterText = getFilterText declarationItem
             let! documentation = getDocumentation declarationItem
-            return CompletionItem(declarationItem.Name, kind, filterText=filterText, documentation=documentation)
+            return CompletionItem(declarationItem.Name, kind, filterText=filterText, documentation=documentation, insertText=declarationItem.NameInCode)
         }
 
     let getDiagnostic (error: FSharpDiagnostic) =
