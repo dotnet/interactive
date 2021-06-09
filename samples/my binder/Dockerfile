@@ -57,12 +57,14 @@ RUN dotnet_sdk_version=5.0.102 \
 COPY ./notebooks/ ${HOME}/notebooks/
 
 # Add package sources
-RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json -n dotnet-public
-RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json -n dotnet-eng
-RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json -n dotnet-tools
-RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries/nuget/v3/index.json -n dotnet-libraries
-RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json -n dotnet5
-RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/MachineLearning/nuget/v3/index.json -n MachineLearning
+RUN echo "<configuration></configuration>" > ${HOME}/NuGet.config
+RUN dotnet nuget add source https://api.nuget.org/v3/index.json -n nuget.org --configfile "${HOME}/NuGet.config"
+RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json -n dotnet-public --configfile "${HOME}/NuGet.config"
+RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json -n dotnet-eng --configfile "${HOME}/NuGet.config"
+RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json -n dotnet-tools --configfile "${HOME}/NuGet.config"
+RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries/nuget/v3/index.json -n dotnet-libraries --configfile "${HOME}/NuGet.config"
+RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json -n dotnet5 --configfile "${HOME}/NuGet.config"
+RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/MachineLearning/nuget/v3/index.json -n MachineLearning --configfile "${HOME}/NuGet.config"
 
 RUN chown -R ${NB_UID} ${HOME}
 USER ${USER}
