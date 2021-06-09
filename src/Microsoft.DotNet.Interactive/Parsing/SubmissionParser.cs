@@ -134,7 +134,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         {
                             var value = parseResult.ValueForArgument<PackageReferenceOrFileInfo>("package");
 
-                            if (value.Value is FileInfo)
+                            if (value?.Value is FileInfo)
                             {
                                 AddHoistedCommand(createCommand(directiveNode, originalCommand, lastKernelNameNode));
                             }
