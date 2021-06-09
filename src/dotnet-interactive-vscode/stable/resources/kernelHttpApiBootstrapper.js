@@ -1,10 +1,12 @@
 (function (global) {
+    console.log("Initializaing .NET Interactive http api");
     if (!global) {
         global = window;
     }
-    const vscode = acquireVsCodeApi();
+
     const timerId = global.setInterval(() => {
-        vscode.postMessage({
+        console.log('Sending getHttpApiEndpoint Command');
+        postKernelMessage({
             command: 'getHttpApiEndpoint'
         });
     }, 500);
@@ -14,14 +16,14 @@
     }
 
     // Handle the message inside the webview
-    global.addEventListener('message', event => {
+    onDidReceiveKernelMessage(event => {
 
-        const message = event.data; // The JSON data our extension sent
+        const message = event;
 
         switch (message.command) {
             case 'resetFactories':
                 clearApiRequest();
-                vscode.postMessage({
+                postKernelMessage({
                     command: 'getHttpApiEndpoint'
                 });
                 break;

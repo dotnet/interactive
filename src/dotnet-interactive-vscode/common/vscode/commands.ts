@@ -11,9 +11,10 @@ import { DotNetPathManager, KernelIdForJupyter } from './extension';
 import { computeToolInstallArguments, executeSafe, executeSafeAndLog } from '../utilities';
 
 import * as versionSpecificFunctions from '../../versionSpecificFunctions';
+import * as notebookControllers from '../../notebookControllers';
+import * as ipynbUtilities from '../../common/ipynbUtilities';
 import { ReportChannel } from '../interfaces/vscode-like';
-import { IJupyterExtensionApi } from '../../jupyter';
-import { isJupyterNotebookViewType, jupyterViewType } from '../interactiveNotebook';
+import { jupyterViewType } from '../interactiveNotebook';
 
 export function registerAcquisitionCommands(context: vscode.ExtensionContext, diagnosticChannel: ReportChannel) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
@@ -123,7 +124,7 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
 
         if (document) {
             for (const cell of document.getCells()) {
-                versionSpecificFunctions.endExecution(cell, false);
+                notebookControllers.endExecution(cell, false);
             }
 
             clientMapper.closeClient(document.uri);
@@ -131,7 +132,7 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.stopAllNotebookKernels', async () => {
-        versionSpecificFunctions.notebookDocuments
+        vscode.workspace.notebookDocuments
             .filter(document => clientMapper.isDotNetClient(document.uri))
             .forEach(async document => await vscode.commands.executeCommand('dotnet-interactive.stopCurrentNotebookKernel', document));
     }));
@@ -173,7 +174,58 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
     }));
 
     async function newNotebook(extension: string): Promise<void> {
-        versionSpecificFunctions.createNewBlankNotebook(extension, openNotebook);
+        const viewType = extension === '.dib' || extension === '.dotnet-interactive'
+            ? 'dotnet-interactive'
+            : jupyterViewType;
+
+        // get language
+        const newNotebookCSharp = `C#`;
+        const newNotebookFSharp = `F#`;
+        const newNotebookPowerShell = `PowerShell`;
+        const notebookLanguage = await vscode.window.showQuickPick([newNotebookCSharp, newNotebookFSharp, newNotebookPowerShell], { title: 'Default Language' });
+        if (!notebookLanguage) {
+            return;
+        }
+
+        const ipynbLanguageName = ipynbUtilities.mapIpynbLanguageName(notebookLanguage);
+        const cellMetadata = {
+            custom: {
+                metadata: {
+                    dotnet_interactive: {
+                        language: ipynbLanguageName
+                    }
+                }
+            }
+        };
+        const cell = new vscode.NotebookCellData(vscode.NotebookCellKind.Code, '', `dotnet-interactive.${ipynbLanguageName}`);
+        cell.metadata = cellMetadata;
+        const documentMetadata = {
+            custom: {
+                metadata: {
+                    kernelspec: {
+                        display_name: `.NET (${notebookLanguage})`,
+                        language: notebookLanguage,
+                        name: `.net-${ipynbLanguageName}`
+                    },
+                    language_info: {
+                        name: notebookLanguage
+                    }
+                }
+            }
+        };
+        const content = new vscode.NotebookData([cell]);
+        content.metadata = documentMetadata;
+        const notebook = await vscode.workspace.openNotebookDocument(viewType, content);
+
+        // The document metadata isn't preserved from the previous call.  This is addressed in the following issues:
+        // - https://github.com/microsoft/vscode-jupyter/issues/6187
+        // - https://github.com/microsoft/vscode-jupyter/issues/5622
+        // In the meantime, the metadata can be set again to ensure it's persisted.
+        const edit = new vscode.WorkspaceEdit();
+        edit.replaceNotebookMetadata(notebook.uri, documentMetadata);
+        await vscode.workspace.applyEdit(edit);
+
+        const _editor = await vscode.window.showNotebookDocument(notebook);
     }
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.openNotebook', async (notebookUri: vscode.Uri | undefined) => {
@@ -201,30 +253,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
         const viewType = extension === '.dib' || extension === '.dotnet-interactive'
             ? 'dotnet-interactive'
             : jupyterViewType;
-
-        if (isJupyterNotebookViewType(viewType) && uri.scheme === 'untitled') {
-            await openNewNotebookWithJupyterExtension();
-        } else {
-            // const notebook = await vscode.notebook.openNotebookDocument(uri);
-            // await vscode.window.showNotebookDocument(notebook);
-            await vscode.commands.executeCommand('vscode.openWith', uri, viewType);
-        }
-    }
-
-    async function openNewNotebookWithJupyterExtension() {
-        const jupyterExtension = vscode.extensions.getExtension<IJupyterExtensionApi>('ms-toolsai.jupyter');
-
-        if (jupyterExtension) {
-            if (!jupyterExtension?.isActive) {
-                await jupyterExtension?.activate();
-            }
-
-            const jupyterExtensionExports = jupyterExtension?.exports;
-
-            if (jupyterExtensionExports) {
-                await jupyterExtensionExports.createBlankNotebook({ defaultCellLanguage: 'dotnet-interactive.csharp' });
-            }
-        }
+        await vscode.commands.executeCommand('vscode.openWith', uri, viewType);
     }
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.saveAsNotebook', async () => {

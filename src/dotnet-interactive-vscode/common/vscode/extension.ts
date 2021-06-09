@@ -16,13 +16,17 @@ import { registerAcquisitionCommands, registerKernelCommands, registerFileComman
 import { getSimpleLanguage, isDotnetInteractiveLanguage, isJupyterNotebookViewType, jupyterViewType } from '../interactiveNotebook';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces';
 
-import { executeSafe, getWorkingDirectoryForNotebook, isDotNetUpToDate, processArguments } from '../utilities';
+import { createOutput, executeSafe, getWorkingDirectoryForNotebook, isDotNetUpToDate, processArguments } from '../utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
 
+import * as notebookControllers from '../../notebookControllers';
+import * as notebookSerializers from '../../notebookSerializers';
 import * as versionSpecificFunctions from '../../versionSpecificFunctions';
+import { ErrorOutputCreator } from '../../common/interactiveClient';
 
 import { isInsidersBuild, isStableBuild } from './vscodeUtilities';
-import { getDotNetMetadata } from '../ipynbUtilities';
+import { getDotNetMetadata, withDotNetCellMetadata } from '../ipynbUtilities';
+import fetch from 'node-fetch';
 
 export const KernelIdForJupyter = 'dotnet-interactive-for-jupyter';
 
@@ -115,7 +119,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // register with VS Code
     const clientMapperConfig = {
         kernelTransportCreator,
-        createErrorOutput: versionSpecificFunctions.createErrorOutput,
+        createErrorOutput,
         diagnosticsChannel,
     };
     const clientMapper = new ClientMapper(clientMapperConfig);
@@ -148,7 +152,7 @@ export async function activate(context: vscode.ExtensionContext) {
                             vscode.commands.executeCommand('dotnet-interactive.openNotebook', vscode.Uri.file(notebookPath)).then(() => { });
                         });
                     } else if (url) {
-                        versionSpecificFunctions.openNotebookFromUrl(url, clientMapper, diagnosticsChannel).then(() => { });
+                        openNotebookFromUrl(url, clientMapper, diagnosticsChannel).then(() => { });
                     }
                     break;
             }
@@ -167,11 +171,10 @@ export async function activate(context: vscode.ExtensionContext) {
         throw new Error(`Unable to find bootstrapper API expected at '${apiBootstrapperUri.fsPath}'.`);
     }
 
-    versionSpecificFunctions.registerWithVsCode(context, clientMapper, diagnosticsChannel, clientMapperConfig.createErrorOutput, apiBootstrapperUri);
-
+    registerWithVsCode(context, clientMapper, diagnosticsChannel, clientMapperConfig.createErrorOutput, apiBootstrapperUri);
     registerFileCommands(context, clientMapper);
 
-    context.subscriptions.push(versionSpecificFunctions.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
+    context.subscriptions.push(vscode.workspace.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
     context.subscriptions.push(vscode.workspace.onDidRenameFiles(e => handleFileRenames(e, clientMapper)));
 
     // language registration
@@ -180,6 +183,56 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
+}
+
+function createErrorOutput(message: string, outputId?: string): vscodeLike.NotebookCellOutput {
+    const error = { name: 'Error', message };
+    const errorItem = vscode.NotebookCellOutputItem.error(error);
+    const cellOutput = createOutput([errorItem], outputId);
+    return cellOutput;
+}
+
+function registerWithVsCode(context: vscode.ExtensionContext, clientMapper: ClientMapper, outputChannel: OutputChannelAdapter, createErrorOutput: ErrorOutputCreator, ...preloadUris: vscode.Uri[]) {
+    const config = {
+        clientMapper,
+        preloadUris,
+        createErrorOutput,
+    };
+    context.subscriptions.push(new notebookControllers.DotNetNotebookKernel(config));
+    notebookSerializers.DotNetDibNotebookSerializer.registerNotebookSerializer(context, 'dotnet-interactive', clientMapper, outputChannel);
+    notebookSerializers.DotNetLegacyNotebookSerializer.registerNotebookSerializer(context, 'dotnet-interactive-legacy', clientMapper, outputChannel);
+}
+
+async function openNotebookFromUrl(notebookUrl: string, clientMapper: ClientMapper, diagnosticsChannel: OutputChannelAdapter): Promise<void> {
+    await vscode.commands.executeCommand('dotnet-interactive.acquire');
+    const extension = path.extname(notebookUrl);
+    let serializer: notebookSerializers.DotNetDibNotebookSerializer | undefined = undefined;
+    let viewType: string | undefined = undefined;
+    switch (extension) {
+        case '.dib':
+        case '.dotnet-interactive':
+            serializer = new notebookSerializers.DotNetDibNotebookSerializer(clientMapper, diagnosticsChannel);
+            viewType = 'dotnet-interactive';
+            break;
+        case '.ipynb':
+            serializer = new notebookSerializers.DotNetJupyterNotebookSerializer(clientMapper, diagnosticsChannel);
+            viewType = 'jupyter-notebook';
+            break;
+    }
+
+    if (serializer && viewType) {
+        try {
+            const response = await fetch(notebookUrl);
+            const arrayBuffer = await response.arrayBuffer();
+            const content = new Uint8Array(arrayBuffer);
+            const cancellationTokenSource = new vscode.CancellationTokenSource();
+            const notebookData = await serializer.deserializeNotebook(content, cancellationTokenSource.token);
+            const notebook = await vscode.workspace.openNotebookDocument(viewType, notebookData);
+            const _editor = await vscode.window.showNotebookDocument(notebook);
+        } catch (e) {
+            vscode.window.showWarningMessage(`Unable to read notebook from '${notebookUrl}': ${e}`);
+        }
+    }
 }
 
 interface DotnetPackExtensionExports {
@@ -205,7 +258,7 @@ async function waitForSdkInstall(requiredSdkVersion: string): Promise<void> {
 async function updateNotebookCellLanguageInMetadata(candidateNotebookCellDocument: vscode.TextDocument) {
     const notebook = candidateNotebookCellDocument.notebook;
     if (notebook &&
-        isJupyterNotebookViewType(versionSpecificFunctions.getNotebookType(notebook)) &&
+        isJupyterNotebookViewType(notebook.notebookType) &&
         isDotnetInteractiveLanguage(candidateNotebookCellDocument.languageId)) {
         const cell = notebook.getCells().find(c => c.document === candidateNotebookCellDocument);
         if (cell) {
@@ -215,15 +268,7 @@ async function updateNotebookCellLanguageInMetadata(candidateNotebookCellDocumen
 
             const dotnetMetadata = getDotNetMetadata(cell.metadata);
             if (dotnetMetadata.language !== cellLanguage) {
-                const newMetadata = cell.metadata.with({
-                    custom: {
-                        metadata: {
-                            dotnet_interactive: {
-                                language: cellLanguage
-                            }
-                        }
-                    }
-                });
+                const newMetadata = withDotNetCellMetadata(cell.metadata, cellLanguage);
                 const edit = new vscode.WorkspaceEdit();
                 edit.replaceNotebookCellMetadata(notebook.uri, cell.index, newMetadata);
                 await vscode.workspace.applyEdit(edit);

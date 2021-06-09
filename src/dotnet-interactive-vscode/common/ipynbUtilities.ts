@@ -32,6 +32,15 @@ export function getDotNetMetadata(metadata: any): DotNetCellMetadata {
     };
 }
 
+export function withDotNetCellMetadata(metadata: { [key: string]: any, } | undefined, cellLanguage: string): { [key: string]: any, } {
+    const newMetadata = { ...metadata };
+    newMetadata.custom = newMetadata.custom || {};
+    newMetadata.custom.metadata = newMetadata.custom.metadata || {};
+    newMetadata.custom.metadata.dotnet_interactive = newMetadata.custom.metadata.dotnet_interactive || {};
+    newMetadata.custom.metadata.dotnet_interactive.language = cellLanguage;
+    return newMetadata;
+}
+
 // the shape of this is meant to match the document metadata from VS Code
 export interface DocumentMetadata {
     custom?: { [key: string]: any } | undefined,

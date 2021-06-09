@@ -12,33 +12,18 @@ import { OutputChannelAdapter } from './common/vscode/OutputChannelAdapter';
 import { getEol, vsCodeCellOutputToContractCellOutput } from './common/vscode/vscodeUtilities';
 import { Eol } from './common/interfaces';
 import { createUri } from './common/utilities';
-import { DotNetNotebookContentProviderWrapper } from './notebookContentProviderWrapper';
 
 abstract class DotNetNotebookSerializer implements vscode.NotebookSerializer {
 
     private serializerId = '*DOTNET-INTERACTIVE-NOTEBOOK-SERIALIZATION*';
-    private disposable: vscode.Disposable;
     private eol: Eol;
 
     constructor(
-        notebookType: string,
-        registerAsSerializer: boolean,
         private readonly clientMapper: ClientMapper,
         private readonly outputChannel: OutputChannelAdapter,
         private readonly extension: string,
     ) {
         this.eol = getEol();
-        if (registerAsSerializer) {
-            this.disposable = vscode.notebook.registerNotebookSerializer(notebookType, this);
-        } else {
-            // temporarly workaround for https://github.com/microsoft/vscode/issues/121974
-            const contentProviderWrapper = new DotNetNotebookContentProviderWrapper(this, this.outputChannel);
-            this.disposable = vscode.notebook.registerNotebookContentProvider(notebookType, contentProviderWrapper);
-        }
-    }
-
-    dispose(): void {
-        this.disposable.dispose();
     }
 
     async deserializeNotebook(content: Uint8Array, token: vscode.CancellationToken): Promise<vscode.NotebookData> {
@@ -61,7 +46,6 @@ abstract class DotNetNotebookSerializer implements vscode.NotebookSerializer {
         }
 
         const notebookData: vscode.NotebookData = {
-            metadata: new vscode.NotebookDocumentMetadata().with({ cellHasExecutionOrder: false }),
             cells: notebookCells.map(toVsCodeNotebookCellData)
         };
         return notebookData;
@@ -88,44 +72,67 @@ abstract class DotNetNotebookSerializer implements vscode.NotebookSerializer {
 function toNotebookCell(cell: vscode.NotebookCellData): contracts.NotebookCell {
     const outputs = cell.outputs || [];
     return {
-        language: getSimpleLanguage(cell.language),
-        contents: cell.source,
+        language: getSimpleLanguage(cell.languageId),
+        contents: cell.value,
         outputs: outputs.map(vsCodeCellOutputToContractCellOutput)
     };
 }
 
 export class DotNetDibNotebookSerializer extends DotNetNotebookSerializer {
     constructor(clientMapper: ClientMapper, outputChannel: OutputChannelAdapter) {
-        super('dotnet-interactive', false, clientMapper, outputChannel, '.dib');
+        super(clientMapper, outputChannel, '.dib');
+    }
+
+    static registerNotebookSerializer(context: vscode.ExtensionContext, notebookType: string, clientMapper: ClientMapper, outputChannel: OutputChannelAdapter) {
+        const serializer = new DotNetDibNotebookSerializer(clientMapper, outputChannel);
+        const notebookSerializer = vscode.workspace.registerNotebookSerializer(notebookType, serializer);
+        context.subscriptions.push(notebookSerializer);
+    }
+}
+
+export class DotNetLegacyNotebookSerializer extends DotNetNotebookSerializer {
+    constructor(clientMapper: ClientMapper, outputChannel: OutputChannelAdapter) {
+        super(clientMapper, outputChannel, '.dib');
+    }
+
+    static registerNotebookSerializer(context: vscode.ExtensionContext, notebookType: string, clientMapper: ClientMapper, outputChannel: OutputChannelAdapter) {
+        const serializer = new DotNetLegacyNotebookSerializer(clientMapper, outputChannel);
+        const notebookSerializer = vscode.workspace.registerNotebookSerializer(notebookType, serializer);
+        context.subscriptions.push(notebookSerializer);
+    }
+}
+
+export class DotNetJupyterNotebookSerializer extends DotNetNotebookSerializer {
+    constructor(clientMapper: ClientMapper, outputChannel: OutputChannelAdapter) {
+        super(clientMapper, outputChannel, '.ipynb');
     }
 }
 
 function toVsCodeNotebookCellData(cell: contracts.NotebookCell): vscode.NotebookCellData {
-    return new vscode.NotebookCellData(
+    const cellData = new vscode.NotebookCellData(
         <number>languageToCellKind(cell.language),
         cell.contents,
-        getNotebookSpecificLanguage(cell.language),
-        cell.outputs.map(contractCellOutputToVsCodeCellOutput),
-    );
+        getNotebookSpecificLanguage(cell.language));
+    cellData.outputs = cell.outputs.map(contractCellOutputToVsCodeCellOutput);
+    return cellData;
 }
 
 function contractCellOutputToVsCodeCellOutput(output: contracts.NotebookCellOutput): vscode.NotebookCellOutput {
     const outputItems: Array<vscode.NotebookCellOutputItem> = [];
     if (utilities.isDisplayOutput(output)) {
         for (const mimeKey in output.data) {
-            outputItems.push(generateVsCodeNotebookCellOutputItem(mimeKey, output.data[mimeKey]));
+            outputItems.push(generateVsCodeNotebookCellOutputItem(output.data[mimeKey], mimeKey));
         }
     } else if (utilities.isErrorOutput(output)) {
-        outputItems.push(generateVsCodeNotebookCellOutputItem(vscodeLike.ErrorOutputMimeType, output.errorValue));
+        outputItems.push(generateVsCodeNotebookCellOutputItem(output.errorValue, vscodeLike.ErrorOutputMimeType));
     } else if (utilities.isTextOutput(output)) {
-        outputItems.push(generateVsCodeNotebookCellOutputItem('text/plain', output.text));
+        outputItems.push(generateVsCodeNotebookCellOutputItem(output.text, 'text/plain'));
     }
 
     return new vscode.NotebookCellOutput(outputItems);
 }
 
-function generateVsCodeNotebookCellOutputItem(mimeType: string, value: unknown): vscode.NotebookCellOutputItem {
-    const encodedValue = new TextEncoder().encode(JSON.stringify(value));
-    const displayValue = utilities.reshapeOutputValueForVsCode(encodedValue, mimeType);
-    return new vscode.NotebookCellOutputItem(mimeType, displayValue);
+function generateVsCodeNotebookCellOutputItem(value: Uint8Array | string, mime: string): vscode.NotebookCellOutputItem {
+    const displayValue = utilities.reshapeOutputValueForVsCode(value, mime);
+    return new vscode.NotebookCellOutputItem(displayValue, mime);
 }

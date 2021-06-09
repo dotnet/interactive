@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { expect } from 'chai';
-import { DotNetCellMetadata, getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, LanguageInfoMetadata, withDotNetKernelMetadata } from '../../ipynbUtilities';
+import { DotNetCellMetadata, getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, LanguageInfoMetadata, withDotNetCellMetadata, withDotNetKernelMetadata } from '../../ipynbUtilities';
 
 describe('ipynb metadata tests', () => {
     describe('document metadata', () => {
@@ -423,6 +423,50 @@ describe('ipynb metadata tests', () => {
             };
             const dotnetMetadata = getDotNetMetadata(cellMetadata);
             expect(dotnetMetadata.language).to.equal(undefined);
+        });
+
+        it(`cell metadata is added when not present`, () => {
+            const existingCellMetadata = {};
+            const updatedCellMetadata = withDotNetCellMetadata(existingCellMetadata, 'pwsh');
+            expect(updatedCellMetadata).to.deep.equal({
+                custom: {
+                    metadata: {
+                        dotnet_interactive: {
+                            language: 'pwsh'
+                        }
+                    }
+                }
+            });
+        });
+
+        it(`existing cell metadata is preserved when updated`, () => {
+            const existingCellMetadata = {
+                number: 42,
+                custom: {
+                    anotherNumber: 43,
+                    metadata: {
+                        stillAnotherNumber: 44,
+                        dotnet_interactive: {
+                            aReallyDeepNumber: 45,
+                            language: 'not-pwsh'
+                        }
+                    }
+                }
+            };
+            const updatedCellMetadata = withDotNetCellMetadata(existingCellMetadata, 'pwsh');
+            expect(updatedCellMetadata).to.deep.equal({
+                number: 42,
+                custom: {
+                    anotherNumber: 43,
+                    metadata: {
+                        stillAnotherNumber: 44,
+                        dotnet_interactive: {
+                            aReallyDeepNumber: 45,
+                            language: 'pwsh'
+                        }
+                    }
+                }
+            });
         });
     });
 

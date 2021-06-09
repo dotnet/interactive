@@ -7,29 +7,33 @@ import { ClientMapper } from './common/clientMapper';
 import * as contracts from './common/interfaces/contracts';
 import * as vscodeLike from './common/interfaces/vscode-like';
 import * as diagnostics from './common/vscode/diagnostics';
-import * as utilities from './common/utilities';
-import * as versionSpecificFunctions from './versionSpecificFunctions';
 import * as vscodeUtilities from './common/vscode/vscodeUtilities';
-import { getSimpleLanguage, isDotnetInteractiveLanguage, notebookCellLanguages } from './common/interactiveNotebook';
+import { getSimpleLanguage, isDotnetInteractiveLanguage, jupyterViewType, notebookCellLanguages } from './common/interactiveNotebook';
 import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, isDotNetNotebookMetadata, withDotNetKernelMetadata } from './common/ipynbUtilities';
 import { reshapeOutputValueForVsCode } from './common/interfaces/utilities';
 import { selectDotNetInteractiveKernelForJupyter } from './common/vscode/commands';
 import { ErrorOutputCreator } from './common/interactiveClient';
 
-const executionTasks: Map<string, vscode.NotebookCellExecutionTask> = new Map();
+const executionTasks: Map<string, vscode.NotebookCellExecution> = new Map();
 
 const viewType = 'dotnet-interactive';
-const jupyterViewType = 'jupyter-notebook';
+const legacyViewType = 'dotnet-interactive-legacy';
+
+export interface DotNetNotebookKernelConfiguration {
+    clientMapper: ClientMapper,
+    preloadUris: vscode.Uri[],
+    createErrorOutput: ErrorOutputCreator,
+}
 
 export class DotNetNotebookKernel {
 
     private disposables: { dispose(): void }[] = [];
 
-    constructor(private readonly clientMapper: ClientMapper, private readonly createErrorOutput: ErrorOutputCreator, preloadUris: vscode.Uri[]) {
-        const preloads = preloadUris.map(uri => ({ uri }));
+    constructor(readonly config: DotNetNotebookKernelConfiguration) {
+        const preloads = config.preloadUris.map(uri => new vscode.NotebookRendererScript(uri));
 
         // .dib execution
-        const dibController = vscode.notebook.createNotebookController(
+        const dibController = vscode.notebooks.createNotebookController(
             'dotnet-interactive',
             viewType,
             '.NET Interactive',
@@ -38,26 +42,41 @@ export class DotNetNotebookKernel {
         );
         this.commonControllerInit(dibController);
 
+        // .dotnet-interactive execution
+        const legacyController = vscode.notebooks.createNotebookController(
+            'dotnet-interactive-legacy',
+            legacyViewType,
+            '.NET Interactive',
+            this.executeHandler.bind(this),
+            preloads
+        );
+        this.commonControllerInit(legacyController);
+
         // .ipynb execution via Jupyter extension (optional)
-        const jupyterController = vscode.notebook.createNotebookController(
+        const jupyterController = vscode.notebooks.createNotebookController(
             'dotnet-interactive-for-jupyter',
             jupyterViewType,
             '.NET Interactive',
             this.executeHandler.bind(this),
             preloads
         );
-        jupyterController.onDidChangeNotebookAssociation(async e => {
+        jupyterController.onDidChangeSelectedNotebooks(async e => {
             // update metadata
             if (e.selected) {
-                await updateNotebookMetadata(e.notebook, clientMapper);
+                await updateNotebookMetadata(e.notebook, this.config.clientMapper);
             }
         });
         this.commonControllerInit(jupyterController);
-        this.disposables.push(vscode.notebook.onDidOpenNotebookDocument(async notebook => {
-            if (notebook.viewType === jupyterViewType && isDotNetNotebook(notebook)) {
-                jupyterController.updateNotebookAffinity(notebook, vscode.NotebookControllerAffinity.Preferred);
-                await selectDotNetInteractiveKernelForJupyter();
-                await updateNotebookMetadata(notebook, clientMapper);
+        this.disposables.push(vscode.workspace.onDidOpenNotebookDocument(async notebook => {
+            if (isDotNetNotebook(notebook)) {
+                // eagerly spin up the backing process
+                const _client = await config.clientMapper.getOrAddClient(notebook.uri);
+
+                if (notebook.notebookType === jupyterViewType) {
+                    jupyterController.updateNotebookAffinity(notebook, vscode.NotebookControllerAffinity.Preferred);
+                    await selectDotNetInteractiveKernelForJupyter();
+                    await updateNotebookMetadata(notebook, this.config.clientMapper);
+                }
             }
         }));
     }
@@ -72,12 +91,12 @@ export class DotNetNotebookKernel {
             const documentUri = e.editor.document.uri;
             switch (e.message.command) {
                 case "getHttpApiEndpoint":
-                    this.clientMapper.tryGetClient(documentUri).then(client => {
+                    this.config.clientMapper.tryGetClient(documentUri).then(client => {
                         if (client) {
                             const uri = client.tryGetProperty<vscode.Uri>("externalUri");
                             controller.postMessage({ command: "configureFactories", endpointUri: uri?.toString() });
 
-                            this.clientMapper.onClientCreate(documentUri, async (client) => {
+                            this.config.clientMapper.onClientCreate(documentUri, async (client) => {
                                 const uri = client.tryGetProperty<vscode.Uri>("externalUri");
                                 await controller.postMessage({ command: "resetFactories", endpointUri: uri?.toString() });
                             });
@@ -96,47 +115,48 @@ export class DotNetNotebookKernel {
     }
 
     private async executeCell(cell: vscode.NotebookCell, controller: vscode.NotebookController): Promise<void> {
-        const executionTask = controller.createNotebookCellExecutionTask(cell);
+        const executionTask = controller.createNotebookCellExecution(cell);
         if (executionTask) {
             executionTasks.set(cell.document.uri.toString(), executionTask);
             try {
-                executionTask.start({
-                    startTime: Date.now(),
-                });
+                const startTime = Date.now();
+                executionTask.start(startTime);
+                executionTask.clearOutput(cell);
+                const controllerErrors: vscodeLike.NotebookCellOutput[] = [];
 
-                executionTask.clearOutput(cell.index);
-                const client = await this.clientMapper.getOrAddClient(cell.notebook.uri);
-                executionTask.token.onCancellationRequested(() => {
-                    const errorOutput = this.createErrorOutput("Cell execution cancelled by user");
-                    // the API is changing between stable and insiders, and this is a temporary re-working of the shape
-                    const cellOutputs = cell.outputs.map(o => ({
-                        id: o.id,
-                        items: o.outputs, // this propery was renamed
-                        metadata: o.metadata,
-                    }));
-                    const resultPromise = () => updateCellOutputs(executionTask, cell, [...cellOutputs, errorOutput])
-                        .then(() => endExecution(cell, false));
-                    client.cancel()
-                        .then(resultPromise)
-                        .catch(resultPromise);
-                });
-                const source = cell.document.getText();
                 function outputObserver(outputs: Array<vscodeLike.NotebookCellOutput>) {
-                    updateCellOutputs(executionTask!, cell, outputs).then(() => { });
+                    updateCellOutputs(executionTask!, [...outputs, ...controllerErrors]).then(() => { });
                 }
 
+                function displayOutputs() {
+                    outputObserver([...cell.outputs]);
+                }
+
+                const client = await this.config.clientMapper.getOrAddClient(cell.notebook.uri);
+                executionTask.token.onCancellationRequested(() => {
+                    client.cancel().catch(async err => {
+                        // command failed to cancel
+                        const cancelFailureMessage = typeof err?.message === 'string' ? <string>err.message : '' + err;
+                        const cancelFailureOutput = this.config.createErrorOutput(cancelFailureMessage);
+                        controllerErrors.push(cancelFailureOutput);
+                        displayOutputs();
+                    });
+                });
+                const source = cell.document.getText();
                 const diagnosticCollection = diagnostics.getDiagnosticCollection(cell.document.uri);
 
                 function diagnosticObserver(diags: Array<contracts.Diagnostic>) {
                     diagnosticCollection.set(cell.document.uri, diags.filter(d => d.severity !== contracts.DiagnosticSeverity.Hidden).map(vscodeUtilities.toVsCodeDiagnostic));
                 }
 
-                return client.execute(source, getSimpleLanguage(cell.document.languageId), outputObserver, diagnosticObserver, { id: cell.document.uri.toString() }).then(() =>
-                    endExecution(cell, true)
-                ).catch(() => endExecution(cell, false));
+                return client.execute(source, getSimpleLanguage(cell.document.languageId), outputObserver, diagnosticObserver, { id: cell.document.uri.toString() }).then(() => {
+                    endExecution(cell, true);
+                }).catch(() => {
+                    endExecution(cell, false);
+                });
             } catch (err) {
-                const errorOutput = this.createErrorOutput(`Error executing cell: ${err}`);
-                await updateCellOutputs(executionTask, cell, [errorOutput]);
+                const errorOutput = this.config.createErrorOutput(`Error executing cell: ${err}`);
+                await updateCellOutputs(executionTask, [errorOutput]);
                 endExecution(cell, false);
                 throw err;
             }
@@ -173,10 +193,9 @@ export async function updateCellLanguages(document: vscode.NotebookDocument): Pr
             const newCellData = new vscode.NotebookCellData(
                 cell.kind,
                 cellText,
-                newLanguage,
-                cell.outputs.concat(), // can't pass through a readonly property, so we have to make it a regular array
-                cell.metadata,
-            );
+                newLanguage);
+            newCellData.outputs = cell.outputs.concat(); // can't pass through a readonly property, so we have to make it a regular array
+            newCellData.metadata = cell.metadata;
             edit.replaceNotebookCells(document.uri, new vscode.NotebookRange(i, i + 1), [newCellData]);
         }
     }
@@ -184,32 +203,24 @@ export async function updateCellLanguages(document: vscode.NotebookDocument): Pr
     await vscode.workspace.applyEdit(edit);
 }
 
-async function updateCellOutputs(executionTask: vscode.NotebookCellExecutionTask, cell: vscode.NotebookCell, outputs: Array<vscodeLike.NotebookCellOutput>): Promise<void> {
-    const reshapedOutputs = outputs.map(o => new vscode.NotebookCellOutput(o.items.map(oi => generateVsCodeNotebookCellOutputItem(oi.mime, oi.data))));
-    await executionTask.replaceOutput(reshapedOutputs, cell.index);
+async function updateCellOutputs(executionTask: vscode.NotebookCellExecution, outputs: Array<vscodeLike.NotebookCellOutput>): Promise<void> {
+    const reshapedOutputs = outputs.map(o => new vscode.NotebookCellOutput(o.items.map(oi => generateVsCodeNotebookCellOutputItem(oi.data, oi.mime))));
+    await executionTask.replaceOutput(reshapedOutputs);
 }
 
 export function endExecution(cell: vscode.NotebookCell, success: boolean) {
-
     const key = cell.document.uri.toString();
     const executionTask = executionTasks.get(key);
     if (executionTask) {
         executionTasks.delete(key);
-        executionTask.end({
-            success,
-            endTime: Date.now(),
-        });
+        const endTime = Date.now();
+        executionTask.end(success, endTime);
     }
 }
 
-function generateVsCodeNotebookCellOutputItem(mimeType: string, value: Uint8Array): vscode.NotebookCellOutputItem {
-    const decoder = new TextDecoder('utf-8');
-    const decodedValue = decoder.decode(value);
-    let displayValue: unknown = decodedValue;
-    if (mimeType === 'application/json' || mimeType === vscodeLike.ErrorOutputMimeType || mimeType === 'application/x.notebook.error-traceback') {
-        displayValue = JSON.parse(decodedValue);
-    }
-    return new vscode.NotebookCellOutputItem(mimeType, displayValue);
+function generateVsCodeNotebookCellOutputItem(data: Uint8Array, mime: string): vscode.NotebookCellOutputItem {
+    const displayData = reshapeOutputValueForVsCode(data, mime);
+    return new vscode.NotebookCellOutputItem(displayData, mime);
 }
 
 async function updateDocumentKernelspecMetadata(document: vscode.NotebookDocument): Promise<void> {
@@ -220,6 +231,10 @@ async function updateDocumentKernelspecMetadata(document: vscode.NotebookDocumen
 }
 
 function isDotNetNotebook(notebook: vscode.NotebookDocument): boolean {
+    if (notebook.uri.toString().endsWith('.dib')) {
+        return true;
+    }
+
     if (isDotNetNotebookMetadata(notebook.metadata)) {
         // metadata looked correct
         return true;
