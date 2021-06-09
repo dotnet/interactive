@@ -55,8 +55,13 @@ RUN dotnet_sdk_version=5.0.102 \
 # Copy notebooks
 COPY ./samples/notebooks/ ${HOME}/Notebooks/
 
-# Copy package sources
-COPY ./NuGet.config ${HOME}/nuget.config
+# Add package sources
+RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json -n dotnet-public
+RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json -n dotnet-eng
+RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json -n dotnet-tools
+RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries/nuget/v3/index.json -n dotnet-libraries
+RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json -n dotnet5
+RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/MachineLearning/nuget/v3/index.json -n MachineLearning
 
 RUN chown -R ${NB_UID} ${HOME}
 USER ${USER}
