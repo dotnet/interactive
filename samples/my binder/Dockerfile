@@ -56,8 +56,24 @@ RUN dotnet_sdk_version=5.0.102 \
 
 COPY ./notebooks/ ${HOME}/notebooks/
 
-# Copy package sources
-COPY ./NuGet.config ${HOME}/nuget.config
+# Add package sources
+RUN echo "\
+<configuration>\
+  <solution>\
+    <add key=\"disableSourceControlIntegration\" value=\"true\" />\
+  </solution>\
+  <packageSources>\
+    <clear />\
+    <add key=\"dotnet-public\" value=\"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json\" />\
+    <add key=\"dotnet-eng\" value=\"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json\" />\
+    <add key=\"dotnet-tools\" value=\"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json\" />\
+    <add key=\"dotnet-libraries\" value=\"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries/nuget/v3/index.json\" />\
+    <add key=\"dotnet5\" value=\"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json\" />\
+    <add key=\"MachineLearning\" value=\"https://pkgs.dev.azure.com/dnceng/public/_packaging/MachineLearning/nuget/v3/index.json\" />\
+  </packageSources>\
+  <disabledPackageSources />\
+</configuration>\
+" > ${HOME}/NuGet.config
 
 RUN chown -R ${NB_UID} ${HOME}
 USER ${USER}
