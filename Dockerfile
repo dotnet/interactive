@@ -56,14 +56,23 @@ RUN dotnet_sdk_version=5.0.102 \
 COPY ./samples/notebooks/ ${HOME}/Notebooks/
 
 # Add package sources
-RUN echo "<configuration></configuration>" > ${HOME}/NuGet.config
-RUN dotnet nuget add source https://api.nuget.org/v3/index.json -n nuget.org --configfile "${HOME}/NuGet.config"
-RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json -n dotnet-public --configfile "${HOME}/NuGet.config"
-RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json -n dotnet-eng --configfile "${HOME}/NuGet.config"
-RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json -n dotnet-tools --configfile "${HOME}/NuGet.config"
-RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries/nuget/v3/index.json -n dotnet-libraries --configfile "${HOME}/NuGet.config"
-RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json -n dotnet5 --configfile "${HOME}/NuGet.config"
-RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/MachineLearning/nuget/v3/index.json -n MachineLearning --configfile "${HOME}/NuGet.config"
+RUN echo "\
+<configuration>\
+  <solution>\
+    <add key=\"disableSourceControlIntegration\" value=\"true\" />\
+  </solution>\
+  <packageSources>\
+    <clear />\
+    <add key=\"dotnet-public\" value=\"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json\" />\
+    <add key=\"dotnet-eng\" value=\"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json\" />\
+    <add key=\"dotnet-tools\" value=\"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json\" />\
+    <add key=\"dotnet-libraries\" value=\"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries/nuget/v3/index.json\" />\
+    <add key=\"dotnet5\" value=\"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json\" />\
+    <add key=\"MachineLearning\" value=\"https://pkgs.dev.azure.com/dnceng/public/_packaging/MachineLearning/nuget/v3/index.json\" />\
+  </packageSources>\
+  <disabledPackageSources />\
+</configuration>\
+" > ${HOME}/NuGet.config
 
 RUN chown -R ${NB_UID} ${HOME}
 USER ${USER}
