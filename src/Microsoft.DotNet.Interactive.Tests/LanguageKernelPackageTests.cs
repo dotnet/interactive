@@ -532,9 +532,8 @@ Formatter.Register<DataFrame>((df, writer) =>
                   .Which.Value
                   .As<InstallPackagesMessage>()
                   .RestoreSources
-                  .Aggregate((s, acc) => acc + " & " + s)
                   .Should()
-                  .ContainAll(expectedList);
+                  .BeEquivalentTo(expectedList);
         }
 
         [Theory]
