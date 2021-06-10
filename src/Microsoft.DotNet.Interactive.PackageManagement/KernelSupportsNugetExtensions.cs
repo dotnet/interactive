@@ -203,18 +203,15 @@ namespace Microsoft.DotNet.Interactive
 
                     var restorePackagesTask = kernel.RestoreAsync();
 
-                    var totalWaitMs = 0;
                     var delay = 500;
                     while (await Task.WhenAny(Task.Delay(delay), restorePackagesTask) != restorePackagesTask)
                     {
-                        totalWaitMs += delay;
+                        if (context.CancellationToken.IsCancellationRequested)
+                        {
+                            break;
+                        }
                         install.Progress = 1 + install.Progress;
                         CreateOrUpdateDisplayValue(context, installPackagesPropertyName, install);
-
-                        if (totalWaitMs > TimeSpan.FromMinutes(1.5).TotalMilliseconds)
-                        {
-                            throw new TimeoutException($"Package restore took longer than expected for packages: {string.Join(", ", install.InstallingPackages)}.");
-                        }
                     }
 
                     var result = await restorePackagesTask;
