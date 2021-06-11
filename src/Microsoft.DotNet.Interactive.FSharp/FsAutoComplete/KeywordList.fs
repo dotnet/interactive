@@ -2,6 +2,7 @@ namespace FsAutoComplete
 
 open FSharp.Compiler.EditorServices
 open FSharp.Compiler.Text
+open FSharp.Compiler.Xml
 open FSharp.Compiler.Tokenization
 open FSharp.Compiler.Symbols
 open FSharp.Compiler.Syntax
