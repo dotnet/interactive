@@ -62,7 +62,13 @@
   "mocha": {
     "ui": "bdd",
     "timeout": "10000",
-    "require": ["requirejs", "source-map-support/register", "ts-node/register"],
-    "watch-files": ["tests/**/*.spec.ts"]
+    "require": [
+      "requirejs",
+      "source-map-support/register",
+      "ts-node/register"
+    ],
+    "watch-files": [
+      "tests/**/*.spec.ts"
+    ]
   }
 }
