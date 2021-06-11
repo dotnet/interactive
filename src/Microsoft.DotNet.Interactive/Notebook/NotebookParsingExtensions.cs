@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.Notebook
     {
         public static IEnumerable<string> SplitAsLines(string s)
         {
-            return s.Split('\n').Select(l => l.EndsWith('\r') ? l[0..^1] : l);
+            return s.Split('\n').Select(l => l.EndsWith("\r") ? l[0..^1] : l);
         }
 
         public static string TrimNewline(this string s)

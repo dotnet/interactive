@@ -10,6 +10,28 @@ using Pocket;
 
 namespace Microsoft.DotNet.Interactive
 {
+    static class DotNetStandardHelpers
+    {
+#if !NETSTANDARD2_0
+        static public bool GetIsCompletedSuccessfully(this Task task)
+    {
+        return task.IsCompletedSuccessfully;
+    }
+#else
+        // NetStandard 2.1
+        // internal const int TASK_STATE_RAN_TO_COMPLETION = 0x1000000;                          // bin: 0000 0001 0000 0000 0000 0000 0000 0000
+        // public bool IsCompletedSuccessfully => (m_stateFlags & TASK_STATE_COMPLETED_MASK) == TASK_STATE_RAN_TO_COMPLETION;
+        // <see cref="IsCompleted"/> will return true when the Task is in one of the three
+        // final states: <see cref="System.Threading.Tasks.TaskStatus.RanToCompletion">RanToCompletion</see>,
+        // <see cref="System.Threading.Tasks.TaskStatus.Faulted">Faulted</see>, or
+        // <see cref="System.Threading.Tasks.TaskStatus.Canceled">Canceled</see>.
+        static public bool GetIsCompletedSuccessfully(this Task task)
+        {
+            return task.IsCompleted && !task.IsFaulted && !task.IsCanceled;
+        }
+#endif
+    }
+
     public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TResult>
     {
         private static readonly Logger Log = new("KernelScheduler");
@@ -128,7 +150,7 @@ namespace Microsoft.DotNet.Interactive
                                     {
                                         if (!operation.TaskCompletionSource.Task.IsCompleted)
                                         {
-                                            if (t.IsCompletedSuccessfully)
+                                            if (t.GetIsCompletedSuccessfully())
                                             {
                                                 operation.TaskCompletionSource.TrySetResult(t.Result);
                                             }
@@ -159,7 +181,7 @@ namespace Microsoft.DotNet.Interactive
                 {
                     Run(deferredOperation);
 
-                    if (!deferredOperation.TaskCompletionSource.Task.IsCompletedSuccessfully)
+                    if (!deferredOperation.TaskCompletionSource.Task.GetIsCompletedSuccessfully())
                     {
                         Log.Error(
                             "Deferred operation failed",

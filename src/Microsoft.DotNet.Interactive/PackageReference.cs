@@ -32,8 +32,7 @@ namespace Microsoft.DotNet.Interactive
                 reference = null;
                 return false;
             }
-
-            var parts = value.Split(",", 2)
+            var parts = value.Split(new char[] {','}, 2)
                              .Select(v => v.Trim())
                              .ToArray();
 
