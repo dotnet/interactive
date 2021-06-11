@@ -46,6 +46,7 @@ The value is 123.
 
 const x = await interactive.csharp.getVariable("x");
 document.getElementById("output").innerText = `The value is ${x}.`;
+console.log(`The value is ${x}.`);
 
 #!markdown
 
