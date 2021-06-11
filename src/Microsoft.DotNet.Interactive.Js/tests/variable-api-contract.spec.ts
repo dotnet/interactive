@@ -15,7 +15,7 @@ describe("dotnet-interactive", () => {
             configureFetchForKernelDiscovery(rootUrl);
         });
 
-        afterEach(fetchMock.restore);
+        afterEach(() => fetchMock.restore());
 
         it("can load multiple variables in a single request", async () => {
             let expectedVariables: VariableResponse = {

@@ -20,7 +20,7 @@ interface CustomCommand2 extends KernelCommand {
 
 describe("dotnet-interactive", () => {
     describe("langauge kernel", () => {
-        afterEach(fetchMock.restore);
+        afterEach(() => fetchMock.restore());
 
         it("can submit code", async () => {
             const rootUrl = "https://dotnet.interactive.com:999";
@@ -47,7 +47,7 @@ describe("dotnet-interactive", () => {
     });
     describe("kernel client", () => {
         describe("submitCode", () => {
-            afterEach(fetchMock.restore);
+            afterEach(() => fetchMock.restore());
 
 
             it("returns resource url", async () => {
@@ -118,7 +118,7 @@ describe("dotnet-interactive", () => {
     });
 
     describe("client-side commands", () => {
-        afterEach(fetchMock.restore);
+        afterEach(() => fetchMock.restore());
         
         // Set up with fake client-side kernel
         const rootUrl = "https://dotnet.interactive.com:999";

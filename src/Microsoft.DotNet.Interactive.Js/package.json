@@ -8,7 +8,7 @@
   "scripts": {
     "build": "npm run rollup-dotnet-interactive && npm run rollup-dotnet-interactive-code-mirror",
     "build-ci": "rollup -c rollup.config.js",
-    "test": "mocha --opts mocha.opts",
+    "test": "mocha tests/**/*.spec.ts",
     "ciTest": "npm test -- --reporter mocha-multi-reporters --reporter-options configFile=testConfig.json",
     "rollup-dotnet-interactive": "npm run build-ci -- -i src/dotnet-interactive.ts -o dist/dotnet-interactive.js",
     "rollup-dotnet-interactive-code-mirror": "npm run build-ci -- -i src/dotnet-interactive-code-mirror.ts -o dist/dotnet-interactive-code-mirror.js",
@@ -30,33 +30,39 @@
   },
   "homepage": "https://github.com/dotnet/interactive#readme",
   "dependencies": {
-    "@microsoft/signalr": "3.1.3",
+    "@microsoft/signalr": "5.0.7",
     "tslib": "2.2.0"
   },
   "devDependencies": {
-    "@types/chai": "4.2.11",
-    "@types/chai-as-promised": "7.1.2",
-    "@types/fetch-mock": "7.3.2",
-    "@types/mocha": "7.0.2",
-    "@types/node": "13.11.1",
+    "@types/chai": "4.2.18",
+    "@types/chai-as-promised": "7.1.4",
+    "@types/fetch-mock": "7.3.3",
+    "@types/mocha": "8.2.2",
+    "@types/node": "15.12.2",
     "@types/node-fetch": "2.5.10",
-    "chai": "4.2.0",
+    "chai": "4.3.4",
     "chai-as-promised": "7.1.1",
-    "fetch-mock": "9.4.0",
+    "fetch-mock": "9.11.0",
     "mkdirp": "1.0.4",
-    "mocha": "7.1.1",
-    "mocha-multi-reporters": "1.1.7",
-    "mocha-trx-reporter": "3.2.4",
+    "mocha": "9.0.0",
+    "mocha-multi-reporters": "1.5.1",
+    "mocha-trx-reporter": "3.3.1",
     "mocha-typescript": "1.1.17",
     "node-fetch": "2.6.1",
     "requirejs": "2.3.6",
-    "rollup": "2.47.0",
+    "rollup": "2.51.2",
     "rollup-plugin-commonjs": "10.1.0",
     "rollup-plugin-node-resolve": "5.2.0",
     "rollup-plugin-typescript2": "0.30.0",
-    "source-map-support": "0.5.16",
+    "source-map-support": "0.5.19",
     "ts-mocha": "8.0.0",
-    "ts-node": "9.1.1",
-    "typescript": "4.2.4"
+    "ts-node": "10.0.0",
+    "typescript": "4.3.2"
+  },
+  "mocha": {
+    "ui": "bdd",
+    "timeout": "10000",
+    "require": ["requirejs", "source-map-support/register", "ts-node/register"],
+    "watch-files": ["tests/**/*.spec.ts"]
   }
 }

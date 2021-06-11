@@ -9,7 +9,7 @@ import { asKernelClientContainer, createMockKernelTransport } from "./testSuppor
 describe("dotnet-interactive", () => {
     describe("kernel discovery contract", () => {
 
-        afterEach(fetchMock.restore);
+        afterEach(() => fetchMock.restore());
 
         it("creates kernel clients for all discovered kernels", async () => {
             const rootUrl = "https://dotnet.interactive.com:999";
