@@ -206,7 +206,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         public async Task Fail_if_restore_source_has_an_invalid_uri()
         {
             using var restoreContext = new PackageRestoreContext();
-            restoreContext.AddRestoreSource("https://completelyFakerestore Source");
+            restoreContext.TryAddRestoreSource("https://completelyFakerestore Source");
             var result = await restoreContext.RestoreAsync();
             result.Succeeded.Should().BeFalse();
         }
@@ -216,7 +216,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             using var restoreContext = new PackageRestoreContext();
 
-            restoreContext.AddRestoreSource("https://completelyFakerestoreSource");
+            restoreContext.TryAddRestoreSource("https://completelyFakerestoreSource");
             await restoreContext.RestoreAsync();
             var restoreSources = restoreContext.RestoreSources;
             restoreSources.Should().ContainSingle("https://completelyFakerestoreSource");
@@ -228,8 +228,8 @@ namespace Microsoft.DotNet.Interactive.Tests
             using var restoreContext = new PackageRestoreContext();
 
             var savedRestoreSources = restoreContext.RestoreSources.ToArray();
-            restoreContext.AddRestoreSource("https://completelyFakerestoreSource");
-            restoreContext.AddRestoreSource("https://completelyFakerestoreSource");
+            restoreContext.TryAddRestoreSource("https://completelyFakerestoreSource");
+            restoreContext.TryAddRestoreSource("https://completelyFakerestoreSource");
             await restoreContext.RestoreAsync();
             var restoreSources = restoreContext.RestoreSources.Where(p => !savedRestoreSources.Contains(p));
             restoreSources.Should()

@@ -445,7 +445,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             ScriptState is not null &&
             (bool)_hasReturnValueMethod.Invoke(ScriptState.Script, null);
 
-        void ISupportNuget.AddRestoreSource(string source) => _packageRestoreContext.Value.AddRestoreSource(source);
+        void ISupportNuget.TryAddRestoreSource(string source) => _packageRestoreContext.Value.TryAddRestoreSource(source);
 
         PackageReference ISupportNuget.GetOrAddPackageReference(string packageName, string packageVersion) =>
             _packageRestoreContext.Value.GetOrAddPackageReference(

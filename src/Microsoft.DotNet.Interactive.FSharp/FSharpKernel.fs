@@ -415,8 +415,8 @@ type FSharpKernel () as this =
         member this.HandleAsync(command: ChangeWorkingDirectory, context: KernelInvocationContext) = handleChangeWorkingDirectory command context |> Async.StartAsTask :> Task
 
     interface ISupportNuget with
-        member _.AddRestoreSource(source: string) =
-            this.PackageRestoreContext.AddRestoreSource source
+        member _.TryAddRestoreSource(source: string) =
+            this.PackageRestoreContext.TryAddRestoreSource source
 
         member _.GetOrAddPackageReference(packageName: string, packageVersion: string) =
             this.PackageRestoreContext.GetOrAddPackageReference (packageName, packageVersion)
