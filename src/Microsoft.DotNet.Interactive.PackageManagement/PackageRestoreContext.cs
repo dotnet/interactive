@@ -54,7 +54,8 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public void AddRestoreSource(string source)
+        // By TryAdd we mean add it if it's not already in the collection
+        public void TryAddRestoreSource(string source)
         {
             _resolvedRestoreSources.GetOrAdd(source, source);
         }

@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive
             string packageName,
             string packageVersion = null);
 
-        void AddRestoreSource(string source);
+        void TryAddRestoreSource(string source);
 
         // Notifies Kernel that packagereferencing is complete, and provides a list of PackageReferences
         void RegisterResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> packageReferences);

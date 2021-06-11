@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (context.HandlingKernel is ISupportNuget kernel)
                 {
-                    kernel.AddRestoreSource(source.Replace("nuget:", ""));
+                    kernel.TryAddRestoreSource(source.Replace("nuget:", ""));
                 }
             });
             return iDirective;
