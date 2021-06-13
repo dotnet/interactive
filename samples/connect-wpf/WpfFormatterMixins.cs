@@ -21,7 +21,7 @@ namespace WpfConnect
 
         private static void UseSolidColorBrushFormatter()
         {
-            Formatter<SolidColorBrush>.Register((brush, writer) =>
+            Formatter.Register<SolidColorBrush>((brush, writer) =>
             {
                 var color = brush.Color;
                 string stringValue = $"#{color.R:X2}{color.G:X2}{color.B:X2}{color.A:X2}";

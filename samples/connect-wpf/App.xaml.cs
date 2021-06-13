@@ -25,7 +25,7 @@ namespace WpfConnect
         {
             base.OnStartup(e);
             _Kernel = new CompositeKernel();
-            _Kernel.UseLog();
+            _Kernel.UseLogMagicCommand();
 
             AddDispatcherCommand(_Kernel);
 
@@ -66,7 +66,6 @@ using {nameof(WpfConnect)};"));
         private CSharpKernel RegisterCSharpKernel()
         {
             var csharpKernel = new CSharpKernel()
-                .UseDefaultFormatting()
                 .UseNugetDirective()
                 .UseKernelHelpers()
                 .UseWho()
