@@ -4,17 +4,13 @@
 
 First, let's start the WPF app and connect to it.
 
-#!powershell
+#!pwsh
 
 Start-Process -NoNewWindow dotnet run
 
 #!csharp
 
 #!connect named-pipe --kernel-name wpf --pipe-name InteractiveWpf
-
-#!csharp
-
-#!wpf -h
 
 #!markdown
 
@@ -96,8 +92,8 @@ vm.Text = "Value changed!"
 
 #!dispatcher --enabled true
 //This should work
-App.MainWindow.Title
+App.MainWindow.Title = "Done correctly";
 
 #!dispatcher --enabled false
 //This is expected to fail
-App.MainWindow.Title
+App.MainWindow.Title = "Not so much";
