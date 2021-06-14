@@ -82,30 +82,28 @@ export class StdioKernelTransport implements KernelTransport {
         });
     }
 
-    public async setExternalUri(externalUri: Uri): Promise<void> {
-        this.externalUri = externalUri;
-        let bootstrapperUri = await this.configureTunnel(this.parseUri(`http://localhost:${this.httpPort}`));
-        if (bootstrapperUri === null) {
-            bootstrapperUri = await this.configureTunnel(externalUri);
-        }
+    public async setExternalUri(options: { externalUri: Uri, localUri: Uri }): Promise<void> {
+        this.externalUri = options.externalUri;
+        let bootstrapperUri = await this.configureTunnel(options);
 
         if (bootstrapperUri === null) {
             let errorMessage = `No valid bootstrapper uri can be found, .NET Interactive http api for Kernel Process ${this.childProcess?.pid} will not work correctly`;
             this.diagnosticChannel.appendLine(errorMessage);
             this.notification.displayError(errorMessage);
         }
+
     }
 
-    private async configureTunnel(uri: Uri): Promise<Uri | null> {
+    private async configureTunnel(options: { externalUri: Uri, localUri: Uri }): Promise<Uri | null> {
         try {
-            this.diagnosticChannel.appendLine(`Kernel process ${this.childProcess?.pid} Port ${this.httpPort} is using tunnel uri ${uri.toString()}`);
-            let apitunnelUri = `${uri.toString()}apitunnel`;
+            this.diagnosticChannel.appendLine(`Kernel process ${this.childProcess?.pid} Port ${this.httpPort} is using tunnel uri ${options.externalUri.toString()}`);
+            let apitunnelUri = `${options.localUri.toString()}apitunnel`;
             let response = await fetch(apitunnelUri, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ tunnelUri: uri.toString(), frontendType: "vscode" })
+                body: JSON.stringify({ tunnelUri: options.externalUri.toString(), frontendType: "vscode" })
             });
 
             let reponseObject: any = await response.json();
