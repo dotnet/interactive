@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelCommand, KernelCommandType, KernelEventType, KernelEventEnvelopeObserver, DisposableSubscription, KernelEvent, KernelCommandEnvelopeObserver, KernelEventEnvelope, KernelTransport } from '../../interfaces/contracts';
+import { KernelCommand, KernelCommandType, KernelEventType, KernelEventEnvelopeObserver, DisposableSubscription, KernelEvent, KernelEventEnvelope, KernelTransport, KernelCommandEnvelopeHandler } from '../../interfaces/contracts';
 
 // Replays all events given to it
 export class TestKernelTransport implements KernelTransport {
@@ -18,10 +18,8 @@ export class TestKernelTransport implements KernelTransport {
         };
     }
 
-    subscribeToCommands(observer: KernelCommandEnvelopeObserver): DisposableSubscription {
-        // Currently, the back channel for client-side kernels is only implemented by the SignalR
-        // transport, so tests in this project don't call this.
-        throw new Error("Stdio channel doesn't currently support a back channel");
+    setCommandHandler(handler: KernelCommandEnvelopeHandler) {
+        throw new Error("not supported");
     }
 
     async submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string): Promise<void> {

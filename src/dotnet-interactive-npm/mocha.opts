@@ -1,1 +1,0 @@
-dist/common/tests/unit/**/*.test.js --exclude dist/common/tests/unit/vscode/**

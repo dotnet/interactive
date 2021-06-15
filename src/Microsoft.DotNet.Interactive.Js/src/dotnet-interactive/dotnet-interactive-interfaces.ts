@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelEventEnvelopeObserver, DisposableSubscription, KernelCommandEnvelopeObserver, KernelCommand, KernelEvent, KernelCommandEnvelope, KernelEventEnvelope, Disposable } from "./contracts";
+import { KernelEventEnvelopeObserver, DisposableSubscription, KernelCommand, KernelEvent, Disposable } from "./contracts";
 
 
 export interface VariableRequest {

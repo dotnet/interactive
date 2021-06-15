@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.VSCode;
 
 namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 {
@@ -43,18 +44,21 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
             $"{nameof(SubmitCode)}.{nameof(SubmitCode.SubmissionType)}"
         };
 
-        private static IEnumerable<Type> AssemblyTypes = typeof(KernelCommand).Assembly.ExportedTypes;
+        private static IEnumerable<Type> CoreAssemblyTypes = typeof(KernelCommand).Assembly.ExportedTypes;
+        private static IEnumerable<Type> VSCodeAssemblyTypes = typeof(VSCodeInteractiveHost).Assembly.ExportedTypes;
+
+        private static IEnumerable<Type> AllAssemblyTypes = CoreAssemblyTypes.Concat(VSCodeAssemblyTypes);
 
         public static string Generate()
         {
             var builder = new StringBuilder();
 
-            var commandTypes = AssemblyTypes
+            var commandTypes = AllAssemblyTypes
                                .Where(t => !t.IsAbstract && !t.IsInterface)
                                .Where(t => typeof(KernelCommand).IsAssignableFrom(t))
                                .OrderBy(t => t.Name)
                                .ToList();
-            var eventTypes = AssemblyTypes
+            var eventTypes = AllAssemblyTypes
                              .Where(t => !t.IsAbstract && !t.IsInterface)
                              .Where(t => typeof(KernelEvent).IsAssignableFrom(t))
                              .OrderBy(t => t.Name)
@@ -150,7 +154,7 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
                 HandlePropertyType(propertyType);
                 if (propertyType.IsAbstract)
                 {
-                    foreach (var derivedPropertyType in AssemblyTypes.Where(t => t.IsSubclassOf(propertyType)))
+                    foreach (var derivedPropertyType in AllAssemblyTypes.Where(t => t.IsSubclassOf(propertyType)))
                     {
                         HandlePropertyType(derivedPropertyType);
                     }

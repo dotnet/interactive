@@ -3,7 +3,7 @@
 
 import * as fetchMock from "fetch-mock";
 import { DotnetInteractiveClient, KernelClientContainer } from "../src/dotnet-interactive/dotnet-interactive-interfaces";
-import { KernelTransport, KernelCommandEnvelope, KernelEventEnvelopeObserver, KernelCommand, KernelCommandType, KernelCommandEnvelopeObserver, KernelEvent, KernelEventType, KernelEventEnvelope } from "../src/dotnet-interactive/contracts";
+import { KernelTransport, KernelCommandEnvelope, KernelEventEnvelopeObserver, KernelCommand, KernelCommandType, KernelCommandEnvelopeHandler, KernelEventEnvelope } from "../src/dotnet-interactive/contracts";
 import { TokenGenerator } from "../src/dotnet-interactive/tokenGenerator";
 
 
@@ -21,7 +21,7 @@ export class MockKernelTransport implements KernelTransport {
     public publishedEvents: Array<KernelEventEnvelope>;
     private tokenGenerator = new TokenGenerator();
     private eventObservers: { [key: string]: KernelEventEnvelopeObserver } = {};
-    private commandObservers: { [key: string]: KernelCommandEnvelopeObserver } = {};
+    private commandHandlers: { [key: string]: KernelCommandEnvelopeHandler } = {};
 
     constructor() {
 
@@ -35,32 +35,26 @@ export class MockKernelTransport implements KernelTransport {
 
         return {
             dispose: () => {
-                delete  this.eventObservers[key];
+                delete this.eventObservers[key];
             }
         };
     }
 
-    public subscribeToCommands(observer: KernelCommandEnvelopeObserver) {
-        let key =  this.tokenGenerator.GetNewToken();
-        this.commandObservers[key] = observer;
-
-        return {
-            dispose: () => {
-                delete  this.commandObservers[key];
-            }
-        };
+    public setCommandHandler(handler: KernelCommandEnvelopeHandler) {
+        let key = this.tokenGenerator.GetNewToken();
+        this.commandHandlers[key] = handler;
     }
 
     public fakeIncomingSubmitCommand(envelope: KernelCommandEnvelope) {
-        for (let key of Object.keys(this.commandObservers)) {
-            let observer = this.commandObservers[key];
+        for (let key of Object.keys(this.commandHandlers)) {
+            let observer = this.commandHandlers[key];
             observer(envelope);
         }
     }
 
     publishKernelEvent(eventEnvelope: KernelEventEnvelope): Promise<void> {
         this.publishedEvents.push(eventEnvelope);
-        return Promise.resolve();        
+        return Promise.resolve();
     }
 
     public submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string): Promise<void> {

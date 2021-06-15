@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.VSCode\Microsoft.DotNet.Interactive.VSCode.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -14,8 +14,8 @@ export interface KernelEventEnvelopeObserver {
     (eventEnvelope: KernelEventEnvelope): void;
 }
 
-export interface KernelCommandEnvelopeObserver {
-    (eventEnvelope: KernelCommandEnvelope): void;
+export interface KernelCommandEnvelopeHandler {
+    (eventEnvelope: KernelCommandEnvelope): Promise<void>;
 }
 
 export interface Disposable {
@@ -27,7 +27,7 @@ export interface DisposableSubscription extends Disposable {
 
 export interface KernelTransport extends Disposable {
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;
-    subscribeToCommands(observer: KernelCommandEnvelopeObserver): DisposableSubscription;
+    setCommandHandler(handler: KernelCommandEnvelopeHandler): void;
     submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string): Promise<void>;
     publishKernelEvent(eventEnvelope: KernelEventEnvelope): Promise<void>;
     waitForReady(): Promise<void>;

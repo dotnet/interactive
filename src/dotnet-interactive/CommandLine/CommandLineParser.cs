@@ -26,6 +26,7 @@ using Microsoft.DotNet.Interactive.Jupyter.Formatting;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Telemetry;
+using Microsoft.DotNet.Interactive.VSCode;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Pocket;
@@ -395,6 +396,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         kernel.UseQuitCommand();
                         
                         var kernelServer = kernel.CreateKernelServer(startupOptions.WorkingDir);
+                        var frontEndKernel = kernelServer.GetFrontEndKernel("vscode");
+                        kernel.Add(frontEndKernel);
 
                         if (startupOptions.EnableHttpApi)
                         {
@@ -402,8 +405,23 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                             if (isVsCode)
                             {
-                                services.AddSingleton(clientSideKernelClient);
+                                kernel.VisitSubkernels(k =>
+                                {
+                                    switch (k)
+                                    {
+                                        case CSharpKernel ck:
+                                            ck.UseVSCodeHelpers();
+                                            break;
+                                        case FSharpKernel fk:
+                                            fk.UseVSCodeHelpers();
+                                            break;
+                                    }
+                                });
+                                // TODO: move this
+                                kernel.RegisterCommandType<GetInput>();
+                                KernelEventEnvelope.RegisterEvent<InputProduced>();
 
+                                services.AddSingleton(clientSideKernelClient);
                                 ((HtmlNotebookFrontendEnvironment)frontendEnvironment).RequiresAutomaticBootstrapping =
                                     false;
                                 kernel.Add(

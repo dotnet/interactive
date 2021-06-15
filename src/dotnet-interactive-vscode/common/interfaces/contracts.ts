@@ -10,6 +10,7 @@ export const CancelType = "Cancel";
 export const ChangeWorkingDirectoryType = "ChangeWorkingDirectory";
 export const DisplayErrorType = "DisplayError";
 export const DisplayValueType = "DisplayValue";
+export const GetInputType = "GetInput";
 export const ParseNotebookType = "ParseNotebook";
 export const QuitType = "Quit";
 export const RequestCompletionsType = "RequestCompletions";
@@ -26,6 +27,7 @@ export type KernelCommandType =
     | typeof ChangeWorkingDirectoryType
     | typeof DisplayErrorType
     | typeof DisplayValueType
+    | typeof GetInputType
     | typeof ParseNotebookType
     | typeof QuitType
     | typeof RequestCompletionsType
@@ -58,6 +60,11 @@ export interface DisplayError extends KernelCommand {
 export interface DisplayValue extends KernelCommand {
     formattedValue: FormattedValue;
     valueId: string;
+}
+
+export interface GetInput extends KernelCommand {
+    prompt: string;
+    isPassword: boolean;
 }
 
 export interface ParseNotebook extends KernelCommand {
@@ -116,6 +123,7 @@ export const DisplayedValueUpdatedType = "DisplayedValueUpdated";
 export const ErrorProducedType = "ErrorProduced";
 export const HoverTextProducedType = "HoverTextProduced";
 export const IncompleteCodeSubmissionReceivedType = "IncompleteCodeSubmissionReceived";
+export const InputProducedType = "InputProduced";
 export const InputRequestedType = "InputRequested";
 export const KernelExtensionLoadedType = "KernelExtensionLoaded";
 export const KernelReadyType = "KernelReady";
@@ -142,6 +150,7 @@ export type KernelEventType =
     | typeof ErrorProducedType
     | typeof HoverTextProducedType
     | typeof IncompleteCodeSubmissionReceivedType
+    | typeof InputProducedType
     | typeof InputRequestedType
     | typeof KernelExtensionLoadedType
     | typeof KernelReadyType
@@ -211,6 +220,10 @@ export interface HoverTextProduced extends KernelEvent {
 }
 
 export interface IncompleteCodeSubmissionReceived extends KernelEvent {
+}
+
+export interface InputProduced extends KernelEvent {
+    value: string;
 }
 
 export interface InputRequested extends KernelEvent {
@@ -369,8 +382,8 @@ export interface KernelEventEnvelopeObserver {
     (eventEnvelope: KernelEventEnvelope): void;
 }
 
-export interface KernelCommandEnvelopeObserver {
-    (eventEnvelope: KernelCommandEnvelope): void;
+export interface KernelCommandEnvelopeHandler {
+    (eventEnvelope: KernelCommandEnvelope): Promise<void>;
 }
 
 export interface Disposable {
@@ -382,7 +395,7 @@ export interface DisposableSubscription extends Disposable {
 
 export interface KernelTransport extends Disposable {
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;
-    subscribeToCommands(observer: KernelCommandEnvelopeObserver): DisposableSubscription;
+    setCommandHandler(handler: KernelCommandEnvelopeHandler): void;
     submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string): Promise<void>;
     publishKernelEvent(eventEnvelope: KernelEventEnvelope): Promise<void>;
     waitForReady(): Promise<void>;
