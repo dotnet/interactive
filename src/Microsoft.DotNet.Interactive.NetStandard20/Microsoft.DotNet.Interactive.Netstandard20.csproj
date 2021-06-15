@@ -7,6 +7,6 @@
     <PackageTags>interactive desktop</PackageTags>
   </PropertyGroup>
 
-  <Import Project="Microsoft.DotNet.Interactive.csproj" />
+  <Import Project="$(MSBuildThisFileDirectory)../Microsoft.DotNet.Interactive/Microsoft.DotNet.Interactive.csproj" />
 
 </Project>

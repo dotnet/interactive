@@ -80,7 +80,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactiv
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.PackageManagement", "src\Microsoft.DotNet.Interactive.PackageManagement\Microsoft.DotNet.Interactive.PackageManagement.csproj", "{53EF46D6-5E21-4507-B8C0-779B634262AA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Netstandard20", "src\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.Netstandard20.csproj", "{0FAA07B9-DBE4-47B5-939F-E1A69B975AD0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Netstandard20", "src\Microsoft.DotNet.Interactive.NetStandard20\Microsoft.DotNet.Interactive.Netstandard20.csproj", "{0FAA07B9-DBE4-47B5-939F-E1A69B975AD0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
