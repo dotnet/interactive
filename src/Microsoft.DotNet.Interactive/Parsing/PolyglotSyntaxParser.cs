@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Connection;
+using Microsoft.DotNet.Interactive.Utility;
 
 #nullable enable
 
@@ -79,21 +80,26 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         {
                             if (isProxyKernel)
                             {
+                                var kernelUri = KernelUri.Parse(directiveToken.DirectiveName);
+                                directiveToken = new DirectiveToken(_sourceText, new TextSpan(currentToken.Span.Start, kernelUri.GetLocalKernelName().Length + 2), rootNode.SyntaxTree);
+
+                                var remoteKernelName = kernelUri.GetRemoteKernelName();
                                 directiveNode =
-                                    new ProxyKernelNameDirectiveNode(directiveToken, _sourceText, rootNode.SyntaxTree);
+                                    new ProxyKernelNameDirectiveNode(remoteKernelName, directiveToken, _sourceText, rootNode.SyntaxTree);
                                 currentKernelIsProxy = true;
                                 
                                 AssignDirectiveParser(directiveNode);
                                 rootNode.Add(directiveNode);
+                                currentKernelName = directiveNode.KernelName;
                             }
                             else
                             {
                                 directiveNode =
                                     new KernelNameDirectiveNode(directiveToken, _sourceText, rootNode.SyntaxTree);
                                 currentKernelIsProxy = false;
+                                currentKernelName = directiveToken.DirectiveName;
                             }
 
-                            currentKernelName = directiveToken.DirectiveName;
                             if (_subkernelInfoByKernelName.TryGetValue(currentKernelName ?? string.Empty, out currentKernelInfo))
                             {
                                 directiveNode.KernelUri = currentKernelInfo.kernelUri;
@@ -117,11 +123,9 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         switch (directiveNode)
                         {
                             case { } _ when !currentKernelIsProxy:
-                                if (_tokens.Count > i + 1 &&
-    _tokens[i + 1] is TriviaToken triviaNode)
+                                if (_tokens.Count > i + 1 && _tokens[i + 1] is TriviaToken triviaNode)
                                 {
                                     i += 1;
-
                                     directiveNode.Add(triviaNode);
                                 }
 
@@ -180,7 +184,9 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             void AppendAsLanguageNode(SyntaxNodeOrToken nodeOrToken)
             {
-                if (rootNode.ChildNodes.LastOrDefault() is LanguageNode previousLanguageNode &&
+                var previousSyntaxNode = rootNode.ChildNodes.LastOrDefault();
+                var previousLanguageNode = previousSyntaxNode as LanguageNode;
+                if (previousLanguageNode is { } &&
                     previousLanguageNode is not KernelNameDirectiveNode &&
                     previousLanguageNode is not ProxyKernelNameDirectiveNode &&
                     previousLanguageNode.KernelName == currentKernelName)
@@ -190,8 +196,11 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 }
                 else
                 {
+                    var targetKernelName = previousLanguageNode is ProxyKernelNameDirectiveNode proxyNode
+                        ? $"{proxyNode.KernelName}/{proxyNode.RemoteKernelName}".TrimEnd('/')
+                        : currentKernelName ?? DefaultLanguage;
                     var languageNode = new LanguageNode(
-                        currentKernelName ?? DefaultLanguage,
+                        targetKernelName,
                         _sourceText,
                         rootNode.SyntaxTree);
                     languageNode.KernelUri = currentKernelInfo.kernelUri;
@@ -257,8 +266,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         .ToDictionary(info => info.KernelAlias);
             }
 
-
-            return _kernelChooserDirectives.TryGetValue(kernelAlias, out chooseKernelDirectiveInfo);
+            var localKernelName = kernelAlias.GetLocalKernelName();
+            return _kernelChooserDirectives.TryGetValue(localKernelName, out chooseKernelDirectiveInfo);
         }
 
         private record ChooseKernelDirectiveInfo(string KernelAlias, bool IsProxyKernel);

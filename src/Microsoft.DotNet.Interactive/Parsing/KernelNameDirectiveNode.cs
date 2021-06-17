@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
     public class KernelNameDirectiveNode : DirectiveNode
     {
         internal KernelNameDirectiveNode(
-            DirectiveToken directiveToken, 
+            DirectiveToken directiveToken,
             SourceText sourceText,
             PolyglotSyntaxTree? syntaxTree) : base(directiveToken, sourceText, syntaxTree)
         {
