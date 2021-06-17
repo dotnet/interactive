@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Parsing;
+using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
@@ -74,8 +75,10 @@ namespace Microsoft.DotNet.Interactive.Connection
                     return;
             }
 
-            var targetKernelName = command.TargetKernelName;
-            command.TargetKernelName = null;
+            var kernelUri = KernelUri.Parse(command.TargetKernelName);
+            var remoteTargetKernelName = kernelUri.GetRemoteKernelName();
+            var localTargetKernelName = command.TargetKernelName;
+            command.TargetKernelName = remoteTargetKernelName;
             var token = command.GetToken();
             var completionSource = new TaskCompletionSource<bool>();
             var sub = KernelEvents
@@ -96,7 +99,7 @@ namespace Microsoft.DotNet.Interactive.Connection
             await completionSource.Task;
             sub.Dispose();
 
-            command.TargetKernelName = targetKernelName;
+            command.TargetKernelName = localTargetKernelName;
         }
     }
 }

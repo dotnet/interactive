@@ -124,6 +124,11 @@ namespace Microsoft.DotNet.Interactive.Parsing
                             TargetKernelName = targetKernelName
                         };
 
+                        if (directiveNode is ProxyKernelNameDirectiveNode p)
+                        {
+                            directiveCommand.TargetKernelName = p.KernelName;
+                        }
+
                         if (directiveNode is KernelNameDirectiveNode kernelNameNode)
                         {
                             targetKernelName = kernelNameNode.KernelName;
