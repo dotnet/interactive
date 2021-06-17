@@ -421,8 +421,38 @@ f();"
             KernelEvents.Should().NotContainErrors();
 
             KernelEvents
-                .OfType<DisplayedValueProduced>()
-                .SelectMany(v => v.FormattedValues)
+                .Should()
+                .ContainSingle<DisplayedValueProduced>()
+                .Which
+                .FormattedValues
+                .Should()
+                .ContainSingle(v =>
+                                   v.MimeType == "text/html" &&
+                                   v.Value.ToString().Contains(Formatter.NullString.HtmlEncode().ToString()));
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Null_return_value_is_formatted_as_null(Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            var submission = language switch
+            {
+                Language.CSharp => "null",
+                Language.FSharp => "let o : obj = null\no"
+            };
+
+            await kernel.SendAsync(new SubmitCode(submission));
+
+            KernelEvents.Should().NotContainErrors();
+
+            KernelEvents
+                .Should()
+                .ContainSingle<ReturnValueProduced>()
+                .Which
+                .FormattedValues
                 .Should()
                 .ContainSingle(v =>
                                    v.MimeType == "text/html" &&

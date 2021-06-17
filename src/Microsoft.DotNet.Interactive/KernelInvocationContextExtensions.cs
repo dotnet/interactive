@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -18,20 +19,16 @@ namespace Microsoft.DotNet.Interactive
         {
             var displayId = Guid.NewGuid().ToString();
 
-            mimeType ??= Formatter.GetPreferredMimeTypeFor(value?.GetType());
-
-            var formattedValue = new FormattedValue(
-                mimeType,
-                value.ToDisplayString(mimeType));
+            var formattedValues = FormattedValue.FromObject(value, mimeType);
 
             context.Publish(
                 new DisplayedValueProduced(
                     value,
                     context?.Command,
-                    new[] { formattedValue },
+                    formattedValues,
                     displayId));
 
-            var displayedValue = new DisplayedValue(displayId, mimeType, context);
+            var displayedValue = new DisplayedValue(displayId, mimeType ?? formattedValues.FirstOrDefault()?.MimeType, context);
 
             return displayedValue;
         }
