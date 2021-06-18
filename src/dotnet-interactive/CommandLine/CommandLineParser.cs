@@ -382,7 +382,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 };
 
                 stdIOCommand.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext>(
-                    (startupOptions, options, console, context) =>
+                    async (startupOptions, options, console, context) =>
                     {
                         var isVsCode = context.ParseResult.Directives.Contains("vscode");
                         FrontendEnvironment frontendEnvironment = startupOptions.EnableHttpApi 
@@ -405,15 +405,12 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                             if (isVsCode)
                             {
-                                kernel.VisitSubkernels(k =>
+                                await kernel.VisitSubkernelsAsync(async k =>
                                 {
                                     switch (k)
                                     {
-                                        case CSharpKernel ck:
-                                            ck.UseVSCodeHelpers();
-                                            break;
-                                        case FSharpKernel fk:
-                                            fk.UseVSCodeHelpers();
+                                        case DotNetKernel dk:
+                                            await dk.UseVSCodeHelpersAsync(kernel);
                                             break;
                                     }
                                 });
@@ -442,14 +439,14 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             {
                                 kernelServer.NotifyIsReady();
                             };
-                            return startHttp(startupOptions, console, startServer, context);
+                            await startHttp(startupOptions, console, startServer, context);
                         }
 
                         kernel.Add(
                             new JavaScriptKernel(),
                             new[] { "js" });
 
-                        return startStdIO(
+                        await startStdIO(
                         startupOptions,
                         kernelServer,
                         console);

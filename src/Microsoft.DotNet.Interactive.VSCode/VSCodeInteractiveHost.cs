@@ -12,6 +12,13 @@ namespace Microsoft.DotNet.Interactive.VSCode
 {
     public class VSCodeInteractiveHost : IInteractiveHost
     {
+        private readonly Kernel _kernel;
+
+        public VSCodeInteractiveHost(Kernel kernel)
+        {
+            _kernel = kernel;
+        }
+
         /// <summary>
         /// Gets input from the user.
         /// </summary>
@@ -23,7 +30,7 @@ namespace Microsoft.DotNet.Interactive.VSCode
             var command = new GetInput(prompt, isPassword, targetKernelName: "vscode");
             var completionSource = new TaskCompletionSource<string>();
             var token = command.GetToken();
-            Kernel.Root.KernelEvents.Where(e => e.Command.GetToken() == token).Subscribe(e =>
+            _kernel.KernelEvents.Where(e => e.Command.GetToken() == token).Subscribe(e =>
             {
                 switch (e)
                 {
@@ -38,7 +45,7 @@ namespace Microsoft.DotNet.Interactive.VSCode
                         break;
                 }
             }, cancellationToken);
-            var _ = Kernel.Root.SendAsync(command, cancellationToken);
+            var _ = _kernel.SendAsync(command, cancellationToken);
             return completionSource.Task;
         }
     }
