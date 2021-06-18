@@ -1,4 +1,4 @@
-# Using .NET notebooks with Jupyter Notebooks / JupyterLabs
+# Using .NET notebooks with Jupyter Notebook / JupyterLab
 
 There are two ways to use .NET notebooks on your machine with .NET Interactive:
 
@@ -71,4 +71,3 @@ Once Jupyter has launched in your browser, you have the option to create noteboo
 For more information on the .NET notebook experience, please check out our samples and documentation on [Binder](https://mybinder.org/v2/gh/dotnet/interactive/main?urlpath=lab) or in this repo under [`docs`](../docs/README.md) and [`samples`](../samples/readme.md).
 
 Once you've created a .NET notebook, you might want to share it with others. In the [next document](CreateBinder.md), you will learn how to share your .NET notebook with others using Binder. 
-
