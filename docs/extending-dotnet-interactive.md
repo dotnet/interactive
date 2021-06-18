@@ -77,3 +77,13 @@ Formatter.Register<DateTime>((date, writer) =>
 ```
 
 The `Formatter` API can be used to customize the output for a given .NET type (`System.DateTime`) for a mime type (`"txt/html"`).
+
+## Script-based extensions
+
+Extensions can also be script-based.  This enables a NuGet package to not have any direct dependency on the
+`Microsoft.DotNet.Interactive` libraries or tools which means that any other projects that normally reference that
+NuGet package also will not have a dependency on .NET Interactive.
+
+NuGet packages that are loaded via `#r "nuget:..."` are probed for a well-known file, `interactive-extensions/dotnet/extension.dib`.
+If that file is found, then it is read in its entirety and executed and that code can add new commands, register
+formatters, etc.  See the [RandomNumber](../samples/extensions/RandomNumber/README.md) extension to see this in action.

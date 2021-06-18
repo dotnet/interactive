@@ -6,4 +6,6 @@ The `ClockExtension` sample builds a standalone extension that adds a magic comm
 
 The `Library` sample is more complex. This sample illustrates how you can augment your own libraries with notebook-specific enhancements that will be available when someone uses you library in .NET Interactive, but without adding a direct dependency from your library to .NET Interactive.
 
+The `RandomNumber` extension shows how to build a script-based extension with no direct dependency on the `Microsoft.DotNet.Interactive` libraries.  See `README.md` in that directory for more information.
+
 You can read more about building extensions [here](../../docs/extending-dotnet-interactive.md).
