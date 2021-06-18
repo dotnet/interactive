@@ -1,4 +1,4 @@
-# Using .NET notebooks on your machine
+# Using .NET notebooks with Jupyter Notebooks / JupyterLabs
 
 There are two ways to use .NET notebooks on your machine with .NET Interactive:
 
