@@ -38,11 +38,6 @@
     <PackageReference Include="System.Text.Json" Version="5.0.2" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
-    <PackageReference Include="System.Memory" Version="4.5.4" />
-    <PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
-  </ItemGroup>
-
   <ItemGroup>
     <NuspecProperty Include="MicrosoftCodeAnalysisAnalyzersVersion=$(MicrosoftCodeAnalysisAnalyzersVersion)" />	
     <NuspecProperty Include="SystemRuntimeLoaderVersion=$(SystemRuntimeLoaderVersion)" />	

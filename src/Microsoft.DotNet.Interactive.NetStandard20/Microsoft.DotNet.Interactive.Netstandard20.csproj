@@ -9,4 +9,14 @@
 
   <Import Project="$(MSBuildThisFileDirectory)../Microsoft.DotNet.Interactive/Microsoft.DotNet.Interactive.csproj" />
 
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)../Microsoft.DotNet.Interactive/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Memory" Version="4.5.4" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
+  </ItemGroup>
+
 </Project>
