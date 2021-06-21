@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -60,6 +61,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                             {
                                 context.Display(code);
                             }
+
 
                             cSharpKernel.TryGetVariable(variableName, out DataFrame oldFrame);
 
@@ -153,6 +155,18 @@ var {variableName} = new {frameTypeName}();
 
 namespace Microsoft.ML
 {
+    public static class DataFrameParser
+    {
+        public static DataFrame Parse(string csvText, char separator = ',', bool header = true,
+            string[] columnNames = null, Type[] dataTypes = null,
+            int numRows = -1, int guessRows = 10,
+            bool addIndexColumn = false, Encoding encoding = null)
+        {
+            using var stream = new MemoryStream(Encoding.ASCII.GetBytes(csvText));
+            return DataFrame.LoadCsv(stream, separator, header, columnNames, dataTypes, numRows, guessRows, addIndexColumn, encoding);
+        }
+    }
+
     public static class DataViewExtensions
     {
         public static SandDanceDataExplorer ExploreWithSandDance(this IDataView source)
