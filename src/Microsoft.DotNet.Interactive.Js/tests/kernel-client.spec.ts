@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { expect } from "chai";
-import { createDotnetInteractiveClient } from "../src/dotnet-interactive/kernel-client-impl";
+import { createDotnetInteractiveClient } from "../src/dotnet-interactive-browser/kernel-client-impl";
 import * as fetchMock from "fetch-mock";
 import { configureFetchForKernelDiscovery, createMockKernelTransport, MockKernelTransport, asKernelClientContainer } from "./testSupport";
 import { CodeSubmissionReceived, CodeSubmissionReceivedType, KernelCommand, KernelCommandEnvelope, KernelCommandType, KernelEventEnvelope, KernelEventEnvelopeObserver, SubmitCodeType } from "../src/dotnet-interactive/contracts";
