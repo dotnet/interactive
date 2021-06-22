@@ -39,6 +39,7 @@ export interface IKernelEventObserver {
 
 // Implemented by the client-side kernel.
 export interface Kernel {
+    readonly name:string;
     send(kernelCommand: { command: KernelCommand, commandType: string }): Promise<void>;
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;
     registerCommandHandler(handler: IKernelCommandHandler): void;

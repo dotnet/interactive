@@ -78,3 +78,25 @@ export class MockKernelTransport implements KernelTransport {
 export function createMockKernelTransport(rootUrl: string): Promise<KernelTransport> {
     return Promise.resolve(new MockKernelTransport());
 }
+
+export class FakeKernel implements Kernel {
+    name: string;
+
+    /**
+     *
+     */
+    constructor(name:string) {
+        this.name = name;
+    }
+    
+    send(kernelCommand: { command: KernelCommand; commandType: string; }): Promise<void> {
+        throw new Error("Method not implemented.");
+    }
+    subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription {
+        throw new Error("Method not implemented.");
+    }
+    registerCommandHandler(handler: IKernelCommandHandler): void {
+        throw new Error("Method not implemented.");
+    }
+
+}
