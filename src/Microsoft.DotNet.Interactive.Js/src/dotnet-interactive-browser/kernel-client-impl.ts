@@ -1,12 +1,12 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelClient, VariableRequest, VariableResponse, DotnetInteractiveClient, ClientFetch, Kernel, IKernelCommandHandler } from "./dotnet-interactive-interfaces";
-import { TokenGenerator } from "./tokenGenerator";
-import { signalTransportFactory } from "./signalr-client";
-import { CommandFailed, CommandFailedType, KernelTransport, KernelEventEnvelope, KernelEventEnvelopeObserver, DisposableSubscription, SubmitCode, SubmitCodeType, DisplayedValueProduced, DisplayedValueProducedType } from "./contracts";
+import { KernelClient, VariableRequest, VariableResponse, DotnetInteractiveClient, ClientFetch, Kernel, IKernelCommandHandler } from "../dotnet-interactive/dotnet-interactive-interfaces";
+import { TokenGenerator } from "../dotnet-interactive/tokenGenerator";
+import { signalTransportFactory } from "../dotnet-interactive/signalr-client";
+import { CommandFailed, CommandFailedType, KernelTransport, KernelEventEnvelope, KernelEventEnvelopeObserver, DisposableSubscription, SubmitCode, SubmitCodeType, DisplayedValueProduced, DisplayedValueProducedType } from "../dotnet-interactive/contracts";
 import { createDefaultClientFetch } from "./clientFetch";
-import { clientSideKernelFactory } from "./client-side-kernel";
+import { clientSideKernelFactory } from "../dotnet-interactive/client-side-kernel";
 
 export interface KernelClientImplParameteres {
     clientFetch: (input: RequestInfo, init: RequestInit) => Promise<Response>;
