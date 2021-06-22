@@ -142,6 +142,7 @@ describe("dotnet-interactive", () => {
                     kernelEventHandlers = [];
                     registeredCommandHandlers = {};
                     kernel = {
+                        name: "client-side-kernel",
                         send: command => {
                             commandsSentToKernel.push(command);
                             return Promise.resolve();

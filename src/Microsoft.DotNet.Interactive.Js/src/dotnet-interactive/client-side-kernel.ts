@@ -7,9 +7,15 @@ import { IKernelCommandHandler, Kernel } from "./dotnet-interactive-interfaces";
 import { TokenGenerator } from "./tokenGenerator";
 
 export class ClientSideKernel implements Kernel {
+    name: string;
     private _commandHandlers: { [commandType: string]: IKernelCommandHandler } = {};
     private readonly _eventObservers: { [token: string]: KernelEventEnvelopeObserver } = {};
     private readonly _tokenGenerator: TokenGenerator = new TokenGenerator();
+
+
+    constructor() {
+       this.name = "client-side-kernel";
+    }
 
     // Is it worth us going to efforts to ensure that the Promise returned here accurately reflects
     // the command's progress? The only thing that actually calls this is the kernel transport, through
