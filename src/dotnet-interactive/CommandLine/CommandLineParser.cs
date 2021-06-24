@@ -250,7 +250,10 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                     services.AddKernel(kernel);
 
+                    var clientSideKernelClient = new SignalRBackchannelKernelClient();
+
                     services.AddSingleton(c => ConnectionInformation.Load(options.ConnectionFile))
+                        .AddSingleton(clientSideKernelClient)
                         .AddSingleton(c =>
                         {
                             return new JupyterRequestContextScheduler(delivery => c.GetRequiredService<JupyterRequestContextHandler>()
