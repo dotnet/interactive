@@ -1,8 +1,9 @@
 import { InspectOptions } from "util";
+import { KernelInvocationContext } from "./dotnet-interactive-interfaces";
 
 export class ConsoleCapture implements Console {
     private _global: Console = null;
-    constructor() {
+    constructor(private kernelInvocationContext: KernelInvocationContext) {
        this._global = global.console;
        global.console = this;
         
