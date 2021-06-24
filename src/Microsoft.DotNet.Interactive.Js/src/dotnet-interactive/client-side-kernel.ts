@@ -8,7 +8,7 @@ import { TokenGenerator } from "./tokenGenerator";
 
 export class ClientSideKernel implements Kernel {
     private _commandHandlers: { [commandType: string]: IKernelCommandHandler } = {};
-    private readonly _eventObservers: { [token: string]: KernelEventEnvelopeObserver} = {};
+    private readonly _eventObservers: { [token: string]: KernelEventEnvelopeObserver } = {};
     private readonly _tokenGenerator: TokenGenerator = new TokenGenerator();
 
     // Is it worth us going to efforts to ensure that the Promise returned here accurately reflects
@@ -22,7 +22,7 @@ export class ClientSideKernel implements Kernel {
         if (handler) {
             let resolvePromise: () => void;
             let promise = new Promise<void>(r => resolvePromise = r);
-                let _: Promise<void> = (async () => {
+            let _: Promise<void> = (async () => {
                 let context = ClientSideKernelInvocationContext.establish(kernelCommand);
 
                 let isRootCommand = context.command === command;
@@ -78,13 +78,14 @@ export class ClientSideKernel implements Kernel {
                 command: {
                     command: kernelEvent.command,
                     commandType: <KernelCommandType>kernelEvent.commandType
-                }});
+                }
+            });
         }
     }
 }
 
 export function attachKernelToTransport(kernel: Kernel, kernelTransport: KernelTransport) {
-    kernelTransport.subscribeToCommands(env => kernel.send(env));
+    kernelTransport.setCommandHandler(env => kernel.send(env));
     kernel.subscribeToKernelEvents(env => kernelTransport.publishKernelEvent(env))
 }
 

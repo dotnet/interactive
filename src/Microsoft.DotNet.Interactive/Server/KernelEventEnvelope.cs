@@ -44,6 +44,12 @@ namespace Microsoft.DotNet.Interactive.Server
 
         KernelEvent IKernelEventEnvelope.Event => _event;
 
+        public static void RegisterEvent<TEvent>() where TEvent : KernelEvent
+        {
+            _envelopeTypesByEventTypeName[typeof(TEvent).Name] = typeof(KernelEventEnvelope<TEvent>);
+            _eventTypesByEventTypeName[typeof(TEvent).Name] = typeof(TEvent);
+        }
+
         public static void ResetToDefaults()
         {
             _envelopeTypesByEventTypeName = new Dictionary<string, Type>

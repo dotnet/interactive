@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { VSCodeKernel } from './vscodeKernel';
 import * as vscodeLike from '../interfaces/vscode-like';
 import { ClientMapper } from '../clientMapper';
 
@@ -102,6 +103,8 @@ export async function activate(context: vscode.ExtensionContext) {
             clientMapper.closeClient(notebookUri, false);
         });
 
+        var kernel = new VSCodeKernel(transport, notebookUri);
+        transport.setCommandHandler(commandEnvelope => kernel.send(commandEnvelope));
         await transport.waitForReady();
 
         let localUriString = `http://localhost:${transport.httpPort}`;

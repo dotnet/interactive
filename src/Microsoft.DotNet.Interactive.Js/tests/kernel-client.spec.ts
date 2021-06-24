@@ -5,7 +5,7 @@ import { expect } from "chai";
 import { createDotnetInteractiveClient } from "../src/dotnet-interactive/kernel-client-impl";
 import * as fetchMock from "fetch-mock";
 import { configureFetchForKernelDiscovery, createMockKernelTransport, MockKernelTransport, asKernelClientContainer } from "./testSupport";
-import { CodeSubmissionReceived, CodeSubmissionReceivedType, KernelCommand, KernelCommandEnvelope, KernelCommandEnvelopeObserver, KernelCommandType, KernelEventEnvelope, KernelEventEnvelopeObserver, SubmitCodeType } from "../src/dotnet-interactive/contracts";
+import { CodeSubmissionReceived, CodeSubmissionReceivedType, KernelCommand, KernelCommandEnvelope, KernelCommandType, KernelEventEnvelope, KernelEventEnvelopeObserver, SubmitCodeType } from "../src/dotnet-interactive/contracts";
 import { IKernelCommandHandler, Kernel, KernelInvocationContext } from "../src/dotnet-interactive/dotnet-interactive-interfaces";
 import { attachKernelToTransport } from "../src/dotnet-interactive/client-side-kernel";
 
@@ -72,7 +72,7 @@ describe("dotnet-interactive", () => {
                     address: rootUrl,
                     kernelTransportFactory: createMockKernelTransport
                 });
-                let resource = client.getExtensionResourceUrl("customExtension","image.png");
+                let resource = client.getExtensionResourceUrl("customExtension", "image.png");
                 expect(resource).to.be.equal("https://dotnet.interactive.com:999/extensions/customExtension/resources/image.png");
             });
 
@@ -119,7 +119,7 @@ describe("dotnet-interactive", () => {
 
     describe("client-side commands", () => {
         afterEach(() => fetchMock.restore());
-        
+
         // Set up with fake client-side kernel
         const rootUrl = "https://dotnet.interactive.com:999";
         let transport: MockKernelTransport = null;
@@ -129,7 +129,7 @@ describe("dotnet-interactive", () => {
         let registeredCommandHandlers: { [commandType: string]: ((kernelCommandInvocation: { command: KernelCommand, context: KernelInvocationContext }) => Promise<void>) } = null;
 
         let makeClient = () => {
-            configureFetchForKernelDiscovery(rootUrl);    
+            configureFetchForKernelDiscovery(rootUrl);
             return createDotnetInteractiveClient({
                 address: rootUrl,
                 kernelTransportFactory: async (url: string) => {
@@ -148,14 +148,14 @@ describe("dotnet-interactive", () => {
                         },
                         subscribeToKernelEvents: observer => {
                             kernelEventHandlers.push(observer);
-                            return { dispose: () => {} };
+                            return { dispose: () => { } };
                         },
                         registerCommandHandler: (handler: IKernelCommandHandler) => {
                             registeredCommandHandlers[handler.commandType] = handler.handle;
                         }
                     };
                     attachKernelToTransport(kernel, kernelTransport);
-            
+
                     return kernel;
                 }
             });
@@ -163,13 +163,13 @@ describe("dotnet-interactive", () => {
 
         let makeContext: () => KernelInvocationContext = () => {
             return {
-                complete: _ => {},
-                fail: _ => {},
+                complete: _ => { },
+                fail: _ => { },
                 subscribeToKernelEvents: _ => {
-                    return { dispose: () => {} };
+                    return { dispose: () => { } };
                 },
-                publish: _ => {},
-                dispose: () => {},
+                publish: _ => { },
+                dispose: () => { },
                 command: null
             };
         };
@@ -202,7 +202,7 @@ describe("dotnet-interactive", () => {
         // Raise events from kernel.
         // Verify that they are sent back to the transport.
         // Token?
-        it ("sends client-side kernel events to the kernel transport", async () => {
+        it("sends client-side kernel events to the kernel transport", async () => {
             await makeClient();
             expect(kernelEventHandlers.length).to.equal(1);
 
@@ -221,7 +221,7 @@ describe("dotnet-interactive", () => {
             expect(eventPublished.code).to.be.equal(eventIn.code);
         });
 
-        it ("passes command handler registration to client-side kernel", async () => {
+        it("passes command handler registration to client-side kernel", async () => {
             let client = await makeClient();
 
             let commandType1: KernelCommandType = <KernelCommandType>"CustomCommand1";

@@ -4,11 +4,13 @@
 using System;
 using System.IO;
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Server
 {
@@ -19,6 +21,7 @@ namespace Microsoft.DotNet.Interactive.Server
         private readonly IKernelCommandAndEventSender _sender;
         private readonly CompositeDisposable _disposables = new();
         private readonly CancellationTokenSource _cancellationTokenSource = new();
+        private FrontEndKernel _frontEndKernel;
 
         public KernelServer(Kernel kernel,
             IKernelCommandAndEventReceiver receiver,
@@ -37,12 +40,19 @@ namespace Microsoft.DotNet.Interactive.Server
 
             _disposables.Add(_kernel.KernelEvents.Subscribe(async kernelEvent =>
             {
+                // if it came from front end, bail out
+                if (kernelEvent.Command.TargetKernelName is not null &&
+                    kernelEvent.Command.TargetKernelName == _frontEndKernel?.Name)
+                {
+                    return;
+                }
+
                 if (kernelEvent is ReturnValueProduced { Value: DisplayedValue })
                 {
                     return;
                 }
 
-                await _sender.SendAsync(kernelEvent, _cancellationTokenSource.Token);
+                await SendAsync(kernelEvent, _cancellationTokenSource.Token);
             }));
 
 
@@ -55,7 +65,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public void NotifyIsReady()
         {
-            _sender.SendAsync(new KernelReady(), _cancellationTokenSource.Token)
+            SendAsync(new KernelReady(), _cancellationTokenSource.Token)
                 .Wait(_cancellationTokenSource.Token);
         }
 
@@ -67,14 +77,33 @@ namespace Microsoft.DotNet.Interactive.Server
                 {
                     if (commandOrEvent.IsParseError)
                     {
-                        var _ = _sender.SendAsync(commandOrEvent.Event, _cancellationTokenSource.Token);
+                        var _ = SendAsync(commandOrEvent.Event, _cancellationTokenSource.Token);
                     }
                     else if (commandOrEvent.Command is { })
                     {
                         var _ = _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
                     }
+                    else if (commandOrEvent.Event is { })
+                    {
+                        _frontEndKernel?.ForwardEvent(commandOrEvent.Event);
+                    }
                 }
             }, _cancellationTokenSource.Token);
+        }
+
+        public Kernel GetFrontEndKernel(string kernelName)
+        {
+            if (_frontEndKernel == null)
+            {
+                _frontEndKernel = new FrontEndKernel(kernelName, _sender);
+            }
+
+            return _frontEndKernel;
+        }
+
+        private Task SendAsync(KernelEvent @event, CancellationToken cancellationToken)
+        {
+            return _sender.SendAsync(@event, cancellationToken);
         }
 
         public void Dispose()
@@ -82,5 +111,4 @@ namespace Microsoft.DotNet.Interactive.Server
             _disposables.Dispose();
         }
     }
-
 }

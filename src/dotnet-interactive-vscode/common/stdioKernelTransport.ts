@@ -13,7 +13,8 @@ import {
     DiagnosticLogEntryProducedType,
     DiagnosticLogEntryProduced,
     KernelReadyType,
-    KernelCommandEnvelopeObserver
+    KernelCommandEnvelopeHandler,
+    KernelCommandEnvelope
 } from './interfaces/contracts';
 import { ProcessStart } from './interfaces';
 import { ReportChannel, Uri } from './interfaces/vscode-like';
@@ -26,7 +27,8 @@ export class StdioKernelTransport implements KernelTransport {
     private lineReader: LineReader;
     private notifyOnExit: boolean = true;
     private readyPromise: Promise<void>;
-    private subscribers: Array<KernelEventEnvelopeObserver> = [];
+    private commandHandler: KernelCommandEnvelopeHandler = () => Promise.resolve();
+    private eventSubscribers: Array<KernelEventEnvelopeObserver> = [];
     public httpPort: Number;
     public externalUri: Uri | null;
 
@@ -160,45 +162,69 @@ export class StdioKernelTransport implements KernelTransport {
         });
     }
 
-    private handleLine(line: string) {
-        let obj = parse(line);
-        let envelope = <KernelEventEnvelope>obj;
-        switch (envelope.eventType) {
-            case DiagnosticLogEntryProducedType:
-                this.diagnosticChannel.appendLine((<DiagnosticLogEntryProduced>envelope.event).message);
-                break;
-        }
+    isKernelEventEnvelope(obj: any): obj is KernelEventEnvelope {
+        return obj.eventType
+            && obj.event;
+    }
 
-        for (let i = this.subscribers.length - 1; i >= 0; i--) {
-            this.subscribers[i](envelope);
+    isKernelCommandEnvelope(obj: any): obj is KernelCommandEnvelope {
+        return obj.commandType
+            && obj.command;
+    }
+
+    private async handleLine(line: string): Promise<void> {
+        const envelope = parse(line);
+        if (this.isKernelEventEnvelope(envelope)) {
+            switch (envelope.eventType) {
+                case DiagnosticLogEntryProducedType:
+                    this.diagnosticChannel.appendLine((<DiagnosticLogEntryProduced>envelope.event).message);
+                    break;
+            }
+
+            for (let i = this.eventSubscribers.length - 1; i >= 0; i--) {
+                this.eventSubscribers[i](envelope);
+            }
+        } else if (this.isKernelCommandEnvelope(envelope)) {
+            // TODO: pass in context with shortcut methods for publish, etc.
+            // TODO: wrap and return succeed/failed
+            // TODO: publish succeeded
+            // TODO: publish failed
+            await this.commandHandler(envelope);
         }
     }
 
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription {
-        this.subscribers.push(observer);
+        this.eventSubscribers.push(observer);
         return {
             dispose: () => {
-                let i = this.subscribers.indexOf(observer);
+                const i = this.eventSubscribers.indexOf(observer);
                 if (i >= 0) {
-                    this.subscribers.splice(i, 1);
+                    this.eventSubscribers.splice(i, 1);
                 }
             }
         };
     }
 
-    subscribeToCommands(observer: KernelCommandEnvelopeObserver): DisposableSubscription {
-        throw new Error('Backchannel not currently supported by this transport');
+    setCommandHandler(handler: KernelCommandEnvelopeHandler) {
+        this.commandHandler = handler;
     }
 
     submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string): Promise<void> {
-        return new Promise((resolve, reject) => {
-            let submit = {
-                token,
-                commandType,
-                command
-            };
+        let commandEnvelope = {
+            token,
+            commandType,
+            command
+        };
+        return this.submit(commandEnvelope);
+    }
 
-            let str = stringify(submit);
+    publishKernelEvent(eventEnvelope: KernelEventEnvelope): Promise<void> {
+        return this.submit(eventEnvelope);
+    }
+
+    private submit(content: any): Promise<void> {
+        return new Promise((resolve, reject) => {
+            let str = stringify(content);
             if (isNotNull(this.childProcess)) {
                 try {
                     this.childProcess.stdin.write(str);
@@ -212,10 +238,6 @@ export class StdioKernelTransport implements KernelTransport {
                 reject('Kernel process is `null`.');
             }
         });
-    }
-
-    publishKernelEvent(eventEnvelope: KernelEventEnvelope): Promise<void> {
-        throw new Error('Backchannel not currently supported by this transport');
     }
 
     waitForReady(): Promise<void> {
