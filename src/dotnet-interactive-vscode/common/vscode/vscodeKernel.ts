@@ -3,6 +3,8 @@
 
 import * as contracts from '../interfaces/contracts';
 import * as vscode from 'vscode';
+import * as vscodeLike from '../interfaces/vscode-like';
+import { getNotebookSpecificLanguage, languageToCellKind } from '../interactiveNotebook';
 
 export interface Kernel {
     send(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void>;
@@ -11,8 +13,9 @@ export interface Kernel {
 export class VSCodeKernel implements Kernel {
     private _commandHandlers: Map<string, contracts.KernelCommandEnvelopeHandler> = new Map();
 
-    constructor(private readonly transport: contracts.KernelTransport) {
+    constructor(private readonly transport: contracts.KernelTransport, private readonly notebookUri: vscodeLike.Uri) {
         this.registerGetInputCommandHandler();
+        this.registerAddCellHandler();
     }
 
     private registerGetInputCommandHandler() {
@@ -28,6 +31,29 @@ export class VSCodeKernel implements Kernel {
                 },
                 command: commandEnvelope,
             });
+        });
+    }
+
+    private registerAddCellHandler() {
+        this.registerCommandHandler(contracts.AddCellType, async commandEnvelope => {
+            const addCell = <contracts.AddCell>commandEnvelope.command;
+            const language = addCell.language;
+            const contents = addCell.contents;
+            const notebookDocument = vscode.workspace.notebookDocuments.find(notebook => notebook.uri.toString() === this.notebookUri.toString());
+            if (notebookDocument) {
+                const edit = new vscode.WorkspaceEdit();
+                const range = new vscode.NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount);
+                const cellKind = languageToCellKind(language);
+                const notebookCellLanguage = getNotebookSpecificLanguage(language);
+                const newCell = new vscode.NotebookCellData(cellKind, contents, notebookCellLanguage);
+                edit.replaceNotebookCells(notebookDocument.uri, range, [newCell]);
+                const succeeded = await vscode.workspace.applyEdit(edit);
+                if (!succeeded) {
+                    throw new Error(`Unable to add cell to notebook '${this.notebookUri.toString()}'.`);
+                }
+            } else {
+                throw new Error(`Unable to get notebook document for URI '${this.notebookUri.toString()}'.`);
+            }
         });
     }
 

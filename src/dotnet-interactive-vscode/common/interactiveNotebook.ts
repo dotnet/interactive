@@ -30,7 +30,7 @@ export function getSimpleLanguage(language: string): string {
 }
 
 export function getNotebookSpecificLanguage(language: string): string {
-    if (!language.startsWith(notebookLanguagePrefix)) {
+    if (!language.startsWith(notebookLanguagePrefix) && language !== 'markdown') {
         return notebookLanguagePrefix + language;
     }
 

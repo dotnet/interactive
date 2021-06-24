@@ -5,6 +5,7 @@
 
 // --------------------------------------------- Kernel Commands
 
+export const AddCellType = "AddCell";
 export const AddPackageType = "AddPackage";
 export const CancelType = "Cancel";
 export const ChangeWorkingDirectoryType = "ChangeWorkingDirectory";
@@ -22,7 +23,8 @@ export const SubmitCodeType = "SubmitCode";
 export const UpdateDisplayedValueType = "UpdateDisplayedValue";
 
 export type KernelCommandType =
-      typeof AddPackageType
+      typeof AddCellType
+    | typeof AddPackageType
     | typeof CancelType
     | typeof ChangeWorkingDirectoryType
     | typeof DisplayErrorType
@@ -38,12 +40,17 @@ export type KernelCommandType =
     | typeof SubmitCodeType
     | typeof UpdateDisplayedValueType;
 
-export interface AddPackage extends KernelCommand {
-    packageReference: PackageReference;
+export interface AddCell extends KernelCommand {
+    language: string;
+    contents: string;
 }
 
 export interface KernelCommand {
     targetKernelName?: string;
+}
+
+export interface AddPackage extends KernelCommand {
+    packageReference: PackageReference;
 }
 
 export interface Cancel extends KernelCommand {

@@ -13,6 +13,8 @@ namespace Microsoft.DotNet.Interactive.VSCode
             rootKernel.RegisterCommandType<GetInput>();
             KernelEventEnvelope.RegisterEvent<InputProduced>();
 
+            rootKernel.RegisterCommandType<AddCell>();
+
             var interactiveHost = new VSCodeInteractiveHost(rootKernel);
             return kernel.SetVariableAsync("InteractiveHost", interactiveHost, typeof(IInteractiveHost));
         }

@@ -5,16 +5,16 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.VSCode
 {
-    public class GetInput : KernelCommand
+    public class AddCell : KernelCommand
     {
-        public string Prompt { get; }
-        public bool IsPassword { get; }
+        public string Language { get; }
+        public string Contents { get; }
 
-        public GetInput(string prompt = "", bool isPassword = false, string targetKernelName = null)
+        public AddCell(string language, string contents, string targetKernelName = null)
             : base(targetKernelName)
         {
-            Prompt = prompt;
-            IsPassword = isPassword;
+            Language = language;
+            Contents = contents;
         }
     }
 }

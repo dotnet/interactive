@@ -103,7 +103,7 @@ export async function activate(context: vscode.ExtensionContext) {
             clientMapper.closeClient(notebookUri, false);
         });
 
-        var kernel = new VSCodeKernel(transport);
+        var kernel = new VSCodeKernel(transport, notebookUri);
         transport.setCommandHandler(commandEnvelope => kernel.send(commandEnvelope));
         await transport.waitForReady();
 
