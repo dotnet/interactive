@@ -133,7 +133,7 @@ stages:
         - pwsh: Get-ChildItem *.dmp -Recurse | Remove-Item
           displayName: Delete dump files
           workingDirectory: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
-          condition: ne(variables['KeepDumps'], 'true')
+          condition: and(ne(variables['KeepDumps'], 'true'), ne(variables['SkipTests'], 'true'))
 
         - task: PublishBuildArtifacts@1
           displayName: Publish Test results and Blame dumps
@@ -307,7 +307,7 @@ stages:
         - pwsh: Get-ChildItem *.dmp -Recurse | Remove-Item
           displayName: Delete dump files
           workingDirectory: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
-          condition: ne(variables['KeepDumps'], 'true')
+          condition: and(ne(variables['KeepDumps'], 'true'), ne(variables['SkipTests'], 'true'))
 
         - task: PublishBuildArtifacts@1
           displayName: Publish Test results and Blame dumps
