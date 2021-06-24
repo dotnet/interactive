@@ -414,9 +414,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                             break;
                                     }
                                 });
-                                // TODO: move this
-                                kernel.RegisterCommandType<GetInput>();
-                                KernelEventEnvelope.RegisterEvent<InputProduced>();
 
                                 services.AddSingleton(clientSideKernelClient);
                                 ((HtmlNotebookFrontendEnvironment)frontendEnvironment).RequiresAutomaticBootstrapping =

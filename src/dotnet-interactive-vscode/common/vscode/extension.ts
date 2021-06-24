@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { VSCodeKernel } from './vscodeKernel';
 import * as vscodeLike from '../interfaces/vscode-like';
 import { ClientMapper } from '../clientMapper';
 
@@ -102,39 +103,8 @@ export async function activate(context: vscode.ExtensionContext) {
             clientMapper.closeClient(notebookUri, false);
         });
 
-        transport.setCommandHandler(async commandEnvelope => {
-            if (commandEnvelope.commandType === contracts.GetInputType) {
-                const getInput = <contracts.GetInput>commandEnvelope.command;
-                const prompt = getInput.prompt;
-                const password = getInput.isPassword;
-                const value = await vscode.window.showInputBox({ prompt, password });
-                try {
-                    await transport.publishKernelEvent({
-                        eventType: contracts.InputProducedType,
-                        event: {
-                            value
-                        },
-                        command: commandEnvelope,
-                    });
-                    await transport.publishKernelEvent({
-                        eventType: contracts.CommandSucceededType,
-                        event: {},
-                        command: commandEnvelope,
-                    });
-                } catch (e) {
-                    await transport.publishKernelEvent({
-                        eventType: contracts.CommandFailedType,
-                        event: {
-                            message: '' + e,
-                        },
-                        command: commandEnvelope,
-                    });
-                }
-            } else {
-                // TODO: forward command to JS kernel?
-            }
-        });
-
+        var kernel = new VSCodeKernel(transport);
+        transport.setCommandHandler(commandEnvelope => kernel.send(commandEnvelope));
         await transport.waitForReady();
 
         let localUriString = `http://localhost:${transport.httpPort}`;
