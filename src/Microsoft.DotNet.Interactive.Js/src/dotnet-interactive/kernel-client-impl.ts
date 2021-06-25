@@ -76,9 +76,9 @@ class InteractiveConsoleWrapper {
         for (const arg of args) {
             let mimeType: string;
             let value: string;
-            if (typeof arg === 'string') {
+            if (typeof arg !== 'object' && !Array.isArray(arg)) {
                 mimeType = 'text/plain';
-                value = arg;
+                value = arg.toString();
             } else {
                 mimeType = 'application/json';
                 value = JSON.stringify(arg);
