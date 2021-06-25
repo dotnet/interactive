@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
@@ -13,7 +14,6 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Notebook;
 using Microsoft.DotNet.Interactive.Tests;
-using Newtonsoft.Json.Linq;
 using Pocket;
 using Recipes;
 using Xunit;
@@ -180,7 +180,7 @@ f();"));
 
             JupyterMessageSender.PubSubMessages
                                 .Should()
-                                .ContainSingle<DisplayData>(r => r.Data["application/json"] is JToken token && token.Type == JTokenType.Integer);
+                                .ContainSingle<DisplayData>(r => r.Data["application/json"] is JsonElement element && element.ValueKind == JsonValueKind.Number);
         }
         
         [Theory]

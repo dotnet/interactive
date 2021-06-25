@@ -4,17 +4,27 @@
 using System;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Recipes
 {
     internal static class JsonSerializationExtensions
     {
-        public static JsonSerializerOptions SerializerOptions { get; } =
-            new JsonSerializerOptions(JsonSerializerDefaults.General)
-            {
-                WriteIndented = false,
-                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-            };
+        static JsonSerializationExtensions()
+        {
+            SerializerOptions =
+                new JsonSerializerOptions(JsonSerializerDefaults.General)
+                {
+                    WriteIndented = false,
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
+                    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                };
+            SerializerOptions.Converters.Add(new DataDictionaryConverter());
+        }
+
+        public static JsonSerializerOptions SerializerOptions { get; }
 
         public static string ToJson(this object source) =>
             JsonSerializer.Serialize(source, SerializerOptions);

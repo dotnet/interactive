@@ -11,10 +11,11 @@ using System.Collections.Generic;
 using System.CommandLine.Rendering;
 using System.Linq;
 using System.Reactive.Concurrency;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
 using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.ZMQ.Message;
+using Recipes;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
 {
@@ -270,7 +271,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         {
             var value = mimeType switch
             {
-                JsonFormatter.MimeType => (object) JToken.Parse(formattedValue),
+                JsonFormatter.MimeType => (object)formattedValue.FromJsonTo<JsonElement>(),
                 _ => formattedValue,
             };
             return value;
