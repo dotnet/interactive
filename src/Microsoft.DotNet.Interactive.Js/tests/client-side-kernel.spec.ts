@@ -4,8 +4,8 @@
 import { expect } from "chai";
 import { describe } from "mocha";
 import { ClientSideKernel } from "../src/dotnet-interactive/client-side-kernel";
-import { KernelCommand, KernelCommandType } from "../src/dotnet-interactive/contracts";
-import { KernelInvocationContext } from "../src/dotnet-interactive/dotnet-interactive-interfaces";
+import { KernelCommand, KernelCommandType } from "../src/common/interfaces/contracts";
+import { KernelInvocationContext } from "../src/common/interfaces/kernel";
 
 interface CustomCommand1 extends KernelCommand {
     data: string

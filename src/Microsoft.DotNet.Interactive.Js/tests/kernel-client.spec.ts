@@ -5,8 +5,8 @@ import { expect } from "chai";
 import { createDotnetInteractiveClient } from "../src/dotnet-interactive-browser/kernel-client-impl";
 import * as fetchMock from "fetch-mock";
 import { configureFetchForKernelDiscovery, createMockKernelTransport, MockKernelTransport, asKernelClientContainer } from "./testSupport";
-import { CodeSubmissionReceived, CodeSubmissionReceivedType, KernelCommand, KernelCommandEnvelope, KernelCommandType, KernelEventEnvelope, KernelEventEnvelopeObserver, SubmitCodeType } from "../src/dotnet-interactive/contracts";
-import { IKernelCommandHandler, Kernel, KernelInvocationContext } from "../src/dotnet-interactive/dotnet-interactive-interfaces";
+import { CodeSubmissionReceived, CodeSubmissionReceivedType, KernelCommand, KernelCommandEnvelope, KernelCommandType, KernelEventEnvelope, KernelEventEnvelopeObserver, SubmitCodeType } from "../src/common/interfaces/contracts";
+import { IKernelCommandHandler, Kernel, KernelInvocationContext } from "../src/common/interfaces/kernel";
 import { attachKernelToTransport } from "../src/dotnet-interactive/client-side-kernel";
 
 

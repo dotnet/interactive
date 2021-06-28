@@ -2,8 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { ClientSideKernelInvocationContext } from "./client-side-kernel-invocation-context";
-import { DisposableSubscription, KernelEventEnvelopeObserver, KernelTransport, Disposable, KernelCommand, KernelEvent, KernelEventType, KernelCommandType } from "./contracts";
-import { IKernelCommandHandler, Kernel } from "./dotnet-interactive-interfaces";
+import { DisposableSubscription, KernelEventEnvelopeObserver, KernelTransport, Disposable, KernelCommand, KernelEvent, KernelEventType, KernelCommandType } from "../common/interfaces/contracts";
+import { IKernelCommandHandler, Kernel } from "../common/interfaces/kernel";
 import { TokenGenerator } from "./tokenGenerator";
 
 export class ClientSideKernel implements Kernel {

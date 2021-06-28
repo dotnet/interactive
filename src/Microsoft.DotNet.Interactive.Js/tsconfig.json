@@ -24,6 +24,9 @@
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "src/common/tests/integration",
+    "src/common/tests/unit/vscode",
+    "src/common/vscode"
   ]
 }

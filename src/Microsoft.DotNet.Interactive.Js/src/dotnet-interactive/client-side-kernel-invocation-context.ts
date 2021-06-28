@@ -1,8 +1,8 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { CommandSucceeded, CommandSucceededType, CommandFailed, CommandFailedType, KernelCommand, KernelEvent } from "./contracts";
-import { IKernelEventObserver, KernelInvocationContext } from "./dotnet-interactive-interfaces";
+import { CommandSucceeded, CommandSucceededType, CommandFailed, CommandFailedType, KernelCommand, KernelEvent } from "../common/interfaces/contracts";
+import { IKernelEventObserver, KernelInvocationContext } from "../common/interfaces/kernel";
 import { TokenGenerator } from "./tokenGenerator";
 
 

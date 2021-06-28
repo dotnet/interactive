@@ -3,9 +3,9 @@
 
 import { expect } from "chai";
 import { describe } from "mocha";
-import { IKernelEventObserver } from "../src/dotnet-interactive";
+import { IKernelEventObserver } from "../src/common/interfaces/kernel";
 import { ClientSideKernelInvocationContext } from "../src/dotnet-interactive/client-side-kernel-invocation-context";
-import { CommandFailedType, CommandSucceededType, DisplayedValueProduced, DisplayedValueProducedType, Disposable, ErrorProduced, ErrorProducedType, KernelCommand, KernelCommandEnvelope, KernelCommandType, KernelEvent, KernelEventEnvelope, KernelEventEnvelopeObserver, SubmitCode, SubmitCodeType } from "../src/dotnet-interactive/contracts";
+import { CommandFailedType, CommandSucceededType, DisplayedValueProduced, DisplayedValueProducedType, Disposable, ErrorProduced, ErrorProducedType, KernelCommand, KernelCommandEnvelope, KernelCommandType, KernelEvent, KernelEventEnvelope, KernelEventEnvelopeObserver, SubmitCode, SubmitCodeType } from "../src/common/interfaces/contracts";
 
 describe("dotnet-interactive", () => {
     describe("client-side kernel invocation context", () => {
