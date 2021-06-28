@@ -1,10 +1,11 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelClient, VariableRequest, VariableResponse, DotnetInteractiveClient, ClientFetch, Kernel, IKernelCommandHandler } from "../dotnet-interactive/dotnet-interactive-interfaces";
+import { KernelClient, VariableRequest, VariableResponse, DotnetInteractiveClient, ClientFetch} from "../dotnet-interactive/dotnet-interactive-interfaces";
+import {Kernel, IKernelCommandHandler } from "../common/interfaces/kernel";
 import { TokenGenerator } from "../dotnet-interactive/tokenGenerator";
 import { signalTransportFactory } from "../dotnet-interactive/signalr-client";
-import { CommandFailed, CommandFailedType, KernelTransport, KernelEventEnvelope, KernelEventEnvelopeObserver, DisposableSubscription, SubmitCode, SubmitCodeType, DisplayedValueProduced, DisplayedValueProducedType } from "../dotnet-interactive/contracts";
+import { CommandFailed, CommandFailedType, KernelTransport, KernelEventEnvelope, KernelEventEnvelopeObserver, DisposableSubscription, SubmitCode, SubmitCodeType, DisplayedValueProduced, DisplayedValueProducedType } from "../common/interfaces/contracts";
 import { createDefaultClientFetch } from "./clientFetch";
 import { clientSideKernelFactory } from "../dotnet-interactive/client-side-kernel";
 

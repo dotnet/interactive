@@ -1,10 +1,8 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { ClientSideKernelInvocationContext } from "./client-side-kernel-invocation-context";
-import { DisposableSubscription, KernelEventEnvelopeObserver, KernelTransport, Disposable, KernelCommand, KernelEvent, KernelEventType, KernelCommandType } from "./contracts";
-import { IKernelCommandHandler, Kernel } from "./dotnet-interactive-interfaces";
-import { TokenGenerator } from "./tokenGenerator";
+import { DisposableSubscription, KernelEventEnvelopeObserver, KernelCommandEnvelope } from "../common/interfaces/contracts";
+import { IKernelCommandHandler, Kernel } from "../common/interfaces/kernel";
 
 export class CompositeKernel implements Kernel {
     readonly name: string;
@@ -33,7 +31,7 @@ export class CompositeKernel implements Kernel {
         return this._kernelMap[kernelName];
     }
 
-    send(kernelCommand: { command: KernelCommand; commandType: string; }): Promise<void> {
+    send(commandEnvelope: KernelCommandEnvelope): Promise<void> {
         throw new Error("Method not implemented.");
     }
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription {
