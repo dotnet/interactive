@@ -131,13 +131,11 @@ export const ErrorProducedType = "ErrorProduced";
 export const HoverTextProducedType = "HoverTextProduced";
 export const IncompleteCodeSubmissionReceivedType = "IncompleteCodeSubmissionReceived";
 export const InputProducedType = "InputProduced";
-export const InputRequestedType = "InputRequested";
 export const KernelExtensionLoadedType = "KernelExtensionLoaded";
 export const KernelReadyType = "KernelReady";
 export const NotebookParsedType = "NotebookParsed";
 export const NotebookSerializedType = "NotebookSerialized";
 export const PackageAddedType = "PackageAdded";
-export const PasswordRequestedType = "PasswordRequested";
 export const ReturnValueProducedType = "ReturnValueProduced";
 export const SignatureHelpProducedType = "SignatureHelpProduced";
 export const StandardErrorValueProducedType = "StandardErrorValueProduced";
@@ -158,13 +156,11 @@ export type KernelEventType =
     | typeof HoverTextProducedType
     | typeof IncompleteCodeSubmissionReceivedType
     | typeof InputProducedType
-    | typeof InputRequestedType
     | typeof KernelExtensionLoadedType
     | typeof KernelReadyType
     | typeof NotebookParsedType
     | typeof NotebookSerializedType
     | typeof PackageAddedType
-    | typeof PasswordRequestedType
     | typeof ReturnValueProducedType
     | typeof SignatureHelpProducedType
     | typeof StandardErrorValueProducedType
@@ -233,10 +229,6 @@ export interface InputProduced extends KernelEvent {
     value: string;
 }
 
-export interface InputRequested extends KernelEvent {
-    prompt: string;
-}
-
 export interface KernelExtensionLoaded extends KernelEvent {
 }
 
@@ -253,10 +245,6 @@ export interface NotebookSerialized extends KernelEvent {
 
 export interface PackageAdded extends KernelEvent {
     packageReference: ResolvedPackageReference;
-}
-
-export interface PasswordRequested extends KernelEvent {
-    prompt: string;
 }
 
 export interface ReturnValueProduced extends DisplayEvent {

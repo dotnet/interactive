@@ -17,7 +17,15 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
         public async Task Schedule(JupyterRequestContext context)
         {
-            await handle(context);
+            try
+            {
+                JupyterRequestContext.Current = context;
+                await handle(context);
+            }
+            finally
+            {
+                JupyterRequestContext.Current = null;
+            }
         }
     }
 }
