@@ -70,12 +70,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                 case CommandFailed commandFailed:
                     OnCommandFailed(commandFailed, context.JupyterMessageSender);
                     break;
-                case InputRequested inputRequested:
-                    OnInputRequested(context, inputRequested);
-                    break;
-                case PasswordRequested passwordRequested:
-                    OnPasswordRequested(context, passwordRequested);
-                    break;
                 case DiagnosticsProduced diagnosticsProduced:
                     OnDiagnosticsProduced(context, context.JupyterRequestMessageEnvelope, diagnosticsProduced);
                     break;
@@ -86,19 +80,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         {
             var transient = new Dictionary<string, object> { { "display_id", displayId ?? Guid.NewGuid().ToString() } };
             return transient;
-        }
-
-        private void OnInputRequested(JupyterRequestContext context, InputRequested inputRequested)
-        {
-            var inputReq = new InputRequest(inputRequested.Prompt, password: false);
-            inputRequested.Content = context.JupyterMessageSender.Send(inputReq);
-        }
-
-        private void OnPasswordRequested(JupyterRequestContext context, PasswordRequested passwordRequested)
-        {
-            var passReq = new InputRequest(passwordRequested.Prompt, password: true);
-            var clearTextPassword = context.JupyterMessageSender.Send(passReq);
-            passwordRequested.Content = new PasswordString(clearTextPassword);
         }
 
         private void OnDiagnosticsProduced(JupyterRequestContext context, 

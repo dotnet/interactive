@@ -46,6 +46,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
             return message.Prompt switch
             {
                 "User: " => "user name",
+                "Password: " => "secret",
                 _ => "input-value"
             };
         }

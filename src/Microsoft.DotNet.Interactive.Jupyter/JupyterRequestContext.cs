@@ -14,6 +14,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
     {
         private readonly TaskCompletionSource<Unit> _done = new TaskCompletionSource<Unit>();
 
+        internal static JupyterRequestContext Current { get; set; }
+
         internal JupyterRequestContext(ReplyChannel serverChannel, PubSubChannel ioPubChannel, StdInChannel stdInChannel, ZeroMQMessage request, string kernelIdentity)
             : this(new JupyterMessageSender(ioPubChannel, serverChannel, stdInChannel, kernelIdentity, request), request)
         {

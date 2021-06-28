@@ -357,7 +357,7 @@ f();"));
             using var _ = LogEvents.Subscribe(e => log.Append(e.ToLogString()));
 
             var scheduler = CreateScheduler();
-            var request = ZeroMQMessage.Create(new ExecuteRequest("password(\"Password:\")"));
+            var request = ZeroMQMessage.Create(new ExecuteRequest("password(\"Password: \")"));
             var context = new JupyterRequestContext(JupyterMessageSender, request);
             await scheduler.Schedule(context);
 
@@ -451,7 +451,7 @@ f();"));
             var errorMessage = string.Join("\n", traceback);
             errorMessage
                 .Should()
-                .StartWith("System.NotSupportedException: Password request is not supported");
+                .StartWith("System.NotSupportedException: Password request is not supported.");
         }
 
         [Fact]

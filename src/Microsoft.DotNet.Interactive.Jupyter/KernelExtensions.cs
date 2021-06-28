@@ -7,7 +7,6 @@ using System.CommandLine.Invocation;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Markdig;
 using Markdig.Renderers;
@@ -23,6 +22,12 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 {
     public static class KernelExtensions
     {
+        public static Task UseJupyterHelpersAsync<TKernel>(this TKernel kernel) where TKernel : DotNetKernel
+        {
+            var interactiveHost = new JupyterInteractiveHost();
+            return kernel.SetVariableAsync("InteractiveHost", interactiveHost, typeof(IInteractiveHost));
+        }
+
         public static T UseDefaultMagicCommands<T>(this T kernel)
             where T : Kernel
         {

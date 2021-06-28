@@ -239,7 +239,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                 return jupyterCommand;
 
-                Task<int> JupyterHandler(StartupOptions startupOptions, JupyterOptions options, IConsole console, InvocationContext context, CancellationToken cancellationToken)
+                async Task<int> JupyterHandler(StartupOptions startupOptions, JupyterOptions options, IConsole console, InvocationContext context, CancellationToken cancellationToken)
                 {
                     var frontendEnvironment = new HtmlNotebookFrontendEnvironment();
                     var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
@@ -249,6 +249,16 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         new[] { "js" });
 
                     services.AddKernel(kernel);
+
+                    await kernel.VisitSubkernelsAsync(async k =>
+                    {
+                        switch (k)
+                        {
+                            case DotNetKernel dk:
+                                await dk.UseJupyterHelpersAsync();
+                                break;
+                        }
+                    });
 
                     var clientSideKernelClient = new SignalRBackchannelKernelClient();
 
@@ -262,7 +272,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         .AddSingleton(c => new JupyterRequestContextHandler(kernel))
                         .AddSingleton<IHostedService, Shell>()
                         .AddSingleton<IHostedService, Heartbeat>();
-                    return jupyter(startupOptions, console, startServer, context);
+                    var result = await jupyter(startupOptions, console, startServer, context);
+                    return result;
                 }
 
                 Task<int> InstallHandler(IConsole console, InvocationContext context, HttpPortRange httpPortRange, DirectoryInfo path)
@@ -397,10 +408,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         services.AddKernel(kernel);
 
                         kernel.UseQuitCommand();
-                        
                         var kernelServer = kernel.CreateKernelServer(startupOptions.WorkingDir);
-                        var frontEndKernel = kernelServer.GetFrontEndKernel("vscode");
-                        kernel.Add(frontEndKernel);
 
                         if (startupOptions.EnableHttpApi)
                         {
@@ -408,6 +416,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                             if (isVsCode)
                             {
+                                var frontEndKernel = kernelServer.GetFrontEndKernel("vscode");
+                                kernel.Add(frontEndKernel);
                                 await kernel.VisitSubkernelsAsync(async k =>
                                 {
                                     switch (k)
