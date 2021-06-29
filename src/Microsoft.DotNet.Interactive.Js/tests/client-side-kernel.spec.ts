@@ -5,7 +5,7 @@ import { expect } from "chai";
 import { describe } from "mocha";
 import { ClientSideKernel } from "../src/dotnet-interactive/client-side-kernel";
 import { KernelCommand, KernelCommandType } from "../src/common/interfaces/contracts";
-import { KernelInvocationContext } from "../src/common/interfaces/kernel";
+import { IKernelInvocationContext } from "../src/common/interfaces/kernel";
 
 interface CustomCommand1 extends KernelCommand {
     data: string
@@ -34,10 +34,10 @@ describe("dotnet-interactive", () => {
                 moreData: "Test 2"
             };
 
-            let handler1Invocations: { command: KernelCommand, context: KernelInvocationContext }[] = [];
-            let handler2Invocations: { command: KernelCommand, context: KernelInvocationContext }[] = [];
-            kernel.registerCommandHandler({ commandType: commandType1, handle: async (a: { command: KernelCommand, context: KernelInvocationContext }) => { handler1Invocations.push(a); } })
-            kernel.registerCommandHandler({ commandType: commandType2, handle: async (a: { command: KernelCommand, context: KernelInvocationContext }) => { handler2Invocations.push(a); } })
+            let handler1Invocations: { command: KernelCommand, context: IKernelInvocationContext }[] = [];
+            let handler2Invocations: { command: KernelCommand, context: IKernelInvocationContext }[] = [];
+            kernel.registerCommandHandler({ commandType: commandType1, handle: async (a: { command: KernelCommand, context: IKernelInvocationContext }) => { handler1Invocations.push(a); } })
+            kernel.registerCommandHandler({ commandType: commandType2, handle: async (a: { command: KernelCommand, context: IKernelInvocationContext }) => { handler2Invocations.push(a); } })
 
             await kernel.send({
                 commandType: commandType1,
@@ -69,10 +69,10 @@ describe("dotnet-interactive", () => {
             let command1In: CustomCommand1 = {
                 data: "Test"
             };
-            let handler1Invocations: { command: KernelCommand, context: KernelInvocationContext }[] = [];
-            let handler2Invocations: { command: KernelCommand, context: KernelInvocationContext }[] = [];
-            kernel.registerCommandHandler({ commandType: commandType1, handle: async (a: { command: KernelCommand, context: KernelInvocationContext }) => { handler1Invocations.push(a); } })
-            kernel.registerCommandHandler({ commandType: commandType1, handle: async (a: { command: KernelCommand, context: KernelInvocationContext }) => { handler2Invocations.push(a); } })
+            let handler1Invocations: { command: KernelCommand, context: IKernelInvocationContext }[] = [];
+            let handler2Invocations: { command: KernelCommand, context: IKernelInvocationContext }[] = [];
+            kernel.registerCommandHandler({ commandType: commandType1, handle: async (a: { command: KernelCommand, context: IKernelInvocationContext }) => { handler1Invocations.push(a); } })
+            kernel.registerCommandHandler({ commandType: commandType1, handle: async (a: { command: KernelCommand, context: IKernelInvocationContext }) => { handler2Invocations.push(a); } })
 
             await kernel.send({
                 commandType: commandType1,
@@ -98,8 +98,8 @@ describe("dotnet-interactive", () => {
                 moreData: "Test 2"
             };
 
-            let handlerInvocations: { command: KernelCommand, context: KernelInvocationContext }[] = [];
-            kernel.registerCommandHandler({ commandType: commandType1, handle: async (a: { command: KernelCommand, context: KernelInvocationContext }) => { handlerInvocations.push(a); } })
+            let handlerInvocations: { command: KernelCommand, context: IKernelInvocationContext }[] = [];
+            kernel.registerCommandHandler({ commandType: commandType1, handle: async (a: { command: KernelCommand, context: IKernelInvocationContext }) => { handlerInvocations.push(a); } })
 
             let errorFromSend = null;
             await kernel.send({

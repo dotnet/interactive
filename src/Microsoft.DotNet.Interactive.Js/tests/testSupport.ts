@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as fetchMock from "fetch-mock";
-import { IKernelCommandHandler, Kernel } from "../src/common/interfaces/kernel";
+import { IKernelCommandHandler, IKernel } from "../src/common/interfaces/kernel";
 import { DotnetInteractiveClient, KernelClientContainer } from "../src/dotnet-interactive/dotnet-interactive-interfaces";
 import { KernelTransport, KernelCommandEnvelope, KernelEventEnvelopeObserver, KernelCommand, KernelCommandType, KernelCommandEnvelopeHandler, KernelEventEnvelope, DisposableSubscription } from "../src/common/interfaces/contracts";
 import { TokenGenerator } from "../src/dotnet-interactive/tokenGenerator";
@@ -80,7 +80,7 @@ export function createMockKernelTransport(rootUrl: string): Promise<KernelTransp
     return Promise.resolve(new MockKernelTransport());
 }
 
-export class FakeKernel implements Kernel {
+export class FakeKernel implements IKernel {
     name: string;
 
     /**

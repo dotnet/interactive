@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { expect } from "chai";
-import { CompositeKernel } from "../src/dotnet-interactive/compositeKernel";
+import { CompositeKernel } from "../src/common/interactive/compositeKernel";
 import { FakeKernel } from "./testSupport";
 
 describe("compositeKernel", ()=>{

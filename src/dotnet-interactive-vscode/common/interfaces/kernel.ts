@@ -5,7 +5,7 @@ import { Disposable, DisposableSubscription, KernelCommand, KernelCommandEnvelop
 
 export interface IKernelCommandInvocation {
     command: KernelCommand;
-    context: KernelInvocationContext;
+    context: IKernelInvocationContext;
 }
 
 export interface IKernelCommandHandler {
@@ -17,7 +17,7 @@ export interface IKernelEventObserver {
     (kernelEvent: { event: KernelEvent, eventType: string, command: KernelCommand, commandType: string }): void;
 }
 
-export interface KernelInvocationContext extends Disposable {
+export interface IKernelInvocationContext extends Disposable {
     subscribeToKernelEvents(observer: IKernelEventObserver): DisposableSubscription;
     complete(command: KernelCommand): void;
     fail(message?: string): void
@@ -25,7 +25,7 @@ export interface KernelInvocationContext extends Disposable {
     command: KernelCommand;
 }
 
-export interface Kernel {
+export interface IKernel {
     readonly name: string;
     send(commandEnvelope: KernelCommandEnvelope): Promise<void>;
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;

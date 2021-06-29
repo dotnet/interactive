@@ -1,19 +1,19 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { DisposableSubscription, KernelEventEnvelopeObserver, KernelCommandEnvelope } from "../common/interfaces/contracts";
-import { IKernelCommandHandler, Kernel } from "../common/interfaces/kernel";
+import { DisposableSubscription, KernelEventEnvelopeObserver, KernelCommandEnvelope } from "../interfaces/contracts";
+import { IKernelCommandHandler, IKernel } from "../interfaces/kernel";
 
-export class CompositeKernel implements Kernel {
+export class CompositeKernel implements IKernel {
     readonly name: string;
-    readonly childKernels: Kernel[];
-    private readonly _kernelMap: { [key: string]: Kernel } = {}
+    readonly childKernels: IKernel[];
+    private readonly _kernelMap: { [key: string]: IKernel } = {}
     constructor(name?: string) {
         this.name = name ?? "client-side-composite-kernel";
         this.childKernels = [];
     }
 
-    add(kernel: Kernel, aliases?: string[]) {
+    add(kernel: IKernel, aliases?: string[]) {
         if (!kernel) {
             throw new Error("kernel cannot be null or undefined")
         }
@@ -27,7 +27,7 @@ export class CompositeKernel implements Kernel {
         }
     }
 
-    findKernelByName(kernelName:string) : Kernel| undefined{
+    findKernelByName(kernelName:string) : IKernel| undefined{
         return this._kernelMap[kernelName];
     }
 

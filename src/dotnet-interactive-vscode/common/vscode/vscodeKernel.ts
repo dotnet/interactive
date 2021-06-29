@@ -5,9 +5,9 @@ import * as contracts from '../interfaces/contracts';
 import * as vscode from 'vscode';
 import * as vscodeLike from '../interfaces/vscode-like';
 import { getNotebookSpecificLanguage, languageToCellKind } from '../interactiveNotebook';
-import { IKernelCommandHandler, Kernel, KernelInvocationContext } from '../interfaces/kernel';
+import { IKernelCommandHandler, IKernel, IKernelInvocationContext } from '../interfaces/kernel';
 
-export class VSCodeKernel implements Kernel {
+export class VSCodeKernel implements IKernel {
     private _commandHandlers: Map<string, IKernelCommandHandler> = new Map();
     readonly name: string;
     constructor(private readonly transport: contracts.KernelTransport, private readonly notebookUri: vscodeLike.Uri) {
@@ -74,7 +74,7 @@ export class VSCodeKernel implements Kernel {
         const handler = this._commandHandlers.get(commandEnvelope.commandType);
         if (handler) {
             try {
-                await handler.handle({ command: commandEnvelope.command, context: <KernelInvocationContext><any>null });
+                await handler.handle({ command: commandEnvelope.command, context: <IKernelInvocationContext><any>null });
                 this.publishEvent({
                     eventType: contracts.CommandSucceededType,
                     event: {},

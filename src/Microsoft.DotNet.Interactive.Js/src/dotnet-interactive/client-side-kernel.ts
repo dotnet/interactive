@@ -3,10 +3,10 @@
 
 import { ClientSideKernelInvocationContext } from "./client-side-kernel-invocation-context";
 import { DisposableSubscription, KernelEventEnvelopeObserver, KernelTransport, Disposable, KernelCommand, KernelEvent, KernelEventType, KernelCommandType } from "../common/interfaces/contracts";
-import { IKernelCommandHandler, Kernel } from "../common/interfaces/kernel";
+import { IKernelCommandHandler, IKernel } from "../common/interfaces/kernel";
 import { TokenGenerator } from "./tokenGenerator";
 
-export class ClientSideKernel implements Kernel {
+export class ClientSideKernel implements IKernel {
     name: string;
     private _commandHandlers: { [commandType: string]: IKernelCommandHandler } = {};
     private readonly _eventObservers: { [token: string]: KernelEventEnvelopeObserver } = {};
@@ -90,14 +90,14 @@ export class ClientSideKernel implements Kernel {
     }
 }
 
-export function attachKernelToTransport(kernel: Kernel, kernelTransport: KernelTransport) {
+export function attachKernelToTransport(kernel: IKernel, kernelTransport: KernelTransport) {
     kernelTransport.setCommandHandler(env => kernel.send(env));
     kernel.subscribeToKernelEvents(env => kernelTransport.publishKernelEvent(env))
 }
 
 let kernel: ClientSideKernel = null
 
-export async function clientSideKernelFactory(kernelTransport: KernelTransport): Promise<Kernel> {
+export async function clientSideKernelFactory(kernelTransport: KernelTransport): Promise<IKernel> {
     if (!kernel) {
         // We need the client-side kernel to be a singleton. However, this factory method is
         // invoked each time a JS cell executes. This has the slightly unfortunate but ultimately

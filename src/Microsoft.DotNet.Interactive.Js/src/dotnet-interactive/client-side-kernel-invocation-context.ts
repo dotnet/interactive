@@ -2,11 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { CommandSucceeded, CommandSucceededType, CommandFailed, CommandFailedType, KernelCommand, KernelEvent } from "../common/interfaces/contracts";
-import { IKernelEventObserver, KernelInvocationContext } from "../common/interfaces/kernel";
+import { IKernelEventObserver, IKernelInvocationContext } from "../common/interfaces/kernel";
 import { TokenGenerator } from "./tokenGenerator";
 
 
-export class ClientSideKernelInvocationContext implements KernelInvocationContext {
+export class ClientSideKernelInvocationContext implements IKernelInvocationContext {
     private static _current: ClientSideKernelInvocationContext = null;
     private readonly _command: KernelCommand;
     private readonly _commandType: string;
@@ -15,7 +15,7 @@ export class ClientSideKernelInvocationContext implements KernelInvocationContex
     private readonly _eventObservers: { [token: string]: IKernelEventObserver} = {};
     private _isComplete = false;
 
-    static establish(kernelCommandInvocation: { command: KernelCommand, commandType: string }): KernelInvocationContext {
+    static establish(kernelCommandInvocation: { command: KernelCommand, commandType: string }): IKernelInvocationContext {
         let current = ClientSideKernelInvocationContext._current;
         if (current === null || current._isComplete) {
             ClientSideKernelInvocationContext._current = new ClientSideKernelInvocationContext(kernelCommandInvocation);
@@ -26,7 +26,7 @@ export class ClientSideKernelInvocationContext implements KernelInvocationContex
         return ClientSideKernelInvocationContext._current;
     }
 
-    static get current(): KernelInvocationContext { return this._current; }
+    static get current(): IKernelInvocationContext { return this._current; }
     get command(): KernelCommand { return this._command; }
 
     constructor(kernelCommandInvocation: { command: KernelCommand, commandType: string }) {

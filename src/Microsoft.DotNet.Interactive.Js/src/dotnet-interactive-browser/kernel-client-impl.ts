@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { KernelClient, VariableRequest, VariableResponse, DotnetInteractiveClient, ClientFetch} from "../dotnet-interactive/dotnet-interactive-interfaces";
-import {Kernel, IKernelCommandHandler } from "../common/interfaces/kernel";
+import {IKernel, IKernelCommandHandler } from "../common/interfaces/kernel";
 import { TokenGenerator } from "../dotnet-interactive/tokenGenerator";
 import { signalTransportFactory } from "../dotnet-interactive/signalr-client";
 import { CommandFailed, CommandFailedType, KernelTransport, KernelEventEnvelope, KernelEventEnvelopeObserver, DisposableSubscription, SubmitCode, SubmitCodeType, DisplayedValueProduced, DisplayedValueProducedType } from "../common/interfaces/contracts";
@@ -13,7 +13,7 @@ export interface KernelClientImplParameteres {
     clientFetch: (input: RequestInfo, init: RequestInit) => Promise<Response>;
     rootUrl: string;
     kernelTransport: KernelTransport,
-    clientSideKernel: Kernel,
+    clientSideKernel: IKernel,
     configureRequire: (config: any) => any
 }
 
@@ -108,7 +108,7 @@ export class KernelClientImpl implements DotnetInteractiveClient {
     private _clientFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
     private _rootUrl: string;
     private _kernelTransport: KernelTransport;
-    private _clientSideKernel: Kernel;
+    private _clientSideKernel: IKernel;
     private _tokenGenerator: TokenGenerator;
     private _configureRequire: (confing: any) => any;
 
@@ -271,7 +271,7 @@ export type DotnetInteractiveClientConfiguration = {
     address: string,
     clientFetch?: ClientFetch,
     kernelTransportFactory?: (rootUrl: string) => Promise<KernelTransport>,
-    clientSideKernelFactory?: (kernelTransport: KernelTransport) => Promise<Kernel>
+    clientSideKernelFactory?: (kernelTransport: KernelTransport) => Promise<IKernel>
 };
 
 function isConfiguration(config: any): config is DotnetInteractiveClientConfiguration {
@@ -282,7 +282,7 @@ export async function createDotnetInteractiveClient(configuration: string | Dotn
     let rootUrl = "";
     let clientFetch: ClientFetch = null;
     let kernelTransportFactory: (rootUrl: string) => Promise<KernelTransport> = null;
-    let kernelFactory: (kernelTransport: KernelTransport) => Promise<Kernel> = null;
+    let kernelFactory: (kernelTransport: KernelTransport) => Promise<IKernel> = null;
 
     if (isConfiguration(configuration)) {
         rootUrl = configuration.address;
