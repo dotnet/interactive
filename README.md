@@ -39,14 +39,6 @@ There are several ways to get started using .NET with Jupyter, including Jupyter
 
 You can find additional documentation [here](./docs/README.md).
 
-## Test Script
-
-Open the VS Code extension test script in VS Code - Insiders
-
-```
-vscode-insiders://ms-dotnettools.dotnet-interactive-vscode/openNotebook?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdotnet%2Finteractive%2Fmain%2FNotebookTestScript.dib
-```
-
 ## Packages
 
 We provide a number of packages that can be used to write custom [extensions](./docs/extending-dotnet-interactive.md) for .NET Interactive or to build your own interactive experiences.
