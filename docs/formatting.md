@@ -1,16 +1,34 @@
 # Formatting
 
+The .NET Interactive formatter APIs create string representations of objects. You can think of this is a replacement for `ToString`, which you can change or extend from within a notebook.
+
 This document contains notes on how formatters are specified, and some specific details about plain text and HTML formatting.
 
-Formatting is invoked when values are displayed either implicitly (using a trailing expression) or using helper methods such as `display`.
+Formatting is invoked when values are displayed either implicitly (using a trailing expression or `return` statement), using the `Display` extension method, or using helper methods such as `display`.
+
+The formatting APIs described below are available in the `Microsoft.DotNet.Interactive.Formatting` namespace.
+
+In C# run:
+```csharp
+using Microsoft.DotNet.Interactive.Formatting;
+```
+
+Or in F#, run:
+```fsharp
+open Microsoft.DotNet.Interactive.Formatting
+```
+
+You can also use these APIs independently of .NET Interactive via the [`Microsoft.DotNet.Interactive.Formatting`](https://www.nuget.org/packages/Microsoft.DotNet.Interactive.Formatting) NuGet package.
 
 ##  Registering preferred MIME types
 
-See the language-specific documentation on using `SetPreferredMimeTypeFor`.
+Every formatter has a corresponding MIME type. Formatters can be created for an arbitrary number of MIME types. By default, the preferred MIME type in a notebook will be `text/html`, but this can be changed for any given .NET `Type`. For example:
 
 ```csharp
 Formatter.SetPreferredMimeTypeFor(typeof(System.Guid), "text/plain");
 ```
+
+For more details, see the language-specific documentation on using `SetPreferredMimeTypeFor`.
 
 ##  Registering formatters
 
