@@ -15,7 +15,7 @@ export class VSCodeKernel implements Kernel {
 
     constructor(private readonly transport: contracts.KernelTransport, private readonly notebookUri: vscodeLike.Uri) {
         this.registerGetInputCommandHandler();
-        this.registerAddCellHandler();
+        this.registerSendEditableCodeHandler();
     }
 
     private registerGetInputCommandHandler() {
@@ -34,18 +34,18 @@ export class VSCodeKernel implements Kernel {
         });
     }
 
-    private registerAddCellHandler() {
-        this.registerCommandHandler(contracts.AddCellType, async commandEnvelope => {
-            const addCell = <contracts.AddCell>commandEnvelope.command;
+    private registerSendEditableCodeHandler() {
+        this.registerCommandHandler(contracts.SendEditableCodeType, async commandEnvelope => {
+            const addCell = <contracts.SendEditableCode>commandEnvelope.command;
             const language = addCell.language;
-            const contents = addCell.contents;
+            const code = addCell.code;
             const notebookDocument = vscode.workspace.notebookDocuments.find(notebook => notebook.uri.toString() === this.notebookUri.toString());
             if (notebookDocument) {
                 const edit = new vscode.WorkspaceEdit();
                 const range = new vscode.NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount);
                 const cellKind = languageToCellKind(language);
                 const notebookCellLanguage = getNotebookSpecificLanguage(language);
-                const newCell = new vscode.NotebookCellData(cellKind, contents, notebookCellLanguage);
+                const newCell = new vscode.NotebookCellData(cellKind, code, notebookCellLanguage);
                 edit.replaceNotebookCells(notebookDocument.uri, range, [newCell]);
                 const succeeded = await vscode.workspace.applyEdit(edit);
                 if (!succeeded) {

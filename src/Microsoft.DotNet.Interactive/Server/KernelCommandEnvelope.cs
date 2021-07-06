@@ -63,6 +63,7 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(RequestDiagnostics)] = typeof(KernelCommandEnvelope<RequestDiagnostics>),
                 [nameof(RequestHoverText)] = typeof(KernelCommandEnvelope<RequestHoverText>),
                 [nameof(RequestSignatureHelp)] = typeof(KernelCommandEnvelope<RequestSignatureHelp>),
+                [nameof(SendEditableCode)] = typeof(KernelCommandEnvelope<SendEditableCode>),
                 [nameof(SerializeNotebook)] = typeof(KernelCommandEnvelope<SerializeNotebook>),
                 [nameof(SubmitCode)] = typeof(KernelCommandEnvelope<SubmitCode>),
                 [nameof(UpdateDisplayedValue)] = typeof(KernelCommandEnvelope<UpdateDisplayedValue>),
