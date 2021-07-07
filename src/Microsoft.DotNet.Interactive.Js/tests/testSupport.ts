@@ -3,8 +3,9 @@
 
 import * as fetchMock from "fetch-mock";
 import { DotnetInteractiveClient, KernelClientContainer } from "../src/dotnet-interactive/dotnet-interactive-interfaces";
-import { KernelTransport, KernelCommandEnvelope, KernelEventEnvelopeObserver, KernelCommand, KernelCommandType, KernelCommandEnvelopeHandler, KernelEventEnvelope } from "../src/dotnet-interactive/contracts";
-import { TokenGenerator } from "../src/dotnet-interactive/tokenGenerator";
+import { KernelTransport, KernelCommandEnvelope, KernelEventEnvelopeObserver, KernelCommand, KernelCommandType, KernelCommandEnvelopeHandler, KernelEventEnvelope, DisposableSubscription } from "../src/common/interfaces/contracts";
+import { TokenGenerator } from "../src/common/interactive/tokenGenerator";
+import { Kernel } from "../src/common/interactive/kernel";
 
 
 export function asKernelClientContainer(client: DotnetInteractiveClient): KernelClientContainer {

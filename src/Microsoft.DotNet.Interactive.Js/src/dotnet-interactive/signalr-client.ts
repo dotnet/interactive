@@ -3,8 +3,8 @@
 
 import * as signalR from "@microsoft/signalr";
 
-import { KernelTransport, KernelEventEnvelope, KernelEventEnvelopeObserver, DisposableSubscription, KernelCommand, KernelCommandType, KernelCommandEnvelope, KernelCommandEnvelopeHandler } from "./contracts";
-import { TokenGenerator } from "./tokenGenerator";
+import { KernelTransport, KernelEventEnvelope, KernelEventEnvelopeObserver, DisposableSubscription, KernelCommand, KernelCommandType, KernelCommandEnvelope, KernelCommandEnvelopeHandler } from "../common/interfaces/contracts";
+import { TokenGenerator } from "../common/interactive/tokenGenerator";
 
 
 export async function signalTransportFactory(rootUrl: string): Promise<KernelTransport> {

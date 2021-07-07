@@ -6,12 +6,12 @@
     "dist"
   ],
   "scripts": {
-    "build": "npm run rollup-dotnet-interactive && npm run rollup-dotnet-interactive-code-mirror",
+    "build": "npm run rollup-dotnet-interactive && npm run rollup-dotnet-interactive-vscode",
     "build-ci": "rollup -c rollup.config.js",
-    "test": "mocha tests/**/*.spec.ts",
+    "test": "mocha tests/**/*.test.ts",
     "ciTest": "npm test -- --reporter mocha-multi-reporters --reporter-options configFile=testConfig.json",
     "rollup-dotnet-interactive": "npm run build-ci -- -i src/dotnet-interactive.ts -o dist/dotnet-interactive.js",
-    "rollup-dotnet-interactive-code-mirror": "npm run build-ci -- -i src/dotnet-interactive-code-mirror.ts -o dist/dotnet-interactive-code-mirror.js",
+    "rollup-dotnet-interactive-vscode": "npm run build-ci -- -i src/dotnet-interactive-vscode.ts -o dist/dotnet-interactive-vscode.js",
     "watch": "tsc -watch -p ./"
   },
   "repository": {
@@ -31,33 +31,33 @@
   "homepage": "https://github.com/dotnet/interactive#readme",
   "dependencies": {
     "@microsoft/signalr": "5.0.7",
-    "tslib": "2.2.0"
+    "tslib": "2.3.0"
   },
   "devDependencies": {
-    "@types/chai": "4.2.18",
+    "@types/chai": "4.2.19",
     "@types/chai-as-promised": "7.1.4",
     "@types/fetch-mock": "7.3.3",
     "@types/mocha": "8.2.2",
-    "@types/node": "15.12.2",
+    "@types/node": "15.12.4",
     "@types/node-fetch": "2.5.10",
     "chai": "4.3.4",
     "chai-as-promised": "7.1.1",
     "fetch-mock": "9.11.0",
     "mkdirp": "1.0.4",
-    "mocha": "9.0.0",
+    "mocha": "9.0.1",
     "mocha-multi-reporters": "1.5.1",
     "mocha-trx-reporter": "3.3.1",
     "mocha-typescript": "1.1.17",
     "node-fetch": "2.6.1",
     "requirejs": "2.3.6",
-    "rollup": "2.51.2",
+    "rollup": "2.52.2",
     "rollup-plugin-commonjs": "10.1.0",
     "rollup-plugin-node-resolve": "5.2.0",
     "rollup-plugin-typescript2": "0.30.0",
     "source-map-support": "0.5.19",
     "ts-mocha": "8.0.0",
     "ts-node": "10.0.0",
-    "typescript": "4.3.2"
+    "typescript": "4.3.4"
   },
   "mocha": {
     "ui": "bdd",
@@ -68,7 +68,7 @@
       "ts-node/register"
     ],
     "watch-files": [
-      "tests/**/*.spec.ts"
+      "tests/**/*.test.ts"
     ]
   }
 }

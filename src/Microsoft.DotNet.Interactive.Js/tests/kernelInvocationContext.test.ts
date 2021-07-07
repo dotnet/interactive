@@ -3,22 +3,30 @@
 
 import { expect } from "chai";
 import { describe } from "mocha";
-import { IKernelEventObserver } from "../src/dotnet-interactive";
-import { ClientSideKernelInvocationContext } from "../src/dotnet-interactive/client-side-kernel-invocation-context";
-import { CommandFailedType, CommandSucceededType, DisplayedValueProduced, DisplayedValueProducedType, Disposable, ErrorProduced, ErrorProducedType, KernelCommand, KernelCommandEnvelope, KernelCommandType, KernelEvent, KernelEventEnvelope, KernelEventEnvelopeObserver, SubmitCode, SubmitCodeType } from "../src/dotnet-interactive/contracts";
+import { IKernelEventObserver } from "../src/common/interactive/kernel";
+import { KernelInvocationContext } from "../src/common/interactive/kernelInvocationContext";
+import { CommandFailedType, CommandSucceededType, DisplayedValueProduced, DisplayedValueProducedType, Disposable, ErrorProduced, ErrorProducedType, KernelCommand, KernelCommandEnvelope, KernelCommandType, KernelEvent, KernelEventEnvelope, KernelEventEnvelopeObserver, SubmitCode, SubmitCodeType } from "../src/common/interfaces/contracts";
 
 describe("dotnet-interactive", () => {
+
+    let toDispose: Disposable[] = [];
+    function use<T extends Disposable>(disposable: T): T {
+        toDispose.push(disposable);
+        return disposable;
+    }
+
+    afterEach(() => toDispose.forEach(d => d.dispose()));
     describe("client-side kernel invocation context", () => {
 
-        let makeEventWatcher: () => { watcher: IKernelEventObserver, events: { event: KernelEvent, eventType: string, command: KernelCommand, commandType: string }[] } =
+        let makeEventWatcher: () => { watcher: IKernelEventObserver, events: KernelEventEnvelope[] } =
             () => {
-                let events: { event: KernelEvent, eventType: string, command: KernelCommand, commandType: string }[] = [];
+                let events: KernelEventEnvelope[] = [];
                 return {
                     events,
-                    watcher: (kernelEvent: { event: KernelEvent, eventType: string, command: KernelCommand, commandType: string }) => events.push(kernelEvent)
+                    watcher: (kernelEvent: KernelEventEnvelope) => events.push(kernelEvent)
                 };
             };
-        function makeSubmitCode(code: string): { commandType: string, command: KernelCommand } {
+        function makeSubmitCode(code: string): KernelCommandEnvelope {
             let command: SubmitCode = {
                 code: code
             };
@@ -27,34 +35,27 @@ describe("dotnet-interactive", () => {
                 command: command
             };
         }
-        let commandAndType = makeSubmitCode("123");
-
-        let toDispose: Disposable[] = [];
-        function use<T extends Disposable>(disposable: T): T {
-            toDispose.push(disposable);
-            return disposable;
-        }
-        afterEach(() => toDispose.forEach(d => d.dispose()));
+        let commadnEnvelope = makeSubmitCode("123");
 
         it("publishes CommandHandled when Complete is called", async () => {
-            let context = use(ClientSideKernelInvocationContext.establish(commandAndType));
+            let context = use(KernelInvocationContext.establish(commadnEnvelope));
 
             let ew = makeEventWatcher();
             context.subscribeToKernelEvents(ew.watcher);
 
-            context.complete(commandAndType.command);
+            context.complete(commadnEnvelope);
 
             expect(ew.events.length).to.eql(1);
             expect(ew.events[0].eventType).to.eql(CommandSucceededType);
         });
 
         it("does not publish CommandFailed when Complete is called", async () => {
-            let context = use(ClientSideKernelInvocationContext.establish(commandAndType));
+            let context = use(KernelInvocationContext.establish(commadnEnvelope));
 
             let ew = makeEventWatcher();
             context.subscribeToKernelEvents(ew.watcher);
 
-            context.complete(commandAndType.command);
+            context.complete(commadnEnvelope);
 
             ew.events.forEach(event => {
                 expect(event.eventType).is.not.eq(CommandFailedType);
@@ -70,22 +71,22 @@ describe("dotnet-interactive", () => {
         });
 
         it("does not publish further events after Complete is called", async () => {
-            let context = use(ClientSideKernelInvocationContext.establish(commandAndType));
+            let context = use(KernelInvocationContext.establish(commadnEnvelope));
 
             let ew = makeEventWatcher();
             context.subscribeToKernelEvents(ew.watcher);
 
-            context.complete(commandAndType.command);
+            context.complete(commadnEnvelope);
 
             let ev: ErrorProduced = {
                 message: "oops",
                 formattedValues: null,
                 valueId: null
             };
-            let evEnv = {
+            let evEnv: KernelEventEnvelope = {
                 event: ev,
                 eventType: ErrorProducedType,
-                ...commandAndType
+                command: commadnEnvelope
             };
             context.publish(evEnv);
 
@@ -95,7 +96,7 @@ describe("dotnet-interactive", () => {
         });
 
         it("publishes CommandFailed when Fail is called", async () => {
-            let context = use(ClientSideKernelInvocationContext.establish(commandAndType));
+            let context = use(KernelInvocationContext.establish(commadnEnvelope));
 
             let ew = makeEventWatcher();
             context.subscribeToKernelEvents(ew.watcher);
@@ -107,7 +108,7 @@ describe("dotnet-interactive", () => {
         });
 
         it("does not publish CommandHandled when Fail is called", async () => {
-            let context = use(ClientSideKernelInvocationContext.establish(commandAndType));
+            let context = use(KernelInvocationContext.establish(commadnEnvelope));
 
             let ew = makeEventWatcher();
             context.subscribeToKernelEvents(ew.watcher);
@@ -120,7 +121,7 @@ describe("dotnet-interactive", () => {
         });
 
         it("does not publish further events after Fail is called", async () => {
-            let context = use(ClientSideKernelInvocationContext.establish(commandAndType));
+            let context = use(KernelInvocationContext.establish(commadnEnvelope));
 
             let ew = makeEventWatcher();
             context.subscribeToKernelEvents(ew.watcher);
@@ -131,10 +132,10 @@ describe("dotnet-interactive", () => {
                 formattedValues: null,
                 valueId: null
             };
-            let evEnv = {
+            let evEnv: KernelEventEnvelope = {
                 event: ev,
                 eventType: DisplayedValueProducedType,
-                ...commandAndType
+                command: commadnEnvelope
             };
             context.publish(evEnv);
 
@@ -145,15 +146,15 @@ describe("dotnet-interactive", () => {
 
         it("completes only when child all commands complete if multiple commands are active", async () => {
             let outerSubmitCode = makeSubmitCode("abc");
-            let outer = use(ClientSideKernelInvocationContext.establish(outerSubmitCode));
+            let outer = use(KernelInvocationContext.establish(outerSubmitCode));
 
             let ew = makeEventWatcher();
             outer.subscribeToKernelEvents(ew.watcher);
 
             let innerSubmitCode = makeSubmitCode("def");
-            let inner = use(ClientSideKernelInvocationContext.establish(innerSubmitCode));
+            let inner = use(KernelInvocationContext.establish(innerSubmitCode));
 
-            inner.complete(innerSubmitCode.command);
+            inner.complete(innerSubmitCode);
 
             ew.events.forEach(event => {
                 expect(event.eventType).is.not.eq(CommandSucceededType);
@@ -162,23 +163,23 @@ describe("dotnet-interactive", () => {
 
         it("publishes events from inner context if both inner and outer are in progress", async () => {
             let outerSubmitCode = makeSubmitCode("abc");
-            let outer = use(ClientSideKernelInvocationContext.establish(outerSubmitCode));
+            let outer = use(KernelInvocationContext.establish(outerSubmitCode));
 
             let ew = makeEventWatcher();
             outer.subscribeToKernelEvents(ew.watcher);
 
             let innerSubmitCode = makeSubmitCode("def");
-            let inner = use(ClientSideKernelInvocationContext.establish(innerSubmitCode));
+            let inner = use(KernelInvocationContext.establish(innerSubmitCode));
 
             let ev: ErrorProduced = {
                 message: "oops",
                 formattedValues: null,
                 valueId: null
             };
-            let evEnv = {
+            let evEnv: KernelEventEnvelope = {
                 event: ev,
                 eventType: ErrorProducedType,
-                ...innerSubmitCode
+                command: innerSubmitCode
             };
             inner.publish(evEnv);
 
@@ -188,25 +189,25 @@ describe("dotnet-interactive", () => {
 
         it("does not publish further events from inner context after outer context is completed", async () => {
             let outerSubmitCode = makeSubmitCode("abc");
-            let outer = use(ClientSideKernelInvocationContext.establish(outerSubmitCode));
+            let outer = use(KernelInvocationContext.establish(outerSubmitCode));
 
             let ew = makeEventWatcher();
             outer.subscribeToKernelEvents(ew.watcher);
 
             let innerSubmitCode = makeSubmitCode("def");
-            let inner = use(ClientSideKernelInvocationContext.establish(innerSubmitCode));
+            let inner = use(KernelInvocationContext.establish(innerSubmitCode));
 
-            outer.complete(outerSubmitCode.command);
+            outer.complete(outerSubmitCode);
 
             let ev: ErrorProduced = {
                 message: "oops",
                 formattedValues: null,
                 valueId: null
             };
-            let evEnv = {
+            let evEnv: KernelEventEnvelope = {
                 event: ev,
                 eventType: ErrorProducedType,
-                ...innerSubmitCode
+                command: innerSubmitCode
             };
             inner.publish(evEnv);
 
@@ -217,25 +218,25 @@ describe("dotnet-interactive", () => {
 
         it("does not publish further events from inner context after it is completed", async () => {
             let outerSubmitCode = makeSubmitCode("abc");
-            let outer = use(ClientSideKernelInvocationContext.establish(outerSubmitCode));
+            let outer = use(KernelInvocationContext.establish(outerSubmitCode));
 
             let ew = makeEventWatcher();
             outer.subscribeToKernelEvents(ew.watcher);
 
             let innerSubmitCode = makeSubmitCode("def");
-            let inner = use(ClientSideKernelInvocationContext.establish(innerSubmitCode));
+            let inner = use(KernelInvocationContext.establish(innerSubmitCode));
 
-            inner.complete(outerSubmitCode.command);
+            inner.complete(outerSubmitCode);
 
             let ev: ErrorProduced = {
                 message: "oops",
                 formattedValues: null,
                 valueId: null
             };
-            let evEnv = {
+            let evEnv: KernelEventEnvelope = {
                 event: ev,
                 eventType: ErrorProducedType,
-                ...innerSubmitCode
+                command: innerSubmitCode
             };
             inner.publish(evEnv);
 
@@ -245,7 +246,7 @@ describe("dotnet-interactive", () => {
         });
 
         it("set current to null when disposed", async () => {
-            let context = ClientSideKernelInvocationContext.establish(commandAndType);
+            let context = KernelInvocationContext.establish(commadnEnvelope);
 
             // TODO
             // The C# test registers a completion callback with OnComplete, but it's not
@@ -254,35 +255,35 @@ describe("dotnet-interactive", () => {
 
             context.dispose();
 
-            expect(ClientSideKernelInvocationContext.current).is.null;
+            expect(KernelInvocationContext.current).is.null;
         });
 
         it("publishes CommandFailed when inner context fails", async () => {
             let outerSubmitCode = makeSubmitCode("abc");
-            let outer = use(ClientSideKernelInvocationContext.establish(outerSubmitCode));
+            let outer = use(KernelInvocationContext.establish(outerSubmitCode));
 
             let ew = makeEventWatcher();
             outer.subscribeToKernelEvents(ew.watcher);
 
             let innerSubmitCode = makeSubmitCode("def");
-            let inner = use(ClientSideKernelInvocationContext.establish(innerSubmitCode));
+            let inner = use(KernelInvocationContext.establish(innerSubmitCode));
 
             inner.fail();
 
             expect(ew.events.length).to.eql(1);
             expect(ew.events[0].eventType).to.eql(CommandFailedType);
-            expect(ew.events[0].command).to.eql(outerSubmitCode.command);
+            expect(ew.events[0].command).to.eql(outerSubmitCode);
         });
 
         it("does not publish further events after inner context fails", async () => {
             let outerSubmitCode = makeSubmitCode("abc");
-            let outer = use(ClientSideKernelInvocationContext.establish(outerSubmitCode));
+            let outer = use(KernelInvocationContext.establish(outerSubmitCode));
 
             let ew = makeEventWatcher();
             outer.subscribeToKernelEvents(ew.watcher);
 
             let innerSubmitCode = makeSubmitCode("def");
-            let inner = use(ClientSideKernelInvocationContext.establish(innerSubmitCode));
+            let inner = use(KernelInvocationContext.establish(innerSubmitCode));
 
             inner.fail();
 
@@ -291,10 +292,10 @@ describe("dotnet-interactive", () => {
                 formattedValues: null,
                 valueId: null
             };
-            let evEnv = {
+            let evEnv: KernelEventEnvelope = {
                 event: ev,
                 eventType: ErrorProducedType,
-                ...innerSubmitCode
+                command: innerSubmitCode
             };
             inner.publish(evEnv);
 

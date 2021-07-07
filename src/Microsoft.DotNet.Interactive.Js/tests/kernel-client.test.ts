@@ -2,12 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { expect } from "chai";
-import { createDotnetInteractiveClient } from "../src/dotnet-interactive/kernel-client-impl";
+import { createDotnetInteractiveClient } from "../src/dotnet-interactive-browser/kernel-client-impl";
 import * as fetchMock from "fetch-mock";
 import { configureFetchForKernelDiscovery, createMockKernelTransport, MockKernelTransport, asKernelClientContainer } from "./testSupport";
-import { CodeSubmissionReceived, CodeSubmissionReceivedType, KernelCommand, KernelCommandEnvelope, KernelCommandType, KernelEventEnvelope, KernelEventEnvelopeObserver, SubmitCodeType } from "../src/dotnet-interactive/contracts";
-import { IKernelCommandHandler, Kernel, KernelInvocationContext } from "../src/dotnet-interactive/dotnet-interactive-interfaces";
-import { attachKernelToTransport } from "../src/dotnet-interactive/client-side-kernel";
+import { CodeSubmissionReceived, CodeSubmissionReceivedType, KernelCommand, KernelCommandEnvelope, KernelCommandType, KernelEventEnvelope, KernelEventEnvelopeObserver, SubmitCodeType } from "../src/common/interfaces/contracts";
+import { IKernelCommandInvocation, IKernelInvocationContext, Kernel } from "../src/common/interactive/kernel";
+import { attachKernelToTransport } from "../src/dotnet-interactive/kernel-factory";
+import { SubmitCode } from "../../dotnet-interactive-vscode/common/interfaces/contracts";
 
 
 interface CustomCommand extends KernelCommand {
@@ -124,9 +125,9 @@ describe("dotnet-interactive", () => {
         const rootUrl = "https://dotnet.interactive.com:999";
         let transport: MockKernelTransport = null;
         let kernel: Kernel = null;
-        let commandsSentToKernel: { command: KernelCommand, commandType: string }[] = null;
+        let commandsSentToKernel: KernelCommandEnvelope[] = null;
         let kernelEventHandlers: KernelEventEnvelopeObserver[] = null
-        let registeredCommandHandlers: { [commandType: string]: ((kernelCommandInvocation: { command: KernelCommand, context: KernelInvocationContext }) => Promise<void>) } = null;
+        let registeredCommandHandlers: { [commandType: string]: ((kernelCommandInvocation: { command: KernelCommand, context: IKernelInvocationContext }) => Promise<void>) } = null;
 
         let makeClient = () => {
             configureFetchForKernelDiscovery(rootUrl);
@@ -141,37 +142,35 @@ describe("dotnet-interactive", () => {
                     commandsSentToKernel = [];
                     kernelEventHandlers = [];
                     registeredCommandHandlers = {};
-                    kernel = {
-                        send: command => {
-                            commandsSentToKernel.push(command);
+                    kernel = new Kernel("client-side-kernel");
+                    kernel.registerCommandHandler({
+                        commandType: "CustomCommand",
+                        handle: (commandInvocation: IKernelCommandInvocation) => {
+                            commandsSentToKernel.push(commandInvocation.commandEnvelope);
                             return Promise.resolve();
-                        },
-                        subscribeToKernelEvents: observer => {
-                            kernelEventHandlers.push(observer);
-                            return { dispose: () => { } };
-                        },
-                        registerCommandHandler: (handler: IKernelCommandHandler) => {
-                            registeredCommandHandlers[handler.commandType] = handler.handle;
                         }
-                    };
+                    });
+
+                    kernel.registerCommandHandler({
+                        commandType: "CustomCommand1",
+                        handle: (commandInvocation: IKernelCommandInvocation) => {
+                            commandsSentToKernel.push(commandInvocation.commandEnvelope);
+                            return Promise.resolve();
+                        }
+                    });
+
+                    kernel.registerCommandHandler({
+                        commandType: "CustomCommand2",
+                        handle: (commandInvocation: IKernelCommandInvocation) => {
+                            commandsSentToKernel.push(commandInvocation.commandEnvelope);
+                            return Promise.resolve();
+                        }
+                    });
                     attachKernelToTransport(kernel, kernelTransport);
 
                     return kernel;
                 }
             });
-        };
-
-        let makeContext: () => KernelInvocationContext = () => {
-            return {
-                complete: _ => { },
-                fail: _ => { },
-                subscribeToKernelEvents: _ => {
-                    return { dispose: () => { } };
-                },
-                publish: _ => { },
-                dispose: () => { },
-                command: null
-            };
         };
 
         // Deliver command from transport
@@ -203,54 +202,39 @@ describe("dotnet-interactive", () => {
         // Verify that they are sent back to the transport.
         // Token?
         it("sends client-side kernel events to the kernel transport", async () => {
-            await makeClient();
-            expect(kernelEventHandlers.length).to.equal(1);
+            let client = await makeClient();
+            client.registerCommandHandler({
+                commandType: SubmitCodeType, handle: (invocation) => {
+                    let submitCode = <SubmitCode>invocation.commandEnvelope.command;
+                    let event: KernelEventEnvelope = {
+                        eventType: CodeSubmissionReceivedType,
+                        event: {
+                            code: submitCode.code
+                        },
+                        command: invocation.commandEnvelope
+                    };
+
+                    invocation.context.publish(event);
+                    return Promise.resolve();
+                }
+            });
+
+
+            transport.fakeIncomingSubmitCommand({ commandType: SubmitCodeType, command: <SubmitCode>{ code: "39 + 3" } });
 
             let eventIn: CodeSubmissionReceived = {
                 code: "39 + 3"
             };
+
             let eventEnvelopeIn: KernelEventEnvelope = {
                 eventType: CodeSubmissionReceivedType,
                 event: eventIn
             };
-            kernelEventHandlers[0](eventEnvelopeIn);
 
             expect(transport.publishedEvents.length).to.be.equal(1);
             expect(transport.publishedEvents[0].eventType).to.be.equal(eventEnvelopeIn.eventType);
             let eventPublished = <CodeSubmissionReceived>transport.publishedEvents[0].event;
             expect(eventPublished.code).to.be.equal(eventIn.code);
-        });
-
-        it("passes command handler registration to client-side kernel", async () => {
-            let client = await makeClient();
-
-            let commandType1: KernelCommandType = <KernelCommandType>"CustomCommand1";
-            let commandType2: KernelCommandType = <KernelCommandType>"CustomCommand2";
-            let command1In: CustomCommand = {
-                data: "Test"
-            };
-            let command2In: CustomCommand2 = {
-                moreData: "Test 2"
-            };
-
-            let commandEnvelopesSentToHandler1: { command: KernelCommand, context: KernelInvocationContext }[] = [];
-            let commandEnvelopesSentToHandler2: { command: KernelCommand, context: KernelInvocationContext }[] = [];
-            client.registerCommandHandler({ commandType: commandType1, handle: async env => { commandEnvelopesSentToHandler1.push(env); } });
-            client.registerCommandHandler({ commandType: commandType2, handle: async env => { commandEnvelopesSentToHandler2.push(env); } });
-
-            expect(Object.keys(registeredCommandHandlers).length).is.equal(2);
-
-            let fakeContext1: KernelInvocationContext = makeContext();
-            registeredCommandHandlers[commandType1]({ command: command1In, context: fakeContext1 });
-            expect(commandEnvelopesSentToHandler1.length).to.be.equal(1);
-            let commandSentToHandler1 = <CustomCommand>commandEnvelopesSentToHandler1[0].command;
-            expect(commandSentToHandler1.data).to.be.equal(command1In.data);
-
-            let fakeContext2: KernelInvocationContext = makeContext();
-            registeredCommandHandlers[commandType2]({ command: command2In, context: fakeContext2 });
-            expect(commandEnvelopesSentToHandler2.length).to.be.equal(1);
-            let commandSentToHandler2 = <CustomCommand2>commandEnvelopesSentToHandler2[0].command;
-            expect(commandSentToHandler2.moreData).to.be.equal(command2In.moreData);
         });
 
         // Do we need to handle get variable(s) requests?
