@@ -127,8 +127,7 @@ export class InteractiveClient {
             };
 
             let reportOutputs = () => {
-                outputObserver([...outputs]);
-                outputs = [];
+                outputObserver(outputs);
             };
 
             let failureReported = false;

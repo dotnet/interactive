@@ -126,7 +126,7 @@ export class DotNetNotebookKernel {
                 const controllerErrors: vscodeLike.NotebookCellOutput[] = [];
 
                 function outputObserver(outputs: Array<vscodeLike.NotebookCellOutput>) {
-                    outputUpdatePromise = outputUpdatePromise.finally(() => updateCellOutputs(executionTask!, [...outputs]));
+                    outputUpdatePromise = outputUpdatePromise.finally(() => updateCellOutputs(executionTask!, [...outputs])).catch(() => {});
                 }
                 const client = await this.config.clientMapper.getOrAddClient(cell.notebook.uri);
                 executionTask.token.onCancellationRequested(() => {
@@ -202,21 +202,22 @@ export async function updateCellLanguages(document: vscode.NotebookDocument): Pr
 }
 
 async function updateCellOutputs(executionTask: vscode.NotebookCellExecution, outputs: Array<vscodeLike.NotebookCellOutput>): Promise<void> {
-    const previousOutput = executionTask.cell.outputs.length ? executionTask.cell.outputs[executionTask.cell.outputs.length - 1] : undefined;
-    const previousOutputItem = previousOutput?.items.length ? previousOutput.items[previousOutput.items.length - 1] : undefined;
-    await Promise.all(outputs.map(async (o, index) => {
+    const reshapedOutputs: vscode.NotebookCellOutput[] = [];
+    outputs.forEach(async (o, index) => {
         const items = o.items.map(oi => generateVsCodeNotebookCellOutputItem(oi.data, oi.mime, oi.stream));
+        const previousOutput = reshapedOutputs.length ? reshapedOutputs[reshapedOutputs.length - 1] : undefined;
+        const previousOutputItem = previousOutput?.items.length ? previousOutput.items[previousOutput.items.length - 1] : undefined;
         // If all of these items are of the same stream type & previous item is the same stream, then append it.
-        if (index === 0 && previousOutput && previousOutputItem?.mime && ['application/vnd.code.notebook.stderr', 'application/vnd.code.notebook.stdout'].includes(previousOutputItem?.mime)){
+        if (previousOutput && previousOutputItem?.mime && ['application/vnd.code.notebook.stderr', 'application/vnd.code.notebook.stdout'].includes(previousOutputItem?.mime)){
             const decoder = new TextDecoder();
             const newText = `${decoder.decode(previousOutputItem.data)}${items.map(item => decoder.decode(item.data)).join()}`;
             const newItem = previousOutputItem.mime === 'application/vnd.code.notebook.stderr' ? vscode.NotebookCellOutputItem.stderr(newText) : vscode.NotebookCellOutputItem.stdout(newText);
-            const newItems = [...previousOutput.items.slice(0, -1), newItem];
-            await executionTask.replaceOutputItems(newItems, previousOutput);
+            previousOutput.items[previousOutput.items.length - 1] = newItem;
         } else {
-            await executionTask.appendOutput(new vscode.NotebookCellOutput(items));
+            reshapedOutputs.push(new vscode.NotebookCellOutput(items));
         }
-    }));
+    });
+    await executionTask.replaceOutput(reshapedOutputs);
 }
 
 export function endExecution(cell: vscode.NotebookCell, success: boolean) {

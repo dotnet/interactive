@@ -151,3 +151,23 @@ let x = 1 +
 1. `Ctrl+Shift+P` => ".NET Interactive: Open notebook"
 2. Select the "Untitled-1.dib"/"Untitled-1.ipynb" from before.
 3. Verify that it contains a single F# cell with the contents "1+1" and that it can execute.
+
+#!markdown
+
+# Support ANSI Codes
+
+#!csharp
+
+Console.Write("\x1b[38;2;0;255;0m");
+Console.WriteLine("this should be green");
+Console.Write("\x1b[0m");
+
+#!csharp
+
+Console.Write("\x1b[38;2;0;255;0mthis should be green\x1b[0m");
+
+#!csharp
+
+Console.Error.Write("\x1b[38;2;0;255;0m"); // set text color to green
+Console.Error.WriteLine("more green in stderr");
+Console.Error.Write("\x1b[0m"); // reset colors
