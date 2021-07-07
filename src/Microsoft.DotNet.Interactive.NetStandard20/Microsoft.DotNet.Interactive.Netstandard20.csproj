@@ -11,6 +11,8 @@
 
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)../Microsoft.DotNet.Interactive/**/*.cs" />
+    <Compile Remove="$(MSBuildThisFileDirectory)../Microsoft.DotNet.Interactive/bin/**/*.cs" />
+    <Compile Remove="$(MSBuildThisFileDirectory)../Microsoft.DotNet.Interactive/obj/**/*.cs" />
   </ItemGroup>
 
   <ItemGroup>
