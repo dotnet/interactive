@@ -19,17 +19,21 @@ namespace Microsoft.DotNet.Interactive
     {
         public IReadOnlyList<string> RestoreSources { get; set; }
         public IReadOnlyList<string> InstalledPackages { get; set; }
+
+        public IReadOnlyList<string> RecentlyInstalledPackages { get; set; }
         public IReadOnlyList<string> InstallingPackages { get; set; }
         public int Progress { get; set; }
 
         public InstallPackagesMessage(
                 IReadOnlyList<string> restoreSources,
                 IReadOnlyList<string> installedPackages,
+                IReadOnlyList<string> recentlyInstalledPackages,
                 IReadOnlyList<string> installingPackages,
                 int progress)
         {
             RestoreSources = restoreSources;
             InstalledPackages = installedPackages;
+            RecentlyInstalledPackages = recentlyInstalledPackages;
             InstallingPackages = installingPackages;
             Progress = progress;
         }
@@ -53,7 +57,8 @@ namespace Microsoft.DotNet.Interactive
             string progress = new String('.', Progress);
             var items = new List<IHtmlContent>();
             items.Add(InstallMessage("Restore sources", RestoreSources));
-            items.Add(InstallMessage("Installed Packages", InstalledPackages));
+            //items.Add(InstallMessage("Installed Packages", InstalledPackages));
+            items.Add(InstallMessage("Recently Installed Packages", RecentlyInstalledPackages));
             items.Add(InstallMessage("Installing Packages", InstallingPackages, progress));
             var r =  div(items).ToString();
             return r;
