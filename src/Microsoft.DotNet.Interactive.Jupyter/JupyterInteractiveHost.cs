@@ -14,11 +14,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         {
         }
 
-        public Task AddCellAsync(string language, string contents, CancellationToken cancellationToken = default)
-        {
-            throw new NotSupportedException();
-        }
-
         public Task<string> GetInputAsync(string prompt = "", bool isPassword = false, CancellationToken cancellationToken = default)
         {
             var result = isPassword

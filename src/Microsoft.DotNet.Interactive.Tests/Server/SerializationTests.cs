@@ -173,6 +173,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new RequestSignatureHelp("sig-help-contents", new LinePosition(1, 2));
 
+                yield return new SendEditableCode("language", "code");
+
                 yield return new SerializeNotebook("notebook.ipynb", new NotebookDocument(new[]
                 {
                     new NotebookCell("csharp", "user code", new NotebookCellOutput[]

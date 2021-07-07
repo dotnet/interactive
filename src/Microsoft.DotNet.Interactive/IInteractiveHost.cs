@@ -9,13 +9,6 @@ namespace Microsoft.DotNet.Interactive
     public interface IInteractiveHost
     {
         /// <summary>
-        /// Add a cell to the end notebook.
-        /// </summary>
-        /// <param name="language">The language of the new cell.</param>
-        /// <param name="contents">The contents of the new cell.</param>
-        Task AddCellAsync(string language, string contents, CancellationToken cancellationToken = default);
-
-        /// <summary>
         /// Gets input from the user.
         /// </summary>
         /// <param name="prompt">The prompt to show.</param>
