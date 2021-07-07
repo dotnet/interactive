@@ -126,7 +126,9 @@ export class DotNetNotebookKernel {
                 const controllerErrors: vscodeLike.NotebookCellOutput[] = [];
 
                 function outputObserver(outputs: Array<vscodeLike.NotebookCellOutput>) {
-                    outputUpdatePromise = outputUpdatePromise.finally(() => updateCellOutputs(executionTask!, [...outputs])).catch(() => {});
+                    outputUpdatePromise = outputUpdatePromise.catch(ex => {
+                        console.error('Failed to update output', ex);
+                    }).finally(() => updateCellOutputs(executionTask!, [...outputs]));
                 }
                 const client = await this.config.clientMapper.getOrAddClient(cell.notebook.uri);
                 executionTask.token.onCancellationRequested(() => {
