@@ -195,11 +195,15 @@ namespace Microsoft.DotNet.Interactive
                     var install = new InstallPackagesMessage(
                             kernel.RestoreSources.OrderBy(s => s).ToList(),
                             kernel.ResolvedPackageReferences.Select(s => $"{s.PackageName}, {s.PackageVersion}").OrderBy(s => s).ToList(),
+
+                            Enumerable.Empty<string>().ToList(),
                             kernel.RequestedPackageReferences
                                   .Except(kernel.ResolvedPackageReferences, PackageReferenceComparer.Instance)
                                   .Select(s => s.PackageName).OrderBy(s => s).ToList(), 0);
 
                     CreateOrUpdateDisplayValue(context, installPackagesPropertyName, install);
+
+                    var currentPackageReferences = kernel.ResolvedPackageReferences?.ToHashSet() ?? new HashSet<ResolvedPackageReference>();
 
                     var restorePackagesTask = kernel.RestoreAsync();
 
@@ -219,6 +223,7 @@ namespace Microsoft.DotNet.Interactive
                     var resultMessage = new InstallPackagesMessage(
                             kernel.RestoreSources.OrderBy(s => s).ToArray(),
                             kernel.ResolvedPackageReferences.Select(s => $"{s.PackageName}, {s.PackageVersion}").OrderBy(s => s).ToList(),
+                            kernel.ResolvedPackageReferences.Where(currentPackageReferences.Add).Select(s => $"{s.PackageName}, {s.PackageVersion}").OrderBy(s => s).ToList(),
                             emptyList,
                             0);
 
