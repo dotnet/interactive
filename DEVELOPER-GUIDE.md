@@ -8,11 +8,11 @@ If you would like to build `dotnet-interactive` tool and its associated librarie
 
 This repo depends on symbolic links between directories.  By default Windows doesn't support this feature.  To work around this scenario, please run the PowerShell script `<root>/src/ensure-symlinks.ps1` as an administrator.  This usually only needs to be run once.
 
-This project depends on .NET 5.0. Before working on the project, check that the .NET prerequisites have been met:
+This project depends on .NET 6.0. Before working on the project, check that the .NET prerequisites have been met:
 
-   - [Prerequisites for .NET on Windows](https://docs.microsoft.com/en-us/dotnet/core/install/windows?tabs=net50#dependencies)
-   - [Prerequisites for .NET on Linux](https://docs.microsoft.com/en-us/dotnet/core/install/linux?tabs=net50#dependencies)
-   - [Prerequisites for .NET on macOS](https://docs.microsoft.com/en-us/dotnet/core/install/macos?tabs=net50#dependencies)
+   - [Prerequisites for .NET on Windows](https://docs.microsoft.com/en-us/dotnet/core/install/windows?tabs=net60#dependencies)
+   - [Prerequisites for .NET on Linux](https://docs.microsoft.com/en-us/dotnet/core/install/linux?tabs=net60#dependencies)
+   - [Prerequisites for .NET on macOS](https://docs.microsoft.com/en-us/dotnet/core/install/macos?tabs=net60#dependencies)
 
 ## Visual Studio / Visual Studio Code
 
@@ -115,7 +115,7 @@ If you've made changes to `dotnet-interactive` and want to try them out with Vis
       -  "run",
       -  "dotnet-interactive",
       -  "--",
-      +  "/PATH/TO/REPO/ROOT/artifacts/bin/dotnet-interactive/Debug/net5.0/Microsoft.DotNet.Interactive.App.dll",
+      +  "/PATH/TO/REPO/ROOT/artifacts/bin/dotnet-interactive/Debug/net6.0/Microsoft.DotNet.Interactive.App.dll",
          "[vscode]",
          "stdio",
       +  "--log-path",

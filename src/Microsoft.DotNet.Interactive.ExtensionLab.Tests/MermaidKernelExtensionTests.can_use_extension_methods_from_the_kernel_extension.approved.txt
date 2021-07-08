@@ -88,7 +88,7 @@ List~String~ : +ConvertAll(Converter~String, TOutput~ converter) List~TOutput~
 List~String~ : +CopyTo(String[] array) Void
 List~String~ : +CopyTo(Int32 index, String[] array, Int32 arrayIndex, Int32 count) Void
 List~String~ : +CopyTo(String[] array, Int32 arrayIndex) Void
-List~String~ : -EnsureCapacity(Int32 min) Void
+List~String~ : +EnsureCapacity(Int32 capacity) Int32
 List~String~ : +Exists(Predicate~String~ match) Boolean
 List~String~ : +Find(Predicate~String~ match) String
 List~String~ : +FindAll(Predicate~String~ match) List~String~
@@ -105,6 +105,7 @@ List~String~ : +get_Count() Int32
 List~String~ : +get_Item(Int32 index) String
 List~String~ : +GetEnumerator() Enumerator~String~
 List~String~ : +GetRange(Int32 index, Int32 count) List~String~
+List~String~ : -Grow(Int32 capacity) Void
 List~String~ : +IndexOf(String item) Int32
 List~String~ : +IndexOf(String item, Int32 index) Int32
 List~String~ : +IndexOf(String item, Int32 index, Int32 count) Int32

@@ -14,7 +14,7 @@ List~Dictionary<String, Object>~ : +ConvertAll(Converter~Dictionary<String, Obje
 List~Dictionary<String, Object>~ : +CopyTo(Dictionary array) Void
 List~Dictionary<String, Object>~ : +CopyTo(Int32 index, Dictionary array, Int32 arrayIndex, Int32 count) Void
 List~Dictionary<String, Object>~ : +CopyTo(Dictionary array, Int32 arrayIndex) Void
-List~Dictionary<String, Object>~ : -EnsureCapacity(Int32 min) Void
+List~Dictionary<String, Object>~ : +EnsureCapacity(Int32 capacity) Int32
 List~Dictionary<String, Object>~ : +Exists(Predicate~Dictionary<String, Object>~ match) Boolean
 List~Dictionary<String, Object>~ : +Find(Predicate~Dictionary<String, Object>~ match) Dictionary~String, Object~
 List~Dictionary<String, Object>~ : +FindAll(Predicate~Dictionary<String, Object>~ match) List~Dictionary<String, Object>~
@@ -31,6 +31,7 @@ List~Dictionary<String, Object>~ : +get_Count() Int32
 List~Dictionary<String, Object>~ : +get_Item(Int32 index) Dictionary~String, Object~
 List~Dictionary<String, Object>~ : +GetEnumerator() Enumerator~Dictionary<String, Object>~
 List~Dictionary<String, Object>~ : +GetRange(Int32 index, Int32 count) List~Dictionary<String, Object>~
+List~Dictionary<String, Object>~ : -Grow(Int32 capacity) Void
 List~Dictionary<String, Object>~ : +IndexOf(Dictionary~String, Object~ item) Int32
 List~Dictionary<String, Object>~ : +IndexOf(Dictionary~String, Object~ item, Int32 index) Int32
 List~Dictionary<String, Object>~ : +IndexOf(Dictionary~String, Object~ item, Int32 index, Int32 count) Int32
