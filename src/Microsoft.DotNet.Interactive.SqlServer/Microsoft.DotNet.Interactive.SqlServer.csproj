@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <OutputType>Library</OutputType>
   </PropertyGroup>
 
@@ -39,7 +39,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="bin\Debug\net5.0\/Microsoft.DotNet.Interactive.SqlServer.dll" />
+    <None Remove="bin\Debug\net6.0\/Microsoft.DotNet.Interactive.SqlServer.dll" />
   </ItemGroup>
 
   <ItemGroup>

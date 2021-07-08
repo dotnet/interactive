@@ -19,7 +19,7 @@ variables:
   - name: _DotNetArtifactsCategory
     value: .NETCore
   - name: DotNetSdkVersion
-    value: '5.0.100'
+    value: '6.0.100-preview.6.21355.2'
   - name: PocketLoggerLogPath
     value: $(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)
   - name: TryDotNetPackagesPath
@@ -101,7 +101,7 @@ stages:
             versionSpec: $(NodeJSVersion)
 
         - task: UseDotNet@2
-          displayName: Use .NET SDK 5.0
+          displayName: Use .NET SDK
           inputs:
             packageType: sdk
             version: $(DotNetSdkVersion)
@@ -416,7 +416,7 @@ stages:
         - checkout: self
           clean: true
         - task: UseDotNet@2
-          displayName: Use .NET SDK 5.0
+          displayName: Use .NET SDK
           inputs:
             packageType: sdk
             version: $(DotNetSdkVersion)

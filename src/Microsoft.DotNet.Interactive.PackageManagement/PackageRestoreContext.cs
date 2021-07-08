@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive
 {
     public class PackageRestoreContext : IDisposable
     {
-        private const string restoreTfm = "net5.0";
+        private const string restoreTfm = "net6.0";
         private readonly ConcurrentDictionary<string, PackageReference> _requestedPackageReferences = new(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, ResolvedPackageReference> _resolvedPackageReferences = new(StringComparer.OrdinalIgnoreCase);
 
@@ -129,7 +129,7 @@ namespace Microsoft.DotNet.Interactive
         private IEnumerable<Tuple<string, string>> GetPackageManagerLines()
         {
             // return restore sources
-            foreach( var rs in RestoreSources)
+            foreach (var rs in RestoreSources)
             {
                 yield return Tuple.Create("i", rs);
             }
@@ -261,7 +261,7 @@ namespace Microsoft.DotNet.Interactive
                     requestedPackages: newlyRequestedPackageReferences,
                     errors: errors);
 
-                foreach(var r in newlyRequestedPackageReferences)
+                foreach (var r in newlyRequestedPackageReferences)
                 {
                     _requestedPackageReferences.TryRemove(r.PackageName, out var _);
                 }
