@@ -173,22 +173,42 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             using var kernel = CreateKernel();
 
+            var url = $"http://example.com/{Guid.NewGuid():N}";
             var result = await kernel.SubmitCodeAsync($@"
-#!value --name hi --from-url https://bing.com
+#!value --name hi --from-url {url}
 // some content");
 
-            result.KernelEvents
-                  .ToSubscribedList()
-                  .Should()
-                  .ContainSingle<CommandFailed>()
-                  .Which
-                  .Message
-                  .Should()
-                  .Be("The --from-url option cannot be used in combination with a content submission.");
+            result.KernelEvents.ToSubscribedList()
+                .Should()
+                .ContainSingle<CommandFailed>()
+                .Which
+                .Message
+                .Should()
+                .Be("The --from-url option cannot be used in combination with a content submission.");
+        }
+
+        [Fact]
+        public async Task when_from_url_is_used_with_content_then_the_response_is_not_stored()
+        {
+            using var kernel = CreateKernel();
+
+            var url = $"http://example.com/{Guid.NewGuid():N}";
+            var result = await kernel.SubmitCodeAsync($@"
+#!value --name hi --from-url {url}
+// some content");
+
+            result.KernelEvents.ToSubscribedList();
+
+            kernel
+                .FindKernel("value")
+                .As<DotNetKernel>()
+                .GetVariableNames()
+                .Should()
+                .NotContain("hi");
         }
 
         private static CompositeKernel CreateKernel() =>
-            new CompositeKernel
+            new()
             {
                 new KeyValueStoreKernel(),
                 new FakeKernel("#!fake")
