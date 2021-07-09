@@ -169,7 +169,7 @@ namespace Microsoft.DotNet.Interactive
 
                 if (options.FromFile is {} fromFile)
                 {
-                    var value = await File.ReadAllTextAsync(fromFile.FullName, kernelInvocationContext.CancellationToken);
+                    var value = File.ReadAllText(fromFile.FullName);
                     await _kernel.StoreValueAsync(value, options, kernelInvocationContext);
                 }
                 else if (options.FromUrl is {} fromUrl)
