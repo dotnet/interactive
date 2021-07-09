@@ -7,10 +7,12 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 using System.ComponentModel;
+using System.Data;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
-
+using Microsoft.Data.SqlClient.Server;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.ExtensionLab;
@@ -20,7 +22,7 @@ using Microsoft.DotNet.Interactive.Formatting.TabularData;
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
     public class MsSqlKernel :
-        Kernel,
+        DotNetKernel,
         IKernelCommandHandler<SubmitCode>,
         IKernelCommandHandler<RequestCompletions>
     {
@@ -203,7 +205,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
             try
             {
-                await _serviceClient.ExecuteQueryStringAsync(_tempFileUri, command.Code);
+                await _serviceClient.ExecuteQueryStringAsync(_tempFileUri, PrependVariableDeclarationsToCode(command));
 
                 context.CancellationToken.Register(() =>
                 {
@@ -228,6 +230,57 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 _queryCompletionHandler = null;
                 _queryMessageHandler = null;
             }
+        }
+
+        private string PrependVariableDeclarationsToCode(SubmitCode command)
+        {
+            var sb = new StringBuilder();
+
+            foreach (var variableNameAndValue in _variables)
+            {
+                sb.AppendLine(GenerateSqlVariableDeclaration(variableNameAndValue));
+            }
+
+            sb.AppendLine(command.Code);
+            
+            return sb.ToString();
+        }
+
+        private string GenerateSqlVariableDeclaration(KeyValuePair<string, object> variableNameAndValue)
+        {
+            return $"DECLARE @{variableNameAndValue.Key} {MapToSqlDataType(variableNameAndValue)} = {MapToSqlValueDeclaration(variableNameAndValue.Value)};";
+
+            static string MapToSqlDataType(KeyValuePair<string, object> variableNameAndValue)
+            {
+                var sqlMetaData = SqlMetaData.InferFromValue(
+                    variableNameAndValue.Value, 
+                    variableNameAndValue.Key);
+
+                var dbType = sqlMetaData.SqlDbType;
+
+                switch (dbType)
+                {
+                    case SqlDbType.Char:
+                    case SqlDbType.NChar:
+                    case SqlDbType.NVarChar:
+                    case SqlDbType.VarChar:
+                        return $"{dbType}({sqlMetaData.MaxLength})";
+
+                    case SqlDbType.Decimal:
+                        return $"{dbType}({sqlMetaData.Precision},{sqlMetaData.Scale})";
+
+                    default:
+                        return dbType.ToString();
+                }
+            }
+
+            string MapToSqlValueDeclaration(object value) =>
+                value switch
+                {
+                    string s => $"N'{s}'",
+                    null => "NULL",
+                    _ => value.ToString()
+                };
         }
 
         private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> GetEnumerableTables(ColumnInfo[] columnInfos, CellValue[][] rows)
@@ -324,5 +377,20 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 }
             }
         }
+
+        public override bool TryGetVariable<T>(string name, out T value)
+        {
+            value = default;
+            return false;
+        }
+
+        private readonly Dictionary<string, object> _variables = new(StringComparer.Ordinal);
+
+        public override async Task SetVariableAsync(string name, object value, Type declaredType = null)
+        {
+            _variables[name] = value;
+        }
+
+        public override IReadOnlyCollection<string> GetVariableNames() => _variables.Keys;
     }
 }

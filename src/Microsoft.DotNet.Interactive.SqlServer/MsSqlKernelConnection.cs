@@ -62,9 +62,10 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             var sqlClient = new MsSqlServiceClient(pathToService);
 
             var kernel = new MsSqlKernel(
-                $"sql-{options.KernelName}",
-                options.ConnectionString, 
-                sqlClient);
+                    $"sql-{options.KernelName}",
+                    options.ConnectionString,
+                    sqlClient)
+                .UseDotNetVariableSharing();
 
             await kernel.ConnectAsync();
 

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.ExtensionLab;
@@ -18,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
 {
     public class MsSqlConnectionTests : IDisposable
     {
-        private async Task<CompositeKernel> CreateKernel()
+        private async Task<CompositeKernel> CreateKernelAsync()
         {
             var csharpKernel = new CSharpKernel().UseNugetDirective();
             await csharpKernel.SubmitCodeAsync(@$"
@@ -46,7 +47,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
         public async Task It_can_connect_and_query_data()
         {
             var connectionString = MsSqlFact.GetConnectionStringForTests();
-            using var kernel = await CreateKernel();
+            using var kernel = await CreateKernelAsync();
             var result = await kernel.SubmitCodeAsync(
                              $"#!connect --kernel-name adventureworks mssql \"{connectionString}\"");
 
@@ -77,7 +78,7 @@ SELECT TOP 100 * FROM Person.Person
         public async Task sending_query_to_sql_will_generate_suggestions()
         {
             var connectionString = MsSqlFact.GetConnectionStringForTests();
-            using var kernel = await CreateKernel();
+            using var kernel = await CreateKernelAsync();
             var result = await kernel.SubmitCodeAsync(
                 $"#!connect --kernel-name adventureworks mssql \"{connectionString}\"");
 
@@ -112,7 +113,7 @@ SELECT TOP 100 * FROM Person.Person
         {
             var connectionString = MsSqlFact.GetConnectionStringForTests();
 
-            using var kernel = await CreateKernel();
+            using var kernel = await CreateKernelAsync();
             var result = await kernel.SubmitCodeAsync(
                              $"#!connect --kernel-name adventureworks mssql \"{connectionString}\" --create-dbcontext");
 
@@ -139,7 +140,7 @@ SELECT TOP 100 * FROM Person.Person
         public async Task Field_types_are_deserialized_correctly()
         {
             var connectionString = MsSqlFact.GetConnectionStringForTests();
-            using var kernel = await CreateKernel();
+            using var kernel = await CreateKernelAsync();
             var result = await kernel.SubmitCodeAsync(
                              $"#!connect --kernel-name adventureworks mssql \"{connectionString}\"");
 
@@ -155,16 +156,8 @@ select * from sys.databases
 
             var events = result.KernelEvents.ToSubscribedList();
 
-            events.Should().NotContainErrors();
 
-            var value = events.Should()
-                    .ContainSingle<DisplayedValueProduced>(e =>
-                        e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
-                              .Which;
-
-            var table = (NteractDataExplorer) value.Value;
-
-            table.Data
+            GetTabularData(events)
                  .Schema
                  .Fields
                  .Should()
@@ -179,7 +172,7 @@ select * from sys.databases
         public async Task Empty_results_are_displayed_correctly()
         {
             var connectionString = MsSqlFact.GetConnectionStringForTests();
-            using var kernel = await CreateKernel();
+            using var kernel = await CreateKernelAsync();
             var result = await kernel.SubmitCodeAsync(
                              $"#!connect --kernel-name adventureworks mssql \"{connectionString}\"");
 
@@ -203,6 +196,59 @@ drop table dbo.EmptyTable;
                 .And
                     .ContainSingle<DisplayedValueProduced>(e =>
                         e.FormattedValues.Any(f => f.MimeType == PlainTextFormatter.MimeType && f.Value.ToString().StartsWith("Info")));
+        }
+
+        [MsSqlTheory]
+        [InlineData("var num = 2;", 2)]
+        [InlineData("string num = \"hi!\";", "hi!")]
+        [InlineData("string num = null;", null)]
+        [InlineData("decimal num = 123456.789;", null)]
+        public async Task shared_variable_can_be_used_to_parameterize_a_sql_query(string csharpVariableDeclaration, object expectedValue)
+        {
+            using var kernel = await CreateKernelAsync();
+
+            var result = await kernel.SubmitCodeAsync(
+                             $"#!connect --kernel-name adventureworks mssql \"{MsSqlFact.GetConnectionStringForTests()}\"");
+
+            result.KernelEvents
+                .ToSubscribedList()
+                .Should()
+                .NotContainErrors();
+
+            await kernel.SendAsync(new SubmitCode(csharpVariableDeclaration));
+
+            var code = @"
+#!sql-adventureworks
+#!share --from csharp num
+select @num";
+
+            result = await kernel.SendAsync(new SubmitCode(code));
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events
+                .Should()
+                .NotContainErrors();
+
+            var data = GetTabularData(events);
+
+            data.Data
+                .Should()
+                .ContainSingle()
+                .Which
+                .Should()
+                .ContainValue(expectedValue);
+        }
+
+        private static TabularDataResource GetTabularData(SubscribedList<KernelEvent> events)
+        {
+            events.Should().NotContainErrors();
+
+            return ((NteractDataExplorer) events
+                           .Should()
+                           .ContainSingle<DisplayedValueProduced>(e =>
+                                                                      e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
+                           .Which.Value).Data;
         }
 
         public void Dispose()

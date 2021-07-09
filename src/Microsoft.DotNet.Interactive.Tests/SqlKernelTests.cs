@@ -5,6 +5,7 @@
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -55,7 +56,6 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .Which;
 
             var message = displayValue.Value.ToString();
-            
 
             // Should contain instructions for how to install SqlServer extension package
             message.Should().Contain(@"#r ""nuget:Microsoft.DotNet.Interactive.SqlServer,*-*""");
