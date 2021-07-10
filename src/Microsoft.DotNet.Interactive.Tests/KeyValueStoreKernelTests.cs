@@ -187,7 +187,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .Be("The --from-url option cannot be used in combination with a content submission.");
         }
 
-        [Fact]
+        [Fact(Skip = "https://github.com/dotnet/interactive/issues/1486")]
         public async Task when_from_url_is_used_with_content_then_the_response_is_not_stored()
         {
             using var kernel = CreateKernel();
