@@ -175,7 +175,8 @@ namespace Microsoft.DotNet.Interactive
                 else if (options.FromUrl is {} fromUrl)
                 {
                     var client = new HttpClient();
-                    var value = await client.GetStringAsync(fromUrl);
+                    var response = await client.GetAsync(fromUrl, kernelInvocationContext.CancellationToken);
+                    var value = await response.Content.ReadAsStringAsync();
                     await _kernel.StoreValueAsync(value, options, kernelInvocationContext);
                 }
 
@@ -185,7 +186,7 @@ namespace Microsoft.DotNet.Interactive
 
         private class ValueDirectiveOptions
         {
-            private static readonly ModelBinder<ValueDirectiveOptions> _modelBinder = new ModelBinder<ValueDirectiveOptions>();
+            private static readonly ModelBinder<ValueDirectiveOptions> _modelBinder = new();
 
             public static ValueDirectiveOptions Create(ParseResult parseResult) => _modelBinder.CreateInstance(new BindingContext(parseResult)) as ValueDirectiveOptions;
 
