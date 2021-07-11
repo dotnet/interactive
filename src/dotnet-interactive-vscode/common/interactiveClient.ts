@@ -312,7 +312,7 @@ export class InteractiveClient {
                         break;
                 }
             });
-            await this.config.transport.submitCommand(command, commandType, token);
+            await this.config.transport.submitCommand({ command, commandType, token });
         });
     }
 
@@ -336,7 +336,7 @@ export class InteractiveClient {
                         break;
                 }
             });
-            this.config.transport.submitCommand(command, commandType, token).catch(e => {
+            this.config.transport.submitCommand({ command, commandType, token }).catch(e => {
                 // only report a failure if it's not a `CommandFailed` event from above (which has already called `reject()`)
                 if (!failureReported) {
                     reject(e);

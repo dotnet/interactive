@@ -1,17 +1,18 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelClient, VariableRequest, VariableResponse, DotnetInteractiveClient, ClientFetch, Kernel, IKernelCommandHandler } from "./dotnet-interactive-interfaces";
-import { TokenGenerator } from "./tokenGenerator";
-import { signalTransportFactory } from "./signalr-client";
-import { CommandFailed, CommandFailedType, KernelTransport, KernelEventEnvelope, KernelEventEnvelopeObserver, DisposableSubscription, SubmitCode, SubmitCodeType, DisplayedValueProduced, DisplayedValueProducedType } from "./contracts";
+import * as dotnetInteractiveInterfaces from "../dotnet-interactive/dotnet-interactive-interfaces";
+import { Kernel, IKernelCommandHandler } from "../common/interactive/kernel";
+import { TokenGenerator } from "../common/interactive/tokenGenerator";
+import { signalTransportFactory } from "../dotnet-interactive/signalr-client";
+import * as contracts from "../common/interfaces/contracts";
 import { createDefaultClientFetch } from "./clientFetch";
-import { clientSideKernelFactory } from "./client-side-kernel";
+import { clientSideKernelFactory } from "../dotnet-interactive/kernel-factory";
 
 export interface KernelClientImplParameteres {
     clientFetch: (input: RequestInfo, init: RequestInit) => Promise<Response>;
     rootUrl: string;
-    kernelTransport: KernelTransport,
+    kernelTransport: contracts.KernelTransport,
     clientSideKernel: Kernel,
     configureRequire: (config: any) => any
 }
@@ -19,7 +20,7 @@ export interface KernelClientImplParameteres {
 class ClientEventQueueManager {
     private static eventPromiseQueues: Map<string, Array<Promise<void>>> = new Map();
 
-    static addEventToClientQueue(clientFetch: ClientFetch, commandToken: string, eventEnvelope: KernelEventEnvelope) {
+    static addEventToClientQueue(clientFetch: dotnetInteractiveInterfaces.ClientFetch, commandToken: string, eventEnvelope: contracts.KernelEventEnvelope) {
         let promiseQueue = this.eventPromiseQueues.get(commandToken);
         if (!promiseQueue) {
             promiseQueue = [];
@@ -51,7 +52,7 @@ class ClientEventQueueManager {
 class InteractiveConsoleWrapper {
     private globalConsole: Console;
 
-    constructor(private clientFetch: ClientFetch, private commandToken: string) {
+    constructor(private clientFetch: dotnetInteractiveInterfaces.ClientFetch, private commandToken: string) {
         this.globalConsole = console;
     }
 
@@ -84,7 +85,7 @@ class InteractiveConsoleWrapper {
                 value = JSON.stringify(arg);
             }
 
-            const displayedValue: DisplayedValueProduced = {
+            const displayedValue: contracts.DisplayedValueProduced = {
                 formattedValues: [
                     {
                         mimeType,
@@ -92,8 +93,8 @@ class InteractiveConsoleWrapper {
                     }
                 ]
             };
-            const eventEnvelope: KernelEventEnvelope = {
-                eventType: DisplayedValueProducedType,
+            const eventEnvelope: contracts.KernelEventEnvelope = {
+                eventType: contracts.DisplayedValueProducedType,
                 event: displayedValue,
             };
 
@@ -102,11 +103,11 @@ class InteractiveConsoleWrapper {
     }
 }
 
-export class KernelClientImpl implements DotnetInteractiveClient {
+export class KernelClientImpl implements dotnetInteractiveInterfaces.DotnetInteractiveClient {
 
     private _clientFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
     private _rootUrl: string;
-    private _kernelTransport: KernelTransport;
+    private _kernelTransport: contracts.KernelTransport;
     private _clientSideKernel: Kernel;
     private _tokenGenerator: TokenGenerator;
     private _configureRequire: (confing: any) => any;
@@ -124,7 +125,7 @@ export class KernelClientImpl implements DotnetInteractiveClient {
         return this._configureRequire(config);
     }
 
-    public subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription {
+    public subscribeToKernelEvents(observer: contracts.KernelEventEnvelopeObserver): contracts.DisposableSubscription {
         let subscription = this._kernelTransport.subscribeToKernelEvents(observer);
         return subscription;
     }
@@ -145,7 +146,7 @@ export class KernelClientImpl implements DotnetInteractiveClient {
         return variable;
     }
 
-    public async getVariables(variableRequest: VariableRequest): Promise<VariableResponse> {
+    public async getVariables(variableRequest: dotnetInteractiveInterfaces.VariableRequest): Promise<dotnetInteractiveInterfaces.VariableResponse> {
         let response = await this._clientFetch("variables", {
             method: 'POST',
             cache: 'no-cache',
@@ -188,7 +189,7 @@ export class KernelClientImpl implements DotnetInteractiveClient {
         if (Array.isArray(kernelNames)) {
             for (let i = 0; i < kernelNames.length; i++) {
                 let kernelName: string = kernelNames[i];
-                let kernelClient: KernelClient = {
+                let kernelClient: dotnetInteractiveInterfaces.KernelClient = {
                     getVariable: (variableName: string): Promise<any> => {
                         return this.getVariable(kernelName, variableName);
                     },
@@ -209,12 +210,12 @@ export class KernelClientImpl implements DotnetInteractiveClient {
 
     public async submitCode(code: string, targetKernelName: string = null): Promise<string> {
         let token: string = this._tokenGenerator.GetNewToken();
-        let command: SubmitCode = {
+        let command: contracts.SubmitCode = {
             code: code,
             targetKernelName: targetKernelName
         }
 
-        await this._kernelTransport.submitCommand(command, SubmitCodeType, token);
+        await this._kernelTransport.submitCommand({ command, commandType: contracts.SubmitCodeType, token });
         return token;
     }
 
@@ -229,7 +230,7 @@ export class KernelClientImpl implements DotnetInteractiveClient {
             command.targetKernelName = targetKernelName;
         }
 
-        await this._kernelTransport.submitCommand(command, <any>commandType, token);
+        await this._kernelTransport.submitCommand({ command, commandType: <any>commandType, token });
         return token;
     }
 
@@ -251,11 +252,11 @@ export class KernelClientImpl implements DotnetInteractiveClient {
     }
 
     public failCommand(err: any, commandToken: string) {
-        const failedEvent: CommandFailed = {
+        const failedEvent: contracts.CommandFailed = {
             message: `${err}`
         };
-        const eventEnvelope: KernelEventEnvelope = {
-            eventType: CommandFailedType,
+        const eventEnvelope: contracts.KernelEventEnvelope = {
+            eventType: contracts.CommandFailedType,
             event: failedEvent,
         };
         ClientEventQueueManager.addEventToClientQueue(this._clientFetch, commandToken, eventEnvelope);
@@ -268,20 +269,20 @@ export class KernelClientImpl implements DotnetInteractiveClient {
 
 export type DotnetInteractiveClientConfiguration = {
     address: string,
-    clientFetch?: ClientFetch,
-    kernelTransportFactory?: (rootUrl: string) => Promise<KernelTransport>,
-    clientSideKernelFactory?: (kernelTransport: KernelTransport) => Promise<Kernel>
+    clientFetch?: dotnetInteractiveInterfaces.ClientFetch,
+    kernelTransportFactory?: (rootUrl: string) => Promise<contracts.KernelTransport>,
+    clientSideKernelFactory?: (kernelTransport: contracts.KernelTransport) => Promise<Kernel>
 };
 
 function isConfiguration(config: any): config is DotnetInteractiveClientConfiguration {
     return typeof config !== "string";
 }
 
-export async function createDotnetInteractiveClient(configuration: string | DotnetInteractiveClientConfiguration): Promise<DotnetInteractiveClient> {
+export async function createDotnetInteractiveClient(configuration: string | DotnetInteractiveClientConfiguration): Promise<dotnetInteractiveInterfaces.DotnetInteractiveClient> {
     let rootUrl = "";
-    let clientFetch: ClientFetch = null;
-    let kernelTransportFactory: (rootUrl: string) => Promise<KernelTransport> = null;
-    let kernelFactory: (kernelTransport: KernelTransport) => Promise<Kernel> = null;
+    let clientFetch: dotnetInteractiveInterfaces.ClientFetch = null;
+    let kernelTransportFactory: (rootUrl: string) => Promise<contracts.KernelTransport> = null;
+    let kernelFactory: (kernelTransport: contracts.KernelTransport) => Promise<Kernel> = null;
 
     if (isConfiguration(configuration)) {
         rootUrl = configuration.address;

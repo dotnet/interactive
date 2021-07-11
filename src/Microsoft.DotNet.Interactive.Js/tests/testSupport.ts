@@ -3,8 +3,9 @@
 
 import * as fetchMock from "fetch-mock";
 import { DotnetInteractiveClient, KernelClientContainer } from "../src/dotnet-interactive/dotnet-interactive-interfaces";
-import { KernelTransport, KernelCommandEnvelope, KernelEventEnvelopeObserver, KernelCommand, KernelCommandType, KernelCommandEnvelopeHandler, KernelEventEnvelope } from "../src/dotnet-interactive/contracts";
-import { TokenGenerator } from "../src/dotnet-interactive/tokenGenerator";
+import { KernelTransport, KernelCommandEnvelope, KernelEventEnvelopeObserver, KernelCommand, KernelCommandType, KernelCommandEnvelopeHandler, KernelEventEnvelope, DisposableSubscription, KernelEventType } from "../src/common/interfaces/contracts";
+import { TokenGenerator } from "../src/common/interactive/tokenGenerator";
+import { Kernel } from "../src/common/interactive/kernel";
 
 
 export function asKernelClientContainer(client: DotnetInteractiveClient): KernelClientContainer {
@@ -57,13 +58,9 @@ export class MockKernelTransport implements KernelTransport {
         return Promise.resolve();
     }
 
-    public submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string): Promise<void> {
+    public submitCommand(commandEnvelope: KernelCommandEnvelope): Promise<void> {
 
-        this.codeSubmissions.push(<KernelCommandEnvelope>{
-            commandType: commandType,
-            command: command,
-            token: token
-        });
+        this.codeSubmissions.push(commandEnvelope);
         return Promise.resolve();
     }
 
@@ -77,4 +74,20 @@ export class MockKernelTransport implements KernelTransport {
 
 export function createMockKernelTransport(rootUrl: string): Promise<KernelTransport> {
     return Promise.resolve(new MockKernelTransport());
+}
+
+export function findEvent<T>(kernelEventEnvelopes: KernelEventEnvelope[], eventType: KernelEventType): T | undefined {
+    return findEventEnvelope(kernelEventEnvelopes, eventType)?.event as T;
+}
+
+export function findEventFromKernel<T>(kernelEventEnvelopes: KernelEventEnvelope[], eventType: KernelEventType, kernelName: string): T | undefined {
+    return findEventEnvelopeFromKernel(kernelEventEnvelopes, eventType, kernelName)?.event as T;
+}
+
+export function findEventEnvelope(kernelEventEnvelopes: KernelEventEnvelope[], eventType: KernelEventType): KernelEventEnvelope | undefined {
+    return kernelEventEnvelopes.find(eventEnvelope => eventEnvelope.eventType === eventType);
+}
+
+export function findEventEnvelopeFromKernel(kernelEventEnvelopes: KernelEventEnvelope[], eventType: KernelEventType, kernelName: string): KernelEventEnvelope | undefined {
+    return kernelEventEnvelopes.find(eventEnvelope => eventEnvelope.eventType === eventType && eventEnvelope.command.command.targetKernelName === kernelName);
 }

@@ -1,26 +1,32 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import {
-    NotebookCellDisplayOutput,
-    NotebookCellErrorOutput,
-    NotebookCellTextOutput,
-} from './contracts';
+import * as contracts from './contracts';
 import * as vscodeLike from './vscode-like';
 
-export function isErrorOutput(arg: any): arg is NotebookCellErrorOutput {
+export function isKernelEventEnvelope(obj: any): obj is contracts.KernelEventEnvelope {
+    return obj.eventType
+        && obj.event;
+}
+
+export function isKernelCommandEnvelope(obj: any): obj is contracts.KernelCommandEnvelope {
+    return obj.commandType
+        && obj.command;
+}
+
+export function isErrorOutput(arg: any): arg is contracts.NotebookCellErrorOutput {
     return arg
         && typeof arg.errorName === 'string'
         && typeof arg.errorValue === 'string'
         && Array.isArray(arg.stackTrace);
 }
 
-export function isDisplayOutput(arg: any): arg is NotebookCellDisplayOutput {
+export function isDisplayOutput(arg: any): arg is contracts.NotebookCellDisplayOutput {
     return arg
         && typeof arg.data === 'object';
 }
 
-export function isTextOutput(arg: any): arg is NotebookCellTextOutput {
+export function isTextOutput(arg: any): arg is contracts.NotebookCellTextOutput {
     return arg
         && typeof arg.text === 'string';
 }
