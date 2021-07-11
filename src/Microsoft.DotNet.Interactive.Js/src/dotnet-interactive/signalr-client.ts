@@ -3,8 +3,8 @@
 
 import * as signalR from "@microsoft/signalr";
 
-import { KernelTransport, KernelEventEnvelope, KernelEventEnvelopeObserver, DisposableSubscription, KernelCommand, KernelCommandType, KernelCommandEnvelope, KernelCommandEnvelopeHandler } from "./contracts";
-import { TokenGenerator } from "./tokenGenerator";
+import { KernelTransport, KernelEventEnvelope, KernelEventEnvelopeObserver, DisposableSubscription, KernelCommand, KernelCommandType, KernelCommandEnvelope, KernelCommandEnvelopeHandler } from "../common/interfaces/contracts";
+import { TokenGenerator } from "../common/interactive/tokenGenerator";
 
 
 export async function signalTransportFactory(rootUrl: string): Promise<KernelTransport> {
@@ -88,13 +88,8 @@ export async function signalTransportFactory(rootUrl: string): Promise<KernelTra
             commandHandlers[key] = handler;
         },
 
-        submitCommand: (command: KernelCommand, commandType: KernelCommandType, token: string): Promise<void> => {
-            let envelope: KernelCommandEnvelope = {
-                commandType: commandType,
-                command: command,
-                token: token,
-            };
-            return connection.send("submitCommand", JSON.stringify(envelope));
+        submitCommand: (commandEnvelope: KernelCommandEnvelope): Promise<void> => {
+            return connection.send("submitCommand", JSON.stringify(commandEnvelope));
         },
 
         publishKernelEvent: (eventEnvelope: KernelEventEnvelope): Promise<void> => {

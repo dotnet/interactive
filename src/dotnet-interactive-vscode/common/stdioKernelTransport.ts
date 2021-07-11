@@ -21,6 +21,7 @@ import { ReportChannel, Uri } from './interfaces/vscode-like';
 import { LineReader } from './lineReader';
 import { isNotNull, parse, stringify } from './utilities';
 import fetch from 'node-fetch';
+import { isKernelCommandEnvelope, isKernelEventEnvelope } from "./interfaces/utilities";
 
 export class StdioKernelTransport implements KernelTransport {
     private childProcess: cp.ChildProcessWithoutNullStreams | null;
@@ -162,19 +163,9 @@ export class StdioKernelTransport implements KernelTransport {
         });
     }
 
-    isKernelEventEnvelope(obj: any): obj is KernelEventEnvelope {
-        return obj.eventType
-            && obj.event;
-    }
-
-    isKernelCommandEnvelope(obj: any): obj is KernelCommandEnvelope {
-        return obj.commandType
-            && obj.command;
-    }
-
     private async handleLine(line: string): Promise<void> {
         const envelope = parse(line);
-        if (this.isKernelEventEnvelope(envelope)) {
+        if (isKernelEventEnvelope(envelope)) {
             switch (envelope.eventType) {
                 case DiagnosticLogEntryProducedType:
                     this.diagnosticChannel.appendLine((<DiagnosticLogEntryProduced>envelope.event).message);
@@ -184,7 +175,7 @@ export class StdioKernelTransport implements KernelTransport {
             for (let i = this.eventSubscribers.length - 1; i >= 0; i--) {
                 this.eventSubscribers[i](envelope);
             }
-        } else if (this.isKernelCommandEnvelope(envelope)) {
+        } else if (isKernelCommandEnvelope(envelope)) {
             // TODO: pass in context with shortcut methods for publish, etc.
             // TODO: wrap and return succeed/failed
             // TODO: publish succeeded
@@ -209,12 +200,7 @@ export class StdioKernelTransport implements KernelTransport {
         this.commandHandler = handler;
     }
 
-    submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string): Promise<void> {
-        let commandEnvelope = {
-            token,
-            commandType,
-            command
-        };
+    submitCommand(commandEnvelope: KernelCommandEnvelope): Promise<void> {
         return this.submit(commandEnvelope);
     }
 
@@ -222,7 +208,7 @@ export class StdioKernelTransport implements KernelTransport {
         return this.submit(eventEnvelope);
     }
 
-    private submit(content: any): Promise<void> {
+    private submit(content: KernelEventEnvelope | KernelCommandEnvelope): Promise<void> {
         return new Promise((resolve, reject) => {
             let str = stringify(content);
             if (isNotNull(this.childProcess)) {

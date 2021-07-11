@@ -51,11 +51,5 @@ dotnet run -p src/interface-generator -- --out-file {contractFile.FullName}
         {
             CheckTypeScriptInterfaceFile("src/dotnet-interactive-vscode/common/interfaces/contracts.ts");
         }
-
-        [Fact]
-        public void http_generated_TypeScript_interfaces_file_has_known_shape()
-        {
-            CheckTypeScriptInterfaceFile("src/Microsoft.DotNet.Interactive.Js/src/dotnet-interactive/contracts.ts");
-        }
     }
 }

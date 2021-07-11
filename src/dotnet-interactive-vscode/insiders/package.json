@@ -368,8 +368,9 @@
     ]
   },
   "scripts": {
+    "compile-preloads": "rollup -c rollup.config.js -i src/kernelApiBootstrapper.ts -o resources/kernelApiBootstrapper.js",
     "vscode:prepublish": "npm run compile",
-    "compile": "npm run lint && tsc -p ./",
+    "compile": "npm run lint && tsc -p ./ && npm run compile-preloads",
     "lint": "eslint src --ext ts",
     "watch": "tsc -watch -p ./",
     "integration-test": "node ./out/tests/integration/runTest.js",
@@ -408,7 +409,12 @@
     "vsce": "1.88.0",
     "vscode-oniguruma": "1.3.1",
     "vscode-test": "1.3.0",
-    "vscode-textmate": "5.1.1"
+    "vscode-textmate": "5.1.1",
+    "rollup": "2.52.2",
+    "@rollup/plugin-commonjs": "19.0.0",
+    "@rollup/plugin-node-resolve": "13.0.0",
+    "rollup-plugin-typescript2": "0.30.0",
+    "source-map-support": "0.5.19"
   },
   "dependencies": {
     "compare-versions": "3.6.0",

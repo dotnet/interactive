@@ -24,3 +24,7 @@ EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode\insiders
 EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode\insiders" -linkName ".vscode" -destinationLocation "..\.vscode"
 
 EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-npm\src" -linkName "common" -destinationLocation "..\..\dotnet-interactive-vscode\common"
+EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-npm" -linkName ".vscode" -destinationLocation "..\dotnet-interactive-vscode\.vscode"
+
+EnsureSymlink -sourceDirectory "$PSScriptRoot\Microsoft.DotNet.Interactive.Js\src" -linkName "common" -destinationLocation "..\..\dotnet-interactive-vscode\common"
+EnsureSymlink -sourceDirectory "$PSScriptRoot\Microsoft.DotNet.Interactive.Js" -linkName ".vscode" -destinationLocation "..\dotnet-interactive-vscode\.vscode"

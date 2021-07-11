@@ -3,61 +3,62 @@
 
 import { expect } from "chai";
 import { describe } from "mocha";
-import { IKernelEventObserver } from "../src/dotnet-interactive";
-import { ClientSideKernelInvocationContext } from "../src/dotnet-interactive/client-side-kernel-invocation-context";
-import { CommandFailedType, CommandSucceededType, DisplayedValueProduced, DisplayedValueProducedType, Disposable, ErrorProduced, ErrorProducedType, KernelCommand, KernelCommandEnvelope, KernelCommandType, KernelEvent, KernelEventEnvelope, KernelEventEnvelopeObserver, SubmitCode, SubmitCodeType } from "../src/dotnet-interactive/contracts";
+import { IKernelEventObserver } from "../src/common/interactive/kernel";
+import { KernelInvocationContext } from "../src/common/interactive/kernelInvocationContext";
+import * as contracts from "../src/common/interfaces/contracts";
 
 describe("dotnet-interactive", () => {
+
+    let toDispose: contracts.Disposable[] = [];
+    function use<T extends contracts.Disposable>(disposable: T): T {
+        toDispose.push(disposable);
+        return disposable;
+    }
+
+    afterEach(() => toDispose.forEach(d => d.dispose()));
     describe("client-side kernel invocation context", () => {
 
-        let makeEventWatcher: () => { watcher: IKernelEventObserver, events: { event: KernelEvent, eventType: string, command: KernelCommand, commandType: string }[] } =
+        let makeEventWatcher: () => { watcher: IKernelEventObserver, events: contracts.KernelEventEnvelope[] } =
             () => {
-                let events: { event: KernelEvent, eventType: string, command: KernelCommand, commandType: string }[] = [];
+                let events: contracts.KernelEventEnvelope[] = [];
                 return {
                     events,
-                    watcher: (kernelEvent: { event: KernelEvent, eventType: string, command: KernelCommand, commandType: string }) => events.push(kernelEvent)
+                    watcher: (kernelEvent: contracts.KernelEventEnvelope) => events.push(kernelEvent)
                 };
             };
-        function makeSubmitCode(code: string): { commandType: string, command: KernelCommand } {
-            let command: SubmitCode = {
+        function makeSubmitCode(code: string): contracts.KernelCommandEnvelope {
+            let command: contracts.SubmitCode = {
                 code: code
             };
             return {
-                commandType: SubmitCodeType,
+                commandType: contracts.SubmitCodeType,
                 command: command
             };
         }
-        let commandAndType = makeSubmitCode("123");
-
-        let toDispose: Disposable[] = [];
-        function use<T extends Disposable>(disposable: T): T {
-            toDispose.push(disposable);
-            return disposable;
-        }
-        afterEach(() => toDispose.forEach(d => d.dispose()));
+        let commadnEnvelope = makeSubmitCode("123");
 
         it("publishes CommandHandled when Complete is called", async () => {
-            let context = use(ClientSideKernelInvocationContext.establish(commandAndType));
+            let context = use(KernelInvocationContext.establish(commadnEnvelope));
 
             let ew = makeEventWatcher();
             context.subscribeToKernelEvents(ew.watcher);
 
-            context.complete(commandAndType.command);
+            context.complete(commadnEnvelope);
 
             expect(ew.events.length).to.eql(1);
-            expect(ew.events[0].eventType).to.eql(CommandSucceededType);
+            expect(ew.events[0].eventType).to.eql(contracts.CommandSucceededType);
         });
 
         it("does not publish CommandFailed when Complete is called", async () => {
-            let context = use(ClientSideKernelInvocationContext.establish(commandAndType));
+            let context = use(KernelInvocationContext.establish(commadnEnvelope));
 
             let ew = makeEventWatcher();
             context.subscribeToKernelEvents(ew.watcher);
 
-            context.complete(commandAndType.command);
+            context.complete(commadnEnvelope);
 
             ew.events.forEach(event => {
-                expect(event.eventType).is.not.eq(CommandFailedType);
+                expect(event.eventType).is.not.eq(contracts.CommandFailedType);
             });
         });
 
@@ -70,32 +71,32 @@ describe("dotnet-interactive", () => {
         });
 
         it("does not publish further events after Complete is called", async () => {
-            let context = use(ClientSideKernelInvocationContext.establish(commandAndType));
+            let context = use(KernelInvocationContext.establish(commadnEnvelope));
 
             let ew = makeEventWatcher();
             context.subscribeToKernelEvents(ew.watcher);
 
-            context.complete(commandAndType.command);
+            context.complete(commadnEnvelope);
 
-            let ev: ErrorProduced = {
+            let ev: contracts.ErrorProduced = {
                 message: "oops",
                 formattedValues: null,
                 valueId: null
             };
-            let evEnv = {
+            let evEnv: contracts.KernelEventEnvelope = {
                 event: ev,
-                eventType: ErrorProducedType,
-                ...commandAndType
+                eventType: contracts.ErrorProducedType,
+                command: commadnEnvelope
             };
             context.publish(evEnv);
 
             ew.events.forEach(event => {
-                expect(event.eventType).is.not.eq(ErrorProducedType);
+                expect(event.eventType).is.not.eq(contracts.ErrorProducedType);
             });
         });
 
         it("publishes CommandFailed when Fail is called", async () => {
-            let context = use(ClientSideKernelInvocationContext.establish(commandAndType));
+            let context = use(KernelInvocationContext.establish(commadnEnvelope));
 
             let ew = makeEventWatcher();
             context.subscribeToKernelEvents(ew.watcher);
@@ -103,11 +104,11 @@ describe("dotnet-interactive", () => {
             context.fail("oops!");
 
             expect(ew.events.length).to.eql(1);
-            expect(ew.events[0].eventType).to.eql(CommandFailedType);
+            expect(ew.events[0].eventType).to.eql(contracts.CommandFailedType);
         });
 
         it("does not publish CommandHandled when Fail is called", async () => {
-            let context = use(ClientSideKernelInvocationContext.establish(commandAndType));
+            let context = use(KernelInvocationContext.establish(commadnEnvelope));
 
             let ew = makeEventWatcher();
             context.subscribeToKernelEvents(ew.watcher);
@@ -115,137 +116,137 @@ describe("dotnet-interactive", () => {
             context.fail("oops!");
 
             ew.events.forEach(event => {
-                expect(event.eventType).is.not.eq(CommandSucceededType);
+                expect(event.eventType).is.not.eq(contracts.CommandSucceededType);
             });
         });
 
         it("does not publish further events after Fail is called", async () => {
-            let context = use(ClientSideKernelInvocationContext.establish(commandAndType));
+            let context = use(KernelInvocationContext.establish(commadnEnvelope));
 
             let ew = makeEventWatcher();
             context.subscribeToKernelEvents(ew.watcher);
 
             context.fail("oops!");
 
-            let ev: DisplayedValueProduced = {
+            let ev: contracts.DisplayedValueProduced = {
                 formattedValues: null,
                 valueId: null
             };
-            let evEnv = {
+            let evEnv: contracts.KernelEventEnvelope = {
                 event: ev,
-                eventType: DisplayedValueProducedType,
-                ...commandAndType
+                eventType: contracts.DisplayedValueProducedType,
+                command: commadnEnvelope
             };
             context.publish(evEnv);
 
             ew.events.forEach(event => {
-                expect(event.eventType).is.not.eq(DisplayedValueProducedType);
+                expect(event.eventType).is.not.eq(contracts.DisplayedValueProducedType);
             });
         });
 
         it("completes only when child all commands complete if multiple commands are active", async () => {
             let outerSubmitCode = makeSubmitCode("abc");
-            let outer = use(ClientSideKernelInvocationContext.establish(outerSubmitCode));
+            let outer = use(KernelInvocationContext.establish(outerSubmitCode));
 
             let ew = makeEventWatcher();
             outer.subscribeToKernelEvents(ew.watcher);
 
             let innerSubmitCode = makeSubmitCode("def");
-            let inner = use(ClientSideKernelInvocationContext.establish(innerSubmitCode));
+            let inner = use(KernelInvocationContext.establish(innerSubmitCode));
 
-            inner.complete(innerSubmitCode.command);
+            inner.complete(innerSubmitCode);
 
             ew.events.forEach(event => {
-                expect(event.eventType).is.not.eq(CommandSucceededType);
+                expect(event.eventType).is.not.eq(contracts.CommandSucceededType);
             });
         });
 
         it("publishes events from inner context if both inner and outer are in progress", async () => {
             let outerSubmitCode = makeSubmitCode("abc");
-            let outer = use(ClientSideKernelInvocationContext.establish(outerSubmitCode));
+            let outer = use(KernelInvocationContext.establish(outerSubmitCode));
 
             let ew = makeEventWatcher();
             outer.subscribeToKernelEvents(ew.watcher);
 
             let innerSubmitCode = makeSubmitCode("def");
-            let inner = use(ClientSideKernelInvocationContext.establish(innerSubmitCode));
+            let inner = use(KernelInvocationContext.establish(innerSubmitCode));
 
-            let ev: ErrorProduced = {
+            let ev: contracts.ErrorProduced = {
                 message: "oops",
                 formattedValues: null,
                 valueId: null
             };
-            let evEnv = {
+            let evEnv: contracts.KernelEventEnvelope = {
                 event: ev,
-                eventType: ErrorProducedType,
-                ...innerSubmitCode
+                eventType: contracts.ErrorProducedType,
+                command: innerSubmitCode
             };
             inner.publish(evEnv);
 
             expect(ew.events.length).to.eql(1);
-            expect(ew.events[0].eventType).to.eql(ErrorProducedType);
+            expect(ew.events[0].eventType).to.eql(contracts.ErrorProducedType);
         });
 
         it("does not publish further events from inner context after outer context is completed", async () => {
             let outerSubmitCode = makeSubmitCode("abc");
-            let outer = use(ClientSideKernelInvocationContext.establish(outerSubmitCode));
+            let outer = use(KernelInvocationContext.establish(outerSubmitCode));
 
             let ew = makeEventWatcher();
             outer.subscribeToKernelEvents(ew.watcher);
 
             let innerSubmitCode = makeSubmitCode("def");
-            let inner = use(ClientSideKernelInvocationContext.establish(innerSubmitCode));
+            let inner = use(KernelInvocationContext.establish(innerSubmitCode));
 
-            outer.complete(outerSubmitCode.command);
+            outer.complete(outerSubmitCode);
 
-            let ev: ErrorProduced = {
+            let ev: contracts.ErrorProduced = {
                 message: "oops",
                 formattedValues: null,
                 valueId: null
             };
-            let evEnv = {
+            let evEnv: contracts.KernelEventEnvelope = {
                 event: ev,
-                eventType: ErrorProducedType,
-                ...innerSubmitCode
+                eventType: contracts.ErrorProducedType,
+                command: innerSubmitCode
             };
             inner.publish(evEnv);
 
             ew.events.forEach(event => {
-                expect(event.eventType).is.not.eq(ErrorProducedType);
+                expect(event.eventType).is.not.eq(contracts.ErrorProducedType);
             });
         });
 
         it("does not publish further events from inner context after it is completed", async () => {
             let outerSubmitCode = makeSubmitCode("abc");
-            let outer = use(ClientSideKernelInvocationContext.establish(outerSubmitCode));
+            let outer = use(KernelInvocationContext.establish(outerSubmitCode));
 
             let ew = makeEventWatcher();
             outer.subscribeToKernelEvents(ew.watcher);
 
             let innerSubmitCode = makeSubmitCode("def");
-            let inner = use(ClientSideKernelInvocationContext.establish(innerSubmitCode));
+            let inner = use(KernelInvocationContext.establish(innerSubmitCode));
 
-            inner.complete(outerSubmitCode.command);
+            inner.complete(outerSubmitCode);
 
-            let ev: ErrorProduced = {
+            let ev: contracts.ErrorProduced = {
                 message: "oops",
                 formattedValues: null,
                 valueId: null
             };
-            let evEnv = {
+            let evEnv: contracts.KernelEventEnvelope = {
                 event: ev,
-                eventType: ErrorProducedType,
-                ...innerSubmitCode
+                eventType: contracts.ErrorProducedType,
+                command: innerSubmitCode
             };
             inner.publish(evEnv);
 
             ew.events.forEach(event => {
-                expect(event.eventType).is.not.eq(ErrorProducedType);
+                expect(event.eventType).is.not.eq(contracts.ErrorProducedType);
             });
         });
 
         it("set current to null when disposed", async () => {
-            let context = ClientSideKernelInvocationContext.establish(commandAndType);
+            let context = KernelInvocationContext.establish(commadnEnvelope);
 
             // TODO
             // The C# test registers a completion callback with OnComplete, but it's not
@@ -254,52 +255,52 @@ describe("dotnet-interactive", () => {
 
             context.dispose();
 
-            expect(ClientSideKernelInvocationContext.current).is.null;
+            expect(KernelInvocationContext.current).is.null;
         });
 
         it("publishes CommandFailed when inner context fails", async () => {
             let outerSubmitCode = makeSubmitCode("abc");
-            let outer = use(ClientSideKernelInvocationContext.establish(outerSubmitCode));
+            let outer = use(KernelInvocationContext.establish(outerSubmitCode));
 
             let ew = makeEventWatcher();
             outer.subscribeToKernelEvents(ew.watcher);
 
             let innerSubmitCode = makeSubmitCode("def");
-            let inner = use(ClientSideKernelInvocationContext.establish(innerSubmitCode));
+            let inner = use(KernelInvocationContext.establish(innerSubmitCode));
 
             inner.fail();
 
             expect(ew.events.length).to.eql(1);
-            expect(ew.events[0].eventType).to.eql(CommandFailedType);
-            expect(ew.events[0].command).to.eql(outerSubmitCode.command);
+            expect(ew.events[0].eventType).to.eql(contracts.CommandFailedType);
+            expect(ew.events[0].command).to.eql(outerSubmitCode);
         });
 
         it("does not publish further events after inner context fails", async () => {
             let outerSubmitCode = makeSubmitCode("abc");
-            let outer = use(ClientSideKernelInvocationContext.establish(outerSubmitCode));
+            let outer = use(KernelInvocationContext.establish(outerSubmitCode));
 
             let ew = makeEventWatcher();
             outer.subscribeToKernelEvents(ew.watcher);
 
             let innerSubmitCode = makeSubmitCode("def");
-            let inner = use(ClientSideKernelInvocationContext.establish(innerSubmitCode));
+            let inner = use(KernelInvocationContext.establish(innerSubmitCode));
 
             inner.fail();
 
-            let ev: ErrorProduced = {
+            let ev: contracts.ErrorProduced = {
                 message: "oops",
                 formattedValues: null,
                 valueId: null
             };
-            let evEnv = {
+            let evEnv: contracts.KernelEventEnvelope = {
                 event: ev,
-                eventType: ErrorProducedType,
-                ...innerSubmitCode
+                eventType: contracts.ErrorProducedType,
+                command: innerSubmitCode
             };
             inner.publish(evEnv);
 
             ew.events.forEach(event => {
-                expect(event.eventType).is.not.eq(ErrorProducedType);
+                expect(event.eventType).is.not.eq(contracts.ErrorProducedType);
             });
         });
     });

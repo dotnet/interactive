@@ -10,9 +10,9 @@ module.exports = function (wallaby) {
             "src/**/*.ts",
             { pattern: "tests/**/*.ts", instrument: false },            
             { pattern: "tests/Responses/**/*.json", instrument: false },     
-            "!tests/**/*.spec.ts*",
+            "!tests/**/*.test.ts*",
         ],
-        tests: ["tests/**/*.spec.ts"],
+        tests: ["tests/**/*.test.ts"],
         compilers: {
             '**/*.ts?(x)': wallaby.compilers.typeScript({ })
         },

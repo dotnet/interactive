@@ -6,7 +6,6 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { VSCodeKernel } from './vscodeKernel';
 import * as vscodeLike from '../interfaces/vscode-like';
 import { ClientMapper } from '../clientMapper';
 
@@ -14,7 +13,7 @@ import { StdioKernelTransport } from '../stdioKernelTransport';
 import { registerLanguageProviders } from './languageProvider';
 import { registerAcquisitionCommands, registerKernelCommands, registerFileCommands } from './commands';
 
-import { getSimpleLanguage, isDotnetInteractiveLanguage, isJupyterNotebookViewType, jupyterViewType } from '../interactiveNotebook';
+import { getNotebookSpecificLanguage, getSimpleLanguage, isDotnetInteractiveLanguage, isJupyterNotebookViewType, jupyterViewType, languageToCellKind } from '../interactiveNotebook';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces';
 
 import { createOutput, executeSafe, getWorkingDirectoryForNotebook, isDotNetUpToDate, processArguments } from '../utilities';
@@ -28,6 +27,7 @@ import { ErrorOutputCreator } from '../../common/interactiveClient';
 import { isInsidersBuild, isStableBuild } from './vscodeUtilities';
 import { getDotNetMetadata, withDotNetCellMetadata } from '../ipynbUtilities';
 import fetch from 'node-fetch';
+import { CompositeKernel } from '../interactive/compositeKernel';
 
 export const KernelIdForJupyter = 'dotnet-interactive-for-jupyter';
 
@@ -103,8 +103,8 @@ export async function activate(context: vscode.ExtensionContext) {
             clientMapper.closeClient(notebookUri, false);
         });
 
-        var kernel = new VSCodeKernel(transport, notebookUri);
-        transport.setCommandHandler(commandEnvelope => kernel.send(commandEnvelope));
+        createAndConfigureKernel(notebookUri, transport);
+
         await transport.waitForReady();
 
         let localUriString = `http://localhost:${transport.httpPort}`;
@@ -199,6 +199,54 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
+}
+
+function createAndConfigureKernel(notebookUri: vscodeLike.Uri, transport: contracts.KernelTransport) {
+    var compositeKernel = new CompositeKernel("vscode");
+
+    compositeKernel.registerCommandHandler({
+        commandType: contracts.GetInputType, handle: async (commandInvocation) => {
+            const getInput = <contracts.GetInput>commandInvocation.commandEnvelope.command;
+            const prompt = getInput.prompt;
+            const password = getInput.isPassword;
+            const value = await vscode.window.showInputBox({ prompt, password });
+            commandInvocation.context.publish({
+                eventType: contracts.InputProducedType,
+                event: {
+                    value
+                },
+                command: commandInvocation.commandEnvelope,
+            });
+        }
+    });
+
+    compositeKernel.registerCommandHandler({
+        commandType: contracts.SendEditableCodeType, handle: async commandInvocation => {
+            const addCell = <contracts.SendEditableCode>commandInvocation.commandEnvelope.command;
+            const language = addCell.language;
+            const contents = addCell.code;
+            const notebookDocument = vscode.workspace.notebookDocuments.find(notebook => notebook.uri.toString() === notebookUri.toString());
+            if (notebookDocument) {
+                const edit = new vscode.WorkspaceEdit();
+                const range = new vscode.NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount);
+                const cellKind = languageToCellKind(language);
+                const notebookCellLanguage = getNotebookSpecificLanguage(language);
+                const newCell = new vscode.NotebookCellData(cellKind, contents, notebookCellLanguage);
+                edit.replaceNotebookCells(notebookDocument.uri, range, [newCell]);
+                const succeeded = await vscode.workspace.applyEdit(edit);
+                if (!succeeded) {
+                    throw new Error(`Unable to add cell to notebook '${notebookUri.toString()}'.`);
+                }
+            } else {
+                throw new Error(`Unable to get notebook document for URI '${notebookUri.toString()}'.`);
+            }
+        }
+    });
+
+    transport.setCommandHandler(commandEnvelope => compositeKernel.send(commandEnvelope));
+    compositeKernel.subscribeToKernelEvents((eEventEnvelope) => {
+        transport.publishKernelEvent(eEventEnvelope);
+    });
 }
 
 function createErrorOutput(message: string, outputId?: string): vscodeLike.NotebookCellOutput {

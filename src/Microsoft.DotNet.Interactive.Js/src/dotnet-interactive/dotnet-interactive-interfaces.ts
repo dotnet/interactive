@@ -1,7 +1,8 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelEventEnvelopeObserver, DisposableSubscription, KernelCommand, KernelEvent, Disposable } from "./contracts";
+import { KernelEventEnvelopeObserver, DisposableSubscription, KernelCommand, KernelEvent, Disposable } from "../common/interfaces/contracts";
+import { IKernelCommandHandler } from "../common/interactive/kernel";
 
 
 export interface VariableRequest {
@@ -20,29 +21,10 @@ export interface KernelClient {
     submitCommand(commandType: string, command?: any): Promise<string>;
 }
 
-export interface KernelInvocationContext extends Disposable {
-    subscribeToKernelEvents(observer: IKernelEventObserver): DisposableSubscription;
-    complete(command: KernelCommand): void;
-    fail(message?: string): void
-    publish(kernelEvent: { event: KernelEvent, eventType: string, command: KernelCommand, commandType: string }): void;
-    command: KernelCommand;
-}
 
-export interface IKernelCommandHandler {
-    commandType: string;
-    handle: (kernelCommandInvocation: { command: KernelCommand, context: KernelInvocationContext }) => Promise<void>
-}
-
-export interface IKernelEventObserver {
-    (kernelEvent: { event: KernelEvent, eventType: string, command: KernelCommand, commandType: string }): void;
-}
 
 // Implemented by the client-side kernel.
-export interface Kernel {
-    send(kernelCommand: { command: KernelCommand, commandType: string }): Promise<void>;
-    subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;
-    registerCommandHandler(handler: IKernelCommandHandler): void;
-}
+
 
 export interface DotnetInteractiveClient {
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;

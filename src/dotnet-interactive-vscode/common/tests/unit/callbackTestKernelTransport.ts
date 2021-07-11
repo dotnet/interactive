@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelCommand, KernelCommandType, KernelEventEnvelopeObserver, DisposableSubscription, KernelEventEnvelope, KernelTransport, KernelCommandEnvelopeHandler } from '../../interfaces/contracts';
+import { KernelCommand, KernelCommandType, KernelEventEnvelopeObserver, DisposableSubscription, KernelEventEnvelope, KernelTransport, KernelCommandEnvelopeHandler, KernelCommandEnvelope } from '../../interfaces/contracts';
 
 // executes the given callback for the specified commands
 export class CallbackTestKernelTransport implements KernelTransport {
@@ -21,11 +21,11 @@ export class CallbackTestKernelTransport implements KernelTransport {
         throw new Error("not supported");
     }
 
-    async submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string): Promise<void> {
+    async submitCommand(commandEnvelope: KernelCommandEnvelope): Promise<void> {
         return new Promise((resolve, reject) => {
-            const commandCallback = this.fakedCommandCallbacks[commandType];
+            const commandCallback = this.fakedCommandCallbacks[commandEnvelope.commandType];
             if (!commandCallback) {
-                reject(`No callback specified for command '${commandType}'`);
+                reject(`No callback specified for command '${commandEnvelope.commandType}'`);
                 return;
             }
 
