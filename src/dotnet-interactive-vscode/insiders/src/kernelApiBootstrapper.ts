@@ -4,6 +4,7 @@
 import { CompositeKernel } from "./common/interactive/compositeKernel";
 import * as genericTransport from "./common/interactive/genericTransport";
 import { JavascriptKernel } from "./common/interactive/javascriptKernel";
+import { Kernel } from "./common/interactive/kernel";
 import * as contracts from "./common/interfaces/contracts";
 
 export function configure(global?: any) {
@@ -12,6 +13,12 @@ export function configure(global?: any) {
     }
 
     global.interactive = {};
+
+    global.kernel = {
+        get root() {
+            return Kernel.root;
+        }
+    };
 
     const jsKernel = new JavascriptKernel();
     const compositeKernel = new CompositeKernel("webview");
