@@ -5,6 +5,12 @@ import * as contracts from "../interfaces/contracts";
 import * as utilities from "../interfaces/utilities";
 import { IKernelCommandHandler, IKernelCommandInvocation, Kernel } from "./kernel";
 
+export function isPromiseCompletionSource<T>(obj: any): obj is PromiseCompletionSource<T> {
+    return obj.promise
+        && obj.resolve
+        && obj.reject;
+}
+
 export class PromiseCompletionSource<T> {
     private _resolve: (value: T) => void = () => { };
     private _reject: (reason: any) => void = () => { };
