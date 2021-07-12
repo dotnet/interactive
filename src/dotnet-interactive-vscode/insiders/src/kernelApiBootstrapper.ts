@@ -18,18 +18,19 @@ export function configure(global?: any) {
 
     compositeKernel.add(jsKernel, ["js"]);
 
-    let completionSources: (genericTransport.PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope> | Promise<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>)[] = [];
+    let waitingOnMessages: genericTransport.PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope> | null;
+    let envelopeQueue: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] = [];
 
     // @ts-ignore
     onDidReceiveKernelMessage(event => {
         if (event.envelope) {
             const envelope = <contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope><any>(event.envelope);
-            let completionSource = completionSources[0];
-            if (genericTransport.isPromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>(completionSource)) {
-                completionSources.shift();
-                completionSource.resolve(envelope);
+            if (waitingOnMessages) {
+                let resolve = waitingOnMessages.resolve;
+                waitingOnMessages = null;
+                resolve(envelope);
             } else {
-                completionSources.push(Promise.resolve(envelope));
+                envelopeQueue.push(envelope);
             }
         }
     });
@@ -41,14 +42,13 @@ export function configure(global?: any) {
             return Promise.resolve();
         },
         () => {
-            if (completionSources.length == 0) {
-                completionSources.push(new genericTransport.PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>());
-            }
-            if (genericTransport.isPromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>(completionSources[0])) {
-                return completionSources[0].promise;
+            let envelope = envelopeQueue.shift();
+            if (envelope) {
+                return Promise.resolve<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>(envelope);
             }
             else {
-                return <Promise<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>>completionSources.shift();
+                waitingOnMessages = new genericTransport.PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>();
+                return waitingOnMessages.promise;
             }
         }
     );
