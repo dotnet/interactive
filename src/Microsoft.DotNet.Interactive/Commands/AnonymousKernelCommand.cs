@@ -3,7 +3,7 @@
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    internal class AnonymousKernelCommand : KernelCommand
+    public class AnonymousKernelCommand : KernelCommand
     {
         public AnonymousKernelCommand(
             KernelCommandInvocation handler, 

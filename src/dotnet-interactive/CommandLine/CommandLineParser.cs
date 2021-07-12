@@ -250,12 +250,12 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                     services.AddKernel(kernel);
 
-                    await kernel.VisitSubkernelsAsync(async k =>
+                    kernel.VisitSubkernels(k =>
                     {
                         switch (k)
                         {
                             case DotNetKernel dk:
-                                await dk.UseJupyterHelpersAsync();
+                                dk.UseJupyterHelpers();
                                 break;
                         }
                     });
@@ -418,12 +418,12 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             {
                                 var frontEndKernel = kernelServer.GetFrontEndKernel("vscode");
                                 kernel.Add(frontEndKernel);
-                                await kernel.VisitSubkernelsAsync(async k =>
+                                kernel.VisitSubkernels(k =>
                                 {
                                     switch (k)
                                     {
                                         case DotNetKernel dk:
-                                            await dk.UseVSCodeHelpersAsync(kernel);
+                                            dk.UseVSCodeHelpers(kernel);
                                             break;
                                     }
                                 });

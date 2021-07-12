@@ -22,10 +22,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 {
     public static class KernelExtensions
     {
-        public static Task UseJupyterHelpersAsync<TKernel>(this TKernel kernel) where TKernel : DotNetKernel
+        public static void UseJupyterHelpers<TKernel>(this TKernel kernel) where TKernel : DotNetKernel
         {
             var interactiveHost = new JupyterInteractiveHost();
-            return kernel.SetVariableAsync("InteractiveHost", interactiveHost, typeof(IInteractiveHost));
+            var command = new AnonymousKernelCommand((_command, context) =>
+            {
+                return kernel.SetVariableAsync("InteractiveHost", interactiveHost, typeof(IInteractiveHost));
+            });
+            kernel.DeferCommand(command);
         }
 
         public static T UseDefaultMagicCommands<T>(this T kernel)
