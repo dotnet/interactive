@@ -4,6 +4,8 @@
 
 Open the VS Code extension test script in VS Code - Insiders
 
+[Test script](vscode-insiders://ms-dotnettools.dotnet-interactive-vscode/openNotebook?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdotnet%2Finteractive%2Fmain%2FNotebookTestScript.dib)
+
 ```
 vscode-insiders://ms-dotnettools.dotnet-interactive-vscode/openNotebook?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdotnet%2Finteractive%2Fmain%2FNotebookTestScript.dib
 ```
