@@ -13,7 +13,7 @@ import { StdioKernelTransport } from '../stdioKernelTransport';
 import { registerLanguageProviders } from './languageProvider';
 import { registerAcquisitionCommands, registerKernelCommands, registerFileCommands } from './commands';
 
-import { getNotebookSpecificLanguage, getSimpleLanguage, isDotnetInteractiveLanguage, isJupyterNotebookViewType, jupyterViewType, languageToCellKind } from '../interactiveNotebook';
+import { getNotebookSpecificLanguage, getSimpleLanguage, isDotnetInteractiveLanguage, isJupyterNotebookViewType, languageToCellKind } from '../interactiveNotebook';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces';
 
 import { createOutput, executeSafe, getWorkingDirectoryForNotebook, isDotNetUpToDate, processArguments } from '../utilities';
@@ -181,18 +181,7 @@ export async function activate(context: vscode.ExtensionContext) {
     diagnosticsChannel.appendLine(`Extension started for VS Code ${hostVersionSuffix}.`);
     const languageServiceDelay = config.get<number>('languageServiceDelay') || 500; // fall back to something reasonable
 
-    let preloads: vscode.Uri[] = [];
-    // notebook kernels
-    const apiBootstrapperUri = vscode.Uri.file(path.join(context.extensionPath, 'resources', 'kernelHttpApiBootstrapper.js'));
-    if (!fs.existsSync(apiBootstrapperUri.fsPath)) {
-        throw new Error(`Unable to find bootstrapper API expected at '${apiBootstrapperUri.fsPath}'.`);
-    }
-    preloads.push(apiBootstrapperUri);
-
-    const newApiBootstrapperUri = vscode.Uri.file(path.join(context.extensionPath, 'resources', 'kernelApiBootstrapper.js'));
-    if (fs.existsSync(newApiBootstrapperUri.fsPath)) {
-        preloads.push(newApiBootstrapperUri);
-    }
+    const preloads = versionSpecificFunctions.getPreloads(context.extensionPath);
 
     registerWithVsCode(context, clientMapper, diagnosticsChannel, clientMapperConfig.createErrorOutput, ...preloads);
     registerFileCommands(context, clientMapper);
