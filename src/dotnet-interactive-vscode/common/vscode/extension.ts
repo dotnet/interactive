@@ -181,13 +181,20 @@ export async function activate(context: vscode.ExtensionContext) {
     diagnosticsChannel.appendLine(`Extension started for VS Code ${hostVersionSuffix}.`);
     const languageServiceDelay = config.get<number>('languageServiceDelay') || 500; // fall back to something reasonable
 
+    let preloads: vscode.Uri[] = [];
     // notebook kernels
     const apiBootstrapperUri = vscode.Uri.file(path.join(context.extensionPath, 'resources', 'kernelHttpApiBootstrapper.js'));
     if (!fs.existsSync(apiBootstrapperUri.fsPath)) {
         throw new Error(`Unable to find bootstrapper API expected at '${apiBootstrapperUri.fsPath}'.`);
     }
+    preloads.push(apiBootstrapperUri);
 
-    registerWithVsCode(context, clientMapper, diagnosticsChannel, clientMapperConfig.createErrorOutput, apiBootstrapperUri);
+    const newApiBootstrapperUri = vscode.Uri.file(path.join(context.extensionPath, 'resources', 'kernelApiBootstrapper.js'));
+    if (fs.existsSync(newApiBootstrapperUri.fsPath)) {
+        preloads.push(newApiBootstrapperUri);
+    }
+
+    registerWithVsCode(context, clientMapper, diagnosticsChannel, clientMapperConfig.createErrorOutput, ...preloads);
     registerFileCommands(context, clientMapper);
 
     context.subscriptions.push(vscode.workspace.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
