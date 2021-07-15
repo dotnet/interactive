@@ -5,6 +5,7 @@ import * as vscode from 'vscode';
 import { ClientMapper } from './common/clientMapper';
 
 import * as contracts from './common/interfaces/contracts';
+import * as genericTransport from './common/interactive/genericTransport';
 import * as vscodeLike from './common/interfaces/vscode-like';
 import * as diagnostics from './common/vscode/diagnostics';
 import * as vscodeUtilities from './common/vscode/vscodeUtilities';
@@ -13,6 +14,9 @@ import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, isDotNetNo
 import { reshapeOutputValueForVsCode } from './common/interfaces/utilities';
 import { selectDotNetInteractiveKernelForJupyter } from './common/vscode/commands';
 import { ErrorOutputCreator } from './common/interactiveClient';
+import { CompositeKernel } from './common/interactive/compositeKernel';
+import { promises } from 'dns';
+import { JavascriptKernel } from './common/interactive/javascriptKernel';
 
 const executionTasks: Map<string, vscode.NotebookCellExecution> = new Map();
 
@@ -85,10 +89,63 @@ export class DotNetNotebookKernel {
         this.disposables.forEach(d => d.dispose());
     }
 
+    private uriMessageHandlerMap: Map<string, MessageHandler> = new Map();
+
     private commonControllerInit(controller: vscode.NotebookController) {
         controller.supportedLanguages = notebookCellLanguages;
         this.disposables.push(controller.onDidReceiveMessage(e => {
             const documentUri = e.editor.document.uri;
+            const documentUriString = documentUri.toString();
+
+            if (e.message.envelope) {
+                let messageHandler = this.uriMessageHandlerMap.get(documentUriString);
+                if (messageHandler) {
+                    const envelope = <contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope><any>(e.message.envelope);
+                    if (messageHandler.waitingOnMessages) {
+                        let capturedMessageWaiter = messageHandler.waitingOnMessages;
+                        messageHandler.waitingOnMessages = null;
+                        capturedMessageWaiter.resolve(envelope);
+                    } else {
+                        messageHandler.envelopeQueue.push(envelope);
+                    }
+                }
+            } else {
+                // TODO: log
+            }
+
+            switch (e.message.preloadCommand) {
+                case 'dostuff':
+                    let messageHandler = this.uriMessageHandlerMap.get(documentUriString);
+                    if (!messageHandler) {
+                        messageHandler = {
+                            waitingOnMessages: null,
+                            envelopeQueue: [],
+                        };
+                        this.uriMessageHandlerMap.set(documentUriString, messageHandler);
+                    }
+
+                    const transport = new genericTransport.GenericTransport(envelope => {
+                        controller.postMessage({ envelope });
+                        return Promise.resolve();
+                    }, () => {
+                        let envelope = messageHandler!.envelopeQueue.shift();
+                        if (envelope) {
+                            return Promise.resolve<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>(envelope);
+                        }
+                        else {
+                            messageHandler!.waitingOnMessages = new genericTransport.PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>();
+                            return messageHandler!.waitingOnMessages.promise;
+                        }
+                    });
+
+                    this.config.clientMapper.getOrAddClient(documentUri).then(client => {
+                        const proxyJsKernel = new genericTransport.ProxyKernel('javascript', transport);
+                        client.kernel.add(proxyJsKernel, ['js']);
+                        transport.run();
+                    });
+                    break;
+            }
+
             switch (e.message.command) {
                 case "getHttpApiEndpoint":
                     this.config.clientMapper.tryGetClient(documentUri).then(client => {
@@ -106,6 +163,9 @@ export class DotNetNotebookKernel {
             }
         }));
         this.disposables.push(controller);
+
+        //
+
     }
 
     private async executeHandler(cells: vscode.NotebookCell[], document: vscode.NotebookDocument, controller: vscode.NotebookController): Promise<void> {
@@ -162,6 +222,11 @@ export class DotNetNotebookKernel {
             }
         }
     }
+}
+
+interface MessageHandler {
+    waitingOnMessages: genericTransport.PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope> | null;
+    envelopeQueue: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[];
 }
 
 async function updateNotebookMetadata(notebook: vscode.NotebookDocument, clientMapper: ClientMapper): Promise<void> {

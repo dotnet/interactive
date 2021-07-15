@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -40,9 +41,18 @@ namespace Microsoft.DotNet.Interactive.Server
 
             _disposables.Add(_kernel.KernelEvents.Subscribe(async kernelEvent =>
             {
+                var frontEndKernelNames = new HashSet<string>();
+                if (_frontEndKernel != null)
+                {
+                    frontEndKernelNames.Add(_frontEndKernel.Name);
+                    frontEndKernelNames.Add("javascript");
+                    frontEndKernelNames.Add("js");
+                }
+
                 // if it came from front end, bail out
                 if (kernelEvent.Command.TargetKernelName is not null &&
-                    kernelEvent.Command.TargetKernelName == _frontEndKernel?.Name)
+                    //kernelEvent.Command.TargetKernelName == _frontEndKernel?.Name)
+                    frontEndKernelNames.Contains(kernelEvent.Command.TargetKernelName))
                 {
                     return;
                 }

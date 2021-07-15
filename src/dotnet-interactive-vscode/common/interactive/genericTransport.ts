@@ -15,8 +15,8 @@ export class PromiseCompletionSource<T> {
     private _resolve: (value: T) => void = () => { };
     private _reject: (reason: any) => void = () => { };
     readonly promise: Promise<T>;
-    constructor() {
 
+    constructor() {
         this.promise = new Promise<T>((resolve, reject) => {
             this._resolve = resolve;
             this._reject = reject;
@@ -38,7 +38,7 @@ export class ProxyKernel extends Kernel {
         super(name);
     }
     getCommandHandler(commandType: contracts.KernelCommandType): IKernelCommandHandler | undefined {
-        return { commandType, handle: this._commandHandler };
+        return { commandType, handle: this._commandHandler.bind(this) };
     }
 
     private async _commandHandler(commandInvocation: IKernelCommandInvocation): Promise<void> {

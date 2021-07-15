@@ -16,3 +16,7 @@ import { ClientMapper } from './common/clientMapper';
 import { OutputChannelAdapter } from './common/vscode/OutputChannelAdapter';
 import { ErrorOutputCreator } from './common/interactiveClient';
 import fetch from 'node-fetch';
+
+export function getPreloads(extensionPath: string): vscode.Uri | undefined {
+    return undefined;
+}
