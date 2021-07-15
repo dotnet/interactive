@@ -44,9 +44,9 @@ namespace Microsoft.DotNet.Interactive.Server
                 var frontEndKernelNames = new HashSet<string>();
                 if (_frontEndKernel != null)
                 {
-                    frontEndKernelNames.Add(_frontEndKernel.Name);
-                    frontEndKernelNames.Add("javascript");
-                    frontEndKernelNames.Add("js");
+                    //frontEndKernelNames.Add(_frontEndKernel.Name);
+                    //frontEndKernelNames.Add("javascript");
+                    //frontEndKernelNames.Add("js");
                 }
 
                 // if it came from front end, bail out
