@@ -139,8 +139,14 @@ export class DotNetNotebookKernel {
                     });
 
                     this.config.clientMapper.getOrAddClient(documentUri).then(client => {
+                        // TODO: this isn't re-triggered when the kernel is restarted
                         const proxyJsKernel = new genericTransport.ProxyKernel('javascript', transport);
                         client.kernel.add(proxyJsKernel, ['js']);
+
+                        transport.setCommandHandler(envelope => {
+                            return client.kernel.send(envelope);
+                        });
+
                         transport.run();
                     });
                     break;
