@@ -55,6 +55,7 @@ import { Eol } from './interfaces';
 import { clearDebounce, createOutput } from './utilities';
 
 import * as vscodeLike from './interfaces/vscode-like';
+import { CompositeKernel } from './interactive/compositeKernel';
 
 export interface ErrorOutputCreator {
     (message: string, outputId?: string): vscodeLike.NotebookCellOutput;
@@ -71,9 +72,22 @@ export class InteractiveClient {
     private tokenEventObservers: Map<string, Array<KernelEventEnvelopeObserver>> = new Map<string, Array<KernelEventEnvelopeObserver>>();
     private deferredOutput: Array<vscodeLike.NotebookCellOutput> = [];
     private valueIdMap: Map<string, { idx: number, outputs: Array<vscodeLike.NotebookCellOutput>, observer: { (outputs: Array<vscodeLike.NotebookCellOutput>): void } }> = new Map<string, { idx: number, outputs: Array<vscodeLike.NotebookCellOutput>, observer: { (outputs: Array<vscodeLike.NotebookCellOutput>): void } }>();
+    private _kernel: CompositeKernel;
 
     constructor(readonly config: InteractiveClientConfiguration) {
         config.transport.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
+
+        this._kernel = new CompositeKernel("vscode");
+        config.transport.setCommandHandler(commandEnvelope => {
+            return this._kernel.send(commandEnvelope);
+        });
+        this._kernel.subscribeToKernelEvents((eEventEnvelope) => {
+            config.transport.publishKernelEvent(eEventEnvelope);
+        });
+    }
+
+    get kernel(): CompositeKernel {
+        return this._kernel;
     }
 
     public tryGetProperty<T>(propertyName: string): T | null {

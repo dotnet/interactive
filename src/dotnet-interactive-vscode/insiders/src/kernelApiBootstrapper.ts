@@ -33,9 +33,9 @@ export function configure(global?: any) {
         if (event.envelope) {
             const envelope = <contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope><any>(event.envelope);
             if (waitingOnMessages) {
-                let resolve = waitingOnMessages.resolve;
+                let capturedMessageWaiter = waitingOnMessages;
                 waitingOnMessages = null;
-                resolve(envelope);
+                capturedMessageWaiter.resolve(envelope);
             } else {
                 envelopeQueue.push(envelope);
             }
@@ -66,5 +66,9 @@ export function configure(global?: any) {
     transport.run();
 
 }
+
+// TODO: sent create proxy message
+// @ts-ignore
+postKernelMessage({ preloadCommand: 'dostuff' });
 
 configure(window);
