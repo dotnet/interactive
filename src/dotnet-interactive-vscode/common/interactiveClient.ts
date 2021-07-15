@@ -56,6 +56,7 @@ import { clearDebounce, createOutput } from './utilities';
 
 import * as vscodeLike from './interfaces/vscode-like';
 import { CompositeKernel } from './interactive/compositeKernel';
+import { ProxyKernel } from './interactive/genericTransport';
 
 export interface ErrorOutputCreator {
     (message: string, outputId?: string): vscodeLike.NotebookCellOutput;
@@ -78,6 +79,10 @@ export class InteractiveClient {
         config.transport.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
 
         this._kernel = new CompositeKernel("vscode");
+
+        const reverseProxy = new ProxyKernel('reverse', config.transport);
+        this._kernel.add(reverseProxy, ['csharp', 'fsharp', 'pwsh']);
+
         config.transport.setCommandHandler(commandEnvelope => {
             return this._kernel.send(commandEnvelope);
         });

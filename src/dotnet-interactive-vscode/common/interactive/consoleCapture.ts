@@ -96,7 +96,7 @@ export class ConsoleCapture implements contracts.Disposable {
             let value: string;
             if (typeof arg !== 'object' && !Array.isArray(arg)) {
                 mimeType = 'text/plain';
-                value = arg.toString();
+                value = arg?.toString();
             } else {
                 mimeType = 'application/json';
                 value = JSON.stringify(arg);

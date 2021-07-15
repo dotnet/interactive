@@ -38,7 +38,12 @@ export class ProxyKernel extends Kernel {
         super(name);
     }
     getCommandHandler(commandType: contracts.KernelCommandType): IKernelCommandHandler | undefined {
-        return { commandType, handle: this._commandHandler.bind(this) };
+        return {
+            commandType,
+            handle: (invocation) => {
+                return this._commandHandler(invocation);
+            }
+        };
     }
 
     private async _commandHandler(commandInvocation: IKernelCommandInvocation): Promise<void> {

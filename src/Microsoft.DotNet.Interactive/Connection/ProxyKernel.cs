@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.Interactive.Connection
                     {
                         var kernel = RootKernel;
                         var eventSubscription = RootKernel.KernelEvents
-                            .Where(e => e.Command == d.Command)
+                            .Where(e => e.Command.GetToken() == d.Command.GetToken() && e.Command.GetType() == d.Command.GetType())
                             .Subscribe(async e => await _sender.SendAsync(e, _cancellationTokenSource.Token));
                         var result = kernel.SendAsync(d.Command, _cancellationTokenSource.Token);
                         await result;

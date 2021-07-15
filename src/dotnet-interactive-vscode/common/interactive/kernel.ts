@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelInvocationContext } from "./kernelInvocationContext";
+import { areCommandsTheSame, KernelInvocationContext } from "./kernelInvocationContext";
 import { TokenGenerator } from "./tokenGenerator";
 import * as contracts from "../interfaces/contracts";
 
@@ -49,8 +49,6 @@ export class Kernel {
         return null;
     }
 
-
-
     // Is it worth us going to efforts to ensure that the Promise returned here accurately reflects
     // the command's progress? The only thing that actually calls this is the kernel transport, through
     // the callback set up by attachKernelToTransport, and the callback is expected to return void, so
@@ -58,15 +56,20 @@ export class Kernel {
     async send(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         this.ensureCommandToken(commandEnvelope);
         let context = KernelInvocationContext.establish(commandEnvelope);
-        let isRootCommand = context.command === commandEnvelope.command;
+        let isRootCommand = areCommandsTheSame(context.commandEnvelope, commandEnvelope);
         let contextEventsSubscription: contracts.Disposable | null = null;
         if (isRootCommand) {
             contextEventsSubscription = context.subscribeToKernelEvents(e => this.publishEvent(e));
         }
-        await this.handleCommand(commandEnvelope);
 
-        if (contextEventsSubscription) {
-            contextEventsSubscription.dispose();
+        try {
+            await this.handleCommand(commandEnvelope);
+        } catch (e) {
+            context.fail(e?.message ?? e);
+        } finally {
+            if (contextEventsSubscription) {
+                contextEventsSubscription.dispose();
+            }
         }
     }
 

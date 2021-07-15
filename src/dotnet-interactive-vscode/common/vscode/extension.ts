@@ -227,7 +227,7 @@ export async function activate(context: vscode.ExtensionContext) {
     if (!fs.existsSync(apiBootstrapperUri.fsPath)) {
         throw new Error(`Unable to find bootstrapper API expected at '${apiBootstrapperUri.fsPath}'.`);
     }
-    preloads.push(apiBootstrapperUri);
+    //preloads.push(apiBootstrapperUri);
 
     const versionSpecificPreload = versionSpecificFunctions.getPreloads(context.extensionPath);
     if (versionSpecificPreload) {

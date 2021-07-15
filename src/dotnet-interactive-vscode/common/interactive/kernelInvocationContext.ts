@@ -83,7 +83,7 @@ export class KernelInvocationContext implements Disposable {
         if (!this._isComplete) {
             let command = kernelEvent.command;
             if (command === null ||
-                command === this._commandEnvelope ||
+                areCommandsTheSame(command!, this._commandEnvelope) ||
                 this._childCommands.includes(command!)) {
                 this._eventObservers.forEach((observer) => {
                     observer(kernelEvent);
@@ -95,4 +95,9 @@ export class KernelInvocationContext implements Disposable {
     dispose() {
         KernelInvocationContext._current = null;
     }
+}
+
+export function areCommandsTheSame(envelope1: KernelCommandEnvelope, envelope2: KernelCommandEnvelope): boolean {
+    return envelope1 === envelope2
+        || (envelope1.commandType === envelope2.commandType && envelope1.token === envelope2.token);
 }
