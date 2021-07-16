@@ -80,7 +80,7 @@ export class InteractiveClient {
 
         this._kernel = new CompositeKernel("vscode");
 
-        const reverseProxy = new ProxyKernel('reverse', config.transport);
+        const reverseProxy = new ProxyKernel('reverse-to-interactive-server', config.transport);
         this._kernel.add(reverseProxy, ['csharp', 'fsharp', 'pwsh']);
 
         config.transport.setCommandHandler(commandEnvelope => {
