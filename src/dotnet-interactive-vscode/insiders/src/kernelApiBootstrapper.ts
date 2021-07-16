@@ -60,10 +60,12 @@ export function configure(global?: any) {
         }
     );
 
-    const reverseProxy = new genericTransport.ProxyKernel('reverse', transport);
+    const reverseProxy = new genericTransport.ProxyKernel('reverse-to-extension-host', transport);
     compositeKernel.add(reverseProxy, ['csharp', 'fsharp', 'pwsh']);
 
-    transport.setCommandHandler(commandEnvelope => compositeKernel.send(commandEnvelope));
+    transport.setCommandHandler(commandEnvelope => {
+        return compositeKernel.send(commandEnvelope);
+    });
     compositeKernel.subscribeToKernelEvents((eventEnvelope) => transport.publishKernelEvent(eventEnvelope));
 
     transport.run();
