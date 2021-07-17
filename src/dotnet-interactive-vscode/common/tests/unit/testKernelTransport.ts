@@ -19,7 +19,7 @@ export class TestKernelTransport implements KernelTransport {
     }
 
     setCommandHandler(handler: KernelCommandEnvelopeHandler) {
-        throw new Error("not supported");
+
     }
 
     async submitCommand(commandEnvelope: KernelCommandEnvelope): Promise<void> {
