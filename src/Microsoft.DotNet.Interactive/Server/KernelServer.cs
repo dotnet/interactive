@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -91,7 +91,17 @@ namespace Microsoft.DotNet.Interactive.Server
                     }
                     else if (commandOrEvent.Command is { })
                     {
-                        var _ = _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
+                        if (_frontEndKernel?.ExecutionContext is not null)
+                        {
+                            ExecutionContext.Run(_frontEndKernel.ExecutionContext, (c) =>
+                            {
+                                var _ = _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
+                            }, null);
+                        }                        
+                        else
+                        {
+                            var _ = _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
+                        }
                     }
                     else if (commandOrEvent.Event is { })
                     {

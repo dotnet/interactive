@@ -3,6 +3,7 @@
 
 using System;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
@@ -14,6 +15,7 @@ namespace Microsoft.DotNet.Interactive.Server
     public class FrontEndKernel : Kernel
     {
         private readonly IKernelCommandAndEventSender _sender;
+        public ExecutionContext ExecutionContext { get; private set; }
 
         public FrontEndKernel(string name, IKernelCommandAndEventSender sender)
             : base(name)
@@ -28,6 +30,8 @@ namespace Microsoft.DotNet.Interactive.Server
 
         internal override async Task HandleAsync(KernelCommand command, KernelInvocationContext context)
         {
+            ExecutionContext = ExecutionContext.Capture();
+
             switch (command)
             {
                 case DirectiveCommand { DirectiveNode: KernelNameDirectiveNode }:
@@ -46,11 +50,12 @@ namespace Microsoft.DotNet.Interactive.Server
                         case CommandFailed _:
                         case CommandSucceeded _:
                             completionSource.TrySetResult(true);
+                            ExecutionContext = null;
                             break;
 
                     }
                 });
-
+            
             var _ = _sender.SendAsync(command, context.CancellationToken);
             await completionSource.Task;
             sub.Dispose();
