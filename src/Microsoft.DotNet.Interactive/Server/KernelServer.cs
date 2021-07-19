@@ -8,10 +8,9 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Commands;
+
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Server
 {
@@ -59,10 +58,17 @@ namespace Microsoft.DotNet.Interactive.Server
 
                 if (kernelEvent is ReturnValueProduced { Value: DisplayedValue })
                 {
-                    return;
+                   // return;
                 }
 
-                await SendAsync(kernelEvent, _cancellationTokenSource.Token);
+                try
+                {
+                    await SendAsync(kernelEvent, _cancellationTokenSource.Token);
+                }
+                catch
+                {
+
+                }
             }));
 
 
