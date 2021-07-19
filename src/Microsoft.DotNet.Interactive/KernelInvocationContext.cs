@@ -89,6 +89,7 @@ namespace Microsoft.DotNet.Interactive
             }
             else
             {
+                Publish(new CommandSucceeded(command));
                 _childCommands.Remove(command);
             }
         }
@@ -170,6 +171,10 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (_current.Value.Command != command)
                 {
+                    if (command.Parent is null)
+                    {
+                        command.Parent = _current.Value.Command;
+                    }
                     _current.Value._childCommands.Add(command);
                 }
             }
