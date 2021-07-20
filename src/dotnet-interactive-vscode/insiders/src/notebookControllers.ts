@@ -14,7 +14,7 @@ import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, isDotNetNo
 import { reshapeOutputValueForVsCode } from './common/interfaces/utilities';
 import { selectDotNetInteractiveKernelForJupyter } from './common/vscode/commands';
 import { ErrorOutputCreator } from './common/interactiveClient';
-import { CompositeKernel } from './common/interactive/compositeKernel';
+import { ProxyKernel } from './common/interactive/proxyKernel';
 import { promises } from 'dns';
 import { JavascriptKernel } from './common/interactive/javascriptKernel';
 
@@ -140,11 +140,21 @@ export class DotNetNotebookKernel {
 
                     this.config.clientMapper.getOrAddClient(documentUri).then(client => {
                         // TODO: this isn't re-triggered when the kernel is restarted
-                        const proxyJsKernel = new genericTransport.ProxyKernel('javascript', transport);
+                        const proxyJsKernel = new ProxyKernel('javascript', transport);
                         client.kernel.add(proxyJsKernel, ['js']);
 
                         transport.setCommandHandler(envelope => {
                             return client.kernel.send(envelope);
+                        });
+
+                        client.transport.subscribeToKernelEvents(eventEnvelope => {
+                            // if (messageHandler!.waitingOnMessages) {
+                            //     let capturedMessageWaiter = messageHandler!.waitingOnMessages;
+                            //     messageHandler!.waitingOnMessages = null;
+                            //     capturedMessageWaiter.resolve(eventEnvelope);
+                            // } else {
+                            //     messageHandler!.envelopeQueue.push(eventEnvelope);
+                            // }
                         });
 
                         transport.run();

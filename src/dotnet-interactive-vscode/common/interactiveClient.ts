@@ -56,7 +56,7 @@ import { clearDebounce, createOutput } from './utilities';
 
 import * as vscodeLike from './interfaces/vscode-like';
 import { CompositeKernel } from './interactive/compositeKernel';
-import { ProxyKernel } from './interactive/genericTransport';
+import { ProxyKernel } from './interactive/proxyKernel';
 
 export interface ErrorOutputCreator {
     (message: string, outputId?: string): vscodeLike.NotebookCellOutput;
@@ -93,6 +93,10 @@ export class InteractiveClient {
 
     get kernel(): CompositeKernel {
         return this._kernel;
+    }
+
+    get transport(): KernelTransport {
+        return this.config.transport;
     }
 
     public tryGetProperty<T>(propertyName: string): T | null {
@@ -149,6 +153,7 @@ export class InteractiveClient {
             };
 
             let failureReported = false;
+            const commandToken = configuration?.token ? configuration.token : this.getNextToken();
 
             return this.submitCode(source, language, eventEnvelope => {
                 if (this.deferredOutput.length > 0) {
@@ -159,7 +164,10 @@ export class InteractiveClient {
                 switch (eventEnvelope.eventType) {
                     // if kernel languages were added, handle those events here
                     case CommandSucceededType:
-                        resolve();
+                        if (eventEnvelope.command?.token === commandToken) {
+                            // only complete this promise if it's the root command
+                            resolve();
+                        }
                         break;
                     case CommandFailedType:
                         {
@@ -168,7 +176,10 @@ export class InteractiveClient {
                             outputs.push(errorOutput);
                             reportOutputs();
                             failureReported = true;
-                            reject(err);
+                            if (eventEnvelope.command?.token === commandToken) {
+                                // only complete this promise if it's the root command
+                                reject(err);
+                            }
                         }
                         break;
                     case DiagnosticsProducedType:
@@ -220,7 +231,7 @@ export class InteractiveClient {
                         }
                         break;
                 }
-            }, configuration?.token).catch(e => {
+            }, commandToken).catch(e => {
                 // only report a failure if it's not a `CommandFailed` event from above (which has already called `reject()`)
                 if (!failureReported) {
                     const errorMessage = typeof e?.message === 'string' ? <string>e.message : '' + e;
@@ -343,13 +354,17 @@ export class InteractiveClient {
                 switch (eventEnvelope.eventType) {
                     case CommandFailedType:
                         let err = <CommandFailed>eventEnvelope.event;
-                        disposable.dispose();
                         failureReported = true;
-                        reject(err);
+                        if (eventEnvelope.command?.token === token) {
+                            disposable.dispose();
+                            reject(err);
+                        }
                         break;
                     case CommandSucceededType:
-                        disposable.dispose();
-                        resolve();
+                        if (eventEnvelope.command?.token === token) {
+                            disposable.dispose();
+                            resolve();
+                        }
                         break;
                     default:
                         break;
@@ -390,12 +405,7 @@ export class InteractiveClient {
     private eventListener(eventEnvelope: KernelEventEnvelope) {
         let token = eventEnvelope.command?.token;
         if (token) {
-            let listeners = this.tokenEventObservers.get(token);
-            if (listeners) {
-                for (let listener of listeners) {
-                    listener(eventEnvelope);
-                }
-            } else if (token.startsWith("deferredCommand::")) {
+            if (token.startsWith("deferredCommand::")) {
                 switch (eventEnvelope.eventType) {
                     case DisplayedValueProducedType:
                     case DisplayedValueUpdatedType:
@@ -404,6 +414,17 @@ export class InteractiveClient {
                         let output = this.displayEventToCellOutput(disp);
                         this.deferredOutput.push(output);
                         break;
+                }
+            } else {
+                const tokenParts = token.split('/');
+                for (let i = tokenParts.length; i >= 1; i--) {
+                    const candidateToken = tokenParts.slice(0, i).join('/');
+                    let listeners = this.tokenEventObservers.get(candidateToken);
+                    if (listeners) {
+                        for (let listener of listeners) {
+                            listener(eventEnvelope);
+                        }
+                    }
                 }
             }
         }

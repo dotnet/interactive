@@ -1,6 +1,8 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+import { KernelCommandEnvelope } from "../interfaces/contracts";
+
 class Guid {
 
     public static validator = new RegExp("^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$", "i");
@@ -70,12 +72,20 @@ class Guid {
     }
 }
 
+function setToken(commandEnvelope: KernelCommandEnvelope) {
+    if (!commandEnvelope.token) {
+        commandEnvelope.token = Guid.create().toString();
+    }
+
+    //
+}
+
 export class TokenGenerator {
     private _seed: string;
     private _counter: number;
-    
+
     constructor() {
-        this._seed =  Guid.create().toString();
+        this._seed = Guid.create().toString();
         this._counter = 0;
     }
 

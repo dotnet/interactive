@@ -45,14 +45,16 @@ namespace Microsoft.DotNet.Interactive.Server
                 .Where(e => e.Command.GetToken() == token)
                 .Subscribe(kernelEvent =>
                 {
-                    switch (kernelEvent)
+                    if (kernelEvent.Command.GetToken() == token)
                     {
-                        case CommandFailed _:
-                        case CommandSucceeded _:
-                            completionSource.TrySetResult(true);
-                            ExecutionContext = null;
-                            break;
-
+                        switch (kernelEvent)
+                        {
+                            case CommandFailed _:
+                            case CommandSucceeded _:
+                                completionSource.TrySetResult(true);
+                                ExecutionContext = null;
+                                break;
+                        }
                     }
                 });
             

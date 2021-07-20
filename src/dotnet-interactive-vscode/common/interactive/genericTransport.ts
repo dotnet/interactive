@@ -3,7 +3,6 @@
 
 import * as contracts from "../interfaces/contracts";
 import * as utilities from "../interfaces/utilities";
-import { IKernelCommandHandler, IKernelCommandInvocation, Kernel } from "./kernel";
 
 export function isPromiseCompletionSource<T>(obj: any): obj is PromiseCompletionSource<T> {
     return obj.promise
@@ -29,54 +28,6 @@ export class PromiseCompletionSource<T> {
 
     reject(reason: any) {
         this._reject(reason);
-    }
-}
-
-export class ProxyKernel extends Kernel {
-
-    constructor(readonly name: string, private readonly transport: contracts.Transport) {
-        super(name);
-    }
-    getCommandHandler(commandType: contracts.KernelCommandType): IKernelCommandHandler | undefined {
-        return {
-            commandType,
-            handle: (invocation) => {
-                return this._commandHandler(invocation);
-            }
-        };
-    }
-
-    private async _commandHandler(commandInvocation: IKernelCommandInvocation): Promise<void> {
-        const token = commandInvocation.commandEnvelope.token;
-        let completeCommand = () => {
-
-        };
-
-        let commandCompletion = new Promise<void>((resolve, reject) => {
-            completeCommand = resolve;
-        });
-        let sub = this.transport.subscribeToKernelEvents((envelope: contracts.KernelEventEnvelope) => {
-            if (envelope.command!.token === token) {
-                commandInvocation.context.publish(envelope);
-                switch (envelope.eventType) {
-                    case contracts.CommandFailedType:
-                    case contracts.CommandSucceededType:
-                        completeCommand();
-                        break;
-                }
-            }
-        });
-
-        try {
-            this.transport.submitCommand(commandInvocation.commandEnvelope);
-            await commandCompletion;
-        }
-        catch (e) {
-            commandInvocation.context.fail(e.message);
-        }
-        finally {
-            sub.dispose();
-        }
     }
 }
 
