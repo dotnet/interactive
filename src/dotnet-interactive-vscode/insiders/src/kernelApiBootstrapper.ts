@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { CompositeKernel } from "./common/interactive/compositeKernel";
+import { ProxyKernel } from "./common/interactive/proxyKernel";
 import * as genericTransport from "./common/interactive/genericTransport";
 import { JavascriptKernel } from "./common/interactive/javascriptKernel";
 import { Kernel } from "./common/interactive/kernel";
@@ -60,7 +61,7 @@ export function configure(global?: any) {
         }
     );
 
-    const reverseProxy = new genericTransport.ProxyKernel('reverse-to-extension-host', transport);
+    const reverseProxy = new ProxyKernel('reverse-to-extension-host', transport);
     compositeKernel.add(reverseProxy, ['csharp', 'fsharp', 'pwsh']);
 
     transport.setCommandHandler(commandEnvelope => {

@@ -31,7 +31,13 @@ export class Kernel {
 
     private ensureCommandToken(commandEnvelope: contracts.KernelCommandEnvelope) {
         if (!commandEnvelope.token) {
-            commandEnvelope.token = this._tokenGenerator.GetNewToken();
+            let nextToken = this._tokenGenerator.GetNewToken();
+            if (KernelInvocationContext.current?.commandEnvelope) {
+                // a parent command exists, create a token hierarchy
+                nextToken = `${KernelInvocationContext.current.commandEnvelope.token}/${nextToken}`;
+            }
+
+            commandEnvelope.token = nextToken;
         }
     }
 
