@@ -36,6 +36,7 @@ export class GenericTransport implements contracts.Transport {
     private stillRunning: PromiseCompletionSource<number>;
     private commandHandler: KernelCommandEnvelopeHandler = () => Promise.resolve();
     private eventSubscribers: Array<contracts.KernelEventEnvelopeObserver> = [];
+
     constructor(private readonly messageSender: (message: contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope) => Promise<void>, private readonly messageReceiver: () => Promise<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>) {
 
         this.stillRunning = new PromiseCompletionSource<number>();
@@ -52,8 +53,7 @@ export class GenericTransport implements contracts.Transport {
                 return;
             }
             if (utilities.isKernelCommandEnvelope(message)) {
-                await this.commandHandler(message);
-
+                this.commandHandler(message);
             } else if (utilities.isKernelEventEnvelope(message)) {
                 for (let i = this.eventSubscribers.length - 1; i >= 0; i--) {
                     this.eventSubscribers[i](message);

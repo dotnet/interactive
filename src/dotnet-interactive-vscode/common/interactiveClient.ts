@@ -316,30 +316,32 @@ export class InteractiveClient {
             let handled = false;
             token = token || this.getNextToken();
             let disposable = this.subscribeToKernelTokenEvents(token, eventEnvelope => {
-                switch (eventEnvelope.eventType) {
-                    case CommandFailedType:
-                        if (!handled) {
-                            handled = true;
-                            disposable.dispose();
-                            let err = <CommandFailed>eventEnvelope.event;
-                            reject(err);
-                        }
-                        break;
-                    case CommandSucceededType:
-                        if (!handled) {
-                            handled = true;
-                            disposable.dispose();
-                            reject('Command was handled before reporting expected result.');
-                        }
-                        break;
-                    default:
-                        if (eventEnvelope.eventType === expectedEventType) {
-                            handled = true;
-                            disposable.dispose();
-                            let event = <TEvent>eventEnvelope.event;
-                            resolve(event);
-                        }
-                        break;
+                if (eventEnvelope.command?.token === token) {
+                    switch (eventEnvelope.eventType) {
+                        case CommandFailedType:
+                            if (!handled) {
+                                handled = true;
+                                disposable.dispose();
+                                let err = <CommandFailed>eventEnvelope.event;
+                                reject(err);
+                            }
+                            break;
+                        case CommandSucceededType:
+                            if (!handled) {
+                                handled = true;
+                                disposable.dispose();
+                                reject('Command was handled before reporting expected result.');
+                            }
+                            break;
+                        default:
+                            if (eventEnvelope.eventType === expectedEventType) {
+                                handled = true;
+                                disposable.dispose();
+                                let event = <TEvent>eventEnvelope.event;
+                                resolve(event);
+                            }
+                            break;
+                    }
                 }
             });
             await this.config.transport.submitCommand({ command, commandType, token });

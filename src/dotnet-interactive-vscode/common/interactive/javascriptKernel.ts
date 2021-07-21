@@ -17,40 +17,31 @@ export class JavascriptKernel extends kernel.Kernel {
 
         invocation.context.publish({ eventType: contracts.CodeSubmissionReceivedType, event: { code }, command: invocation.commandEnvelope });
 
-
         let capture: contracts.Disposable | undefined = new ConsoleCapture(invocation.context);
         let result: any = undefined;
 
         try {
-
             const AsyncFunction = eval(`Object.getPrototypeOf(async function(){}).constructor`);
-
             const evaluator = AsyncFunction("console", code);
-
             result = await evaluator(capture);
+            const formattedValue = formatValue(result);
+            if (formattedValue) {
+                const event: contracts.ReturnValueProduced = {
+                    formattedValues: [formattedValue]
+                };
+                invocation.context.publish({ eventType: contracts.ReturnValueProducedType, event, command: invocation.commandEnvelope });
+            }
         } catch (e) {
-
             capture.dispose();
             capture = undefined;
 
             throw e;
         }
         finally {
-
             if (capture) {
                 capture.dispose();
             }
         }
-        const formattedValue = formatValue(result);
-        if (formattedValue) {
-
-            const event: contracts.ReturnValueProduced = {
-                formattedValues: [formattedValue]
-            };
-
-            invocation.context.publish({ eventType: contracts.ReturnValueProducedType, event, command: invocation.commandEnvelope });
-        }
-        return Promise.resolve();
     }
 }
 

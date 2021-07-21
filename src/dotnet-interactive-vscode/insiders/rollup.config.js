@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import typescript from 'rollup-plugin-typescript2'
+import typescript from 'rollup-plugin-typescript2';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import pkg from './package.json';
@@ -37,4 +37,15 @@ export default {
         }),
         commonjs()
     ],
-}
+    onwarn: function (warning, warn) {
+        switch (warning.code) {
+            case 'EVAL':
+            case 'MISSING_NAME_OPTION_FOR_IIFE_EXPORT':
+                // don't care about these
+                return;
+            default:
+                warn(warning);
+                break;
+        }
+    }
+};

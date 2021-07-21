@@ -65,13 +65,16 @@ export class Kernel {
         let isRootCommand = areCommandsTheSame(context.commandEnvelope, commandEnvelope);
         let contextEventsSubscription: contracts.Disposable | null = null;
         if (isRootCommand) {
-            contextEventsSubscription = context.subscribeToKernelEvents(e => this.publishEvent(e));
+            contextEventsSubscription = context.subscribeToKernelEvents(e => {
+                const message = `kernel ${this.name} saw event ${e.eventType} with token ${e.command?.token}`;
+                // @ts-ignore
+                devconsole?.log(message);
+                return this.publishEvent(e);
+            });
         }
 
         try {
             await this.handleCommand(commandEnvelope);
-        } catch (e) {
-            context.fail(e?.message ?? e);
         } finally {
             if (contextEventsSubscription) {
                 contextEventsSubscription.dispose();
@@ -85,30 +88,29 @@ export class Kernel {
 
     handleCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
-            let { command, commandType } = commandEnvelope;
             let context = KernelInvocationContext.establish(commandEnvelope);
             context.handlingKernel = this;
-            let isRootCommand = context.command === command;
+            let isRootCommand = areCommandsTheSame(context.commandEnvelope, commandEnvelope);
 
-            let handler = this.getCommandHandler(commandType);
+            let handler = this.getCommandHandler(commandEnvelope.commandType);
             if (handler) {
                 try {
+                    // @ts-ignore
+                    devconsole.log(`kernel ${this.name} about to handle command ${commandEnvelope.commandType}`);
                     await handler.handle({ commandEnvelope: commandEnvelope, context });
 
+                    context.complete(commandEnvelope);
                     if (isRootCommand) {
-                        context.complete(commandEnvelope);
                         context.dispose();
-                    } else {
-                        context.complete(commandEnvelope);
                     }
 
-
-
+                    // @ts-ignore
+                    devconsole.log(`kernel ${this.name} done handling command ${commandEnvelope.commandType}`);
                     resolve();
                 }
                 catch (e) {
+                    context.fail(e.message);
                     if (isRootCommand) {
-                        context.fail(e.message);
                         context.dispose();
                     }
 
@@ -119,7 +121,7 @@ export class Kernel {
                     context.dispose();
                 }
 
-                reject(new Error(`No handler found for command type ${commandType}`));
+                reject(new Error(`No handler found for command type ${commandEnvelope.commandType}`));
             }
         });
     }

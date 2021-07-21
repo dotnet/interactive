@@ -23,13 +23,13 @@ export class ProxyKernel extends Kernel {
         const token = commandInvocation.commandEnvelope.token;
         const completionSource = new PromiseCompletionSource<boolean>();
         let sub = this.transport.subscribeToKernelEvents((envelope: contracts.KernelEventEnvelope) => {
+            // @ts-ignore
+            devconsole.log(`proxy ${this.name} got event ${envelope.eventType} from ${envelope.command?.command?.targetKernelName} with token ${envelope.command?.token}`);
             if (envelope.command!.token === token) {
-                console.log(`proxy ${this.name} got event with token ${token}`);
                 commandInvocation.context.publish(envelope);
                 switch (envelope.eventType) {
                     case contracts.CommandFailedType:
                     case contracts.CommandSucceededType:
-                        console.log(`proxy ${this.name} about to stop waiting with token ${token}`);
                         completionSource.resolve(true);
                         break;
                 }
@@ -38,9 +38,11 @@ export class ProxyKernel extends Kernel {
 
         try {
             this.transport.submitCommand(commandInvocation.commandEnvelope);
-            console.log(`proxy ${this.name} about to await with token ${token}`);
+            // @ts-ignore
+            devconsole.log(`proxy ${this.name} about to await with token ${token}`);
             await completionSource.promise;
-            console.log(`proxy ${this.name} done awaiting with token ${token}`);
+            // @ts-ignore
+            devconsole.log(`proxy ${this.name} done awaiting with token ${token}`);
         }
         catch (e) {
             commandInvocation.context.fail(e.message);

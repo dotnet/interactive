@@ -11,7 +11,7 @@ import * as diagnostics from './common/vscode/diagnostics';
 import * as vscodeUtilities from './common/vscode/vscodeUtilities';
 import { getSimpleLanguage, isDotnetInteractiveLanguage, jupyterViewType, notebookCellLanguages } from './common/interactiveNotebook';
 import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, isDotNetNotebookMetadata, withDotNetKernelMetadata } from './common/ipynbUtilities';
-import { reshapeOutputValueForVsCode } from './common/interfaces/utilities';
+import { isKernelEventEnvelope, reshapeOutputValueForVsCode } from './common/interfaces/utilities';
 import { selectDotNetInteractiveKernelForJupyter } from './common/vscode/commands';
 import { ErrorOutputCreator } from './common/interactiveClient';
 import { ProxyKernel } from './common/interactive/proxyKernel';
@@ -147,7 +147,14 @@ export class DotNetNotebookKernel {
                             return client.kernel.send(envelope);
                         });
 
+                        transport.subscribeToKernelEvents(envelope => {
+                            client.transport.publishKernelEvent(envelope);
+                        });
+
                         client.transport.subscribeToKernelEvents(eventEnvelope => {
+                            return transport.publishKernelEvent(eventEnvelope);
+                            //controller.postMessage({ envelope: eventEnvelope });
+                            //return Promise.resolve();
                             // if (messageHandler!.waitingOnMessages) {
                             //     let capturedMessageWaiter = messageHandler!.waitingOnMessages;
                             //     messageHandler!.waitingOnMessages = null;
