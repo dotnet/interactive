@@ -25,7 +25,17 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public void ForwardEvent(KernelEvent @event)
         {
-            PublishEvent(@event);
+            if (ExecutionContext is not null)
+            {
+                ExecutionContext.Run(ExecutionContext, (_) =>
+                {
+                    PublishEvent(@event);
+                },null);
+            }
+            else
+            {
+                PublishEvent(@event);
+            }
         }
 
         internal override async Task HandleAsync(KernelCommand command, KernelInvocationContext context)
