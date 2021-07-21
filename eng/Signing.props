@@ -6,6 +6,7 @@
     <FileSignInfo Include="FluentAssertions.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Markdig.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Markdig.Signed.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="MessagePack.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Microsoft.Management.Infrastructure.dll" CertificateName="None" />
     <FileSignInfo Include="Namotion.Reflection.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="NetMQ.dll" CertificateName="3PartySHA2" />
@@ -14,6 +15,7 @@
     <FileSignInfo Include="Serilog.Sinks.RollingFileAlternate.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="XPlot.Plotly.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="NaCl.dll" CertificateName="3PartySHA2" />
+
 
     <!-- PowerShell Modules that are shipped with the PowerShell subkernel -->
 
