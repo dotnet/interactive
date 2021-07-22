@@ -14,7 +14,8 @@ export const notebookCellLanguages: Array<string> = [
     'dotnet-interactive.html',
     'dotnet-interactive.javascript',
     'dotnet-interactive.pwsh',
-    'dotnet-interactive.sql'
+    'dotnet-interactive.sql',
+    'dotnet-interactive.kusto',
 ];
 
 export const defaultNotebookCellLanguage = notebookCellLanguages[0];
