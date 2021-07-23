@@ -19,6 +19,7 @@ import { promises } from 'dns';
 import { JavascriptKernel } from './common/interactive/javascriptKernel';
 import { LogEntry, Logger } from './common/logger';
 import { OutputChannelAdapter } from './common/vscode/OutputChannelAdapter';
+import * as notebookMessageHandler from './common/notebookMessageHandler';
 
 const executionTasks: Map<string, vscode.NotebookCellExecution> = new Map();
 
@@ -91,7 +92,7 @@ export class DotNetNotebookKernel {
         this.disposables.forEach(d => d.dispose());
     }
 
-    private uriMessageHandlerMap: Map<string, MessageHandler> = new Map();
+    private uriMessageHandlerMap: Map<string, notebookMessageHandler.MessageHandler> = new Map();
 
     private commonControllerInit(controller: vscode.NotebookController) {
         controller.supportedLanguages = notebookCellLanguages;
@@ -111,62 +112,12 @@ export class DotNetNotebookKernel {
                         messageHandler.envelopeQueue.push(envelope);
                     }
                 }
-            } else {
-                // TODO: log
             }
 
             switch (e.message.preloadCommand) {
-                case 'dostuff':
-                    let messageHandler = this.uriMessageHandlerMap.get(documentUriString);
-                    if (!messageHandler) {
-                        messageHandler = {
-                            waitingOnMessages: null,
-                            envelopeQueue: [],
-                        };
-                        this.uriMessageHandlerMap.set(documentUriString, messageHandler);
-                    }
-
-                    const transport = new genericTransport.GenericTransport(envelope => {
-                        controller.postMessage({ envelope });
-                        return Promise.resolve();
-                    }, () => {
-                        let envelope = messageHandler!.envelopeQueue.shift();
-                        if (envelope) {
-                            return Promise.resolve<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>(envelope);
-                        }
-                        else {
-                            messageHandler!.waitingOnMessages = new genericTransport.PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>();
-                            return messageHandler!.waitingOnMessages.promise;
-                        }
-                    });
-
-                    this.config.clientMapper.getOrAddClient(documentUri).then(client => {
-                        // TODO: this isn't re-triggered when the kernel is restarted
-                        const proxyJsKernel = new ProxyKernel('javascript', transport);
-                        client.kernel.add(proxyJsKernel, ['js']);
-
-                        transport.setCommandHandler(envelope => {
-                            return client.kernel.send(envelope);
-                        });
-
-                        transport.subscribeToKernelEvents(envelope => {
-                            client.transport.publishKernelEvent(envelope);
-                        });
-
-                        client.transport.subscribeToKernelEvents(eventEnvelope => {
-                            return transport.publishKernelEvent(eventEnvelope);
-                            //controller.postMessage({ envelope: eventEnvelope });
-                            //return Promise.resolve();
-                            // if (messageHandler!.waitingOnMessages) {
-                            //     let capturedMessageWaiter = messageHandler!.waitingOnMessages;
-                            //     messageHandler!.waitingOnMessages = null;
-                            //     capturedMessageWaiter.resolve(eventEnvelope);
-                            // } else {
-                            //     messageHandler!.envelopeQueue.push(eventEnvelope);
-                            // }
-                        });
-
-                        transport.run();
+                case '#!connect':
+                    this.config.clientMapper.getOrAddClient(documentUri).then(() => {
+                        notebookMessageHandler.hashBangConnect(this.config.clientMapper, this.uriMessageHandlerMap, (arg) => controller.postMessage(arg), documentUri);
                     });
                     break;
             }
@@ -192,9 +143,6 @@ export class DotNetNotebookKernel {
             }
         }));
         this.disposables.push(controller);
-
-        //
-
     }
 
     private async executeHandler(cells: vscode.NotebookCell[], document: vscode.NotebookDocument, controller: vscode.NotebookController): Promise<void> {
@@ -251,11 +199,6 @@ export class DotNetNotebookKernel {
             }
         }
     }
-}
-
-interface MessageHandler {
-    waitingOnMessages: genericTransport.PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope> | null;
-    envelopeQueue: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[];
 }
 
 async function updateNotebookMetadata(notebook: vscode.NotebookDocument, clientMapper: ClientMapper): Promise<void> {

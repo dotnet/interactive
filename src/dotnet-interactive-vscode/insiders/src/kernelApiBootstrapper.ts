@@ -103,8 +103,7 @@ export function configure(global?: any) {
 
 }
 
-// TODO: sent create proxy message
 // @ts-ignore
-postKernelMessage({ preloadCommand: 'dostuff' });
+postKernelMessage({ preloadCommand: '#!connect' });
 
 configure(window);
