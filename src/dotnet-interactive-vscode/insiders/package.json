@@ -136,6 +136,22 @@
           "type": "string",
           "default": "1.0.235701",
           "description": "The minimum required version of the .NET Interactive tool."
+        },
+        "dotnet-interactive.logLevel": {
+          "type": "string",
+          "default": "Error",
+          "enum": [
+            "Info",
+            "Warn",
+            "Error",
+            "None"
+          ],
+          "enumDescriptions": [
+            "Logs informational messages",
+            "Logs warning messages",
+            "Logs error messages",
+            "Disables logging"
+          ]
         }
       }
     },

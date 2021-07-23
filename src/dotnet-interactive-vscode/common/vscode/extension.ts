@@ -28,6 +28,7 @@ import { isInsidersBuild, isStableBuild } from './vscodeUtilities';
 import { getDotNetMetadata, withDotNetCellMetadata } from '../ipynbUtilities';
 import fetch from 'node-fetch';
 import { CompositeKernel } from '../interactive/compositeKernel';
+import { Logger, LogLevel } from '../logger';
 
 export const KernelIdForJupyter = 'dotnet-interactive-for-jupyter';
 
@@ -57,13 +58,22 @@ export const DotNetPathManager = new CachedDotNetPathManager();
 
 export async function activate(context: vscode.ExtensionContext) {
 
-    // @ts-ignore
-    this.globalThis.devconsole = console;
-
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
     const minDotNetSdkVersion = config.get<string>('minimumDotNetSdkVersion') || '5.0';
     const diagnosticsChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET Interactive : diagnostics'));
+    const loggerChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET Interactive : logger'));
     DotNetPathManager.setOutputChannelAdapter(diagnosticsChannel);
+
+    Logger.configure('extension host', logEntry => {
+        const config = vscode.workspace.getConfiguration('dotnet-interactive');
+        const loggerLevelString = config.get<string>('logLevel') || LogLevel[LogLevel.Error];
+        const loggerLevelKey = loggerLevelString as keyof typeof LogLevel;
+        const logLevel = LogLevel[loggerLevelKey];
+        if (logEntry.logLevel >= logLevel) {
+            const messageLogLevel = LogLevel[logEntry.logLevel];
+            loggerChannel.appendLine(`[${messageLogLevel}] ${logEntry.source}: ${logEntry.message}`);
+        }
+    });
 
     // pause if an sdk installation is currently running
     await waitForSdkInstall(minDotNetSdkVersion);

@@ -17,6 +17,8 @@ import { ErrorOutputCreator } from './common/interactiveClient';
 import { ProxyKernel } from './common/interactive/proxyKernel';
 import { promises } from 'dns';
 import { JavascriptKernel } from './common/interactive/javascriptKernel';
+import { LogEntry, Logger } from './common/logger';
+import { OutputChannelAdapter } from './common/vscode/OutputChannelAdapter';
 
 const executionTasks: Map<string, vscode.NotebookCellExecution> = new Map();
 
@@ -183,6 +185,10 @@ export class DotNetNotebookKernel {
                         }
                     });
                     break;
+            }
+
+            if (e.message.logEntry) {
+                Logger.default.write(<LogEntry>e.message.logEntry);
             }
         }));
         this.disposables.push(controller);

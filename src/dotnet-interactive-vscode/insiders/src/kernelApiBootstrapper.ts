@@ -9,6 +9,7 @@ import { Kernel } from "./common/interactive/kernel";
 import * as contracts from "./common/interfaces/contracts";
 import { isKernelEventEnvelope } from "./common/interfaces/utilities";
 import { KernelCommandScheduler } from "./common/interactive/kernelCommandScheduler";
+import { Logger } from "./common/logger";
 
 export function configure(global?: any) {
     if (!global) {
@@ -23,7 +24,10 @@ export function configure(global?: any) {
         }
     };
 
-    global.devconsole = console;
+    Logger.configure('webview', entry => {
+        // @ts-ignore
+        postKernelMessage({ logEntry: entry });
+    });
 
     const jsKernel = new JavascriptKernel();
     const compositeKernel = new CompositeKernel("webview");
@@ -38,21 +42,18 @@ export function configure(global?: any) {
         if (event.envelope) {
             const envelope = <contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope><any>(event.envelope);
             if (isKernelEventEnvelope(envelope)) {
-                // @ts-ignore
-                devconsole.log(`webview transport got ${envelope.eventType} with token ${envelope.command?.token}`);
+                Logger.default.info(`transport got ${envelope.eventType} with token ${envelope.command?.token}`);
             }
             if (waitingOnMessages) {
                 let capturedMessageWaiter = waitingOnMessages;
                 waitingOnMessages = null;
                 if (isKernelEventEnvelope(envelope)) {
-                    // @ts-ignore
-                    devconsole.log(`webview transport using awaiter`);
+                    Logger.default.info(`transport using awaiter`);
                 }
                 capturedMessageWaiter.resolve(envelope);
             } else {
                 if (isKernelEventEnvelope(envelope)) {
-                    // @ts-ignore
-                    devconsole.log(`webview transport adding to queue`);
+                    Logger.default.info(`transport adding to queue`);
                 }
                 envelopeQueue.push(envelope);
             }
@@ -69,14 +70,12 @@ export function configure(global?: any) {
             let envelope = envelopeQueue.shift();
             if (envelope) {
                 if (isKernelEventEnvelope(envelope)) {
-                    // @ts-ignore
-                    devconsole.log(`webview transport extracting from queue`);
+                    Logger.default.info(`transport extracting from queue`);
                 }
                 return Promise.resolve<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>(envelope);
             }
             else {
-                // @ts-ignore
-                devconsole.log(`webview transport building promise awaiter`);
+                Logger.default.info(`transport building promise awaiter`);
                 waitingOnMessages = new genericTransport.PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>();
                 return waitingOnMessages.promise;
             }
@@ -96,8 +95,7 @@ export function configure(global?: any) {
     });
 
     compositeKernel.subscribeToKernelEvents((eventEnvelope) => {
-        // @ts-ignore
-        devconsole.log(`webview composite kernel sending forwarding event ${eventEnvelope.eventType} with token ${eventEnvelope.command?.token} from ${eventEnvelope.command?.command.targetKernelName} to vscode extension host`);
+        Logger.default.info(`composite kernel sending forwarding event ${eventEnvelope.eventType} with token ${eventEnvelope.command?.token} from ${eventEnvelope.command?.command.targetKernelName} to vscode extension host`);
         return transport.publishKernelEvent(eventEnvelope);
     });
 

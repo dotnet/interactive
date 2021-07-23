@@ -4,6 +4,7 @@
 import { areCommandsTheSame, KernelInvocationContext } from "./kernelInvocationContext";
 import { TokenGenerator } from "./tokenGenerator";
 import * as contracts from "../interfaces/contracts";
+import { Logger } from "../logger";
 
 export interface IKernelCommandInvocation {
     commandEnvelope: contracts.KernelCommandEnvelope;
@@ -67,8 +68,7 @@ export class Kernel {
         if (isRootCommand) {
             contextEventsSubscription = context.subscribeToKernelEvents(e => {
                 const message = `kernel ${this.name} saw event ${e.eventType} with token ${e.command?.token}`;
-                // @ts-ignore
-                devconsole?.log(message);
+                Logger.default.info(message);
                 return this.publishEvent(e);
             });
         }
@@ -95,8 +95,7 @@ export class Kernel {
             let handler = this.getCommandHandler(commandEnvelope.commandType);
             if (handler) {
                 try {
-                    // @ts-ignore
-                    devconsole.log(`kernel ${this.name} about to handle command ${commandEnvelope.commandType}`);
+                    Logger.default.info(`kernel ${this.name} about to handle command ${commandEnvelope.commandType}`);
                     await handler.handle({ commandEnvelope: commandEnvelope, context });
 
                     context.complete(commandEnvelope);
@@ -104,8 +103,7 @@ export class Kernel {
                         context.dispose();
                     }
 
-                    // @ts-ignore
-                    devconsole.log(`kernel ${this.name} done handling command ${commandEnvelope.commandType}`);
+                    Logger.default.info(`kernel ${this.name} done handling command ${commandEnvelope.commandType}`);
                     resolve();
                 }
                 catch (e) {
