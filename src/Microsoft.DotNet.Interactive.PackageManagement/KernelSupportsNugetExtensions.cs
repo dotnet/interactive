@@ -192,14 +192,16 @@ namespace Microsoft.DotNet.Interactive
                         return;
                     }
 
+                    var requested =
+                            kernel.RequestedPackageReferences
+                                  .Except(kernel.ResolvedPackageReferences, PackageReferenceComparer.Instance)
+                                  .Select(s => s.PackageName).OrderBy(s => s).ToList();
                     var install = new InstallPackagesMessage(
                             kernel.RestoreSources.OrderBy(s => s).ToList(),
                             kernel.ResolvedPackageReferences.Select(s => $"{s.PackageName}, {s.PackageVersion}").OrderBy(s => s).ToList(),
-
                             Enumerable.Empty<string>().ToList(),
-                            kernel.RequestedPackageReferences
-                                  .Except(kernel.ResolvedPackageReferences, PackageReferenceComparer.Instance)
-                                  .Select(s => s.PackageName).OrderBy(s => s).ToList(), 0);
+                            requested,
+                            0);
 
                     CreateOrUpdateDisplayValue(context, installPackagesPropertyName, install);
 
@@ -223,7 +225,7 @@ namespace Microsoft.DotNet.Interactive
                     var resultMessage = new InstallPackagesMessage(
                             kernel.RestoreSources.OrderBy(s => s).ToArray(),
                             kernel.ResolvedPackageReferences.Select(s => $"{s.PackageName}, {s.PackageVersion}").OrderBy(s => s).ToList(),
-                            kernel.ResolvedPackageReferences.Where(currentPackageReferences.Add).Select(s => $"{s.PackageName}, {s.PackageVersion}").OrderBy(s => s).ToList(),
+                            kernel.ResolvedPackageReferences.Where(r => requested.Contains(r.PackageName, StringComparer.OrdinalIgnoreCase)).Where(currentPackageReferences.Add).Select(s => $"{s.PackageName}, {s.PackageVersion}").OrderBy(s => s).ToList(),
                             emptyList,
                             0);
 
