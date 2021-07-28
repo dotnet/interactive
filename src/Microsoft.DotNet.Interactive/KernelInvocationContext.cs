@@ -89,7 +89,8 @@ namespace Microsoft.DotNet.Interactive
             }
             else
             {
-                Publish(new CommandSucceeded(command));
+                // todo: review this change
+                //Publish(new CommandSucceeded(command));
                 _childCommands.Remove(command);
             }
         }

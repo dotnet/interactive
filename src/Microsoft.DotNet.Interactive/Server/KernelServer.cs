@@ -43,14 +43,11 @@ namespace Microsoft.DotNet.Interactive.Server
                 var frontEndKernelNames = new HashSet<string>();
                 if (_frontEndKernel != null)
                 {
-                    //frontEndKernelNames.Add(_frontEndKernel.Name);
-                    //frontEndKernelNames.Add("javascript");
-                    //frontEndKernelNames.Add("js");
+                    frontEndKernelNames.Add(_frontEndKernel.Name);
                 }
 
                 // if it came from front end, bail out
                 if (kernelEvent.Command.TargetKernelName is not null &&
-                    //kernelEvent.Command.TargetKernelName == _frontEndKernel?.Name)
                     frontEndKernelNames.Contains(kernelEvent.Command.TargetKernelName))
                 {
                     return;
@@ -58,7 +55,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
                 if (kernelEvent is ReturnValueProduced { Value: DisplayedValue })
                 {
-                   // return;
+                   return;
                 }
 
                 try

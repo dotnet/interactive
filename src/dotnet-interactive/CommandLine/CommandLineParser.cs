@@ -417,7 +417,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             if (isVsCode)
                             {
                                 var frontEndKernel = kernelServer.GetFrontEndKernel("vscode");
-                                kernel.Add(frontEndKernel, new[] { "javascript", "js" });
+                                kernel.Add(frontEndKernel);
                                 await kernel.VisitSubkernelsAsync(async k =>
                                 {
                                     switch (k)
@@ -431,9 +431,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                 services.AddSingleton(clientSideKernelClient);
                                 ((HtmlNotebookFrontendEnvironment)frontendEnvironment).RequiresAutomaticBootstrapping =
                                     false;
-                                //kernel.Add(
-                                //    new JavaScriptKernel(clientSideKernelClient),
-                                //    new[] { "js" });
+                                kernel.Add(
+                                    new JavaScriptKernel(clientSideKernelClient),
+                                    new[] { "js" });
                             }
                             else
                             {

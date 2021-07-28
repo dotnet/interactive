@@ -423,7 +423,7 @@ namespace Microsoft.DotNet.Interactive
 
                 await Pipeline.SendAsync(command, context);
 
-               // if (command != context.Command)
+                if (command != context.Command)
                 {
                     context.Complete(command);
                 }
