@@ -236,16 +236,10 @@ export async function activate(context: vscode.ExtensionContext) {
     const languageServiceDelay = config.get<number>('languageServiceDelay') || 500; // fall back to something reasonable
 
     const preloads: vscode.Uri[] = [];
-    // notebook kernels
-    const apiBootstrapperUri = vscode.Uri.file(path.join(context.extensionPath, 'resources', 'kernelHttpApiBootstrapper.js'));
-    if (!fs.existsSync(apiBootstrapperUri.fsPath)) {
-        throw new Error(`Unable to find bootstrapper API expected at '${apiBootstrapperUri.fsPath}'.`);
-    }
-    //preloads.push(apiBootstrapperUri);
 
-    const versionSpecificPreload = versionSpecificFunctions.getPreloads(context.extensionPath);
-    if (versionSpecificPreload) {
-        preloads.push(versionSpecificPreload);
+    const kernelPreloads = versionSpecificFunctions.getPreloads(context.extensionPath);
+    if (kernelPreloads) {
+        preloads.push(kernelPreloads);
     }
 
     registerWithVsCode(context, clientMapper, diagnosticsChannel, clientMapperConfig.createErrorOutput, ...preloads);

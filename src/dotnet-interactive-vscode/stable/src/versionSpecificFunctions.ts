@@ -16,7 +16,13 @@ import { ClientMapper } from './common/clientMapper';
 import { OutputChannelAdapter } from './common/vscode/OutputChannelAdapter';
 import { ErrorOutputCreator } from './common/interactiveClient';
 import fetch from 'node-fetch';
+import * as fs from 'fs';
 
 export function getPreloads(extensionPath: string): vscode.Uri | undefined {
-    return undefined;
+    const apiBootstrapperUri = vscode.Uri.file(path.join(extensionPath, 'resources', 'kernelHttpApiBootstrapper.js'));
+    if (!fs.existsSync(apiBootstrapperUri.fsPath)) {
+        throw new Error(`Unable to find bootstrapper API expected at '${apiBootstrapperUri.fsPath}'.`);
+    }
+
+    return apiBootstrapperUri;
 }
