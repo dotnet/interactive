@@ -49,7 +49,8 @@ import {
     SubmitCode,
     SubmitCodeType,
     CancelType,
-    Cancel
+    Cancel,
+    StandardErrorValueProduced
 } from './interfaces/contracts';
 import { Eol } from './interfaces';
 import { clearDebounce, createOutput } from './utilities';
@@ -193,7 +194,8 @@ export class InteractiveClient {
                     case StandardOutputValueProducedType:
                         {
                             let disp = <DisplayEvent>eventEnvelope.event;
-                            let output = this.displayEventToCellOutput(disp);
+                            const stream = eventEnvelope.eventType === StandardErrorValueProducedType ? 'stderr' : 'stdout';
+                            let output = this.displayEventToCellOutput(disp, stream);
                             outputs.push(output);
                             reportOutputs();
                         }
@@ -432,16 +434,20 @@ export class InteractiveClient {
         }
     }
 
-    private displayEventToCellOutput(disp: DisplayEvent): vscodeLike.NotebookCellOutput {
+    private displayEventToCellOutput(disp: DisplayEvent, stream?: 'stdout' | 'stderr'): vscodeLike.NotebookCellOutput {
         const encoder = new TextEncoder();
         let outputItems: Array<vscodeLike.NotebookCellOutputItem> = [];
         if (disp.formattedValues && disp.formattedValues.length > 0) {
             for (let formatted of disp.formattedValues) {
                 let data = encoder.encode(formatted.value);
-                outputItems.push({
+                const outputItem: vscodeLike.NotebookCellOutputItem = {
                     mime: formatted.mimeType,
-                    data,
-                });
+                    data
+                }
+                if (stream) {
+                    outputItem.stream = stream;
+                }
+                outputItems.push(outputItem);
             }
         }
 
