@@ -398,11 +398,11 @@ export class InteractiveClient {
         if (disp.formattedValues && disp.formattedValues.length > 0) {
             for (let formatted of disp.formattedValues) {
                 let data = encoder.encode(formatted.value);
-                const outputItem:vscodeLike.NotebookCellOutputItem = {
+                const outputItem: vscodeLike.NotebookCellOutputItem = {
                     mime: formatted.mimeType,
                     data
                 }
-                if (stream){
+                if (stream) {
                     outputItem.stream = stream;
                 }
                 outputItems.push(outputItem);
