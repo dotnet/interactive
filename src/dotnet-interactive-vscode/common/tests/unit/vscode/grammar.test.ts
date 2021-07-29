@@ -91,8 +91,8 @@ describe('TextMate grammar tests', async () => {
             '#!pwsh',
             '#!sql',
             '#!sql-adventureworks',
-            '#!kusto',
-            '#!kusto-default',
+            '#!kql',
+            '#!kql-default',
         ];
         const tokens = await getTokens(text);
         expect(tokens).to.deep.equal([
@@ -176,14 +176,14 @@ describe('TextMate grammar tests', async () => {
             ],
             [
                 {
-                    tokenText: '#!kusto',
-                    scopes: ['source.dotnet-interactive', 'language.switch.kusto']
+                    tokenText: '#!kql',
+                    scopes: ['source.dotnet-interactive', 'language.switch.kql']
                 }
             ],
             [
                 {
-                    tokenText: '#!kusto-default',
-                    scopes: ['source.dotnet-interactive', 'language.switch.kusto']
+                    tokenText: '#!kql-default',
+                    scopes: ['source.dotnet-interactive', 'language.switch.kql']
                 }
             ],
         ]);
@@ -238,8 +238,8 @@ describe('TextMate grammar tests', async () => {
         ['powershell', 'powershell'],
         ['sql', 'sql'],
         ['sql-adventureworks', 'sql'],
-        ['kusto', 'kusto'],
-        ['kusto-default', 'kusto'],
+        ['kql', 'kql'],
+        ['kql-default', 'kql'],
     ];
 
     for (const [magicCommand, language] of allLanguages) {
