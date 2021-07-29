@@ -18,23 +18,19 @@ namespace Microsoft.DotNet.Interactive
     public class InstallPackagesMessage
     {
         public IReadOnlyList<string> RestoreSources { get; set; }
-        public IReadOnlyList<string> InstalledPackages { get; set; }
-
-        public IReadOnlyList<string> RecentlyInstalledPackages { get; set; }
         public IReadOnlyList<string> InstallingPackages { get; set; }
+        public IReadOnlyList<string> InstalledPackages { get; set; }
         public int Progress { get; set; }
 
         public InstallPackagesMessage(
                 IReadOnlyList<string> restoreSources,
-                IReadOnlyList<string> installedPackages,
-                IReadOnlyList<string> recentlyInstalledPackages,
                 IReadOnlyList<string> installingPackages,
+                IReadOnlyList<string> installedPackages,
                 int progress)
         {
             RestoreSources = restoreSources;
-            InstalledPackages = installedPackages;
-            RecentlyInstalledPackages = recentlyInstalledPackages;
             InstallingPackages = installingPackages;
+            InstalledPackages = installedPackages;
             Progress = progress;
         }
 
@@ -57,49 +53,44 @@ namespace Microsoft.DotNet.Interactive
             string progress = new String('.', Progress);
             var items = new List<IHtmlContent>();
             items.Add(InstallMessage("Restore sources", RestoreSources));
-            items.Add(InstallMessage("Installed Packages", RecentlyInstalledPackages));
             items.Add(InstallMessage("Installing Packages", InstallingPackages, progress));
+            items.Add(InstallMessage("Installed Packages", InstalledPackages));
             var r =  div(items).ToString();
             return r;
         }
 
-        public string FormatAsPlainText()
+        public IEnumerable<string> FormatAsPlainTextLines()
         {
-            var result = new StringBuilder();
             if (RestoreSources.Count > 0)
             {
-                result.Append("Restore sources");
+                yield return "Restore sources";
                 foreach (var source in RestoreSources)
                 {
-                    result.Append(System.Environment.NewLine);
-                    result.Append(" - " + source);
+                    yield return $" - {source}";
                 }
-                result.Append(System.Environment.NewLine);
-            }
-
-            if (InstalledPackages.Count > 0)
-            {
-                result.Append("Installed Packages");
-                foreach (var installed in InstalledPackages)
-                {
-                    result.Append(System.Environment.NewLine);
-                    result.Append(" - " + installed);
-                }
-                result.Append(System.Environment.NewLine);
             }
 
             if (InstallingPackages.Count > 0)
             {
-                result.Append("Installing Packages");
+                yield return "Installing Packages";
                 foreach (var installing in InstallingPackages)
                 {
-                    result.Append(System.Environment.NewLine);
-                    result.Append(" - " + installing + "   ");
-                    result.Append('.', Progress);
+                    yield return $" - {installing}   " + new String('.', Progress);
                 }
-                result.Append(System.Environment.NewLine);
             }
-            return result.ToString();
+
+            if (InstalledPackages.Count > 0)
+            {
+                yield return "Installed Packages";
+                foreach (var installed in InstalledPackages)
+                {
+                    yield return $" - {installed}";
+                }
+            }
+        }
+        public string FormatAsPlainText()
+        {
+            return String.Join(System.Environment.NewLine, FormatAsPlainTextLines());
         }
     }
 

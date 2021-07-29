@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using Pocket;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive
@@ -192,61 +193,76 @@ namespace Microsoft.DotNet.Interactive
                         return;
                     }
 
-                    var requested =
-                            kernel.RequestedPackageReferences
-                                  .Except(kernel.ResolvedPackageReferences, PackageReferenceComparer.Instance)
-                                  .Select(s => s.PackageName).OrderBy(s => s).ToList();
-                    var install = new InstallPackagesMessage(
-                            kernel.RestoreSources.OrderBy(s => s).ToList(),
-                            kernel.ResolvedPackageReferences.Select(s => $"{s.PackageName}, {s.PackageVersion}").OrderBy(s => s).ToList(),
+                    var requestedPackages =
+                        kernel.RequestedPackageReferences
+                              .Except(kernel.ResolvedPackageReferences, PackageReferenceComparer.Instance)
+                              .Select(s => s.PackageName).OrderBy(s => s).ToList();
+
+                    var requestedSources =
+                        kernel.RestoreSources.OrderBy(s => s).ToList();
+
+                    var installMessage =
+                        new InstallPackagesMessage(
+                            requestedSources,
+                            requestedPackages,
                             Enumerable.Empty<string>().ToList(),
-                            requested,
                             0);
 
-                    CreateOrUpdateDisplayValue(context, installPackagesPropertyName, install);
-
-                    var currentPackageReferences = kernel.ResolvedPackageReferences?.ToHashSet() ?? new HashSet<ResolvedPackageReference>();
-
-                    var restorePackagesTask = kernel.RestoreAsync();
-
-                    var delay = 500;
-                    while (await Task.WhenAny(Task.Delay(delay), restorePackagesTask) != restorePackagesTask)
+                    using (var operation = Logger.Log.OnEnterAndExit())
                     {
-                        if (context.CancellationToken.IsCancellationRequested)
+                        CreateOrUpdateDisplayValue(context, installPackagesPropertyName, installMessage);
+
+                        var currentPackageReferences = kernel.ResolvedPackageReferences?.ToHashSet() ?? new HashSet<ResolvedPackageReference>();
+                        var restorePackagesTask = kernel.RestoreAsync();
+                        var delay = 500;
+                        while (await Task.WhenAny(Task.Delay(delay), restorePackagesTask) != restorePackagesTask)
                         {
-                            break;
+                            if (context.CancellationToken.IsCancellationRequested)
+                            {
+                                break;
+                            }
+                            installMessage.Progress = 1 + installMessage.Progress;
+                            CreateOrUpdateDisplayValue(context, installPackagesPropertyName, installMessage);
                         }
-                        install.Progress = 1 + install.Progress;
-                        CreateOrUpdateDisplayValue(context, installPackagesPropertyName, install);
-                    }
 
-                    var result = await restorePackagesTask;
+                        var result = await restorePackagesTask;
 
-                    var resultMessage = new InstallPackagesMessage(
-                            kernel.RestoreSources.OrderBy(s => s).ToArray(),
-                            kernel.ResolvedPackageReferences.Select(s => $"{s.PackageName}, {s.PackageVersion}").OrderBy(s => s).ToList(),
-                            kernel.ResolvedPackageReferences.Where(r => requested.Contains(r.PackageName, StringComparer.OrdinalIgnoreCase)).Where(currentPackageReferences.Add).Select(s => $"{s.PackageName}, {s.PackageVersion}").OrderBy(s => s).ToList(),
-                            emptyList,
-                            0);
+                        var resultMessage = new InstallPackagesMessage(
+                                requestedSources,
+                                Enumerable.Empty<string>().ToList(),
+                                kernel.ResolvedPackageReferences.Where(r => requestedPackages.Contains(r.PackageName, StringComparer.OrdinalIgnoreCase)).Where(currentPackageReferences.Add).Select(s => $"{s.PackageName}, {s.PackageVersion}").OrderBy(s => s).ToList(),
+                                0);
 
-                    if (result.Succeeded)
-                    {
-                        kernel?.RegisterResolvedPackageReferences(result.ResolvedReferences);
+                        var logMessage = new InstallPackagesMessage(
+                                kernel.RestoreSources.OrderBy(s => s).ToList(),
+                                requestedPackages,
+                                kernel.ResolvedPackageReferences.Select(s => $"{s.PackageName}, {s.PackageVersion}").OrderBy(s => s).ToList(),
+                                0);
 
-                        foreach (var resolvedReference in result.ResolvedReferences)
+                        if (result.Succeeded)
                         {
-                            context.Publish(new PackageAdded(resolvedReference, context.Command));
+                            foreach (var line in logMessage.FormatAsPlainTextLines())
+                            {
+                                operation.Info(line);
+                            }
+
+                            kernel?.RegisterResolvedPackageReferences(result.ResolvedReferences);
+                            foreach (var resolvedReference in result.ResolvedReferences)
+                            {
+                                context.Publish(new PackageAdded(resolvedReference, context.Command));
+                            }
+                            CreateOrUpdateDisplayValue(context, installPackagesPropertyName, resultMessage);
                         }
-                        CreateOrUpdateDisplayValue(context, installPackagesPropertyName, resultMessage);
-                    }
-                    else
-                    {
-                        var errors = $"{string.Join(Environment.NewLine, result.Errors)}";
-                        CreateOrUpdateDisplayValue(context, installPackagesPropertyName, resultMessage);
-                        context.Fail(message: errors);
-                    }
+                        else
+                        {
+                            operation.Info($"failed: {operation.Info(installMessage.FormatAsPlainText())}");
+
+                            var errors = $"{string.Join(Environment.NewLine, result.Errors)}";
+                            CreateOrUpdateDisplayValue(context, installPackagesPropertyName, resultMessage);
+                            context.Fail(message: errors);
+                        }
+                    };
                 };
-
                 await invocationContext.HandlingKernel.SendAsync(new AnonymousKernelCommand(restore));
             };
         }
