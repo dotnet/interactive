@@ -6,9 +6,15 @@ import * as contracts from "../src/common/interfaces/contracts";
 import { CompositeKernel } from "../src/common/interactive/compositeKernel";
 import { Kernel } from "../src/common/interactive/kernel";
 import { findEventFromKernel } from "./testSupport";
+import { Logger } from "../src/common/logger";
 
 
 describe("compositeKernel", () => {
+
+    before(() => {
+        Logger.configure("test", () => { });
+    });
+
     it("can have child kernels", () => {
         const kernel = new CompositeKernel("composite-kernel");
         kernel.add(new Kernel("javascript"));

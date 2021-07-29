@@ -5,8 +5,14 @@ import { expect } from "chai";
 import { describe } from "mocha";
 import * as contracts from "../src/common/interfaces/contracts";
 import { JavascriptKernel } from "../src/common/interactive/javascriptKernel";
+import { Logger } from "../src/common/logger";
 
 describe("javascriptKernel", () => {
+
+    before(() => {
+        Logger.configure("test", () => { });
+    });
+
     it("can handle SubmitCode", async () => {
         let events: contracts.KernelEventEnvelope[] = [];
         const kernel = new JavascriptKernel();

@@ -9,6 +9,7 @@ import * as contracts from "../src/common/interfaces/contracts";
 import { IKernelCommandInvocation, Kernel } from "../src/common/interactive/kernel";
 import { attachKernelToTransport } from "../src/dotnet-interactive/kernel-factory";
 import { KernelInvocationContext } from "../src/common/interactive/kernelInvocationContext";
+import { Logger } from "../src/common/logger";
 
 
 interface CustomCommand extends contracts.KernelCommand {
@@ -20,6 +21,11 @@ interface CustomCommand2 extends contracts.KernelCommand {
 }
 
 describe("dotnet-interactive", () => {
+
+    before(() => {
+        Logger.configure("test", () => { });
+    });
+
     describe("langauge kernel", () => {
         afterEach(() => fetchMock.restore());
 

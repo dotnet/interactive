@@ -5,6 +5,7 @@ import { expect } from "chai";
 import { describe } from "mocha";
 import * as contracts from "../src/common/interfaces/contracts";
 import { IKernelCommandInvocation, Kernel } from "../src/common/interactive/kernel";
+import { Logger } from "../src/common/logger";
 
 interface CustomCommand1 extends contracts.KernelCommand {
     data: string
@@ -15,6 +16,11 @@ interface CustomCommand2 extends contracts.KernelCommand {
 }
 
 describe("dotnet-interactive", () => {
+
+    before(() => {
+        Logger.configure("test", () => { });
+    });
+
     let commandType1: contracts.KernelCommandType = <contracts.KernelCommandType>"CustomCommand1";
     let commandType2: contracts.KernelCommandType = <contracts.KernelCommandType>"CustomCommand2";
 
