@@ -3,7 +3,7 @@
   "patterns": [
     {
       "begin": "^#!cs(harp)?\\s+$",
-      "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh|sql(-.+)?|kusto(-.+)?)\\s+$)",
+      "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh|sql(-.+)?|kql(-.+)?)\\s+$)",
       "name": "language.switch.csharp",
       "patterns": [
         {
@@ -13,7 +13,7 @@
     },
     {
       "begin": "^#!fs(harp)?\\s+$",
-      "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh|sql(-.+)?|kusto(-.+)?)\\s+$)",
+      "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh|sql(-.+)?|kql(-.+)?)\\s+$)",
       "name": "language.switch.fsharp",
       "patterns": [
         {
@@ -23,7 +23,7 @@
     },
     {
       "begin": "^#!html\\s+$",
-      "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh|sql(-.+)?|kusto(-.+)?)\\s+$)",
+      "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh|sql(-.+)?|kql(-.+)?)\\s+$)",
       "name": "language.switch.html",
       "patterns": [
         {
@@ -33,7 +33,7 @@
     },
     {
       "begin": "^#!(javascript|js)\\s+$",
-      "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh|sql(-.+)?|kusto(-.+)?)\\s+$)",
+      "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh|sql(-.+)?|kql(-.+)?)\\s+$)",
       "name": "language.switch.javascript",
       "patterns": [
         {
@@ -43,7 +43,7 @@
     },
     {
       "begin": "^#!(markdown|md)\\s+$",
-      "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh|sql(-.+)?|kusto(-.+)?)\\s+$)",
+      "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh|sql(-.+)?|kql(-.+)?)\\s+$)",
       "name": "language.switch.markdown",
       "patterns": [
         {
@@ -53,7 +53,7 @@
     },
     {
       "begin": "^#!(powershell|pwsh)\\s+$",
-      "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh|sql(-.+)?|kusto(-.+)?)\\s+$)",
+      "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh|sql(-.+)?|kql(-.+)?)\\s+$)",
       "name": "language.switch.powershell",
       "patterns": [
         {
@@ -63,7 +63,7 @@
     },
     {
       "begin": "^#!sql(-.+)?\\s+$",
-      "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh|sql(-.+)?|kusto(-.+)?)\\s+$)",
+      "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh|sql(-.+)?|kql(-.+)?)\\s+$)",
       "name": "language.switch.sql",
       "patterns": [
         {
@@ -72,12 +72,12 @@
       ]
     },
     {
-      "begin": "^#!kusto(-.+)?\\s+$",
-      "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh|sql(-.+)?|kusto(-.+)?)\\s+$)",
-      "name": "language.switch.kusto",
+      "begin": "^#!kql(-.+)?\\s+$",
+      "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh|sql(-.+)?|kql(-.+)?)\\s+$)",
+      "name": "language.switch.kql",
       "patterns": [
         {
-          "include": "source.dotnet-interactive.kusto"
+          "include": "source.dotnet-interactive.kql"
         }
       ]
     }
