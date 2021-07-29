@@ -235,12 +235,7 @@ export async function activate(context: vscode.ExtensionContext) {
     diagnosticsChannel.appendLine(`Extension started for VS Code ${hostVersionSuffix}.`);
     const languageServiceDelay = config.get<number>('languageServiceDelay') || 500; // fall back to something reasonable
 
-    const preloads: vscode.Uri[] = [];
-
-    const kernelPreloads = versionSpecificFunctions.getPreloads(context.extensionPath);
-    if (kernelPreloads) {
-        preloads.push(kernelPreloads);
-    }
+    const preloads = versionSpecificFunctions.getPreloads(context.extensionPath);
 
     registerWithVsCode(context, clientMapper, diagnosticsChannel, clientMapperConfig.createErrorOutput, ...preloads);
     registerFileCommands(context, clientMapper);

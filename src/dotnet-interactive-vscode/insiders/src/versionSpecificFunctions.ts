@@ -18,11 +18,26 @@ import { ErrorOutputCreator } from './common/interactiveClient';
 import fetch from 'node-fetch';
 import * as fs from 'fs';
 
-export function getPreloads(extensionPath: string): vscode.Uri | undefined {
-    const newApiBootstrapperUri = vscode.Uri.file(path.join(extensionPath, 'resources', 'kernelApiBootstrapper.js'));
-    if (!fs.existsSync(newApiBootstrapperUri.fsPath)) {
-        throw new Error(`Unable to find new bootstrapper API expected at '${newApiBootstrapperUri.fsPath}'.`);
+export function getPreloads(extensionPath: string): vscode.Uri[] {
+    const preloads: vscode.Uri[] = [];
+    const errors: string[] = [];
+    const apiFiles: string[] = [
+        //'kernelApiBootstrapper.js',
+        'kernelHttpApiBootstrapper.js'];
+
+    for (const apiFile of apiFiles) {
+        const apiFileUri = vscode.Uri.file(path.join(extensionPath, 'resources', apiFile));
+        if (fs.existsSync(apiFileUri.fsPath)) {
+            preloads.push(apiFileUri);
+        } else {
+            errors.push(`Unable to find API file expected at  ${apiFileUri.fsPath}`);
+        }
     }
 
-    return newApiBootstrapperUri;
+    if (errors.length > 0) {
+        const error = errors.join("\n");
+        throw new Error(error);
+    }
+
+    return preloads;
 }
