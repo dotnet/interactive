@@ -91,8 +91,9 @@ describe('Notebook tests', () => {
         const token = '123';
         const code = `
 Console.WriteLine(1);
-Console.WriteLine(1);
-Console.WriteLine(1);
+Console.WriteLine(2);
+Guid.NewGuid().Display();
+Console.WriteLine(3);
 `;
         const config = createKernelTransportConfig(async (_notebookPath) => new TestKernelTransport({
             'SubmitCode': [
@@ -137,6 +138,19 @@ Console.WriteLine(1);
                     token
                 },
                 {
+                    eventType: DisplayedValueProducedType,
+                    event: {
+                        valueId: null,
+                        formattedValues: [
+                            {
+                                mimeType: 'text/html',
+                                value: '<div></div>'
+                            }
+                        ]
+                    },
+                    token
+                },
+                {
                     eventType: StandardOutputValueProducedType,
                     event: {
                         valueId: null,
@@ -168,6 +182,7 @@ Console.WriteLine(1);
                     {
                         mime: 'text/plain',
                         decodedData: '1\r\n',
+                        stream: "stdout"
                     }
                 ],
             },
@@ -177,6 +192,7 @@ Console.WriteLine(1);
                     {
                         mime: 'text/plain',
                         decodedData: '2\r\n',
+                        stream: "stdout"
                     }
                 ]
             },
@@ -184,8 +200,18 @@ Console.WriteLine(1);
                 id: '3',
                 items: [
                     {
+                        mime: 'text/html',
+                        decodedData: '<div></div>'
+                    }
+                ]
+            },
+            {
+                id: '4',
+                items: [
+                    {
                         mime: 'text/plain',
                         decodedData: '3\r\n',
+                        stream: "stdout"
                     }
                 ]
             }
