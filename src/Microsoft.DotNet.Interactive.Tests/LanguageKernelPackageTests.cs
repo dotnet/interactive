@@ -1096,5 +1096,55 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
                 .Should()
                 .ContainSingle(p => p.PackageName == "Newtonsoft.Json");
         }
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_r_nuget_should_display_only_requested_packages(Language defaultLanguageKernel)
+        {
+            var kernel = CreateCompositeKernel(defaultLanguageKernel);
+
+            var code = @"
+#r ""nuget:Google.Protobuf""
+#r ""nuget:Microsoft.ML.OnnxTransformer,1.4.0""
+";
+
+            var command = new SubmitCode(code);
+
+            var result = await kernel.SendAsync(command);
+
+            using var events = result.KernelEvents.ToSubscribedList();
+
+            using var _ = new AssertionScope();
+
+            var expectedDisplayed = new[]
+            {
+                "Google.Protobuf, 3.17.3",
+                "Microsoft.ML.OnnxTransformer, 1.4.0"
+            };
+
+            var notExpectedDisplayed = new[]
+            {
+                "Microsoft.ML.KMeansClustering",
+                "Microsoft.ML.PCA",
+                "Microsoft.ML.StandardTrainers",
+                "Microsoft.ML.Transforms",
+                "Microsoft.ML.CpuMath",
+                "Microsoft.ML.DataView",
+                "Microsoft.ML.OnnxRuntime",
+                "Newtonsoft.Json",
+                "System.CodeDom"
+            };
+
+            events.OfType<DisplayedValueUpdated>()
+                  .Where(v => v.Value is InstallPackagesMessage)
+                  .Last().Value
+                  .As<InstallPackagesMessage>()
+                  .InstalledPackages
+                  .Aggregate((s, acc) => acc + " & " + s)
+                  .Should()
+                  .ContainAll(expectedDisplayed)
+                  .And
+                  .NotContainAny(notExpectedDisplayed);
+        }
     }
 }
