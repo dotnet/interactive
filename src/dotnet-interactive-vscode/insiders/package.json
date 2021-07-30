@@ -252,6 +252,13 @@
           "SQL (.NET Interactive)"
         ],
         "configuration": "./syntaxes/sql.language-configuration.json"
+      },
+      {
+        "id": "dotnet-interactive.kql",
+        "aliases": [
+          "Kusto Query Language (KQL) (.NET Interactive)"
+        ],
+        "configuration": "./syntaxes/kql.language-configuration.json"
       }
     ],
     "grammars": [
@@ -266,7 +273,8 @@
           "language.switch.javascript": "dotnet-interactive.javascript",
           "language.switch.markdown": "dotnet-interactive.markdown",
           "language.switch.powershell": "dotnet-interactive.pwsh",
-          "language.switch.sql": "dotnet-interactive.sql"
+          "language.switch.sql": "dotnet-interactive.sql",
+          "language.switch.kql": "dotnet-interactive.kql"
         }
       },
       {
@@ -280,7 +288,8 @@
           "language.switch.javascript": "dotnet-interactive.javascript",
           "language.switch.markdown": "dotnet-interactive.markdown",
           "language.switch.powershell": "dotnet-interactive.pwsh",
-          "language.switch.sql": "dotnet-interactive.sql"
+          "language.switch.sql": "dotnet-interactive.sql",
+          "language.switch.kql": "dotnet-interactive.kql"
         }
       },
       {
@@ -294,7 +303,8 @@
           "language.switch.javascript": "dotnet-interactive.javascript",
           "language.switch.markdown": "dotnet-interactive.markdown",
           "language.switch.powershell": "dotnet-interactive.pwsh",
-          "language.switch.sql": "dotnet-interactive.sql"
+          "language.switch.sql": "dotnet-interactive.sql",
+          "language.switch.kql": "dotnet-interactive.kql"
         }
       },
       {
@@ -308,7 +318,8 @@
           "language.switch.javascript": "dotnet-interactive.javascript",
           "language.switch.markdown": "dotnet-interactive.markdown",
           "language.switch.powershell": "dotnet-interactive.pwsh",
-          "language.switch.sql": "dotnet-interactive.sql"
+          "language.switch.sql": "dotnet-interactive.sql",
+          "language.switch.kql": "dotnet-interactive.kql"
         }
       },
       {
@@ -322,7 +333,8 @@
           "language.switch.javascript": "dotnet-interactive.javascript",
           "language.switch.markdown": "dotnet-interactive.markdown",
           "language.switch.powershell": "dotnet-interactive.pwsh",
-          "language.switch.sql": "dotnet-interactive.sql"
+          "language.switch.sql": "dotnet-interactive.sql",
+          "language.switch.kql": "dotnet-interactive.kql"
         }
       },
       {
@@ -336,7 +348,8 @@
           "language.switch.javascript": "dotnet-interactive.javascript",
           "language.switch.markdown": "dotnet-interactive.markdown",
           "language.switch.powershell": "dotnet-interactive.pwsh",
-          "language.switch.sql": "dotnet-interactive.sql"
+          "language.switch.sql": "dotnet-interactive.sql",
+          "language.switch.kql": "dotnet-interactive.kql"
         }
       },
       {
@@ -350,7 +363,8 @@
           "language.switch.javascript": "dotnet-interactive.javascript",
           "language.switch.markdown": "dotnet-interactive.markdown",
           "language.switch.powershell": "dotnet-interactive.pwsh",
-          "language.switch.sql": "dotnet-interactive.sql"
+          "language.switch.sql": "dotnet-interactive.sql",
+          "language.switch.kql": "dotnet-interactive.kql"
         }
       },
       {
@@ -364,7 +378,8 @@
           "language.switch.javascript": "dotnet-interactive.javascript",
           "language.switch.markdown": "dotnet-interactive.markdown",
           "language.switch.powershell": "dotnet-interactive.pwsh",
-          "language.switch.sql": "dotnet-interactive.sql"
+          "language.switch.sql": "dotnet-interactive.sql",
+          "language.switch.kql": "dotnet-interactive.kql"
         }
       },
       {
@@ -378,7 +393,23 @@
           "language.switch.javascript": "dotnet-interactive.javascript",
           "language.switch.markdown": "dotnet-interactive.markdown",
           "language.switch.powershell": "dotnet-interactive.pwsh",
-          "language.switch.sql": "dotnet-interactive.sql"
+          "language.switch.sql": "dotnet-interactive.sql",
+          "language.switch.kql": "dotnet-interactive.kql"
+        }
+      },
+      {
+        "language": "dotnet-interactive.kql",
+        "scopeName": "source.dotnet-interactive.kql",
+        "path": "./syntaxes/source.dotnet-interactive.kql.tmGrammar.json",
+        "embeddedLanguages": {
+          "language.switch.csharp": "dotnet-interactive.csharp",
+          "language.switch.fsharp": "dotnet-interactive.fsharp",
+          "language.switch.html": "dotnet-interactive.html",
+          "language.switch.javascript": "dotnet-interactive.javascript",
+          "language.switch.markdown": "dotnet-interactive.markdown",
+          "language.switch.powershell": "dotnet-interactive.pwsh",
+          "language.switch.sql": "dotnet-interactive.sql",
+          "language.switch.kql": "dotnet-interactive.kql"
         }
       }
     ]
