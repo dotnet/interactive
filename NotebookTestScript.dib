@@ -6,7 +6,7 @@ You'll notice a counter that appears and starts incrementing.  After a second or
 
 ```
 5
-Error: Comamnd cancelled
+Comamnd cancelled
 ```
 
 #!csharp
@@ -65,7 +65,7 @@ display(new { Name = "Developer", Salary = 42 }, "application/json");
 # Execute the next cell and verify the following error appears:
 
 ```
-Error: input.fsx (1,11)-(1,12) parse error Unexpected token '+' or incomplete expression
+input.fsx (1,11)-(1,12) parse error Unexpected token '+' or incomplete expression
 ```
 
 #!fsharp
@@ -154,56 +154,24 @@ let x = 1 +
 
 #!markdown
 
-# Support ANSI Codes
+# Complex console output
 
 #!markdown
 
-The output should look like:
+The output shoudl look like:
 
-<span style="color: rgb(0, 255, 0)">this should be green</span>
+<span style="color:#00FF00">this should be green</span>
+
+this is white
+
+<span style="color:#FF0000">this should be red</span>
 
 #!csharp
 
 Console.Write("\x1b[38;2;0;255;0m");
 Console.WriteLine("this should be green");
 Console.Write("\x1b[0m");
-
-#!markdown
-
-The output should look like:
-
-<span style="color: rgb(0, 255, 0)">this should also be green</span>
-
-#!csharp
-
-Console.Write("\x1b[38;2;0;255;0mthis should also be green\x1b[0m");
-
-#!markdown
-
-The output should look like:
-
-<span style="color: rgb(0, 255, 0)">more green in stderr</span>
-
-#!csharp
-
-Console.Error.Write("\x1b[38;2;0;255;0m"); // set text color to green
-Console.Error.WriteLine("more green in stderr");
-Console.Error.Write("\x1b[0m"); // reset colors
-
-#!markdown
-
-The output shoudl look like:
-
-12
-
-text
-
-34
-
-#!csharp
-
-Console.Write("1");
-Console.WriteLine("2");
-"text".Display();
-Console.Write("3");
-Console.WriteLine("4");
+"this is white".Display();
+Console.Error.Write("\x1b[38;2;255;0;0m");
+Console.Error.WriteLine("this should be red");
+Console.Error.Write("\x1b[0m");
