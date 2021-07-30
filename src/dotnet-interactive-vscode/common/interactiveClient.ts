@@ -443,7 +443,7 @@ export class InteractiveClient {
                 const outputItem: vscodeLike.NotebookCellOutputItem = {
                     mime: formatted.mimeType,
                     data
-                }
+                };
                 if (stream) {
                     outputItem.stream = stream;
                 }
