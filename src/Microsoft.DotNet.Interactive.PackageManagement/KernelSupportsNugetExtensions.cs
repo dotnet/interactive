@@ -230,12 +230,6 @@ namespace Microsoft.DotNet.Interactive
                             kernel.ResolvedPackageReferences.Where(r => requestedPackages.Contains(r.PackageName, StringComparer.OrdinalIgnoreCase)).Where(currentPackageReferences.Add).Select(s => $"{s.PackageName}, {s.PackageVersion}").OrderBy(s => s).ToList(),
                             0);
 
-                    var logMessage = new InstallPackagesMessage(
-                            kernel.RestoreSources.OrderBy(s => s).ToList(),
-                            requestedPackages,
-                            kernel.ResolvedPackageReferences.Select(s => $"{s.PackageName}, {s.PackageVersion}").OrderBy(s => s).ToList(),
-                            0);
-
                     if (result.Succeeded)
                     {
                         kernel?.RegisterResolvedPackageReferences(result.ResolvedReferences);
