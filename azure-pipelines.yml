@@ -328,8 +328,12 @@ stages:
       jobs:
       - job: Dockerfile_official_image
         pool:
-          name: NetCorePublic-Pool
-          queue: BuildPool.Ubuntu.1604.amd64.Open
+          ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+            name: NetCorePublic-Pool
+            queue: BuildPool.Ubuntu.1604.amd64.Open
+          ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+            name: NetCoreInternal-Pool
+            queue: BuildPool.Ubuntu.1604.amd64
         steps:
         - checkout: self
           clean: true
@@ -345,8 +349,12 @@ stages:
       jobs:
       - job: Dockerfile_Main
         pool:
-          name: NetCorePublic-Pool
-          queue: BuildPool.Ubuntu.1604.amd64.Open
+          ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+            name: NetCorePublic-Pool
+            queue: BuildPool.Ubuntu.1604.amd64.Open
+          ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+            name: NetCoreInternal-Pool
+            queue: BuildPool.Ubuntu.1604.amd64
         steps:
         - checkout: self
           clean: true
@@ -362,8 +370,12 @@ stages:
       jobs:
       - job: Dockerfile_Binder_Dependency
         pool:
-          name: NetCorePublic-Pool
-          queue: BuildPool.Ubuntu.1604.amd64.Open
+          ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+            name: NetCorePublic-Pool
+            queue: BuildPool.Ubuntu.1604.amd64.Open
+          ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+            name: NetCoreInternal-Pool
+            queue: BuildPool.Ubuntu.1604.amd64
         steps:
         - checkout: self
           clean: true
@@ -381,8 +393,12 @@ stages:
         dependsOn: Windows_NT
         condition: and(succeeded(), ne(variables['SkipTests'], 'true'))
         pool:
-          name: NetCorePublic-Pool
-          queue: BuildPool.Ubuntu.1604.amd64.Open
+          ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+            name: NetCorePublic-Pool
+            queue: BuildPool.Ubuntu.1604.amd64.Open
+          ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+            name: NetCoreInternal-Pool
+            queue: BuildPool.Ubuntu.1604.amd64
         variables:
         - name: DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT
           value: 1
