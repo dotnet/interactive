@@ -16,6 +16,7 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Microsoft.DotNet.Interactive.Utility;
 using Newtonsoft.Json;
 using Recipes;
 using Xunit;
@@ -1096,6 +1097,7 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
                 .Should()
                 .ContainSingle(p => p.PackageName == "Newtonsoft.Json");
         }
+
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
