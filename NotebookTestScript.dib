@@ -156,18 +156,54 @@ let x = 1 +
 
 # Support ANSI Codes
 
+#!markdown
+
+The output should look like:
+
+<span style="color: rgb(0, 255, 0)">this should be green</span>
+
 #!csharp
 
 Console.Write("\x1b[38;2;0;255;0m");
 Console.WriteLine("this should be green");
 Console.Write("\x1b[0m");
 
+#!markdown
+
+The output should look like:
+
+<span style="color: rgb(0, 255, 0)">this should also be green</span>
+
 #!csharp
 
-Console.Write("\x1b[38;2;0;255;0mthis should be green\x1b[0m");
+Console.Write("\x1b[38;2;0;255;0mthis should also be green\x1b[0m");
+
+#!markdown
+
+The output should look like:
+
+<span style="color: rgb(0, 255, 0)">more green in stderr</span>
 
 #!csharp
 
 Console.Error.Write("\x1b[38;2;0;255;0m"); // set text color to green
 Console.Error.WriteLine("more green in stderr");
 Console.Error.Write("\x1b[0m"); // reset colors
+
+#!markdown
+
+The output shoudl look like:
+
+12
+
+text
+
+34
+
+#!csharp
+
+Console.Write("1");
+Console.WriteLine("2");
+"text".Display();
+Console.Write("3");
+Console.WriteLine("4");
