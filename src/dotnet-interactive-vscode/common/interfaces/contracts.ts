@@ -388,10 +388,14 @@ export interface Disposable {
 export interface DisposableSubscription extends Disposable {
 }
 
-export interface KernelTransport extends Disposable {
-    subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;
-    setCommandHandler(handler: KernelCommandEnvelopeHandler): void;
-    submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string): Promise<void>;
-    publishKernelEvent(eventEnvelope: KernelEventEnvelope): Promise<void>;
+export interface KernelTransport extends Transport {
     waitForReady(): Promise<void>;
 }
+
+export interface Transport extends Disposable {
+    subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;
+    setCommandHandler(handler: KernelCommandEnvelopeHandler): void;
+    submitCommand(commandEnvelope: KernelCommandEnvelope): Promise<void>;
+    publishKernelEvent(eventEnvelope: KernelEventEnvelope): Promise<void>;
+}
+

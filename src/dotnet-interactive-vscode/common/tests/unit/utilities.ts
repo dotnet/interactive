@@ -36,6 +36,10 @@ export function createKernelTransportConfig(kernelTransportCreator: (notebookUri
 
     const encoder = new TextEncoder();
 
+    function configureKernel() {
+        // noop
+    }
+
     const defaultClientMapperConfig = {
         kernelTransportCreator: defaultKernelTransportCreator,
         createErrorOutput: (message: string, outputId?: string) => {
@@ -50,11 +54,12 @@ export function createKernelTransportConfig(kernelTransportCreator: (notebookUri
             return cellOutput;
         },
         diagnosticChannel: undefined,
+        configureKernel,
     };
 
     return {
         ...defaultClientMapperConfig,
-        kernelTransportCreator
+        kernelTransportCreator,
     };
 }
 

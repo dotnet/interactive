@@ -6,7 +6,6 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { VSCodeKernel } from './vscodeKernel';
 import * as vscodeLike from '../interfaces/vscode-like';
 import { ClientMapper } from '../clientMapper';
 
@@ -14,7 +13,7 @@ import { StdioKernelTransport } from '../stdioKernelTransport';
 import { registerLanguageProviders } from './languageProvider';
 import { registerAcquisitionCommands, registerKernelCommands, registerFileCommands } from './commands';
 
-import { getSimpleLanguage, isDotnetInteractiveLanguage, isJupyterNotebookViewType, jupyterViewType } from '../interactiveNotebook';
+import { getNotebookSpecificLanguage, getSimpleLanguage, isDotnetInteractiveLanguage, isJupyterNotebookViewType, languageToCellKind } from '../interactiveNotebook';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces';
 
 import { createOutput, executeSafe, getWorkingDirectoryForNotebook, isDotNetUpToDate, processArguments } from '../utilities';
@@ -28,6 +27,8 @@ import { ErrorOutputCreator } from '../../common/interactiveClient';
 import { isInsidersBuild, isStableBuild } from './vscodeUtilities';
 import { getDotNetMetadata, withDotNetCellMetadata } from '../ipynbUtilities';
 import fetch from 'node-fetch';
+import { CompositeKernel } from '../interactive/compositeKernel';
+import { Logger, LogLevel } from '../logger';
 
 export const KernelIdForJupyter = 'dotnet-interactive-for-jupyter';
 
@@ -56,10 +57,23 @@ export class CachedDotNetPathManager {
 export const DotNetPathManager = new CachedDotNetPathManager();
 
 export async function activate(context: vscode.ExtensionContext) {
+
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
     const minDotNetSdkVersion = config.get<string>('minimumDotNetSdkVersion') || '5.0';
     const diagnosticsChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET Interactive : diagnostics'));
+    const loggerChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET Interactive : logger'));
     DotNetPathManager.setOutputChannelAdapter(diagnosticsChannel);
+
+    Logger.configure('extension host', logEntry => {
+        const config = vscode.workspace.getConfiguration('dotnet-interactive');
+        const loggerLevelString = config.get<string>('logLevel') || LogLevel[LogLevel.Error];
+        const loggerLevelKey = loggerLevelString as keyof typeof LogLevel;
+        const logLevel = LogLevel[loggerLevelKey];
+        if (logEntry.logLevel >= logLevel) {
+            const messageLogLevel = LogLevel[logEntry.logLevel];
+            loggerChannel.appendLine(`[${messageLogLevel}] ${logEntry.source}: ${logEntry.message}`);
+        }
+    });
 
     // pause if an sdk installation is currently running
     await waitForSdkInstall(minDotNetSdkVersion);
@@ -103,8 +117,6 @@ export async function activate(context: vscode.ExtensionContext) {
             clientMapper.closeClient(notebookUri, false);
         });
 
-        var kernel = new VSCodeKernel(transport, notebookUri);
-        transport.setCommandHandler(commandEnvelope => kernel.send(commandEnvelope));
         await transport.waitForReady();
 
         let localUriString = `http://localhost:${transport.httpPort}`;
@@ -132,11 +144,53 @@ export async function activate(context: vscode.ExtensionContext) {
         return transport;
     }
 
+    function configureKernel(compositeKernel: CompositeKernel, notebookUri: vscodeLike.Uri) {
+        compositeKernel.registerCommandHandler({
+            commandType: contracts.GetInputType, handle: async (commandInvocation) => {
+                const getInput = <contracts.GetInput>commandInvocation.commandEnvelope.command;
+                const prompt = getInput.prompt;
+                const password = getInput.isPassword;
+                const value = await vscode.window.showInputBox({ prompt, password });
+                commandInvocation.context.publish({
+                    eventType: contracts.InputProducedType,
+                    event: {
+                        value
+                    },
+                    command: commandInvocation.commandEnvelope,
+                });
+            }
+        });
+
+        compositeKernel.registerCommandHandler({
+            commandType: contracts.SendEditableCodeType, handle: async commandInvocation => {
+                const addCell = <contracts.SendEditableCode>commandInvocation.commandEnvelope.command;
+                const language = addCell.language;
+                const contents = addCell.code;
+                const notebookDocument = vscode.workspace.notebookDocuments.find(notebook => notebook.uri.toString() === notebookUri.toString());
+                if (notebookDocument) {
+                    const edit = new vscode.WorkspaceEdit();
+                    const range = new vscode.NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount);
+                    const cellKind = languageToCellKind(language);
+                    const notebookCellLanguage = getNotebookSpecificLanguage(language);
+                    const newCell = new vscode.NotebookCellData(cellKind, contents, notebookCellLanguage);
+                    edit.replaceNotebookCells(notebookDocument.uri, range, [newCell]);
+                    const succeeded = await vscode.workspace.applyEdit(edit);
+                    if (!succeeded) {
+                        throw new Error(`Unable to add cell to notebook '${notebookUri.toString()}'.`);
+                    }
+                } else {
+                    throw new Error(`Unable to get notebook document for URI '${notebookUri.toString()}'.`);
+                }
+            }
+        });
+    }
+
     // register with VS Code
     const clientMapperConfig = {
         kernelTransportCreator,
         createErrorOutput,
         diagnosticsChannel,
+        configureKernel,
     };
     const clientMapper = new ClientMapper(clientMapperConfig);
 
@@ -181,13 +235,9 @@ export async function activate(context: vscode.ExtensionContext) {
     diagnosticsChannel.appendLine(`Extension started for VS Code ${hostVersionSuffix}.`);
     const languageServiceDelay = config.get<number>('languageServiceDelay') || 500; // fall back to something reasonable
 
-    // notebook kernels
-    const apiBootstrapperUri = vscode.Uri.file(path.join(context.extensionPath, 'resources', 'kernelHttpApiBootstrapper.js'));
-    if (!fs.existsSync(apiBootstrapperUri.fsPath)) {
-        throw new Error(`Unable to find bootstrapper API expected at '${apiBootstrapperUri.fsPath}'.`);
-    }
+    const preloads = versionSpecificFunctions.getPreloads(context.extensionPath);
 
-    registerWithVsCode(context, clientMapper, diagnosticsChannel, clientMapperConfig.createErrorOutput, apiBootstrapperUri);
+    registerWithVsCode(context, clientMapper, diagnosticsChannel, clientMapperConfig.createErrorOutput, ...preloads);
     registerFileCommands(context, clientMapper);
 
     context.subscriptions.push(vscode.workspace.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));

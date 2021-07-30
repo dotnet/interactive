@@ -394,3 +394,5 @@ src/Microsoft.DotNet.Interactive.SandDance.js/dist/
 src/Microsoft.DotNet.Interactive.Mermaid.js/dist/
 
 src/Microsoft.DotNet.Interactive.ExtensionLab.Tests/DataFrameKernelExtensionTests.it_registers_formatters.received.json
+
+src/dotnet-interactive-vscode/insiders/resources/kernelApiBootstrapper.js

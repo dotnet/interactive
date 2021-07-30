@@ -1,7 +1,6 @@
 ﻿<ProjectConfiguration>
   <Settings>
     <AdditionalFilesToIncludeForProject>
-      <Value>..\Microsoft.DotNet.Interactive.Js\src\dotnet-interactive\contracts.ts</Value>
       <Value>..\dotnet-interactive-vscode\common\interfaces\contracts.ts</Value>
     </AdditionalFilesToIncludeForProject>
     <DefaultTestTimeout>25000</DefaultTestTimeout>

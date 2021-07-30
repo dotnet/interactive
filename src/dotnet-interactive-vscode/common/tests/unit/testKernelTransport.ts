@@ -1,45 +1,45 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelCommand, KernelCommandType, KernelEventType, KernelEventEnvelopeObserver, DisposableSubscription, KernelEvent, KernelEventEnvelope, KernelTransport, KernelCommandEnvelopeHandler } from '../../interfaces/contracts';
+import * as contracts from '../../interfaces/contracts';
 
 // Replays all events given to it
-export class TestKernelTransport implements KernelTransport {
-    private theObserver: KernelEventEnvelopeObserver | undefined;
+export class TestKernelTransport implements contracts.KernelTransport {
+    private theObserver: contracts.KernelEventEnvelopeObserver | undefined;
     private fakedCommandCounter: Map<string, number> = new Map<string, number>();
 
-    constructor(readonly fakedEventEnvelopes: { [key: string]: { eventType: KernelEventType, event: KernelEvent, token: string }[] }) {
+    constructor(readonly fakedEventEnvelopes: { [key: string]: { eventType: contracts.KernelEventType, event: contracts.KernelEvent, token: string }[] }) {
     }
 
-    subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription {
+    subscribeToKernelEvents(observer: contracts.KernelEventEnvelopeObserver): contracts.DisposableSubscription {
         this.theObserver = observer;
         return {
             dispose: () => { }
         };
     }
 
-    setCommandHandler(handler: KernelCommandEnvelopeHandler) {
-        throw new Error("not supported");
+    setCommandHandler(handler: contracts.KernelCommandEnvelopeHandler) {
+
     }
 
-    async submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string): Promise<void> {
+    async submitCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         // find bare fake command events
-        let eventEnvelopesToReturn = this.fakedEventEnvelopes[commandType];
+        let eventEnvelopesToReturn = this.fakedEventEnvelopes[commandEnvelope.commandType];
         if (!eventEnvelopesToReturn) {
             // check for numbered variants
-            let counter = this.fakedCommandCounter.get(commandType);
+            let counter = this.fakedCommandCounter.get(commandEnvelope.commandType);
             if (!counter) {
                 // first encounter
                 counter = 1;
             }
 
             // and increment for next time
-            this.fakedCommandCounter.set(commandType, counter + 1);
+            this.fakedCommandCounter.set(commandEnvelope.commandType, counter + 1);
 
-            eventEnvelopesToReturn = this.fakedEventEnvelopes[`${commandType}#${counter}`];
+            eventEnvelopesToReturn = this.fakedEventEnvelopes[`${commandEnvelope.commandType}#${counter}`];
             if (!eventEnvelopesToReturn) {
                 // couldn't find numbered event names
-                throw new Error(`Unable to find events for command '${commandType}'.`);
+                throw new Error(`Unable to find events for command '${commandEnvelope.commandType}'.`);
             }
         }
 
@@ -49,16 +49,15 @@ export class TestKernelTransport implements KernelTransport {
                     eventType: envelope.eventType,
                     event: envelope.event,
                     command: {
-                        token: envelope.token,
-                        commandType,
-                        command
+                        ...commandEnvelope,
+                        token: envelope.token
                     }
                 });
             }
         }
     }
 
-    publishKernelEvent(eventEnvelope: KernelEventEnvelope): Promise<void> {
+    publishKernelEvent(eventEnvelope: contracts.KernelEventEnvelope): Promise<void> {
         throw new Error("Stdio channel doesn't currently support a back channel");
     }
 

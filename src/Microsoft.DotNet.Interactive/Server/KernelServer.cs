@@ -1,16 +1,16 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Commands;
+
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Server
 {
@@ -40,19 +40,32 @@ namespace Microsoft.DotNet.Interactive.Server
 
             _disposables.Add(_kernel.KernelEvents.Subscribe(async kernelEvent =>
             {
+                var frontEndKernelNames = new HashSet<string>();
+                if (_frontEndKernel != null)
+                {
+                    frontEndKernelNames.Add(_frontEndKernel.Name);
+                }
+
                 // if it came from front end, bail out
                 if (kernelEvent.Command.TargetKernelName is not null &&
-                    kernelEvent.Command.TargetKernelName == _frontEndKernel?.Name)
+                    frontEndKernelNames.Contains(kernelEvent.Command.TargetKernelName))
                 {
                     return;
                 }
 
                 if (kernelEvent is ReturnValueProduced { Value: DisplayedValue })
                 {
-                    return;
+                   return;
                 }
 
-                await SendAsync(kernelEvent, _cancellationTokenSource.Token);
+                try
+                {
+                    await SendAsync(kernelEvent, _cancellationTokenSource.Token);
+                }
+                catch
+                {
+
+                }
             }));
 
 
@@ -81,7 +94,17 @@ namespace Microsoft.DotNet.Interactive.Server
                     }
                     else if (commandOrEvent.Command is { })
                     {
-                        var _ = _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
+                        if (_frontEndKernel?.ExecutionContext is not null)
+                        {
+                            ExecutionContext.Run(_frontEndKernel.ExecutionContext, (c) =>
+                            {
+                                var _ = _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
+                            }, null);
+                        }                        
+                        else
+                        {
+                            var _ = _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
+                        }
                     }
                     else if (commandOrEvent.Event is { })
                     {

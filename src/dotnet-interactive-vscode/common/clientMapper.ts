@@ -4,11 +4,13 @@
 import { KernelTransport } from './interfaces/contracts';
 import { ErrorOutputCreator, InteractiveClient } from "./interactiveClient";
 import { ReportChannel, Uri } from "./interfaces/vscode-like";
+import { CompositeKernel } from './interactive/compositeKernel';
 
 export interface ClientMapperConfiguration {
     kernelTransportCreator: (notebookUri: Uri) => Promise<KernelTransport>,
     createErrorOutput: ErrorOutputCreator,
     diagnosticChannel?: ReportChannel,
+    configureKernel: (compositeKernel: CompositeKernel, notebookUri: Uri) => void,
 }
 
 export class ClientMapper {
@@ -57,6 +59,7 @@ export class ClientMapper {
                         createErrorOutput: this.config.createErrorOutput,
                     };
                     const client = new InteractiveClient(config);
+                    this.config.configureKernel(client.kernel, uri);
 
                     let onCreate = this.clientCreationCallbackMap.get(key);
                     if (onCreate) {

@@ -5,14 +5,21 @@ import * as vscode from 'vscode';
 import { ClientMapper } from './common/clientMapper';
 
 import * as contracts from './common/interfaces/contracts';
+import * as genericTransport from './common/interactive/genericTransport';
 import * as vscodeLike from './common/interfaces/vscode-like';
 import * as diagnostics from './common/vscode/diagnostics';
 import * as vscodeUtilities from './common/vscode/vscodeUtilities';
 import { getSimpleLanguage, isDotnetInteractiveLanguage, jupyterViewType, notebookCellLanguages } from './common/interactiveNotebook';
 import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, isDotNetNotebookMetadata, withDotNetKernelMetadata } from './common/ipynbUtilities';
-import { reshapeOutputValueForVsCode } from './common/interfaces/utilities';
+import { isKernelEventEnvelope, reshapeOutputValueForVsCode } from './common/interfaces/utilities';
 import { selectDotNetInteractiveKernelForJupyter } from './common/vscode/commands';
 import { ErrorOutputCreator } from './common/interactiveClient';
+import { ProxyKernel } from './common/interactive/proxyKernel';
+import { promises } from 'dns';
+import { JavascriptKernel } from './common/interactive/javascriptKernel';
+import { LogEntry, Logger } from './common/logger';
+import { OutputChannelAdapter } from './common/vscode/OutputChannelAdapter';
+import * as notebookMessageHandler from './common/notebookMessageHandler';
 
 const executionTasks: Map<string, vscode.NotebookCellExecution> = new Map();
 
@@ -85,10 +92,36 @@ export class DotNetNotebookKernel {
         this.disposables.forEach(d => d.dispose());
     }
 
+    private uriMessageHandlerMap: Map<string, notebookMessageHandler.MessageHandler> = new Map();
+
     private commonControllerInit(controller: vscode.NotebookController) {
         controller.supportedLanguages = notebookCellLanguages;
         this.disposables.push(controller.onDidReceiveMessage(e => {
             const documentUri = e.editor.document.uri;
+            const documentUriString = documentUri.toString();
+
+            if (e.message.envelope) {
+                let messageHandler = this.uriMessageHandlerMap.get(documentUriString);
+                if (messageHandler) {
+                    const envelope = <contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope><any>(e.message.envelope);
+                    if (messageHandler.waitingOnMessages) {
+                        let capturedMessageWaiter = messageHandler.waitingOnMessages;
+                        messageHandler.waitingOnMessages = null;
+                        capturedMessageWaiter.resolve(envelope);
+                    } else {
+                        messageHandler.envelopeQueue.push(envelope);
+                    }
+                }
+            }
+
+            switch (e.message.preloadCommand) {
+                case '#!connect':
+                    this.config.clientMapper.getOrAddClient(documentUri).then(() => {
+                        notebookMessageHandler.hashBangConnect(this.config.clientMapper, this.uriMessageHandlerMap, (arg) => controller.postMessage(arg), documentUri);
+                    });
+                    break;
+            }
+
             switch (e.message.command) {
                 case "getHttpApiEndpoint":
                     this.config.clientMapper.tryGetClient(documentUri).then(client => {
@@ -103,6 +136,10 @@ export class DotNetNotebookKernel {
                         }
                     });
                     break;
+            }
+
+            if (e.message.logEntry) {
+                Logger.default.write(<LogEntry>e.message.logEntry);
             }
         }));
         this.disposables.push(controller);
