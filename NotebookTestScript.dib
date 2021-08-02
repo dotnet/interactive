@@ -42,6 +42,8 @@ var x = 123;
 The value is 123.
 ```
 
+And the output below the next cell should display the same value.
+
 #!javascript
 
 const x = await interactive.csharp.getVariable("x");

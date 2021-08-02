@@ -22,6 +22,7 @@ export function getPreloads(extensionPath: string): vscode.Uri[] {
     const preloads: vscode.Uri[] = [];
     const errors: string[] = [];
     const apiFiles: string[] = [
+        //'kernelApiBootstrapper.js',
         'kernelHttpApiBootstrapper.js'];
 
     for (const apiFile of apiFiles) {
