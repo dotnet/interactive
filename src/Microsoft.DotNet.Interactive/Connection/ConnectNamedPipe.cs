@@ -28,12 +28,13 @@ namespace Microsoft.DotNet.Interactive.Connection
             clientStream.ReadMode = PipeTransmissionMode.Message;
 
 
-            var proxyKernel = CreateProxyKernel2(options, clientStream);
+            var proxyKernel = CreateProxyKernel(options, clientStream);
 
             return proxyKernel;
         }
 
-        private static ProxyKernel CreateProxyKernel2(NamedPipeConnectionOptions options, NamedPipeClientStream clientStream)
+        private static ProxyKernel CreateProxyKernel(NamedPipeConnectionOptions options,
+            NamedPipeClientStream clientStream)
         {
             var receiver = new KernelCommandAndEventPipeStreamReceiver(clientStream);
 

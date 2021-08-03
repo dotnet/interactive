@@ -328,7 +328,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             new JavaScriptKernel(),
                             new[] { "js" });
 
-                        services.AddKernel(kernel);
+                        services.AddKernel(kernel)
+                            .AddSingleton(new SignalRBackchannelKernelClient());
 
                         onServerStarted ??= () =>
                         {

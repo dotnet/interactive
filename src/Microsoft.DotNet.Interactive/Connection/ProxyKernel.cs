@@ -18,6 +18,7 @@ namespace Microsoft.DotNet.Interactive.Connection
         private readonly IKernelCommandAndEventReceiver _receiver;
         private readonly IKernelCommandAndEventSender _sender;
         private readonly CancellationTokenSource _cancellationTokenSource = new();
+        private ExecutionContext _executionContext;
 
         public ProxyKernel(string name, IKernelCommandAndEventReceiver receiver, IKernelCommandAndEventSender sender) : base(name)
         {
@@ -47,7 +48,17 @@ namespace Microsoft.DotNet.Interactive.Connection
 
                 if (d.Event is not null)
                 {
-                    PublishEvent(d.Event);
+                    if (_executionContext is { } ec)
+                    {
+                        ExecutionContext.Run(ec, _ =>
+                        {
+                            PublishEvent(d.Event);
+                        },null);
+                    }
+                    else
+                    {
+                        PublishEvent(d.Event);
+                    }
                 }
                 else if (d.Command is not null)
                 {
@@ -56,7 +67,11 @@ namespace Microsoft.DotNet.Interactive.Connection
                         var kernel = RootKernel;
                         var eventSubscription = RootKernel.KernelEvents
                             .Where(e => e.Command.GetToken() == d.Command.GetToken() && e.Command.GetType() == d.Command.GetType())
-                            .Subscribe(async e => await _sender.SendAsync(e, _cancellationTokenSource.Token));
+                            .Subscribe(async e =>
+                            {
+                                await _sender.SendAsync(e, _cancellationTokenSource.Token);
+                            });
+
                         var result = kernel.SendAsync(d.Command, _cancellationTokenSource.Token);
                         await result;
                         eventSubscription.Dispose();
@@ -75,6 +90,7 @@ namespace Microsoft.DotNet.Interactive.Connection
                     return;
             }
 
+            _executionContext = ExecutionContext.Capture();
             var kernelUri = KernelUri.Parse(command.TargetKernelName);
             var remoteTargetKernelName = kernelUri.GetRemoteKernelName();
             var localTargetKernelName = command.TargetKernelName;
@@ -90,6 +106,7 @@ namespace Microsoft.DotNet.Interactive.Connection
                         case CommandFailed _:
                         case CommandSucceeded _:
                             completionSource.TrySetResult(true);
+                            _executionContext = null;
                             break;
 
                     }

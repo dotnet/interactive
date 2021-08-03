@@ -30,6 +30,9 @@ namespace Microsoft.DotNet.Interactive.Http
             var receiver = new KernelCommandAndEventSignalRHubConnectionReceiver(connection);
             var sender = new KernelCommandAndEventSignalRHubConnectionSender(connection);
             var proxyKernel = new ProxyKernel(options.KernelName, receiver, sender);
+
+            var _ = proxyKernel.RunAsync();
+
             proxyKernel.RegisterForDisposal(receiver);
             proxyKernel.RegisterForDisposal(async () =>
             {
