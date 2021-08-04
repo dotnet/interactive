@@ -685,12 +685,13 @@ Formatter.Register<DataFrame>((df, writer) =>
 
             await kernel.SubmitCodeAsync(code);
 
-            events
-                .OfType<ErrorProduced>()
-                .Last()
-                .Value
-                .Should()
-                .Be("Microsoft.ML.AutoML version 0.16.1-preview cannot be added because version 0.16.0-preview was added previously.");
+            events.Should()
+                  .ContainSingle<CommandFailed>()
+                  .Which
+                  .Message
+                  .Should()
+                  .Be("Microsoft.ML.AutoML version 0.16.1-preview cannot be added because version 0.16.0-preview was added previously.");
+
         }
 
         [Theory]
@@ -717,12 +718,12 @@ Formatter.Register<DataFrame>((df, writer) =>
 
             await kernel.SubmitCodeAsync(code);
 
-            events
-                .OfType<ErrorProduced>()
-                .Last()
-                .Value
-                .Should()
-                .Be("Microsoft.ML.AutoML version 0.16.1-preview cannot be added because version 0.16.0-preview was added previously.");
+            events.Should()
+                  .ContainSingle<CommandFailed>()
+                  .Which
+                  .Message
+                  .Should()
+                  .Be("Microsoft.ML.AutoML version 0.16.1-preview cannot be added because version 0.16.0-preview was added previously.");
         }
 
         [Theory]
@@ -794,12 +795,12 @@ using NodaTime.Extensions;");
 #r ""nuget: Google.Protobuf, 3.10.1""
 ");
 
-            events
-                .OfType<ErrorProduced>()
-                .Last()
-                .Value
-                .Should()
-                .Be("Google.Protobuf version 3.10.1 cannot be added because version 3.10.0 was added previously.");
+            events.Should()
+                  .ContainSingle<CommandFailed>()
+                  .Which
+                  .Message
+                  .Should()
+                  .Be("Google.Protobuf version 3.10.1 cannot be added because version 3.10.0 was added previously.");
         }
 
         [Theory]
@@ -1077,9 +1078,9 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
 
             var command = new SubmitCode(code);
 
-            var result = await kernel.SendAsync(command);
+            using var events = kernel.KernelEvents.ToSubscribedList();
 
-            using var events = result.KernelEvents.ToSubscribedList();
+            var result = await kernel.SendAsync(command);
 
             using var _ = new AssertionScope();
 
@@ -1110,8 +1111,9 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
 ";
 
             var command = new SubmitCode(code);
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
             var result = await kernel.SendAsync(command);
-            using var events = result.KernelEvents.ToSubscribedList();
 
             using var _ = new AssertionScope();
 
@@ -1120,30 +1122,13 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
                 "Microsoft.ML.OnnxTransformer, 1.4.0"
             };
 
-            var notExpectedDisplayed = new[]
-            {
-                "google.protobuf, 3.5.1",
-                "microsoft.ml.kmeansclustering",
-                "microsoft.ml.pca",
-                "microsoft.ml.standardtrainers",
-                "microsoft.ml.transforms",
-                "microsoft.ml.cpumath",
-                "microsoft.ml.dataview",
-                "microsoft.ml.onnxruntime",
-                "newtonsoft.json",
-                "system.codedom"
-            };
-
             events.OfType<DisplayedValueUpdated>()
                   .Where(v => v.Value is InstallPackagesMessage)
                   .Last().Value
                   .As<InstallPackagesMessage>()
                   .InstalledPackages
-                  .Aggregate((s, acc) => acc + " & " + s)
                   .Should()
-                  .ContainAll(expectedDisplayed)
-                  .And
-                  .NotContainAny(notExpectedDisplayed);
+                  .BeEquivalentTo(expectedDisplayed);
         }
 
         [Theory]
@@ -1163,28 +1148,15 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
 #r ""nuget:Google.Protobuf, 3.5.1""
 ";
             var command2 = new SubmitCode(codeSecondSubmission);
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
             var result2 = await kernel.SendAsync(command2);
 
-            using var events = result2.KernelEvents.ToSubscribedList();
             using var _ = new AssertionScope();
 
-            var expectedDisplayed = new[]
+            var expected = new[]
             {
                 "google.protobuf, 3.5.1"
-            };
-
-            var notExpectedDisplayed = new[]
-            {
-                "microsoft.ml.onnxtransformer, 1.4.0",
-                "microsoft.ml.kmeansclustering",
-                "microsoft.ml.pca",
-                "microsoft.ml.standardtrainers",
-                "microsoft.ml.transforms",
-                "microsoft.ml.cpumath",
-                "microsoft.ml.dataview",
-                "microsoft.ml.onnxruntime",
-                "newtonsoft.json",
-                "system.codedom"
             };
 
             events.OfType<DisplayedValueUpdated>()
@@ -1192,11 +1164,8 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
                   .Last().Value
                   .As<InstallPackagesMessage>()
                   .InstalledPackages
-                  .Aggregate((s, acc) => acc + " & " + s)
                   .Should()
-                  .ContainAll(expectedDisplayed)
-                  .And
-                  .NotContainAny(notExpectedDisplayed);
+                  .BeEquivalentTo(expected);
         }
 
         [Theory]
@@ -1223,9 +1192,10 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
 #r ""nuget:Microsoft.ML.OnnxTransformer, 1.4.0""
 ";
             var command3 = new SubmitCode(codeThirdSubmission);
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
             var result3 = await kernel.SendAsync(command3);
 
-            using var events = result3.KernelEvents.ToSubscribedList();
             using var _ = new AssertionScope();
 
             var expectedDisplayed = new[]
@@ -1234,29 +1204,13 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
                 "Microsoft.ML.OnnxTransformer, 1.4.0"
             };
 
-            var notExpectedDisplayed = new[]
-            {
-                "microsoft.ml.kmeansclustering",
-                "microsoft.ml.pca",
-                "microsoft.ml.standardtrainers",
-                "microsoft.ml.transforms",
-                "microsoft.ml.cpumath",
-                "microsoft.ml.dataview",
-                "microsoft.ml.onnxruntime",
-                "newtonsoft.json",
-                "system.codedom"
-            };
-
             events.OfType<DisplayedValueUpdated>()
                   .Where(v => v.Value is InstallPackagesMessage)
                   .Last().Value
                   .As<InstallPackagesMessage>()
                   .InstalledPackages
-                  .Aggregate((s, acc) => acc + " & " + s)
                   .Should()
-                  .ContainAll(expectedDisplayed)
-                  .And
-                  .NotContainAny(notExpectedDisplayed);
+                  .BeEquivalentTo(expectedDisplayed);
         }
 
         [Theory]
@@ -1276,9 +1230,10 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
 #r ""nuget:Google.Protobuf, 3.5.0""
 ";
             var command2 = new SubmitCode(codeSecondSubmission);
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
             var result2 = await kernel.SendAsync(command2);
 
-            using var events = result2.KernelEvents.ToSubscribedList();
             using var _ = new AssertionScope();
 
             events
@@ -1301,9 +1256,10 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
 #r ""nuget:Google.Protobuf, 3.5.1""
 ";
             var command = new SubmitCode(codeFirstSubmission);
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
             var result = await kernel.SendAsync(command);
 
-            using var events = result.KernelEvents.ToSubscribedList();
             using var _ = new AssertionScope();
 
             events

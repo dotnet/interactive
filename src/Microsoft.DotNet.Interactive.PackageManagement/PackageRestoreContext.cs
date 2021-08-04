@@ -103,7 +103,7 @@ namespace Microsoft.DotNet.Interactive
 
             PackageReference AppendPathSeparator(PackageReference resolved)
             {
-                if (resolved == null)
+                if (resolved is null)
                 {
                     var newPackageRef = new PackageReference(packageName, packageVersion);
                     _requestedPackageReferences.TryAdd(key, newPackageRef);
