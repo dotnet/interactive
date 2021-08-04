@@ -91,6 +91,11 @@ namespace Microsoft.DotNet.Interactive
                     {
                         resolvedPackage = requested;
                     }
+                    else
+                    {
+                        // Package already loaded with a different version
+                        return null;
+                    }
                 }
             }
 
