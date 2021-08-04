@@ -1101,40 +1101,37 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
-        public async Task Pound_r_nuget_should_display_only_requested_packages(Language defaultLanguageKernel)
+        public async Task Pound_r_nuget_should_display_only_requested_packages_for_first_submission(Language defaultLanguageKernel)
         {
             var kernel = CreateCompositeKernel(defaultLanguageKernel);
 
             var code = @"
-#r ""nuget:Google.Protobuf""
 #r ""nuget:Microsoft.ML.OnnxTransformer,1.4.0""
 ";
 
             var command = new SubmitCode(code);
-
             var result = await kernel.SendAsync(command);
-
             using var events = result.KernelEvents.ToSubscribedList();
 
             using var _ = new AssertionScope();
 
             var expectedDisplayed = new[]
             {
-                "Google.Protobuf, 3.17.3",
                 "Microsoft.ML.OnnxTransformer, 1.4.0"
             };
 
             var notExpectedDisplayed = new[]
             {
-                "Microsoft.ML.KMeansClustering",
-                "Microsoft.ML.PCA",
-                "Microsoft.ML.StandardTrainers",
-                "Microsoft.ML.Transforms",
-                "Microsoft.ML.CpuMath",
-                "Microsoft.ML.DataView",
-                "Microsoft.ML.OnnxRuntime",
-                "Newtonsoft.Json",
-                "System.CodeDom"
+                "google.protobuf, 3.5.1",
+                "microsoft.ml.kmeansclustering",
+                "microsoft.ml.pca",
+                "microsoft.ml.standardtrainers",
+                "microsoft.ml.transforms",
+                "microsoft.ml.cpumath",
+                "microsoft.ml.dataview",
+                "microsoft.ml.onnxruntime",
+                "newtonsoft.json",
+                "system.codedom"
             };
 
             events.OfType<DisplayedValueUpdated>()
@@ -1147,6 +1144,175 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
                   .ContainAll(expectedDisplayed)
                   .And
                   .NotContainAny(notExpectedDisplayed);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_r_nuget_should_display_only_requested_packages_for_subsequent_submission(Language defaultLanguageKernel)
+        {
+            var kernel = CreateCompositeKernel(defaultLanguageKernel);
+
+            var codeFirstSubmission = @"
+#r ""nuget:Microsoft.ML.OnnxTransformer,1.4.0""
+";
+            var command1 = new SubmitCode(codeFirstSubmission);
+            var _result1 = await kernel.SendAsync(command1);
+
+            var codeSecondSubmission = @"
+#r ""nuget:Google.Protobuf, 3.5.1""
+";
+            var command2 = new SubmitCode(codeSecondSubmission);
+            var result2 = await kernel.SendAsync(command2);
+
+            using var events = result2.KernelEvents.ToSubscribedList();
+            using var _ = new AssertionScope();
+
+            var expectedDisplayed = new[]
+            {
+                "google.protobuf, 3.5.1"
+            };
+
+            var notExpectedDisplayed = new[]
+            {
+                "microsoft.ml.onnxtransformer, 1.4.0",
+                "microsoft.ml.kmeansclustering",
+                "microsoft.ml.pca",
+                "microsoft.ml.standardtrainers",
+                "microsoft.ml.transforms",
+                "microsoft.ml.cpumath",
+                "microsoft.ml.dataview",
+                "microsoft.ml.onnxruntime",
+                "newtonsoft.json",
+                "system.codedom"
+            };
+
+            events.OfType<DisplayedValueUpdated>()
+                  .Where(v => v.Value is InstallPackagesMessage)
+                  .Last().Value
+                  .As<InstallPackagesMessage>()
+                  .InstalledPackages
+                  .Aggregate((s, acc) => acc + " & " + s)
+                  .Should()
+                  .ContainAll(expectedDisplayed)
+                  .And
+                  .NotContainAny(notExpectedDisplayed);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_r_nuget_should_display_only_requested_packages_for_third_submission(Language defaultLanguageKernel)
+        {
+            var kernel = CreateCompositeKernel(defaultLanguageKernel);
+
+            var codeFirstSubmission = @"
+#r ""nuget:Microsoft.ML.OnnxTransformer,1.4.0""
+";
+            var command1 = new SubmitCode(codeFirstSubmission);
+            var _result1 = await kernel.SendAsync(command1);
+
+            var codeSecondSubmission = @"
+#r ""nuget:Google.Protobuf, 3.5.1""
+";
+            var command2 = new SubmitCode(codeSecondSubmission);
+            var result2 = await kernel.SendAsync(command2);
+
+            var codeThirdSubmission = @"
+#r ""nuget:Google.Protobuf, 3.5.1""
+#r ""nuget:Microsoft.ML.OnnxTransformer, 1.4.0""
+";
+            var command3 = new SubmitCode(codeThirdSubmission);
+            var result3 = await kernel.SendAsync(command3);
+
+            using var events = result3.KernelEvents.ToSubscribedList();
+            using var _ = new AssertionScope();
+
+            var expectedDisplayed = new[]
+            {
+                "google.protobuf, 3.5.1",
+                "Microsoft.ML.OnnxTransformer, 1.4.0"
+            };
+
+            var notExpectedDisplayed = new[]
+            {
+                "microsoft.ml.kmeansclustering",
+                "microsoft.ml.pca",
+                "microsoft.ml.standardtrainers",
+                "microsoft.ml.transforms",
+                "microsoft.ml.cpumath",
+                "microsoft.ml.dataview",
+                "microsoft.ml.onnxruntime",
+                "newtonsoft.json",
+                "system.codedom"
+            };
+
+            events.OfType<DisplayedValueUpdated>()
+                  .Where(v => v.Value is InstallPackagesMessage)
+                  .Last().Value
+                  .As<InstallPackagesMessage>()
+                  .InstalledPackages
+                  .Aggregate((s, acc) => acc + " & " + s)
+                  .Should()
+                  .ContainAll(expectedDisplayed)
+                  .And
+                  .NotContainAny(notExpectedDisplayed);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_r_nuget_should_error_when_trying_to_specify_a_different_version_of_an_already_loaded_package(Language defaultLanguageKernel)
+        {
+            var kernel = CreateCompositeKernel(defaultLanguageKernel);
+
+            var codeFirstSubmission = @"
+#r ""nuget:Microsoft.ML.OnnxTransformer,1.4.0""
+";
+            var command1 = new SubmitCode(codeFirstSubmission);
+            var _result1 = await kernel.SendAsync(command1);
+
+            var codeSecondSubmission = @"
+#r ""nuget:Google.Protobuf, 3.5.0""
+";
+            var command2 = new SubmitCode(codeSecondSubmission);
+            var result2 = await kernel.SendAsync(command2);
+
+            using var events = result2.KernelEvents.ToSubscribedList();
+            using var _ = new AssertionScope();
+
+            events
+                .Should()
+                .ContainSingle<CommandFailed>()
+                .Which
+                .Message
+                .Should()
+                .Be("Google.Protobuf version 3.5.0 cannot be added because version 3.5.1 was added previously.");
+        }
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_r_nuget_should_error_when_trying_to_specify_a_different_version_of_an_already_specified_package(Language defaultLanguageKernel)
+        {
+            var kernel = CreateCompositeKernel(defaultLanguageKernel);
+
+            var codeFirstSubmission = @"
+#r ""nuget:Google.Protobuf, 3.5.0""
+#r ""nuget:Google.Protobuf, 3.5.1""
+";
+            var command = new SubmitCode(codeFirstSubmission);
+            var result = await kernel.SendAsync(command);
+
+            using var events = result.KernelEvents.ToSubscribedList();
+            using var _ = new AssertionScope();
+
+            events
+                .Should()
+                .ContainSingle<CommandFailed>()
+                .Which
+                .Message
+                .Should()
+                .Be("Google.Protobuf version 3.5.1 cannot be added because version 3.5.0 was added previously.");
         }
     }
 }
