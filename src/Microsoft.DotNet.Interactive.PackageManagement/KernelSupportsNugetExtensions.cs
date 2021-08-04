@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.Interactive
                     if (alreadyGotten is { } && !string.IsNullOrWhiteSpace(pkg.PackageVersion) && pkg.PackageVersion != alreadyGotten.PackageVersion)
                     {
                         var errorMessage = GenerateErrorMessage(pkg, alreadyGotten).ToString(OutputMode.NonAnsi);
-                        context.Publish(new ErrorProduced(errorMessage, context.Command));
+                        context.Fail(message: errorMessage);
                     }
                     else
                     {
@@ -113,7 +113,7 @@ namespace Microsoft.DotNet.Interactive
                         if (added is null)
                         {
                             var errorMessage = GenerateErrorMessage(pkg).ToString(OutputMode.NonAnsi);
-                            context.Publish(new ErrorProduced(errorMessage, context.Command));
+                            context.Fail(message: errorMessage);
                         }
                     }
 
@@ -194,7 +194,6 @@ namespace Microsoft.DotNet.Interactive
 
                     var requestedPackages =
                         kernel.RequestedPackageReferences
-                              .Except(kernel.ResolvedPackageReferences, PackageReferenceComparer.Instance)
                               .Select(s => s.PackageName).OrderBy(s => s).ToList();
 
                     var requestedSources =
@@ -209,7 +208,6 @@ namespace Microsoft.DotNet.Interactive
 
                     CreateOrUpdateDisplayValue(context, installPackagesPropertyName, installMessage);
 
-                    var currentPackageReferences = kernel.ResolvedPackageReferences?.ToHashSet() ?? new HashSet<ResolvedPackageReference>();
                     var restorePackagesTask = kernel.RestoreAsync();
                     var delay = 500;
                     while (await Task.WhenAny(Task.Delay(delay), restorePackagesTask) != restorePackagesTask)
@@ -227,7 +225,7 @@ namespace Microsoft.DotNet.Interactive
                     var resultMessage = new InstallPackagesMessage(
                             requestedSources,
                             Enumerable.Empty<string>().ToList(),
-                            kernel.ResolvedPackageReferences.Where(r => requestedPackages.Contains(r.PackageName, StringComparer.OrdinalIgnoreCase)).Where(currentPackageReferences.Add).Select(s => $"{s.PackageName}, {s.PackageVersion}").OrderBy(s => s).ToList(),
+                            kernel.ResolvedPackageReferences.Where(r => requestedPackages.Contains(r.PackageName, StringComparer.OrdinalIgnoreCase)).Select(s => $"{s.PackageName}, {s.PackageVersion}").OrderBy(s => s).ToList(),
                             0);
 
                     if (result.Succeeded)
