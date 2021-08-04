@@ -1,6 +1,8 @@
 The organization of this extension is a bit complicated.
 ===
 
+This repo depends on symbolic links between directories.  By default Windows doesn't support this feature.  To work around this scenario, please run the PowerShell script `<root>/src/ensure-symlinks.ps1` as an administrator.  This usually only needs to be run once.
+
 # tl;dr -
 
 0. Requirements:
