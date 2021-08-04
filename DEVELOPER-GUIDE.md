@@ -6,6 +6,8 @@ If you would like to build `dotnet-interactive` tool and its associated librarie
 
 ## Prerequisites
 
+This repo depends on symbolic links between directories.  By default Windows doesn't support this feature.  To work around this scenario, please run the PowerShell script `<root>/src/ensure-symlinks.ps1` as an administrator.  This usually only needs to be run once.
+
 This project depends on .NET 5.0. Before working on the project, check that the .NET prerequisites have been met:
 
    - [Prerequisites for .NET on Windows](https://docs.microsoft.com/en-us/dotnet/core/install/windows?tabs=net50#dependencies)

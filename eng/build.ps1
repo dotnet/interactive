@@ -36,6 +36,25 @@ try {
     #     }
     # }
 
+    $repoRoot = Resolve-Path "$PSScriptRoot\.."
+    $symlinkDirectories = @(
+        "$repoRoot\src\dotnet-interactive-vscode\stable\src\common",
+        "$repoRoot\src\dotnet-interactive-vscode\stable\.vscode",
+        "$repoRoot\src\dotnet-interactive-vscode\insiders\src\common",
+        "$repoRoot\src\dotnet-interactive-vscode\insiders\.vscode",
+        "$repoRoot\src\dotnet-interactive-npm\src\common",
+        "$repoRoot\src\dotnet-interactive-npm\.vscode",
+        "$repoRoot\src\Microsoft.DotNet.Interactive.Js\src\common",
+        "$repoRoot\src\Microsoft.DotNet.Interactive.Js\.vscode"
+    )
+
+    foreach ($symlinkDir in $symlinkDirectories) {
+        $candidate = Get-Item $symlinkDir -ErrorAction SilentlyContinue
+        if (($null -eq $candidate) -Or (-Not($candidate.Attributes -match "ReparsePoint"))) {
+            throw "The directory '$symlinkDir' was not a symlink.  Please run the script '$repoRoot\src\ensure-symlinks.ps1' **AS ADMIN**."
+        }
+    }
+
     # invoke regular build/test script
     . (Join-Path $PSScriptRoot "common\build.ps1") -projects "$PSScriptRoot\..\dotnet-interactive.sln" @args
     if ($LASTEXITCODE -ne 0) {
