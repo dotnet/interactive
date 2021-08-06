@@ -5,11 +5,11 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class NotebookSerialized : KernelEvent
+    public class InteractiveDocumentSerialized : KernelEvent
     {
         public byte[] RawData { get; }
 
-        public NotebookSerialized(byte[] rawData, KernelCommand command)
+        public InteractiveDocumentSerialized(byte[] rawData, KernelCommand command)
             : base(command)
         {
             RawData = rawData;

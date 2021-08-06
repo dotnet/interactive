@@ -5,7 +5,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Notebook;
+using Microsoft.DotNet.Interactive.Ipynb;
 
 namespace Microsoft.DotNet.Interactive.Server
 {

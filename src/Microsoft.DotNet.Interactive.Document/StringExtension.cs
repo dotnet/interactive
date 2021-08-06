@@ -4,9 +4,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Microsoft.DotNet.Interactive.Notebook
+namespace Microsoft.DotNet.Interactive
 {
-    internal static class NotebookParsingExtensions
+    internal static class StringExtension
     {
         public static IEnumerable<string> SplitAsLines(string s)
         {

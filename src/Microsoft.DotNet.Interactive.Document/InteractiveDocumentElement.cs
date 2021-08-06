@@ -3,19 +3,19 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive.Notebook
+namespace Microsoft.DotNet.Interactive
 {
-    public class NotebookCell
+    public class InteractiveDocumentElement
     {
         public string Language { get; }
         public string Contents { get; }
-        public NotebookCellOutput[] Outputs { get; }
+        public InteractiveDocumentOutputElement[] Outputs { get; }
 
-        public NotebookCell(string language, string contents, NotebookCellOutput[] outputs = null)
+        public InteractiveDocumentElement(string language, string contents, InteractiveDocumentOutputElement[] outputs = null)
         {
             Language = language;
             Contents = contents;
-            Outputs = outputs ?? Array.Empty<NotebookCellOutput>();
+            Outputs = outputs ?? Array.Empty<InteractiveDocumentOutputElement>();
         }
     }
 }

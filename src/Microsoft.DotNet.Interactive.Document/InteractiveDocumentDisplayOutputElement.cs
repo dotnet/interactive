@@ -3,13 +3,13 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive.Notebook
+namespace Microsoft.DotNet.Interactive
 {
-    public class NotebookCellDisplayOutput : NotebookCellOutput
+    public class InteractiveDocumentDisplayOutputElement : InteractiveDocumentOutputElement
     {
         public IDictionary<string, object> Data { get; }
 
-        public NotebookCellDisplayOutput(IDictionary<string, object> data)
+        public InteractiveDocumentDisplayOutputElement(IDictionary<string, object> data)
         {
             Data = data;
         }

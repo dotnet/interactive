@@ -3,20 +3,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.Notebook;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
-using Xunit.Abstractions;
 
-namespace Microsoft.DotNet.Interactive.Tests.Notebook
+namespace Microsoft.DotNet.Interactive.Document.Tests
 {
-    public class RoundTripNotebookDocumentFileFormatTests : NotebookDocumentFileFormatTests
+    public class RoundTripNotebookDocumentFileFormatTests : NotebookDocumentFileFormatTestsBase
     {
-        public RoundTripNotebookDocumentFileFormatTests(ITestOutputHelper output)
-            : base(output)
-        {
-        }
 
         [Theory]
         [InlineData(".dib", false)]
@@ -24,24 +19,26 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
         [InlineData(".ipynb", true)]
         public void notebook_document_can_be_round_tripped_through_supported_file_formats(string extension, bool checkOutputs)
         {
-            // not all notebook types retain outputs, so round-tripping them isn't necessarily interesting
+            // not all interactive types retain outputs, so round-tripping them isn't necessarily interesting
             var outputs = checkOutputs
                 ? new[]
                 {
-                    new NotebookCellDisplayOutput(new Dictionary<string, object>
+                    new InteractiveDocumentDisplayOutputElement(new Dictionary<string, object>
                     {
                         { "text/html", "This is html." }
                     })
                 }
-                : Array.Empty<NotebookCellOutput>();
+                : Array.Empty<InteractiveDocumentOutputElement>();
             var cells = new[]
             {
-                new NotebookCell("csharp", "//", outputs)
+                new InteractiveDocumentElement("csharp", "//", outputs)
             };
-            var originalNotebook = new NotebookDocument(cells);
-            var fileName = $"notebook{extension}";
-            var content = SerializeToString(fileName, originalNotebook);
-            var roundTrippedNotebook = ParseFromString(fileName, content);
+            var originalNotebook = new InteractiveDocument(cells);
+            var fileName = $"interactive{extension}";
+            using var stream = new MemoryStream();
+            NotebookFileFormatHandler.Write(fileName, originalNotebook, "\n", stream);
+            stream.Position = 0;
+            var roundTrippedNotebook = NotebookFileFormatHandler.Read(fileName, stream, "csharp", KernelLanguageAliases);
             roundTrippedNotebook
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(originalNotebook);

@@ -1,41 +1,40 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.IO;
+using System.Text;
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.Notebook;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
-using Xunit.Abstractions;
 
-namespace Microsoft.DotNet.Interactive.Tests.Notebook
+namespace Microsoft.DotNet.Interactive.Document.Tests
 {
-    public partial class DibNotebookDocumentFileFormatTests : NotebookDocumentFileFormatTests
+    public class DibNotebookDocumentFileFormatTests : NotebookDocumentFileFormatTestsBase
     {
-        public DibNotebookDocumentFileFormatTests(ITestOutputHelper output)
-            : base(output)
+        public InteractiveDocument ParseDib(string content)
         {
+            return NotebookFileFormatHandler.Read("interactive.dib", content,"csharp", KernelLanguageAliases);
         }
 
-        public NotebookDocument ParseDib(string content)
+        public string SerializeDib(InteractiveDocument interactive, string newLine)
         {
-            return ParseFromString("notebook.dib", content);
-        }
-
-        public string SerializeDib(NotebookDocument notebook)
-        {
-            return SerializeToString("notebook.dib", notebook);
+            using var stream = new MemoryStream();
+            NotebookFileFormatHandler.Write("interactive.dib", interactive, newLine, stream);
+            stream.Position = 0;
+            var serialized = Encoding.UTF8.GetString(stream.ToArray());
+            return serialized;
         }
 
         [Fact]
         public void empty_dib_file_parses_as_a_single_empty_cell()
         {
             var notebook = ParseDib(string.Empty);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .ContainSingle()
                 .Which
                 .Should()
-                .Match<NotebookCell>(cell =>
+                .Match<InteractiveDocumentElement>(cell =>
                     cell.Language == "csharp" &&
                     cell.Contents == string.Empty
                 );
@@ -45,12 +44,12 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
         public void top_level_code_without_a_language_specifier_is_assigned_the_default_language()
         {
             var notebook = ParseDib("var x = 1;");
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .ContainSingle()
                 .Which
                 .Should()
-                .Match<NotebookCell>(cell =>
+                .Match<InteractiveDocumentElement>(cell =>
                     cell.Language == "csharp" &&
                     cell.Contents == "var x = 1;"
                 );
@@ -61,12 +60,12 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
         {
             var notebook = ParseDib(@"#!fsharp
 let x = 1");
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .ContainSingle()
                 .Which
                 .Should()
-                .Match<NotebookCell>(cell =>
+                .Match<InteractiveDocumentElement>(cell =>
                     cell.Language == "fsharp" &&
                     cell.Contents == "let x = 1"
                 );
@@ -77,12 +76,12 @@ let x = 1");
         {
             var notebook = ParseDib(@"#!probably-a-magic-command
 var x = 1;");
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .ContainSingle()
                 .Which
                 .Should()
-                .Match<NotebookCell>(cell =>
+                .Match<InteractiveDocumentElement>(cell =>
                     cell.Language == "csharp" &&
                     cell.Contents == "#!probably-a-magic-command\nvar x = 1;"
                 );
@@ -94,12 +93,12 @@ var x = 1;");
             var notebook = ParseDib(@"#!fsharp
 #!probably-a-magic-command
 let x = 1");
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .ContainSingle()
                 .Which
                 .Should()
-                .Match<NotebookCell>(cell =>
+                .Match<InteractiveDocumentElement>(cell =>
                     cell.Language == "fsharp" &&
                     cell.Contents == "#!probably-a-magic-command\nlet x = 1"
                 );
@@ -115,7 +114,7 @@ let x = 1");
 #!csharp
 #!wpf -h
 ");
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .SatisfyRespectively(
                     cell => cell.Should().Match(_ => cell.Language == "csharp" && cell.Contents == "#!connect named-pipe --kernel-name wpf --pipe-name some-pipe-name"),
@@ -133,12 +132,12 @@ var y = 2;
 #!fsharp
 let x = 1
 let y = 2");
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new NotebookCell("csharp", "var x = 1;\nvar y = 2;"),
-                    new NotebookCell("fsharp", "let x = 1\nlet y = 2")
+                    new InteractiveDocumentElement("csharp", "var x = 1;\nvar y = 2;"),
+                    new InteractiveDocumentElement("fsharp", "let x = 1\nlet y = 2")
                 });
         }
 
@@ -155,12 +154,12 @@ Get-Item
 
 #!fsharp
 ");
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new NotebookCell("csharp", "//"),
-                    new NotebookCell("pwsh", "Get-Item")
+                    new InteractiveDocumentElement("csharp", "//"),
+                    new InteractiveDocumentElement("pwsh", "Get-Item")
                 });
         }
 
@@ -191,12 +190,12 @@ Get-Item
 
 
 ");
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new NotebookCell("csharp", "// first line of C#\n\n\n\n// last line of C#"),
-                    new NotebookCell("fsharp", "// first line of F#\n\n\n\n// last line of F#")
+                    new InteractiveDocumentElement("csharp", "// first line of C#\n\n\n\n// last line of C#"),
+                    new InteractiveDocumentElement("fsharp", "// first line of F#\n\n\n\n// last line of F#")
                 });
         }
 
@@ -208,11 +207,11 @@ Get-Item
 
 This is `markdown`.
 ");
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new NotebookCell("markdown", "This is `markdown`.")
+                    new InteractiveDocumentElement("markdown", "This is `markdown`.")
                 });
         }
 
@@ -238,16 +237,16 @@ This is `markdown`.
 #!md
 This is `markdown` with an alias.
 ");
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new NotebookCell("csharp", "// this is csharp 1"),
-                    new NotebookCell("csharp", "// this is csharp 2"),
-                    new NotebookCell("fsharp", "// this is fsharp 1"),
-                    new NotebookCell("fsharp", "// this is fsharp 2"),
-                    new NotebookCell("pwsh", "# this is pwsh"),
-                    new NotebookCell("markdown", "This is `markdown` with an alias.")
+                    new InteractiveDocumentElement("csharp", "// this is csharp 1"),
+                    new InteractiveDocumentElement("csharp", "// this is csharp 2"),
+                    new InteractiveDocumentElement("fsharp", "// this is fsharp 1"),
+                    new InteractiveDocumentElement("fsharp", "// this is fsharp 2"),
+                    new InteractiveDocumentElement("pwsh", "# this is pwsh"),
+                    new InteractiveDocumentElement("markdown", "This is `markdown` with an alias.")
                 });
         }
 
@@ -267,12 +266,12 @@ This is `markdown` with an alias.
             };
             var code = string.Join(newline, lines);
             var notebook = ParseDib(code);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new NotebookCell("csharp", "1+1"),
-                    new NotebookCell("fsharp", "[1;2;3;4]\n|> List.sum")
+                    new InteractiveDocumentElement("csharp", "1+1"),
+                    new InteractiveDocumentElement("fsharp", "[1;2;3;4]\n|> List.sum")
                 });
         }
 
@@ -285,7 +284,7 @@ This is `markdown` with an alias.
 var x = 1;
 
 ");
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .ContainSingle()
                 .Which
@@ -299,19 +298,20 @@ var x = 1;
         [InlineData(".dotnet-interactive")]
         public void notebook_can_be_parsed_from_different_extensions(string extension)
         {
-            var fileName = $"notebook{extension}";
-            var notebook = ParseFromString(fileName, @"
+            var fileName = $"interactive{extension}";
+            var notebook = NotebookFileFormatHandler.Read(fileName, @"
 #!csharp
 1+1
 
 #!fsharp
-2+2");
-            notebook.Cells
+2+2",
+                "csharp", KernelLanguageAliases);
+            notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new NotebookCell("csharp", "1+1"),
-                    new NotebookCell("fsharp", "2+2")
+                    new InteractiveDocumentElement("csharp", "1+1"),
+                    new InteractiveDocumentElement("fsharp", "2+2")
                 });
         }
 
@@ -320,10 +320,10 @@ var x = 1;
         {
             var cells = new[]
             {
-                new NotebookCell("csharp", "\n\n\n\n// this is csharp\n\n\n")
+                new InteractiveDocumentElement("csharp", "\n\n\n\n// this is csharp\n\n\n")
             };
-            var notebook = new NotebookDocument(cells);
-            var serialized = SerializeDib(notebook);
+            var notebook = new InteractiveDocument(cells);
+            var serialized = SerializeDib(notebook, "\n");
             var expectedLines = new[]
             {
                 "#!csharp",
@@ -331,23 +331,23 @@ var x = 1;
                 "// this is csharp",
                 ""
             };
-            var expected = string.Join("\r\n", expectedLines);
+            var expected = string.Join("\n", expectedLines);
             serialized
                 .Should()
                 .Be(expected);
         }
 
         [Fact]
-        public void empty_cells_arent_serialized()
+        public void empty_cells_are_not_serialized()
         {
             var cells = new[]
             {
-                new NotebookCell("csharp", ""),
-                new NotebookCell("fsharp", "// this is fsharp"),
-                new NotebookCell("csharp", "")
+                new InteractiveDocumentElement("csharp", ""),
+                new InteractiveDocumentElement("fsharp", "// this is fsharp"),
+                new InteractiveDocumentElement("csharp", "")
             };
-            var notebook = new NotebookDocument(cells);
-            var serialized = SerializeDib(notebook);
+            var notebook = new InteractiveDocument(cells);
+            var serialized = SerializeDib(notebook, "\n");
             var expectedLines = new[]
             {
                 "#!fsharp",
@@ -355,7 +355,7 @@ var x = 1;
                 "// this is fsharp",
                 ""
             };
-            var expected = string.Join("\r\n", expectedLines);
+            var expected = string.Join("\n", expectedLines);
             serialized
                 .Should()
                 .Be(expected);
@@ -368,12 +368,12 @@ var x = 1;
         {
             var cells = new[]
             {
-                new NotebookCell("csharp", "// C# line 1\n// C# line 2"),
-                new NotebookCell("fsharp", "// F# line 1\n// F# line 2"),
-                new NotebookCell("markdown", "This is `markdown`.")
+                new InteractiveDocumentElement("csharp", $"// C# line 1{newline}// C# line 2"),
+                new InteractiveDocumentElement("fsharp", $"// F# line 1{newline}// F# line 2"),
+                new InteractiveDocumentElement("markdown", "This is `markdown`.")
             };
-            var notebook = new NotebookDocument(cells);
-            var serialized = SerializeToString("notebook.dib", notebook, newline);
+            var notebook = new InteractiveDocument(cells);
+            var serialized = SerializeDib(notebook, newline);
             var expectedLines = new[]
             {
                 "#!csharp",
@@ -402,13 +402,16 @@ var x = 1;
         [InlineData(".dotnet-interactive")]
         public void notebook_can_be_serialized_to_different_extensions(string extension)
         {
-            var fileName = $"notebook{extension}";
+            var fileName = $"interactive{extension}";
             var cells = new[]
             {
-                new NotebookCell("csharp", "// this is csharp")
+                new InteractiveDocumentElement("csharp", "// this is csharp")
             };
-            var notebook = new NotebookDocument(cells);
-            var serialized = SerializeToString(fileName, notebook);
+            var notebook = new InteractiveDocument(cells);
+            using var stream = new MemoryStream();
+            NotebookFileFormatHandler.Write(fileName, notebook,"\n", stream);
+            stream.Position = 0;
+            var serialized = Encoding.UTF8.GetString( stream.ToArray());
             var expectedLines = new[]
             {
                 "#!csharp",
@@ -416,7 +419,7 @@ var x = 1;
                 "// this is csharp",
                 ""
             };
-            var expected = string.Join("\r\n", expectedLines);
+            var expected = string.Join("\n", expectedLines);
             serialized
                 .Should()
                 .Be(expected);

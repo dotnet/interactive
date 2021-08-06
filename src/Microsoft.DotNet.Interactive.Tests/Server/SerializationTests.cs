@@ -14,7 +14,6 @@ using Microsoft.AspNetCore.Html;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Notebook;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 
@@ -163,7 +162,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     new FormattedValue("text/html", "<b>hi!</b>")
                 );
 
-                yield return new ParseNotebook("notebook.ipynb", new byte[] { 0x01, 0x02, 0x03, 0x04 });
+                yield return new ParseInteractiveDocument("interactive.ipynb", new byte[] { 0x01, 0x02, 0x03, 0x04 });
 
                 yield return new RequestCompletions("Cons", new LinePosition(0, 4), "csharp");
 
@@ -175,16 +174,16 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new SendEditableCode("language", "code");
 
-                yield return new SerializeNotebook("notebook.ipynb", new NotebookDocument(new[]
+                yield return new SerializeInteractiveDocument("interactive.ipynb", new InteractiveDocument(new[]
                 {
-                    new NotebookCell("csharp", "user code", new NotebookCellOutput[]
+                    new InteractiveDocumentElement("csharp", "user code", new InteractiveDocumentOutputElement[]
                     {
-                        new NotebookCellDisplayOutput(new Dictionary<string, object>
+                        new InteractiveDocumentDisplayOutputElement(new Dictionary<string, object>
                         {
                             { "text/html", "<b></b>" }
                         }),
-                        new NotebookCellTextOutput("text"),
-                        new NotebookCellErrorOutput("e-name", "e-value", new[]
+                        new InteractiveDocumentTextOutputElement("text"),
+                        new InteractiveDocumentErrorOutputElement("e-name", "e-value", new[]
                         {
                             "at func1()",
                             "at func2()"
@@ -291,24 +290,24 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new KernelReady();
 
-                yield return new NotebookParsed(new NotebookDocument(new[]
+                yield return new InteractiveDocumentParsed(new InteractiveDocument(new[]
                 {
-                    new NotebookCell("language", "contents", new NotebookCellOutput[]
+                    new InteractiveDocumentElement("language", "contents", new InteractiveDocumentOutputElement[]
                     {
-                        new NotebookCellDisplayOutput(new Dictionary<string, object>()
+                        new InteractiveDocumentDisplayOutputElement(new Dictionary<string, object>()
                         {
                             { "text/html", "<b></b>" }
                         }),
-                        new NotebookCellTextOutput("text"),
-                        new NotebookCellErrorOutput("e-name", "e-value", new[]
+                        new InteractiveDocumentTextOutputElement("text"),
+                        new InteractiveDocumentErrorOutputElement("e-name", "e-value", new[]
                         {
                             "at func1()",
                             "at func2()"
                         })
                     })
-                }), new ParseNotebook("notebook.ipynb", new byte[0]));
+                }), new ParseInteractiveDocument("interactive.ipynb", new byte[0]));
 
-                yield return new NotebookSerialized(new byte[] { 0x01, 0x02, 0x03, 0x04 }, new SerializeNotebook("notebook.ipynb", null,"\n"));
+                yield return new InteractiveDocumentSerialized(new byte[] { 0x01, 0x02, 0x03, 0x04 }, new SerializeInteractiveDocument("interactive.ipynb", null,"\n"));
                
                 yield return new PackageAdded(
                     new ResolvedPackageReference(
