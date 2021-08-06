@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.Ipynb
             _serializerOptions.Converters.Add(new DataDictionaryConverter());
         }
 
-        public static InteractiveDocument Read(string content, IDictionary<string, string> kernelLanguageAliases)
+        public static InteractiveDocument Parse(string content, IDictionary<string, string> kernelLanguageAliases)
         {
             if (kernelLanguageAliases == null)
             {
@@ -125,7 +125,7 @@ namespace Microsoft.DotNet.Interactive.Ipynb
         {
             using var reader = new StreamReader(stream, Encoding);
             var content = reader.ReadToEnd();
-            return Read(content, kernelLanguageAliases);
+            return Parse(content, kernelLanguageAliases);
         }
 
         public static async Task<InteractiveDocument> ReadAsync(Stream stream,
@@ -133,7 +133,7 @@ namespace Microsoft.DotNet.Interactive.Ipynb
         {
             using var reader = new StreamReader(stream, Encoding);
             var content = await reader.ReadToEndAsync();
-            return Read(content, kernelLanguageAliases);
+            return Parse(content, kernelLanguageAliases);
         }
 
         private static List<string> GetTextLines(JsonElement? jsonElement)
@@ -154,16 +154,6 @@ namespace Microsoft.DotNet.Interactive.Ipynb
             return string.Join("\n", textLines);
         }
 
-        private static string GetTextAsSingleStringOrEmptyObject(JsonElement? jsonElement)
-        {
-            var text = GetTextAsSingleString(jsonElement);
-            if (string.IsNullOrEmpty(text))
-            {
-                return "{}";
-            }
-            return text;
-        }
-
         public static void Write(InteractiveDocument interactive, string newline, Stream stream)
         {
             using var writer = new StreamWriter(stream, Encoding, 1024, true);
@@ -171,7 +161,7 @@ namespace Microsoft.DotNet.Interactive.Ipynb
             writer.Flush();
         }
 
-        public static void Write(InteractiveDocument interactive, string newline, TextWriter writer)
+        public static string ToIpynbContent(this InteractiveDocument interactive, string newline = "\n")
         {
             var cells = new List<object>();
             foreach (var element in interactive.Elements)
@@ -263,6 +253,12 @@ namespace Microsoft.DotNet.Interactive.Ipynb
             };
 
             var content = JsonSerializer.Serialize(jupyter, options);
+            return content;
+        }
+
+        public static void Write(InteractiveDocument interactive, string newline, TextWriter writer)
+        {
+            var content = interactive.ToIpynbContent(newline);
             writer.Write(content);
         }
 

@@ -4,12 +4,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Text;
 using Assent;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using FluentAssertions.Json;
+using Microsoft.DotNet.Interactive.Ipynb;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -23,16 +22,12 @@ namespace Microsoft.DotNet.Interactive.Document.Tests
         {
             var content = JsonConvert.SerializeObject(jupyter);
            
-            return NotebookFileFormatHandler.Read("interactive.ipynb", content, "csharp", KernelLanguageAliases);
+            return IpynbFile.Parse(content, KernelLanguageAliases);
         }
 
         public string SerializeJupyter(InteractiveDocument interactive, string newLine)
         {
-            using var stream = new MemoryStream();
-            NotebookFileFormatHandler.Write("interactive.ipynb", interactive, "\n", stream);
-            stream.Position = 0;
-            var serialized = Encoding.UTF8.GetString(stream.ToArray());
-            return serialized;
+            return interactive.ToIpynbContent(newLine);
         }
 
         [Theory]

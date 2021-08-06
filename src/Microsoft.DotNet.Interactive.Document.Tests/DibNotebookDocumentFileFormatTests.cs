@@ -4,6 +4,7 @@
 using System.IO;
 using System.Text;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.dib;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -13,16 +14,12 @@ namespace Microsoft.DotNet.Interactive.Document.Tests
     {
         public InteractiveDocument ParseDib(string content)
         {
-            return NotebookFileFormatHandler.Read("interactive.dib", content,"csharp", KernelLanguageAliases);
+            return DibFile.Parse( content,"csharp", KernelLanguageAliases);
         }
 
         public string SerializeDib(InteractiveDocument interactive, string newLine)
         {
-            using var stream = new MemoryStream();
-            NotebookFileFormatHandler.Write("interactive.dib", interactive, newLine, stream);
-            stream.Position = 0;
-            var serialized = Encoding.UTF8.GetString(stream.ToArray());
-            return serialized;
+            return interactive.ToDibContent(newLine);
         }
 
         [Fact]
@@ -299,7 +296,7 @@ var x = 1;
         public void notebook_can_be_parsed_from_different_extensions(string extension)
         {
             var fileName = $"interactive{extension}";
-            var notebook = NotebookFileFormatHandler.Read(fileName, @"
+            var notebook = NotebookFileFormatHandler.Parse(fileName, @"
 #!csharp
 1+1
 
