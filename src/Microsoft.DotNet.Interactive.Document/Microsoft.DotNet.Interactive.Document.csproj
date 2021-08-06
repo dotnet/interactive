@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <PackageId Condition="'$(PackageId)'==''">Microsoft.DotNet.Interactive.Document</PackageId>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageDescription Condition="'$(PackageDescription)'==''">Notebooks support for .NET Interactive</PackageDescription>
+    <PackageTags Condition="'$(PackageTags)'==''">interactive</PackageTags>
+    <RootNamespace>Microsoft.DotNet.Interactive</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Collections.Immutable" Version="5.0.0" />
+    <PackageReference Include="System.Text.Json" Version="5.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
+  </ItemGroup>
+
+</Project>

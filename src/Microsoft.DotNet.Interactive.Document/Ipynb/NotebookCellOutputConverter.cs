@@ -7,13 +7,13 @@ using System.Linq;
 using System.Text.Json;
 using Microsoft.DotNet.Interactive.Formatting;
 
-namespace Microsoft.DotNet.Interactive.Notebook
+namespace Microsoft.DotNet.Interactive.Ipynb
 {
-    public class NotebookCellOutputConverter : JsonConverter<NotebookCellOutput>
+    public class NotebookCellOutputConverter : JsonConverter<InteractiveDocumentOutputElement>
     {
         public static JsonSerializerOptions InternalOptions { get; set; }
 
-        public override NotebookCellOutput Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override InteractiveDocumentOutputElement Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             EnsureStartObject(reader, typeToConvert);
             
@@ -59,17 +59,17 @@ namespace Microsoft.DotNet.Interactive.Notebook
                 {
                     if (text is not null)
                     {
-                        return new NotebookCellTextOutput(text);
+                        return new InteractiveDocumentTextOutputElement(text);
                     }
 
                     if (data is not null)
                     {
-                        return new NotebookCellDisplayOutput(data);
+                        return new InteractiveDocumentDisplayOutputElement(data);
                     }
 
                     if (errorName is not null && errorValue is not null && stackTrace is not null)
                     {
-                        return new NotebookCellErrorOutput(errorName, errorValue, stackTrace.ToArray());
+                        return new InteractiveDocumentErrorOutputElement(errorName, errorValue, stackTrace.ToArray());
                     }
 
                 }
@@ -77,6 +77,5 @@ namespace Microsoft.DotNet.Interactive.Notebook
 
             throw new JsonException($"Cannot deserialize {typeToConvert.Name}");
         }
-
     }
 }

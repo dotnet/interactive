@@ -4,35 +4,35 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Text;
 using Assent;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using FluentAssertions.Json;
-using Microsoft.DotNet.Interactive.Notebook;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
-using Xunit.Abstractions;
 
-namespace Microsoft.DotNet.Interactive.Tests.Notebook
+namespace Microsoft.DotNet.Interactive.Document.Tests
 {
-    public class JupyterNotebookDocumentFileFormatTests : NotebookDocumentFileFormatTests
+    public class JupyterNotebookDocumentFileFormatTests : NotebookDocumentFileFormatTestsBase
     {
-        public JupyterNotebookDocumentFileFormatTests(ITestOutputHelper output)
-            : base(output)
-        {
-        }
-
-        public NotebookDocument ParseJupyter(object jupyter)
+        public InteractiveDocument ParseJupyter(object jupyter)
         {
             var content = JsonConvert.SerializeObject(jupyter);
-            return ParseFromString("notebook.ipynb", content);
+           
+            return NotebookFileFormatHandler.Read("interactive.ipynb", content, "csharp", KernelLanguageAliases);
         }
 
-        public string SerializeJupyter(NotebookDocument notebook)
+        public string SerializeJupyter(InteractiveDocument interactive, string newLine)
         {
-            return SerializeToString("notebook.ipynb", notebook);
+            using var stream = new MemoryStream();
+            NotebookFileFormatHandler.Write("interactive.ipynb", interactive, "\n", stream);
+            stream.Position = 0;
+            var serialized = Encoding.UTF8.GetString(stream.ToArray());
+            return serialized;
         }
 
         [Theory]
@@ -73,11 +73,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 nbformat_minor = 4
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new NotebookCell(language, "// this is the code")
+                    new InteractiveDocumentElement(language, "// this is the code")
                 });
         }
 
@@ -105,12 +105,12 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 }
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new NotebookCell("csharp", "// this is assumed to be csharp"),
-                    new NotebookCell("csharp", "// this is still assumed to be csharp")
+                    new InteractiveDocumentElement("csharp", "// this is assumed to be csharp"),
+                    new InteractiveDocumentElement("csharp", "// this is still assumed to be csharp")
                 });
         }
 
@@ -156,7 +156,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 nbformat_minor = 4
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .ContainSingle()
                 .Which
@@ -166,7 +166,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
         }
 
         [Fact]
-        public void cell_language_can_specify_language_when_theres_no_notebook_default()
+        public void cell_language_can_specify_language_when_there_is_no_notebook_default()
         {
             var jupyter = new
             {
@@ -188,7 +188,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 }
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .ContainSingle()
                 .Which
@@ -198,7 +198,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
         }
 
         [Fact]
-        public void parsed_cells_dont_contain_redundant_language_specifier()
+        public void parsed_cells_do_not_contain_redundant_language_specifier()
         {
             var jupyter = new
             {
@@ -233,11 +233,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 nbformat_minor = 4
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new[]
+                .BeEquivalentToRespectingRuntimeTypes(new object[]
                 {
-                    new NotebookCell("csharp", "// this is the code")
+                    new InteractiveDocumentElement("csharp", "// this is the code")
                 });
         }
 
@@ -270,14 +270,14 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 {
                     kernelspec = new
                     {
-                        display_name = $".NET (C#)",
+                        display_name = ".NET (C#)",
                         language = "C#",
                         name = $".net-csharp"
                     },
                     language_info = new
                     {
                         file_extension = ".cs",
-                        mimetype = $"text/x-csharp",
+                        mimetype = "text/x-csharp",
                         name = "C#",
                         pygments_lexer = "C#",
                         version = "8.0"
@@ -287,7 +287,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 nbformat_minor = 4
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .ContainSingle()
                 .Which
@@ -341,15 +341,15 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 }
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new NotebookCell("csharp", "// this is csharp 1"),
-                    new NotebookCell("csharp", "// this is csharp 2"),
-                    new NotebookCell("fsharp", "// this is fsharp 1"),
-                    new NotebookCell("fsharp", "// this is fsharp 2"),
-                    new NotebookCell("pwsh", "# this is pwsh")
+                    new InteractiveDocumentElement("csharp", "// this is csharp 1"),
+                    new InteractiveDocumentElement("csharp", "// this is csharp 2"),
+                    new InteractiveDocumentElement("fsharp", "// this is fsharp 1"),
+                    new InteractiveDocumentElement("fsharp", "// this is fsharp 2"),
+                    new InteractiveDocumentElement("pwsh", "# this is pwsh")
                 });
         }
 
@@ -389,11 +389,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 nbformat_minor = 4
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new NotebookCell("fsharp", "// this is the code")
+                    new InteractiveDocumentElement("fsharp", "// this is the code")
                 });
         }
 
@@ -433,11 +433,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 nbformat_minor = 4
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new NotebookCell("csharp", "// this is csharp\n#!fsharp\n// and this is fsharp")
+                    new InteractiveDocumentElement("csharp", "// this is csharp\n#!fsharp\n// and this is fsharp")
                 });
         }
 
@@ -477,11 +477,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 nbformat_minor = 4
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new NotebookCell("csharp", "#!probably-a-magic-command\n// but this is csharp")
+                    new InteractiveDocumentElement("csharp", "#!probably-a-magic-command\n// but this is csharp")
                 });
         }
 
@@ -501,11 +501,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 }
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new NotebookCell("markdown", "This is `markdown`.")
+                    new InteractiveDocumentElement("markdown", "This is `markdown`.")
                 });
         }
 
@@ -529,11 +529,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 }
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new NotebookCell("markdown", "This is `markdown`.\nSo is this.")
+                    new InteractiveDocumentElement("markdown", "This is `markdown`.\nSo is this.")
                 });
         }
 
@@ -573,11 +573,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 nbformat_minor = 4
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new NotebookCell("csharp", "line 1\nline 2\nline 3\n")
+                    new InteractiveDocumentElement("csharp", "line 1\nline 2\nline 3\n")
                 });
         }
 
@@ -624,11 +624,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 nbformat_minor = 4
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new NotebookCell("csharp", "line 1\nline 2\nline 3\nline 4")
+                    new InteractiveDocumentElement("csharp", "line 1\nline 2\nline 3\nline 4")
                 });
         }
 
@@ -637,7 +637,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
         {
             var jupyter = new { };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .BeEmpty();
         }
@@ -679,12 +679,12 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 }
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new NotebookCell("csharp", "// line 1\n// line 2"),
-                    new NotebookCell("csharp", "// line 5\n// line 6")
+                    new InteractiveDocumentElement("csharp", "// line 1\n// line 2"),
+                    new InteractiveDocumentElement("csharp", "// line 5\n// line 6")
                 });
         }
 
@@ -713,11 +713,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 }
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new NotebookCell("csharp", "// this is not really fsharp")
+                    new InteractiveDocumentElement("csharp", "// this is not really fsharp")
                 });
         }
 
@@ -739,16 +739,16 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 }
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new NotebookCell("csharp", "")
+                    new InteractiveDocumentElement("csharp", "")
                 });
         }
 
         [Fact]
-        public void cell_display_output_with_string_array_can_be_parsed()
+        public void cell_display_output_with_object_array_can_be_parsed()
         {
             var jupyter = new
             {
@@ -776,7 +776,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 }
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .ContainSingle()
                 .Which
@@ -785,7 +785,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeOfType<NotebookCellDisplayOutput>()
+                .BeOfType<InteractiveDocumentDisplayOutputElement>()
                 .Which
                 .Data
                 .Should()
@@ -804,8 +804,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 );
         }
 
+
         [Fact]
-        public void cell_displaly_output_without_data_member_can_be_parsed()
+        public void cell_display_output_without_data_member_can_be_parsed()
         {
             var jupyter = new
             {
@@ -834,7 +835,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 }
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .ContainSingle()
                 .Which
@@ -843,7 +844,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeOfType<NotebookCellDisplayOutput>()
+                .BeOfType<InteractiveDocumentDisplayOutputElement>()
                 .Which
                 .Data
                 .Should()
@@ -876,7 +877,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 }
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .ContainSingle()
                 .Which
@@ -885,7 +886,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeOfType<NotebookCellTextOutput>()
+                .BeOfType<InteractiveDocumentTextOutputElement>()
                 .Which
                 .Text
                 .Should()
@@ -923,7 +924,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 }
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .ContainSingle()
                 .Which
@@ -932,10 +933,10 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeOfType<NotebookCellErrorOutput>()
+                .BeOfType<InteractiveDocumentErrorOutputElement>()
                 .Which
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new NotebookCellErrorOutput(null, null, new string[0]));
+                .BeEquivalentToRespectingRuntimeTypes(new InteractiveDocumentErrorOutputElement(null, null, new string[0]));
         }
 
         [Fact]
@@ -953,19 +954,19 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 }
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new NotebookCell("markdown", ""));
+                .BeEquivalentToRespectingRuntimeTypes(new InteractiveDocumentElement("markdown", ""));
         }
 
         [Fact]
         public void serialized_notebook_has_appropriate_metadata()
         {
-            var notebook = new NotebookDocument(Array.Empty<NotebookCell>());
-            var serialized = SerializeJupyter(notebook);
+            var notebook = new InteractiveDocument(Array.Empty<InteractiveDocumentElement>());
+            var serialized = SerializeJupyter(notebook, "\n");
             var jupyter = JToken.Parse(serialized);
 
             using var _ = new AssertionScope();
@@ -1003,10 +1004,10 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
         {
             var cells = new[]
             {
-                new NotebookCell("csharp", "//")
+                new InteractiveDocumentElement("csharp", "//")
             };
-            var notebook = new NotebookDocument(cells);
-            var serialized = SerializeJupyter(notebook);
+            var notebook = new InteractiveDocument(cells);
+            var serialized = SerializeJupyter(notebook,"\n");
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"]
                 .Should()
@@ -1039,10 +1040,10 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
         {
             var cells = new[]
             {
-                new NotebookCell("csharp", "var x = 1;")
+                new InteractiveDocumentElement("csharp", "var x = 1;")
             };
-            var notebook = new NotebookDocument(cells);
-            var serialized = SerializeJupyter(notebook);
+            var notebook = new InteractiveDocument(cells);
+            var serialized = SerializeJupyter(notebook, "\n");
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"][0]["source"]
                 .Should()
@@ -1057,10 +1058,10 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
         {
             var cells = new[]
             {
-                new NotebookCell("fsharp", "let x = 1")
+                new InteractiveDocumentElement("fsharp", "let x = 1")
             };
-            var notebook = new NotebookDocument(cells);
-            var serialized = SerializeJupyter(notebook);
+            var notebook = new InteractiveDocument(cells);
+            var serialized = SerializeJupyter(notebook, "\n");
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"][0]
                 .Should()
@@ -1088,10 +1089,10 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
         {
             var cells = new[]
             {
-                new NotebookCell("csharp", "var x = 1;\nvar y = 2;")
+                new InteractiveDocumentElement("csharp", "var x = 1;\nvar y = 2;")
             };
-            var notebook = new NotebookDocument(cells);
-            var serialized = SerializeJupyter(notebook);
+            var notebook = new InteractiveDocument(cells);
+            var serialized = SerializeJupyter(notebook, "\n");
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"][0]["source"]
                 .Should()
@@ -1107,10 +1108,10 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
         {
             var cells = new[]
             {
-                new NotebookCell("markdown", "This is `markdown`.\nThis is more `markdown`.")
+                new InteractiveDocumentElement("markdown", "This is `markdown`.\nThis is more `markdown`.")
             };
-            var notebook = new NotebookDocument(cells);
-            var serialized = SerializeJupyter(notebook);
+            var notebook = new InteractiveDocument(cells);
+            var serialized = SerializeJupyter(notebook, "\n");
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"]
                 .Should()
@@ -1136,13 +1137,13 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
         {
             var cells = new[]
             {
-                new NotebookCell("csharp", "//", new[]
+                new InteractiveDocumentElement("csharp", "//", new[]
                 {
-                    new NotebookCellTextOutput("this is text")
+                    new InteractiveDocumentTextOutputElement("this is text")
                 })
             };
-            var notebook = new NotebookDocument(cells);
-            var serialized = SerializeJupyter(notebook);
+            var notebook = new InteractiveDocument(cells);
+            var serialized = SerializeJupyter(notebook, "\n");
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"]
                 .Should()
@@ -1188,7 +1189,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 }
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .ContainSingle()
                 .Which
@@ -1197,7 +1198,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new NotebookCellTextOutput("this is text"));
+                .BeEquivalentToRespectingRuntimeTypes(new InteractiveDocumentTextOutputElement("this is text"));
         }
 
         [Fact]
@@ -1230,7 +1231,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 }
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .ContainSingle()
                 .Which
@@ -1239,7 +1240,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new NotebookCellTextOutput("this is text\nso is this"));
+                .BeEquivalentToRespectingRuntimeTypes(new InteractiveDocumentTextOutputElement("this is text\nso is this"));
         }
 
         [Fact]
@@ -1247,16 +1248,16 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
         {
             var cells = new[]
             {
-                new NotebookCell("csharp", "//", new[]
+                new InteractiveDocumentElement("csharp", "//", new[]
                 {
-                    new NotebookCellDisplayOutput(new Dictionary<string, object>
+                    new InteractiveDocumentDisplayOutputElement(new Dictionary<string, object>
                     {
                         { "text/html", "this is html" }
                     })
                 })
             };
-            var notebook = new NotebookDocument(cells);
-            var serialized = SerializeJupyter(notebook);
+            var notebook = new InteractiveDocument(cells);
+            var serialized = SerializeJupyter(notebook, "\n");
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"]
                 .Should()
@@ -1309,7 +1310,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 }
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .ContainSingle()
                 .Which
@@ -1318,7 +1319,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new NotebookCellDisplayOutput(new Dictionary<string, object>
+                .BeEquivalentToRespectingRuntimeTypes(new InteractiveDocumentDisplayOutputElement(new Dictionary<string, object>
                 {
                     { "text/html", "this is html" }
                 }));
@@ -1329,13 +1330,13 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
         {
             var cells = new[]
             {
-                new NotebookCell("csharp", "//", new[]
+                new InteractiveDocumentElement("csharp", "//", new[]
                 {
-                    new NotebookCellErrorOutput("e-name", "e-value", new[] { "at func1()", "at func2()" })
+                    new InteractiveDocumentErrorOutputElement("e-name", "e-value", new[] { "at func1()", "at func2()" })
                 })
             };
-            var notebook = new NotebookDocument(cells);
-            var serialized = SerializeJupyter(notebook);
+            var notebook = new InteractiveDocument(cells);
+            var serialized = SerializeJupyter(notebook, "\n");
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"]
                 .Should()
@@ -1391,7 +1392,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 }
             };
             var notebook = ParseJupyter(jupyter);
-            notebook.Cells
+            notebook.Elements
                 .Should()
                 .ContainSingle()
                 .Which
@@ -1400,7 +1401,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new NotebookCellErrorOutput("e-name", "e-value", new[]
+                .BeEquivalentToRespectingRuntimeTypes(new InteractiveDocumentErrorOutputElement("e-name", "e-value", new[]
                 {
                     "at func1()",
                     "at func2()"
@@ -1415,17 +1416,17 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                                  .SetInteractive(Debugger.IsAttached);
             var cells = new[]
             {
-                new NotebookCell("csharp", "// this is csharp", new[]
+                new InteractiveDocumentElement("csharp", "// this is csharp", new[]
                 {
-                    new NotebookCellDisplayOutput(new Dictionary<string, object>()
+                    new InteractiveDocumentDisplayOutputElement(new Dictionary<string, object>()
                     {
                         { "text/html", "this is html" }
                     })
                 }),
-                new NotebookCell("markdown", "This is `markdown`.")
+                new InteractiveDocumentElement("markdown", "This is `markdown`.")
             };
-            var notebook = new NotebookDocument(cells);
-            var json = SerializeJupyter(notebook);
+            var notebook = new InteractiveDocument(cells);
+            var json = SerializeJupyter(notebook, "\n");
             this.Assent(json, configuration);
         }
     }

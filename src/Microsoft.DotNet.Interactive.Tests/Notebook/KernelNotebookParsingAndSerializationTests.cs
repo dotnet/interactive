@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Notebook;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
@@ -21,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
         }
 
         [Fact]
-        public async Task composite_kernel_can_parse_notebooks()
+        public async Task composite_kernel_can_parse_interactive_documents()
         {
             using var kernel = CreateCompositeKernel();
 
@@ -31,14 +30,14 @@ var x = 1;
 ";
             var notebookBytes = Encoding.UTF8.GetBytes(notebookText);
 
-            await kernel.SendAsync(new ParseNotebook("notebook.dib", notebookBytes, ".NET"));
+            await kernel.SendAsync(new ParseInteractiveDocument("interactive.dib", notebookBytes, ".NET"));
             
             KernelEvents
                 .Should()
-                .ContainSingle<NotebookParsed>()
+                .ContainSingle<InteractiveDocumentParsed>()
                 .Which
-                .Notebook
-                .Cells
+                .Document
+                .Elements
                 .Should()
                 .ContainSingle()
                 .Which
@@ -52,12 +51,12 @@ var x = 1;
         {
             using var kernel = CreateCompositeKernel();
 
-            var notebook = new NotebookDocument(new[]
+            var notebook = new InteractiveDocument(new[]
             {
-                new NotebookCell("csharp", "var x = 1;")
+                new InteractiveDocumentElement("csharp", "var x = 1;")
             });
 
-            await kernel.SendAsync(new SerializeNotebook("notebook.dib", notebook, "\r\n", ".NET"));
+            await kernel.SendAsync(new SerializeInteractiveDocument("interactive.dib", notebook, "\n", ".NET"));
 
             var expectedLines = new[]
             {
@@ -66,11 +65,11 @@ var x = 1;
                 "var x = 1;",
                 ""
             };
-            var expectedText = string.Join("\r\n", expectedLines);
+            var expectedText = string.Join("\n", expectedLines);
 
             KernelEvents
                 .Should()
-                .ContainSingle<NotebookSerialized>()
+                .ContainSingle<InteractiveDocumentSerialized>()
                 .Which
                 .RawData
                 .AsString() // passing throught via this helper to make a test failure easier to identify

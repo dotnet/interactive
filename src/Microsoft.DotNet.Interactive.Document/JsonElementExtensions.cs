@@ -3,7 +3,7 @@
 
 using System.Text.Json;
 
-namespace Microsoft.DotNet.Interactive.Extensions
+namespace Microsoft.DotNet.Interactive
 {
     public static class JsonElementExtensions
     {

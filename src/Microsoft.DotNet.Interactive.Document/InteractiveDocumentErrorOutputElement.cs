@@ -1,15 +1,15 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.DotNet.Interactive.Notebook
+namespace Microsoft.DotNet.Interactive
 {
-    public class NotebookCellErrorOutput : NotebookCellOutput
+    public class InteractiveDocumentErrorOutputElement : InteractiveDocumentOutputElement
     {
         public string ErrorName { get; }
         public string ErrorValue { get; }
         public string[] StackTrace { get; }
 
-        public NotebookCellErrorOutput(string errorName, string errorValue, string[] stackTrace)
+        public InteractiveDocumentErrorOutputElement(string errorName, string errorValue, string[] stackTrace)
         {
             ErrorName = errorName;
             ErrorValue = errorValue;

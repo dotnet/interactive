@@ -17,7 +17,6 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
-using Microsoft.DotNet.Interactive.Notebook;
 using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive
@@ -26,8 +25,8 @@ namespace Microsoft.DotNet.Interactive
         Kernel,
         IExtensibleKernel,
         IEnumerable<Kernel>,
-        IKernelCommandHandler<ParseNotebook>,
-        IKernelCommandHandler<SerializeNotebook>
+        IKernelCommandHandler<ParseInteractiveDocument>,
+        IKernelCommandHandler<SerializeInteractiveDocument>
     {
         private readonly ConcurrentQueue<PackageAdded> _packagesToCheckForExtensions = new();
         private readonly List<Kernel> _childKernels = new();
@@ -104,26 +103,29 @@ namespace Microsoft.DotNet.Interactive
             RegisterForDisposal(kernel);
         }
 
-        public Task HandleAsync(ParseNotebook command, KernelInvocationContext context)
+        public Task HandleAsync(ParseInteractiveDocument command, KernelInvocationContext context)
         {
-            var notebook = ParseNotebook(command.FileName, command.RawData);
-            context.Publish(new NotebookParsed(notebook, command));
+            var notebook = ParseInteractiveDocument(command.FileName, command.RawData);
+            context.Publish(new InteractiveDocumentParsed(notebook, command));
             return Task.CompletedTask;
         }
 
-        public NotebookDocument ParseNotebook(string fileName, byte[] rawData)
+        private InteractiveDocument ParseInteractiveDocument(string fileName, byte[] rawData)
         {
-            // FIX: (ParseNotebook) make this internal, make name congruent with SerializeNotebook
             var kernelLanguageAliases = _kernelsByNameOrAlias.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Name);
             kernelLanguageAliases.Remove(Name); // remove `.NET`
-            var notebook = NotebookFileFormatHandler.Parse(fileName, rawData, DefaultKernelName, kernelLanguageAliases);
+
+            using var stream = new MemoryStream(rawData);
+            var notebook = NotebookFileFormatHandler.Read(fileName, stream, DefaultKernelName, kernelLanguageAliases);
             return notebook;
         }
 
-        public Task HandleAsync(SerializeNotebook command, KernelInvocationContext context)
+        public Task HandleAsync(SerializeInteractiveDocument command, KernelInvocationContext context)
         {
-            var rawData = NotebookFileFormatHandler.Serialize(command.FileName, command.Notebook, command.NewLine);
-            context.Publish(new NotebookSerialized(rawData, command));
+            using var stream = new MemoryStream();
+            NotebookFileFormatHandler.Write(command.FileName, command.Document, command.NewLine,stream);
+            var rawData = stream.ToArray();
+            context.Publish(new InteractiveDocumentSerialized(rawData, command));
             return Task.CompletedTask;
         }
 

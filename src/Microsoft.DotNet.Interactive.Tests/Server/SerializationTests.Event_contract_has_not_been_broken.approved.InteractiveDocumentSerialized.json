@@ -1,0 +1,1 @@
+{"event":{"rawData":"AQIDBA=="},"eventType":"InteractiveDocumentSerialized","command":{"token":"the-token","commandType":"SerializeInteractiveDocument","command":{"fileName":"interactive.ipynb","document":null,"newLine":"\n","targetKernelName":null}}}

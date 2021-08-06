@@ -1,7 +1,8 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.DotNet.Interactive.Notebook;
+
+using Microsoft.DotNet.Interactive.Ipynb;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
 {
@@ -9,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
     {
         public static string GetLanguage(this JupyterRequestContext context)
         {
-            if (context.JupyterRequestMessageEnvelope.MetaData.TryGetValue(NotebookFileFormatHandler.MetadataNamespace, out var candidateMetadata) &&
+            if (context.JupyterRequestMessageEnvelope.MetaData.TryGetValue(IpynbFile.MetadataNamespace, out var candidateMetadata) &&
                 candidateMetadata is InputCellMetadata inputCellMetadata)
             {
                 return inputCellMetadata.Language;
