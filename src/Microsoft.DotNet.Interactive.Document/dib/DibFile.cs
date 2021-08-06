@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.dib
 
         public static Encoding Encoding => new UTF8Encoding(false);
 
-        public static InteractiveDocument Read(string content, string defaultLanguage, IDictionary<string, string> kernelLanguageAliases)
+        public static InteractiveDocument Parse(string content, string defaultLanguage, IDictionary<string, string> kernelLanguageAliases)
         {
             if (kernelLanguageAliases == null)
             {
@@ -97,7 +97,7 @@ namespace Microsoft.DotNet.Interactive.dib
         {
             using var reader = new StreamReader(stream, Encoding);
             var content = reader.ReadToEnd();
-            return Read(content, defaultLanguage, kernelLanguageAliases);
+            return Parse(content, defaultLanguage, kernelLanguageAliases);
         }
 
         public static async Task<InteractiveDocument> ReadAsync(Stream stream, string defaultLanguage,
@@ -105,17 +105,10 @@ namespace Microsoft.DotNet.Interactive.dib
         {
             using var reader = new StreamReader(stream, Encoding);
             var content = await reader.ReadToEndAsync();
-            return Read(content, defaultLanguage, kernelLanguageAliases);
+            return Parse(content, defaultLanguage, kernelLanguageAliases);
         }
 
-        public static void Write(InteractiveDocument interactiveDocument, string newline, Stream stream)
-        {
-            using var writer = new StreamWriter(stream, Encoding, 1024, true);
-            Write(interactiveDocument, newline, writer);
-            writer.Flush();
-        }
-
-        public static void Write(InteractiveDocument interactiveDocument, string newline, TextWriter writer)
+        public static string ToDibContent(this InteractiveDocument interactiveDocument, string newline = "\n")
         {
             var lines = new List<string>();
 
@@ -137,6 +130,19 @@ namespace Microsoft.DotNet.Interactive.dib
             }
 
             var content = string.Join(newline, lines);
+            return content;
+        }
+
+        public static void Write(InteractiveDocument interactiveDocument, string newline, Stream stream)
+        {
+            using var writer = new StreamWriter(stream, Encoding, 1024, true);
+            Write(interactiveDocument, newline, writer);
+            writer.Flush();
+        }
+
+        public static void Write(InteractiveDocument interactiveDocument, string newline, TextWriter writer)
+        {
+            var content = interactiveDocument.ToDibContent(newline);
             writer.Write(content);
         }
         

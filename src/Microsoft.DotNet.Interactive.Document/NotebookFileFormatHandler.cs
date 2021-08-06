@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive
 {
     public static class NotebookFileFormatHandler
     {
-        public static InteractiveDocument Read(string fileName, string content, string defaultLanguage,
+        public static InteractiveDocument Parse(string fileName, string content, string defaultLanguage,
             IDictionary<string, string> kernelLanguageAliases)
         {
             var extension = Path.GetExtension(fileName);
@@ -19,9 +19,9 @@ namespace Microsoft.DotNet.Interactive
             {
                 case ".dib":
                 case ".dotnet-interactive":
-                    return DibFile.Read(content, defaultLanguage, kernelLanguageAliases);
+                    return DibFile.Parse(content, defaultLanguage, kernelLanguageAliases);
                 case ".ipynb":
-                    return IpynbFile.Read(content, kernelLanguageAliases);
+                    return IpynbFile.Parse(content, kernelLanguageAliases);
                 default:
                     throw new NotSupportedException($"Unable to parse a interactive document of type '{extension}'");
             }
