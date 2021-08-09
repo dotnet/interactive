@@ -198,7 +198,3 @@ using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 
 var _ = Kernel.Root.SendAsync(new SendEditableCode("markdown","# this is a markdown cell."));
-
-#!markdown
-
-# this is a markdown cell.
