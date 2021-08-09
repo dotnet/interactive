@@ -177,3 +177,28 @@ Console.Write("\x1b[0m");
 Console.Error.Write("\x1b[38;2;255;0;0m");
 Console.Error.WriteLine("this should be red");
 Console.Error.Write("\x1b[0m");
+
+#!markdown
+
+# vscode kernel
+This cell should prompt the user for input
+
+#!csharp
+
+var input = await InteractiveHost.GetInputAsync("give me data");
+input
+
+#!markdown
+
+Test adding cell to notebook (VSCode only)
+
+#!csharp
+
+using Microsoft.DotNet.Interactive;
+using Microsoft.DotNet.Interactive.Commands;
+
+var _ = Kernel.Root.SendAsync(new SendEditableCode("markdown","# this is a markdown cell."));
+
+#!markdown
+
+# this is a markdown cell.

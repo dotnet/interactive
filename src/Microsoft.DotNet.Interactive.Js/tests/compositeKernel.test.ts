@@ -7,6 +7,7 @@ import { CompositeKernel } from "../src/common/interactive/compositeKernel";
 import { Kernel } from "../src/common/interactive/kernel";
 import { findEventFromKernel } from "./testSupport";
 import { Logger } from "../src/common/logger";
+import { getPackedSettings } from "http2";
 
 
 describe("compositeKernel", () => {
@@ -60,11 +61,34 @@ describe("compositeKernel", () => {
             events.push(e);
         });
 
-        await compositeKernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "pytonCode", targetKernelName: "python" } });
+        await compositeKernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "pytonCode", targetKernelName: python.name } });
         await compositeKernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "goCode", targetKernelName: "go" } });
 
-        expect(events.find(e => e.command.command.targetKernelName === "python")).not.to.be.undefined;
-        expect(events.find(e => e.command.command.targetKernelName === "go")).not.to.be.undefined;
+        expect(events.find(e => e.command.command.targetKernelName === python.name)).not.to.be.undefined;
+        expect(events.find(e => e.command.command.targetKernelName === go.name)).not.to.be.undefined;
+    });
+
+    it("can have command handlers", async () => {
+        const events: contracts.KernelEventEnvelope[] = [];
+        const compositeKernel = new CompositeKernel("composite-kernel");
+        const python = new Kernel("python");
+        const go = new Kernel("go");
+        compositeKernel.add(python);
+        compositeKernel.add(go);
+
+        compositeKernel.registerCommandHandler({
+            commandType: contracts.SubmitCodeType, handle: (invocation) => {
+                return Promise.resolve();
+            }
+        });
+
+        compositeKernel.subscribeToKernelEvents(e => {
+            events.push(e);
+        });
+
+        await compositeKernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "goCode", targetKernelName: compositeKernel.name } });
+
+        expect(events.find(e => e.command.command.targetKernelName === compositeKernel.name)).not.to.be.undefined;
     });
 
     it("publishes events from subkernels kernels", async () => {
