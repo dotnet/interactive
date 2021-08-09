@@ -343,47 +343,47 @@ stages:
             command: build
             Dockerfile: "$(Build.SourcesDirectory)/samples/docker-image/Dockerfile"
 
-  # - template: /eng/common/templates/jobs/jobs.yml
-  #   parameters:
-  #     enableMicrobuild: true
-  #     jobs:
-  #     - job: Dockerfile_Main
-  #       pool:
-  #         ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-  #           name: NetCorePublic-Pool
-  #           queue: BuildPool.Ubuntu.1604.amd64.Open
-  #         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-  #           name: NetCoreInternal-Pool
-  #           queue: BuildPool.Ubuntu.1604.amd64
-  #       steps:
-  #       - checkout: self
-  #         clean: true
-  #       - task: Docker@2
-  #         displayName: Build main Dockerfile
-  #         inputs:
-  #           command: build
-  #           Dockerfile: "$(Build.SourcesDirectory)/Dockerfile"
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      enableMicrobuild: true
+      jobs:
+      - job: Dockerfile_Main
+        pool:
+          ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+            name: NetCorePublic-Pool
+            queue: BuildPool.Ubuntu.1604.amd64.Open
+          ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+            name: NetCoreInternal-Pool
+            queue: BuildPool.Ubuntu.1604.amd64
+        steps:
+        - checkout: self
+          clean: true
+        - task: Docker@2
+          displayName: Build main Dockerfile
+          inputs:
+            command: build
+            Dockerfile: "$(Build.SourcesDirectory)/Dockerfile"
 
-  # - template: /eng/common/templates/jobs/jobs.yml
-  #   parameters:
-  #     enableMicrobuild: true
-  #     jobs:
-  #     - job: Dockerfile_Binder_Dependency
-  #       pool:
-  #         ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-  #           name: NetCorePublic-Pool
-  #           queue: BuildPool.Ubuntu.1604.amd64.Open
-  #         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-  #           name: NetCoreInternal-Pool
-  #           queue: BuildPool.Ubuntu.1604.amd64
-  #       steps:
-  #       - checkout: self
-  #         clean: true
-  #       - task: Docker@2
-  #         displayName: Build Binder dependency Dockerfile
-  #         inputs:
-  #           command: build
-  #           Dockerfile: "$(Build.SourcesDirectory)/samples/my binder/Dockerfile"
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      enableMicrobuild: true
+      jobs:
+      - job: Dockerfile_Binder_Dependency
+        pool:
+          ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+            name: NetCorePublic-Pool
+            queue: BuildPool.Ubuntu.1604.amd64.Open
+          ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+            name: NetCoreInternal-Pool
+            queue: BuildPool.Ubuntu.1604.amd64
+        steps:
+        - checkout: self
+          clean: true
+        - task: Docker@2
+          displayName: Build Binder dependency Dockerfile
+          inputs:
+            command: build
+            Dockerfile: "$(Build.SourcesDirectory)/samples/my binder/Dockerfile"
 
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
