@@ -7,7 +7,6 @@ import { CompositeKernel } from "../src/common/interactive/compositeKernel";
 import { Kernel } from "../src/common/interactive/kernel";
 import { findEventFromKernel } from "./testSupport";
 import { Logger } from "../src/common/logger";
-import { getPackedSettings } from "http2";
 
 
 describe("compositeKernel", () => {
