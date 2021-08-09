@@ -37,7 +37,7 @@ describe("compositeKernel", () => {
         expect(kernel.findKernelByName("js")).not.to.be.undefined;
     });
 
-    it("routes commands to the approprioate kernels", async () => {
+    it("routes commands to the appropriate kernels", async () => {
         const events: contracts.KernelEventEnvelope[] = [];
         const compositeKernel = new CompositeKernel("composite-kernel");
         const python = new Kernel("python");
