@@ -42,8 +42,9 @@ export class CompositeKernel extends Kernel {
             ? this
             : this.getTargetKernel(commandEnvelope.command);
 
-        if (kernel) {
-
+        if (kernel === this) {
+            return super.handleCommand(commandEnvelope);
+        } else if (kernel) {
             return kernel.handleCommand(commandEnvelope);
         }
 
