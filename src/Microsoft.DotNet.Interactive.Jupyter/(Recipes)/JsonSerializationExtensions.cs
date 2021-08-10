@@ -6,6 +6,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Json;
 
 namespace Recipes
 {

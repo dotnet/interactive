@@ -4,7 +4,7 @@
 using System;
 using System.Text.Json;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Json
 {
     public abstract class JsonConverter<T> : System.Text.Json.Serialization.JsonConverter<T>
     {

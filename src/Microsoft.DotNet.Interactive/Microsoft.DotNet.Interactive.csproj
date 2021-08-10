@@ -49,6 +49,7 @@
   <ItemGroup>
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Documents\Microsoft.DotNet.Interactive.Documents.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.Json\Microsoft.DotNet.Interactive.Json.csproj" />
   </ItemGroup>
 
 </Project>

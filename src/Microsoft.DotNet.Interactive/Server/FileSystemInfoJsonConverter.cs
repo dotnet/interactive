@@ -4,10 +4,11 @@
 using System;
 using System.IO;
 using System.Text.Json;
+using Microsoft.DotNet.Interactive.Json;
 
 namespace Microsoft.DotNet.Interactive.Server
 {
-    public class FileSystemInfoJsonConverter : Formatting.JsonConverter<FileSystemInfo>
+    public class FileSystemInfoJsonConverter : JsonConverter<FileSystemInfo>
     {
         public override FileSystemInfo Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {

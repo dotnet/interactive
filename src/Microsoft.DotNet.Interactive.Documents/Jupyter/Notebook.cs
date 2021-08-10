@@ -10,6 +10,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Json;
 
 namespace Microsoft.DotNet.Interactive.Documents.Jupyter
 {

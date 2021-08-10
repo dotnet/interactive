@@ -19,6 +19,7 @@
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.CSharp\Microsoft.DotNet.Interactive.CSharp.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Documents\Microsoft.DotNet.Interactive.Documents.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.FSharp\Microsoft.DotNet.Interactive.FSharp.fsproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.Json\Microsoft.DotNet.Interactive.Json.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.PowerShell\Microsoft.DotNet.Interactive.PowerShell.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
   </ItemGroup>
