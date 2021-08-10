@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
     {
         public static string GetLanguage(this JupyterRequestContext context)
         {
-            if (context.JupyterRequestMessageEnvelope.MetaData.TryGetValue(IpynbFile.MetadataNamespace, out var candidateMetadata) &&
+            if (context.JupyterRequestMessageEnvelope.MetaData.TryGetValue(Notebook.MetadataNamespace, out var candidateMetadata) &&
                 candidateMetadata is InputCellMetadata inputCellMetadata)
             {
                 return inputCellMetadata.Language;

@@ -4,7 +4,6 @@
 using System.IO;
 using System.Text;
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.dib;
 using Microsoft.DotNet.Interactive.Dib;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -297,7 +296,7 @@ var x = 1;
         public void notebook_can_be_parsed_from_different_extensions(string extension)
         {
             var fileName = $"interactive{extension}";
-            var notebook = NotebookFileFormatHandler.Parse(fileName, @"
+            var notebook = InteractiveDocument.Parse(fileName, @"
 #!csharp
 1+1
 
@@ -407,7 +406,7 @@ var x = 1;
             };
             var notebook = new InteractiveDocument(cells);
             using var stream = new MemoryStream();
-            NotebookFileFormatHandler.Write(fileName, notebook,"\n", stream);
+            InteractiveDocument.Write(fileName, notebook,"\n", stream);
             stream.Position = 0;
             var serialized = Encoding.UTF8.GetString( stream.ToArray());
             var expectedLines = new[]
