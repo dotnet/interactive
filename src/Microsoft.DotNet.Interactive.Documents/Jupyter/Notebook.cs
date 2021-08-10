@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             _serializerOptions.Converters.Add(new DataDictionaryConverter());
         }
 
-        public static Documents.InteractiveDocument Parse(string content, IDictionary<string, string> kernelLanguageAliases)
+        public static InteractiveDocument Parse(string content, IDictionary<string, string> kernelLanguageAliases)
         {
             if (kernelLanguageAliases == null)
             {
@@ -118,10 +118,10 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
                 }
             }
 
-            return new Documents.InteractiveDocument(cells.ToArray());
+            return new InteractiveDocument(cells.ToArray());
         }
 
-        public static Documents.InteractiveDocument Read(Stream stream, 
+        public static InteractiveDocument Read(Stream stream, 
             IDictionary<string, string> kernelLanguageAliases)
         {
             using var reader = new StreamReader(stream, Encoding);
@@ -129,7 +129,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             return Parse(content, kernelLanguageAliases);
         }
 
-        public static async Task<Documents.InteractiveDocument> ReadAsync(Stream stream,
+        public static async Task<InteractiveDocument> ReadAsync(Stream stream,
             IDictionary<string, string> kernelLanguageAliases)
         {
             using var reader = new StreamReader(stream, Encoding);
