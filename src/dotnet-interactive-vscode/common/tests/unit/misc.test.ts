@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { expect } from 'chai';
-import { NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellTextOutput } from '../../interfaces/contracts';
+import { InteractiveDocumentDisplayOutputElement, InteractiveDocumentErrorOutputElement, InteractiveDocumentTextOutputElement } from '../../interfaces/contracts';
 import { isDisplayOutput, isErrorOutput, isTextOutput, reshapeOutputValueForVsCode } from '../../interfaces/utilities';
 import { isDotNetNotebookMetadata, isIpynbFile } from '../../ipynbUtilities';
 import { createUri, debounce, executeSafe, getWorkingDirectoryForNotebook, isDotNetUpToDate, parse, processArguments, stringify } from '../../utilities';
@@ -149,7 +149,7 @@ describe('Miscellaneous tests', () => {
 
     it('cell error output shape can be detected', () => {
         // strongly typed to catch interface changes
-        const error: NotebookCellErrorOutput = {
+        const error: InteractiveDocumentErrorOutputElement = {
             errorName: 'ename',
             errorValue: 'evalue',
             stackTrace: [
@@ -162,7 +162,7 @@ describe('Miscellaneous tests', () => {
 
     it('cell display output shape can be detected', () => {
         // strongly typed to catch interface changes
-        const display: NotebookCellDisplayOutput = {
+        const display: InteractiveDocumentDisplayOutputElement = {
             data: {
                 'text/html': 'html',
                 'text/plain': 'text'
@@ -173,7 +173,7 @@ describe('Miscellaneous tests', () => {
 
     it('cell text output shape can be detected', () => {
         // strongly typed to catch interface changes
-        const text: NotebookCellTextOutput = {
+        const text: InteractiveDocumentTextOutputElement = {
             text: 'some text'
         };
         expect(isTextOutput(text)).to.be.true;
