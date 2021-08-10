@@ -7,9 +7,9 @@ namespace Microsoft.DotNet.Interactive.Events
 {
     public class InteractiveDocumentParsed : KernelEvent
     {
-        public InteractiveDocument Document { get; }
+        public Documents.InteractiveDocument Document { get; }
 
-        public InteractiveDocumentParsed(InteractiveDocument document, KernelCommand command)
+        public InteractiveDocumentParsed(Documents.InteractiveDocument document, KernelCommand command)
             : base(command)
         {
             Document = document;

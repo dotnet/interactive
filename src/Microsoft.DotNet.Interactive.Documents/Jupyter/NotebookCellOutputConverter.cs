@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text.Json;
 using Microsoft.DotNet.Interactive.Formatting;
 
-namespace Microsoft.DotNet.Interactive.Ipynb
+namespace Microsoft.DotNet.Interactive.Documents.Jupyter
 {
     public class NotebookCellOutputConverter : JsonConverter<InteractiveDocumentOutputElement>
     {

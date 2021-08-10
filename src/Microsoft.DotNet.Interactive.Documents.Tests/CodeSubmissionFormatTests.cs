@@ -4,22 +4,21 @@
 using System.IO;
 using System.Text;
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.Dib;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Documents.Tests
 {
-    public class DibFormatTests : DocumentFormatTestsBase
+    public class CodeSubmissionFormatTests : DocumentFormatTestsBase
     {
         public InteractiveDocument ParseDib(string content)
         {
-            return Document.Parse( content,"csharp", KernelLanguageAliases);
+            return CodeSubmission.Parse( content,"csharp", KernelLanguageAliases);
         }
 
         public string SerializeDib(InteractiveDocument interactive, string newLine)
         {
-            return interactive.ToDibContent(newLine);
+            return interactive.ToCodeSubmissionContent(newLine);
         }
 
         [Fact]
@@ -288,28 +287,6 @@ var x = 1;
                 .Outputs
                 .Should()
                 .BeEmpty();
-        }
-
-        [Theory]
-        [InlineData(".dib")]
-        [InlineData(".dotnet-interactive")]
-        public void notebook_can_be_parsed_from_different_extensions(string extension)
-        {
-            var fileName = $"interactive{extension}";
-            var notebook = InteractiveDocument.Parse(fileName, @"
-#!csharp
-1+1
-
-#!fsharp
-2+2",
-                "csharp", KernelLanguageAliases);
-            notebook.Elements
-                .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new[]
-                {
-                    new InteractiveDocumentElement("csharp", "1+1"),
-                    new InteractiveDocumentElement("fsharp", "2+2")
-                });
         }
 
         [Fact]

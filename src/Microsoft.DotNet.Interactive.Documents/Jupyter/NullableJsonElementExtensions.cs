@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 
-namespace Microsoft.DotNet.Interactive.Ipynb
+namespace Microsoft.DotNet.Interactive.Documents.Jupyter
 {
     internal static class NullableJsonElementExtensions
     {

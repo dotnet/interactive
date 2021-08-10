@@ -6,10 +6,10 @@ namespace Microsoft.DotNet.Interactive.Commands
     public class SerializeInteractiveDocument : KernelCommand
     {
         public string FileName { get; }
-        public InteractiveDocument Document { get; }
+        public Documents.InteractiveDocument Document { get; }
         public string NewLine { get; }
 
-        public SerializeInteractiveDocument(string fileName, InteractiveDocument document, string newLine, string targetKernelName = null)
+        public SerializeInteractiveDocument(string fileName, Documents.InteractiveDocument document, string newLine, string targetKernelName = null)
             : base(targetKernelName)
         {
             FileName = fileName;

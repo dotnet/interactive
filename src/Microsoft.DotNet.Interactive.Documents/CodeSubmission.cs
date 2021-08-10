@@ -8,9 +8,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.Dib
+namespace Microsoft.DotNet.Interactive.Documents
 {
-    public static class Document
+    public static class CodeSubmission
     {
         private const string InteractiveNotebookCellSpecifier = "#!";
 
@@ -25,32 +25,32 @@ namespace Microsoft.DotNet.Interactive.Dib
 
             var lines = StringExtensions.SplitAsLines(content);
 
-            var cells = new List<InteractiveDocumentElement>();
+            var elements = new List<InteractiveDocumentElement>();
             var currentLanguage = defaultLanguage;
-            var currentCellLines = new List<string>();
+            var currentElementLines = new List<string>();
 
-            InteractiveDocumentElement CreateCell(string cellLanguage, IEnumerable<string> cellLines)
+            InteractiveDocumentElement CreateElement(string elementLanguage, IEnumerable<string> elementLines)
             {
-                return new(cellLanguage, string.Join("\n", cellLines));
+                return new(elementLanguage, string.Join("\n", elementLines));
             }
 
-            void AddCell()
+            void AddElement()
             {
                 // trim leading blank lines
-                while (currentCellLines.Count > 0 && string.IsNullOrEmpty(currentCellLines[0]))
+                while (currentElementLines.Count > 0 && string.IsNullOrEmpty(currentElementLines[0]))
                 {
-                    currentCellLines.RemoveAt(0);
+                    currentElementLines.RemoveAt(0);
                 }
 
                 // trim trailing blank lines
-                while (currentCellLines.Count > 0 && string.IsNullOrEmpty(currentCellLines[^1]))
+                while (currentElementLines.Count > 0 && string.IsNullOrEmpty(currentElementLines[^1]))
                 {
-                    currentCellLines.RemoveAt(currentCellLines.Count - 1);
+                    currentElementLines.RemoveAt(currentElementLines.Count - 1);
                 }
 
-                if (currentCellLines.Count > 0)
+                if (currentElementLines.Count > 0)
                 {
-                    cells.Add(CreateCell(currentLanguage, currentCellLines));
+                    elements.Add(CreateElement(currentLanguage, currentElementLines));
                 }
             }
 
@@ -61,35 +61,35 @@ namespace Microsoft.DotNet.Interactive.Dib
                     var cellLanguage = line.Substring(InteractiveNotebookCellSpecifier.Length);
                     if (kernelLanguageAliases.TryGetValue(cellLanguage, out cellLanguage))
                     {
-                        // recognized language, finalize the current cell
-                        AddCell();
+                        // recognized language, finalize the current element
+                        AddElement();
 
-                        // start a new cell
+                        // start a new element
                         currentLanguage = cellLanguage;
-                        currentCellLines.Clear();
+                        currentElementLines.Clear();
                     }
                     else
                     {
                         // unrecognized language, probably a magic command
-                        currentCellLines.Add(line);
+                        currentElementLines.Add(line);
                     }
                 }
                 else
                 {
-                    currentCellLines.Add(line);
+                    currentElementLines.Add(line);
                 }
             }
 
-            // finalize last cell
-            AddCell();
+            // finalize last element
+            AddElement();
 
-            // ensure there's at least one cell available
-            if (cells.Count == 0)
+            // ensure there's at least one element available
+            if (elements.Count == 0)
             {
-                cells.Add(CreateCell(defaultLanguage, Array.Empty<string>()));
+                elements.Add(CreateElement(defaultLanguage, Array.Empty<string>()));
             }
 
-            return new InteractiveDocument(cells.ToArray());
+            return new InteractiveDocument(elements.ToArray());
         }
 
         public static InteractiveDocument Read(Stream stream, string defaultLanguage,
@@ -108,23 +108,23 @@ namespace Microsoft.DotNet.Interactive.Dib
             return Parse(content, defaultLanguage, kernelLanguageAliases);
         }
 
-        public static string ToDibContent(this InteractiveDocument interactiveDocument, string newline = "\n")
+        public static string ToCodeSubmissionContent(this InteractiveDocument interactiveDocument, string newline = "\n")
         {
             var lines = new List<string>();
 
-            foreach (var cell in interactiveDocument.Elements)
+            foreach (var element in interactiveDocument.Elements)
             {
-                var cellLines = StringExtensions.SplitAsLines(cell.Contents).SkipWhile(l => l.Length == 0).ToList();
-                while (cellLines.Count > 0 && cellLines[^1].Length == 0)
+                var elementLines = StringExtensions.SplitAsLines(element.Contents).SkipWhile(l => l.Length == 0).ToList();
+                while (elementLines.Count > 0 && elementLines[^1].Length == 0)
                 {
-                    cellLines.RemoveAt(cellLines.Count - 1);
+                    elementLines.RemoveAt(elementLines.Count - 1);
                 }
 
-                if (cellLines.Count > 0)
+                if (elementLines.Count > 0)
                 {
-                    lines.Add($"{InteractiveNotebookCellSpecifier}{cell.Language}");
+                    lines.Add($"{InteractiveNotebookCellSpecifier}{element.Language}");
                     lines.Add("");
-                    lines.AddRange(cellLines);
+                    lines.AddRange(elementLines);
                     lines.Add("");
                 }
             }
@@ -142,7 +142,7 @@ namespace Microsoft.DotNet.Interactive.Dib
 
         public static void Write(InteractiveDocument interactiveDocument, string newline, TextWriter writer)
         {
-            var content = interactiveDocument.ToDibContent(newline);
+            var content = interactiveDocument.ToCodeSubmissionContent(newline);
             writer.Write(content);
         }
         
