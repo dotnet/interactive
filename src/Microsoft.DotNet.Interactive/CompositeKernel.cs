@@ -110,20 +110,20 @@ namespace Microsoft.DotNet.Interactive
             return Task.CompletedTask;
         }
 
-        private InteractiveDocument ParseInteractiveDocument(string fileName, byte[] rawData)
+        private Documents.InteractiveDocument ParseInteractiveDocument(string fileName, byte[] rawData)
         {
             var kernelLanguageAliases = _kernelsByNameOrAlias.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Name);
             kernelLanguageAliases.Remove(Name); // remove `.NET`
 
             using var stream = new MemoryStream(rawData);
-            var notebook = InteractiveDocument.Read(fileName, stream, DefaultKernelName, kernelLanguageAliases);
+            var notebook = Documents.InteractiveDocument.Read(fileName, stream, DefaultKernelName, kernelLanguageAliases);
             return notebook;
         }
 
         public Task HandleAsync(SerializeInteractiveDocument command, KernelInvocationContext context)
         {
             using var stream = new MemoryStream();
-            InteractiveDocument.Write(command.FileName, command.Document, command.NewLine,stream);
+            Documents.InteractiveDocument.Write(command.FileName, command.Document, command.NewLine,stream);
             var rawData = stream.ToArray();
             context.Publish(new InteractiveDocumentSerialized(rawData, command));
             return Task.CompletedTask;

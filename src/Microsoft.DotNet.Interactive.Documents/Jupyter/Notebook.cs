@@ -10,9 +10,8 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Ipynb;
 
-namespace Microsoft.DotNet.Interactive.Jupyter
+namespace Microsoft.DotNet.Interactive.Documents.Jupyter
 {
     public static class Notebook
     {
@@ -27,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             _serializerOptions.Converters.Add(new DataDictionaryConverter());
         }
 
-        public static InteractiveDocument Parse(string content, IDictionary<string, string> kernelLanguageAliases)
+        public static Documents.InteractiveDocument Parse(string content, IDictionary<string, string> kernelLanguageAliases)
         {
             if (kernelLanguageAliases == null)
             {
@@ -118,10 +117,10 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                 }
             }
 
-            return new InteractiveDocument(cells.ToArray());
+            return new Documents.InteractiveDocument(cells.ToArray());
         }
 
-        public static InteractiveDocument Read(Stream stream, 
+        public static Documents.InteractiveDocument Read(Stream stream, 
             IDictionary<string, string> kernelLanguageAliases)
         {
             using var reader = new StreamReader(stream, Encoding);
@@ -129,7 +128,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             return Parse(content, kernelLanguageAliases);
         }
 
-        public static async Task<InteractiveDocument> ReadAsync(Stream stream,
+        public static async Task<Documents.InteractiveDocument> ReadAsync(Stream stream,
             IDictionary<string, string> kernelLanguageAliases)
         {
             using var reader = new StreamReader(stream, Encoding);
@@ -155,14 +154,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             return string.Join("\n", textLines);
         }
 
-        public static void Write(InteractiveDocument interactive, string newline, Stream stream)
+        public static void Write(Documents.InteractiveDocument interactive, string newline, Stream stream)
         {
             using var writer = new StreamWriter(stream, Encoding, 1024, true);
             Write(interactive, newline, writer);
             writer.Flush();
         }
 
-        public static string ToIpynbContent(this InteractiveDocument interactive, string newline = "\n")
+        public static string ToIpynbContent(this Documents.InteractiveDocument interactive, string newline = "\n")
         {
             var cells = new List<object>();
             foreach (var element in interactive.Elements)
@@ -257,7 +256,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             return content;
         }
 
-        public static void Write(InteractiveDocument interactive, string newline, TextWriter writer)
+        public static void Write(Documents.InteractiveDocument interactive, string newline, TextWriter writer)
         {
             var content = interactive.ToIpynbContent(newline);
             writer.Write(content);

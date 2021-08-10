@@ -4,37 +4,20 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.DotNet.Interactive.Dib;
-using Microsoft.DotNet.Interactive.Jupyter;
+using Microsoft.DotNet.Interactive.Documents.Jupyter;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive.Documents
 {
     public partial class InteractiveDocument
     {
-        public static InteractiveDocument Parse(string fileName, string content, string defaultLanguage,
-            IDictionary<string, string> kernelLanguageAliases)
+       public static InteractiveDocument Read(string fileName, Stream stream, string defaultLanguage, IDictionary<string, string> kernelLanguageAliases)
         {
             var extension = Path.GetExtension(fileName);
             switch (extension.ToLowerInvariant())
             {
                 case ".dib":
                 case ".dotnet-interactive":
-                    return Document.Parse(content, defaultLanguage, kernelLanguageAliases);
-                case ".ipynb":
-                    return Notebook.Parse(content, kernelLanguageAliases);
-                default:
-                    throw new NotSupportedException($"Unable to parse a interactive document of type '{extension}'");
-            }
-        }
-
-        public static InteractiveDocument Read(string fileName, Stream stream, string defaultLanguage, IDictionary<string, string> kernelLanguageAliases)
-        {
-            var extension = Path.GetExtension(fileName);
-            switch (extension.ToLowerInvariant())
-            {
-                case ".dib":
-                case ".dotnet-interactive":
-                    return Document.Read(stream, defaultLanguage, kernelLanguageAliases);
+                    return CodeSubmission.Read(stream, defaultLanguage, kernelLanguageAliases);
                 case ".ipynb":
                     return Notebook.Read(stream, kernelLanguageAliases);
                 default:
@@ -51,7 +34,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 case ".dib":
                 case ".dotnet-interactive":
-                    Document.Write(interactive, newline, stream);
+                    CodeSubmission.Write(interactive, newline, stream);
                     break;
                 case ".ipynb":
                     Notebook.Write(interactive, newline, stream);

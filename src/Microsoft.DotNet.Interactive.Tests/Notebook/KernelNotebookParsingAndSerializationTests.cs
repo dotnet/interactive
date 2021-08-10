@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -51,7 +52,7 @@ var x = 1;
         {
             using var kernel = CreateCompositeKernel();
 
-            var notebook = new InteractiveDocument(new[]
+            var notebook = new Documents.InteractiveDocument(new[]
             {
                 new InteractiveDocumentElement("csharp", "var x = 1;")
             });

@@ -13,6 +13,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Html;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -174,7 +175,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new SendEditableCode("language", "code");
 
-                yield return new SerializeInteractiveDocument("interactive.ipynb", new InteractiveDocument(new[]
+                yield return new SerializeInteractiveDocument("interactive.ipynb", new Documents.InteractiveDocument(new[]
                 {
                     new InteractiveDocumentElement("csharp", "user code", new InteractiveDocumentOutputElement[]
                     {
@@ -290,7 +291,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new KernelReady();
 
-                yield return new InteractiveDocumentParsed(new InteractiveDocument(new[]
+                yield return new InteractiveDocumentParsed(new Documents.InteractiveDocument(new[]
                 {
                     new InteractiveDocumentElement("language", "contents", new InteractiveDocumentOutputElement[]
                     {
