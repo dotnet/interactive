@@ -72,7 +72,6 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
                     {
                         return new InteractiveDocumentErrorOutputElement(errorName, errorValue, stackTrace.ToArray());
                     }
-
                 }
             }
 
