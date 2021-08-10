@@ -9,7 +9,6 @@ using FluentAssertions;
 using FluentAssertions.Execution;
 using FluentAssertions.Json;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
-using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
