@@ -4,12 +4,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.DotNet.Interactive.dib;
-using Microsoft.DotNet.Interactive.Ipynb;
+using Microsoft.DotNet.Interactive.Dib;
+using Microsoft.DotNet.Interactive.Jupyter;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public static class NotebookFileFormatHandler
+    public partial class InteractiveDocument
     {
         public static InteractiveDocument Parse(string fileName, string content, string defaultLanguage,
             IDictionary<string, string> kernelLanguageAliases)
@@ -19,9 +19,9 @@ namespace Microsoft.DotNet.Interactive
             {
                 case ".dib":
                 case ".dotnet-interactive":
-                    return DibFile.Parse(content, defaultLanguage, kernelLanguageAliases);
+                    return Document.Parse(content, defaultLanguage, kernelLanguageAliases);
                 case ".ipynb":
-                    return IpynbFile.Parse(content, kernelLanguageAliases);
+                    return Notebook.Parse(content, kernelLanguageAliases);
                 default:
                     throw new NotSupportedException($"Unable to parse a interactive document of type '{extension}'");
             }
@@ -34,9 +34,9 @@ namespace Microsoft.DotNet.Interactive
             {
                 case ".dib":
                 case ".dotnet-interactive":
-                    return DibFile.Read(stream, defaultLanguage, kernelLanguageAliases);
+                    return Document.Read(stream, defaultLanguage, kernelLanguageAliases);
                 case ".ipynb":
-                    return IpynbFile.Read(stream, kernelLanguageAliases);
+                    return Notebook.Read(stream, kernelLanguageAliases);
                 default:
                     throw new NotSupportedException($"Unable to parse a interactive document of type '{extension}'");
             }
@@ -51,10 +51,10 @@ namespace Microsoft.DotNet.Interactive
             {
                 case ".dib":
                 case ".dotnet-interactive":
-                    DibFile.Write(interactive, newline, stream);
+                    Document.Write(interactive, newline, stream);
                     break;
                 case ".ipynb":
-                    IpynbFile.Write(interactive, newline, stream);
+                    Notebook.Write(interactive, newline, stream);
                     break;
                 default:
                     throw new NotSupportedException($"Unable to serialize a interactive document of type '{extension}'");

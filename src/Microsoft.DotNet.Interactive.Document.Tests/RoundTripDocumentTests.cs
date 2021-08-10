@@ -8,9 +8,9 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Document.Tests
+namespace Microsoft.DotNet.Interactive.Documents.Tests
 {
-    public class RoundTripNotebookFileFormatTests : NotebookFileFormatTestsBase
+    public class RoundTripDocumentTests : DocumentFormatTestsBase
     {
 
         [Theory]

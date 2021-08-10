@@ -4,13 +4,13 @@
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive.Document.Tests
+namespace Microsoft.DotNet.Interactive.Documents.Tests
 {
-    public abstract class NotebookDocumentFileFormatTestsBase
+    public abstract class DocumentFormatTestsBase
     {
         public Dictionary<string, string> KernelLanguageAliases { get; }
 
-        protected NotebookDocumentFileFormatTestsBase()
+        protected DocumentFormatTestsBase()
         {
             KernelLanguageAliases = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase)
             {

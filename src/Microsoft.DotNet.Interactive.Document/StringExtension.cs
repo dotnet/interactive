@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Interactive
 {
-    internal static class StringExtension
+    internal static class StringExtensions
     {
         public static IEnumerable<string> SplitAsLines(string s)
         {
