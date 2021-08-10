@@ -84,9 +84,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactiv
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.VSCode", "src\Microsoft.DotNet.Interactive.VSCode\Microsoft.DotNet.Interactive.VSCode.csproj", "{382C875B-2CB2-4F93-B5E9-EC14CDDB2256}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Document", "src\Microsoft.DotNet.Interactive.Document\Microsoft.DotNet.Interactive.Document.csproj", "{E06F109D-E9B5-4C68-9904-6955CA30252D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Documents", "src\Microsoft.DotNet.Interactive.Document\Microsoft.DotNet.Interactive.Documents.csproj", "{E06F109D-E9B5-4C68-9904-6955CA30252D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Document.Tests", "src\Microsoft.DotNet.Interactive.Document.Tests\Microsoft.DotNet.Interactive.Document.Tests.csproj", "{F68E1EAE-5A70-4023-A727-6255234A2A8F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Documents.Tests", "src\Microsoft.DotNet.Interactive.Document.Tests\Microsoft.DotNet.Interactive.Documents.Tests.csproj", "{F68E1EAE-5A70-4023-A727-6255234A2A8F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
