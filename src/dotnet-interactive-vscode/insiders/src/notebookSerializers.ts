@@ -54,7 +54,7 @@ abstract class DotNetNotebookSerializer implements vscode.NotebookSerializer {
     async serializeNotebook(data: vscode.NotebookData, token: vscode.CancellationToken): Promise<Uint8Array> {
         const client = await this.getClient();
         const interactiveDocument = {
-            elements: data.cells.map(toNotebookCell)
+            elements: data.cells.map(toInteractiveDocumentElement)
         };
         const content = await client.serializeNotebook(this.getNotebookName(), interactiveDocument, this.eol);
         return content;
@@ -69,7 +69,7 @@ abstract class DotNetNotebookSerializer implements vscode.NotebookSerializer {
     }
 }
 
-function toNotebookCell(cell: vscode.NotebookCellData): contracts.InteractiveDocumentElement {
+function toInteractiveDocumentElement(cell: vscode.NotebookCellData): contracts.InteractiveDocumentElement {
     const outputs = cell.outputs || [];
     return {
         language: getSimpleLanguage(cell.languageId),
@@ -113,11 +113,11 @@ function toVsCodeNotebookCellData(cell: contracts.InteractiveDocumentElement): v
         <number>languageToCellKind(cell.language),
         cell.contents,
         getNotebookSpecificLanguage(cell.language));
-    cellData.outputs = cell.outputs.map(contractCellOutputToVsCodeCellOutput);
+    cellData.outputs = cell.outputs.map(outputElementToVsCodeCellOutput);
     return cellData;
 }
 
-function contractCellOutputToVsCodeCellOutput(output: contracts.InteractiveDocumentOutputElement): vscode.NotebookCellOutput {
+function outputElementToVsCodeCellOutput(output: contracts.InteractiveDocumentOutputElement): vscode.NotebookCellOutput {
     const outputItems: Array<vscode.NotebookCellOutputItem> = [];
     if (utilities.isDisplayOutput(output)) {
         for (const mimeKey in output.data) {
