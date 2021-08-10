@@ -10,7 +10,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Document.Tests
 {
-    public class DibNotebookDocumentFileFormatTests : NotebookDocumentFileFormatTestsBase
+    public class DibNotebookFileFormatTests : NotebookFileFormatTestsBase
     {
         public InteractiveDocument ParseDib(string content)
         {

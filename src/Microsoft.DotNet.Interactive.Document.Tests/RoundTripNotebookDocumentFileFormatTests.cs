@@ -10,7 +10,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Document.Tests
 {
-    public class RoundTripNotebookDocumentFileFormatTests : NotebookDocumentFileFormatTestsBase
+    public class RoundTripNotebookFileFormatTests : NotebookFileFormatTestsBase
     {
 
         [Theory]
