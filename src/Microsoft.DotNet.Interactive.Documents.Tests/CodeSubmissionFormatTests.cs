@@ -370,33 +370,5 @@ var x = 1;
                 .Should()
                 .Be(expected);
         }
-
-        [Theory]
-        [InlineData(".dib")]
-        [InlineData(".dotnet-interactive")]
-        public void notebook_can_be_serialized_to_different_extensions(string extension)
-        {
-            var fileName = $"interactive{extension}";
-            var cells = new[]
-            {
-                new InteractiveDocumentElement("csharp", "// this is csharp")
-            };
-            var notebook = new InteractiveDocument(cells);
-            using var stream = new MemoryStream();
-            InteractiveDocument.Write(fileName, notebook,"\n", stream);
-            stream.Position = 0;
-            var serialized = Encoding.UTF8.GetString( stream.ToArray());
-            var expectedLines = new[]
-            {
-                "#!csharp",
-                "",
-                "// this is csharp",
-                ""
-            };
-            var expected = string.Join("\n", expectedLines);
-            serialized
-                .Should()
-                .Be(expected);
-        }
     }
 }
