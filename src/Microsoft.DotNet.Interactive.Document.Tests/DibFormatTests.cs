@@ -5,16 +5,17 @@ using System.IO;
 using System.Text;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.dib;
+using Microsoft.DotNet.Interactive.Dib;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Document.Tests
+namespace Microsoft.DotNet.Interactive.Documents.Tests
 {
-    public class DibNotebookFileFormatTests : NotebookFileFormatTestsBase
+    public class DibFormatTests : DocumentFormatTestsBase
     {
         public InteractiveDocument ParseDib(string content)
         {
-            return DibFile.Parse( content,"csharp", KernelLanguageAliases);
+            return Document.Parse( content,"csharp", KernelLanguageAliases);
         }
 
         public string SerializeDib(InteractiveDocument interactive, string newLine)

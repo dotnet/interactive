@@ -8,9 +8,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.dib
+namespace Microsoft.DotNet.Interactive.Dib
 {
-    public static class DibFile
+    public static class Document
     {
         private const string InteractiveNotebookCellSpecifier = "#!";
 
@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.dib
                 throw new ArgumentNullException(nameof(kernelLanguageAliases));
             }
 
-            var lines = StringExtension.SplitAsLines(content);
+            var lines = StringExtensions.SplitAsLines(content);
 
             var cells = new List<InteractiveDocumentElement>();
             var currentLanguage = defaultLanguage;
@@ -114,7 +114,7 @@ namespace Microsoft.DotNet.Interactive.dib
 
             foreach (var cell in interactiveDocument.Elements)
             {
-                var cellLines = StringExtension.SplitAsLines(cell.Contents).SkipWhile(l => l.Length == 0).ToList();
+                var cellLines = StringExtensions.SplitAsLines(cell.Contents).SkipWhile(l => l.Length == 0).ToList();
                 while (cellLines.Count > 0 && cellLines[^1].Length == 0)
                 {
                     cellLines.RemoveAt(cellLines.Count - 1);

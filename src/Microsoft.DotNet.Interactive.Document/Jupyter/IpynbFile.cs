@@ -10,17 +10,18 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Ipynb;
 
-namespace Microsoft.DotNet.Interactive.Ipynb
+namespace Microsoft.DotNet.Interactive.Jupyter
 {
-    public static class IpynbFile
+    public static class Notebook
     {
         public const string MetadataNamespace = "dotnet_interactive";
         private static readonly JsonSerializerOptions _serializerOptions;
 
         public static Encoding Encoding => new UTF8Encoding(false);
 
-        static IpynbFile()
+        static Notebook()
         {
             _serializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.General);
             _serializerOptions.Converters.Add(new DataDictionaryConverter());
@@ -141,7 +142,7 @@ namespace Microsoft.DotNet.Interactive.Ipynb
             var textLines = jsonElement?.ValueKind switch
             {
                 JsonValueKind.Array => jsonElement.EnumerateArray().Select(element => element.GetString().TrimNewline()),
-                JsonValueKind.String => StringExtension.SplitAsLines(jsonElement.GetString()),
+                JsonValueKind.String => StringExtensions.SplitAsLines(jsonElement.GetString()),
                 _ => Array.Empty<string>()
             };
 
@@ -173,7 +174,7 @@ namespace Microsoft.DotNet.Interactive.Ipynb
                         {
                             cell_type = "markdown",
                             metadata = new { },
-                            source = AddTrailingNewlinesToAllButLast(StringExtension.SplitAsLines(element.Contents))
+                            source = AddTrailingNewlinesToAllButLast(StringExtensions.SplitAsLines(element.Contents))
                         });
                         break;
                     default:
@@ -212,7 +213,7 @@ namespace Microsoft.DotNet.Interactive.Ipynb
                                     language = element.Language
                                 }
                             },
-                            source = AddTrailingNewlinesToAllButLast(StringExtension.SplitAsLines(element.Contents)),
+                            source = AddTrailingNewlinesToAllButLast(StringExtensions.SplitAsLines(element.Contents)),
                             outputs
                         });
                         break;

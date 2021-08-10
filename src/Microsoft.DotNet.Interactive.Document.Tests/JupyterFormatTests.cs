@@ -8,21 +8,21 @@ using Assent;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using FluentAssertions.Json;
-using Microsoft.DotNet.Interactive.Ipynb;
+using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Document.Tests
+namespace Microsoft.DotNet.Interactive.Documents.Tests
 {
-    public class JupyterNotebookDocumentFileFormatTests : NotebookDocumentFileFormatTestsBase
+    public class JupyterFormatTests : DocumentFormatTestsBase
     {
         public InteractiveDocument ParseJupyter(object jupyter)
         {
             var content = JsonConvert.SerializeObject(jupyter);
            
-            return IpynbFile.Parse(content, KernelLanguageAliases);
+            return Notebook.Parse(content, KernelLanguageAliases);
         }
 
         public string SerializeJupyter(InteractiveDocument interactive, string newLine)

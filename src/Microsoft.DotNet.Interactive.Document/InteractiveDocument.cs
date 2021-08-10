@@ -3,7 +3,7 @@
 
 namespace Microsoft.DotNet.Interactive
 {
-    public class InteractiveDocument
+    public partial class InteractiveDocument
     {
         public InteractiveDocumentElement[] Elements { get; }
 
