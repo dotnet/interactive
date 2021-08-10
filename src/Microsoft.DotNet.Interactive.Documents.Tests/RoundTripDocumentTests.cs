@@ -36,9 +36,9 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
             var originalNotebook = new InteractiveDocument(cells);
             var fileName = $"interactive{extension}";
             using var stream = new MemoryStream();
-            NotebookFileFormatHandler.Write(fileName, originalNotebook, "\n", stream);
+            InteractiveDocument.Write(fileName, originalNotebook, "\n", stream);
             stream.Position = 0;
-            var roundTrippedNotebook = NotebookFileFormatHandler.Read(fileName, stream, "csharp", KernelLanguageAliases);
+            var roundTrippedNotebook = InteractiveDocument.Read(fileName, stream, "csharp", KernelLanguageAliases);
             roundTrippedNotebook
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(originalNotebook);

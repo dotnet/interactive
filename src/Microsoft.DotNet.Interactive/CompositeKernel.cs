@@ -116,14 +116,14 @@ namespace Microsoft.DotNet.Interactive
             kernelLanguageAliases.Remove(Name); // remove `.NET`
 
             using var stream = new MemoryStream(rawData);
-            var notebook = NotebookFileFormatHandler.Read(fileName, stream, DefaultKernelName, kernelLanguageAliases);
+            var notebook = InteractiveDocument.Read(fileName, stream, DefaultKernelName, kernelLanguageAliases);
             return notebook;
         }
 
         public Task HandleAsync(SerializeInteractiveDocument command, KernelInvocationContext context)
         {
             using var stream = new MemoryStream();
-            NotebookFileFormatHandler.Write(command.FileName, command.Document, command.NewLine,stream);
+            InteractiveDocument.Write(command.FileName, command.Document, command.NewLine,stream);
             var rawData = stream.ToArray();
             context.Publish(new InteractiveDocumentSerialized(rawData, command));
             return Task.CompletedTask;
