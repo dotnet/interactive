@@ -11,14 +11,14 @@ export const ChangeWorkingDirectoryType = "ChangeWorkingDirectory";
 export const DisplayErrorType = "DisplayError";
 export const DisplayValueType = "DisplayValue";
 export const GetInputType = "GetInput";
-export const ParseNotebookType = "ParseNotebook";
+export const ParseInteractiveDocumentType = "ParseInteractiveDocument";
 export const QuitType = "Quit";
 export const RequestCompletionsType = "RequestCompletions";
 export const RequestDiagnosticsType = "RequestDiagnostics";
 export const RequestHoverTextType = "RequestHoverText";
 export const RequestSignatureHelpType = "RequestSignatureHelp";
 export const SendEditableCodeType = "SendEditableCode";
-export const SerializeNotebookType = "SerializeNotebook";
+export const SerializeInteractiveDocumentType = "SerializeInteractiveDocument";
 export const SubmitCodeType = "SubmitCode";
 export const UpdateDisplayedValueType = "UpdateDisplayedValue";
 
@@ -29,14 +29,14 @@ export type KernelCommandType =
     | typeof DisplayErrorType
     | typeof DisplayValueType
     | typeof GetInputType
-    | typeof ParseNotebookType
+    | typeof ParseInteractiveDocumentType
     | typeof QuitType
     | typeof RequestCompletionsType
     | typeof RequestDiagnosticsType
     | typeof RequestHoverTextType
     | typeof RequestSignatureHelpType
     | typeof SendEditableCodeType
-    | typeof SerializeNotebookType
+    | typeof SerializeInteractiveDocumentType
     | typeof SubmitCodeType
     | typeof UpdateDisplayedValueType;
 
@@ -69,7 +69,7 @@ export interface GetInput extends KernelCommand {
     isPassword: boolean;
 }
 
-export interface ParseNotebook extends KernelCommand {
+export interface ParseInteractiveDocument extends KernelCommand {
     fileName: string;
     rawData: Uint8Array;
 }
@@ -100,9 +100,9 @@ export interface SendEditableCode extends KernelCommand {
     code: string;
 }
 
-export interface SerializeNotebook extends KernelCommand {
+export interface SerializeInteractiveDocument extends KernelCommand {
     fileName: string;
-    notebook: NotebookDocument;
+    document: InteractiveDocument;
     newLine: string;
 }
 
@@ -114,6 +114,26 @@ export interface SubmitCode extends KernelCommand {
 export interface UpdateDisplayedValue extends KernelCommand {
     formattedValue: FormattedValue;
     valueId: string;
+}
+
+export interface KernelEvent {
+}
+
+export interface InteractiveDocumentDisplayOutputElement extends InteractiveDocumentOutputElement {
+    data: { [key: string]: any; };
+}
+
+export interface InteractiveDocumentOutputElement {
+}
+
+export interface InteractiveDocumentTextOutputElement extends InteractiveDocumentOutputElement {
+    text: string;
+}
+
+export interface InteractiveDocumentErrorOutputElement extends InteractiveDocumentOutputElement {
+    errorName: string;
+    errorValue: string;
+    stackTrace: Array<string>;
 }
 
 // --------------------------------------------- Kernel events
@@ -131,10 +151,10 @@ export const ErrorProducedType = "ErrorProduced";
 export const HoverTextProducedType = "HoverTextProduced";
 export const IncompleteCodeSubmissionReceivedType = "IncompleteCodeSubmissionReceived";
 export const InputProducedType = "InputProduced";
+export const InteractiveDocumentParsedType = "InteractiveDocumentParsed";
+export const InteractiveDocumentSerializedType = "InteractiveDocumentSerialized";
 export const KernelExtensionLoadedType = "KernelExtensionLoaded";
 export const KernelReadyType = "KernelReady";
-export const NotebookParsedType = "NotebookParsed";
-export const NotebookSerializedType = "NotebookSerialized";
 export const PackageAddedType = "PackageAdded";
 export const ReturnValueProducedType = "ReturnValueProduced";
 export const SignatureHelpProducedType = "SignatureHelpProduced";
@@ -156,10 +176,10 @@ export type KernelEventType =
     | typeof HoverTextProducedType
     | typeof IncompleteCodeSubmissionReceivedType
     | typeof InputProducedType
+    | typeof InteractiveDocumentParsedType
+    | typeof InteractiveDocumentSerializedType
     | typeof KernelExtensionLoadedType
     | typeof KernelReadyType
-    | typeof NotebookParsedType
-    | typeof NotebookSerializedType
     | typeof PackageAddedType
     | typeof ReturnValueProducedType
     | typeof SignatureHelpProducedType
@@ -169,9 +189,6 @@ export type KernelEventType =
 
 export interface CodeSubmissionReceived extends KernelEvent {
     code: string;
-}
-
-export interface KernelEvent {
 }
 
 export interface CommandFailed extends KernelEvent {
@@ -229,18 +246,18 @@ export interface InputProduced extends KernelEvent {
     value: string;
 }
 
+export interface InteractiveDocumentParsed extends KernelEvent {
+    document: InteractiveDocument;
+}
+
+export interface InteractiveDocumentSerialized extends KernelEvent {
+    rawData: Uint8Array;
+}
+
 export interface KernelExtensionLoaded extends KernelEvent {
 }
 
 export interface KernelReady extends KernelEvent {
-}
-
-export interface NotebookParsed extends KernelEvent {
-    notebook: NotebookDocument;
-}
-
-export interface NotebookSerialized extends KernelEvent {
-    rawData: Uint8Array;
 }
 
 export interface PackageAdded extends KernelEvent {
@@ -306,31 +323,14 @@ export interface FormattedValue {
     value: string;
 }
 
-export interface NotebookDocument {
-    cells: Array<NotebookCell>;
+export interface InteractiveDocument {
+    elements: Array<InteractiveDocumentElement>;
 }
 
-export interface NotebookCell {
+export interface InteractiveDocumentElement {
     language: string;
     contents: string;
-    outputs: Array<NotebookCellOutput>;
-}
-
-export interface NotebookCellOutput {
-}
-
-export interface NotebookCellDisplayOutput extends NotebookCellOutput {
-    data: { [key: string]: any; };
-}
-
-export interface NotebookCellErrorOutput extends NotebookCellOutput {
-    errorName: string;
-    errorValue: string;
-    stackTrace: Array<string>;
-}
-
-export interface NotebookCellTextOutput extends NotebookCellOutput {
-    text: string;
+    outputs: Array<InteractiveDocumentOutputElement>;
 }
 
 export interface PackageReference {

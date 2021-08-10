@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.VSCode;
 
@@ -29,13 +30,16 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
             { typeof(FileInfo), "string" },
         };
 
-        private static readonly HashSet<Type> AlwaysEmitTypes = new HashSet<Type>
+        private static readonly HashSet<Type> AlwaysEmitTypes = new()
         {
             typeof(KernelCommand),
-            typeof(KernelEvent)
+            typeof(KernelEvent),
+            typeof(InteractiveDocumentDisplayOutputElement),
+            typeof(InteractiveDocumentTextOutputElement),
+            typeof(InteractiveDocumentErrorOutputElement)
         };
 
-        private static readonly HashSet<string> OptionalFields = new HashSet<string>
+        private static readonly HashSet<string> OptionalFields = new()
         {
             $"{nameof(CompletionsProduced)}.{nameof(CompletionsProduced.LinePositionSpan)}",
             $"{nameof(DisplayEvent)}.{nameof(DisplayEvent.ValueId)}",
@@ -65,8 +69,6 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
                              .ToList();
 
             var emittedTypes = new HashSet<Type>(WellKnownTypes.Keys);
-
-            emittedTypes.RemoveWhere(AlwaysEmitTypes.Contains);
 
             builder.AppendLine(@"// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
@@ -111,6 +113,11 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
             builder.AppendLine($"      {string.Join($"{Environment.NewLine}    | ", types.Select(c => $"typeof {c.Name}Type"))};");
 
             foreach (var type in types)
+            {
+                GenerateType(builder, type, emittedTypes, additionalTypes);
+            }
+
+            foreach (var type in AlwaysEmitTypes)
             {
                 GenerateType(builder, type, emittedTypes, additionalTypes);
             }

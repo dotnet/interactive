@@ -4,7 +4,7 @@
 import * as os from 'os';
 import * as vscode from 'vscode';
 import { Eol, WindowsEol, NonWindowsEol } from "../interfaces";
-import { Diagnostic, DiagnosticSeverity, LinePosition, LinePositionSpan, NotebookCell, NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellOutput, NotebookDocument } from '../interfaces/contracts';
+import { Diagnostic, DiagnosticSeverity, LinePosition, LinePositionSpan, InteractiveDocumentDisplayOutputElement, InteractiveDocumentErrorOutputElement, InteractiveDocumentOutputElement, InteractiveDocument, InteractiveDocumentElement } from '../interfaces/contracts';
 
 import { getSimpleLanguage } from '../interactiveNotebook';
 import * as vscodeLike from '../interfaces/vscode-like';
@@ -72,13 +72,13 @@ export function getEol(): Eol {
     }
 }
 
-export function toNotebookDocument(document: vscode.NotebookDocument): NotebookDocument {
+export function toNotebookDocument(document: vscode.NotebookDocument): InteractiveDocument {
     return {
-        cells: document.getCells().map(toNotebookCell)
+        elements: document.getCells().map(toInteractiveDocumentElement)
     };
 }
 
-export function toNotebookCell(cell: vscode.NotebookCell): NotebookCell {
+export function toInteractiveDocumentElement(cell: vscode.NotebookCell): InteractiveDocumentElement {
     return {
         language: cell.kind === vscode.NotebookCellKind.Code
             ? getSimpleLanguage(cell.document.languageId)
@@ -88,13 +88,13 @@ export function toNotebookCell(cell: vscode.NotebookCell): NotebookCell {
     };
 }
 
-export function vsCodeCellOutputToContractCellOutput(output: vscode.NotebookCellOutput): NotebookCellOutput {
+export function vsCodeCellOutputToContractCellOutput(output: vscode.NotebookCellOutput): InteractiveDocumentOutputElement {
     const outputItems = output.items;
     const errorOutputItems = outputItems.filter(oi => oi.mime === vscodeLike.ErrorOutputMimeType);
     if (errorOutputItems.length > 0) {
         // any error-like output takes precedence
         const errorOutputItem = errorOutputItems[0];
-        const error: NotebookCellErrorOutput = {
+        const error: InteractiveDocumentErrorOutputElement = {
             errorName: 'Error',
             errorValue: '' + errorOutputItem.data,
             stackTrace: [],
@@ -107,7 +107,7 @@ export function vsCodeCellOutputToContractCellOutput(output: vscode.NotebookCell
             data[outputItem.mime] = outputItem.data;
         }
 
-        const cellOutput: NotebookCellDisplayOutput = {
+        const cellOutput: InteractiveDocumentDisplayOutputElement = {
             data,
         };
 
