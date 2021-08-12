@@ -21,6 +21,7 @@ namespace Microsoft.DotNet.Interactive.Server
             };
             JsonSerializerOptions.Converters.Add(new DataDictionaryConverter());
             JsonSerializerOptions.Converters.Add(new NotebookCellOutputConverter());
+            JsonSerializerOptions.Converters.Add(new FileSystemInfoJsonConverter());
         }
 
         public static JsonSerializerOptions JsonSerializerOptions { get; }
