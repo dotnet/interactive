@@ -32,8 +32,4 @@
     <PackageReference Include="System.Memory" Version="4.5.4" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Microsoft.DotNet.Interactive.Json\Microsoft.DotNet.Interactive.Json.csproj" />
-  </ItemGroup>
-
 </Project>
