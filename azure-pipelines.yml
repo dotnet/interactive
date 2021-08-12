@@ -25,7 +25,7 @@ variables:
   - name: TryDotNetPackagesPath
     value: $(Build.SourcesDirectory)/artifacts/.trydotnet/packages
   - name: NodeJSVersion
-    value: '12.16.1'
+    value: '14.17.5'
   - name: _TestArgs
     value: ''
 
