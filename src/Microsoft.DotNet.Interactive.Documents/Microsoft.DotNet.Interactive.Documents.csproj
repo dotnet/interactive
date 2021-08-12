@@ -18,9 +18,4 @@
     <PackageReference Include="System.Text.Json" Version="5.0.2" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
-    <ProjectReference Include="..\Microsoft.DotNet.Interactive.Json\Microsoft.DotNet.Interactive.Json.csproj" />
-  </ItemGroup>
-
 </Project>

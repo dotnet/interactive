@@ -3,7 +3,6 @@
 
 using System;
 using System.Text.Json;
-using Microsoft.DotNet.Interactive.Json;
 
 namespace Microsoft.DotNet.Interactive.Formatting.TabularData
 {
