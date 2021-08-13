@@ -11,7 +11,7 @@ using Xunit;
 using Xunit.Abstractions;
 using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.ZMQ.Message;
 using System.Collections.Generic;
-using Microsoft.DotNet.Interactive.Ipynb;
+using Microsoft.DotNet.Interactive.Documents.Jupyter;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 {

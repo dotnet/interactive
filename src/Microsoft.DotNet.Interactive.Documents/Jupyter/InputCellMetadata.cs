@@ -3,7 +3,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Ipynb
+namespace Microsoft.DotNet.Interactive.Documents.Jupyter
 {
 
     public class InputCellMetadata
