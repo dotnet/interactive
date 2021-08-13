@@ -3,7 +3,6 @@
 
 
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
-using Microsoft.DotNet.Interactive.Ipynb;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
 {

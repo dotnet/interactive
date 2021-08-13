@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using FluentAssertions;
 using FluentAssertions.Extensions;
-using Microsoft.DotNet.Interactive.Ipynb;
+using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Recipes;
 

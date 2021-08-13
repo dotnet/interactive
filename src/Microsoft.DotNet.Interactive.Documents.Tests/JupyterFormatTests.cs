@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
 
         public string SerializeJupyter(InteractiveDocument interactive, string newLine)
         {
-            return interactive.ToIpynbContent(newLine);
+            return interactive.ToJupyterNotebookContent(newLine);
         }
 
         [Theory]

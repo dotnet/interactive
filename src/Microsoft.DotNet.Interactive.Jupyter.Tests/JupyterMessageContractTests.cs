@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 
 using Assent;
-using Microsoft.DotNet.Interactive.Ipynb;
+using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Jupyter.ZMQ;
 using Xunit;

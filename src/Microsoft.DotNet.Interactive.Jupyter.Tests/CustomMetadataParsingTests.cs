@@ -3,7 +3,7 @@
 
 using System.Text.Json;
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.Ipynb;
+using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Microsoft.DotNet.Interactive.Jupyter.ZMQ;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
