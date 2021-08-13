@@ -160,7 +160,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             writer.Flush();
         }
 
-        public static string ToJupyterNotebookContent(this Documents.InteractiveDocument interactive, string newline = "\n")
+        public static string ToJupyterNotebookContent(this InteractiveDocument interactive, string newline = "\n")
         {
             var cells = new List<object>();
             foreach (var element in interactive.Elements)
@@ -257,7 +257,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
 
         public static void Write(Documents.InteractiveDocument interactive, string newline, TextWriter writer)
         {
-            var content = interactive.ToIpynbContent(newline);
+            var content = interactive.ToJupyterNotebookContent(newline);
             writer.Write(content);
         }
 

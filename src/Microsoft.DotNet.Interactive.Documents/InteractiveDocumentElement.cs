@@ -13,6 +13,10 @@ namespace Microsoft.DotNet.Interactive.Documents
 
         public InteractiveDocumentElement(string language, string contents, InteractiveDocumentOutputElement[] outputs = null)
         {
+            if (string.IsNullOrWhiteSpace(language))
+            {
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(language));
+            }
             Language = language;
             Contents = contents;
             Outputs = outputs ?? Array.Empty<InteractiveDocumentOutputElement>();

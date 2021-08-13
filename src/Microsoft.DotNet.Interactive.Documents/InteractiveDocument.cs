@@ -1,6 +1,8 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+
 namespace Microsoft.DotNet.Interactive.Documents
 {
     public partial class InteractiveDocument
@@ -9,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.Documents
 
         public InteractiveDocument(InteractiveDocumentElement[] elements)
         {
-            Elements = elements;
+            Elements = elements ?? throw new ArgumentNullException(nameof(elements));
         }
     }
 }
