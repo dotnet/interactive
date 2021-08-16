@@ -58,17 +58,17 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
                 {
                     if (text is not null)
                     {
-                        return new InteractiveDocumentTextOutputElement(text);
+                        return new TextElement(text);
                     }
 
                     if (data is not null)
                     {
-                        return new InteractiveDocumentDisplayOutputElement(data);
+                        return new DisplayElement(data);
                     }
 
                     if (errorName is not null && errorValue is not null && stackTrace is not null)
                     {
-                        return new InteractiveDocumentErrorOutputElement(errorName, errorValue, stackTrace.ToArray());
+                        return new ErrorElement(errorName, errorValue, stackTrace.ToArray());
                     }
                 }
             }

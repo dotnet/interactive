@@ -179,12 +179,12 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 {
                     new InteractiveDocumentElement("csharp", "user code", new InteractiveDocumentOutputElement[]
                     {
-                        new InteractiveDocumentDisplayOutputElement(new Dictionary<string, object>
+                        new DisplayElement(new Dictionary<string, object>
                         {
                             { "text/html", "<b></b>" }
                         }),
-                        new InteractiveDocumentTextOutputElement("text"),
-                        new InteractiveDocumentErrorOutputElement("e-name", "e-value", new[]
+                        new TextElement("text"),
+                        new ErrorElement("e-name", "e-value", new[]
                         {
                             "at func1()",
                             "at func2()"
@@ -295,12 +295,12 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 {
                     new InteractiveDocumentElement("language", "contents", new InteractiveDocumentOutputElement[]
                     {
-                        new InteractiveDocumentDisplayOutputElement(new Dictionary<string, object>()
+                        new DisplayElement(new Dictionary<string, object>()
                         {
                             { "text/html", "<b></b>" }
                         }),
-                        new InteractiveDocumentTextOutputElement("text"),
-                        new InteractiveDocumentErrorOutputElement("e-name", "e-value", new[]
+                        new TextElement("text"),
+                        new ErrorElement("e-name", "e-value", new[]
                         {
                             "at func1()",
                             "at func2()"

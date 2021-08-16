@@ -25,17 +25,17 @@ namespace Microsoft.DotNet.Interactive.Server
     //        var item = JObject.Load(reader);
     //        if (HasAllProperties(item, "data"))
     //        {
-    //            return item.ToObject<InteractiveDocumentDisplayOutputElement>(serializer);
+    //            return item.ToObject<DisplayElement>(serializer);
     //        }
 
     //        if (HasAllProperties(item, "errorName", "errorValue", "stackTrace"))
     //        {
-    //            return item.ToObject<InteractiveDocumentErrorOutputElement>(serializer);
+    //            return item.ToObject<ErrorElement>(serializer);
     //        }
 
     //        if (HasAllProperties(item, "text"))
     //        {
-    //            return item.ToObject<InteractiveDocumentTextOutputElement>(serializer);
+    //            return item.ToObject<TextElement>(serializer);
     //        }
 
     //        return null;

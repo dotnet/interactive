@@ -780,7 +780,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeOfType<InteractiveDocumentDisplayOutputElement>()
+                .BeOfType<DisplayElement>()
                 .Which
                 .Data
                 .Should()
@@ -839,7 +839,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeOfType<InteractiveDocumentDisplayOutputElement>()
+                .BeOfType<DisplayElement>()
                 .Which
                 .Data
                 .Should()
@@ -881,7 +881,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeOfType<InteractiveDocumentTextOutputElement>()
+                .BeOfType<TextElement>()
                 .Which
                 .Text
                 .Should()
@@ -928,10 +928,10 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeOfType<InteractiveDocumentErrorOutputElement>()
+                .BeOfType<ErrorElement>()
                 .Which
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new InteractiveDocumentErrorOutputElement(null, null, new string[0]));
+                .BeEquivalentToRespectingRuntimeTypes(new ErrorElement(null, null, new string[0]));
         }
 
         [Fact]
@@ -1134,7 +1134,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
             {
                 new InteractiveDocumentElement("csharp", "//", new[]
                 {
-                    new InteractiveDocumentTextOutputElement("this is text")
+                    new TextElement("this is text")
                 })
             };
             var notebook = new InteractiveDocument(cells);
@@ -1193,7 +1193,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new InteractiveDocumentTextOutputElement("this is text"));
+                .BeEquivalentToRespectingRuntimeTypes(new TextElement("this is text"));
         }
 
         [Fact]
@@ -1235,7 +1235,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new InteractiveDocumentTextOutputElement("this is text\nso is this"));
+                .BeEquivalentToRespectingRuntimeTypes(new TextElement("this is text\nso is this"));
         }
 
         [Fact]
@@ -1245,7 +1245,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
             {
                 new InteractiveDocumentElement("csharp", "//", new[]
                 {
-                    new InteractiveDocumentDisplayOutputElement(new Dictionary<string, object>
+                    new DisplayElement(new Dictionary<string, object>
                     {
                         { "text/html", "this is html" }
                     })
@@ -1314,7 +1314,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new InteractiveDocumentDisplayOutputElement(new Dictionary<string, object>
+                .BeEquivalentToRespectingRuntimeTypes(new DisplayElement(new Dictionary<string, object>
                 {
                     { "text/html", "this is html" }
                 }));
@@ -1327,7 +1327,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
             {
                 new InteractiveDocumentElement("csharp", "//", new[]
                 {
-                    new InteractiveDocumentErrorOutputElement("e-name", "e-value", new[] { "at func1()", "at func2()" })
+                    new ErrorElement("e-name", "e-value", new[] { "at func1()", "at func2()" })
                 })
             };
             var notebook = new InteractiveDocument(cells);
@@ -1396,7 +1396,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new InteractiveDocumentErrorOutputElement("e-name", "e-value", new[]
+                .BeEquivalentToRespectingRuntimeTypes(new ErrorElement("e-name", "e-value", new[]
                 {
                     "at func1()",
                     "at func2()"
@@ -1413,7 +1413,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
             {
                 new InteractiveDocumentElement("csharp", "// this is csharp", new[]
                 {
-                    new InteractiveDocumentDisplayOutputElement(new Dictionary<string, object>()
+                    new DisplayElement(new Dictionary<string, object>()
                     {
                         { "text/html", "this is html" }
                     })

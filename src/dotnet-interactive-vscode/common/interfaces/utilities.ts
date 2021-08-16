@@ -14,19 +14,19 @@ export function isKernelCommandEnvelope(obj: any): obj is contracts.KernelComman
         && obj.command;
 }
 
-export function isErrorOutput(arg: any): arg is contracts.InteractiveDocumentErrorOutputElement {
+export function isErrorOutput(arg: any): arg is contracts.ErrorElement {
     return arg
         && typeof arg.errorName === 'string'
         && typeof arg.errorValue === 'string'
         && Array.isArray(arg.stackTrace);
 }
 
-export function isDisplayOutput(arg: any): arg is contracts.InteractiveDocumentDisplayOutputElement {
+export function isDisplayOutput(arg: any): arg is contracts.DisplayElement {
     return arg
         && typeof arg.data === 'object';
 }
 
-export function isTextOutput(arg: any): arg is contracts.InteractiveDocumentTextOutputElement {
+export function isTextOutput(arg: any): arg is contracts.TextElement {
     return arg
         && typeof arg.text === 'string';
 }

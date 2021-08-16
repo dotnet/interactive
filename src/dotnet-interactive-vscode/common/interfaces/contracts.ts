@@ -119,18 +119,18 @@ export interface UpdateDisplayedValue extends KernelCommand {
 export interface KernelEvent {
 }
 
-export interface InteractiveDocumentDisplayOutputElement extends InteractiveDocumentOutputElement {
+export interface DisplayElement extends InteractiveDocumentOutputElement {
     data: { [key: string]: any; };
 }
 
 export interface InteractiveDocumentOutputElement {
 }
 
-export interface InteractiveDocumentTextOutputElement extends InteractiveDocumentOutputElement {
+export interface TextElement extends InteractiveDocumentOutputElement {
     text: string;
 }
 
-export interface InteractiveDocumentErrorOutputElement extends InteractiveDocumentOutputElement {
+export interface ErrorElement extends InteractiveDocumentOutputElement {
     errorName: string;
     errorValue: string;
     stackTrace: Array<string>;

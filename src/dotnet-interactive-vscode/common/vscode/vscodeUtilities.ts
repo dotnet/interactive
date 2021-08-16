@@ -4,7 +4,7 @@
 import * as os from 'os';
 import * as vscode from 'vscode';
 import { Eol, WindowsEol, NonWindowsEol } from "../interfaces";
-import { Diagnostic, DiagnosticSeverity, LinePosition, LinePositionSpan, InteractiveDocumentDisplayOutputElement, InteractiveDocumentErrorOutputElement, InteractiveDocumentOutputElement, InteractiveDocument, InteractiveDocumentElement } from '../interfaces/contracts';
+import { Diagnostic, DiagnosticSeverity, LinePosition, LinePositionSpan, DisplayElement, ErrorElement, InteractiveDocumentOutputElement, InteractiveDocument, InteractiveDocumentElement } from '../interfaces/contracts';
 
 import { getSimpleLanguage } from '../interactiveNotebook';
 import * as vscodeLike from '../interfaces/vscode-like';
@@ -94,7 +94,7 @@ export function vsCodeCellOutputToContractCellOutput(output: vscode.NotebookCell
     if (errorOutputItems.length > 0) {
         // any error-like output takes precedence
         const errorOutputItem = errorOutputItems[0];
-        const error: InteractiveDocumentErrorOutputElement = {
+        const error: ErrorElement = {
             errorName: 'Error',
             errorValue: '' + errorOutputItem.data,
             stackTrace: [],
@@ -107,7 +107,7 @@ export function vsCodeCellOutputToContractCellOutput(output: vscode.NotebookCell
             data[outputItem.mime] = outputItem.data;
         }
 
-        const cellOutput: InteractiveDocumentDisplayOutputElement = {
+        const cellOutput: DisplayElement = {
             data,
         };
 

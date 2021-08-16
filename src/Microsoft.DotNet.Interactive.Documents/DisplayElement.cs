@@ -5,11 +5,11 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.Documents
 {
-    public class InteractiveDocumentDisplayOutputElement : InteractiveDocumentOutputElement
+    public class DisplayElement : InteractiveDocumentOutputElement
     {
         public IDictionary<string, object> Data { get; }
 
-        public InteractiveDocumentDisplayOutputElement(IDictionary<string, object> data)
+        public DisplayElement(IDictionary<string, object> data)
         {
             Data = data;
         }

@@ -83,16 +83,16 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
                                         {
                                             // our concept of a interactive is heavily influenced by VS Code and they don't distinguish between execution results and displayed data
                                             "display_data" or "execute_result" =>
-                                                new InteractiveDocumentDisplayOutputElement(
+                                                new DisplayElement(
                                                     JsonSerializer.Deserialize<IDictionary<string, object>>(
                                                         cellOutput.GetPropertyFromPath("data").GetRawText(), _serializerOptions)),
 
                                             "stream" =>
-                                                new InteractiveDocumentTextOutputElement(
+                                                new TextElement(
                                                     GetTextAsSingleString(cellOutput.GetPropertyFromPath("text"))),
 
                                             "error" =>
-                                                new InteractiveDocumentErrorOutputElement(
+                                                new ErrorElement(
                                                     cellOutput.GetPropertyFromPath("ename").GetString(),
                                                     cellOutput.GetPropertyFromPath("evalue").GetString(),
                                                     cellOutput.GetPropertyFromPath("traceback").EnumerateArray()
@@ -178,21 +178,21 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
                     default:
                         var outputs = element.Outputs.Select<InteractiveDocumentOutputElement, object>(o => o switch
                         {
-                            InteractiveDocumentDisplayOutputElement displayOutput => new
+                            DisplayElement displayOutput => new
                             {
                                 output_type = "execute_result",
                                 data = displayOutput.Data,
                                 execution_count = 1,
                                 metadata = new { }
                             },
-                            InteractiveDocumentErrorOutputElement errorOutput => new
+                            ErrorElement errorOutput => new
                             {
                                 output_type = "error",
                                 ename = errorOutput.ErrorName,
                                 evalue = errorOutput.ErrorValue,
                                 traceback = errorOutput.StackTrace
                             },
-                            InteractiveDocumentTextOutputElement textOutput => new
+                            TextElement textOutput => new
                             {
                                 output_type = "stream",
                                 name = "stdout", // n.b., could also be `stderr`, but our representation (and VS Code) don't differentiate the two
