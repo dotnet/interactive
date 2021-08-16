@@ -2,11 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { expect } from 'chai';
-import { InteractiveDocumentDisplayOutputElement, InteractiveDocumentErrorOutputElement, InteractiveDocumentTextOutputElement } from '../../interfaces/contracts';
+import { DisplayElement, ErrorElement, TextElement } from '../../interfaces/contracts';
 import { isDisplayOutput, isErrorOutput, isTextOutput, reshapeOutputValueForVsCode } from '../../interfaces/utilities';
 import { isDotNetNotebookMetadata, isIpynbFile } from '../../ipynbUtilities';
 import { createUri, debounce, executeSafe, getWorkingDirectoryForNotebook, isDotNetUpToDate, parse, processArguments, stringify } from '../../utilities';
-import { decodeNotebookCellOutputs, decodeToString } from './utilities';
+import { decodeToString } from './utilities';
 
 import * as vscodeLike from '../../interfaces/vscode-like';
 
@@ -149,7 +149,7 @@ describe('Miscellaneous tests', () => {
 
     it('cell error output shape can be detected', () => {
         // strongly typed to catch interface changes
-        const error: InteractiveDocumentErrorOutputElement = {
+        const error: ErrorElement = {
             errorName: 'ename',
             errorValue: 'evalue',
             stackTrace: [
@@ -162,7 +162,7 @@ describe('Miscellaneous tests', () => {
 
     it('cell display output shape can be detected', () => {
         // strongly typed to catch interface changes
-        const display: InteractiveDocumentDisplayOutputElement = {
+        const display: DisplayElement = {
             data: {
                 'text/html': 'html',
                 'text/plain': 'text'
@@ -173,7 +173,7 @@ describe('Miscellaneous tests', () => {
 
     it('cell text output shape can be detected', () => {
         // strongly typed to catch interface changes
-        const text: InteractiveDocumentTextOutputElement = {
+        const text: TextElement = {
             text: 'some text'
         };
         expect(isTextOutput(text)).to.be.true;

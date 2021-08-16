@@ -3,13 +3,13 @@
 
 namespace Microsoft.DotNet.Interactive.Documents
 {
-    public class InteractiveDocumentErrorOutputElement : InteractiveDocumentOutputElement
+    public class ErrorElement : InteractiveDocumentOutputElement
     {
         public string ErrorName { get; }
         public string ErrorValue { get; }
         public string[] StackTrace { get; }
 
-        public InteractiveDocumentErrorOutputElement(string errorName, string errorValue, string[] stackTrace)
+        public ErrorElement(string errorName, string errorValue, string[] stackTrace)
         {
             ErrorName = errorName;
             ErrorValue = errorValue;

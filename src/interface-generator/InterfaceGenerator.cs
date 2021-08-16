@@ -34,9 +34,9 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
         {
             typeof(KernelCommand),
             typeof(KernelEvent),
-            typeof(InteractiveDocumentDisplayOutputElement),
-            typeof(InteractiveDocumentTextOutputElement),
-            typeof(InteractiveDocumentErrorOutputElement)
+            typeof(DisplayElement),
+            typeof(TextElement),
+            typeof(ErrorElement)
         };
 
         private static readonly HashSet<string> OptionalFields = new()

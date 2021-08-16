@@ -3,11 +3,11 @@
 
 namespace Microsoft.DotNet.Interactive.Documents
 {
-    public class InteractiveDocumentTextOutputElement : InteractiveDocumentOutputElement
+    public class TextElement : InteractiveDocumentOutputElement
     {
         public string Text { get; }
 
-        public InteractiveDocumentTextOutputElement(string text)
+        public TextElement(string text)
         {
             Text = text;
         }
