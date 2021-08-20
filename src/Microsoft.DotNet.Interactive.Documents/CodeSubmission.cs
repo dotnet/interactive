@@ -16,11 +16,14 @@ namespace Microsoft.DotNet.Interactive.Documents
 
         public static Encoding Encoding => new UTF8Encoding(false);
 
-        public static InteractiveDocument Parse(string content, string defaultLanguage, IDictionary<string, string> kernelLanguageAliases)
+        public static InteractiveDocument Parse(
+            string content,
+            string defaultLanguage,
+            IReadOnlyCollection<KernelName> kernelNames)
         {
-            if (kernelLanguageAliases == null)
+            if (kernelNames == null)
             {
-                throw new ArgumentNullException(nameof(kernelLanguageAliases));
+                throw new ArgumentNullException(nameof(kernelNames));
             }
 
             var lines = StringExtensions.SplitAsLines(content);
@@ -54,12 +57,14 @@ namespace Microsoft.DotNet.Interactive.Documents
                 }
             }
 
+            var mapOfKernelNamesByAlias = kernelNames.ToMapOfKernelNamesByAlias();
+
             foreach (var line in lines)
             {
                 if (line.StartsWith(InteractiveNotebookCellSpecifier))
                 {
                     var cellLanguage = line.Substring(InteractiveNotebookCellSpecifier.Length);
-                    if (kernelLanguageAliases.TryGetValue(cellLanguage, out cellLanguage))
+                    if (mapOfKernelNamesByAlias.TryGetValue(cellLanguage, out cellLanguage))
                     {
                         // recognized language, finalize the current element
                         AddElement();
@@ -92,20 +97,24 @@ namespace Microsoft.DotNet.Interactive.Documents
             return new InteractiveDocument(elements.ToArray());
         }
 
-        public static InteractiveDocument Read(Stream stream, string defaultLanguage,
-            IDictionary<string, string> kernelLanguageAliases)
+        public static InteractiveDocument Read(
+            Stream stream, 
+            string defaultLanguage,
+            IReadOnlyCollection<KernelName> kernelNames)
         {
             using var reader = new StreamReader(stream, Encoding);
             var content = reader.ReadToEnd();
-            return Parse(content, defaultLanguage, kernelLanguageAliases);
+            return Parse(content, defaultLanguage, kernelNames);
         }
 
-        public static async Task<InteractiveDocument> ReadAsync(Stream stream, string defaultLanguage,
-            IDictionary<string, string> kernelLanguageAliases)
+        public static async Task<InteractiveDocument> ReadAsync(
+            Stream stream, 
+            string defaultLanguage,
+            IReadOnlyCollection<KernelName> kernelNames) 
         {
             using var reader = new StreamReader(stream, Encoding);
             var content = await reader.ReadToEndAsync();
-            return Parse(content, defaultLanguage, kernelLanguageAliases);
+            return Parse(content, defaultLanguage, kernelNames);
         }
 
         public static string ToCodeSubmissionContent(this InteractiveDocument interactiveDocument, string newline = "\n")

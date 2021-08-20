@@ -8,23 +8,16 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
 {
     public abstract class DocumentFormatTestsBase
     {
-        public Dictionary<string, string> KernelLanguageAliases { get; }
+        public IReadOnlyList<KernelName> KernelLanguageAliases { get; }
 
         protected DocumentFormatTestsBase()
         {
-            KernelLanguageAliases = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase)
+            KernelLanguageAliases = new List<KernelName>
             {
-                ["fsharp"] = "fsharp",
-                ["fs"] = "fsharp",
-                ["f#"] = "fsharp",
-                ["csharp"] = "csharp",
-                ["cs"] = "csharp",
-                ["c#"] = "csharp",
-                ["powershell"] = "pwsh",
-                ["pwsh"] = "pwsh",
-                ["markdown"] = "markdown", 
-                ["md"] = "markdown"
-
+                new("csharp", new[] { "cs", "C#", "c#" }),
+                new("fsharp", new[] { "fs", "F#", "f#" }),
+                new("pwsh", new[] { "powershell" }),
+                new("markdown", new[] { "md" }),
             };
         }
     }
