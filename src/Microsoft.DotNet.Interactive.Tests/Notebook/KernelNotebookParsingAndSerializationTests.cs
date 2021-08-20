@@ -22,7 +22,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
 
         [Theory]
         [InlineData("interactive.dib")]
-        [InlineData("interactive.dotnet-interactive")]
         public async Task composite_kernel_can_parse_interactive_documents(string fileName)
         {
             using var kernel = CreateCompositeKernel();
@@ -109,12 +108,11 @@ var x = 1;
 
         [Theory]
         [InlineData("interactive.dib")]
-        [InlineData("interactive.dotnet-interactive")]
         public async Task composite_kernel_can_serialize_notebooks(string fileName)
         {
             using var kernel = CreateCompositeKernel();
 
-            var notebook = new Documents.InteractiveDocument(new[]
+            var notebook = new InteractiveDocument(new[]
             {
                 new InteractiveDocumentElement("csharp", "var x = 1;")
             });
