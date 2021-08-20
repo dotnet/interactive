@@ -390,7 +390,6 @@ namespace Microsoft.DotNet.Interactive
             switch (extension.ToLowerInvariant())
             {
                 case ".dib":
-                case ".dotnet-interactive":
                     return CodeSubmission.Read(stream, defaultLanguage, kernelLanguageAliases);
                 case ".ipynb":
                     return Notebook.Read(stream, kernelLanguageAliases);
@@ -407,7 +406,6 @@ namespace Microsoft.DotNet.Interactive
             switch (extension.ToLowerInvariant())
             {
                 case ".dib":
-                case ".dotnet-interactive":
                     CodeSubmission.Write(interactive, newline, stream);
                     break;
                 case ".ipynb":
