@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -103,6 +104,100 @@ x");
 
             hitRemoteCSharp.Should().BeTrue();
             hitRemoteFSharp.Should().BeFalse();
+        }
+
+        [FactSkipLinux]
+        public async Task proxyKernel_does_not_perform_split_if_all_parts_go_to_same_targetKernel_as_the_original_command()
+        {
+            var handledCommands = new List<KernelCommand>();
+            using var remoteCompositeKernel = new CompositeKernel
+            {
+               
+                new FakeKernel("csharp")
+                {
+                    Handle = (command, _) =>
+                    {
+                        handledCommands.Add(command);
+                        return Task.CompletedTask;
+                    }
+                },
+                new FakeKernel("fsharp")
+                {
+                    Handle = (_, _) => Task.CompletedTask
+                },
+            };
+
+            remoteCompositeKernel.DefaultKernelName = "csharp";
+            var pipeName = Guid.NewGuid().ToString();
+
+            StartServer(remoteCompositeKernel, pipeName);
+            var connection = new ConnectNamedPipe();
+
+            var proxyKernel = await connection.CreateKernelAsync(new NamedPipeConnectionOptions
+            {
+                KernelName = "proxyKernel",
+                PipeName = pipeName
+            }, null);
+            
+            var code = @"#i ""nuget:source1""
+#i ""nuget:source2""
+#r ""nuget:package1""
+#r ""nuget:package2""
+
+Console.WriteLine(1);";
+
+            var command = new SubmitCode(code, proxyKernel.Name);
+            await proxyKernel.SendAsync(command);
+
+            handledCommands.Should().ContainSingle<SubmitCode>();
+        }
+
+
+        [FactSkipLinux]
+        public async Task proxyKernel_does_not_perform_split_if_all_parts_go_to_same_targetKernel_original_command_has_not_target_kernel()
+        {
+
+            var handledCommands = new List<KernelCommand>();
+            using var remoteCompositeKernel = new CompositeKernel
+            {
+
+                new FakeKernel("csharp")
+                {
+                    Handle = (command, _) =>
+                    {
+                        handledCommands.Add(command);
+                        return Task.CompletedTask;
+                    }
+                },
+                new FakeKernel("fsharp")
+                {
+                    Handle = (_, _) => Task.CompletedTask
+                },
+            };
+
+            remoteCompositeKernel.DefaultKernelName = "csharp";
+            var pipeName = Guid.NewGuid().ToString();
+
+            StartServer(remoteCompositeKernel, pipeName);
+            var connection = new ConnectNamedPipe();
+
+            var proxyKernel = await connection.CreateKernelAsync(new NamedPipeConnectionOptions
+            {
+                KernelName = "proxyKernel",
+                PipeName = pipeName
+            }, null);
+
+            var code = @"#i ""nuget:source1""
+#i ""nuget:source2""
+#r ""nuget:package1""
+#r ""nuget:package2""
+
+Console.WriteLine(1);";
+
+            var command = new SubmitCode(code);
+            await proxyKernel.SendAsync(command);
+
+            handledCommands.Should().ContainSingle<SubmitCode>();
         }
 
         void StartServer(Kernel remoteKernel, string pipeName) => remoteKernel.UseNamedPipeKernelServer(pipeName, new DirectoryInfo(Environment.CurrentDirectory));
