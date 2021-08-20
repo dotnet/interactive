@@ -112,13 +112,19 @@ namespace Microsoft.DotNet.Interactive
             return Task.CompletedTask;
         }
 
-        private Documents.InteractiveDocument ParseInteractiveDocument(string fileName, byte[] rawData)
+        private InteractiveDocument ParseInteractiveDocument(string fileName, byte[] rawData)
         {
             var kernelLanguageAliases = _kernelsByNameOrAlias.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Name);
             kernelLanguageAliases.Remove(Name); // remove `.NET`
 
             using var stream = new MemoryStream(rawData);
-            var notebook = Read(fileName, stream, DefaultKernelName, kernelLanguageAliases);
+
+            var kernelNames = _kernelsByNameOrAlias
+                .GroupBy(x => x.Value.Name)
+                .Select(g => new KernelName(g.Key, g.Select(f => f.Key).ToArray()))
+                .ToArray();
+
+            var notebook = Read(fileName, stream, DefaultKernelName, kernelNames);
             return notebook;
         }
 
@@ -384,20 +390,23 @@ namespace Microsoft.DotNet.Interactive
             SubmissionParser.ResetParser();
         }
 
-        private static InteractiveDocument Read(string fileName, Stream stream, string defaultLanguage, IDictionary<string, string> kernelLanguageAliases)
+        private static InteractiveDocument Read(
+            string fileName, 
+            Stream stream, 
+            string defaultLanguage, 
+            IReadOnlyCollection<KernelName> kernelNames)
         {
             var extension = Path.GetExtension(fileName);
             switch (extension.ToLowerInvariant())
             {
                 case ".dib":
-                    return CodeSubmission.Read(stream, defaultLanguage, kernelLanguageAliases);
+                    return CodeSubmission.Read(stream, defaultLanguage, kernelNames);
                 case ".ipynb":
-                    return Notebook.Read(stream, kernelLanguageAliases);
+                    return Notebook.Read(stream, kernelNames);
                 default:
                     throw new NotSupportedException($"Unable to parse a interactive document of type '{extension}'");
             }
         }
-
 
         private static void Write(string fileName, InteractiveDocument interactive, string newline, Stream stream)
         {

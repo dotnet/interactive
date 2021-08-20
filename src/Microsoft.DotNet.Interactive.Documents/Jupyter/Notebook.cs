@@ -25,16 +25,18 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             _serializerOptions.Converters.Add(new DataDictionaryConverter());
         }
 
-        public static InteractiveDocument Parse(string content, IDictionary<string, string> kernelLanguageAliases)
+        public static InteractiveDocument Parse(string content, IReadOnlyCollection<KernelName> kernelNames)
         {
-            if (kernelLanguageAliases == null)
+            if (kernelNames is null)
             {
-                throw new ArgumentNullException(nameof(kernelLanguageAliases));
+                throw new ArgumentNullException(nameof(kernelNames));
             }
+
+            var kernelAliasesToNameMap = kernelNames.ToMapOfKernelNamesByAlias();
 
             var jupyter = JsonDocument.Parse(content).RootElement;
             var notebookLanguage = jupyter.GetPropertyFromPath("metadata", "kernelspec", "language")?.GetString() ?? "C#";
-            var defaultLanguage = notebookLanguage switch
+            var defaultTargetKernelName = notebookLanguage switch
             {
                 "C#" => "csharp",
                 "F#" => "fsharp",
@@ -57,13 +59,15 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
 
                         var sourceLines = GetTextLines(cell.GetPropertyFromPath("source"));
 
-                        var possibleCellLanguage = sourceLines.Count > 0 && sourceLines[0].StartsWith("#!")
-                            ? sourceLines[0].Substring(2)
-                            : null;
+                        var possibleTargetKernelName = sourceLines.Count > 0 && sourceLines[0].StartsWith("#!")
+                                                       ? sourceLines[0].Substring(2)
+                                                       : null;
 
-                        var (cellLanguage, cellSourceLines) = possibleCellLanguage is not null && kernelLanguageAliases.TryGetValue(possibleCellLanguage, out var actualCellLanguage)
-                            ? (actualCellLanguage, sourceLines.Skip(1))
-                            : (languageFromMetadata ?? defaultLanguage, sourceLines);
+                        var (cellTargetKernelName, cellSourceLines) =
+                            possibleTargetKernelName is not null &&
+                            kernelAliasesToNameMap.TryGetValue(possibleTargetKernelName, out var targetKernelName)
+                                ? (targetKernelName, sourceLines.Skip(1))
+                                : (languageFromMetadata ?? defaultTargetKernelName, sourceLines);
 
                         var source = string.Join("\n", cellSourceLines); // normalize all line endings to `\n`
 
@@ -107,7 +111,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
                                 .Where(x => x is not null)
                                 .ToArray();
                         }
-                        cells.Add(new InteractiveDocumentElement(cellLanguage, source, outputs));
+                        cells.Add(new InteractiveDocumentElement(cellTargetKernelName, source, outputs));
                         break;
                     case "markdown":
                         var markdown = GetTextAsSingleString(cell.GetPropertyFromPath("source"));
@@ -119,20 +123,22 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             return new InteractiveDocument(cells.ToArray());
         }
 
-        public static InteractiveDocument Read(Stream stream, 
-            IDictionary<string, string> kernelLanguageAliases)
+        public static InteractiveDocument Read(
+            Stream stream, 
+            IReadOnlyCollection<KernelName> kernelNames)
         {
             using var reader = new StreamReader(stream, Encoding);
             var content = reader.ReadToEnd();
-            return Parse(content, kernelLanguageAliases);
+            return Parse(content, kernelNames);
         }
 
-        public static async Task<InteractiveDocument> ReadAsync(Stream stream,
-            IDictionary<string, string> kernelLanguageAliases)
+        public static async Task<InteractiveDocument> ReadAsync(
+            Stream stream,
+            IReadOnlyCollection<KernelName> kernelNames)
         {
             using var reader = new StreamReader(stream, Encoding);
             var content = await reader.ReadToEndAsync();
-            return Parse(content, kernelLanguageAliases);
+            return Parse(content, kernelNames);
         }
 
         private static List<string> GetTextLines(JsonElement? jsonElement)
@@ -153,7 +159,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             return string.Join("\n", textLines);
         }
 
-        public static void Write(Documents.InteractiveDocument interactive, string newline, Stream stream)
+        public static void Write(InteractiveDocument interactive, string newline, Stream stream)
         {
             using var writer = new StreamWriter(stream, Encoding, 1024, true);
             Write(interactive, newline, writer);
@@ -255,7 +261,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             return content;
         }
 
-        public static void Write(Documents.InteractiveDocument interactive, string newline, TextWriter writer)
+        public static void Write(InteractiveDocument interactive, string newline, TextWriter writer)
         {
             var content = interactive.ToJupyterNotebookContent(newline);
             writer.Write(content);
@@ -264,7 +270,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
         /// <summary>
         /// Ensures each line _except the last_ ends with '\n'.
         /// </summary>
-        private static IEnumerable<string> AddTrailingNewlinesToAllButLast(IEnumerable<string> lines)
+        private static IEnumerable<string> AddTrailingNewlinesToAllButLast(string[] lines)
         {
             var result = lines.Select(l => l.EndsWith("\n") ? l : l + "\n").ToList();
             if (result.Count > 0)
