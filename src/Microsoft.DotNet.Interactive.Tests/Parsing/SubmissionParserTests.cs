@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -367,6 +368,74 @@ var b = 22;";
         }
 
         [Fact]
+        public async Task proxyKernel_does_not_perform_split_if_all_parts_go_to_same_targetKernel_as_the_original_command()
+        {
+            
+            var commandAndEventReceiver = new BlockingCommandAndEventReceiver();
+            var commandAndEventSender = new RecordingKernelCommandAndEventSender();
+
+            commandAndEventSender.OnSend(commandOrEvent =>
+            {
+                if (commandOrEvent.Command is { } command)
+                {
+                    commandAndEventReceiver.Write(new CommandOrEvent( new CommandSucceeded(command)));
+                }
+            });
+            var proxyKernel = new ProxyKernel(
+                "proxyKernel",
+                commandAndEventReceiver,
+                commandAndEventSender);
+
+            var _ = proxyKernel.RunAsync();
+            var code = @"#i ""nuget:source1""
+#i ""nuget:source2""
+#r ""nuget:package1""
+#r ""nuget:package2""
+
+Console.WriteLine(1);";
+            
+            var command = new SubmitCode(code, proxyKernel.Name);
+            await proxyKernel.SendAsync(command);
+
+            commandAndEventSender.Commands.Should().BeEquivalentTo(command);
+        }
+
+
+        [Fact]
+        public async Task proxyKernel_does_not_perform_split_if_all_parts_go_to_same_targetKernel_original_command_has_not_target_kernel()
+        {
+
+            var commandAndEventReceiver = new BlockingCommandAndEventReceiver();
+            var commandAndEventSender = new RecordingKernelCommandAndEventSender();
+
+            commandAndEventSender.OnSend(commandOrEvent =>
+            {
+                if (commandOrEvent.Command is { } command)
+                {
+                    commandAndEventReceiver.Write(new CommandOrEvent(new CommandSucceeded(command)));
+                }
+            });
+            var proxyKernel = new ProxyKernel(
+                "proxyKernel",
+                commandAndEventReceiver,
+                commandAndEventSender);
+
+            var _ = proxyKernel.RunAsync();
+
+            var code = @"#i ""nuget:source1""
+#i ""nuget:source2""
+#r ""nuget:package1""
+#r ""nuget:package2""
+
+Console.WriteLine(1);";
+
+            var command = new SubmitCode(code);
+            await proxyKernel.SendAsync(command);
+
+            commandAndEventSender.Commands.Should().BeEquivalentTo(command);
+        }
+
+        [Fact]
         public void When_targeting_a_local_kernel_after_targeting_a_proxy_kernel_splitting_resumes()
         {
 
@@ -465,6 +534,49 @@ Console.WriteLine(d);
             public Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
             {
                 throw new NotImplementedException();
+            }
+        }
+
+        private class RecordingKernelCommandAndEventSender : IKernelCommandAndEventSender
+        {
+            private Action<CommandOrEvent> _onSend;
+            public List<KernelCommand> Commands { get; } = new();
+            public List<KernelEvent> Events { get; } = new();
+            public Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
+            {
+                Commands.Add(kernelCommand);
+                _onSend?.Invoke(new CommandOrEvent(kernelCommand));
+                return Task.CompletedTask;
+            }
+
+            public Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
+            {
+                Events.Add(kernelEvent);
+                _onSend?.Invoke(new CommandOrEvent(kernelEvent));
+                return Task.CompletedTask;
+            }
+
+            public void OnSend(Action<CommandOrEvent> onSend)
+            {
+                _onSend = onSend;
+            }
+        }
+
+        private class BlockingCommandAndEventReceiver : IKernelCommandAndEventReceiver
+        {
+            private readonly BlockingCollection<CommandOrEvent> _commandsOrEvents;
+
+            public BlockingCommandAndEventReceiver()
+            {
+                _commandsOrEvents = new BlockingCollection<CommandOrEvent>();
+            }
+            public void Write(CommandOrEvent commandOrEvent)
+            {
+                _commandsOrEvents.Add(commandOrEvent);
+            }
+            public IAsyncEnumerable<CommandOrEvent> CommandsOrEventsAsync(CancellationToken cancellationToken)
+            {
+                return _commandsOrEvents.GetConsumingEnumerable(cancellationToken).ToAsyncEnumerable();
             }
         }
     }
