@@ -258,7 +258,7 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentNullException(nameof(command));
             }
 
-            command.ShouldPublishCompletionEvents = true;
+            command.ShouldPublishCompletionEvent = true;
 
             var context = KernelInvocationContext.Establish(command);
 

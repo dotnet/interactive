@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.Commands
         public KernelCommand Parent { get; internal set; }
 
         [JsonIgnore]
-        internal bool ShouldPublishCompletionEvents { get; set; }
+        internal bool ShouldPublishCompletionEvent { get; set; }
 
         [JsonIgnore]
         public IDictionary<string, object> Properties { get; }

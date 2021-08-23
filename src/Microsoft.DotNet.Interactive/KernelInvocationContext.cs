@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Interactive
             }
             else
             {
-                if (command.ShouldPublishCompletionEvents)
+                if (command.ShouldPublishCompletionEvent)
                 {
                     Publish(new CommandSucceeded(command));
                 }
@@ -113,7 +113,7 @@ namespace Microsoft.DotNet.Interactive
         {
             if (!IsComplete)
             {
-                foreach (var command in _childCommands.Where(c => c.ShouldPublishCompletionEvents))
+                foreach (var command in _childCommands.Where(c => c.ShouldPublishCompletionEvent))
                 {
                     Publish(new CommandFailed(exception, command, message));
                 }
