@@ -258,6 +258,8 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentNullException(nameof(command));
             }
 
+            command.ShouldPublishCompletionEvents = true;
+
             var context = KernelInvocationContext.Establish(command);
 
             // only subscribe for the root command 

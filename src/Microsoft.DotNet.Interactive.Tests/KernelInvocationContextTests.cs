@@ -7,6 +7,7 @@ using FluentAssertions;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
@@ -51,7 +52,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
-        public async Task When_a_command_spawns_another_command_then_parent_context_is_not_complete_until_child_context_is_complete()
+        public async Task Middleware_can_be_used_to_emit_events_after_the_command_has_been_handled()
         {
             using var kernel = new CompositeKernel
             {
@@ -81,6 +82,102 @@ namespace Microsoft.DotNet.Interactive.Tests
             values
                 .Should()
                 .BeEquivalentSequenceTo(1, 2, 3);
+        }
+
+        [Fact]
+        public async Task Commands_created_by_submission_splitting_do_not_publish_CommandSucceeded()
+        {
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel{Name = "cs1"},
+                new CSharpKernel{Name = "cs2"}
+            };
+            var kernelEvents = kernel.KernelEvents.ToSubscribedList();
+            var command = new SubmitCode(@"
+#!cs1
+""hello""
+
+#!cs2
+""world""
+");
+            await kernel.SendAsync(command);
+            kernelEvents.Should()
+                .ContainSingle<CommandSucceeded>()
+                .Which
+                .Command.Should().BeSameAs(command);
+        }
+
+        [Fact]
+        public async Task Commands_created_by_submission_splitting_do_not_publish_CommandFailed()
+        {
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel{Name = "cs1"},
+                new CSharpKernel{Name = "cs2"}
+            };
+            var kernelEvents = kernel.KernelEvents.ToSubscribedList();
+            var command = new SubmitCode(@"
+#!cs1
+""hello""
+
+#!cs2
+error
+");
+            await kernel.SendAsync(command);
+            kernelEvents.Should()
+                .ContainSingle<CommandFailed>()
+                .Which
+                .Command.Should().BeSameAs(command);
+        }
+
+        [Fact]
+        public async Task Commands_sent_within_the_code_of_another_command_publish_CommandSucceeded()
+        {
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel{Name = "cs1"},
+                new CSharpKernel{Name = "cs2"}
+            };
+            var kernelEvents = kernel.KernelEvents.ToSubscribedList();
+            var command = new SubmitCode(@$"
+#!cs1
+using {typeof(Kernel).Namespace};
+using {typeof(KernelCommand).Namespace};
+await Kernel.Root.SendAsync(new SubmitCode(""1+1"", ""cs2""));
+");
+            await kernel.SendAsync(command);
+
+            using var _ = new AssertionScope();
+            kernelEvents.Should()
+                .ContainSingle<CommandSucceeded>(e => e.Command == command);
+
+            kernelEvents.Should()
+                .ContainSingle<CommandSucceeded>(e => e.Command.TargetKernelName == "cs2");
+        }
+
+        [Fact]
+        public async Task Commands_sent_within_the_code_of_another_command_publish_CommandFailed()
+        {
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel{Name = "cs1"},
+                new CSharpKernel{Name = "cs2"}
+            };
+            var kernelEvents = kernel.KernelEvents.ToSubscribedList();
+            var command = new SubmitCode($@"
+#!cs1
+using {typeof(Kernel).Namespace};
+using {typeof(KernelCommand).Namespace};
+await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
+");
+            await kernel.SendAsync(command);
+
+            using var _ = new AssertionScope();
+            kernelEvents.Should()
+                .ContainSingle<CommandFailed>(e => e.Command == command);
+
+            kernelEvents.Should()
+                .ContainSingle<CommandFailed>(e => e.Command.TargetKernelName == "cs2");
         }
 
         [Fact]

@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
@@ -89,8 +90,10 @@ namespace Microsoft.DotNet.Interactive
             }
             else
             {
-                // todo: review this change
-                //Publish(new CommandSucceeded(command));
+                if (command.ShouldPublishCompletionEvents)
+                {
+                    Publish(new CommandSucceeded(command));
+                }
                 _childCommands.Remove(command);
             }
         }
@@ -110,6 +113,10 @@ namespace Microsoft.DotNet.Interactive
         {
             if (!IsComplete)
             {
+                foreach (var command in _childCommands.Where(c => c.ShouldPublishCompletionEvents))
+                {
+                    Publish(new CommandFailed(exception, command, message));
+                }
                 Publish(new CommandFailed(exception, Command, message));
                 _events.OnCompleted();
 
@@ -148,9 +155,9 @@ namespace Microsoft.DotNet.Interactive
 
             var command = @event.Command;
 
-            if (command is null ||
-                Command == command ||
-                _childCommands.Contains(command))
+            if (command is null 
+                || Command == command 
+                || _childCommands.Contains(command))
             {
                 _events.OnNext(@event);
             }
