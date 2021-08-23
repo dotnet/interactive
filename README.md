@@ -1,3 +1,4 @@
+
 # .NET Interactive <img src ="https://user-images.githubusercontent.com/2546640/56708992-deee8780-66ec-11e9-9991-eb85abb1d10a.png" width="80px" alt="dotnet bot in space" align ="right">
 
 [![Discord](https://img.shields.io/discord/732297728826277939?label=discord)](https://discord.gg/3pvut9YujN) [![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/dotnet/interactive/interactive-ci?branchName=main)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=744&branchName=main) [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dotnet/interactive/main?urlpath=lab) 
@@ -19,6 +20,26 @@
 We recently introduced the [.NET Interactive Notebooks](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode) extension for Visual Studio Code, which adds support for .NET Interactive using the new Visual Studio Code [native notebook feature](https://code.visualstudio.com/updates/v1_45#_github-issue-notebook). We encourage you to [try it out](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode). If you'd like to contribute, you can start [here](CONTRIBUTING.md). 
 
 ![newnotebook](https://user-images.githubusercontent.com/2546640/94438730-833fed80-016d-11eb-94e6-da7b51abf58a.gif)
+
+## Features
+### Multi-language notebooks 
+.NET Interactive enables users to mix languages in a single notebook or cell without a wrapper. The multi-language experience opens up doors for users to use the best language for the task at hand.
+
+**Languages supported**
+- C# and F# 
+- PowerShell built in collaboration with the PowerShell team
+- JavaScript: With JavaScript user's can leverage 
+- HTML 
+- SQL built in collaboration with the  Azure Data / SQL team
+
+**Coming soon**
+- Kusto 
+
+**Experimenting** 
+- Python and R 
+
+### Variable Sharing 
+### Low code visualization
 
 ## Jupyter and nteract
 
