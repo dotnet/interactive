@@ -24,9 +24,18 @@ namespace Microsoft.DotNet.Interactive.Documents
 
         protected virtual void OnWrite(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
         {
+#if NET472
+            var localOptions = options;
+            localOptions.Converters.Remove(this);
+#else
             var localOptions = new JsonSerializerOptions(options);
             localOptions.Converters.Remove(this);
+#endif
             JsonSerializer.Serialize(writer, value, value.GetType(), localOptions);
+
+#if NET472
+            localOptions.Converters.Add(this);
+#endif
         }
     }
 }

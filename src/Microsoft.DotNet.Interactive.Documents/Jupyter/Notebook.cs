@@ -21,7 +21,11 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
 
         static Notebook()
         {
-            _serializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.General);
+#if NET472
+            _serializerOptions = new JsonSerializerOptions();
+#else
+_serializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.General);
+#endif
             _serializerOptions.Converters.Add(new DataDictionaryConverter());
         }
 
@@ -249,8 +253,11 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             };
 
             // use single space indention as is common with .ipynb
-
+#if NET472
+            var options = new JsonSerializerOptions()
+#else
             var options = new JsonSerializerOptions(JsonSerializerDefaults.General)
+#endif
             {
                 WriteIndented = true,
                 Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
