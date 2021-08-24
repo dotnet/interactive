@@ -102,7 +102,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                             {
                                 commands.Clear();
                                 commands.Add(
-                                    new AnonymousKernelCommand((kernelCommand, context) =>
+                                    new AnonymousKernelCommand((_, context) =>
                                     {
                                         var message =
                                             string.Join(Environment.NewLine,

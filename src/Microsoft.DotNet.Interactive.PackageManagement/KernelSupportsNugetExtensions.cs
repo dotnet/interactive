@@ -2,14 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.Rendering;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive
@@ -144,64 +142,35 @@ namespace Microsoft.DotNet.Interactive
             return path.Length > 0 && path.EndsWith(Path.DirectorySeparatorChar);
         }
 
-        private class PackageReferenceComparer : IEqualityComparer<PackageReference>
-        {
-            public bool Equals(PackageReference x, PackageReference y) =>
-                string.Equals(
-                    GetDisplayValueId(x),
-                    GetDisplayValueId(y),
-                    StringComparison.OrdinalIgnoreCase);
-
-            public int GetHashCode(PackageReference obj) => obj.PackageName.ToLowerInvariant().GetHashCode();
-
-            public static string GetDisplayValueId(PackageReference package)
-            {
-                return package.PackageName.ToLowerInvariant();
-            }
-
-            public static IEqualityComparer<PackageReference> Instance { get; } = new PackageReferenceComparer();
-        }
-
         private static void CreateOrUpdateDisplayValue(KernelInvocationContext context, string name, object content)
         {
-            object displayed = null;
-            if (!context.Command.Properties.TryGetValue(name, out displayed))
+            if (!context.Command.Properties.TryGetValue(name, out var displayed))
             {
                 displayed = context.Display(content);
                 context.Command.Properties.Add(name, displayed);
             }
             else
             {
-                (displayed as DisplayedValue).Update(content);
+                (displayed as DisplayedValue)?.Update(content);
             }
         }
 
-        private static IReadOnlyList<string> emptyList = Enumerable.Empty<string>().ToList();
-
         internal static KernelCommandInvocation DoNugetRestore()
         {
-            return async (command, invocationContext) =>
+            return async (_, invocationContext) =>
             {
-                KernelCommandInvocation restore = async (_, context) =>
+                async Task Restore(KernelInvocationContext context)
                 {
-                    if (!(context.HandlingKernel is ISupportNuget kernel))
+                    if (context.HandlingKernel is not ISupportNuget kernel)
                     {
                         return;
                     }
 
-                    var requestedPackages =
-                        kernel.RequestedPackageReferences
-                              .Select(s => s.PackageName).OrderBy(s => s).ToList();
+                    var requestedPackages = kernel.RequestedPackageReferences.Select(s => s.PackageName).OrderBy(s => s).ToList();
 
-                    var requestedSources =
-                        kernel.RestoreSources.OrderBy(s => s).ToList();
+                    var requestedSources = kernel.RestoreSources.OrderBy(s => s).ToList();
 
-                    var installMessage =
-                        new InstallPackagesMessage(
-                            requestedSources,
-                            requestedPackages,
-                            Enumerable.Empty<string>().ToList(),
-                            0);
+                    var installMessage = new InstallPackagesMessage(requestedSources, requestedPackages, Array.Empty<string>(), 0);
 
                     CreateOrUpdateDisplayValue(context, installPackagesPropertyName, installMessage);
 
@@ -213,35 +182,42 @@ namespace Microsoft.DotNet.Interactive
                         {
                             break;
                         }
-                        installMessage.Progress = 1 + installMessage.Progress;
+
+                        installMessage.Progress++;
                         CreateOrUpdateDisplayValue(context, installPackagesPropertyName, installMessage);
                     }
 
                     var result = await restorePackagesTask;
 
                     var resultMessage = new InstallPackagesMessage(
-                            requestedSources,
-                            Enumerable.Empty<string>().ToList(),
-                            kernel.ResolvedPackageReferences.Where(r => requestedPackages.Contains(r.PackageName, StringComparer.OrdinalIgnoreCase)).Select(s => $"{s.PackageName}, {s.PackageVersion}").OrderBy(s => s).ToList(),
-                            0);
+                        requestedSources,
+                        Array.Empty<string>(),
+                        kernel.ResolvedPackageReferences
+                            .Where(r => requestedPackages.Contains(r.PackageName, StringComparer.OrdinalIgnoreCase))
+                            .Select(s => $"{s.PackageName}, {s.PackageVersion}")
+                            .OrderBy(s => s)
+                            .ToList(),
+                        0);
 
                     if (result.Succeeded)
                     {
-                        kernel?.RegisterResolvedPackageReferences(result.ResolvedReferences);
+                        kernel.RegisterResolvedPackageReferences(result.ResolvedReferences);
                         foreach (var resolvedReference in result.ResolvedReferences)
                         {
                             context.Publish(new PackageAdded(resolvedReference, context.Command));
                         }
+
                         CreateOrUpdateDisplayValue(context, installPackagesPropertyName, resultMessage);
                     }
                     else
                     {
-                        var errors = $"{string.Join(Environment.NewLine, result.Errors)}";
+                        var errors = string.Join(Environment.NewLine, result.Errors);
                         CreateOrUpdateDisplayValue(context, installPackagesPropertyName, resultMessage);
                         context.Fail(message: errors);
                     }
-                };
-                await invocationContext.HandlingKernel.SendAsync(new AnonymousKernelCommand(restore));
+                }
+
+                await invocationContext.ScheduleAsync(Restore);
             };
         }
     }

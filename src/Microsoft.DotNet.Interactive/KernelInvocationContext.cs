@@ -229,5 +229,9 @@ namespace Microsoft.DotNet.Interactive
             Complete(Command);
             TryCancel();
         }
+
+        public Task ScheduleAsync(Func<KernelInvocationContext, Task> func) =>
+            HandlingKernel.SendAsync(new AnonymousKernelCommand((_, invocationContext) =>
+                                                                    func(invocationContext)));
     }
 }
