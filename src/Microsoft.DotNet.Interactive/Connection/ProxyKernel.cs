@@ -64,7 +64,6 @@ namespace Microsoft.DotNet.Interactive.Connection
                 {
                     var _ = Task.Run(async () =>
                     {
-                        var kernel = RootKernel;
                         var eventSubscription = RootKernel.KernelEvents
                             .Where(e => e.Command.GetToken() == d.Command.GetToken() && e.Command.GetType() == d.Command.GetType())
                             .Subscribe(async e =>
@@ -72,8 +71,7 @@ namespace Microsoft.DotNet.Interactive.Connection
                                 await _sender.SendAsync(e, _cancellationTokenSource.Token);
                             });
 
-                        var result = kernel.SendAsync(d.Command, _cancellationTokenSource.Token);
-                        await result;
+                        await RootKernel.SendAsync(d.Command, _cancellationTokenSource.Token);
                         eventSubscription.Dispose();
                     }, _cancellationTokenSource.Token);
                 }
