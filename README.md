@@ -28,7 +28,7 @@ We recently introduced the [.NET Interactive Notebooks](https://marketplace.visu
 **Languages supported**
 - C# and F# 
 - PowerShell built in collaboration with the PowerShell team
-- JavaScript: With JavaScript user's can leverage 
+- JavaScript
 - HTML 
 - SQL built in collaboration with the  Azure Data / SQL team
 
@@ -39,7 +39,20 @@ We recently introduced the [.NET Interactive Notebooks](https://marketplace.visu
 - Python and R 
 
 ### Variable Sharing 
-### Low code visualization
+
+### Visualization 
+**Use your fav**
+
+**Low code visualization**
+
+In just a single line of code easily visualize data. For  example the code snippet below will render an interactive [Microsoft SandDance](https://www.microsoft.com/en-us/research/project/sanddance/).
+```csharp
+housingData.ExploreWithSandDance().Display();
+```
+
+![low-code-visualization](https://user-images.githubusercontent.com/2546640/130510820-6a5b5f9d-a0cc-4fef-8a3d-ea741a30d7f8.gif)
+
+[Low code visualization](https://github.com/dotnet/interactive/tree/main/samples/ExtensionLab) example.
 
 ## Jupyter and nteract
 
