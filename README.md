@@ -9,7 +9,7 @@
 * [Code bots](https://github.com/CodeConversations/CodeConversations)
 * Devices like [Raspberry Pi](https://www.raspberrypi.org/)
 * Embeddable script engines
-* REPLs
+* [REPLs](https://github.com/jonsequitur/dotnet-repl)
 
 *.NET Interactive IS .NET UNLEASHED*
 
@@ -19,7 +19,9 @@
 
 We recently introduced the [.NET Interactive Notebooks](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode) extension for Visual Studio Code, which adds support for .NET Interactive using the new Visual Studio Code [native notebook feature](https://code.visualstudio.com/updates/v1_45#_github-issue-notebook). We encourage you to [try it out](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode). If you'd like to contribute, you can start [here](CONTRIBUTING.md). 
 
-![newnotebook](https://user-images.githubusercontent.com/2546640/94438730-833fed80-016d-11eb-94e6-da7b51abf58a.gif)
+![newnotebook](https://user-images.githubusercontent.com/2546640/130660742-deb5c33b-020d-4d03-8034-7f11532c3201.gif)
+
+---
 
 ## Features
 ### Multi-language notebooks 
@@ -27,32 +29,55 @@ We recently introduced the [.NET Interactive Notebooks](https://marketplace.visu
 
 **Languages supported**
 - C# and F# 
-- PowerShell built in collaboration with the PowerShell team
+- PowerShell built in collaboration with the PowerShell team 💙
 - JavaScript
 - HTML 
-- SQL built in collaboration with the  Azure Data / SQL team
+- SQL built in collaboration with the  Azure Data / SQL team 💙
 
 **Coming soon**
 - Kusto 
 
-**Experimenting** 
+**What languages are we exploring** 
 - Python and R 
 
 ### Variable Sharing 
 
+.NET Interactive enables you to write code in multiple languages within a single notebook and in order to take advantage of those languages' different strengths, you might find it useful to share data between them. Read more [here](https://github.com/dotnet/interactive/blob/main/docs/variable-sharing.md).
+
+![Notebooks-variable-sharing](https://user-images.githubusercontent.com/2546640/130664292-1cdfb806-a6f6-4874-bcad-a5eb4517a925.gif)
+
+The gif above showcases the following:
+- Variable sharing across C#, HTML and JavaScript across cells.
+- Multi-language cells.
+
+For more examples on multi-language notebooks and variable sharing checkout our [polyglot samples](https://github.com/dotnet/interactive/tree/main/samples/notebooks/polyglot).
+
 ### Visualization 
-**Use your fav**
 
 **Low code visualization**
 
-In just a single line of code easily visualize data. For  example the code snippet below will render an interactive [Microsoft SandDance](https://www.microsoft.com/en-us/research/project/sanddance/).
+In just a single line of code easily visualize data with Microsoft SandDance and [nteract DataExplorer](https://data-explorer.nteract.io/). For  example the code snippet below will render an interactive [Microsoft SandDance](https://www.microsoft.com/en-us/research/project/sanddance/).
 ```csharp
 housingData.ExploreWithSandDance().Display();
 ```
 
 ![low-code-visualization](https://user-images.githubusercontent.com/2546640/130510820-6a5b5f9d-a0cc-4fef-8a3d-ea741a30d7f8.gif)
 
-[Low code visualization](https://github.com/dotnet/interactive/tree/main/samples/ExtensionLab) example.
+For more [low code visualization](https://github.com/dotnet/interactive/tree/main/samples/ExtensionLab) example check out our samples.
+
+**Works with your favorite visualization libraries**
+
+![d3js](https://user-images.githubusercontent.com/2546640/130669124-09f11de8-e324-4c2e-bdbc-c49fd85511c2.gif)
+
+The image below showcases the following: 
+
+- `C#` cell: Define a variable in C#
+- `JavaScript` cell: Use RequireJS to import d3.js
+- `HTML cell`:  Visualize the data
+
+Full example [here](https://github.com/dotnet/interactive/blob/main/samples/notebooks/polyglot/d3js.ipynb).
+
+----
 
 ## Jupyter and nteract
 
