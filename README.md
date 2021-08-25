@@ -50,7 +50,7 @@ The gif above showcases the following:
 - Variable sharing across C#, HTML and JavaScript cells.
 - Multi-language cells.
 
-For more examples on multi-language notebooks and variable sharing checkout our [polyglot samples](https://github.com/dotnet/interactive/tree/main/samples/notebooks/polyglot).
+For more examples on multi-language notebooks and variable sharing check out our [polyglot samples](https://github.com/dotnet/interactive/tree/main/samples/notebooks/polyglot).
 
 ### Visualization 
 
