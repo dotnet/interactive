@@ -37,7 +37,7 @@ We recently introduced the [.NET Interactive Notebooks](https://marketplace.visu
 **Coming soon**
 - Kusto 
 
-**What languages are we exploring** 
+**What languages are we exploring?** 
 - Python and R 
 
 ### Variable Sharing 
