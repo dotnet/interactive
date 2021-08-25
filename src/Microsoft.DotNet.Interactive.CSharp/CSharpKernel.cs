@@ -290,7 +290,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 // Report the compilation failure or exception
                 if (exception is not null)
                 {
-                    context.Fail(exception, message);
+                    context.Fail(exception, message, submitCode);
                 }
                 else
                 {
@@ -307,7 +307,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }
             else
             {
-                context.Fail(null, "Command cancelled");
+                context.Fail(null, "Command cancelled", submitCode);
             }
         }
 

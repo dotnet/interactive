@@ -11,10 +11,8 @@ using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
@@ -130,56 +128,6 @@ error
                 .ContainSingle<CommandFailed>()
                 .Which
                 .Command.Should().BeSameAs(command);
-        }
-
-        [Fact]
-        public async Task Commands_sent_within_the_code_of_another_command_publish_CommandSucceeded()
-        {
-            using var kernel = new CompositeKernel
-            {
-                new CSharpKernel{Name = "cs1"},
-                new CSharpKernel{Name = "cs2"}
-            };
-            var kernelEvents = kernel.KernelEvents.ToSubscribedList();
-            var command = new SubmitCode(@$"
-#!cs1
-using {typeof(Kernel).Namespace};
-using {typeof(KernelCommand).Namespace};
-await Kernel.Root.SendAsync(new SubmitCode(""1+1"", ""cs2""));
-");
-            await kernel.SendAsync(command);
-
-            using var _ = new AssertionScope();
-            kernelEvents.Should()
-                .ContainSingle<CommandSucceeded>(e => e.Command == command);
-
-            kernelEvents.Should()
-                .ContainSingle<CommandSucceeded>(e => e.Command.TargetKernelName == "cs2");
-        }
-
-        [Fact]
-        public async Task Commands_sent_within_the_code_of_another_command_publish_CommandFailed()
-        {
-            using var kernel = new CompositeKernel
-            {
-                new CSharpKernel{Name = "cs1"},
-                new CSharpKernel{Name = "cs2"}
-            };
-            var kernelEvents = kernel.KernelEvents.ToSubscribedList();
-            var command = new SubmitCode($@"
-#!cs1
-using {typeof(Kernel).Namespace};
-using {typeof(KernelCommand).Namespace};
-await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
-");
-            await kernel.SendAsync(command);
-
-            using var _ = new AssertionScope();
-            kernelEvents.Should()
-                .ContainSingle<CommandFailed>(e => e.Command == command);
-
-            kernelEvents.Should()
-                .ContainSingle<CommandFailed>(e => e.Command.TargetKernelName == "cs2");
         }
 
         [Fact]
@@ -372,43 +320,6 @@ await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
             inner.Publish(new DisplayedValueProduced("oops!", command));
 
             events.Should().NotContain(e => e is DisplayedValueProduced);
-        }
-    }
-
-    public class KernelCommandNestingTests : LanguageKernelTestBase
-    {
-        public KernelCommandNestingTests(ITestOutputHelper output) : base(output)
-        {
-        }
-
-        [Fact]
-        public async Task Nested_commands_publish_CommandSucceeded_to_KernelCommandResult()
-        {
-            using var kernel = new CompositeKernel
-            {
-                new CSharpKernel(),
-                new FSharpKernel()
-            };
-
-            var result = await kernel.SubmitCodeAsync(
-                @"
-using System.Reactive.Linq;
-using Microsoft.DotNet.Interactive;
-using Microsoft.DotNet.Interactive.Commands;
-
-var result = await Kernel.Root.SendAsync(new SubmitCode(""123"", ""fsharp""));
-
-await result.KernelEvents.LastAsync();
-");
-
-            var events = result.KernelEvents.ToSubscribedList();
-
-            events.Should().NotContainErrors();
-
-
-
-            // TODO-JOSEQU (Nested_commands_publish_CommandSucceeded_to_KernelCommandResult) write test
-            Assert.True(false, "Test Nested_commands_publish_CommandSucceeded_to_KernelCommandResult is not written yet.");
         }
     }
 }

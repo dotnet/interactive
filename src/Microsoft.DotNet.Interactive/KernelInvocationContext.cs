@@ -2,8 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,7 +24,7 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly ReplaySubject<KernelEvent> _events = new();
 
-        private readonly HashSet<KernelCommand> _childCommands = new();
+        private readonly ConcurrentDictionary<KernelCommand, ReplaySubject<KernelEvent>> _childCommands = new();
 
         private readonly CompositeDisposable _disposables = new();
 
@@ -79,9 +81,11 @@ namespace Microsoft.DotNet.Interactive
 
         public void Complete(KernelCommand command)
         {
+            var commandSucceeded = new CommandSucceeded(command);
+
             if (command == Command)
             {
-                Publish(new CommandSucceeded(Command));
+                Publish(commandSucceeded);
                 if (!_events.IsDisposed)
                 {
                     _events.OnCompleted();
@@ -92,13 +96,18 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (command.ShouldPublishCompletionEvent == true)
                 {
-                    Publish(new CommandSucceeded(command));
+                    Publish(commandSucceeded);
                 }
-                _childCommands.Remove(command);
+
+                if (_childCommands.TryGetValue(command, out var events) && 
+                    !events.IsDisposed)
+                {
+                    events.OnCompleted();
+                }
             }
         }
 
-        public void Cancel()
+        internal void Cancel()
         {
             if (!IsComplete)
             {
@@ -109,14 +118,28 @@ namespace Microsoft.DotNet.Interactive
 
         public void Fail(
             Exception exception = null,
-            string message = null)
+            string message = null,
+            KernelCommand command = null)
         {
-            if (!IsComplete)
+            if (IsComplete)
             {
-                foreach (var command in _childCommands.Where(c => c.ShouldPublishCompletionEvent == true))
+                return;
+            }
+
+            if (command is { } &&
+                command != Command &&
+                command.ShouldPublishCompletionEvent == true)
+            {
+                Publish(new CommandFailed(exception, command, message));
+
+                if (_childCommands.TryGetValue(command, out var events) &&
+                    !events.IsDisposed)
                 {
-                    Publish(new CommandFailed(exception, command, message));
+                    events.OnCompleted();
                 }
+            }
+            else
+            {
                 Publish(new CommandFailed(exception, Command, message));
                 _events.OnCompleted();
 
@@ -137,7 +160,6 @@ namespace Microsoft.DotNet.Interactive
             }
             catch (ObjectDisposedException)
             {
-
             }
         }
 
@@ -155,9 +177,11 @@ namespace Microsoft.DotNet.Interactive
 
             var command = @event.Command;
 
-            if (command is null 
-                || Command == command 
-                || _childCommands.Contains(command))
+            if (_childCommands.TryGetValue(command, out var events))
+            {
+                events.OnNext(@event);
+            }
+            else if (Command == command)
             {
                 _events.OnNext(@event);
             }
@@ -166,6 +190,19 @@ namespace Microsoft.DotNet.Interactive
         public IObservable<KernelEvent> KernelEvents => _events;
 
         public KernelCommandResult Result { get; }
+
+        internal KernelCommandResult ResultFor(KernelCommand command)
+        {
+            if (command == Command)
+            {
+                return Result;
+            }
+            else
+            {
+                var events = _childCommands[command];
+                return new KernelCommandResult(events);
+            }
+        }
 
         public static KernelInvocationContext Establish(KernelCommand command)
         {
@@ -183,7 +220,20 @@ namespace Microsoft.DotNet.Interactive
                     {
                         command.Parent = _current.Value.Command;
                     }
-                    _current.Value._childCommands.Add(command);
+
+                    _current.Value._childCommands.GetOrAdd(command, c =>
+                    {
+                        var replaySubject = new ReplaySubject<KernelEvent>();
+
+                        var subscription = replaySubject
+                            .Where(e => e is not CommandSucceeded and not CommandFailed)
+                            .Subscribe(e => _current.Value._events.OnNext(e));
+
+                        _current.Value._disposables.Add(subscription);
+                        _current.Value._disposables.Add(replaySubject);
+
+                        return replaySubject;
+                    });
                 }
             }
 

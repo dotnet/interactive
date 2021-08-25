@@ -135,10 +135,7 @@ namespace Microsoft.DotNet.Interactive
 
         private void Run(ScheduledOperation operation)
         {
-            if (_currentTopLevelOperation.Value is null)
-            {
-                _currentTopLevelOperation.Value = operation;
-            }
+            _currentTopLevelOperation.Value ??= operation;
 
             using var logOp = Log.OnEnterAndConfirmOnExit($"Run: {operation.Value}");
 

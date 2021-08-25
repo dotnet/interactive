@@ -68,7 +68,7 @@ public class A
                 .Should()
                 .NotContainErrors();
 
-            var formattedValues = result.KernelEvents
+            result.KernelEvents
                 .ToSubscribedList()
                 .Should()
                 .ContainSingle<DisplayedValueProduced>()
