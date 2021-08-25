@@ -63,7 +63,7 @@ housingData.ExploreWithSandDance().Display();
 
 ![low-code-visualization](https://user-images.githubusercontent.com/2546640/130510820-6a5b5f9d-a0cc-4fef-8a3d-ea741a30d7f8.gif)
 
-For more [low code visualization](https://github.com/dotnet/interactive/tree/main/samples/ExtensionLab) example check out our samples.
+For more [low code visualization](https://github.com/dotnet/interactive/tree/main/samples/ExtensionLab) examples, check out our samples.
 
 **Works with your favorite visualization libraries**
 
