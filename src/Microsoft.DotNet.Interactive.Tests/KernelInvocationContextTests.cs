@@ -11,8 +11,10 @@ using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
@@ -370,6 +372,43 @@ await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
             inner.Publish(new DisplayedValueProduced("oops!", command));
 
             events.Should().NotContain(e => e is DisplayedValueProduced);
+        }
+    }
+
+    public class KernelCommandNestingTests : LanguageKernelTestBase
+    {
+        public KernelCommandNestingTests(ITestOutputHelper output) : base(output)
+        {
+        }
+
+        [Fact]
+        public async Task Nested_commands_publish_CommandSucceeded_to_KernelCommandResult()
+        {
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel(),
+                new FSharpKernel()
+            };
+
+            var result = await kernel.SubmitCodeAsync(
+                @"
+using System.Reactive.Linq;
+using Microsoft.DotNet.Interactive;
+using Microsoft.DotNet.Interactive.Commands;
+
+var result = await Kernel.Root.SendAsync(new SubmitCode(""123"", ""fsharp""));
+
+await result.KernelEvents.LastAsync();
+");
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should().NotContainErrors();
+
+
+
+            // TODO-JOSEQU (Nested_commands_publish_CommandSucceeded_to_KernelCommandResult) write test
+            Assert.True(false, "Test Nested_commands_publish_CommandSucceeded_to_KernelCommandResult is not written yet.");
         }
     }
 }
