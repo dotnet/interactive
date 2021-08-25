@@ -46,32 +46,32 @@ namespace Microsoft.DotNet.Interactive.Connection
                     break;
                 }
 
-                if (d.Event is not null)
+                if (d.Event is { } eventToForward)
                 {
                     if (_executionContext is { } ec)
                     {
                         ExecutionContext.Run(ec, _ =>
                         {
-                            PublishEvent(d.Event);
+                            PublishEvent(eventToForward);
                         },null);
                     }
                     else
                     {
-                        PublishEvent(d.Event);
+                        PublishEvent(eventToForward);
                     }
                 }
-                else if (d.Command is not null)
+                else if (d.Command is {} commandToForward)
                 {
                     var _ = Task.Run(async () =>
                     {
                         var eventSubscription = RootKernel.KernelEvents
-                            .Where(e => e.Command.GetToken() == d.Command.GetToken() && e.Command.GetType() == d.Command.GetType())
+                            .Where(e => e.Command.GetToken() == commandToForward.GetToken() && e.Command.GetType() == commandToForward.GetType())
                             .Subscribe(async e =>
                             {
                                 await _sender.SendAsync(e, _cancellationTokenSource.Token);
                             });
 
-                        await RootKernel.SendAsync(d.Command, _cancellationTokenSource.Token);
+                        await RootKernel.SendAsync(commandToForward, _cancellationTokenSource.Token);
                         eventSubscription.Dispose();
                     }, _cancellationTokenSource.Token);
                 }
@@ -83,11 +83,13 @@ namespace Microsoft.DotNet.Interactive.Connection
         {
             switch (command)
             {
+                // directives are handled locally
                 case DirectiveCommand { DirectiveNode: KernelNameDirectiveNode }:
                     await base.HandleAsync(command, context);
                     return;
             }
 
+            // forward the command
             _executionContext = ExecutionContext.Capture();
             var kernelUri = KernelUri.Parse(command.TargetKernelName);
             var remoteTargetKernelName = kernelUri.GetRemoteKernelName();
