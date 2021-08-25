@@ -47,7 +47,7 @@ We recently introduced the [.NET Interactive Notebooks](https://marketplace.visu
 ![Notebooks-variable-sharing](https://user-images.githubusercontent.com/2546640/130664292-1cdfb806-a6f6-4874-bcad-a5eb4517a925.gif)
 
 The gif above showcases the following:
-- Variable sharing across C#, HTML and JavaScript across cells.
+- Variable sharing across C#, HTML and JavaScript cells.
 - Multi-language cells.
 
 For more examples on multi-language notebooks and variable sharing checkout our [polyglot samples](https://github.com/dotnet/interactive/tree/main/samples/notebooks/polyglot).
