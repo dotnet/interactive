@@ -139,7 +139,7 @@ error
 
             var events = context.KernelEvents.ToSubscribedList();
 
-            context.Fail(message: "oops!");
+            context.Fail(command, message: "oops!");
 
             events.Should()
                   .ContainSingle<CommandFailed>();
@@ -154,7 +154,7 @@ error
 
             var events = context.KernelEvents.ToSubscribedList();
 
-            context.Fail(message: "oops!");
+            context.Fail(command, message: "oops!");
 
             events.Should()
                   .NotContain(e => e is CommandSucceeded);
@@ -215,7 +215,7 @@ error
 
             var events = context.KernelEvents.ToSubscribedList();
 
-            context.Fail(message: "oops");
+            context.Fail(command, message: "oops");
 
             context.Publish(new DisplayedValueProduced("oops", command));
 
@@ -295,7 +295,7 @@ error
             var innerCommand = new SubmitCode("def");
             await using var inner = KernelInvocationContext.Establish(innerCommand);
 
-            inner.Fail();
+            inner.Fail(innerCommand);
 
             events.Should()
                   .ContainSingle<CommandFailed>()
@@ -316,7 +316,7 @@ error
             var innerCommand = new SubmitCode("def");
             await using var inner = KernelInvocationContext.Establish(innerCommand);
 
-            inner.Fail();
+            inner.Fail(innerCommand);
             inner.Publish(new DisplayedValueProduced("oops!", command));
 
             events.Should().NotContain(e => e is DisplayedValueProduced);

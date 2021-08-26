@@ -99,7 +99,7 @@ namespace Microsoft.DotNet.Interactive
                     if (alreadyGotten is { } && !string.IsNullOrWhiteSpace(pkg.PackageVersion) && pkg.PackageVersion != alreadyGotten.PackageVersion)
                     {
                         var errorMessage = GenerateErrorMessage(pkg, alreadyGotten).ToString(OutputMode.NonAnsi);
-                        context.Fail(message: errorMessage);
+                        context.Fail(context.Command, message: errorMessage);
                     }
                     else
                     {
@@ -108,7 +108,7 @@ namespace Microsoft.DotNet.Interactive
                         if (added is null)
                         {
                             var errorMessage = GenerateErrorMessage(pkg).ToString(OutputMode.NonAnsi);
-                            context.Fail(message: errorMessage);
+                            context.Fail(context.Command, message: errorMessage);
                         }
                     }
 
@@ -213,7 +213,7 @@ namespace Microsoft.DotNet.Interactive
                     {
                         var errors = string.Join(Environment.NewLine, result.Errors);
                         CreateOrUpdateDisplayValue(context, installPackagesPropertyName, resultMessage);
-                        context.Fail(message: errors);
+                        context.Fail(context.Command, message: errors);
                     }
                 }
 

@@ -112,14 +112,16 @@ namespace Microsoft.DotNet.Interactive
             if (!IsComplete)
             {
                 TryCancel();
-                Fail(new OperationCanceledException($"Command :{Command} cancelled."));
+                Fail(
+                    Command,
+                    new OperationCanceledException($"Command :{Command} cancelled."));
             }
         }
 
         public void Fail(
+            KernelCommand command,
             Exception exception = null,
-            string message = null,
-            KernelCommand command = null)
+            string message = null)
         {
             if (IsComplete)
             {

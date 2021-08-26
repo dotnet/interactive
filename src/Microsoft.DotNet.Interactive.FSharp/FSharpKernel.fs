@@ -219,11 +219,11 @@ type FSharpKernel () as this =
                     | Error (:? FsiCompilationException) 
                     | Ok _ ->
                         let ex = CodeSubmissionCompilationErrorException(Exception(aggregateError))
-                        context.Fail(ex, aggregateError)
+                        context.Fail(codeSubmission, ex, aggregateError)
                     | Error ex ->
-                        context.Fail(ex, null)
+                        context.Fail(codeSubmission, ex, null)
                 else
-                    context.Fail(null, "Command cancelled")
+                    context.Fail(codeSubmission, null, "Command cancelled")
         }
 
     let handleRequestCompletions (requestCompletions: RequestCompletions) (context: KernelInvocationContext) =

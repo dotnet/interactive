@@ -186,7 +186,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 {
                     if (messageParams.Message.IsError)
                     {
-                        context.Fail(message: messageParams.Message.Message);
+                        context.Fail(command, message: messageParams.Message.Message);
                         completion.SetResult(true);
                     }
                     else

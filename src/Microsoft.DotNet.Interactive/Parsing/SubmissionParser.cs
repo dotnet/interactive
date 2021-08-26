@@ -109,7 +109,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                                                 parseResult.Errors
                                                     .Select(e => e.ToString()));
 
-                                        context.Fail(message: message);
+                                        context.Fail(originalCommand, message: message);
                                         return Task.CompletedTask;
                                     }, parent: originalCommand));
                             }

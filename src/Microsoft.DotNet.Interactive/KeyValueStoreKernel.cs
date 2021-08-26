@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (!string.IsNullOrWhiteSpace(value))
                 {
-                    context.Fail(message: "The --from-file option cannot be used in combination with a content submission.");
+                    context.Fail(command, message: "The --from-file option cannot be used in combination with a content submission.");
                 }
 
                 return;
@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (!string.IsNullOrWhiteSpace(value))
                 {
-                    context.Fail(message: "The --from-url option cannot be used in combination with a content submission.");
+                    context.Fail(command, message: "The --from-url option cannot be used in combination with a content submission.");
                 }
 
                 return;

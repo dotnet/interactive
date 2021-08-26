@@ -138,7 +138,7 @@ namespace Microsoft.DotNet.Interactive
                 || command.LinePosition.Character < 0
                 || command.LinePosition.Character > lines[command.LinePosition.Line].Span.Length)
             {
-                context.Fail(message: $"The specified position {command.LinePosition}");
+                context.Fail(command, message: $"The specified position {command.LinePosition}");
                 commands = null;
                 return false;
             }
@@ -434,7 +434,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (!context.IsComplete)
                 {
-                    context.Fail(exception);
+                    context.Fail(command, exception);
                 }
 
                 throw;

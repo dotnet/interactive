@@ -78,7 +78,6 @@ namespace Microsoft.DotNet.Interactive.Connection
             }
         }
 
-
         internal override async Task HandleAsync(KernelCommand command, KernelInvocationContext context)
         {
             switch (command)
