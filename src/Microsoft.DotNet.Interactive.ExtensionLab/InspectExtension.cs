@@ -50,10 +50,10 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         private void Inspect(OptimizationLevel configuration, SourceCodeKind kind, Platform platform, KernelInvocationContext context)
         {
-            if (!(context.Command is SubmitCode))
+            if (context.Command is not SubmitCode command)
+            {
                 return;
-
-            var command = context.Command as SubmitCode;
+            }
 
             // TODO: Is there a proper way of cleaning up code from the magic commands?
             var code = Regex.Replace(command.Code, $"#!{INSPECT_COMMAND}(.*)", "");
@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             if (!result.IsSuccess)
             {
 		        var diagnostics = string.Join('\n', result.CompilationDiagnostics);
-                context.Fail(message: $"Uh-oh, something went wrong:\n {diagnostics}");
+                context.Fail(command, message: $"Uh-oh, something went wrong:\n {diagnostics}");
                 return;
             }
 

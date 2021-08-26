@@ -4,8 +4,6 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Text;
-using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Formatting;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
@@ -34,9 +32,9 @@ namespace Microsoft.DotNet.Interactive
             Progress = progress;
         }
 
-        IHtmlContent InstallMessage(string message, IEnumerable<string> items, string progress = null)
+        private IHtmlContent InstallMessage(string message, IReadOnlyList<string> items, string progress = null)
         {
-            if (items.Count() > 0)
+            if (items.Any())
             {
                 return div(
                     strong(message),
@@ -50,13 +48,13 @@ namespace Microsoft.DotNet.Interactive
 
         public string FormatAsHtml()
         {
-            string progress = new String('.', Progress);
-            var items = new List<IHtmlContent>();
-            items.Add(InstallMessage("Restore sources", RestoreSources));
-            items.Add(InstallMessage("Installing Packages", InstallingPackages, progress));
-            items.Add(InstallMessage("Installed Packages", InstalledPackages));
-            var r =  div(items).ToString();
-            return r;
+            var items = new List<IHtmlContent>
+            {
+                InstallMessage("Restore sources", RestoreSources),
+                InstallMessage("Installing Packages", InstallingPackages, new string('.', Progress)),
+                InstallMessage("Installed Packages", InstalledPackages)
+            };
+            return div(items).ToString();
         }
 
         public IEnumerable<string> FormatAsPlainTextLines()
@@ -75,7 +73,7 @@ namespace Microsoft.DotNet.Interactive
                 yield return "Installing Packages";
                 foreach (var installing in InstallingPackages)
                 {
-                    yield return $" - {installing}   " + new String('.', Progress);
+                    yield return $" - {installing}   " + new string('.', Progress);
                 }
             }
 
@@ -88,21 +86,22 @@ namespace Microsoft.DotNet.Interactive
                 }
             }
         }
+
         public string FormatAsPlainText()
         {
-            return String.Join(System.Environment.NewLine, FormatAsPlainTextLines());
+            return string.Join(Environment.NewLine, FormatAsPlainTextLines());
         }
-    }
 
-    class InstallPackagesMessageFormatterSource : ITypeFormatterSource
-    {
-        public IEnumerable<ITypeFormatter> CreateTypeFormatters()
+        private class InstallPackagesMessageFormatterSource : ITypeFormatterSource
         {
-            return new ITypeFormatter[]
+            public IEnumerable<ITypeFormatter> CreateTypeFormatters()
             {
-                new PlainTextFormatter<InstallPackagesMessage>((m, ctxt) => ctxt.Writer.Write(m.FormatAsPlainText())),
-                new HtmlFormatter<InstallPackagesMessage>((m, ctxt) => ctxt.Writer.Write(m.FormatAsHtml()))
-            };
+                return new ITypeFormatter[]
+                {
+                    new PlainTextFormatter<InstallPackagesMessage>((m, ctxt) => ctxt.Writer.Write(m.FormatAsPlainText())),
+                    new HtmlFormatter<InstallPackagesMessage>((m, ctxt) => ctxt.Writer.Write(m.FormatAsHtml()))
+                };
+            }
         }
     }
 }

@@ -210,7 +210,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             if (context.CancellationToken.IsCancellationRequested)
             {
-                context.Fail(null, "Command cancelled");
+                context.Fail(submitCode, null, "Command cancelled");
                 return;
             }
 

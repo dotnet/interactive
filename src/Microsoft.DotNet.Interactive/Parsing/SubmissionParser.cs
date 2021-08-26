@@ -102,14 +102,14 @@ namespace Microsoft.DotNet.Interactive.Parsing
                             {
                                 commands.Clear();
                                 commands.Add(
-                                    new AnonymousKernelCommand((kernelCommand, context) =>
+                                    new AnonymousKernelCommand((_, context) =>
                                     {
                                         var message =
                                             string.Join(Environment.NewLine,
                                                 parseResult.Errors
                                                     .Select(e => e.ToString()));
 
-                                        context.Fail(message: message);
+                                        context.Fail(originalCommand, message: message);
                                         return Task.CompletedTask;
                                     }, parent: originalCommand));
                             }

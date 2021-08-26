@@ -651,12 +651,14 @@ $${languageSpecificCode}
         public async Task RequestCompletions_prevents_RequestDiagnostics_from_producing_events(Language language)
         {
             var kernel = CreateKernel(language);
+            
             MarkupTestFile.GetLineAndColumn("Console.$$", out var output, out var line, out var column);
-
+            
             var requestDiagnosticsCommand = new RequestDiagnostics(output);
 
-            var results = await  Task.WhenAll(
-                kernel.SendAsync(new RequestCompletions(output, new LinePosition(line,column))),
+            var requestCompletionsCommand = new RequestCompletions(output, new LinePosition(line,column));
+            var results = await Task.WhenAll(
+                kernel.SendAsync(requestCompletionsCommand),
                 kernel.SendAsync(requestDiagnosticsCommand)
             );
 

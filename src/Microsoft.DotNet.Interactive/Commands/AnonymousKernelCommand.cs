@@ -12,6 +12,7 @@ namespace Microsoft.DotNet.Interactive.Commands
             : base(targetKernelName, parent)
         {
             Handler = handler;
+            ShouldPublishCompletionEvent = false;
         }
     }
 }

@@ -9,7 +9,6 @@ using System.CommandLine.Parsing;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -139,7 +138,7 @@ namespace Microsoft.DotNet.Interactive
                 || command.LinePosition.Character < 0
                 || command.LinePosition.Character > lines[command.LinePosition.Line].Span.Length)
             {
-                context.Fail(message: $"The specified position {command.LinePosition}");
+                context.Fail(command, message: $"The specified position {command.LinePosition}");
                 commands = null;
                 return false;
             }
@@ -258,6 +257,8 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentNullException(nameof(command));
             }
 
+            command.ShouldPublishCompletionEvent ??= true;
+
             var context = KernelInvocationContext.Establish(command);
 
             // only subscribe for the root command 
@@ -330,7 +331,6 @@ namespace Microsoft.DotNet.Interactive
                             case RequestHoverText _:
                             case RequestCompletions _:
                             case RequestSignatureHelp _:
-                                // FIX: (SendAsync) 
                                 {
                                     if (_inFlightContext is { } inflight)
                                     {
@@ -369,7 +369,7 @@ namespace Microsoft.DotNet.Interactive
                 }
             }
 
-            return context.Result;
+            return context.ResultFor(command);
         }
 
         private async Task RunOnFastPath(KernelInvocationContext context,
@@ -427,14 +427,14 @@ namespace Microsoft.DotNet.Interactive
                 {
                     context.Complete(command);
                 }
-
-                return context.Result;
+                
+                return context.ResultFor(command);
             }
             catch (Exception exception)
             {
                 if (!context.IsComplete)
                 {
-                    context.Fail(exception);
+                    context.Fail(command, exception);
                 }
 
                 throw;

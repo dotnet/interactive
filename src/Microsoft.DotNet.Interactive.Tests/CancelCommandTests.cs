@@ -76,7 +76,6 @@ while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested
                 .Should()
                 .ContainSingle<CommandSucceeded>(c => c.Command == cancelCommand);
         }
-
      
         [Fact]
         public async Task can_cancel_user_loop_using_CancellationToken()
