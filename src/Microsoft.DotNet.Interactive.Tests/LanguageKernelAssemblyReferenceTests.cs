@@ -5,7 +5,6 @@ using System;
 using System.IO;
 using System.Reflection;
 using FluentAssertions;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -45,13 +44,12 @@ typeof(Hello).Name"
 
             await SubmitCode(kernel, source);
 
-            KernelEvents
-                .Should()
-                .ContainSingle(e => e is ReturnValueProduced);
+            KernelEvents.Should().NotContainErrors();
 
             KernelEvents
-                .OfType<ReturnValueProduced>()
-                .Single()
+                .Should()
+                .ContainSingle<ReturnValueProduced>()
+                .Which
                 .Value
                 .Should()
                 .Be("Hello");
@@ -84,13 +82,12 @@ typeof(Hello).Name"
 
             await SubmitCode(kernel, source);
 
-            KernelEvents
-                .Should()
-                .ContainSingle(e => e is ReturnValueProduced);
+            KernelEvents.Should().NotContainErrors();
 
             KernelEvents
-                .OfType<ReturnValueProduced>()
-                .Single()
+                .Should()
+                .ContainSingle<ReturnValueProduced>()
+                .Which
                 .Value
                 .Should()
                 .Be("Hello");
