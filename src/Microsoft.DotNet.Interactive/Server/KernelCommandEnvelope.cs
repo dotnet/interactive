@@ -5,6 +5,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text.Json;
 using Microsoft.DotNet.Interactive.Commands;
 
@@ -83,7 +85,13 @@ namespace Microsoft.DotNet.Interactive.Server
                 command.GetType(),
                 commandType =>
                 {
-                    var genericType = _envelopeTypesByCommandTypeName[command.GetType().Name];
+                    var type = command.GetType();
+                    var attribute = type.GetCustomAttribute<NotSerializableAttribute>();
+                    if (attribute is { })
+                    {
+                        throw new SerializationException(attribute.Message ?? $"Cannot serialize {commandType.Name}");
+                    }
+                    var genericType = _envelopeTypesByCommandTypeName[type.Name];
 
                     var constructor = genericType.GetConstructors().Single();
 
