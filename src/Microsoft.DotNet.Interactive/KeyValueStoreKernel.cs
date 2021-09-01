@@ -235,11 +235,11 @@ namespace Microsoft.DotNet.Interactive
         public async Task HandleAsync(SetFormattedValue command, KernelInvocationContext context)
         {
             await StoreValueAsync(
-                command.FormattedValue, 
+                command.FormattedValue.Value, 
                 new ValueDirectiveOptions
                 {
                     Name = command.Name,
-                    MimeType = command.MimeType
+                    MimeType = command.FormattedValue.MimeType
                 },context);
         }
     }

@@ -7,24 +7,17 @@ namespace Microsoft.DotNet.Interactive.Commands
 {
     public class SetFormattedValue : KernelCommand
     {
-        public string FormattedValue { get; }
-        public string MimeType { get; }
+        public FormattedValue FormattedValue { get; }
         public string Name { get; }
 
-        public SetFormattedValue(string formattedValue, string mimeType, string name, string targetKernelName) : base(targetKernelName)
+        public SetFormattedValue(FormattedValue formattedValue, string name, string targetKernelName) : base(targetKernelName)
         {
-            if (string.IsNullOrWhiteSpace(mimeType))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(mimeType));
-            }
-
             if (string.IsNullOrWhiteSpace(name))
             {
                 throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
             }
             FormattedValue = formattedValue ?? throw new ArgumentNullException(nameof(formattedValue));
-
-            MimeType = mimeType;
+            
             Name = name;
         }
     }

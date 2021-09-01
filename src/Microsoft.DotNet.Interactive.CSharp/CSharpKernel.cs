@@ -535,9 +535,10 @@ namespace Microsoft.DotNet.Interactive.CSharp
             await SetVariableAsync(command.Name, command.Value, command.Value?.GetType());
         }
 
-        public Task HandleAsync(SetFormattedValue command, KernelInvocationContext context)
+        public async Task HandleAsync(SetFormattedValue command, KernelInvocationContext context)
         {
-            throw new NotImplementedException();
+            var (value, type) = command.FormattedValue.ToDotNetValue();
+            await SetVariableAsync(command.Name,value, type);
         }
     }
 }

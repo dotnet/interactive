@@ -392,6 +392,8 @@ type FSharpKernel () as this =
         
     let handleSetFormattedValue (setFormattedValue: SetFormattedValue) (context: KernelInvocationContext) =
         async {
+            let struct (value,_type) = setFormattedValue.FormattedValue.ToDotNetValue()
+            script.Value.Fsi.AddBoundValue(setFormattedValue.Name, value) |> ignore
             return Task.CompletedTask
         }
 
