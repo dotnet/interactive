@@ -355,47 +355,44 @@ type FSharpKernel () as this =
     let handleRequestValueNames (requestValueNames: RequestValueNames) (context: KernelInvocationContext) =
         async {
             context.Publish(new ValueNamesProduced(this.GetVariableNames(), requestValueNames))
-            return Task.CompletedTask;
+            return Task.CompletedTask
         }
 
     let handleRequestValue (requestValue: RequestValue) (context: KernelInvocationContext) =
         async {
-            let mutable value : obj = null
-            if(this.TryGetVariable(requestValue.Name, &value)) then 
+            match this.TryGetVariable(requestValue.Name) with
+            | true,value ->
+                let formattedValues =
+                    let valueType = if isNull value then typeof<obj>
+                                    else value.GetType()
+                    let hasMimeTypes = if isNull requestValue.MimeTypes then false
+                                       elif requestValue.MimeTypes.Count = 0 then false
+                                       else  true
 
-                let formattedValues = new List<FormattedValue>();
-                let valueType = match value with
-                                | x when isNull(x) -> typeof<obj>
-                                | _ -> value.GetType()
-                let hasMimeTypes = match requestValue.MimeTypes with
-                                    | x when isNull(x) -> false
-                                    | x when x.Count = 0 -> false
-                                    | _ -> true
-
-                if (hasMimeTypes) then                
-                    formattedValues.AddRange(requestValue.MimeTypes.Select(fun mimeType -> new FormattedValue(mimeType, value.ToDisplayString(mimeType))));
+                    if hasMimeTypes then
+                        requestValue.MimeTypes
+                        |> Array.ofSeq
+                        |> Array.map (fun mimeType -> new FormattedValue(mimeType, value.ToDisplayString(mimeType)))
+                    else                
+                        let preferredMimeType = Formatter.GetPreferredMimeTypeFor(valueType)
+                        [| (new FormattedValue(preferredMimeType, value.ToDisplayString(preferredMimeType))) |]
                 
-                else                
-                    let preferredMimeType = Formatter.GetPreferredMimeTypeFor(valueType);
-                    formattedValues.Add(new FormattedValue(preferredMimeType, value.ToDisplayString(preferredMimeType)));
-                
-
-                context.Publish(new ValueProduced(value, requestValue.Name, requestValue, formattedValues));
-                return Task.CompletedTask;
-            else
+                context.Publish(new ValueProduced(value, requestValue.Name, requestValue, formattedValues))           
+            | false,_ ->
                 raise (new ValueNotFoundException(requestValue.Name))
-                return Task.CompletedTask;
+
+            return Task.CompletedTask
         }
 
     let handleSetReferenceValue (setReferenceValue: SetReferenceValue) (context: KernelInvocationContext) =
         async {
             script.Value.Fsi.AddBoundValue(setReferenceValue.Name, setReferenceValue.Value) |> ignore
-            return Task.CompletedTask;
+            return Task.CompletedTask
         }
         
     let handleSetFormattedValue (setFormattedValue: SetFormattedValue) (context: KernelInvocationContext) =
         async {
-            return Task.CompletedTask;
+            return Task.CompletedTask
         }
 
     let handleRequestDiagnostics (requestDiagnostics: RequestDiagnostics) (context: KernelInvocationContext) =
