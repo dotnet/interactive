@@ -232,112 +232,69 @@ namespace Microsoft.DotNet.Interactive
             {
                 Handler = CommandHandler.Create(async (ParseResult parseResult, KernelInvocationContext context) =>
                 {
-                    var alias = parseResult.CommandResult.Token.Value;
-
-
-                    await Display(context);
-                    
+                    await Display(context, false);
                 })
             };
+
             return command;
-
-            async Task Display(KernelInvocationContext context)
-            {
-                if (context.Command is SubmitCode &&
-                    context.HandlingKernel is IKernelCommandHandler<RequestValueNames> and IKernelCommandHandler<RequestValue> )
-                {
-                    var nameEvents = new List<ValueNamesProduced>();
-
-                    var result = await context.HandlingKernel.SendAsync(new RequestValueNames(context.Command.TargetKernelName));
-                    result.KernelEvents.OfType<ValueNamesProduced>().Subscribe(e => nameEvents.Add(e));
-
-                    var valueNames = nameEvents.SelectMany(e => e.ValueNames).Distinct().ToList();
-
-                    var valueEvents = new List<ValueProduced>();
-                    var valueCommands = valueNames.Select(valueName => new RequestValue(valueName, context.HandlingKernel.Name)).ToList();
-
-                 
-
-                    foreach (var valueCommand in valueCommands)
-                    {
-                        result = await context.HandlingKernel.SendAsync(valueCommand);
-                        result.KernelEvents.OfType<ValueProduced>().Subscribe(e => valueEvents.Add(e));
-                    }
-                    
-
-                    var variables = valueEvents.Select(e => new CurrentVariable(e.Name, e.Value.GetType(), e.Value));
-
-                    var currentVariables = new CurrentVariables(
-                        variables,
-                        false);
-
-                    var html = currentVariables
-                        .ToDisplayString(HtmlFormatter.MimeType);
-
-                    context.Publish(
-                        new DisplayedValueProduced(
-                            html,
-                            context.Command,
-                            new[]
-                            {
-                                new FormattedValue(
-                                    HtmlFormatter.MimeType,
-                                    html)
-                            }));
-                }
-            }
         }
 
         private static Command whos()
         {
             var command = new Command("#!whos", "Display the names of the current top-level variables and their values.")
             {
-                Handler = CommandHandler.Create((ParseResult parseResult, KernelInvocationContext context) =>
+                Handler = CommandHandler.Create(async (ParseResult parseResult, KernelInvocationContext context) =>
                 {
-                    var alias = parseResult.CommandResult.Token.Value;
-
-                    var detailed = true;
-
-                    Display(context, detailed);
-
-                    return Task.CompletedTask;
+                    await  Display(context, true);
                 })
             };
 
-
-
             return command;
+        }
 
-            void Display(KernelInvocationContext context, bool detailed)
+        private static async Task Display(KernelInvocationContext context, bool detailed)
+        {
+            if (context.Command is SubmitCode &&
+                context.HandlingKernel is IKernelCommandHandler<RequestValueNames> and IKernelCommandHandler<RequestValue>)
             {
-                if (context.Command is SubmitCode &&
-                    context.HandlingKernel is DotNetKernel kernel)
+                var nameEvents = new List<ValueNamesProduced>();
+
+                var result = await context.HandlingKernel.SendAsync(new RequestValueNames(context.Command.TargetKernelName));
+                result.KernelEvents.OfType<ValueNamesProduced>().Subscribe(e => nameEvents.Add(e));
+
+                var valueNames = nameEvents.SelectMany(e => e.ValueNames).Distinct().ToList();
+
+                var valueEvents = new List<ValueProduced>();
+                var valueCommands = valueNames.Select(valueName => new RequestValue(valueName, context.HandlingKernel.Name)).ToList();
+
+
+
+                foreach (var valueCommand in valueCommands)
                 {
-                    var variables = kernel.GetVariableNames()
-                                          .Select(name =>
-                                          {
-                                              kernel.TryGetVariable(name, out object v);
-                                              return new CurrentVariable(name, v.GetType(), v);
-                                          });
-
-                    var currentVariables = new CurrentVariables(
-                        variables,
-                        detailed);
-
-                    var html = currentVariables
-                        .ToDisplayString(HtmlFormatter.MimeType);
-
-                    context.Publish(
-                        new DisplayedValueProduced(
-                            html,
-                            context.Command,
-                            new[]
-                            {
-                                new FormattedValue(
-                                    HtmlFormatter.MimeType,
-                                    html)
-                            }));
+                    result = await context.HandlingKernel.SendAsync(valueCommand);
+                    result.KernelEvents.OfType<ValueProduced>().Subscribe(e => valueEvents.Add(e));
                 }
+
+
+                var variables = valueEvents.Select(e => new CurrentVariable(e.Name, e.Value.GetType(), e.Value));
+
+                var currentVariables = new CurrentVariables(
+                    variables,
+                    detailed);
+
+                var html = currentVariables
+                    .ToDisplayString(HtmlFormatter.MimeType);
+
+                context.Publish(
+                    new DisplayedValueProduced(
+                        html,
+                        context.Command,
+                        new[]
+                        {
+                            new FormattedValue(
+                                HtmlFormatter.MimeType,
+                                html)
+                        }));
             }
         }
 
