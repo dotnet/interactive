@@ -7,14 +7,14 @@ namespace Microsoft.DotNet.Interactive.Commands
 {
     public class RequestValue : KernelCommand
     {
-        public string VariableName { get; }
+        public string Name { get; }
         
-        public IReadOnlyCollection<string> MimeType { get; }
+        public IReadOnlyCollection<string> MimeTypes { get; }
 
-        public RequestValue(string variableName, string targetKernelName, IReadOnlyCollection<string> mimeType = null ) : base(targetKernelName)
+        public RequestValue(string name, string targetKernelName, IReadOnlyCollection<string> mimeTypes = null ) : base(targetKernelName)
         {
-            VariableName = variableName;
-            MimeType = mimeType;
+            Name = name;
+            MimeTypes = mimeTypes;
         }
     }
 }

@@ -1,4 +1,4 @@
-// Copyright (c) .NET Foundation and contributors. All rights reserved.
+ // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.DotNet.Interactive.FSharp
@@ -351,6 +351,25 @@ type FSharpKernel () as this =
                 ()
         }
 
+    let handleRequestValueNames (requestValueNames: RequestValueNames) (context: KernelInvocationContext) =
+        async {
+            return Task.CompletedTask;
+        }
+
+    let handleRequestValue (requestValue: RequestValue) (context: KernelInvocationContext) =
+        async {
+            return Task.CompletedTask;
+        }
+
+    let handleSetReferenceValue (setReferenceValue: SetReferenceValue) (context: KernelInvocationContext) =
+        async {
+            return Task.CompletedTask;
+        }
+        
+    let handleSetFormattedValue (setFormattedValue: SetFormattedValue) (context: KernelInvocationContext) =
+        async {
+            return Task.CompletedTask;
+        }
 
     let handleRequestDiagnostics (requestDiagnostics: RequestDiagnostics) (context: KernelInvocationContext) =
         async {
@@ -411,6 +430,18 @@ type FSharpKernel () as this =
 
     interface IKernelCommandHandler<ChangeWorkingDirectory> with
         member this.HandleAsync(command: ChangeWorkingDirectory, context: KernelInvocationContext) = handleChangeWorkingDirectory command context |> Async.StartAsTask :> Task
+
+    interface IKernelCommandHandler<RequestValueNames> with
+        member this.HandleAsync(command: RequestValueNames, context: KernelInvocationContext) = handleRequestValueNames command context |> Async.StartAsTask :> Task
+
+    interface IKernelCommandHandler<RequestValue> with
+        member this.HandleAsync(command: RequestValue, context: KernelInvocationContext) = handleRequestValue command context |> Async.StartAsTask :> Task
+
+    interface IKernelCommandHandler<SetReferenceValue> with
+        member this.HandleAsync(command: SetReferenceValue, context: KernelInvocationContext) = handleSetReferenceValue command context |> Async.StartAsTask :> Task
+
+    interface IKernelCommandHandler<SetFormattedValue> with
+        member this.HandleAsync(command: SetFormattedValue, context: KernelInvocationContext) = handleSetFormattedValue command context |> Async.StartAsTask :> Task
 
     interface ISupportNuget with
         member _.TryAddRestoreSource(source: string) =
