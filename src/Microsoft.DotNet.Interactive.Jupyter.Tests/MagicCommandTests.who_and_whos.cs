@@ -85,8 +85,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
             {
                 using var baseKernel = language switch
                 {
-                    Language.CSharp => new CSharpKernel().UseWho() as Kernel,
-                    Language.FSharp => new FSharpKernel().UseWho(),
+                    Language.CSharp => new CSharpKernel().UseWho().UseWhos() as Kernel,
+                    Language.FSharp => new FSharpKernel().UseWho().UseWhos(),
                 };
                 using var kernel = new CompositeKernel
                     {

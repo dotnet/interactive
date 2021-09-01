@@ -1,1 +1,1 @@
-{"token":"the-token","commandType":"SetFormattedValue","command":{"formattedValue":"text value","mimeType":"text/plain","name":"a","targetKernelName":"csharp"}}
+{"token":"the-token","commandType":"SetFormattedValue","command":{"formattedValue":{"mimeType":"text/plain","value":"text value"},"name":"a","targetKernelName":"csharp"}}
