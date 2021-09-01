@@ -4,11 +4,14 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
@@ -16,7 +19,6 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Microsoft.DotNet.Interactive.Utility;
 using Newtonsoft.Json;
 using Recipes;
 using Xunit;
@@ -34,171 +36,20 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
-        public async Task it_can_load_assembly_references_using_r_directive_single_submission(Language language)
+        public async Task it_can_load_script_files_using_load_directive_with_relative_path(Language language )
         {
             var kernel = CreateKernel(language);
-
-            // F# strings treat \ as an escape character.  So do C# strings, except #r in C# is special, and doesn't.  F# usually uses @ strings for paths @"c:\temp\...."
-            var dllPath = new FileInfo(typeof(JsonConvert).Assembly.Location).FullName.Replace('\\', '/');
-
-            var source = language switch
-            {
-                Language.FSharp => $@"#r ""{dllPath}""
-open Newtonsoft.Json
-let json = JsonConvert.SerializeObject( struct {{| value = ""hello"" |}} )
-json",
-
-                Language.CSharp => $@"#r ""{dllPath}""
-using Newtonsoft.Json;
-var json = JsonConvert.SerializeObject(new {{ value = ""hello"" }});
-json"
-            };
-
-            await SubmitCode(kernel, source);
-
-            KernelEvents
-                .Should()
-                .ContainSingle(e => e is ReturnValueProduced);
-
-            KernelEvents
-                .OfType<ReturnValueProduced>()
-                .Single()
-                .Value
-                .Should()
-                .Be(new { value = "hello" }.ToJson());
-        }
-
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        public async Task it_can_load_assembly_references_using_r_directive_separate_submissions(Language language)
-        {
-            var kernel = CreateKernel(language);
-
-            // F# strings treat \ as an escape character.  So do C# strings, except #r in C# is special, and doesn't.  F# usually uses @ strings for paths @"c:\temp\...."
-            var dllPath = new FileInfo(typeof(JsonConvert).Assembly.Location).FullName.Replace('\\', '/');
-
-            var source = language switch
-            {
-                Language.FSharp => new[]
-                {
-                    $"#r \"{dllPath}\"",
-                    "open Newtonsoft.Json",
-                    @"let json = JsonConvert.SerializeObject( struct {| value = ""hello"" |} )",
-                    "json"
-                },
-
-                Language.CSharp => new[]
-                {
-                    $"#r \"{dllPath}\"",
-                    "using Newtonsoft.Json;",
-                    @"var json = JsonConvert.SerializeObject(new { value = ""hello"" });",
-                    "json"
-                }
-            };
-
-            await SubmitCode(kernel, source);
-
-            KernelEvents
-                .Should()
-                .ContainSingle(e => e is ReturnValueProduced);
-
-            KernelEvents
-                .OfType<ReturnValueProduced>()
-                .Single()
-                .Value
-                .Should()
-                .Be(new { value = "hello" }.ToJson());
-        }
-
-
-        [Theory]
-        [InlineData(Language.CSharp, false)]
-        [InlineData(Language.FSharp, false)]
-        [InlineData(Language.CSharp, true)]
-        //[InlineData(Language.FSharp, true, Skip = "FSharp, relative is not relative to cwd.")]
-        public async Task it_can_load_assembly_references_using_r_directive_with_relative_path(Language language, bool changeCurrentDirectoryInUserCode)
-        {
-            var currentDirectory = Directory.GetCurrentDirectory();
-            DisposeAfterTest(() => Directory.SetCurrentDirectory(currentDirectory));
-
-            var kernel = CreateKernel(language);
-
-            if (changeCurrentDirectoryInUserCode)
-            {
-                //Even when a user changes the current directory, loading from a relative path is not affected.
-                await kernel.SendAsync(new SubmitCode("System.IO.Directory.SetCurrentDirectory(\"..\")"));
-            }
-
-            var dllName = new FileInfo(typeof(JsonConvert).Assembly.Location).Name;
 
             var code = language switch
             {
-                Language.CSharp => $"#r \"{dllName}\"",
-                Language.FSharp => $"#r \"{dllName}\""
-            };
-
-            var command = new SubmitCode(code);
-
-            await kernel.SendAsync(command);
-
-            KernelEvents.Should()
-                        .ContainSingle<CommandSucceeded>(c => c.Command == command);
-        }
-
-        [Theory]
-        [InlineData(Language.CSharp, false)]
-        [InlineData(Language.FSharp, false)]
-        [InlineData(Language.CSharp, true)]
-        [InlineData(Language.FSharp, true)]
-        public async Task it_can_load_script_files_using_load_directive_with_relative_path(Language language, bool changeCurrentDirectoryInUserCode)
-        {
-            var currentDirectory = Directory.GetCurrentDirectory();
-            DisposeAfterTest(() => Directory.SetCurrentDirectory(currentDirectory));
-
-            var kernel = CreateKernel(language);
-
-            if (changeCurrentDirectoryInUserCode)
-            {
-                //Even when a user changes the current directory, loading from a relative path is not affected.
-                await kernel.SendAsync(new SubmitCode("System.IO.Directory.SetCurrentDirectory(\"..\")"));
-            }
-
-            var code = language switch
-            {
-                Language.CSharp => $"#load \"RelativeLoadingSample.csx\"",
-                Language.FSharp => $"#load \"RelativeLoadingSample.fsx\""
+                Language.CSharp => "#load \"RelativeLoadingSample.csx\"",
+                Language.FSharp => "#load \"RelativeLoadingSample.fsx\""
             };
 
             var command = new SubmitCode(code);
             await kernel.SendAsync(command);
 
-            KernelEvents.Should()
-                        .ContainSingle<StandardOutputValueProduced>(e => e.FormattedValues.Any(v => v.Value.Contains("hello!")));
-        }
-
-        [Theory]
-        [InlineData(Language.CSharp)]
-        //Not implemented: [InlineData(Language.FSharp)]
-        public async Task it_can_load_script_files_using_load_directive_with_relative_path_after_command_changeWorkingDirectory(Language language)
-        {
-            var currentDirectory = Directory.GetCurrentDirectory();
-            DisposeAfterTest(() => Directory.SetCurrentDirectory(currentDirectory));
-
-            var kernel = CreateKernel(language);
-            var absolutePathOneLevelHigher = Directory.GetParent(currentDirectory).FullName;
-            await kernel.SendAsync(new ChangeWorkingDirectory(absolutePathOneLevelHigher));
-
-            var relativePath = Path.GetRelativePath(absolutePathOneLevelHigher, currentDirectory);
-
-            var code = language switch
-            {
-                Language.CSharp => $"#load \"{relativePath}/RelativeLoadingSample.csx\"",
-                Language.FSharp => $"#load \"{relativePath}/RelativeLoadingSample.fsx\""
-            };
-
-            var command = new SubmitCode(code);
-            await kernel.SendAsync(command);
+            KernelEvents.Should().NotContainErrors();
 
             KernelEvents.Should()
                         .ContainSingle<StandardOutputValueProduced>(e => e.FormattedValues.Any(v => v.Value.Contains("hello!")));
