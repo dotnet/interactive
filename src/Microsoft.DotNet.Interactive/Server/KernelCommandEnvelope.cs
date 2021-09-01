@@ -70,7 +70,10 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(SubmitCode)] = typeof(KernelCommandEnvelope<SubmitCode>),
                 [nameof(UpdateDisplayedValue)] = typeof(KernelCommandEnvelope<UpdateDisplayedValue>),
                 [nameof(Quit)] = typeof(KernelCommandEnvelope<Quit>),
-                [nameof(Cancel)] = typeof(KernelCommandEnvelope<Cancel>)
+                [nameof(Cancel)] = typeof(KernelCommandEnvelope<Cancel>),
+                [nameof(RequestValue)] = typeof(KernelCommandEnvelope<RequestValue>),
+                [nameof(RequestValueNames)] = typeof(KernelCommandEnvelope<RequestValueNames>),
+                [nameof(SetFormattedValue)] = typeof(KernelCommandEnvelope<SetFormattedValue>)
             };
 
             _commandTypesByCommandTypeName = new ConcurrentDictionary<string, Type>(_envelopeTypesByCommandTypeName

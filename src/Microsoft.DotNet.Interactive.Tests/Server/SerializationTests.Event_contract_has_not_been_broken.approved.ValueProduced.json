@@ -1,0 +1,1 @@
+{"event":{"formattedValues":[{"mimeType":"text/html","value":"<span>formatted value</span>"}]},"eventType":"ValueProduced","command":{"token":"the-token","commandType":"RequestValue","command":{"variableName":"a","mimeType":["text/html"],"targetKernelName":"csharp"}}}
