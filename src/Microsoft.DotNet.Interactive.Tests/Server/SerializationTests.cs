@@ -209,7 +209,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new RequestValue("a", "csharp", new[] { HtmlFormatter.MimeType });
 
-                yield return new SetFormattedValue("text value", PlainTextFormatter.MimeType, "a", "csharp");
+                yield return new SetFormattedValue(new FormattedValue(PlainTextFormatter.MimeType, "text value") , "a", "csharp");
             }
         }
 
