@@ -23,7 +23,6 @@ namespace Microsoft.DotNet.Interactive
         IKernelCommandHandler<SubmitCode>,
         IKernelCommandHandler<RequestValueNames>,
         IKernelCommandHandler<RequestValue>,
-        IKernelCommandHandler<SetReferenceValue>,
         IKernelCommandHandler<SetFormattedValue>
     {
         internal const string DefaultKernelName = "value";
@@ -233,14 +232,15 @@ namespace Microsoft.DotNet.Interactive
             throw new ValueNotFoundException(command.Name);
         }
 
-        public Task HandleAsync(SetReferenceValue command, KernelInvocationContext context)
+        public async Task HandleAsync(SetFormattedValue command, KernelInvocationContext context)
         {
-            throw new NotImplementedException();
-        }
-
-        public Task HandleAsync(SetFormattedValue command, KernelInvocationContext context)
-        {
-            throw new NotImplementedException();
+            await StoreValueAsync(
+                command.FormattedValue, 
+                new ValueDirectiveOptions
+                {
+                    Name = command.Name,
+                    MimeType = command.MimeType
+                },context);
         }
     }
 }

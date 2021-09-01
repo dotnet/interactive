@@ -530,9 +530,9 @@ namespace Microsoft.DotNet.Interactive.CSharp
             throw new ValueNotFoundException(command.Name);
         }
 
-        public Task HandleAsync(SetReferenceValue command, KernelInvocationContext context)
+        public async Task HandleAsync(SetReferenceValue command, KernelInvocationContext context)
         {
-            throw new NotImplementedException();
+            await SetVariableAsync(command.Name, command.Value, command.Value?.GetType());
         }
 
         public Task HandleAsync(SetFormattedValue command, KernelInvocationContext context)

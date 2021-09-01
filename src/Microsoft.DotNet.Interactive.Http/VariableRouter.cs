@@ -68,14 +68,8 @@ namespace Microsoft.DotNet.Interactive.Http
                         {
                             if (languageKernel.TryGetVariable(variableName, out object value))
                             {
-                                if (value is string)
-                                {
-                                    propertyBag[variableName] = JToken.FromObject(value);
-                                }
-                                else
-                                {
-                                    propertyBag[variableName] = JToken.Parse(value.ToDisplayString(JsonFormatter.MimeType));
-                                }
+                                propertyBag[variableName] = JToken.Parse(value.ToDisplayString(JsonFormatter.MimeType));
+                                
                             }
                             else
                             {
@@ -140,14 +134,7 @@ namespace Microsoft.DotNet.Interactive.Http
                             await using (var writer = new StreamWriter(httpContext.Response.Body))
                             {
                                 httpContext.Response.ContentType = JsonFormatter.MimeType;
-                                if (value is string)
-                                {
-                                    await writer.WriteAsync(JsonConvert.ToString(value));
-                                }
-                                else
-                                {
-                                    await writer.WriteAsync(value.ToDisplayString(JsonFormatter.MimeType));
-                                }
+                                await writer.WriteAsync(value.ToDisplayString(JsonFormatter.MimeType));
                             }
 
                             await httpContext.Response.CompleteAsync();
