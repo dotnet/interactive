@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-
+using System.Reflection;
 using Assent;
 
 using FluentAssertions;
@@ -15,6 +15,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 
@@ -70,7 +71,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             var ignoredProperties = new HashSet<string>
             {
                 $"{nameof(CommandFailed)}.{nameof(CommandFailed.Exception)}",
-                $"{nameof(DisplayEvent)}.{nameof(DisplayEvent.Value)}"
+                $"{nameof(DisplayEvent)}.{nameof(DisplayEvent.Value)}",
+                $"{nameof(ValueProduced)}.{nameof(ValueProduced.Value)}"
             };
 
             deserializedEnvelope
@@ -116,10 +118,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         public void All_command_types_are_tested_for_round_trip_serialization()
         {
             var commandTypes = typeof(KernelCommand)
-                               .Assembly
-                               .ExportedTypes
-                               .Concrete()
-                               .DerivedFrom(typeof(KernelCommand));
+                .Assembly
+                .ExportedTypes
+                .Concrete()
+                .DerivedFrom(typeof(KernelCommand))
+                .Where(t => t.GetCustomAttribute<NotSerializableAttribute>() is null);
 
             Commands()
                 .Select(e => e[0].GetType())
@@ -201,6 +204,12 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 yield return new Quit();
 
                 yield return new Cancel("csharp");
+
+                yield return new RequestValueNames("csharp");
+
+                yield return new RequestValue("a", "csharp", new[] { HtmlFormatter.MimeType });
+
+                yield return new SetFormattedValue("text value", PlainTextFormatter.MimeType, "a", "csharp");
             }
         }
 
@@ -361,6 +370,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     new ChangeWorkingDirectory("some/different/directory"));
 
                 yield return new KernelExtensionLoaded(new SubmitCode(@"#r ""nuget:package"" "));
+
+                yield return new ValueNamesProduced(new[] { "a", "b", "c" }, new RequestValueNames("csharp"));
+
+                yield return new ValueProduced("raw value",
+                    new RequestValue("a", "csharp", new[] { HtmlFormatter.MimeType }), new []{new FormattedValue(HtmlFormatter.MimeType, "<span>formatted value</span>")});
             }
         }
 
