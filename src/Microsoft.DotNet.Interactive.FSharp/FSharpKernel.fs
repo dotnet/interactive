@@ -8,6 +8,7 @@ open System.Collections.Generic
 open System.Collections.Immutable
 open System.Collections.Concurrent
 open System.IO
+open System.Linq
 open System.Runtime.InteropServices
 open System.Xml
 open System.Text
@@ -353,16 +354,42 @@ type FSharpKernel () as this =
 
     let handleRequestValueNames (requestValueNames: RequestValueNames) (context: KernelInvocationContext) =
         async {
+            context.Publish(new ValueNamesProduced(this.GetVariableNames(), requestValueNames))
             return Task.CompletedTask;
         }
 
     let handleRequestValue (requestValue: RequestValue) (context: KernelInvocationContext) =
         async {
-            return Task.CompletedTask;
+            let mutable value : obj = null
+            if(this.TryGetVariable(requestValue.Name, &value)) then 
+
+                let formattedValues = new List<FormattedValue>();
+                let valueType = match value with
+                                | x when isNull(x) -> typeof<obj>
+                                | _ -> value.GetType()
+                let hasMimeTypes = match requestValue.MimeTypes with
+                                    | x when isNull(x) -> false
+                                    | x when x.Count = 0 -> false
+                                    | _ -> true
+
+                if (hasMimeTypes) then                
+                    formattedValues.AddRange(requestValue.MimeTypes.Select(fun mimeType -> new FormattedValue(mimeType, value.ToDisplayString(mimeType))));
+                
+                else                
+                    let preferredMimeType = Formatter.GetPreferredMimeTypeFor(valueType);
+                    formattedValues.Add(new FormattedValue(preferredMimeType, value.ToDisplayString(preferredMimeType)));
+                
+
+                context.Publish(new ValueProduced(value, requestValue.Name, requestValue, formattedValues));
+                return Task.CompletedTask;
+            else
+                raise (new ValueNotFoundException(requestValue.Name))
+                return Task.CompletedTask;
         }
 
     let handleSetReferenceValue (setReferenceValue: SetReferenceValue) (context: KernelInvocationContext) =
         async {
+
             return Task.CompletedTask;
         }
         
@@ -403,6 +430,13 @@ type FSharpKernel () as this =
             true
         | _ ->
             false
+    member this.TryGetVariable(name: string, [<Out>] value: obj byref) =
+        match script.Value.Fsi.TryFindBoundValue(name) with
+               | Some cv ->
+                   value <- cv.Value.ReflectionValue
+                   true
+               | _ ->
+                   false
 
     override _.SetVariableAsync(name: string, value: Object, [<Optional>] declaredType: Type) : Task = 
         script.Value.Fsi.AddBoundValue(name, value) |> ignore
