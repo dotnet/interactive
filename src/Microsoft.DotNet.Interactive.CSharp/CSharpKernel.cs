@@ -125,10 +125,22 @@ namespace Microsoft.DotNet.Interactive.CSharp
             string name,
             out T value)
         {
-            if (ScriptState?.Variables
-                           .LastOrDefault(v => v.Name == name) is { } variable)
+            if (TryGetVariable(name, out var rawValue))
             {
-                value = (T)variable.Value;
+                value = (T)rawValue;
+                return true;
+            }
+
+            value = default;
+            return false;
+        }
+
+        private bool TryGetVariable(string name, out object value)
+        {
+            if (ScriptState?.Variables
+                .LastOrDefault(v => v.Name == name) is { } variable)
+            {
+                value = variable.Value;
                 return true;
             }
 
@@ -498,7 +510,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public Task HandleAsync(RequestValue command, KernelInvocationContext context)
         {
-            if (TryGetVariable(command.Name, out object value))
+            if (TryGetVariable(command.Name, out var value))
             {
                 var formattedValues = new List<FormattedValue>();
                 if (command.MimeTypes?.Any() == true)
@@ -507,7 +519,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 }
                 else
                 {
-                    var preferredMimeType = Formatter.GetPreferredMimeTypeFor(value.GetType());
+                    var preferredMimeType = Formatter.GetPreferredMimeTypeFor(value?.GetType() ?? typeof(object));
                     formattedValues.Add(new FormattedValue(preferredMimeType, value?.ToDisplayString(preferredMimeType)));
                 }
 

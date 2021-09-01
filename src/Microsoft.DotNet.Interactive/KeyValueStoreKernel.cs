@@ -14,6 +14,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -212,7 +213,24 @@ namespace Microsoft.DotNet.Interactive
 
         public Task HandleAsync(RequestValue command, KernelInvocationContext context)
         {
-            throw new NotImplementedException();
+            if (_values.TryGetValue(command.Name, out var value))
+            {
+                var formattedValues = new List<FormattedValue>();
+                if (command.MimeTypes?.Any() == true)
+                {
+                    formattedValues.AddRange(command.MimeTypes.Select(mimeType => new FormattedValue(mimeType, value?.ToDisplayString(mimeType))));
+                }
+                else
+                {
+                    var preferredMimeType = Formatter.GetPreferredMimeTypeFor(value.GetType());
+                    formattedValues.Add(new FormattedValue(preferredMimeType, value?.ToDisplayString(preferredMimeType)));
+                }
+
+                context.Publish(new ValueProduced(value, command.Name, command, formattedValues));
+                return Task.CompletedTask;
+            }
+
+            throw new ValueNotFoundException(command.Name);
         }
 
         public Task HandleAsync(SetReferenceValue command, KernelInvocationContext context)
