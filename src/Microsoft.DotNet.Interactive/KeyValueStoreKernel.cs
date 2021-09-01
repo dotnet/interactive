@@ -18,7 +18,11 @@ namespace Microsoft.DotNet.Interactive
 {
     public class KeyValueStoreKernel :
         DotNetKernel,
-        IKernelCommandHandler<SubmitCode>
+        IKernelCommandHandler<SubmitCode>,
+        IKernelCommandHandler<RequestValueNames>,
+        IKernelCommandHandler<RequestValue>,
+        IKernelCommandHandler<SetReferenceValue>,
+        IKernelCommandHandler<SetFormattedValue>
     {
         internal const string DefaultKernelName = "value";
 
@@ -197,6 +201,26 @@ namespace Microsoft.DotNet.Interactive
             public Uri FromUrl { get; set; }
 
             public string MimeType { get; set; }
+        }
+
+        public Task HandleAsync(RequestValueNames command, KernelInvocationContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task HandleAsync(RequestValue command, KernelInvocationContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task HandleAsync(SetReferenceValue command, KernelInvocationContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task HandleAsync(SetFormattedValue command, KernelInvocationContext context)
+        {
+            throw new NotImplementedException();
         }
     }
 }

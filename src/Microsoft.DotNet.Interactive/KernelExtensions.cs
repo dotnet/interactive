@@ -209,22 +209,30 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public static TKernel UseWho<TKernel>(this TKernel kernel)
-            where TKernel : DotNetKernel
+            where TKernel : Kernel, IKernelCommandHandler<RequestValueNames>
         {
-            kernel.AddDirective(who_and_whos());
+            kernel.AddDirective(who());
             Formatter.Register(new CurrentVariablesFormatter());
             return kernel;
         }
 
-        private static Command who_and_whos()
+        public static TKernel UseWhos<TKernel>(this TKernel kernel)
+            where TKernel : Kernel, IKernelCommandHandler<RequestValueNames>, IKernelCommandHandler<RequestValue>
         {
-            var command = new Command("#!whos", "Display the names of the current top-level variables and their values.")
+            kernel.AddDirective(whos());
+            Formatter.Register(new CurrentVariablesFormatter());
+            return kernel;
+        }
+
+        private static Command who()
+        {
+            var command = new Command("#!who", "Display the names of the current top-level variables.")
             {
                 Handler = CommandHandler.Create((ParseResult parseResult, KernelInvocationContext context) =>
                 {
                     var alias = parseResult.CommandResult.Token.Value;
 
-                    var detailed = alias == "#!whos";
+                    var detailed = false;
 
                     Display(context, detailed);
 
@@ -232,8 +240,58 @@ namespace Microsoft.DotNet.Interactive
                 })
             };
 
-            // TODO: (who_and_whos) this should be a separate command with separate help
-            command.AddAlias("#!who");
+            return command;
+
+            void Display(KernelInvocationContext context, bool detailed)
+            {
+                if (context.Command is SubmitCode &&
+                    context.HandlingKernel is DotNetKernel kernel)
+                {
+                    var variables = kernel.GetVariableNames()
+                                          .Select(name =>
+                                          {
+                                              kernel.TryGetVariable(name, out object v);
+                                              return new CurrentVariable(name, v.GetType(), v);
+                                          });
+
+                    var currentVariables = new CurrentVariables(
+                        variables,
+                        detailed);
+
+                    var html = currentVariables
+                        .ToDisplayString(HtmlFormatter.MimeType);
+
+                    context.Publish(
+                        new DisplayedValueProduced(
+                            html,
+                            context.Command,
+                            new[]
+                            {
+                                new FormattedValue(
+                                    HtmlFormatter.MimeType,
+                                    html)
+                            }));
+                }
+            }
+        }
+
+        private static Command whos()
+        {
+            var command = new Command("#!whos", "Display the names of the current top-level variables and their values.")
+            {
+                Handler = CommandHandler.Create((ParseResult parseResult, KernelInvocationContext context) =>
+                {
+                    var alias = parseResult.CommandResult.Token.Value;
+
+                    var detailed = true;
+
+                    Display(context, detailed);
+
+                    return Task.CompletedTask;
+                })
+            };
+
+
 
             return command;
 
