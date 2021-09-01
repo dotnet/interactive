@@ -59,11 +59,10 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 {
                     var latestRuntimeDirAndVersion =
                         Directory.GetDirectories(appRefDir)
-                        .Select(dir => Path.GetFileName(dir))
+                        .Select(Path.GetFileName)
                         .Select(dir => new { Directory = dir, Version = Version.TryParse(dir, out var version) ? version : new Version() })
                         .OrderBy(dirPair => dirPair.Version)
-                        .Where(dirPair => dirPair.Version <= runtimeVersion)
-                        .LastOrDefault();
+                        .LastOrDefault(dirPair => dirPair.Version <= runtimeVersion);
                     if (latestRuntimeDirAndVersion is { })
                     {
                         var refVersion = latestRuntimeDirAndVersion.Directory; // e.g., `5.0.0`
@@ -86,7 +85,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                     var resolved = CachingMetadataResolver.ResolveReferenceWithXmlDocumentationProvider(assemblyRef, MetadataReferenceProperties.Assembly);
                     assemblyRefs.Add(resolved);
                 }
-                catch (Exception ex) when (ex is ArgumentNullException || ex is ArgumentException || ex is IOException)
+                catch (Exception ex) when (ex is ArgumentNullException or ArgumentException or IOException)
                 {
                     // the only exceptions that can be thrown by `ResolveReferenceWithXmlDocumentationProvider` which
                     // internally calls `XmlDocumentationProvider.CreateFromFile`
@@ -263,7 +262,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var workingDocument = solution.GetDocument(workingDocumentId);
 
             return workingDocument;
-
         }
 
         public void AddPackageManagerReference(MetadataReference reference)
