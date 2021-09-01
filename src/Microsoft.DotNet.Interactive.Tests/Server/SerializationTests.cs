@@ -373,7 +373,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new ValueNamesProduced(new[] { "a", "b", "c" }, new RequestValueNames("csharp"));
 
-                yield return new ValueProduced("raw value",
+                yield return new ValueProduced("raw value", "a",
                     new RequestValue("a", "csharp", new[] { HtmlFormatter.MimeType }), new []{new FormattedValue(HtmlFormatter.MimeType, "<span>formatted value</span>")});
             }
         }

@@ -13,6 +13,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -205,7 +206,8 @@ namespace Microsoft.DotNet.Interactive
 
         public Task HandleAsync(RequestValueNames command, KernelInvocationContext context)
         {
-            throw new NotImplementedException();
+            context.Publish(new ValueNamesProduced(GetVariableNames(), command));
+            return Task.CompletedTask;
         }
 
         public Task HandleAsync(RequestValue command, KernelInvocationContext context)

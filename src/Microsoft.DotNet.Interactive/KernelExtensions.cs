@@ -2,11 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
@@ -228,35 +230,46 @@ namespace Microsoft.DotNet.Interactive
         {
             var command = new Command("#!who", "Display the names of the current top-level variables.")
             {
-                Handler = CommandHandler.Create((ParseResult parseResult, KernelInvocationContext context) =>
+                Handler = CommandHandler.Create(async (ParseResult parseResult, KernelInvocationContext context) =>
                 {
                     var alias = parseResult.CommandResult.Token.Value;
 
-                    var detailed = false;
 
-                    Display(context, detailed);
-
-                    return Task.CompletedTask;
+                    await Display(context);
+                    
                 })
             };
-
             return command;
 
-            void Display(KernelInvocationContext context, bool detailed)
+            async Task Display(KernelInvocationContext context)
             {
                 if (context.Command is SubmitCode &&
-                    context.HandlingKernel is DotNetKernel kernel)
+                    context.HandlingKernel is IKernelCommandHandler<RequestValueNames> and IKernelCommandHandler<RequestValue> )
                 {
-                    var variables = kernel.GetVariableNames()
-                                          .Select(name =>
-                                          {
-                                              kernel.TryGetVariable(name, out object v);
-                                              return new CurrentVariable(name, v.GetType(), v);
-                                          });
+                    var nameEvents = new List<ValueNamesProduced>();
+
+                    var result = await context.HandlingKernel.SendAsync(new RequestValueNames(context.Command.TargetKernelName));
+                    result.KernelEvents.OfType<ValueNamesProduced>().Subscribe(e => nameEvents.Add(e));
+
+                    var valueNames = nameEvents.SelectMany(e => e.ValueNames).Distinct().ToList();
+
+                    var valueEvents = new List<ValueProduced>();
+                    var valueCommands = valueNames.Select(valueName => new RequestValue(valueName, context.HandlingKernel.Name)).ToList();
+
+                 
+
+                    foreach (var valueCommand in valueCommands)
+                    {
+                        result = await context.HandlingKernel.SendAsync(valueCommand);
+                        result.KernelEvents.OfType<ValueProduced>().Subscribe(e => valueEvents.Add(e));
+                    }
+                    
+
+                    var variables = valueEvents.Select(e => new CurrentVariable(e.Name, e.Value.GetType(), e.Value));
 
                     var currentVariables = new CurrentVariables(
                         variables,
-                        detailed);
+                        false);
 
                     var html = currentVariables
                         .ToDisplayString(HtmlFormatter.MimeType);
