@@ -389,7 +389,7 @@ type FSharpKernel () as this =
 
     let handleSetReferenceValue (setReferenceValue: SetReferenceValue) (context: KernelInvocationContext) =
         async {
-
+            script.Value.Fsi.AddBoundValue(setReferenceValue.Name, setReferenceValue.Value) |> ignore
             return Task.CompletedTask;
         }
         
