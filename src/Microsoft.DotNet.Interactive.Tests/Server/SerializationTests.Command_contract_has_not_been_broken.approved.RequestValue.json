@@ -1,1 +1,1 @@
-{"token":"the-token","commandType":"RequestValue","command":{"variableName":"a","mimeType":["text/html"],"targetKernelName":"csharp"}}
+{"token":"the-token","commandType":"RequestValue","command":{"name":"a","mimeTypes":["text/html"],"targetKernelName":"csharp"}}

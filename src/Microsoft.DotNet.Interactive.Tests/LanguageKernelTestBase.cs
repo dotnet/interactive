@@ -113,6 +113,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .UseKernelHelpers()
                 .UseDotNetVariableSharing()
                 .UseWho()
+                .UseWhos()
                 .UseDefaultNamespaces();
 
             if (openTestingNamespaces)
@@ -143,7 +144,8 @@ namespace Microsoft.DotNet.Interactive.Tests
                    .UseNugetDirective()
                    .UseKernelHelpers()
                    .UseDotNetVariableSharing()
-                   .UseWho();
+                   .UseWho()
+                   .UseWhos();
         }
 
         private (Kernel, IEnumerable<string>) CreatePowerShellKernelAndAliases()
