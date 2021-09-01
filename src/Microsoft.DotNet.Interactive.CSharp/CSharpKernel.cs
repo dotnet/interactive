@@ -511,7 +511,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                     formattedValues.Add(new FormattedValue(preferredMimeType, value?.ToDisplayString(preferredMimeType)));
                 }
 
-                context.Publish(new ValueProduced(value, command, formattedValues));
+                context.Publish(new ValueProduced(value, command.Name, command, formattedValues));
                 return Task.CompletedTask;
             }
 
