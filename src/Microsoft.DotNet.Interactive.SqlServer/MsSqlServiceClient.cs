@@ -19,12 +19,14 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         private JsonRpc _rpc;
         private bool _initialized = false;
         private readonly string _serviceExePath;
+        private readonly string _arguments;
 
         public const string SqlToolsServiceEnvironmentVariableName = "DOTNET_SQLTOOLSSERVICE";
 
-        public MsSqlServiceClient(string serviceExePath = null)
+        public MsSqlServiceClient(string serviceExePath = null, string arguments = null)
         {
             _serviceExePath = serviceExePath;
+            _arguments = arguments;
 
             if (string.IsNullOrWhiteSpace(_serviceExePath))
             {
@@ -54,7 +56,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = false,
-                Arguments = $"--parent-pid {Process.GetCurrentProcess().Id}"
+                Arguments = _arguments
             };
             _process = new Process
             {
@@ -110,15 +112,9 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         public event EventHandler<IntelliSenseReadyParams> OnIntellisenseReady;
         public event EventHandler<MessageParams> OnQueryMessage;
 
-        public async Task<bool> ConnectAsync(Uri ownerUri, string connectionStr)
+        public async Task<bool> ConnectAsync(ConnectParams connectParams)
         {
-            var connectionOptions = new Dictionary<string, string>();
-            connectionOptions.Add("ConnectionString", connectionStr);
-
-            var connectionDetails = new ConnectionDetails() { Options = connectionOptions };
-            var connectionParams = new ConnectParams() { OwnerUri = ownerUri.AbsolutePath, Connection = connectionDetails };
-
-            return await _rpc.InvokeWithParameterObjectAsync<bool>("connection/connect", connectionParams);
+            return await _rpc.InvokeWithParameterObjectAsync<bool>("connection/connect", connectParams);
         }
 
         public async Task<bool> DisconnectAsync(Uri ownerUri)
