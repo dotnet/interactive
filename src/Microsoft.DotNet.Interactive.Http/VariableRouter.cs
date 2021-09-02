@@ -129,7 +129,7 @@ namespace Microsoft.DotNet.Interactive.Http
         {
             if (targetKernel is ISupportGetValues doteNetKernel)
             {
-                if (doteNetKernel.TryGetVariable(variableName, out object value))
+                if (doteNetKernel.TryGetValue(variableName, out object value))
                 {
                     return new FormattedValue(JsonFormatter.MimeType, value.ToDisplayString(JsonFormatter.MimeType));
                 }
@@ -164,7 +164,7 @@ namespace Microsoft.DotNet.Interactive.Http
 
                 if (targetKernel is ISupportGetValues languageKernel)
                 {
-                    if (languageKernel.TryGetVariable(variableName, out object value))
+                    if (languageKernel.TryGetValue(variableName, out object value))
                     {
                         context.Handler = async httpContext =>
                         {

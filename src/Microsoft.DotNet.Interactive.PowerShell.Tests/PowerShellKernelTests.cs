@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Tests
 
             await kernel.SubmitCodeAsync(code);
 
-            kernel.TryGetVariable("x", out object fi).Should().BeTrue();
+            kernel.TryGetValue("x", out object fi).Should().BeTrue();
 
             fi.Should().BeOfType(expectedType);
         }
@@ -179,12 +179,12 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             await kernel.SubmitCodeAsync("$currentUserCurrentHost = $PROFILE.CurrentUserCurrentHost");
             await kernel.SubmitCodeAsync("$allUsersCurrentHost = $PROFILE.AllUsersCurrentHost");
 
-            kernel.TryGetVariable("currentUserCurrentHost", out object profileObj).Should().BeTrue();
+            kernel.TryGetValue("currentUserCurrentHost", out object profileObj).Should().BeTrue();
             profileObj.Should().BeOfType<string>();
             string currentUserCurrentHost = profileObj.As<string>();
 
             // Get $PROFILE default.
-            kernel.TryGetVariable("PROFILE", out profileObj).Should().BeTrue();
+            kernel.TryGetValue("PROFILE", out profileObj).Should().BeTrue();
             profileObj.Should().BeOfType<string>();
             string profileDefault = profileObj.As<string>();
 
@@ -193,7 +193,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             profileDefault.Should().NotBeNullOrEmpty();
             profileDefault.Should().Be(currentUserCurrentHost);
 
-            kernel.TryGetVariable("allUsersCurrentHost", out profileObj).Should().BeTrue();
+            kernel.TryGetValue("allUsersCurrentHost", out profileObj).Should().BeTrue();
             profileObj.Should().BeOfType<string>();
             string allUsersCurrentHost = profileObj.As<string>();
 
@@ -215,7 +215,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                 // trigger first time setup.
                 await kernel.SubmitCodeAsync("Get-Date");
 
-                kernel.TryGetVariable(randomVariableName, out object profileObj).Should().BeTrue();
+                kernel.TryGetValue(randomVariableName, out object profileObj).Should().BeTrue();
 
                 profileObj.Should().BeOfType<bool>();
                 profileObj.As<bool>().Should().BeTrue();

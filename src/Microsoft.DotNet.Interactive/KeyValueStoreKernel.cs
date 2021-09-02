@@ -34,16 +34,16 @@ namespace Microsoft.DotNet.Interactive
         {
         }
 
-        public Task SetVariableAsync(string name, object value, Type declaredType = null)
+        public Task SetValueAsync(string name, object value, Type declaredType = null)
         {
             _values[name] = value;
             return Task.CompletedTask;
         }
 
-        public IReadOnlyCollection<string> GetVariableNames() =>
+        public IReadOnlyCollection<string> GetValueNames() =>
             _values.Keys.ToArray();
 
-        public bool TryGetVariable<T>(string name, out T value)
+        public bool TryGetValue<T>(string name, out T value)
         {
             if (_values.TryGetValue(name, out var obj) &&
                 obj is T t)
@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.Interactive
             ValueDirectiveOptions options,
             KernelInvocationContext context)
         {
-            await SetVariableAsync(options.Name, value);
+            await SetValueAsync(options.Name, value);
 
             if (options.MimeType is { } mimeType)
             {
@@ -207,7 +207,7 @@ namespace Microsoft.DotNet.Interactive
 
         public Task HandleAsync(RequestValueNames command, KernelInvocationContext context)
         {
-            context.Publish(new ValueNamesProduced(GetVariableNames(), command));
+            context.Publish(new ValueNamesProduced(GetValueNames(), command));
             return Task.CompletedTask;
         }
 
@@ -230,7 +230,7 @@ namespace Microsoft.DotNet.Interactive
                 return Task.CompletedTask;
             }
 
-            throw new ValueNotFoundException(command.Name);
+            throw new InvalidOperationException($"Cannot find value named: {command.Name}");
         }
     }
 }

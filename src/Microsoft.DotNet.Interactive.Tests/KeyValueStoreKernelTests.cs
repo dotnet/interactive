@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var keyValueStoreKernel = (ISupportGetValues) kernel.FindKernel("value");
 
-            keyValueStoreKernel.TryGetVariable("hi", out object retrievedValue);
+            keyValueStoreKernel.TryGetValue("hi", out object retrievedValue);
 
             retrievedValue
                 .Should()
@@ -100,7 +100,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var keyValueStoreKernel = (ISupportGetValues) kernel.FindKernel("value");
 
-            keyValueStoreKernel.TryGetVariable("hi", out object retrievedValue);
+            keyValueStoreKernel.TryGetValue("hi", out object retrievedValue);
 
             retrievedValue
                 .Should()
@@ -119,7 +119,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var keyValueStoreKernel = (ISupportGetValues) kernel.FindKernel("value");
 
-            keyValueStoreKernel.TryGetVariable("hi", out object retrievedValue);
+            keyValueStoreKernel.TryGetValue("hi", out object retrievedValue);
 
             retrievedValue
                 .Should()
@@ -202,7 +202,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             kernel
                 .FindKernel("value")
                 .As<ISupportGetValues>()
-                .GetVariableNames()
+                .GetValueNames()
                 .Should()
                 .NotContain("hi");
         }

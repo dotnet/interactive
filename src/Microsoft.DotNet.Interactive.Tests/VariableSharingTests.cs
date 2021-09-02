@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             "let x = 123",
             @"using Microsoft.DotNet.Interactive;
 
-(Kernel.Current.FindKernel(""fsharp"") as Microsoft.DotNet.Interactive.DotNetKernel).TryGetVariable(""x"", out int x);
+(Kernel.Current.FindKernel(""fsharp"") as Microsoft.DotNet.Interactive.ISupportGetValues).TryGetValue(""x"", out int x);
 x")]
         [InlineData(
             "#!fsharp",
@@ -240,14 +240,14 @@ x")]
                 new CSharpKernel()
                     .UseNugetDirective()
                     .UseKernelHelpers()
-                    .UseDotNetVariableSharing(),
+                    .UseVariableSharing(),
                 new FSharpKernel()
                     .UseNugetDirective()
                     .UseKernelHelpers()
                     .UseDefaultNamespaces() 
-                    .UseDotNetVariableSharing(),
+                    .UseVariableSharing(),
                 new PowerShellKernel()
-                    .UseDotNetVariableSharing()
+                    .UseVariableSharing()
             }.LogEventsToPocketLogger();
         }
 

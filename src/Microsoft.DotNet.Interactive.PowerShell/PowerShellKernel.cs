@@ -130,7 +130,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             _addAccelerator?.Invoke(null, new object[] { name, type });
         }
 
-        public IReadOnlyCollection<string> GetVariableNames()
+        public IReadOnlyCollection<string> GetValueNames()
         {
             var psObject = pwsh.Runspace.SessionStateProxy.InvokeProvider.Item.Get("variable:")?.FirstOrDefault();
 
@@ -142,7 +142,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             return Array.Empty<string>();
         }
 
-        public bool TryGetVariable<T>(string name, out T value)
+        public bool TryGetValue<T>(string name, out T value)
         {
             var variable = pwsh.Runspace.SessionStateProxy.PSVariable.Get(name);
 
@@ -161,7 +161,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             return false;
         }
 
-        public Task SetVariableAsync(string name, object value, Type declaredType)
+        public Task SetValueAsync(string name, object value, Type declaredType)
         {
             _lazyPwsh.Value.Runspace.SessionStateProxy.PSVariable.Set(name, value);
             return Task.CompletedTask;

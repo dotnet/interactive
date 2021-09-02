@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive
     {
         public static Task SetVariableAsync<T>(this ISupportSetValues kernel, string name, T value)
         {
-            return kernel.SetVariableAsync(name, value, typeof(T));
+            return kernel.SetValueAsync(name, value, typeof(T));
         }
     }
 }
