@@ -643,14 +643,6 @@ namespace Microsoft.DotNet.Interactive
                         SetHandler(requestValueHandler, requestValue);
                         break;
 
-                    case (SetReferenceValue setReferenceValue, IKernelCommandHandler<SetReferenceValue> setReferenceValueHandler):
-                        SetHandler(setReferenceValueHandler, setReferenceValue);
-                        break;
-
-                    case (SetFormattedValue setFormattedValue, IKernelCommandHandler<SetFormattedValue> setFormattedValueHandler):
-                        SetHandler(setFormattedValueHandler, setFormattedValue);
-                        break;
-
                     default:
                         TrySetDynamicHandler(command);
                         break;

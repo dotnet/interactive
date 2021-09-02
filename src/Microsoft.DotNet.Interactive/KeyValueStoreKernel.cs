@@ -22,8 +22,7 @@ namespace Microsoft.DotNet.Interactive
         DotNetKernel,
         IKernelCommandHandler<SubmitCode>,
         IKernelCommandHandler<RequestValueNames>,
-        IKernelCommandHandler<RequestValue>,
-        IKernelCommandHandler<SetFormattedValue>
+        IKernelCommandHandler<RequestValue>
     {
         internal const string DefaultKernelName = "value";
 
@@ -230,17 +229,6 @@ namespace Microsoft.DotNet.Interactive
             }
 
             throw new ValueNotFoundException(command.Name);
-        }
-
-        public async Task HandleAsync(SetFormattedValue command, KernelInvocationContext context)
-        {
-            await StoreValueAsync(
-                command.FormattedValue.Value, 
-                new ValueDirectiveOptions
-                {
-                    Name = command.Name,
-                    MimeType = command.FormattedValue.MimeType
-                },context);
         }
     }
 }

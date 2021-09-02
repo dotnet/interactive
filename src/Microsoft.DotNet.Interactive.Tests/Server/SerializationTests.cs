@@ -121,8 +121,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 .Assembly
                 .ExportedTypes
                 .Concrete()
-                .DerivedFrom(typeof(KernelCommand))
-                .Where(t => t.GetCustomAttribute<NotSerializableAttribute>() is null);
+                .DerivedFrom(typeof(KernelCommand));
 
             Commands()
                 .Select(e => e[0].GetType())
@@ -209,7 +208,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new RequestValue("a", "csharp", new[] { HtmlFormatter.MimeType });
 
-                yield return new SetFormattedValue(new FormattedValue(PlainTextFormatter.MimeType, "text value") , "a", "csharp");
             }
         }
 

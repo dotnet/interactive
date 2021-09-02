@@ -72,8 +72,7 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(Quit)] = typeof(KernelCommandEnvelope<Quit>),
                 [nameof(Cancel)] = typeof(KernelCommandEnvelope<Cancel>),
                 [nameof(RequestValue)] = typeof(KernelCommandEnvelope<RequestValue>),
-                [nameof(RequestValueNames)] = typeof(KernelCommandEnvelope<RequestValueNames>),
-                [nameof(SetFormattedValue)] = typeof(KernelCommandEnvelope<SetFormattedValue>)
+                [nameof(RequestValueNames)] = typeof(KernelCommandEnvelope<RequestValueNames>)
             };
 
             _commandTypesByCommandTypeName = new ConcurrentDictionary<string, Type>(_envelopeTypesByCommandTypeName
@@ -89,11 +88,7 @@ namespace Microsoft.DotNet.Interactive.Server
                 commandType =>
                 {
                     var type = command.GetType();
-                    var attribute = type.GetCustomAttribute<NotSerializableAttribute>();
-                    if (attribute is { })
-                    {
-                        throw new SerializationException(attribute.Message ?? $"Cannot serialize {commandType.Name}");
-                    }
+
                     var genericType = _envelopeTypesByCommandTypeName[type.Name];
 
                     var constructor = genericType.GetConstructors().Single();

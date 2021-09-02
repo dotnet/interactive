@@ -39,9 +39,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         IKernelCommandHandler<SubmitCode>,
         IKernelCommandHandler<ChangeWorkingDirectory>,
         IKernelCommandHandler<RequestValueNames>,
-        IKernelCommandHandler<RequestValue>,
-        IKernelCommandHandler<SetReferenceValue>,
-        IKernelCommandHandler<SetFormattedValue>
+        IKernelCommandHandler<RequestValue>
     {
         internal const string DefaultKernelName = "csharp";
 
@@ -528,17 +526,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }
 
             throw new ValueNotFoundException(command.Name);
-        }
-
-        public async Task HandleAsync(SetReferenceValue command, KernelInvocationContext context)
-        {
-            await SetVariableAsync(command.Name, command.Value, command.Value?.GetType());
-        }
-
-        public async Task HandleAsync(SetFormattedValue command, KernelInvocationContext context)
-        {
-            var (value, type) = command.FormattedValue.ToDotNetValue();
-            await SetVariableAsync(command.Name,value, type);
         }
     }
 }
