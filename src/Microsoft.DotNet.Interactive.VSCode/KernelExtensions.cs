@@ -8,7 +8,7 @@ namespace Microsoft.DotNet.Interactive.VSCode
 {
     public static class KernelExtensions
     {
-        public static Task UseVSCodeHelpersAsync<TKernel>(this TKernel kernel, Kernel rootKernel) where TKernel : DotNetKernel
+        public static Task UseVSCodeHelpersAsync<TKernel>(this TKernel kernel, Kernel rootKernel) where TKernel : Kernel, ISupportSetValues
         {
             rootKernel.RegisterCommandType<GetInput>();
             KernelEventEnvelope.RegisterEvent<InputProduced>();

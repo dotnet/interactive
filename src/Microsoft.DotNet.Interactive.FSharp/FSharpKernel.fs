@@ -34,7 +34,7 @@ open FSharp.Compiler.Symbols
 
 type FSharpKernel () as this =
 
-    inherit DotNetKernel("fsharp")
+    inherit Kernel("fsharp")
 
     static let lockObj = Object();
 
@@ -404,12 +404,12 @@ type FSharpKernel () as this =
         |> List.filter (fun x -> x.Name <> "it") // don't report special variable `it`
         |> List.map (fun x -> CurrentVariable(x.Name, x.Value.ReflectionType, x.Value.ReflectionValue))
 
-    override _.GetVariableNames() =
+    member _.GetVariableNames() =
         this.GetCurrentVariables()
         |> List.map (fun x -> x.Name)
         :> IReadOnlyCollection<string>
 
-    override _.TryGetVariable<'a>(name: string, [<Out>] value: 'a byref) =
+    member _.TryGetVariable<'a>(name: string, [<Out>] value: 'a byref) =
         match script.Value.Fsi.TryFindBoundValue(name) with
         | Some cv ->
             value <- cv.Value.ReflectionValue :?> 'a
@@ -424,7 +424,7 @@ type FSharpKernel () as this =
                | _ ->
                    false
 
-    override _.SetVariableAsync(name: string, value: Object, [<Optional>] declaredType: Type) : Task = 
+    member _.SetVariableAsync(name: string, value: Object, [<Optional>] declaredType: Type) : Task = 
         script.Value.Fsi.AddBoundValue(name, value) |> ignore
         Task.CompletedTask
 

@@ -29,9 +29,11 @@ using CompletionItem = Microsoft.DotNet.Interactive.Events.CompletionItem;
 namespace Microsoft.DotNet.Interactive.CSharp
 {
     public class CSharpKernel :
-        DotNetKernel,
+        Kernel,
         IExtensibleKernel,
         ISupportNuget,
+        ISupportGetValues,
+        ISupportSetValues,
         IKernelCommandHandler<RequestCompletions>,
         IKernelCommandHandler<RequestDiagnostics>,
         IKernelCommandHandler<RequestHoverText>,
@@ -112,14 +114,14 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return Task.FromResult(SyntaxFactory.IsCompleteSubmission(syntaxTree));
         }
 
-        public override IReadOnlyCollection<string> GetVariableNames() =>
+        public IReadOnlyCollection<string> GetVariableNames() =>
             ScriptState?.Variables
                        .Select(v => v.Name)
                        .Distinct()
                        .ToArray() ??
             Array.Empty<string>();
 
-        public override bool TryGetVariable<T>(
+        public bool TryGetVariable<T>(
             string name,
             out T value)
         {
@@ -146,7 +148,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return false;
         }
 
-        public override async Task SetVariableAsync(string name, object value, Type declaredType = null)
+        public async Task SetVariableAsync(string name, object value, Type declaredType = null)
         {
             var csharpTypeDeclaration = new StringWriter();
 

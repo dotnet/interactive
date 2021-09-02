@@ -19,7 +19,9 @@ using Microsoft.DotNet.Interactive.Formatting;
 namespace Microsoft.DotNet.Interactive
 {
     public class KeyValueStoreKernel :
-        DotNetKernel,
+        Kernel,
+        ISupportGetValues,
+        ISupportSetValues,
         IKernelCommandHandler<SubmitCode>,
         IKernelCommandHandler<RequestValueNames>,
         IKernelCommandHandler<RequestValue>
@@ -32,16 +34,16 @@ namespace Microsoft.DotNet.Interactive
         {
         }
 
-        public override Task SetVariableAsync(string name, object value, Type declaredType = null)
+        public Task SetVariableAsync(string name, object value, Type declaredType = null)
         {
             _values[name] = value;
             return Task.CompletedTask;
         }
 
-        public override IReadOnlyCollection<string> GetVariableNames() =>
+        public IReadOnlyCollection<string> GetVariableNames() =>
             _values.Keys.ToArray();
 
-        public override bool TryGetVariable<T>(string name, out T value)
+        public bool TryGetVariable<T>(string name, out T value)
         {
             if (_values.TryGetValue(name, out var obj) &&
                 obj is T t)

@@ -1,15 +1,13 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public static class DotNetKernelExtensions
+    public interface ISupportSetValues
     {
-        public static Task SetVariableAsync<T>(this ISupportSetValues kernel, string name, T value)
-        {
-            return kernel.SetVariableAsync(name, value, typeof(T));
-        }
+        public Task SetVariableAsync(string name, object value, Type declaredType = null);
     }
 }

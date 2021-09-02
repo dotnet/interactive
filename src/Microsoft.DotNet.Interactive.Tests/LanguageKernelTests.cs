@@ -1214,7 +1214,7 @@ Console.Write(2);
 
             await kernel.SubmitCodeAsync(codeToSetVariable);
 
-            var languageKernel = kernel.ChildKernels.OfType<DotNetKernel>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<ISupportGetValues>().Single();
 
             var succeeded = languageKernel.TryGetVariable("x", out int x);
 
@@ -1241,7 +1241,7 @@ Console.Write(2);
 
             await kernel.SubmitCodeAsync(codeToSetVariable);
 
-            var languageKernel = kernel.ChildKernels.OfType<DotNetKernel>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<ISupportGetValues>().Single();
 
             languageKernel.GetVariableNames().Should().Contain("x");
         }
@@ -1254,11 +1254,11 @@ Console.Write(2);
         {
             var kernel = CreateKernel(language);
 
-            var languageKernel = kernel.ChildKernels.OfType<DotNetKernel>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<ISupportSetValues>().Single();
 
             await languageKernel.SetVariableAsync("x", 123);
 
-            var succeeded = languageKernel.TryGetVariable("x", out int x);
+            var succeeded = ((ISupportGetValues)languageKernel).TryGetVariable("x", out int x);
 
             using var _ = new AssertionScope();
 
@@ -1274,12 +1274,12 @@ Console.Write(2);
         {
             var kernel = CreateKernel(language);
 
-            var languageKernel = kernel.ChildKernels.OfType<DotNetKernel>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<ISupportSetValues>().Single();
 
             await languageKernel.SetVariableAsync("x", 123);
             await languageKernel.SetVariableAsync("x", 456);
 
-            var succeeded = languageKernel.TryGetVariable("x", out int x);
+            var succeeded = ((ISupportGetValues)languageKernel).TryGetVariable("x", out int x);
 
             using var _ = new AssertionScope();
 
@@ -1295,12 +1295,12 @@ Console.Write(2);
         {
             var kernel = CreateKernel(language);
 
-            var languageKernel = kernel.ChildKernels.OfType<DotNetKernel>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<ISupportSetValues>().Single();
 
             await languageKernel.SetVariableAsync("x", 123);
             await languageKernel.SetVariableAsync("x", "hello");
 
-            var succeeded = languageKernel.TryGetVariable("x", out string x);
+            var succeeded = ((ISupportGetValues)languageKernel).TryGetVariable("x", out string x);
 
             using var _ = new AssertionScope();
 
