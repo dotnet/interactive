@@ -4,10 +4,14 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 
 using Newtonsoft.Json;
@@ -62,14 +66,26 @@ namespace Microsoft.DotNet.Interactive.Http
                     var propertyBag = new JObject();
                     response[kernelName] = propertyBag;
                     var targetKernel = GetKernel(kernelName);
-                    if (targetKernel is DotNetKernel languageKernel)
+                    if (targetKernel is null)
+                    {
+                        context.Handler = async httpContext =>
+                        {
+                            httpContext.Response.StatusCode = 400;
+                            await httpContext.Response.WriteAsync($"kernel {kernelName} not found");
+                            await httpContext.Response.CompleteAsync();
+                        };
+                        return;
+                    }
+                    
+                    if (targetKernel.SupportsCommand<RequestValue>() || targetKernel is DotNetKernel)
                     {
                         foreach (var variableName in kernelProperty.Value.Values<string>())
                         {
-                            if (languageKernel.TryGetVariable(variableName, out object value))
+                            var value = await TryGetValueAsync(targetKernel, variableName);
+
+                            if (value is {} )
                             {
-                                propertyBag[variableName] = JToken.Parse(value.ToDisplayString(JsonFormatter.MimeType));
-                                
+                                propertyBag[variableName] = JToken.Parse(value.Value);
                             }
                             else
                             {
@@ -88,7 +104,7 @@ namespace Microsoft.DotNet.Interactive.Http
                         context.Handler = async httpContext =>
                         {
                             httpContext.Response.StatusCode = 400;
-                            await httpContext.Response.WriteAsync($"kernel {kernelName} not found");
+                            await httpContext.Response.WriteAsync($"kernel {kernelName} doesn't support RequestValue");
                             await httpContext.Response.CompleteAsync();
                         };
                         return;
@@ -107,6 +123,27 @@ namespace Microsoft.DotNet.Interactive.Http
                     await httpContext.Response.CompleteAsync();
                 };
             }
+        }
+
+        private async Task<FormattedValue> TryGetValueAsync(Kernel targetKernel, string variableName)
+        {
+            if (targetKernel is DotNetKernel doteNetKernel)
+            {
+                if (doteNetKernel.TryGetVariable(variableName, out object value))
+                {
+                    return new FormattedValue(JsonFormatter.MimeType, value.ToDisplayString(JsonFormatter.MimeType));
+                }
+
+                return null;
+            }
+
+            var result = await targetKernel.SendAsync(new RequestValue(variableName, targetKernel.Name,
+                new[] { JsonFormatter.MimeType }));
+            ValueProduced vp = null;
+
+            result.KernelEvents.OfType<ValueProduced>().Subscribe(e => vp = e);
+
+            return vp?.FormattedValues.FirstOrDefault(fv => fv.MimeType == JsonFormatter.MimeType);
         }
 
         private void SingleVariableRequest(RouteContext context)

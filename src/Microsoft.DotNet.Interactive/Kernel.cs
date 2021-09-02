@@ -677,5 +677,10 @@ namespace Microsoft.DotNet.Interactive
         }
 
         internal ChooseKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= CreateChooseKernelDirective();
+
+        public bool SupportsCommand<T>() where T : KernelCommand
+        {
+            return this is IKernelCommandHandler<T> || _dynamicHandlers.ContainsKey(typeof(T));
+        }
     }
 }
