@@ -22,9 +22,7 @@ namespace Microsoft.DotNet.Interactive
         Kernel,
         ISupportGetValues,
         ISupportSetValues,
-        IKernelCommandHandler<SubmitCode>,
-        IKernelCommandHandler<RequestValueNames>,
-        IKernelCommandHandler<RequestValue>
+        IKernelCommandHandler<SubmitCode>
     {
         internal const string DefaultKernelName = "value";
 
@@ -203,34 +201,6 @@ namespace Microsoft.DotNet.Interactive
             public Uri FromUrl { get; set; }
 
             public string MimeType { get; set; }
-        }
-
-        public Task HandleAsync(RequestValueNames command, KernelInvocationContext context)
-        {
-            context.Publish(new ValueNamesProduced(GetValueNames(), command));
-            return Task.CompletedTask;
-        }
-
-        public Task HandleAsync(RequestValue command, KernelInvocationContext context)
-        {
-            if (_values.TryGetValue(command.Name, out var value))
-            {
-                var formattedValues = new List<FormattedValue>();
-                if (command.MimeTypes?.Any() == true)
-                {
-                    formattedValues.AddRange(command.MimeTypes.Select(mimeType => new FormattedValue(mimeType, value?.ToDisplayString(mimeType))));
-                }
-                else
-                {
-                    var preferredMimeType = Formatter.GetPreferredMimeTypeFor(value.GetType());
-                    formattedValues.Add(new FormattedValue(preferredMimeType, value?.ToDisplayString(preferredMimeType)));
-                }
-
-                context.Publish(new ValueProduced(value, command.Name, command, formattedValues));
-                return Task.CompletedTask;
-            }
-
-            throw new InvalidOperationException($"Cannot find value named: {command.Name}");
         }
     }
 }

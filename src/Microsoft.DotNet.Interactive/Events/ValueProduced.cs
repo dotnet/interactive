@@ -14,20 +14,21 @@ namespace Microsoft.DotNet.Interactive.Events
         public object Value { get; }
 
         public string Name { get; }
-        public IReadOnlyCollection<FormattedValue> FormattedValues { get; }
+        public FormattedValue FormattedValue { get; }
 
         public ValueProduced(object value,
             string name,
             RequestValue command,
-            IReadOnlyCollection<FormattedValue> formattedValues = null) : base(command)
+            FormattedValue formattedValue = null) : base(command)
         {
             if (string.IsNullOrWhiteSpace(name))
             {
                 throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
             }
+
             Value = value;
             Name = name;
-            FormattedValues = formattedValues;
+            FormattedValue = formattedValue;
         }
     }
 }

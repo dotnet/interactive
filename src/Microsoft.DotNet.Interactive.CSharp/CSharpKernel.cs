@@ -39,9 +39,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         IKernelCommandHandler<RequestHoverText>,
         IKernelCommandHandler<RequestSignatureHelp>,
         IKernelCommandHandler<SubmitCode>,
-        IKernelCommandHandler<ChangeWorkingDirectory>,
-        IKernelCommandHandler<RequestValueNames>,
-        IKernelCommandHandler<RequestValue>
+        IKernelCommandHandler<ChangeWorkingDirectory>
     {
         internal const string DefaultKernelName = "csharp";
 
@@ -502,32 +500,5 @@ namespace Microsoft.DotNet.Interactive.CSharp
         public IEnumerable<string> RestoreSources =>
             PackageRestoreContext.RestoreSources;
 
-        public Task HandleAsync(RequestValueNames command, KernelInvocationContext context)
-        {
-            context.Publish(new ValueNamesProduced(GetValueNames(), command));
-            return Task.CompletedTask;
-        }
-
-        public Task HandleAsync(RequestValue command, KernelInvocationContext context)
-        {
-            if (TryGetVariable(command.Name, out var value))
-            {
-                var formattedValues = new List<FormattedValue>();
-                if (command.MimeTypes?.Any() == true)
-                {
-                    formattedValues.AddRange(command.MimeTypes.Select(mimeType => new FormattedValue(mimeType, value?.ToDisplayString(mimeType))));
-                }
-                else
-                {
-                    var preferredMimeType = Formatter.GetPreferredMimeTypeFor(value?.GetType() ?? typeof(object));
-                    formattedValues.Add(new FormattedValue(preferredMimeType, value?.ToDisplayString(preferredMimeType)));
-                }
-
-                context.Publish(new ValueProduced(value, command.Name, command, formattedValues));
-                return Task.CompletedTask;
-            }
-
-            throw new InvalidOperationException($"Cannot find value named: {command.Name}");
-        }
     }
 }

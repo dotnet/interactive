@@ -351,39 +351,7 @@ type FSharpKernel () as this =
                 context.Publish(HoverTextProduced(requestHoverText, reply, lps))
                 ()
         }
-
-    let handleRequestValueNames (requestValueNames: RequestValueNames) (context: KernelInvocationContext) =
-        async {
-            context.Publish(new ValueNamesProduced(this.handleGetValueNames(), requestValueNames))
-            return Task.CompletedTask
-        }
-
-    let handleRequestValue (requestValue: RequestValue) (context: KernelInvocationContext) =
-        async {
-            match this.TryGetVariable(requestValue.Name) with
-            | true,value ->
-                let formattedValues =
-                    let valueType = if isNull value then typeof<obj>
-                                    else value.GetType()
-                    let hasMimeTypes = if isNull requestValue.MimeTypes then false
-                                       elif requestValue.MimeTypes.Count = 0 then false
-                                       else  true
-
-                    if hasMimeTypes then
-                        requestValue.MimeTypes
-                        |> Array.ofSeq
-                        |> Array.map (fun mimeType -> new FormattedValue(mimeType, value.ToDisplayString(mimeType)))
-                    else                
-                        let preferredMimeType = Formatter.GetPreferredMimeTypeFor(valueType)
-                        [| (new FormattedValue(preferredMimeType, value.ToDisplayString(preferredMimeType))) |]
-                
-                context.Publish(new ValueProduced(value, requestValue.Name, requestValue, formattedValues))           
-            | false,_ ->
-                raise (new InvalidOperationException($"Cannot find value named: {requestValue.Name}"))
-
-            return Task.CompletedTask
-        }
-
+   
     let handleRequestDiagnostics (requestDiagnostics: RequestDiagnostics) (context: KernelInvocationContext) =
         async {
             let _parseResults, checkFileResults, _checkProjectResults = script.Value.Fsi.ParseAndCheckInteraction(requestDiagnostics.Code)
@@ -452,12 +420,6 @@ type FSharpKernel () as this =
 
     interface IKernelCommandHandler<ChangeWorkingDirectory> with
         member this.HandleAsync(command: ChangeWorkingDirectory, context: KernelInvocationContext) = handleChangeWorkingDirectory command context |> Async.StartAsTask :> Task
-
-    interface IKernelCommandHandler<RequestValueNames> with
-        member this.HandleAsync(command: RequestValueNames, context: KernelInvocationContext) = handleRequestValueNames command context |> Async.StartAsTask :> Task
-
-    interface IKernelCommandHandler<RequestValue> with
-        member this.HandleAsync(command: RequestValue, context: KernelInvocationContext) = handleRequestValue command context |> Async.StartAsTask :> Task
 
     interface ISupportNuget with
         member _.TryAddRestoreSource(source: string) =

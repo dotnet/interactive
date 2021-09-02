@@ -81,7 +81,7 @@ namespace Microsoft.DotNet.Interactive.Http
                     {
                         foreach (var variableName in kernelProperty.Value.Values<string>())
                         {
-                            var value = await TryGetValueAsync(targetKernel, variableName);
+                            var value = TryGetValue(targetKernel, variableName);
 
                             if (value is {} )
                             {
@@ -125,7 +125,7 @@ namespace Microsoft.DotNet.Interactive.Http
             }
         }
 
-        private async Task<FormattedValue> TryGetValueAsync(Kernel targetKernel, string variableName)
+        private FormattedValue TryGetValue(Kernel targetKernel, string variableName)
         {
             if (targetKernel is ISupportGetValues doteNetKernel)
             {
@@ -136,14 +136,8 @@ namespace Microsoft.DotNet.Interactive.Http
 
                 return null;
             }
-
-            var result = await targetKernel.SendAsync(new RequestValue(variableName, targetKernel.Name,
-                new[] { JsonFormatter.MimeType }));
-            ValueProduced vp = null;
-
-            result.KernelEvents.OfType<ValueProduced>().Subscribe(e => vp = e);
-
-            return vp?.FormattedValues.FirstOrDefault(fv => fv.MimeType == JsonFormatter.MimeType);
+            
+            return null;
         }
 
         private void SingleVariableRequest(RouteContext context)
