@@ -36,8 +36,8 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var code = language switch
             {
-                Language.CSharp => $"#load \"{currentDirectoryName}{Path.DirectorySeparatorChar}RelativeLoadingSample.csx\"",
-                Language.FSharp => $"#load \"{currentDirectoryName}{Path.DirectorySeparatorChar}RelativeLoadingSample.fsx\""
+                Language.CSharp => $"#load \"{Path.Combine(currentDirectory, "RelativeLoadingSample.csx")}\"",
+                Language.FSharp => $"#load \"{Path.Combine(currentDirectory, "RelativeLoadingSample.fsx")}\""
             };
 
             var command = new SubmitCode(code);
@@ -65,8 +65,8 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var code = language switch
             {
-                Language.CSharp => $"#load \"{relativePath}/RelativeLoadingSample.csx\"",
-                Language.FSharp => $"#load \"{relativePath}/RelativeLoadingSample.fsx\""
+                Language.CSharp => $"#load \"{Path.Combine(relativePath, "RelativeLoadingSample.csx")}\"",
+                Language.FSharp => $"#load \"{Path.Combine(relativePath, "RelativeLoadingSample.fsx")}\""
             };
 
             var command = new SubmitCode(code);
