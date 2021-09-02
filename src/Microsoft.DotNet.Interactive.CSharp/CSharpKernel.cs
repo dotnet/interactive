@@ -114,14 +114,14 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return Task.FromResult(SyntaxFactory.IsCompleteSubmission(syntaxTree));
         }
 
-        public IReadOnlyCollection<string> GetVariableNames() =>
+        public IReadOnlyCollection<string> GetValueNames() =>
             ScriptState?.Variables
                        .Select(v => v.Name)
                        .Distinct()
                        .ToArray() ??
             Array.Empty<string>();
 
-        public bool TryGetVariable<T>(
+        public bool TryGetValue<T>(
             string name,
             out T value)
         {
@@ -148,7 +148,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return false;
         }
 
-        public async Task SetVariableAsync(string name, object value, Type declaredType = null)
+        public async Task SetValueAsync(string name, object value, Type declaredType = null)
         {
             var csharpTypeDeclaration = new StringWriter();
 
@@ -504,7 +504,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public Task HandleAsync(RequestValueNames command, KernelInvocationContext context)
         {
-            context.Publish(new ValueNamesProduced(GetVariableNames(), command));
+            context.Publish(new ValueNamesProduced(GetValueNames(), command));
             return Task.CompletedTask;
         }
 
@@ -527,7 +527,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 return Task.CompletedTask;
             }
 
-            throw new ValueNotFoundException(command.Name);
+            throw new InvalidOperationException($"Cannot find value named: {command.Name}");
         }
     }
 }

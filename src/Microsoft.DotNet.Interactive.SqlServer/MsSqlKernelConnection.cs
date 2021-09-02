@@ -154,7 +154,7 @@ foreach (var file in  new[] {{ model.ContextFile.Code }}.Concat(model.Additional
 
             await csharpKernel.SubmitCodeAsync(submission1);
 
-            csharpKernel.TryGetVariable("code", out string submission2);
+            csharpKernel.TryGetValue("code", out string submission2);
 
             await csharpKernel.SubmitCodeAsync(submission2);
 

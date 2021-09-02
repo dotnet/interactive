@@ -354,7 +354,7 @@ type FSharpKernel () as this =
 
     let handleRequestValueNames (requestValueNames: RequestValueNames) (context: KernelInvocationContext) =
         async {
-            context.Publish(new ValueNamesProduced(this.GetVariableNames(), requestValueNames))
+            context.Publish(new ValueNamesProduced(this.handleGetValueNames(), requestValueNames))
             return Task.CompletedTask
         }
 
@@ -379,7 +379,7 @@ type FSharpKernel () as this =
                 
                 context.Publish(new ValueProduced(value, requestValue.Name, requestValue, formattedValues))           
             | false,_ ->
-                raise (new ValueNotFoundException(requestValue.Name))
+                raise (new InvalidOperationException($"Cannot find value named: {requestValue.Name}"))
 
             return Task.CompletedTask
         }
@@ -404,18 +404,8 @@ type FSharpKernel () as this =
         |> List.filter (fun x -> x.Name <> "it") // don't report special variable `it`
         |> List.map (fun x -> CurrentVariable(x.Name, x.Value.ReflectionType, x.Value.ReflectionValue))
 
-    member _.GetVariableNames() =
-        this.GetCurrentVariables()
-        |> List.map (fun x -> x.Name)
-        :> IReadOnlyCollection<string>
+    
 
-    member _.TryGetVariable<'a>(name: string, [<Out>] value: 'a byref) =
-        match script.Value.Fsi.TryFindBoundValue(name) with
-        | Some cv ->
-            value <- cv.Value.ReflectionValue :?> 'a
-            true
-        | _ ->
-            false
     member this.TryGetVariable(name: string, [<Out>] value: obj byref) =
         match script.Value.Fsi.TryFindBoundValue(name) with
                | Some cv ->
@@ -423,8 +413,20 @@ type FSharpKernel () as this =
                    true
                | _ ->
                    false
+    member this.handleGetValueNames() =
+        this.GetCurrentVariables()
+        |> List.map (fun x -> x.Name)
+        :> IReadOnlyCollection<string>
 
-    member _.SetVariableAsync(name: string, value: Object, [<Optional>] declaredType: Type) : Task = 
+    member this.handleTryGetValue<'a>(name: string, [<Out>] value: 'a byref) =
+        match script.Value.Fsi.TryFindBoundValue(name) with
+        | Some cv ->
+            value <- cv.Value.ReflectionValue :?> 'a
+            true
+        | _ ->
+            false
+
+    member this.handleSetValueAsync(name: string, value: Object, [<Optional>] declaredType: Type) : Task = 
         script.Value.Fsi.AddBoundValue(name, value) |> ignore
         Task.CompletedTask
 
@@ -497,6 +499,13 @@ type FSharpKernel () as this =
                             sb.Append(Environment.NewLine) |> ignore
             let command = new SubmitCode(sb.ToString(), "fsharp")
             this.DeferCommand(command)
+
+    interface ISupportGetValues with
+        member _.GetValueNames() = this.handleGetValueNames()
+        member _.TryGetValue<'a>(name: string, [<Out>] value: 'a byref)  = this.handleTryGetValue(name, &value)
+
+    interface ISupportSetValues with
+        member _.SetValueAsync(name: string, value: obj, declaredType: Type): Task = this.handleSetValueAsync(name, value, declaredType)
 
     interface IExtensibleKernel with
         member this.LoadExtensionsFromDirectoryAsync(directory:DirectoryInfo, context:KernelInvocationContext) =

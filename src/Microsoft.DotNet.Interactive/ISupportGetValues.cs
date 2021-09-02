@@ -7,8 +7,8 @@ namespace Microsoft.DotNet.Interactive
 {
     public interface ISupportGetValues
     {
-        public bool TryGetVariable<T>(string name, out T value);
+        public bool TryGetValue<T>(string name, out T value);
 
-        public IReadOnlyCollection<string> GetVariableNames();
+        public IReadOnlyCollection<string> GetValueNames();
     }
 }

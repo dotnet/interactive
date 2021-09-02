@@ -153,7 +153,7 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
-        public static T UseDotNetVariableSharing<T>(this T kernel)
+        public static T UseVariableSharing<T>(this T kernel)
             where T : Kernel, ISupportGetValues
         {
             var variableNameArg = new Argument<string>(
@@ -166,7 +166,7 @@ namespace Microsoft.DotNet.Interactive
                 {
                     return composite.ChildKernels
                                     .OfType<ISupportGetValues>()
-                                    .SelectMany(k => k.GetVariableNames());
+                                    .SelectMany(k => k.GetValueNames());
                 }
 
                 return Array.Empty<string>();
@@ -198,9 +198,9 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (kernel.FindKernel(from) is ISupportGetValues fromKernel)
                 {
-                    if (fromKernel.TryGetVariable(name, out object shared))
+                    if (fromKernel.TryGetValue(name, out object shared))
                     {
-                        await ((ISupportSetValues)kernel).SetVariableAsync(name, shared);
+                        await ((ISupportSetValues)kernel).SetValueAsync(name, shared);
                     }
                 }
             });

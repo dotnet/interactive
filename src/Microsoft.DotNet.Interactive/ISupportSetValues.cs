@@ -8,6 +8,6 @@ namespace Microsoft.DotNet.Interactive
 {
     public interface ISupportSetValues
     {
-        public Task SetVariableAsync(string name, object value, Type declaredType = null);
+        public Task SetValueAsync(string name, object value, Type declaredType = null);
     }
 }

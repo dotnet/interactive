@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                         bool showCode,
                         KernelInvocationContext context)
                     {
-                        if (cSharpKernel.TryGetVariable<DataFrame>(variableName, out var dataFrame))
+                        if (cSharpKernel.TryGetValue<DataFrame>(variableName, out var dataFrame))
                         {
                             var code = BuildTypedDataFrameCode(
                                 dataFrame,
@@ -63,11 +63,11 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                             }
 
 
-                            cSharpKernel.TryGetVariable(variableName, out DataFrame oldFrame);
+                            cSharpKernel.TryGetValue(variableName, out DataFrame oldFrame);
 
                             await cSharpKernel.SendAsync(new SubmitCode(code));
 
-                            cSharpKernel.TryGetVariable(variableName, out DataFrame newFrame);
+                            cSharpKernel.TryGetValue(variableName, out DataFrame newFrame);
 
                             foreach (var column in oldFrame.Columns)
                             {

@@ -111,7 +111,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .UseDefaultFormatting()
                 .UseNugetDirective()
                 .UseKernelHelpers()
-                .UseDotNetVariableSharing()
+                .UseVariableSharing()
                 .UseWho()
                 .UseWhos()
                 .UseDefaultNamespaces();
@@ -143,7 +143,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             return new CSharpKernel()
                    .UseNugetDirective()
                    .UseKernelHelpers()
-                   .UseDotNetVariableSharing()
+                   .UseVariableSharing()
                    .UseWho()
                    .UseWhos();
         }
@@ -151,7 +151,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         private (Kernel, IEnumerable<string>) CreatePowerShellKernelAndAliases()
         {
             return (new PowerShellKernel()
-                .UseDotNetVariableSharing(),
+                .UseVariableSharing(),
                 new[]
                 {
                     "powershell"
