@@ -384,19 +384,6 @@ type FSharpKernel () as this =
             return Task.CompletedTask
         }
 
-    let handleSetReferenceValue (setReferenceValue: SetReferenceValue) (context: KernelInvocationContext) =
-        async {
-            script.Value.Fsi.AddBoundValue(setReferenceValue.Name, setReferenceValue.Value) |> ignore
-            return Task.CompletedTask
-        }
-        
-    let handleSetFormattedValue (setFormattedValue: SetFormattedValue) (context: KernelInvocationContext) =
-        async {
-            let struct (value,_type) = setFormattedValue.FormattedValue.ToDotNetValue()
-            script.Value.Fsi.AddBoundValue(setFormattedValue.Name, value) |> ignore
-            return Task.CompletedTask
-        }
-
     let handleRequestDiagnostics (requestDiagnostics: RequestDiagnostics) (context: KernelInvocationContext) =
         async {
             let _parseResults, checkFileResults, _checkProjectResults = script.Value.Fsi.ParseAndCheckInteraction(requestDiagnostics.Code)
@@ -469,12 +456,6 @@ type FSharpKernel () as this =
 
     interface IKernelCommandHandler<RequestValue> with
         member this.HandleAsync(command: RequestValue, context: KernelInvocationContext) = handleRequestValue command context |> Async.StartAsTask :> Task
-
-    interface IKernelCommandHandler<SetReferenceValue> with
-        member this.HandleAsync(command: SetReferenceValue, context: KernelInvocationContext) = handleSetReferenceValue command context |> Async.StartAsTask :> Task
-
-    interface IKernelCommandHandler<SetFormattedValue> with
-        member this.HandleAsync(command: SetFormattedValue, context: KernelInvocationContext) = handleSetFormattedValue command context |> Async.StartAsTask :> Task
 
     interface ISupportNuget with
         member _.TryAddRestoreSource(source: string) =
