@@ -35,10 +35,10 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var source = language switch
             {
-                Language.FSharp => $@"#r ""{dllPath}""
+                Language.FSharp => $@"#r @""{dllPath.FullName}""
 typeof<Hello>.Name",
 
-                Language.CSharp => $@"#r ""{dllPath}""
+                Language.CSharp => $@"#r ""{dllPath.FullName}""
 typeof(Hello).Name"
             };
 
@@ -69,13 +69,13 @@ typeof(Hello).Name"
             {
                 Language.FSharp => new[]
                 {
-                    $"#r \"{dllPath}\"",
+                    $"#r @\"{dllPath.FullName}\"",
                     "typeof<Hello>.Name"
                 },
 
                 Language.CSharp => new[]
                 {
-                    $"#r \"{dllPath}\"",
+                    $"#r \"{dllPath.FullName}\"",
                     "typeof(Hello).Name"
                 }
             };
@@ -104,8 +104,8 @@ typeof(Hello).Name"
 
             var code = language switch
             {
-                Language.CSharp => $"#r \"{dllName}\"",
-                Language.FSharp => $"#r \"{dllName}\""
+                Language.CSharp => $"#r \"{dllName.Name}\"",
+                Language.FSharp => $"#r \"{dllName.Name}\""
             };
 
             var command = new SubmitCode(code);
@@ -135,8 +135,8 @@ typeof(Hello).Name"
 
             var code = language switch
             {
-                Language.CSharp => $"#r \"{dllName}\"\nnew Hello()",
-                Language.FSharp => $"#r \"{dllName}\"\nnew Hello()"
+                Language.CSharp => $"#r \"{dllName.Name}\"\nnew Hello()",
+                Language.FSharp => $"#r \"{dllName.Name}\"\nnew Hello()"
             };
 
             var command = new SubmitCode(code);
@@ -149,20 +149,21 @@ typeof(Hello).Name"
                         .ContainSingle<CommandSucceeded>(c => c.Command == command);
         }
 
-        private string CreateDllInCurrentDirectory()
+        private FileInfo CreateDllInCurrentDirectory()
         {
-            var dllName = $"{Guid.NewGuid():N}.dll";
+            var assemblyName = Guid.NewGuid().ToString("N");
+            var dllName = assemblyName + ".dll";
 
             var systemRefLocation = typeof(object).GetTypeInfo().Assembly.Location;
             var systemReference = MetadataReference.CreateFromFile(systemRefLocation);
 
-            CSharpCompilation.Create(dllName)
-                             .WithOptions(
-                                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
+            CSharpCompilation.Create(assemblyName)
+                             .WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
                              .AddReferences(systemReference)
                              .AddSyntaxTrees(CSharpSyntaxTree.ParseText("public class Hello { }"))
                              .Emit(dllName);
-            return dllName;
+
+            return new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), dllName));
         }
     }
 }
