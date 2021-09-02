@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.Server;
 
@@ -59,6 +60,18 @@ namespace Microsoft.DotNet.Interactive
             _disposables.Add(Disposable.Create(
                 () => _kernelEvents.OnCompleted()
                 ));
+
+            RegisterCommandHandlers();
+        }
+
+        private void RegisterCommandHandlers()
+        {
+            if (this is ISupportGetValues supportGetValuesKernel)
+            {
+                RegisterCommandHandler<RequestValueNames>((command, context) => command.InvokeAsync(context));
+
+                RegisterCommandHandler<RequestValue>((command, context) => command.InvokeAsync(context));
+            }
         }
 
         internal KernelCommandPipeline Pipeline { get; }
@@ -633,14 +646,6 @@ namespace Microsoft.DotNet.Interactive
 
                     case (ChangeWorkingDirectory changeWorkingDirectory, IKernelCommandHandler<ChangeWorkingDirectory> changeWorkingDirectoryHandler):
                         SetHandler(changeWorkingDirectoryHandler, changeWorkingDirectory);
-                        break;
-
-                    case (RequestValueNames requestValueNames, IKernelCommandHandler<RequestValueNames> requestValueNamesHandler):
-                        SetHandler(requestValueNamesHandler, requestValueNames);
-                        break;
-
-                    case (RequestValue requestValue, IKernelCommandHandler<RequestValue> requestValueHandler):
-                        SetHandler(requestValueHandler, requestValue);
                         break;
 
                     default:

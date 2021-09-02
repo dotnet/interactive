@@ -211,7 +211,7 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public static TKernel UseWho<TKernel>(this TKernel kernel)
-            where TKernel : Kernel, IKernelCommandHandler<RequestValueNames>
+            where TKernel : Kernel, ISupportGetValues
         {
             kernel.AddDirective(who());
             Formatter.Register(new CurrentVariablesFormatter());
@@ -219,7 +219,7 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public static TKernel UseWhos<TKernel>(this TKernel kernel)
-            where TKernel : Kernel, IKernelCommandHandler<RequestValueNames>, IKernelCommandHandler<RequestValue>
+            where TKernel : Kernel, ISupportGetValues
         {
             kernel.AddDirective(whos());
             Formatter.Register(new CurrentVariablesFormatter());
@@ -255,7 +255,7 @@ namespace Microsoft.DotNet.Interactive
         private static async Task Display(KernelInvocationContext context, bool detailed)
         {
             if (context.Command is SubmitCode &&
-                context.HandlingKernel is IKernelCommandHandler<RequestValueNames> and IKernelCommandHandler<RequestValue>)
+                context.HandlingKernel is ISupportGetValues)
             {
                 var nameEvents = new List<ValueNamesProduced>();
 
