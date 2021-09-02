@@ -3,6 +3,7 @@
 
 using System;
 using System.CommandLine;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -59,7 +60,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 }
             }
 
-            var sqlClient = new MsSqlServiceClient(pathToService);
+            var sqlClient = new MsSqlServiceClient(pathToService, $"--parent-pid {Process.GetCurrentProcess().Id}");
 
             var kernel = new MsSqlKernel(
                 $"sql-{options.KernelName}",
