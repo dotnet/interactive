@@ -77,7 +77,7 @@ namespace Microsoft.DotNet.Interactive.Http
                         return;
                     }
                     
-                    if (targetKernel.SupportsCommand<RequestValue>() || targetKernel is DotNetKernel)
+                    if (targetKernel.SupportsCommand<RequestValue>() || targetKernel is ISupportGetValues)
                     {
                         foreach (var variableName in kernelProperty.Value.Values<string>())
                         {
@@ -127,7 +127,7 @@ namespace Microsoft.DotNet.Interactive.Http
 
         private async Task<FormattedValue> TryGetValueAsync(Kernel targetKernel, string variableName)
         {
-            if (targetKernel is DotNetKernel doteNetKernel)
+            if (targetKernel is ISupportGetValues doteNetKernel)
             {
                 if (doteNetKernel.TryGetVariable(variableName, out object value))
                 {
@@ -162,7 +162,7 @@ namespace Microsoft.DotNet.Interactive.Http
 
                 var targetKernel = GetKernel(kernelName);
 
-                if (targetKernel is DotNetKernel languageKernel)
+                if (targetKernel is ISupportGetValues languageKernel)
                 {
                     if (languageKernel.TryGetVariable(variableName, out object value))
                     {
