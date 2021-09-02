@@ -32,28 +32,6 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
-        public async Task it_can_load_script_files_using_load_directive_with_relative_path(Language language )
-        {
-            var kernel = CreateKernel(language);
-
-            var code = language switch
-            {
-                Language.CSharp => "#load \"RelativeLoadingSample.csx\"",
-                Language.FSharp => "#load \"RelativeLoadingSample.fsx\""
-            };
-
-            var command = new SubmitCode(code);
-            await kernel.SendAsync(command);
-
-            KernelEvents.Should().NotContainErrors();
-
-            KernelEvents.Should()
-                        .ContainSingle<StandardOutputValueProduced>(e => e.FormattedValues.Any(v => v.Value.Contains("hello!")));
-        }
-
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
         public async Task it_returns_completion_list_for_types_imported_at_runtime(Language language)
         {
             var kernel = CreateKernel(language);
