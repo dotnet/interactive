@@ -521,7 +521,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseKernelHelpers()
                     .UseJupyterHelpers()
                     .UseWho()
-                    .UseWhos()
                     .UseMathAndLaTeX()
                     .UseValueSharing()
                     .UseAspNetCore(),
@@ -533,7 +532,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseNugetDirective()
                     .UseKernelHelpers()
                     .UseWho()
-                    .UseWhos()
                     .UseDefaultNamespaces()
                     .UseMathAndLaTeX()
                     .UseValueSharing(),
@@ -552,8 +550,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             compositeKernel.Add(
                 new KeyValueStoreKernel()
-                    .UseWho()
-                    .UseWhos() );
+                    .UseWho());
 
             var kernel = compositeKernel
                          .UseDefaultMagicCommands()

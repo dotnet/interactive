@@ -561,14 +561,12 @@ Formatter.Register<DataFrame>((df, writer) =>
                         .UseNugetDirective()
                         .UseKernelHelpers()
                         .UseWho()
-                        .UseWhos()
                         .LogEventsToPocketLogger();
             var fsk =
                     new FSharpKernel()
                         .UseDefaultFormatting()
                         .UseKernelHelpers()
                         .UseWho()
-                        .UseWhos()
                         .UseDefaultNamespaces()
                         .LogEventsToPocketLogger();
 

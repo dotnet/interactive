@@ -214,13 +214,6 @@ namespace Microsoft.DotNet.Interactive
             where TKernel : Kernel, ISupportGetValue
         {
             kernel.AddDirective(who());
-            Formatter.Register(new CurrentVariablesFormatter());
-            return kernel;
-        }
-
-        public static TKernel UseWhos<TKernel>(this TKernel kernel)
-            where TKernel : Kernel, ISupportGetValue
-        {
             kernel.AddDirective(whos());
             Formatter.Register(new CurrentVariablesFormatter());
             return kernel;
