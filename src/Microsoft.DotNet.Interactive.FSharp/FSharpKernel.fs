@@ -381,10 +381,17 @@ type FSharpKernel () as this =
                    true
                | _ ->
                    false
-    member this.handleGetValueNames() =
+    member this.handleGetValueDescriptors() =
         this.GetCurrentVariables()
-        |> List.map (fun x -> x.Name)
-        :> IReadOnlyCollection<string>
+        |> List.map (fun x -> new ValueDescriptor( x.Name, this.getValueType(x.Name)))
+        :> IReadOnlyCollection<ValueDescriptor>
+
+    member this.getValueType(name:string) = 
+        match script.Value.Fsi.TryFindBoundValue(name) with
+        | Some cv ->
+            cv.Value.ReflectionValue.GetType()            
+        | _ ->
+            null
 
     member this.handleTryGetValue<'a>(name: string, [<Out>] value: 'a byref) =
         match script.Value.Fsi.TryFindBoundValue(name) with
@@ -463,7 +470,7 @@ type FSharpKernel () as this =
             this.DeferCommand(command)
 
     interface ISupportGetValue with
-        member _.GetValueNames() = this.handleGetValueNames()
+        member _.GetValueDescriptors() = this.handleGetValueDescriptors()
         member _.TryGetValue<'a>(name: string, [<Out>] value: 'a byref)  = this.handleTryGetValue(name, &value)
 
     interface ISupportSetValue with

@@ -1282,7 +1282,7 @@ Console.Write(2);
 
             var languageKernel = kernel.ChildKernels.OfType<ISupportGetValue>().Single();
 
-            languageKernel.GetValueNames().Should().Contain("x");
+            languageKernel.GetValueDescriptors().Should().Contain(v => v.Name == "x");
         }
 
         [Theory]

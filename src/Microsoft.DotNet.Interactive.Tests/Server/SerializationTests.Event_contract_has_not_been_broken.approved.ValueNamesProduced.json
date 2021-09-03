@@ -1,1 +1,1 @@
-{"event":{"valueNames":["a","b","c"]},"eventType":"ValueNamesProduced","command":{"token":"the-token","commandType":"RequestValueNames","command":{"targetKernelName":"csharp"}}}
+{"event":{"valueDescriptors":[{"name":"a"},{"name":"b"},{"name":"c"}]},"eventType":"ValueNamesProduced","command":{"token":"the-token","commandType":"RequestValueNames","command":{"targetKernelName":"csharp"}}}
