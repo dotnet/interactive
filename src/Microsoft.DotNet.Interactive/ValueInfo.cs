@@ -8,15 +8,15 @@ namespace Microsoft.DotNet.Interactive
 {
     public class ValueInfo
     {
-        public ValueInfo(string name, Type clrType = null)
+        public ValueInfo(string name, Type type = null)
         {
             Name = name;
-            ClrType = clrType;
+            Type = type;
         }
 
         public string Name { get; }
 
         [JsonIgnore]
-        public Type ClrType { get; }
+        public Type Type { get; }
     }
 }

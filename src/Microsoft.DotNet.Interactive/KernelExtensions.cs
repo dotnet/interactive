@@ -260,19 +260,19 @@ namespace Microsoft.DotNet.Interactive
                 var nameEvents = new List<ValueInfosProduced>();
 
                 var result = await context.HandlingKernel.SendAsync(new RequestValueInfos(context.Command.TargetKernelName));
-                result.KernelEvents.OfType<ValueInfosProduced>().Subscribe(e => nameEvents.Add(e));
+                using var _ = result.KernelEvents.OfType<ValueInfosProduced>().Subscribe(e => nameEvents.Add(e));
 
-                var valueNames = nameEvents.SelectMany(e => e.ValueInfos.Select(d => d.Name)).Distinct().ToList();
+                var valueNames = nameEvents.SelectMany(e => e.ValueInfos.Select(d => d.Name)).Distinct();
 
                 var valueEvents = new List<ValueProduced>();
-                var valueCommands = valueNames.Select(valueName => new RequestValue(valueName, context.HandlingKernel.Name)).ToList();
+                var valueCommands = valueNames.Select(valueName => new RequestValue(valueName, context.HandlingKernel.Name));
 
 
 
                 foreach (var valueCommand in valueCommands)
                 {
                     result = await context.HandlingKernel.SendAsync(valueCommand);
-                    result.KernelEvents.OfType<ValueProduced>().Subscribe(e => valueEvents.Add(e));
+                    using var __ = result.KernelEvents.OfType<ValueProduced>().Subscribe(e => valueEvents.Add(e));
                 }
 
 
