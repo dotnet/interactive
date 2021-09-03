@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
 
@@ -18,8 +17,8 @@ namespace Microsoft.DotNet.Interactive.Events
 
         public ValueProduced(object value,
             string name,
-            RequestValue command,
-            FormattedValue formattedValue = null) : base(command)
+            FormattedValue formattedValue,
+            RequestValue command) : base(command)
         {
             if (string.IsNullOrWhiteSpace(name))
             {
@@ -28,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.Events
 
             Value = value;
             Name = name;
-            FormattedValue = formattedValue;
+            FormattedValue = formattedValue ?? throw new ArgumentNullException(nameof(formattedValue));
         }
     }
 }
