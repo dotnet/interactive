@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Server
     public abstract class KernelEventEnvelope : IKernelEventEnvelope
     {
         private static readonly ConcurrentDictionary<Type, Func<KernelEvent, IKernelEventEnvelope>> _envelopeFactories =
-            new ConcurrentDictionary<Type, Func<KernelEvent, IKernelEventEnvelope>>();
+            new();
 
         private static Dictionary<string, Type> _envelopeTypesByEventTypeName;
 
