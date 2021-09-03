@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             "let x = 123",
             @"using Microsoft.DotNet.Interactive;
 
-(Kernel.Current.FindKernel(""fsharp"") as Microsoft.DotNet.Interactive.ISupportGetValues).TryGetValue(""x"", out int x);
+(Kernel.Current.FindKernel(""fsharp"") as Microsoft.DotNet.Interactive.ISupportGetValue).TryGetValue(""x"", out int x);
 x")]
         [InlineData(
             "#!fsharp",
