@@ -27,8 +27,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
     public class PowerShellKernel :
         Kernel,
-        ISupportGetValues,
-        ISupportSetValues,
+        ISupportGetValue,
+        ISupportSetValue,
         IKernelCommandHandler<RequestCompletions>,
         IKernelCommandHandler<RequestDiagnostics>,
         IKernelCommandHandler<SubmitCode>

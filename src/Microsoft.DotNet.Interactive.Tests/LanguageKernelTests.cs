@@ -1253,7 +1253,7 @@ Console.Write(2);
 
             await kernel.SubmitCodeAsync(codeToSetVariable);
 
-            var languageKernel = kernel.ChildKernels.OfType<ISupportGetValues>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<ISupportGetValue>().Single();
 
             var succeeded = languageKernel.TryGetValue("x", out int x);
 
@@ -1280,7 +1280,7 @@ Console.Write(2);
 
             await kernel.SubmitCodeAsync(codeToSetVariable);
 
-            var languageKernel = kernel.ChildKernels.OfType<ISupportGetValues>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<ISupportGetValue>().Single();
 
             languageKernel.GetValueNames().Should().Contain("x");
         }
@@ -1293,11 +1293,11 @@ Console.Write(2);
         {
             var kernel = CreateKernel(language);
 
-            var languageKernel = kernel.ChildKernels.OfType<ISupportSetValues>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<ISupportSetValue>().Single();
 
             await languageKernel.SetValueAsync("x", 123);
 
-            var succeeded = ((ISupportGetValues)languageKernel).TryGetValue("x", out int x);
+            var succeeded = ((ISupportGetValue)languageKernel).TryGetValue("x", out int x);
 
             using var _ = new AssertionScope();
 
@@ -1313,12 +1313,12 @@ Console.Write(2);
         {
             var kernel = CreateKernel(language);
 
-            var languageKernel = kernel.ChildKernels.OfType<ISupportSetValues>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<ISupportSetValue>().Single();
 
             await languageKernel.SetValueAsync("x", 123);
             await languageKernel.SetValueAsync("x", 456);
 
-            var succeeded = ((ISupportGetValues)languageKernel).TryGetValue("x", out int x);
+            var succeeded = ((ISupportGetValue)languageKernel).TryGetValue("x", out int x);
 
             using var _ = new AssertionScope();
 
@@ -1334,12 +1334,12 @@ Console.Write(2);
         {
             var kernel = CreateKernel(language);
 
-            var languageKernel = kernel.ChildKernels.OfType<ISupportSetValues>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<ISupportSetValue>().Single();
 
             await languageKernel.SetValueAsync("x", 123);
             await languageKernel.SetValueAsync("x", "hello");
 
-            var succeeded = ((ISupportGetValues)languageKernel).TryGetValue("x", out string x);
+            var succeeded = ((ISupportGetValue)languageKernel).TryGetValue("x", out string x);
 
             using var _ = new AssertionScope();
 

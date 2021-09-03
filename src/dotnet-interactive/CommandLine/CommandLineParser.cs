@@ -254,7 +254,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     {
                         switch (k)
                         {
-                            case ISupportSetValues svk:
+                            case ISupportSetValue svk:
                                 await svk.UseJupyterHelpersAsync();
                                 break;
                         }
@@ -423,7 +423,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                 {
                                     switch (k)
                                     {
-                                        case ISupportSetValues svk:
+                                        case ISupportSetValue svk:
                                             await svk.UseVSCodeHelpersAsync(kernel);
                                             break;
                                     }
@@ -523,7 +523,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseWho()
                     .UseWhos()
                     .UseMathAndLaTeX()
-                    .UseVariableSharing()
+                    .UseValueSharing()
                     .UseAspNetCore(),
                 new[] { "c#", "C#" });
 
@@ -536,14 +536,14 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseWhos()
                     .UseDefaultNamespaces()
                     .UseMathAndLaTeX()
-                    .UseVariableSharing(),
+                    .UseValueSharing(),
                 new[] { "f#", "F#" });
 
             compositeKernel.Add(
                 new PowerShellKernel()
                     .UseJupyterHelpers()
                     .UseProfiles()
-                    .UseVariableSharing(),
+                    .UseValueSharing(),
                 new[] { "powershell" });
 
 

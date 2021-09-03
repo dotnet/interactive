@@ -20,8 +20,8 @@ namespace Microsoft.DotNet.Interactive
 {
     public class KeyValueStoreKernel :
         Kernel,
-        ISupportGetValues,
-        ISupportSetValues,
+        ISupportGetValue,
+        ISupportSetValue,
         IKernelCommandHandler<SubmitCode>
     {
         internal const string DefaultKernelName = "value";

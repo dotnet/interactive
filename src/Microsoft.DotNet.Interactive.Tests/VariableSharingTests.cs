@@ -240,14 +240,14 @@ x")]
                 new CSharpKernel()
                     .UseNugetDirective()
                     .UseKernelHelpers()
-                    .UseVariableSharing(),
+                    .UseValueSharing(),
                 new FSharpKernel()
                     .UseNugetDirective()
                     .UseKernelHelpers()
                     .UseDefaultNamespaces() 
-                    .UseVariableSharing(),
+                    .UseValueSharing(),
                 new PowerShellKernel()
-                    .UseVariableSharing()
+                    .UseValueSharing()
             }.LogEventsToPocketLogger();
         }
 
