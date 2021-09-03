@@ -4,19 +4,19 @@
 using System;
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Events
+namespace Microsoft.DotNet.Interactive
 {
     public class ValueInfo
     {
-        public ValueInfo(string name, Type clrValueType = null)
+        public ValueInfo(string name, Type clrType = null)
         {
             Name = name;
-            ClrValueType = clrValueType;
+            ClrType = clrType;
         }
 
         public string Name { get; }
 
         [JsonIgnore]
-        public Type ClrValueType { get; }
+        public Type ClrType { get; }
     }
 }

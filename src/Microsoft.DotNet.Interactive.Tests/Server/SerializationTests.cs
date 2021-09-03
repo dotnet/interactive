@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 $"{nameof(CommandFailed)}.{nameof(CommandFailed.Exception)}",
                 $"{nameof(DisplayEvent)}.{nameof(DisplayEvent.Value)}",
                 $"{nameof(ValueProduced)}.{nameof(ValueProduced.Value)}",
-                $"{nameof(ValueInfo)}.{nameof(ValueInfo.ClrValueType)}"
+                $"{nameof(ValueInfo)}.{nameof(ValueInfo.ClrType)}"
             };
 
             deserializedEnvelope
