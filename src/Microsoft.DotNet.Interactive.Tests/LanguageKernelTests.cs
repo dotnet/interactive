@@ -34,6 +34,45 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Theory]
         [InlineData(Language.FSharp)]
         [InlineData(Language.CSharp)]
+        public async Task it_fails_to_get_value_with_unsupported_mimetype(Language language)
+        {
+            var valueName = "x";
+            var mimeType = "unsupported-mimeType";
+
+            var kernel = CreateKernel(language);
+
+            var source = language switch
+            {
+                Language.FSharp => new[]
+                {
+                    $"let {valueName} = 123"
+                },
+
+                Language.CSharp => new[]
+                {
+                    $"var {valueName} = 123;"
+                }
+            };
+
+            await SubmitCode(kernel, source);
+
+            await kernel.SendAsync(new RequestValue(valueName, kernel.Name, mimeType));
+
+            KernelEvents
+                .OfType<CommandFailed>()
+                .Last()
+                .Exception
+                .Should()
+                .BeOfType<InvalidOperationException>()
+                .Which
+                .Message
+                .Should()
+                .Be($"MimeType {mimeType} is not supported");
+        }
+
+        [Theory]
+        [InlineData(Language.FSharp)]
+        [InlineData(Language.CSharp)]
         public async Task it_returns_the_result_of_a_non_null_expression(Language language)
         {
             var kernel = CreateKernel(language);

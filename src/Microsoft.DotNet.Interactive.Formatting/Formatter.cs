@@ -527,13 +527,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 return defaultFormatter;
             }
-            
-            // Last resort backup 
-            return new AnonymousTypeFormatter<object>((value,  context) =>
-            {
-                context.Writer.Write(value);
-                return true;
-            }, mimeType, actualType);
+
+            // Last resort use preferred mimeType
+
+            var preferredMimeType = GetPreferredMimeTypeFor(actualType);
+
+            return GetPreferredFormatterFor(actualType, preferredMimeType);
         }
 
         internal static ITypeFormatter TryInferPreferredFormatter(Type actualType, string mimeType, IEnumerable<ITypeFormatter> formatters)
