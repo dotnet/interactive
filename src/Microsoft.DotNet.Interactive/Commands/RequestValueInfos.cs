@@ -7,9 +7,9 @@ using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    public class RequestValueNames : KernelCommand
+    public class RequestValueInfos : KernelCommand
     {
-        public RequestValueNames(string targetKernelName) : base(targetKernelName)
+        public RequestValueInfos(string targetKernelName) : base(targetKernelName)
         {
             
         }
@@ -18,11 +18,11 @@ namespace Microsoft.DotNet.Interactive.Commands
         {
             if (context.HandlingKernel is ISupportGetValue supportGetValuesKernel)
             {
-                context.Publish(new ValueNamesProduced(supportGetValuesKernel.GetValueDescriptors(), this));
+                context.Publish(new ValueInfosProduced(supportGetValuesKernel.GetValueInfos(), this));
                 return Task.CompletedTask;
             }
 
-            throw new InvalidOperationException($"Kernel {context.HandlingKernel.Name} doesn't support command {nameof(RequestValueNames)}");
+            throw new InvalidOperationException($"Kernel {context.HandlingKernel.Name} doesn't support command {nameof(RequestValueInfos)}");
         }
     
     }

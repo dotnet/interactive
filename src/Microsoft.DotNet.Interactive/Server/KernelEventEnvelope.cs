@@ -76,7 +76,7 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(StandardOutputValueProduced)] = typeof(KernelEventEnvelope<StandardOutputValueProduced>),
                 [nameof(WorkingDirectoryChanged)] = typeof(KernelEventEnvelope<WorkingDirectoryChanged>),
                 [nameof(KernelExtensionLoaded)] = typeof(KernelEventEnvelope<KernelExtensionLoaded>),
-                [nameof(ValueNamesProduced)] = typeof(KernelEventEnvelope<ValueNamesProduced>),
+                [nameof(ValueInfosProduced)] = typeof(KernelEventEnvelope<ValueInfosProduced>),
                 [nameof(ValueProduced)] = typeof(KernelEventEnvelope<ValueProduced>)
             };
 

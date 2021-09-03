@@ -6,9 +6,9 @@ using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class ValueDescriptor
+    public class ValueInfo
     {
-        public ValueDescriptor(string name, Type clrValueType = null)
+        public ValueInfo(string name, Type clrValueType = null)
         {
             Name = name;
             ClrValueType = clrValueType;

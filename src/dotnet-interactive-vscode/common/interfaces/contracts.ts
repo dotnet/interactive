@@ -18,7 +18,7 @@ export const RequestDiagnosticsType = "RequestDiagnostics";
 export const RequestHoverTextType = "RequestHoverText";
 export const RequestSignatureHelpType = "RequestSignatureHelp";
 export const RequestValueType = "RequestValue";
-export const RequestValueNamesType = "RequestValueNames";
+export const RequestValueInfosType = "RequestValueInfos";
 export const SendEditableCodeType = "SendEditableCode";
 export const SerializeInteractiveDocumentType = "SerializeInteractiveDocument";
 export const SubmitCodeType = "SubmitCode";
@@ -38,7 +38,7 @@ export type KernelCommandType =
     | typeof RequestHoverTextType
     | typeof RequestSignatureHelpType
     | typeof RequestValueType
-    | typeof RequestValueNamesType
+    | typeof RequestValueInfosType
     | typeof SendEditableCodeType
     | typeof SerializeInteractiveDocumentType
     | typeof SubmitCodeType
@@ -104,7 +104,7 @@ export interface RequestValue extends KernelCommand {
     mimeType: string;
 }
 
-export interface RequestValueNames extends KernelCommand {
+export interface RequestValueInfos extends KernelCommand {
 }
 
 export interface SendEditableCode extends KernelCommand {
@@ -172,7 +172,7 @@ export const ReturnValueProducedType = "ReturnValueProduced";
 export const SignatureHelpProducedType = "SignatureHelpProduced";
 export const StandardErrorValueProducedType = "StandardErrorValueProduced";
 export const StandardOutputValueProducedType = "StandardOutputValueProduced";
-export const ValueNamesProducedType = "ValueNamesProduced";
+export const ValueInfosProducedType = "ValueInfosProduced";
 export const ValueProducedType = "ValueProduced";
 export const WorkingDirectoryChangedType = "WorkingDirectoryChanged";
 
@@ -199,7 +199,7 @@ export type KernelEventType =
     | typeof SignatureHelpProducedType
     | typeof StandardErrorValueProducedType
     | typeof StandardOutputValueProducedType
-    | typeof ValueNamesProducedType
+    | typeof ValueInfosProducedType
     | typeof ValueProducedType
     | typeof WorkingDirectoryChangedType;
 
@@ -295,8 +295,8 @@ export interface StandardErrorValueProduced extends DisplayEvent {
 export interface StandardOutputValueProduced extends DisplayEvent {
 }
 
-export interface ValueNamesProduced extends KernelEvent {
-    valueDescriptors: Array<ValueDescriptor>;
+export interface ValueInfosProduced extends KernelEvent {
+    valueInfos: Array<ValueInfo>;
 }
 
 export interface ValueProduced extends KernelEvent {
@@ -386,7 +386,7 @@ export enum SubmissionType {
     Diagnose = 1,
 }
 
-export interface ValueDescriptor {
+export interface ValueInfo {
     name: string;
 }
 

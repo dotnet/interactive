@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Interactive
         {
             if (this is ISupportGetValue supportGetValuesKernel)
             {
-                RegisterCommandHandler<RequestValueNames>((command, context) => command.InvokeAsync(context));
+                RegisterCommandHandler<RequestValueInfos>((command, context) => command.InvokeAsync(context));
 
                 RegisterCommandHandler<RequestValue>((command, context) => command.InvokeAsync(context));
             }

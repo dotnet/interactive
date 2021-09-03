@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 $"{nameof(CommandFailed)}.{nameof(CommandFailed.Exception)}",
                 $"{nameof(DisplayEvent)}.{nameof(DisplayEvent.Value)}",
                 $"{nameof(ValueProduced)}.{nameof(ValueProduced.Value)}",
-                $"{nameof(ValueDescriptor)}.{nameof(ValueDescriptor.ClrValueType)}"
+                $"{nameof(ValueInfo)}.{nameof(ValueInfo.ClrValueType)}"
             };
 
             deserializedEnvelope
@@ -205,7 +205,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new Cancel("csharp");
 
-                yield return new RequestValueNames("csharp");
+                yield return new RequestValueInfos("csharp");
 
                 yield return new RequestValue("a", "csharp",  HtmlFormatter.MimeType );
 
@@ -370,7 +370,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new KernelExtensionLoaded(new SubmitCode(@"#r ""nuget:package"" "));
 
-                yield return new ValueNamesProduced(new[] { new ValueDescriptor("a", typeof(string)), new ValueDescriptor("b", typeof(string)), new ValueDescriptor("c", typeof(string)) }, new RequestValueNames("csharp"));
+                yield return new ValueInfosProduced(new[] { new ValueInfo("a", typeof(string)), new ValueInfo("b", typeof(string)), new ValueInfo("c", typeof(string)) }, new RequestValueInfos("csharp"));
 
                 yield return new ValueProduced("raw value", "a", new FormattedValue(HtmlFormatter.MimeType, "<span>formatted value</span>"), new RequestValue("a", "csharp",  HtmlFormatter.MimeType ));
             }
