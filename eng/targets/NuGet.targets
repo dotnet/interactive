@@ -3,13 +3,6 @@
   <ItemGroup>
     <NuspecProperty Include="Configuration=$(Configuration)" />
     <NuspecProperty Include="TargetFramework=$(TargetFramework)" />
-    <!-- These properties are needed so that version number can be same for MLS.Agent.Tools and the libraries that depend on it -->
-    <NuspecProperty Include="NewtonsoftJsonVersion=$(NewtonsoftJsonVersion)" />
-    <NuspecProperty Include="PocketLoggerVersion=$(PocketLoggerVersion)" />
-    <NuspecProperty Include="SystemDiagnosticsProcessVersion=$(SystemDiagnosticsProcessVersion)" />
-    <NuspecProperty Include="MicrosoftCodeAnalysisCommonVersion=$(MicrosoftCodeAnalysisCommonVersion)" />
-    <NuspecProperty Include="TaskExtensionsVersion=$(TaskExtensionsVersion)" />
-    <NuspecProperty Include="SystemRuntimeExtensionsVersion=$(SystemRuntimeExtensionsVersion)" />
   </ItemGroup>
 
 </Project>
