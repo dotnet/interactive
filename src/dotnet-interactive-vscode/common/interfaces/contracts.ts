@@ -101,7 +101,7 @@ export interface RequestSignatureHelp extends LanguageServiceCommand {
 
 export interface RequestValue extends KernelCommand {
     name: string;
-    mimeTypes: Array<string>;
+    mimeType: string;
 }
 
 export interface RequestValueNames extends KernelCommand {
@@ -301,7 +301,7 @@ export interface ValueNamesProduced extends KernelEvent {
 
 export interface ValueProduced extends KernelEvent {
     name: string;
-    formattedValues: Array<FormattedValue>;
+    formattedValue: FormattedValue;
 }
 
 export interface WorkingDirectoryChanged extends KernelEvent {

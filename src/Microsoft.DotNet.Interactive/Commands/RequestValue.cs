@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Globalization;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -26,10 +28,29 @@ namespace Microsoft.DotNet.Interactive.Commands
             {
                 if (supportGetValuesKernel.TryGetValue(Name, out object value))
                 {
-                    var mimeType = MimeType ?? Formatter.GetPreferredMimeTypeFor(value.GetType());
-                    var formatted = new FormattedValue(mimeType, value?.ToDisplayString(mimeType));
+                    if (value is { })
+                    {
+                        var valueType = value.GetType();
+                        var mimeType = MimeType ?? Formatter.GetPreferredMimeTypeFor(valueType);
+                        var formatter = Formatter.GetPreferredFormatterFor(valueType, mimeType);
+                        if (formatter.MimeType != mimeType)
+                        {
+                            throw new InvalidOperationException($"MimeType {mimeType} is not supported");
+                        }
 
-                    context.Publish(new ValueProduced(value, Name, this, formatted));
+                        using var writer = new StringWriter(CultureInfo.InvariantCulture);
+                        formatter.Format(value, writer);
+                        var formatted = new FormattedValue(mimeType, writer.ToString());
+                        context.Publish(new ValueProduced(value, Name, this, formatted));
+                    }
+                    else
+                    {
+                        var mimeType = MimeType ?? Formatter.GetPreferredMimeTypeFor(typeof(object));
+                        var formatted = new FormattedValue(mimeType, "null");
+
+                        context.Publish(new ValueProduced(value, Name, this, formatted));
+                    }
+
                     return Task.CompletedTask;
                 }
 
