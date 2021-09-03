@@ -1,4 +1,4 @@
- // Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.DotNet.Interactive.FSharp
@@ -8,7 +8,6 @@ open System.Collections.Generic
 open System.Collections.Immutable
 open System.Collections.Concurrent
 open System.IO
-open System.Linq
 open System.Runtime.InteropServices
 open System.Xml
 open System.Text
@@ -381,10 +380,10 @@ type FSharpKernel () as this =
                    true
                | _ ->
                    false
-    member this.handleGetValueDescriptors() =
+    member this.handleGetValueValueInfos() =
         this.GetCurrentVariables()
-        |> List.map (fun x -> new ValueDescriptor( x.Name, this.getValueType(x.Name)))
-        :> IReadOnlyCollection<ValueDescriptor>
+        |> List.map (fun x -> new ValueInfo( x.Name, this.getValueType(x.Name)))
+        :> IReadOnlyCollection<ValueInfo>
 
     member this.getValueType(name:string) = 
         match script.Value.Fsi.TryFindBoundValue(name) with
@@ -470,7 +469,7 @@ type FSharpKernel () as this =
             this.DeferCommand(command)
 
     interface ISupportGetValue with
-        member _.GetValueDescriptors() = this.handleGetValueDescriptors()
+        member _.GetValueInfos() = this.handleGetValueValueInfos()
         member _.TryGetValue<'a>(name: string, [<Out>] value: 'a byref)  = this.handleTryGetValue(name, &value)
 
     interface ISupportSetValue with

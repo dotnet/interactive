@@ -202,7 +202,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             kernel
                 .FindKernel("value")
                 .As<ISupportGetValue>()
-                .GetValueDescriptors()
+                .GetValueInfos()
                 .Should()
                 .NotContain("hi");
         }

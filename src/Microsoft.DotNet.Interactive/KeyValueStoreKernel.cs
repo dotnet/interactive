@@ -37,8 +37,8 @@ namespace Microsoft.DotNet.Interactive
             return Task.CompletedTask;
         }
 
-        public IReadOnlyCollection<ValueDescriptor> GetValueDescriptors() =>
-            _values.Select(e => new ValueDescriptor(e.Key, typeof(string))).ToArray();
+        public IReadOnlyCollection<ValueInfo> GetValueInfos() =>
+            _values.Select(e => new ValueInfo(e.Key, typeof(string))).ToArray();
 
         public bool TryGetValue<T>(string name, out T value)
         {

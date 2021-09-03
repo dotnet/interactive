@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(Quit)] = typeof(KernelCommandEnvelope<Quit>),
                 [nameof(Cancel)] = typeof(KernelCommandEnvelope<Cancel>),
                 [nameof(RequestValue)] = typeof(KernelCommandEnvelope<RequestValue>),
-                [nameof(RequestValueNames)] = typeof(KernelCommandEnvelope<RequestValueNames>)
+                [nameof(RequestValueInfos)] = typeof(KernelCommandEnvelope<RequestValueInfos>)
             };
 
             _commandTypesByCommandTypeName = new ConcurrentDictionary<string, Type>(_envelopeTypesByCommandTypeName

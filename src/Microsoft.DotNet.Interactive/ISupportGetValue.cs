@@ -10,6 +10,6 @@ namespace Microsoft.DotNet.Interactive
     {
         public bool TryGetValue<T>(string name, out T value);
 
-        public IReadOnlyCollection<ValueDescriptor> GetValueDescriptors();
+        public IReadOnlyCollection<ValueInfo> GetValueInfos();
     }
 }

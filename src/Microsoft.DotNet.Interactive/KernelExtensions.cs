@@ -166,7 +166,7 @@ namespace Microsoft.DotNet.Interactive
                 {
                     return composite.ChildKernels
                                     .OfType<ISupportGetValue>()
-                                    .SelectMany(k => k.GetValueDescriptors().Select(vd => vd.Name)).ToArray();
+                                    .SelectMany(k => k.GetValueInfos().Select(vd => vd.Name)).ToArray();
                 }
 
                 return Array.Empty<string>();
@@ -257,12 +257,12 @@ namespace Microsoft.DotNet.Interactive
             if (context.Command is SubmitCode &&
                 context.HandlingKernel is ISupportGetValue)
             {
-                var nameEvents = new List<ValueNamesProduced>();
+                var nameEvents = new List<ValueInfosProduced>();
 
-                var result = await context.HandlingKernel.SendAsync(new RequestValueNames(context.Command.TargetKernelName));
-                result.KernelEvents.OfType<ValueNamesProduced>().Subscribe(e => nameEvents.Add(e));
+                var result = await context.HandlingKernel.SendAsync(new RequestValueInfos(context.Command.TargetKernelName));
+                result.KernelEvents.OfType<ValueInfosProduced>().Subscribe(e => nameEvents.Add(e));
 
-                var valueNames = nameEvents.SelectMany(e => e.ValueDescriptors.Select(d => d.Name)).Distinct().ToList();
+                var valueNames = nameEvents.SelectMany(e => e.ValueInfos.Select(d => d.Name)).Distinct().ToList();
 
                 var valueEvents = new List<ValueProduced>();
                 var valueCommands = valueNames.Select(valueName => new RequestValue(valueName, context.HandlingKernel.Name)).ToList();

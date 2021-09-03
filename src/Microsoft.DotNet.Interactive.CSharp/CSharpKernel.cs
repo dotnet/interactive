@@ -112,12 +112,12 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return Task.FromResult(SyntaxFactory.IsCompleteSubmission(syntaxTree));
         }
 
-        public IReadOnlyCollection<ValueDescriptor> GetValueDescriptors() =>
+        public IReadOnlyCollection<ValueInfo> GetValueInfos() =>
             ScriptState?.Variables
-                       .Select(v => new ValueDescriptor(v.Name, v.Type))
+                       .Select(v => new ValueInfo(v.Name, v.Type))
                        .Distinct()
                        .ToArray() ??
-            Array.Empty<ValueDescriptor>();
+            Array.Empty<ValueInfo>();
 
         public bool TryGetValue<T>(
             string name,
