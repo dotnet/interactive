@@ -166,7 +166,7 @@ namespace Microsoft.DotNet.Interactive
                 {
                     return composite.ChildKernels
                                     .OfType<ISupportGetValue>()
-                                    .SelectMany(k => k.GetValueNames());
+                                    .SelectMany(k => k.GetValueDescriptors().Select(vd => vd.Name)).ToArray();
                 }
 
                 return Array.Empty<string>();
@@ -262,7 +262,7 @@ namespace Microsoft.DotNet.Interactive
                 var result = await context.HandlingKernel.SendAsync(new RequestValueNames(context.Command.TargetKernelName));
                 result.KernelEvents.OfType<ValueNamesProduced>().Subscribe(e => nameEvents.Add(e));
 
-                var valueNames = nameEvents.SelectMany(e => e.ValueNames).Distinct().ToList();
+                var valueNames = nameEvents.SelectMany(e => e.ValueDescriptors.Select(d => d.Name)).Distinct().ToList();
 
                 var valueEvents = new List<ValueProduced>();
                 var valueCommands = valueNames.Select(valueName => new RequestValue(valueName, context.HandlingKernel.Name)).ToList();

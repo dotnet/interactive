@@ -130,16 +130,16 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             _addAccelerator?.Invoke(null, new object[] { name, type });
         }
 
-        public IReadOnlyCollection<string> GetValueNames()
+        public IReadOnlyCollection<ValueDescriptor> GetValueDescriptors()
         {
             var psObject = pwsh.Runspace.SessionStateProxy.InvokeProvider.Item.Get("variable:")?.FirstOrDefault();
 
             if (psObject?.BaseObject is Dictionary<string, PSVariable>.ValueCollection valueCollection)
             {
-                return valueCollection.Select(v => v.Name).ToArray();
+                return valueCollection.Select(v => new ValueDescriptor( v.Name, v.Value?.GetType())).ToArray();
             }
 
-            return Array.Empty<string>();
+            return Array.Empty<ValueDescriptor>();
         }
 
         public bool TryGetValue<T>(string name, out T value)

@@ -14,7 +14,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -38,8 +37,8 @@ namespace Microsoft.DotNet.Interactive
             return Task.CompletedTask;
         }
 
-        public IReadOnlyCollection<string> GetValueNames() =>
-            _values.Keys.ToArray();
+        public IReadOnlyCollection<ValueDescriptor> GetValueDescriptors() =>
+            _values.Select(e => new ValueDescriptor(e.Key, typeof(string))).ToArray();
 
         public bool TryGetValue<T>(string name, out T value)
         {

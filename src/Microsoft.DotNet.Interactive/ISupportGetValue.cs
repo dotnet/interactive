@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -9,6 +10,6 @@ namespace Microsoft.DotNet.Interactive
     {
         public bool TryGetValue<T>(string name, out T value);
 
-        public IReadOnlyCollection<string> GetValueNames();
+        public IReadOnlyCollection<ValueDescriptor> GetValueDescriptors();
     }
 }

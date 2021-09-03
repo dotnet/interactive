@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.Commands
         {
             if (context.HandlingKernel is ISupportGetValue supportGetValuesKernel)
             {
-                context.Publish(new ValueNamesProduced(supportGetValuesKernel.GetValueNames(), this));
+                context.Publish(new ValueNamesProduced(supportGetValuesKernel.GetValueDescriptors(), this));
                 return Task.CompletedTask;
             }
 
