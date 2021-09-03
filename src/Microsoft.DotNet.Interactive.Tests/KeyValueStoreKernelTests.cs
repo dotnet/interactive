@@ -204,7 +204,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .As<ISupportGetValue>()
                 .GetValueInfos()
                 .Should()
-                .NotContain("hi");
+                .NotContain(vi => vi.Name == "hi");
         }
 
         private static CompositeKernel CreateKernel() =>
