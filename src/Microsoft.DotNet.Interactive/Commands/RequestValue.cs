@@ -41,14 +41,14 @@ namespace Microsoft.DotNet.Interactive.Commands
                         using var writer = new StringWriter(CultureInfo.InvariantCulture);
                         formatter.Format(value, writer);
                         var formatted = new FormattedValue(mimeType, writer.ToString());
-                        context.Publish(new ValueProduced(value, Name, this, formatted));
+                        context.Publish(new ValueProduced(value, Name, formatted, this));
                     }
                     else
                     {
                         var mimeType = MimeType ?? Formatter.GetPreferredMimeTypeFor(typeof(object));
                         var formatted = new FormattedValue(mimeType, "null");
 
-                        context.Publish(new ValueProduced(value, Name, this, formatted));
+                        context.Publish(new ValueProduced(value, Name, formatted, this));
                     }
 
                     return Task.CompletedTask;
