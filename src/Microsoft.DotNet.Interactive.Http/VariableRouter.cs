@@ -77,7 +77,7 @@ namespace Microsoft.DotNet.Interactive.Http
                         return;
                     }
                     
-                    if (targetKernel.SupportsCommand<RequestValue>() || targetKernel is ISupportGetValues)
+                    if (targetKernel.SupportsCommand<RequestValue>() || targetKernel is ISupportGetValue)
                     {
                         foreach (var variableName in kernelProperty.Value.Values<string>())
                         {
@@ -127,7 +127,7 @@ namespace Microsoft.DotNet.Interactive.Http
 
         private FormattedValue TryGetValue(Kernel targetKernel, string variableName)
         {
-            if (targetKernel is ISupportGetValues doteNetKernel)
+            if (targetKernel is ISupportGetValue doteNetKernel)
             {
                 if (doteNetKernel.TryGetValue(variableName, out object value))
                 {
@@ -156,7 +156,7 @@ namespace Microsoft.DotNet.Interactive.Http
 
                 var targetKernel = GetKernel(kernelName);
 
-                if (targetKernel is ISupportGetValues languageKernel)
+                if (targetKernel is ISupportGetValue languageKernel)
                 {
                     if (languageKernel.TryGetValue(variableName, out object value))
                     {

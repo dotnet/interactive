@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 {
     public static class KernelExtensions
     {
-        public static Task UseJupyterHelpersAsync<TKernel>(this TKernel kernel) where TKernel : ISupportSetValues
+        public static Task UseJupyterHelpersAsync<TKernel>(this TKernel kernel) where TKernel : ISupportSetValue
         {
             var interactiveHost = new JupyterInteractiveHost();
             return kernel.SetValueAsync("InteractiveHost", interactiveHost, typeof(IInteractiveHost));

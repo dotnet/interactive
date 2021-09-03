@@ -462,11 +462,11 @@ type FSharpKernel () as this =
             let command = new SubmitCode(sb.ToString(), "fsharp")
             this.DeferCommand(command)
 
-    interface ISupportGetValues with
+    interface ISupportGetValue with
         member _.GetValueNames() = this.handleGetValueNames()
         member _.TryGetValue<'a>(name: string, [<Out>] value: 'a byref)  = this.handleTryGetValue(name, &value)
 
-    interface ISupportSetValues with
+    interface ISupportSetValue with
         member _.SetValueAsync(name: string, value: obj, declaredType: Type): Task = this.handleSetValueAsync(name, value, declaredType)
 
     interface IExtensibleKernel with

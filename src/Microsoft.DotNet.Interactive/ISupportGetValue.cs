@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public interface ISupportGetValues
+    public interface ISupportGetValue
     {
         public bool TryGetValue<T>(string name, out T value);
 

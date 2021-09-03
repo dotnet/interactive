@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 #!value --name hi
 {storedValue}");
 
-            var keyValueStoreKernel = (ISupportGetValues) kernel.FindKernel("value");
+            var keyValueStoreKernel = (ISupportGetValue) kernel.FindKernel("value");
 
             keyValueStoreKernel.TryGetValue("hi", out object retrievedValue);
 
@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             await kernel.SubmitCodeAsync(string.Format(code, filePath));
 
-            var keyValueStoreKernel = (ISupportGetValues) kernel.FindKernel("value");
+            var keyValueStoreKernel = (ISupportGetValue) kernel.FindKernel("value");
 
             keyValueStoreKernel.TryGetValue("hi", out object retrievedValue);
 
@@ -117,7 +117,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             await kernel.SubmitCodeAsync("#!value --name hi --from-url http://bing.com");
 
-            var keyValueStoreKernel = (ISupportGetValues) kernel.FindKernel("value");
+            var keyValueStoreKernel = (ISupportGetValue) kernel.FindKernel("value");
 
             keyValueStoreKernel.TryGetValue("hi", out object retrievedValue);
 
@@ -201,7 +201,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             kernel
                 .FindKernel("value")
-                .As<ISupportGetValues>()
+                .As<ISupportGetValue>()
                 .GetValueNames()
                 .Should()
                 .NotContain("hi");

@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.Commands
 
         public override Task InvokeAsync(KernelInvocationContext context)
         {
-            if (context.HandlingKernel is ISupportGetValues supportGetValuesKernel)
+            if (context.HandlingKernel is ISupportGetValue supportGetValuesKernel)
             {
                 context.Publish(new ValueNamesProduced(supportGetValuesKernel.GetValueNames(), this));
                 return Task.CompletedTask;

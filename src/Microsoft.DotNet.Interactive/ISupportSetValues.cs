@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public interface ISupportSetValues
+    public interface ISupportSetValue
     {
         public Task SetValueAsync(string name, object value, Type declaredType = null);
     }

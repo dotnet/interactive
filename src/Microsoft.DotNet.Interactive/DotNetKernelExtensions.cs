@@ -7,7 +7,7 @@ namespace Microsoft.DotNet.Interactive
 {
     public static class DotNetKernelExtensions
     {
-        public static Task SetVariableAsync<T>(this ISupportSetValues kernel, string name, T value)
+        public static Task SetVariableAsync<T>(this ISupportSetValue kernel, string name, T value)
         {
             return kernel.SetValueAsync(name, value, typeof(T));
         }

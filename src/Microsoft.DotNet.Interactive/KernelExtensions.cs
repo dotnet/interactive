@@ -153,8 +153,8 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
-        public static T UseVariableSharing<T>(this T kernel)
-            where T : Kernel, ISupportGetValues
+        public static T UseValueSharing<T>(this T kernel)
+            where T : Kernel, ISupportGetValue
         {
             var variableNameArg = new Argument<string>(
                 "name",
@@ -165,7 +165,7 @@ namespace Microsoft.DotNet.Interactive
                 if (kernel.ParentKernel is { } composite)
                 {
                     return composite.ChildKernels
-                                    .OfType<ISupportGetValues>()
+                                    .OfType<ISupportGetValue>()
                                     .SelectMany(k => k.GetValueNames());
                 }
 
@@ -181,7 +181,7 @@ namespace Microsoft.DotNet.Interactive
                 if (kernel.ParentKernel is { } composite)
                 {
                     return composite.ChildKernels
-                                    .Where(k => k is ISupportGetValues)
+                                    .Where(k => k is ISupportGetValue)
                                     .Select(k => k.Name);
                 }
 
@@ -196,11 +196,11 @@ namespace Microsoft.DotNet.Interactive
 
             share.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (from, name, context) =>
             {
-                if (kernel.FindKernel(from) is ISupportGetValues fromKernel)
+                if (kernel.FindKernel(from) is ISupportGetValue fromKernel)
                 {
                     if (fromKernel.TryGetValue(name, out object shared))
                     {
-                        await ((ISupportSetValues)kernel).SetValueAsync(name, shared);
+                        await ((ISupportSetValue)kernel).SetValueAsync(name, shared);
                     }
                 }
             });
@@ -211,7 +211,7 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public static TKernel UseWho<TKernel>(this TKernel kernel)
-            where TKernel : Kernel, ISupportGetValues
+            where TKernel : Kernel, ISupportGetValue
         {
             kernel.AddDirective(who());
             Formatter.Register(new CurrentVariablesFormatter());
@@ -219,7 +219,7 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public static TKernel UseWhos<TKernel>(this TKernel kernel)
-            where TKernel : Kernel, ISupportGetValues
+            where TKernel : Kernel, ISupportGetValue
         {
             kernel.AddDirective(whos());
             Formatter.Register(new CurrentVariablesFormatter());
@@ -232,7 +232,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 Handler = CommandHandler.Create(async (ParseResult parseResult, KernelInvocationContext context) =>
                 {
-                    await Display(context, false);
+                    await DisplayValues(context, false);
                 })
             };
 
@@ -245,17 +245,17 @@ namespace Microsoft.DotNet.Interactive
             {
                 Handler = CommandHandler.Create(async (ParseResult parseResult, KernelInvocationContext context) =>
                 {
-                    await  Display(context, true);
+                    await  DisplayValues(context, true);
                 })
             };
 
             return command;
         }
 
-        private static async Task Display(KernelInvocationContext context, bool detailed)
+        private static async Task DisplayValues(KernelInvocationContext context, bool detailed)
         {
             if (context.Command is SubmitCode &&
-                context.HandlingKernel is ISupportGetValues)
+                context.HandlingKernel is ISupportGetValue)
             {
                 var nameEvents = new List<ValueNamesProduced>();
 
