@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -23,6 +24,7 @@ using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Tests.Utility
 {
+    [DebuggerStepThrough]
     public static class AssertionExtensions
     {
         public static GenericCollectionAssertions<T> AllSatisfy<T>(

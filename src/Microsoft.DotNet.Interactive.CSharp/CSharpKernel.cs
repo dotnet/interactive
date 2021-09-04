@@ -313,7 +313,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public Task HandleAsync(ChangeWorkingDirectory command, KernelInvocationContext context)
         {
-            _workingDirectory = command.WorkingDirectory;
             return Task.CompletedTask;
         }
 
@@ -322,12 +321,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             CancellationToken cancellationToken = default,
             Func<Exception, bool> catchException = default)
         {
-            if (_workingDirectory == null)
-                _workingDirectory = Directory.GetCurrentDirectory();
-
-            ScriptOptions = ScriptOptions
-                .WithMetadataResolver(CachingMetadataResolver.Default.WithBaseDirectory(_workingDirectory))
-                .WithSourceResolver(new SourceFileResolver(ImmutableArray<string>.Empty, _workingDirectory));
+            UpdateScriptOptionsIfWorkingDirectoryChanged();
 
             if (ScriptState is null)
             {
@@ -335,7 +329,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                                                     code,
                                                     ScriptOptions,
                                                     cancellationToken: cancellationToken)
-                    .UntilCancelled(cancellationToken) ?? ScriptState;
+                                                .UntilCancelled(cancellationToken) ?? ScriptState;
             }
             else
             {
@@ -355,6 +349,20 @@ namespace Microsoft.DotNet.Interactive.CSharp
             if (ScriptState is not null && ScriptState.Exception is null)
             {
                 _workspace.UpdateWorkspace(ScriptState);
+            }
+
+            void UpdateScriptOptionsIfWorkingDirectoryChanged()
+            {
+                var currentDir = Directory.GetCurrentDirectory();
+
+                if (!currentDir.Equals(_workingDirectory, StringComparison.Ordinal))
+                {
+                    _workingDirectory = currentDir;
+
+                    ScriptOptions = ScriptOptions
+                                    .WithMetadataResolver(CachingMetadataResolver.Default.WithBaseDirectory(_workingDirectory))
+                                    .WithSourceResolver(new SourceFileResolver(ImmutableArray<string>.Empty, _workingDirectory));
+                }
             }
         }
 

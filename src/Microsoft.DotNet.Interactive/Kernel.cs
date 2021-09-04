@@ -311,7 +311,6 @@ namespace Microsoft.DotNet.Interactive
                                 {
                                     if (_countOfLanguageServiceCommandsInFlight > 0)
                                     {
-                                    
                                         context.CancelWithSuccess();
                                         return context.Result;
                                     }
