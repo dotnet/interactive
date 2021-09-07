@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
     public class KustoKernelConnection : ConnectKernelCommand<KustoConnectionOptions>
     {
         public KustoKernelConnection()
-            : base("kusto", "Connects to a Microsoft Kusto Server database")
+            : base("kql", "Connects to a Microsoft Kusto Server database")
         {
             Add(new Option<string>(
                 "--cluster",
@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             KustoConnectionOptions options,
             KernelInvocationContext context)
         {
-            var connectionDetails = BuildConnectionDetails(options);
+            var connectionDetails = await BuildConnectionDetailsAsync(options);
 
             var resolvedPackageReferences = ((ISupportNuget)context.HandlingKernel).ResolvedPackageReferences;
             // Walk through the packages looking for the package that endswith the name "Microsoft.SqlToolsService"
@@ -79,23 +79,24 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             return kernel;
         }
 
-        private KustoConnectionDetails BuildConnectionDetails(KustoConnectionOptions options)
+        private async Task<KustoConnectionDetails> BuildConnectionDetailsAsync(KustoConnectionOptions options)
         {
             return new KustoConnectionDetails
             {
                 Cluster = options.Cluster,
                 Database = options.Database,
-                Token = GetKustoToken(options)
+                Token = await GetKustoTokenAsync(options)
             };
         }
 
-        private string GetKustoToken(KustoConnectionOptions options)
+        private static async Task<string> GetKustoTokenAsync(KustoConnectionOptions options)
         {
-            var kcsb = new KustoConnectionStringBuilder(options.Cluster, options.Database).WithAadUserPromptAuthentication();
+            var kcsb = new KustoConnectionStringBuilder(options.Cluster, options.Database)
+                .WithAadUserPromptAuthentication();
             var authenticator = HttpClientAuthenticatorFactory.CreateAuthenticator(kcsb);
             
             var request = new HttpRequestMessage();
-            authenticator.AuthenticateAsync(request).GetAwaiter().GetResult();
+            await authenticator.AuthenticateAsync(request);
 
             // first value of authorization is the auth token
             // stored in <bearer> <token> format
