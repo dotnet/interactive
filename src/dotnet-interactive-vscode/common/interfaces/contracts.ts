@@ -296,7 +296,7 @@ export interface StandardOutputValueProduced extends DisplayEvent {
 }
 
 export interface ValueInfosProduced extends KernelEvent {
-    valueInfos: Array<ValueInfo>;
+    valueInfos: Array<KernelValueInfo>;
 }
 
 export interface ValueProduced extends KernelEvent {
@@ -358,6 +358,10 @@ export interface InteractiveDocumentElement {
     outputs: Array<InteractiveDocumentOutputElement>;
 }
 
+export interface KernelValueInfo {
+    name: string;
+}
+
 export interface PackageReference {
     packageName: string;
     packageVersion: string;
@@ -384,10 +388,6 @@ export interface ParameterInformation {
 export enum SubmissionType {
     Run = 0,
     Diagnose = 1,
-}
-
-export interface ValueInfo {
-    name: string;
 }
 
 export interface KernelEventEnvelope {

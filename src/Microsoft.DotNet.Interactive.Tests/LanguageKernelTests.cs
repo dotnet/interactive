@@ -56,11 +56,12 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             await SubmitCode(kernel, source);
 
-            await kernel.SendAsync(new RequestValue(valueName, kernel.Name, mimeType));
+            var result = await kernel.SendAsync(new RequestValue(valueName, kernel.Name, mimeType));
+            var kernelEvents = result.KernelEvents.ToSubscribedList();
 
-            KernelEvents
-                .OfType<CommandFailed>()
-                .Last()
+            kernelEvents
+                .Should().ContainSingle<CommandFailed>()
+                .Which
                 .Exception
                 .Should()
                 .BeOfType<InvalidOperationException>()
@@ -80,8 +81,9 @@ namespace Microsoft.DotNet.Interactive.Tests
             await SubmitCode(kernel, "123");
 
             KernelEvents
-                .OfType<ReturnValueProduced>()
-                .Last()
+                .Should()
+                .ContainSingle<ReturnValueProduced>()
+                .Which
                 .Value
                 .Should()
                 .Be(123);
@@ -186,8 +188,9 @@ location.EndsWith(""System.Text.Json.dll"")"
             var events = KernelEvents;
 
             events
-                .OfType<ReturnValueProduced>()
-                .Last()
+                .Should()
+                .ContainSingle<ReturnValueProduced>()
+                .Which
                 .Value
                 .Should()
                 .Be(10);
