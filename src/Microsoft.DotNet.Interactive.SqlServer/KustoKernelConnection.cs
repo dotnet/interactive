@@ -25,9 +25,6 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             Add(new Option<string>(
                 "--database",
                 "The database to query"));
-            Add(new Option<bool>(
-                "--login", 
-                "Uses username and password authentication"));
         }
 
         public override async Task<Kernel> CreateKernelAsync(
