@@ -366,24 +366,16 @@ type FSharpKernel () as this =
 
     let _packageRestoreContext = lazy createPackageRestoreContext this.RegisterForDisposal
 
-    member this.GetCurrentVariables() =
+    member this.GetValues() =
         script.Value.Fsi.GetBoundValues()
         |> List.filter (fun x -> x.Name <> "it") // don't report special variable `it`
-        |> List.map (fun x -> CurrentVariable(x.Name, x.Value.ReflectionType, x.Value.ReflectionValue))
+        |> List.map (fun x -> KernelValue( new KernelValueInfo(x.Name, x.Value.ReflectionType), x.Value.ReflectionValue, this.Name))
 
-    
 
-    member this.TryGetVariable(name: string, [<Out>] value: obj byref) =
-        match script.Value.Fsi.TryFindBoundValue(name) with
-               | Some cv ->
-                   value <- cv.Value.ReflectionValue
-                   true
-               | _ ->
-                   false
     member this.handleGetValueValueInfos() =
-        this.GetCurrentVariables()
-        |> List.map (fun x -> new ValueInfo( x.Name, this.getValueType(x.Name)))
-        :> IReadOnlyCollection<ValueInfo>
+        this.GetValues()
+        |> List.map (fun x -> new KernelValueInfo( x.Name, this.getValueType(x.Name)))
+        :> IReadOnlyCollection<KernelValueInfo>
 
     member this.getValueType(name:string) = 
         match script.Value.Fsi.TryFindBoundValue(name) with

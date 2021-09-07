@@ -269,10 +269,10 @@ namespace Microsoft.DotNet.Interactive
                 }
 
 
-                var variables = valueEvents.Select(e => new CurrentVariable(e.Name, e.Value.GetType(), e.Value));
+                var kernelValues = valueEvents.Select(e => new KernelValue( new KernelValueInfo( e.Name, e.Value.GetType()), e.Value, context.HandlingKernel.Name));
 
-                var currentVariables = new CurrentVariables(
-                    variables,
+                var currentVariables = new KernelValues(
+                    kernelValues,
                     detailed);
 
                 var html = currentVariables

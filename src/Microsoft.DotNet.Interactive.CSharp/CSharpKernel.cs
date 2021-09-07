@@ -112,33 +112,34 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return Task.FromResult(SyntaxFactory.IsCompleteSubmission(syntaxTree));
         }
 
-        public IReadOnlyCollection<ValueInfo> GetValueInfos() =>
+        public IReadOnlyCollection<KernelValueInfo> GetValueInfos() =>
             ScriptState?.Variables
-                       .Select(v => new ValueInfo(v.Name, v.Type))
+                       .Select(v => new KernelValueInfo(v.Name, v.Type))
                        .Distinct()
                        .ToArray() ??
-            Array.Empty<ValueInfo>();
+            Array.Empty<KernelValueInfo>();
 
         public bool TryGetValue<T>(
             string name,
             out T value)
         {
-            if (TryGetVariable(name, out var rawValue))
-            {
-                value = (T)rawValue;
-                return true;
-            }
-
-            value = default;
-            return false;
-        }
-
-        private bool TryGetVariable(string name, out object value)
-        {
+            object rawValue;
+            bool ret;
             if (ScriptState?.Variables
                 .LastOrDefault(v => v.Name == name) is { } variable)
             {
-                value = variable.Value;
+                rawValue = variable.Value;
+                ret = true;
+            }
+            else
+            {
+                rawValue = default;
+                ret = false;
+            }
+
+            if (ret)
+            {
+                value = (T)rawValue;
                 return true;
             }
 

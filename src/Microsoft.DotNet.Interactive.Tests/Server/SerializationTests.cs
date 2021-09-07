@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 $"{nameof(CommandFailed)}.{nameof(CommandFailed.Exception)}",
                 $"{nameof(DisplayEvent)}.{nameof(DisplayEvent.Value)}",
                 $"{nameof(ValueProduced)}.{nameof(ValueProduced.Value)}",
-                $"{nameof(ValueInfo)}.{nameof(ValueInfo.Type)}"
+                $"{nameof(KernelValueInfo)}.{nameof(KernelValueInfo.Type)}"
             };
 
             deserializedEnvelope
@@ -370,7 +370,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new KernelExtensionLoaded(new SubmitCode(@"#r ""nuget:package"" "));
 
-                yield return new ValueInfosProduced(new[] { new ValueInfo("a", typeof(string)), new ValueInfo("b", typeof(string)), new ValueInfo("c", typeof(string)) }, new RequestValueInfos("csharp"));
+                yield return new ValueInfosProduced(new[] { new KernelValueInfo("a", typeof(string)), new KernelValueInfo("b", typeof(string)), new KernelValueInfo("c", typeof(string)) }, new RequestValueInfos("csharp"));
 
                 yield return new ValueProduced("raw value", "a", new FormattedValue(HtmlFormatter.MimeType, "<span>formatted value</span>"), new RequestValue("a", "csharp",  HtmlFormatter.MimeType ));
             }

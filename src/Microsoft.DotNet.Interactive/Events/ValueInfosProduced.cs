@@ -8,9 +8,9 @@ namespace Microsoft.DotNet.Interactive.Events
 {
     public class ValueInfosProduced : KernelEvent
     {
-        public IReadOnlyCollection<ValueInfo> ValueInfos { get; }
+        public IReadOnlyCollection<KernelValueInfo> ValueInfos { get; }
 
-        public ValueInfosProduced(IReadOnlyCollection<ValueInfo> valueInfos, RequestValueInfos command) : base(command)
+        public ValueInfosProduced(IReadOnlyCollection<KernelValueInfo> valueInfos, RequestValueInfos command) : base(command)
         {
             ValueInfos = valueInfos;
         }

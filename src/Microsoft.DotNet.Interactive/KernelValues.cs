@@ -8,11 +8,11 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public class CurrentVariables : IEnumerable<CurrentVariable>
+    public class KernelValues : IEnumerable<KernelValue>
     {
-        private readonly Dictionary<string, CurrentVariable> _variables = new Dictionary<string, CurrentVariable>();
+        private readonly Dictionary<string, KernelValue> _variables = new();
 
-        public CurrentVariables(IEnumerable<CurrentVariable> variables, bool detailed)
+        public KernelValues(IEnumerable<KernelValue> variables, bool detailed)
             : this(detailed)
         {
             if (variables is null)
@@ -26,14 +26,14 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private CurrentVariables(bool detailed)
+        private KernelValues(bool detailed)
         {
             Detailed = detailed;
         }
 
         public bool Detailed { get; }
 
-        public IEnumerator<CurrentVariable> GetEnumerator() => _variables.Values.GetEnumerator();
+        public IEnumerator<KernelValue> GetEnumerator() => _variables.Values.GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
