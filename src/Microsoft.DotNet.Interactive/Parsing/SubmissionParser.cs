@@ -137,7 +137,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                         if (parseResult.CommandResult.Command.Name == "#r")
                         {
-                            var value = parseResult.ValueForArgument<PackageReferenceOrFileInfo>("package");
+                            var packageArg = (Argument<PackageReferenceOrFileInfo>)parseResult.CommandResult.Command.Arguments.Single(a => a.Name == "package");
+                            var value = parseResult.GetValueForArgument(packageArg);
 
                             if (value?.Value is FileInfo)
                             {
@@ -281,7 +282,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     new CommandLineBuilder(_rootCommand)
                         .ParseResponseFileAs(ResponseFileHandling.Disabled)
                         .UseTypoCorrections()
-                        .UseHelpBuilder(bc => new DirectiveHelpBuilder(_rootCommand.Name))
+                        .UseHelpBuilder(_ => new DirectiveHelpBuilder(_rootCommand.Name))
                         .UseHelp()
                         .UseMiddleware(
                             context =>

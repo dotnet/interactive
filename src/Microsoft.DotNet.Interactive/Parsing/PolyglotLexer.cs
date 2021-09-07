@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
         private TextWindow _textWindow;
         private readonly SourceText _sourceText;
         private readonly PolyglotSyntaxTree _syntaxTree;
-        private readonly List<SyntaxToken> _tokens = new List<SyntaxToken>();
+        private readonly List<SyntaxToken> _tokens = new();
 
         public PolyglotLexer(SourceText sourceText, PolyglotSyntaxTree syntaxTree)
         {

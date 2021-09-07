@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Parsing;
@@ -34,7 +33,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             DefaultLanguage = defaultLanguage;
             _sourceText = sourceText;
             _rootKernelDirectiveParser = rootKernelDirectiveParser;
-            _subkernelInfoByKernelName = subkernelInfoByKernelName ?? new ConcurrentDictionary<string, (KernelUri kernelUri, Func<Parser> getParser)>();
+            _subkernelInfoByKernelName = subkernelInfoByKernelName;
         }
 
         public PolyglotSyntaxTree Parse()
@@ -58,10 +57,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
         private void ParseSubmission(PolyglotSubmissionNode rootNode)
         {
             var currentKernelName = DefaultLanguage;
-            _subkernelInfoByKernelName.TryGetValue(currentKernelName ?? "", out var currentKernelInfo);
+            _subkernelInfoByKernelName.TryGetValue(currentKernelName, out var currentKernelInfo);
             
             var currentKernelIsProxy = false;
-            if (TryGetChooseKernelDirectiveInfo(currentKernelName?? "", out var chooseKernelDirectiveInfo))
+            if (TryGetChooseKernelDirectiveInfo(currentKernelName, out var chooseKernelDirectiveInfo))
             {
                 currentKernelIsProxy = chooseKernelDirectiveInfo.IsProxyKernel;
             }
@@ -100,7 +99,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                                 currentKernelName = directiveToken.DirectiveName;
                             }
 
-                            if (_subkernelInfoByKernelName.TryGetValue(currentKernelName ?? string.Empty, out currentKernelInfo))
+                            if (_subkernelInfoByKernelName.TryGetValue(currentKernelName, out currentKernelInfo))
                             {
                                 directiveNode.KernelUri = currentKernelInfo.kernelUri;
                             }
@@ -112,12 +111,11 @@ namespace Microsoft.DotNet.Interactive.Parsing
                                 _sourceText,
                                 currentKernelName ?? DefaultLanguage,
                                 rootNode.SyntaxTree);
-                            if (_subkernelInfoByKernelName.TryGetValue(directiveNode.KernelName ?? string.Empty,
+                            if (_subkernelInfoByKernelName.TryGetValue(directiveNode.KernelName,
                                 out currentKernelInfo))
                             {
                                 directiveNode.KernelUri = currentKernelInfo.kernelUri;
                             }
-
                         }
 
                         switch (directiveNode)
@@ -143,14 +141,16 @@ namespace Microsoft.DotNet.Interactive.Parsing
                                 {
                                     var parseResult = directiveNode.GetDirectiveParseResult();
                                     if (_subkernelInfoByKernelName.TryGetValue(currentKernelName ?? string.Empty,
-                                        out currentKernelInfo))
+                                                                               out currentKernelInfo))
                                     {
                                         directiveNode.KernelUri = currentKernelInfo.kernelUri;
                                     }
 
                                     if (parseResult.Errors.Count == 0)
                                     {
-                                        var value = parseResult.ValueForArgument<PackageReferenceOrFileInfo>("package");
+                                        var packageArg = (Argument<PackageReferenceOrFileInfo>)parseResult.CommandResult.Command.Arguments.Single(a => a.Name == "package");
+
+                                        var value = parseResult.GetValueForArgument(packageArg);
 
                                         if (value?.Value is FileInfo)
                                         {

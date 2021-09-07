@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Help;
 using System.CommandLine.IO;
+using System.IO;
 
 namespace Microsoft.DotNet.Interactive.Parsing
 {
@@ -13,17 +14,15 @@ namespace Microsoft.DotNet.Interactive.Parsing
         private readonly string _rootCommandName;
         private readonly Dictionary<ISymbol, string> _directiveHelp = new();
 
-        public DirectiveHelpBuilder(string rootCommandName) : base(new SystemConsole())
+        public DirectiveHelpBuilder(string rootCommandName) : base(Resources.Instance)
         {
             _rootCommandName = rootCommandName;
         }
 
-        public override void Write(ICommand command)
+        public override void Write(ICommand command, TextWriter writer)
         {
-            var capturingConsole = new TestConsole();
-            new HelpBuilder(capturingConsole).Write(command);
-            Console.Out.Write(
-                CleanUp(capturingConsole));
+            new HelpBuilder(Resources.Instance).Write(command, writer);
+            writer.Write(CleanUp(writer));
         }
 
         public string GetHelpForSymbol(ISymbol symbol)
@@ -33,31 +32,31 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 return help;
             }
 
-            var console = new TestConsole();
-            var helpBuilder = new HelpBuilder(console);
+            var writer = new StringWriter();
+            var helpBuilder = new HelpBuilder(Resources.Instance);
 
             switch (symbol)
             {
                 case ICommand command:
-                    helpBuilder.Write(command);
+                    helpBuilder.Write(command, writer);
                     break;
                 case IOption option:
                     var helpItem = GetHelpItem(option);
 
-                    console.Out.WriteLine($"{helpItem.Descriptor} {helpItem.Description}");
+                    writer.WriteLine($"{helpItem.Descriptor} {helpItem.Description}");
 
                     break;
             }
 
-            help = CleanUp(console);
+            help = CleanUp(writer);
 
             _directiveHelp[symbol] = help;
 
             return help;
         }
 
-        private string CleanUp(TestConsole capturingConsole) =>
-            capturingConsole.Out
+        private string CleanUp(TextWriter writer) =>
+            writer
                             .ToString()
                             .Replace(_rootCommandName + " ", "");
 
