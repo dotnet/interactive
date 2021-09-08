@@ -10,11 +10,11 @@ using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive
 {
-    /* This kernel is used as a placeholder for the MSSQL kernel in order to enable SQL language coloring
-* in the editor. Language grammars can only be defined for fixed kernel names, but MSSQL subkernels
+    /* This kernel is used as a placeholder for the MSKQL kernel in order to enable KQL language coloring
+* in the editor. Language grammars can only be defined for fixed kernel names, but MSKQL subkernels
 * are user-defined via the #!connect magic command. So, this kernel is specified in addition to the
 * user-defined kernel as a kind of "styling" kernel as well as to provide guidance and discoverability
-* for SQL features.
+* for KQL features.
 */
     public class KQLKernel :
         Kernel,
@@ -61,7 +61,7 @@ Now, you can connect to a Microsoft Kusto Server database by running the followi
     #!connect kql --kernel-name mydatabase --cluster ""https://help.kusto.windows.net"" --database ""Samples""
     </pre>
 </code>
-<p>Once a connection is established, you can send SQL statements by prefixing them with the magic command for your connection.</p>
+<p>Once a connection is established, you can send KQL statements by prefixing them with the magic command for your connection.</p>
 <code>
     <pre>
     #!kql-mydatabase
