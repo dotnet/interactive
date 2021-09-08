@@ -7,7 +7,7 @@ using Microsoft.DotNet.Interactive.ExtensionLab;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
-    public class KustoKernelExtension : IKernelExtension
+    public class KqlKernelExtension : IKernelExtension
     {
         public Task OnLoadAsync(Kernel kernel)
         {
@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 kernel.UseSandDanceExplorer();
 
                 compositeKernel
-                    .UseKernelClientConnection(new KustoKernelConnection());
+                    .UseKernelClientConnection(new KqlKernelConnection());
 
                 KernelInvocationContext.Current?.Display(
                     new HtmlString(@"<details><summary>Query Microsoft Kusto Server databases.</summary>

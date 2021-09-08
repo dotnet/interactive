@@ -15,6 +15,7 @@ export const notebookCellLanguages: Array<string> = [
     'dotnet-interactive.javascript',
     'dotnet-interactive.pwsh',
     'dotnet-interactive.sql',
+    'dotnet-interactive.kql',
 ];
 
 export const defaultNotebookCellLanguage = notebookCellLanguages[0];

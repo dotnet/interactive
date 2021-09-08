@@ -14,9 +14,9 @@ using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
-    public class KustoKernelConnection : ConnectKernelCommand<KustoConnectionOptions>
+    public class KqlKernelConnection : ConnectKernelCommand<KqlConnectionOptions>
     {
-        public KustoKernelConnection()
+        public KqlKernelConnection()
             : base("kql", "Connects to a Microsoft Kusto Server database")
         {
             Add(new Option<string>(
@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         }
 
         public override async Task<Kernel> CreateKernelAsync(
-            KustoConnectionOptions options,
+            KqlConnectionOptions options,
             KernelInvocationContext context)
         {
             var connectionDetails = await BuildConnectionDetailsAsync(options);
@@ -66,8 +66,8 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
             var sqlClient = new MsSqlServiceClient(pathToService);
 
-            var kernel = new MsKustoKernel(
-                $"kusto-{options.KernelName}",
+            var kernel = new MsKqlKernel(
+                $"kql-{options.KernelName}",
                 connectionDetails, 
                 sqlClient);
 
@@ -76,9 +76,9 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             return kernel;
         }
 
-        private async Task<KustoConnectionDetails> BuildConnectionDetailsAsync(KustoConnectionOptions options)
+        private async Task<KqlConnectionDetails> BuildConnectionDetailsAsync(KqlConnectionOptions options)
         {
-            return new KustoConnectionDetails
+            return new KqlConnectionDetails
             {
                 Cluster = options.Cluster,
                 Database = options.Database,
@@ -86,7 +86,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             };
         }
 
-        private static async Task<string> GetKustoTokenAsync(KustoConnectionOptions options)
+        private static async Task<string> GetKustoTokenAsync(KqlConnectionOptions options)
         {
             var kcsb = new KustoConnectionStringBuilder(options.Cluster, options.Database)
                 .WithAadUserPromptAuthentication();
