@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Parsing;
@@ -28,12 +29,12 @@ namespace Microsoft.DotNet.Interactive.Parsing
             SourceText sourceText,
             string defaultLanguage,
             Parser rootKernelDirectiveParser,
-            IDictionary<string, (KernelUri kernelUri, Func<Parser> getParser)> subkernelInfoByKernelName)
+            IDictionary<string, (KernelUri kernelUri, Func<Parser> getParser)>? subkernelInfoByKernelName)
         {
             DefaultLanguage = defaultLanguage;
             _sourceText = sourceText;
             _rootKernelDirectiveParser = rootKernelDirectiveParser;
-            _subkernelInfoByKernelName = subkernelInfoByKernelName;
+            _subkernelInfoByKernelName = subkernelInfoByKernelName ?? new ConcurrentDictionary<string, (KernelUri kernelUri, Func<Parser> getParser)>();
         }
 
         public PolyglotSyntaxTree Parse()
@@ -57,10 +58,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
         private void ParseSubmission(PolyglotSubmissionNode rootNode)
         {
             var currentKernelName = DefaultLanguage;
-            _subkernelInfoByKernelName.TryGetValue(currentKernelName, out var currentKernelInfo);
+            _subkernelInfoByKernelName.TryGetValue(currentKernelName ?? "", out var currentKernelInfo);
             
             var currentKernelIsProxy = false;
-            if (TryGetChooseKernelDirectiveInfo(currentKernelName, out var chooseKernelDirectiveInfo))
+            if (TryGetChooseKernelDirectiveInfo(currentKernelName?? "", out var chooseKernelDirectiveInfo))
             {
                 currentKernelIsProxy = chooseKernelDirectiveInfo.IsProxyKernel;
             }
@@ -99,7 +100,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                                 currentKernelName = directiveToken.DirectiveName;
                             }
 
-                            if (_subkernelInfoByKernelName.TryGetValue(currentKernelName, out currentKernelInfo))
+                            if (_subkernelInfoByKernelName.TryGetValue(currentKernelName ?? string.Empty, out currentKernelInfo))
                             {
                                 directiveNode.KernelUri = currentKernelInfo.kernelUri;
                             }
@@ -111,7 +112,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                                 _sourceText,
                                 currentKernelName ?? DefaultLanguage,
                                 rootNode.SyntaxTree);
-                            if (_subkernelInfoByKernelName.TryGetValue(directiveNode.KernelName,
+                            if (_subkernelInfoByKernelName.TryGetValue(directiveNode.KernelName ?? string.Empty,
                                 out currentKernelInfo))
                             {
                                 directiveNode.KernelUri = currentKernelInfo.kernelUri;

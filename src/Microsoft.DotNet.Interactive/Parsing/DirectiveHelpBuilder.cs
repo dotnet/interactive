@@ -4,7 +4,6 @@
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Help;
-using System.CommandLine.IO;
 using System.IO;
 
 namespace Microsoft.DotNet.Interactive.Parsing
@@ -21,8 +20,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         public override void Write(ICommand command, TextWriter writer)
         {
-            new HelpBuilder(Resources.Instance).Write(command, writer);
-            writer.Write(CleanUp(writer));
+            var buffer = new StringWriter();
+            new HelpBuilder(Resources.Instance).Write(command, buffer);
+            var buffer2 = CleanUp(buffer.ToString());
+            writer.Write(buffer2);
         }
 
         public string GetHelpForSymbol(ISymbol symbol)
@@ -48,39 +49,14 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     break;
             }
 
-            help = CleanUp(writer);
+            help = CleanUp(writer.ToString());
 
             _directiveHelp[symbol] = help;
 
             return help;
         }
 
-        private string CleanUp(TextWriter writer) =>
-            writer
-                            .ToString()
-                            .Replace(_rootCommandName + " ", "");
-
-        private class SystemConsole : IConsole
-        {
-            public IStandardStreamWriter Out { get; } = new StandardOutStreamWriter();
-
-            public bool IsOutputRedirected => System.Console.IsOutputRedirected;
-
-            public IStandardStreamWriter Error { get; } = new StandardErrorStreamWriter();
-
-            public bool IsErrorRedirected => System.Console.IsErrorRedirected;
-
-            public bool IsInputRedirected => System.Console.IsInputRedirected;
-
-            private class StandardOutStreamWriter : IStandardStreamWriter
-            {
-                public void Write(string value) => System.Console.Out.Write(value);
-            }
-
-            private class StandardErrorStreamWriter : IStandardStreamWriter
-            {
-                public void Write(string value) => System.Console.Error.Write(value);
-            }
-        }
+        private string CleanUp(string outputIncludingRootCommand) =>
+            outputIncludingRootCommand.Replace(_rootCommandName + " ", "");
     }
 }

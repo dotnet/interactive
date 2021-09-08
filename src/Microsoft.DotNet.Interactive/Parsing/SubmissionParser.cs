@@ -14,13 +14,15 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 
+#nullable enable
+
 namespace Microsoft.DotNet.Interactive.Parsing
 {
     public class SubmissionParser
     {
         private readonly Kernel _kernel;
-        private Parser _directiveParser;
-        private RootCommand _rootCommand;
+        private Parser? _directiveParser;
+        private RootCommand? _rootCommand;
 
         public SubmissionParser(Kernel kernel)
         {
@@ -36,7 +38,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         public string KernelLanguage { get; internal set; }
 
-        public PolyglotSyntaxTree Parse(string code, string language = null)
+        public PolyglotSyntaxTree Parse(string code, string? language = null)
         {
             var sourceText = SourceText.From(code);
 
@@ -68,7 +70,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
         private delegate KernelCommand CreateChildCommand(
             LanguageNode languageNode,
             KernelCommand parentCommand,
-            KernelNameDirectiveNode kernelNameDirectiveNode);
+            KernelNameDirectiveNode? kernelNameDirectiveNode);
 
         private IReadOnlyList<KernelCommand> SplitSubmission(
             KernelCommand originalCommand,
@@ -80,10 +82,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
             var hoistedCommandsIndex = 0;
 
             var tree = Parse(code, originalCommand.TargetKernelName);
-            var nodes = tree.GetRoot().ChildNodes.ToArray();
+            var nodes = tree.GetRoot()?.ChildNodes.ToArray() ?? Array.Empty<SyntaxNode>();
             var targetKernelName = originalCommand.TargetKernelName ?? KernelLanguage;
             var lastKernelUri = originalCommand.KernelUri;
-            KernelNameDirectiveNode lastKernelNameNode = null;
+            KernelNameDirectiveNode? lastKernelNameNode = null;
 
             foreach (var node in nodes)
             {
@@ -245,9 +247,9 @@ namespace Microsoft.DotNet.Interactive.Parsing
             }
         }
 
-        internal IDictionary<string, (KernelUri kernelUri, Func<Parser> getParser)> GetSubkernelDirectiveParsers()
+        internal IDictionary<string, (KernelUri kernelUri, Func<Parser> getParser)>? GetSubkernelDirectiveParsers()
         {
-            if (!(_kernel is CompositeKernel compositeKernel))
+            if (_kernel is not CompositeKernel compositeKernel)
             {
                 return null;
             }
@@ -282,7 +284,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     new CommandLineBuilder(_rootCommand)
                         .ParseResponseFileAs(ResponseFileHandling.Disabled)
                         .UseTypoCorrections()
-                        .UseHelpBuilder(_ => new DirectiveHelpBuilder(_rootCommand.Name))
+                        .UseHelpBuilder(_ => new DirectiveHelpBuilder(_rootCommand?.Name))
                         .UseHelp()
                         .UseMiddleware(
                             context =>
@@ -318,7 +320,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             EnsureRootCommandIsInitialized();
 
-            _rootCommand.Add(command);
+            _rootCommand?.Add(command);
 
             ResetParser();
         }
