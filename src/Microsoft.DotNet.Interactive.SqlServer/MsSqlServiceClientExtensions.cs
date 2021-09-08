@@ -17,14 +17,14 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             return await serviceClient.ConnectAsync(connectionParams);
         }
         
-        public static async Task<bool> ConnectAsync(this MsSqlServiceClient serviceClient, Uri ownerUri, KustoConnectionDetails kustoDetails)
+        public static async Task<bool> ConnectAsync(this MsSqlServiceClient serviceClient, Uri ownerUri, KqlConnectionDetails kqlDetails)
         {
             var connectionOptions = new Dictionary<string, string>
             {
-                {"server", kustoDetails.Cluster},
-                {"database", kustoDetails.Database},
-                {"azureAccountToken", kustoDetails.Token},
-                {"authenticationType", kustoDetails.AuthenticationType}
+                {"server", kqlDetails.Cluster},
+                {"database", kqlDetails.Database},
+                {"azureAccountToken", kqlDetails.Token},
+                {"authenticationType", kqlDetails.AuthenticationType}
             };
             
             var connectionParams = new ConnectParams

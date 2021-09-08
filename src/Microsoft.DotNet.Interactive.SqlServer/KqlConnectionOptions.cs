@@ -2,7 +2,7 @@
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
-    public class KustoConnectionOptions : KernelConnectionOptions
+    public class KqlConnectionOptions : KernelConnectionOptions
     {
         public string Cluster { get; set; }
         public string Database { get; set; }

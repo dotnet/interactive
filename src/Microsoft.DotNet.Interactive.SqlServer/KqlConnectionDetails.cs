@@ -1,6 +1,6 @@
 ﻿namespace Microsoft.DotNet.Interactive.SqlServer
 {
-    public class KustoConnectionDetails
+    public class KqlConnectionDetails
     {
         public string Cluster { get; set; }
         public string Database { get; set; }

@@ -12,13 +12,13 @@ using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
-    public class MsKustoKernel : ToolsServiceKernel
+    public class MsKqlKernel : ToolsServiceKernel
     {
-        private readonly KustoConnectionDetails _connectionDetails;
+        private readonly KqlConnectionDetails _connectionDetails;
 
-        public MsKustoKernel(
+        public MsKqlKernel(
             string name,
-            KustoConnectionDetails connectionDetails,
+            KqlConnectionDetails connectionDetails,
             MsSqlServiceClient client) : base(name, client)
         {
             if (connectionDetails is null)
@@ -65,11 +65,11 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         }
 
         protected override ChooseKernelDirective CreateChooseKernelDirective() =>
-            new ChooseMsKustoKernelDirective(this);
+            new ChooseKqlKernelDirective(this);
 
-        private class ChooseMsKustoKernelDirective : ChooseKernelDirective
+        private class ChooseKqlKernelDirective : ChooseKernelDirective
         {
-            public ChooseMsKustoKernelDirective(Kernel kernel) : base(kernel, $"Run a Kusto query using the \"{kernel.Name}\" connection.")
+            public ChooseKqlKernelDirective(Kernel kernel) : base(kernel, $"Run a Kusto query using the \"{kernel.Name}\" connection.")
             {
                 Add(MimeTypeOption);
             }
