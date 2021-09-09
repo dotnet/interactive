@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
             // TODO: remove KQLKernel it is used to test current patch
             var kernel = new CompositeKernel
             {
-                new KQLKernel(),
+                new KqlKernel(),
                 csharpKernel,
                 new KeyValueStoreKernel()
             };

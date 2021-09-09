@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
                 KernelInvocationContext.Current?.Display(
                     new HtmlString(@"<details><summary>Query Microsoft Kusto Server databases.</summary>
-    <p>This extension adds support for connecting to Microsoft Kusto Server databases using the <code>#!connect kusto</code> magic command. For more information, run a cell using the <code>#!kusto</code> magic command.</p>
+    <p>This extension adds support for connecting to Microsoft Kusto Server databases using the <code>#!connect kql</code> magic command. For more information, run a cell using the <code>#!kql</code> magic command.</p>
     </details>"),
                     "text/html");
             }

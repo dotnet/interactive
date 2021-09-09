@@ -384,6 +384,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
                    .BeEquivalentTo(
                        ".NET",
                        "sql",
+                       "kql",
                        "csharp",
                        "fsharp",
                        "pwsh",

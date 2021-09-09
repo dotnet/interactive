@@ -119,7 +119,7 @@
     },
     {
       "//comment": " User-defined functions-https://docs.microsoft.com/en-us/azure/kusto/query/functions/user-defined-functions",
-      "match": "\\.create-or-alter",
+      "match": "\\.(create-or-alter|show)",
       "name": "keyword.functions.kql"
     },
     {

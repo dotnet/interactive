@@ -613,7 +613,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             // TODO: temporary measure to support vscode integrations
             compositeKernel.Add(new SQLKernel());
-            compositeKernel.Add(new KQLKernel());
+            compositeKernel.Add(new KqlKernel());
 
             compositeKernel.Add(
                 new CSharpKernel()
