@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
     {
         public InteractiveDocument ParseDib(string content)
         {
-            return CodeSubmission.Parse( content,"csharp", KernelLanguageAliases);
+            return CodeSubmission.Parse(content, "csharp", KernelLanguageAliases);
         }
 
         public string SerializeDib(InteractiveDocument interactive, string newLine)
@@ -193,11 +193,13 @@ Get-Item
                 });
         }
 
-        [Fact]
-        public void markdown_cells_can_be_parsed_even_though_its_not_a_kernel_language()
+        [Theory]
+        [InlineData("markdown")]
+        [InlineData("md")]
+        public void markdown_cells_can_be_parsed_even_though_its_not_a_kernel_language(string cellLanguage)
         {
-            var notebook = ParseDib(@"
-#!markdown
+            var notebook = ParseDib($@"
+#!{cellLanguage}
 
 This is `markdown`.
 ");

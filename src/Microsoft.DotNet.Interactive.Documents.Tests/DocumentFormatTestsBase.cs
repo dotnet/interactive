@@ -17,7 +17,6 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 new("csharp", new[] { "cs", "C#", "c#" }),
                 new("fsharp", new[] { "fs", "F#", "f#" }),
                 new("pwsh", new[] { "powershell" }),
-                new("markdown", new[] { "md" }),
             };
         }
     }
