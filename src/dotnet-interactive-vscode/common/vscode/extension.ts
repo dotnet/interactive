@@ -138,7 +138,7 @@ export async function activate(context: vscode.ExtensionContext) {
             await transport.setExternalUri({ externalUri, localUri });
         }
         catch (e) {
-            vscode.window.showErrorMessage(`Error configuring http connection with .NET Interactive on ${externalUri.toString()} : ${e.message}`);
+            vscode.window.showErrorMessage(`Error configuring http connection with .NET Interactive on ${externalUri.toString()} : ${(<any>e)?.message}`);
         }
 
         return transport;
