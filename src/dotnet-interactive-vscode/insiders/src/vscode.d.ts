@@ -502,7 +502,7 @@ declare module 'vscode' {
 		constructor(anchorLine: number, anchorCharacter: number, activeLine: number, activeCharacter: number);
 
 		/**
-		 * A selection is reversed if {@link Selection.active active}.isBefore({@link Selection.anchor anchor}).
+		 * A selection is reversed if its {@link Selection.anchor anchor} is the {@link Selection.end end} position.
 		 */
 		isReversed: boolean;
 	}
@@ -4737,8 +4737,8 @@ declare module 'vscode' {
 		 * @param document The document in which the command was invoked.
 		 * @param position The position at which the command was invoked.
 		 * @param token A cancellation token.
-		 * @returns A call hierarchy item or a thenable that resolves to such. The lack of a result can be
-		 * signaled by returning `undefined` or `null`.
+		 * @returns One or multiple call hierarchy items or a thenable that resolves to such. The lack of a result can be
+		 * signaled by returning `undefined`, `null`, or an empty array.
 		 */
 		prepareCallHierarchy(document: TextDocument, position: Position, token: CancellationToken): ProviderResult<CallHierarchyItem | CallHierarchyItem[]>;
 
@@ -6420,6 +6420,17 @@ declare module 'vscode' {
 		 */
 		static Test: TaskGroup;
 
+		/**
+		 * Whether the task that is part of this group is the default for the group.
+		 * This property cannot be set through API, and is controlled by a user's task configurations.
+		 */
+		readonly isDefault?: boolean;
+
+		/**
+		 * The ID of the task group. Is one of TaskGroup.Clean.id, TaskGroup.Build.id, TaskGroup.Rebuild.id, or TaskGroup.Test.id.
+		 */
+		readonly id: string;
+
 		private constructor(id: string, label: string);
 	}
 
@@ -7014,6 +7025,18 @@ declare module 'vscode' {
 		SymbolicLink = 64
 	}
 
+	export enum FilePermission {
+		/**
+		 * The file is readonly.
+		 *
+		 * *Note:* All `FileStat` from a `FileSystemProvider` that is registered with
+		 * the option `isReadonly: true` will be implicitly handled as if `FilePermission.Readonly`
+		 * is set. As a consequence, it is not possible to have a readonly file system provider
+		 * registered where some `FileStat` are not readonly.
+		 */
+		Readonly = 1
+	}
+
 	/**
 	 * The `FileStat`-type represents metadata about a file
 	 */
@@ -7045,6 +7068,12 @@ declare module 'vscode' {
 		 * example.
 		 */
 		size: number;
+		/**
+		 * The permissions of the file, e.g. whether the file is readonly.
+		 *
+		 * *Note:* This value might be a bitmask, e.g. `FilePermission.Readonly | FilePermission.Other`.
+		 */
+		permissions?: FilePermission;
 	}
 
 	/**
@@ -7396,6 +7425,14 @@ declare module 'vscode' {
 		 * Defaults to false (scripts-disabled).
 		 */
 		readonly enableScripts?: boolean;
+
+		/**
+		 * Controls whether forms are enabled in the webview content or not.
+		 *
+		 * Defaults to true if {@link enableScripts scripts are enabled}. Otherwise defaults to false.
+		 * Explicitly setting this property to either true or false overrides the default.
+		 */
+		readonly enableForms?: boolean;
 
 		/**
 		 * Controls whether command uris are enabled in webview content or not.
@@ -8179,6 +8216,11 @@ declare module 'vscode' {
 		 * environment that has no representation of an application root folder.
 		 */
 		export const appRoot: string;
+
+		/**
+		 * The environment in which the app is hosted in. i.e. 'desktop', 'codespaces', 'web'.
+		 */
+		export const appHost: string;
 
 		/**
 		 * The custom uri scheme the editor registers to in the operating system.
@@ -9250,7 +9292,7 @@ declare module 'vscode' {
 		 * Get {@link TreeItem} representation of the `element`
 		 *
 		 * @param element The element for which {@link TreeItem} representation is asked for.
-		 * @return {@link TreeItem} representation of the element
+		 * @return TreeItem representation of the element.
 		 */
 		getTreeItem(element: T): TreeItem | Thenable<TreeItem>;
 
@@ -9484,6 +9526,13 @@ declare module 'vscode' {
 		 * The icon path or {@link ThemeIcon} for the terminal.
 		 */
 		iconPath?: Uri | { light: Uri; dark: Uri } | ThemeIcon;
+
+		/**
+		 * The icon {@link ThemeColor} for the terminal.
+		 * The `terminal.ansi*` theme keys are
+		 * recommended for the best contrast and consistency across themes.
+		 */
+		color?: ThemeColor;
 	}
 
 	/**
@@ -9505,6 +9554,13 @@ declare module 'vscode' {
 		 * The icon path or {@link ThemeIcon} for the terminal.
 		 */
 		iconPath?: Uri | { light: Uri; dark: Uri } | ThemeIcon;
+
+		/**
+		 * The icon {@link ThemeColor} for the terminal.
+		 * The standard `terminal.ansi*` theme keys are
+		 * recommended for the best contrast and consistency across themes.
+		 */
+		color?: ThemeColor;
 	}
 
 	/**
@@ -9975,7 +10031,8 @@ declare module 'vscode' {
 		buttons: readonly QuickInputButton[];
 
 		/**
-		 * An event signaling when a button was triggered.
+		 * An event signaling when a button in the title bar was triggered.
+		 * This event does not fire for buttons on a {@link QuickPickItem}.
 		 */
 		readonly onDidTriggerButton: Event<QuickInputButton>;
 
@@ -10468,8 +10525,8 @@ declare module 'vscode' {
 		export const fs: FileSystem;
 
 		/**
-		 * The workspace folder that is open in the editor. `undefined` when no workspace
-		 * has been opened.
+		 * The uri of the first entry of {@linkcode workspace.workspaceFolders workspaceFolders}
+		 * as `string`. `undefined` if there is no first entry.
 		 *
 		 * Refer to https://code.visualstudio.com/docs/editor/workspaces for more information
 		 * on workspaces.
@@ -10479,13 +10536,11 @@ declare module 'vscode' {
 		export const rootPath: string | undefined;
 
 		/**
-		 * List of workspace folders that are open in the editor. `undefined` when no workspace
+		 * List of workspace folders (0-N) that are open in the editor. `undefined` when no workspace
 		 * has been opened.
 		 *
 		 * Refer to https://code.visualstudio.com/docs/editor/workspaces for more information
 		 * on workspaces.
-		 *
-		 * *Note* that the first entry corresponds to the value of `rootPath`.
 		 */
 		export const workspaceFolders: readonly WorkspaceFolder[] | undefined;
 
@@ -10919,7 +10974,7 @@ declare module 'vscode' {
 		 * @param scope A scope for which the configuration is asked for.
 		 * @return The full configuration or a subset.
 		 */
-		export function getConfiguration(section?: string | undefined, scope?: ConfigurationScope | null): WorkspaceConfiguration;
+		export function getConfiguration(section?: string, scope?: ConfigurationScope | null): WorkspaceConfiguration;
 
 		/**
 		 * An event that is emitted when the {@link WorkspaceConfiguration configuration} changed.
@@ -11539,7 +11594,7 @@ declare module 'vscode' {
 		/**
 		 * The metadata of this cell. Can be anything but must be JSON-stringifyable.
 		 */
-		readonly metadata: { [key: string]: any }
+		readonly metadata: { [key: string]: any };
 
 		/**
 		 * The outputs of this cell.
@@ -11675,7 +11730,7 @@ declare module 'vscode' {
 		readonly executionOrder?: number;
 
 		/**
-		 * If the exclusive finished successfully.
+		 * If the execution finished successfully.
 		 */
 		readonly success?: boolean;
 
@@ -13778,7 +13833,7 @@ declare module 'vscode' {
 		 * to the editor that implement GitHub and Microsoft authentication: their providerId's are 'github' and 'microsoft'.
 		 * @param providerId The id of the provider to use
 		 * @param scopes A list of scopes representing the permissions requested. These are dependent on the authentication provider
-		 * @param options The {@link GetSessionOptions} to use
+		 * @param options The {@link AuthenticationGetSessionOptions} to use
 		 * @returns A thenable that resolves to an authentication session
 		 */
 		export function getSession(providerId: string, scopes: readonly string[], options: AuthenticationGetSessionOptions & { createIfNone: true }): Thenable<AuthenticationSession>;
@@ -13793,7 +13848,7 @@ declare module 'vscode' {
 		 * to the editor that implement GitHub and Microsoft authentication: their providerId's are 'github' and 'microsoft'.
 		 * @param providerId The id of the provider to use
 		 * @param scopes A list of scopes representing the permissions requested. These are dependent on the authentication provider
-		 * @param options The {@link GetSessionOptions} to use
+		 * @param options The {@link AuthenticationGetSessionOptions} to use
 		 * @returns A thenable that resolves to an authentication session if available, or undefined if there are no sessions
 		 */
 		export function getSession(providerId: string, scopes: readonly string[], options?: AuthenticationGetSessionOptions): Thenable<AuthenticationSession | undefined>;
@@ -13923,7 +13978,7 @@ declare module 'vscode' {
 
 		/**
 		 * A collection of "top-level" {@link TestItem} instances, which can in
-		 * turn have their own {@link TestItem.children | children} to form the
+		 * turn have their own {@link TestItem.children children} to form the
 		 * "test tree."
 		 *
 		 * The extension controls when to add tests. For example, extensions should
