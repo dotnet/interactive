@@ -119,10 +119,10 @@ namespace Microsoft.DotNet.Interactive
 
             using var stream = new MemoryStream(rawData);
 
-            var kernelNames = _kernelsByNameOrAlias
-                .GroupBy(x => x.Value.Name)
+            var kernelNames = kernelLanguageAliases
+                .GroupBy(x => x.Value)
                 .Select(g => new KernelName(g.Key, g.Select(f => f.Key).ToArray()))
-                .ToArray();
+                .ToList();
 
             var notebook = Read(fileName, stream, DefaultKernelName, kernelNames);
             return notebook;

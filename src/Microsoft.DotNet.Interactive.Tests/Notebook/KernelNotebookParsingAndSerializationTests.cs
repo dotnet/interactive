@@ -49,6 +49,35 @@ var x = 1;
         }
 
         [Fact]
+        public async Task composite_kernel_excludes_parent_dotNET_kernel_from_acceptable_cell_language_splitters_in_dib()
+        {
+            using var kernel = CreateCompositeKernel();
+
+            // the composite kernel calls itself ".NET" but we don't want to allow splitting cells on that language; instead we
+            // want `#!.NET` to be considered a magic command in whatever the current cell is
+            var notebookText = @"
+#!.NET
+var x = 1;
+";
+            var notebookBytes = Encoding.UTF8.GetBytes(notebookText);
+
+            await kernel.SendAsync(new ParseInteractiveDocument("notebook.dib", notebookBytes, ".NET"));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<InteractiveDocumentParsed>()
+                .Which
+                .Document
+                .Elements
+                .Should()
+                .ContainSingle()
+                .Which
+                .Contents
+                .Should()
+                .Be("#!.NET\nvar x = 1;");
+        }
+
+        [Fact]
         public async Task composite_kernel_can_parse_jupter_notebook()
         {
             using var kernel = CreateCompositeKernel();
