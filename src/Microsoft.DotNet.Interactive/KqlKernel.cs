@@ -11,19 +11,19 @@ using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 namespace Microsoft.DotNet.Interactive
 {
     /* This kernel is used as a placeholder for the MSKQL kernel in order to enable KQL language coloring
-* in the editor. Language grammars can only be defined for fixed kernel names, but MSKQL subkernels
-* are user-defined via the #!connect magic command. So, this kernel is specified in addition to the
-* user-defined kernel as a kind of "styling" kernel as well as to provide guidance and discoverability
-* for KQL features.
-*/
-    public class KQLKernel :
+    * in the editor. Language grammars can only be defined for fixed kernel names, but MSKQL subkernels
+    * are user-defined via the #!connect magic command. So, this kernel is specified in addition to the
+    * user-defined kernel as a kind of "styling" kernel as well as to provide guidance and discoverability
+    * for KQL features.
+    */
+    public class KqlKernel :
         Kernel,
         IKernelCommandHandler<SubmitCode>
     {
         private readonly HashSet<string> _kernelNameFilter;
-        public const string DefaultKernelName = "kql";
+        private const string DefaultKernelName = "kql";
 
-        public KQLKernel() : base(DefaultKernelName)
+        public KqlKernel() : base(DefaultKernelName)
         {
             _kernelNameFilter = new HashSet<string>
             {

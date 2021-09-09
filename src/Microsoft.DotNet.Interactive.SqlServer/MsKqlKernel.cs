@@ -4,7 +4,6 @@
 using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.CommandLine.Parsing;
 using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
@@ -86,7 +85,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 switch (kernelInvocationContext.Command)
                 {
                     case SubmitCode c:
-                        var mimeType = commandLineInvocationContext.ParseResult.FindResultFor(MimeTypeOption)?.GetValueOrDefault();
+                        var mimeType = commandLineInvocationContext.ParseResult.ValueForOption(MimeTypeOption);
 
                         c.Properties.Add("mime-type", mimeType);
                         break;

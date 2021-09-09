@@ -11,8 +11,8 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             var connectionOptions = new Dictionary<string, string>();
             connectionOptions.Add("ConnectionString", connectionStr);
 
-            var connectionDetails = new ConnectionDetails() {Options = connectionOptions};
-            var connectionParams = new ConnectParams() {OwnerUri = ownerUri.AbsolutePath, Connection = connectionDetails};
+            var connectionDetails = new ConnectionDetails {Options = connectionOptions};
+            var connectionParams = new ConnectParams {OwnerUri = ownerUri.AbsolutePath, Connection = connectionDetails};
 
             return await serviceClient.ConnectAsync(connectionParams);
         }
