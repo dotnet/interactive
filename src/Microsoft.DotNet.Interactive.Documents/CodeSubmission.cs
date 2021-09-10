@@ -63,7 +63,9 @@ namespace Microsoft.DotNet.Interactive.Documents
             if (!splittingKernelNames.Exists(kn => kn.Name == "markdown"))
             {
                 splittingKernelNames.Add(new KernelName("markdown", new[] { "md" }));
-            }            var mapOfKernelNamesByAlias = splittingKernelNames.ToMapOfKernelNamesByAlias();
+            }            
+            
+            var mapOfKernelNamesByAlias = splittingKernelNames.ToMapOfKernelNamesByAlias();
 
             foreach (var line in lines)
             {
