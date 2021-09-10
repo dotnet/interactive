@@ -58,8 +58,12 @@ namespace Microsoft.DotNet.Interactive.Documents
             }
 
             var splittingKernelNames = kernelNames.ToList();
-            splittingKernelNames.Add(new KernelName("markdown", new[] { "md" })); // not a kernel language, but still a valid cell splitter
-            var mapOfKernelNamesByAlias = splittingKernelNames.ToMapOfKernelNamesByAlias();
+
+            // not a kernel language, but still a valid cell splitter
+            if (!splittingKernelNames.Exists(kn => kn.Name == "markdown"))
+            {
+                splittingKernelNames.Add(new KernelName("markdown", new[] { "md" }));
+            }            var mapOfKernelNamesByAlias = splittingKernelNames.ToMapOfKernelNamesByAlias();
 
             foreach (var line in lines)
             {
