@@ -19,7 +19,7 @@ variables:
   - name: _DotNetArtifactsCategory
     value: .NETCore
   - name: DotNetSdkVersion
-    value: '5.0.100'
+    value: '5.0.400'
   - name: PocketLoggerLogPath
     value: $(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)
   - name: TryDotNetPackagesPath

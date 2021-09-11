@@ -163,7 +163,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 "),
                 ("global.json", @"{
   ""sdk"": {
-    ""version"": ""5.0.100"",
+    ""version"": ""5.0.400"",
     ""rollForward"": ""latestMinor""
   }
 }
@@ -284,7 +284,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 "),
                 ("global.json", @"{
   ""sdk"": {
-    ""version"": ""5.0.100"",
+    ""version"": ""5.0.400"",
     ""rollForward"": ""latestMinor""
   }
 }
