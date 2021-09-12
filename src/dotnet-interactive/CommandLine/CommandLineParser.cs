@@ -557,7 +557,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                          .UseLogMagicCommand()
                          .UseAboutMagicCommand()
                          .UseKernelClientConnection(new ConnectNamedPipe())
-                         .UseKernelClientConnection(new ConnectSignalR());
+                         .UseKernelClientConnection(new ConnectSignalR())
+                         .UseKernelClientConnection(new ConnectStdIO());
 
             if (startupOptions.Verbose)
             {

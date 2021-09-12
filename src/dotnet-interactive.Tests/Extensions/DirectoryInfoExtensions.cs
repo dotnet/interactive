@@ -1,15 +1,14 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-
 using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.App.IntegrationTests.Utility
+namespace Microsoft.DotNet.Interactive.App.Tests.Extensions
 {
-    public static class DirectoryTestHelper
+    internal static class DirectoryInfoExtensions
     {
         public static async Task<bool> WaitForFileCondition(this FileInfo file, TimeSpan timeout, Func<FileInfo, bool> predicate)
         {
