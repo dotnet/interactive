@@ -5,6 +5,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
+using Microsoft.DotNet.Interactive.Documents.ParserServer;
 
 namespace Microsoft.DotNet.Interactive.Server
 {
@@ -19,7 +20,9 @@ namespace Microsoft.DotNet.Interactive.Server
                 NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
                 Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             };
+            JsonSerializerOptions.Converters.Add(new ByteArrayConverter());
             JsonSerializerOptions.Converters.Add(new DataDictionaryConverter());
+            JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
             JsonSerializerOptions.Converters.Add(new NotebookCellOutputConverter());
             JsonSerializerOptions.Converters.Add(new FileSystemInfoJsonConverter());
         }

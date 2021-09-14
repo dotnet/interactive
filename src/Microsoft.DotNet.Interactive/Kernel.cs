@@ -622,15 +622,6 @@ namespace Microsoft.DotNet.Interactive
             {
                 switch (command, this)
                 {
-                    case (ParseInteractiveDocument parseNotebook, IKernelCommandHandler<ParseInteractiveDocument> parseNotebookHandler):
-                        SetHandler(parseNotebookHandler, parseNotebook);
-                        break;
-
-                    case (SerializeInteractiveDocument serializeNotebook, IKernelCommandHandler<SerializeInteractiveDocument>
-                        serializeNotebookHandler):
-                        SetHandler(serializeNotebookHandler, serializeNotebook);
-                        break;
-
                     case (SubmitCode submitCode, IKernelCommandHandler<SubmitCode> submitCodeHandler):
                         SetHandler(submitCodeHandler, submitCode);
                         break;

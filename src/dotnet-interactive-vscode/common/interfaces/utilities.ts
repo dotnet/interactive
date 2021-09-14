@@ -47,3 +47,31 @@ export function reshapeOutputValueForVsCode(value: Uint8Array | string, mime: st
         return value;
     }
 }
+
+export function isUint8Array(arg: any): arg is Uint8Array {
+    return arg
+        && (typeof arg.length === 'number' || arg.type === 'Buffer');
+}
+
+export function isNotebookParserServerResponse(arg: any): arg is contracts.NotebookParserServerResponse {
+    return arg
+        && typeof arg.id === 'string';
+}
+
+export function isNotebookParseResponse(arg: any): arg is contracts.NotebookParseResponse {
+    return arg
+        && typeof arg.id === 'string'
+        && typeof arg.document === 'object';
+}
+
+export function isNotebookSerializeResponse(arg: any): arg is contracts.NotebookSerializeResponse {
+    return arg
+        && typeof arg.id === 'string'
+        && isUint8Array(arg.rawData);
+}
+
+export function isNotebookParserServerError(arg: any): arg is contracts.NotebookErrorResponse {
+    return arg
+        && typeof arg.id === 'string'
+        && typeof arg.errorMessage === 'string';
+}

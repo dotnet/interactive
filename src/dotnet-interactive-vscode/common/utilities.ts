@@ -7,6 +7,7 @@ import * as path from 'path';
 import { v4 as uuid } from 'uuid';
 import { InstallInteractiveArgs, ProcessStart } from "./interfaces";
 import { NotebookCellOutput, NotebookCellOutputItem, ReportChannel, Uri } from './interfaces/vscode-like';
+import * as contracts from './interfaces/contracts';
 
 export function executeSafe(command: string, args: Array<string>, workingDirectory?: string | undefined): Promise<{ code: number, output: string, error: string }> {
     return new Promise<{ code: number, output: string, error: string }>(resolve => {
@@ -231,6 +232,12 @@ export function stringify(value: any): string {
             return buffer.toString('base64');
         }
 
+        if (key.indexOf('/') > 0 && Array.isArray(value.data) && value.type === 'Buffer') {
+            // this looks like a cell output where `key` is a mime type and `value` is a UTF-8 string
+            const buffer = Buffer.from(value);
+            return buffer.toString('utf-8');
+        }
+
         return value;
     });
 }
@@ -260,5 +267,17 @@ export function isVersionSufficient(firstVersion: string, secondVersion: string)
         return compareVersions.compare(firstVersion, secondVersion, '>=');
     } catch (_) {
         return false;
+    }
+}
+
+export function extensionToDocumentType(extension: string): contracts.DocumentSerializationType {
+    switch (extension) {
+        case '.dib':
+        case '.dotnet-interactive':
+            return contracts.DocumentSerializationType.Dib;
+        case '.ipynb':
+            return contracts.DocumentSerializationType.Ipynb;
+        default:
+            throw new Error(`Unsupported notebook extension '${extension}'`);
     }
 }

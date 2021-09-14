@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Documents;
+using Microsoft.DotNet.Interactive.Documents.ParserServer;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.VSCode;
 
@@ -36,7 +37,19 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
             typeof(KernelEvent),
             typeof(DisplayElement),
             typeof(TextElement),
-            typeof(ErrorElement)
+            typeof(ErrorElement),
+        };
+
+        private static readonly HashSet<Type> ParserServerTypes = new()
+        {
+            // requests
+            typeof(NotebookParseRequest),
+            typeof(NotebookSerializeRequest),
+
+            // responses
+            typeof(NotebookParseResponse),
+            typeof(NotebookSerializeResponse),
+            typeof(NotebookErrorResponse),
         };
 
         private static readonly HashSet<string> OptionalFields = new()
@@ -121,6 +134,11 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
             {
                 GenerateType(builder, type, emittedTypes, additionalTypes);
             }
+
+            foreach (var type in ParserServerTypes)
+            {
+                GenerateType(builder, type, emittedTypes, additionalTypes);
+            }
         }
 
         private static void GenerateType(StringBuilder builder, Type type, ISet<Type> emittedTypes, ICollection<Type> requiredTypes)
@@ -144,6 +162,7 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 
             builder.AppendLine();
             builder.AppendLine($"export interface {TypeName(type)} {extends}{{");
+
             foreach (var property in GetProperties(type))
             {
                 builder.AppendLine($"    {PropertyName(type, property)}: {GetTypeScriptTypeName(property.PropertyType)};");
@@ -206,9 +225,9 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
         {
             builder.AppendLine();
             builder.AppendLine($"export enum {type.Name} {{");
-            foreach (var (name, value) in type.GetEnumNames().Zip(type.GetEnumValues().Cast<int>()))
+            foreach (var name in type.GetEnumNames())
             {
-                builder.AppendLine($"    {name} = {value},");
+                builder.AppendLine($"    {name} = \"{name.ToLowerInvariant()}\",");
             }
 
             builder.AppendLine("}");

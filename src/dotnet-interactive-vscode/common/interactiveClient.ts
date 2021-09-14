@@ -23,15 +23,6 @@ import {
     KernelEventEnvelopeObserver,
     KernelEventType,
     KernelTransport,
-    InteractiveDocument,
-    InteractiveDocumentParsed,
-    InteractiveDocumentParsedType,
-    InteractiveDocumentSerialized,
-    InteractiveDocumentSerializedType,
-    ParseInteractiveDocument,
-    ParseInteractiveDocumentType,
-    SerializeInteractiveDocument,
-    SerializeInteractiveDocumentType,
     RequestCompletions,
     RequestCompletionsType,
     RequestDiagnostics,
@@ -51,7 +42,6 @@ import {
     CancelType,
     Cancel
 } from './interfaces/contracts';
-import { Eol } from './interfaces';
 import { clearDebounce, createOutput } from './utilities';
 
 import * as vscodeLike from './interfaces/vscode-like';
@@ -106,26 +96,6 @@ export class InteractiveClient {
         catch {
             return null;
         }
-    }
-    async parseNotebook(fileName: string, rawData: Uint8Array, token?: string | undefined): Promise<InteractiveDocument> {
-        const command: ParseInteractiveDocument = {
-            fileName,
-            rawData,
-            targetKernelName: '.NET' // this command MUST be handled by the composite kernel
-        };
-        const notebookParsed = await this.submitCommandAndGetResult<InteractiveDocumentParsed>(command, ParseInteractiveDocumentType, InteractiveDocumentParsedType, token);
-        return notebookParsed.document;
-    }
-
-    async serializeNotebook(fileName: string, document: InteractiveDocument, eol: Eol, token?: string | undefined): Promise<Uint8Array> {
-        const command: SerializeInteractiveDocument = {
-            fileName,
-            document,
-            newLine: eol,
-            targetKernelName: '.NET' // this command MUST be handled by the composite kernel
-        };
-        const serializedInteractiveDocument = await this.submitCommandAndGetResult<InteractiveDocumentSerialized>(command, SerializeInteractiveDocumentType, InteractiveDocumentSerializedType, token);
-        return serializedInteractiveDocument.rawData;
     }
 
     private clearExistingLanguageServiceRequests(requestId: string) {

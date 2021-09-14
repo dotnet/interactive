@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -292,7 +293,7 @@ var x = 1;
         [Fact]
         public void extra_blank_lines_are_removed_from_beginning_and_end_on_save()
         {
-            var cells = new[]
+            var cells = new List<InteractiveDocumentElement>()
             {
                 new InteractiveDocumentElement("csharp", "\n\n\n\n// this is csharp\n\n\n")
             };
@@ -314,7 +315,7 @@ var x = 1;
         [Fact]
         public void empty_cells_are_not_serialized()
         {
-            var cells = new[]
+            var cells = new List<InteractiveDocumentElement>()
             {
                 new InteractiveDocumentElement("csharp", ""),
                 new InteractiveDocumentElement("fsharp", "// this is fsharp"),
@@ -340,7 +341,7 @@ var x = 1;
         [InlineData("\r\n")]
         public void multiple_cells_are_serialized_with_appropriate_separators(string newline)
         {
-            var cells = new[]
+            var cells = new List<InteractiveDocumentElement>()
             {
                 new InteractiveDocumentElement("csharp", $"// C# line 1{newline}// C# line 2"),
                 new InteractiveDocumentElement("fsharp", $"// F# line 1{newline}// F# line 2"),

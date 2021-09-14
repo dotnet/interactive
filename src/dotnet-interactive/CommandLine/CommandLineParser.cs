@@ -9,6 +9,7 @@ using System.CommandLine.Invocation;
 using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.IO;
+using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,6 +19,7 @@ using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.AspNetCore;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Documents.ParserServer;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Http;
@@ -60,6 +62,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             KernelServer kernel,
             IConsole console);
 
+        public delegate Task StartNotebookParser(
+            NotebookParserServer notebookParserServer);
+
         public delegate Task StartHttp(
             StartupOptions options,
             IConsole console,
@@ -72,6 +77,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             Jupyter jupyter = null,
             StartStdIO startStdIO = null,
             StartVSCode startVSCode = null,
+            StartNotebookParser startNotebookParser = null,
             StartHttp startHttp = null,
             Action onServerStarted = null,
             ITelemetry telemetry = null,
@@ -102,6 +108,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             startStdIO ??= StdIOCommand.Do;
 
             startVSCode ??= VSCodeCommand.Do;
+
+            startNotebookParser ??= ParseNotebookCommand.Do;
 
             startHttp ??= HttpCommand.Do;
 
@@ -177,6 +185,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             rootCommand.AddCommand(Jupyter());
             rootCommand.AddCommand(StdIO());
             rootCommand.AddCommand(VSCode());
+            rootCommand.AddCommand(NotebookParser());
             rootCommand.AddCommand(HttpServer());
 
             return new CommandLineBuilder(rootCommand)
@@ -189,7 +198,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                        }
 
                        // If sentinel does not exist, print the welcome message showing the telemetry notification.
-                       if (!Telemetry.Telemetry.SkipFirstTimeExperience && 
+                       if (!Telemetry.Telemetry.SkipFirstTimeExperience &&
                            !firstTimeUseNoticeSentinel.Exists())
                        {
                            context.Console.Out.WriteLine();
@@ -253,7 +262,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 {
                     var frontendEnvironment = new HtmlNotebookFrontendEnvironment();
                     var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
-                   
+
                     kernel.Add(
                         new JavaScriptKernel(),
                         new[] { "js" });
@@ -333,7 +342,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     {
                         var frontendEnvironment = new BrowserFrontendEnvironment();
                         var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
-                        
+
                         kernel.Add(
                             new JavaScriptKernel(),
                             new[] { "js" });
@@ -409,8 +418,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 stdIOCommand.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext>(
                     async (startupOptions, options, console, context) =>
                     {
-                        FrontendEnvironment frontendEnvironment = startupOptions.EnableHttpApi 
-                            ? new HtmlNotebookFrontendEnvironment() 
+                        FrontendEnvironment frontendEnvironment = startupOptions.EnableHttpApi
+                            ? new HtmlNotebookFrontendEnvironment()
                             : new BrowserFrontendEnvironment();
 
                         var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
@@ -422,10 +431,10 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                         if (startupOptions.EnableHttpApi)
                         {
-                            var clientSideKernelClient =new SignalRBackchannelKernelClient();
+                            var clientSideKernelClient = new SignalRBackchannelKernelClient();
 
                             services.AddSingleton(clientSideKernelClient);
-                              
+
                             kernel.Add(
                                 new JavaScriptKernel(clientSideKernelClient),
                                 new[] { "js" });
@@ -566,6 +575,21 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 return vscodeCommand;
             }
 
+            Command NotebookParser()
+            {
+                var notebookParserCommand = new Command(
+                    "notebook-parser",
+                    "Starts a process to parse and serialize notebooks.");
+                notebookParserCommand.Handler = CommandHandler.Create(async () =>
+                {
+                    Console.InputEncoding = Encoding.UTF8;
+                    Console.OutputEncoding = Encoding.UTF8;
+                    var notebookParserServer = new NotebookParserServer(Console.In, Console.Out);
+                    await startNotebookParser(notebookParserServer);
+                });
+                return notebookParserCommand;
+            }
+
             static HttpPortRange ParsePortRangeOption(ArgumentResult result)
             {
                 var source = result.Tokens[0].Value;
@@ -668,7 +692,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             SetUpFormatters(frontendEnvironment);
 
             kernel.DefaultKernelName = defaultKernelName;
-         
+
             return kernel;
         }
 

@@ -960,7 +960,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public void serialized_notebook_has_appropriate_metadata()
         {
-            var notebook = new InteractiveDocument(Array.Empty<InteractiveDocumentElement>());
+            var notebook = new InteractiveDocument(new List<InteractiveDocumentElement>());
             var serialized = SerializeJupyter(notebook, "\n");
             var jupyter = JToken.Parse(serialized);
 
@@ -997,7 +997,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public void serialized_code_cells_have_appropriate_shape()
         {
-            var cells = new[]
+            var cells = new List<InteractiveDocumentElement>()
             {
                 new InteractiveDocumentElement("csharp", "//")
             };
@@ -1033,7 +1033,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public void serialized_code_cells_with_default_jupyter_kernel_language_dont_have_language_specifier()
         {
-            var cells = new[]
+            var cells = new List<InteractiveDocumentElement>()
             {
                 new InteractiveDocumentElement("csharp", "var x = 1;")
             };
@@ -1051,7 +1051,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public void serialized_code_cells_with_non_default_jupyter_kernel_language_have_language_metadata_and_no_language_specifier()
         {
-            var cells = new[]
+            var cells = new List<InteractiveDocumentElement>()
             {
                 new InteractiveDocumentElement("fsharp", "let x = 1")
             };
@@ -1082,7 +1082,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public void code_cells_with_multi_line_text_are_serialized_as_an_array()
         {
-            var cells = new[]
+            var cells = new List<InteractiveDocumentElement>()
             {
                 new InteractiveDocumentElement("csharp", "var x = 1;\nvar y = 2;")
             };
@@ -1101,7 +1101,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public void serialized_markdown_cells_have_appropriate_shape()
         {
-            var cells = new[]
+            var cells = new List<InteractiveDocumentElement>()
             {
                 new InteractiveDocumentElement("markdown", "This is `markdown`.\nThis is more `markdown`.")
             };
@@ -1130,7 +1130,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public void text_cell_outputs_are_serialized()
         {
-            var cells = new[]
+            var cells = new List<InteractiveDocumentElement>()
             {
                 new InteractiveDocumentElement("csharp", "//", new[]
                 {
@@ -1241,7 +1241,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public void rich_cell_outputs_are_serialized()
         {
-            var cells = new[]
+            var cells = new List<InteractiveDocumentElement>()
             {
                 new InteractiveDocumentElement("csharp", "//", new[]
                 {
@@ -1323,7 +1323,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public void error_cell_outputs_are_serialized()
         {
-            var cells = new[]
+            var cells = new List<InteractiveDocumentElement>()
             {
                 new InteractiveDocumentElement("csharp", "//", new[]
                 {
@@ -1409,7 +1409,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
             var configuration = new Configuration()
                                  .UsingExtension("json")
                                  .SetInteractive(Debugger.IsAttached);
-            var cells = new[]
+            var cells = new List<InteractiveDocumentElement>()
             {
                 new InteractiveDocumentElement("csharp", "// this is csharp", new[]
                 {

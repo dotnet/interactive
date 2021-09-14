@@ -107,30 +107,6 @@ let x = 1 +
 
 ``` json
 {
- "cells": [
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {
-    "dotnet_interactive": {
-     "language": "fsharp"
-    }
-   },
-   "outputs": [
-    {
-     "data": {
-      "text/html": [
-       "<div class=\"dni-plaintext\">2</div>"
-      ]
-     },
-     "output_type": "unknown"
-    }
-   ],
-   "source": [
-    "1+1"
-   ]
-  }
- ],
  "metadata": {
   "kernelspec": {
    "display_name": ".NET (F#)",
@@ -141,6 +117,31 @@ let x = 1 +
    "name": "F#"
   }
  },
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "source": [
+    "1+1"
+   ],
+   "outputs": [
+    {
+     "output_type": "display_data",
+     "data": {
+      "text/html": [
+       "<div class=\"dni-plaintext\">2</div>"
+      ]
+     },
+     "metadata": {}
+    }
+   ],
+   "metadata": {
+    "dotnet_interactive": {
+     "language": "fsharp"
+    }
+   }
+  }
+ ],
  "nbformat": 4,
  "nbformat_minor": 2
 }

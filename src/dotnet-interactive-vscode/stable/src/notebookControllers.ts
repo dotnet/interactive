@@ -5,20 +5,15 @@ import * as vscode from 'vscode';
 import { ClientMapper } from './common/clientMapper';
 
 import * as contracts from './common/interfaces/contracts';
-import * as genericTransport from './common/interactive/genericTransport';
 import * as vscodeLike from './common/interfaces/vscode-like';
 import * as diagnostics from './common/vscode/diagnostics';
 import * as vscodeUtilities from './common/vscode/vscodeUtilities';
 import { getSimpleLanguage, isDotnetInteractiveLanguage, jupyterViewType, notebookCellLanguages } from './common/interactiveNotebook';
 import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, isDotNetNotebookMetadata, withDotNetKernelMetadata } from './common/ipynbUtilities';
-import { isKernelEventEnvelope, reshapeOutputValueForVsCode } from './common/interfaces/utilities';
+import { reshapeOutputValueForVsCode } from './common/interfaces/utilities';
 import { selectDotNetInteractiveKernelForJupyter } from './common/vscode/commands';
 import { ErrorOutputCreator } from './common/interactiveClient';
-import { ProxyKernel } from './common/interactive/proxyKernel';
-import { promises } from 'dns';
-import { JavascriptKernel } from './common/interactive/javascriptKernel';
 import { LogEntry, Logger } from './common/logger';
-import { OutputChannelAdapter } from './common/vscode/OutputChannelAdapter';
 import * as notebookMessageHandler from './common/notebookMessageHandler';
 
 const executionTasks: Map<string, vscode.NotebookCellExecution> = new Map();
@@ -225,14 +220,14 @@ export async function updateCellLanguages(document: vscode.NotebookDocument): Pr
             ? getCellLanguage(cellText, cellMetadata, documentLanguageInfo, cell.document.languageId)
             : 'markdown';
         if (cell.document.languageId !== newLanguage) {
-            await vscode.languages.setTextDocumentLanguage(cell.document, newLanguage)
+            await vscode.languages.setTextDocumentLanguage(cell.document, newLanguage);
         }
     }));
 }
 
 async function updateCellOutputs(executionTask: vscode.NotebookCellExecution, outputs: Array<vscodeLike.NotebookCellOutput>): Promise<void> {
     const reshapedOutputs: vscode.NotebookCellOutput[] = [];
-    outputs.forEach(async (o, index) => {
+    outputs.forEach(async (o) => {
         const items = o.items.map(oi => generateVsCodeNotebookCellOutputItem(oi.data, oi.mime, oi.stream));
 
         // If all of these items are of the same stream type & previous item is the same stream, then append it.

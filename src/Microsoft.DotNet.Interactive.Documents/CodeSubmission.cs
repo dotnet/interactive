@@ -102,7 +102,7 @@ namespace Microsoft.DotNet.Interactive.Documents
                 elements.Add(CreateElement(defaultLanguage, Array.Empty<string>()));
             }
 
-            return new InteractiveDocument(elements.ToArray());
+            return new InteractiveDocument(elements);
         }
 
         public static InteractiveDocument Read(

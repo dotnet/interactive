@@ -67,8 +67,6 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(IncompleteCodeSubmissionReceived)] = typeof(KernelEventEnvelope<IncompleteCodeSubmissionReceived>),
                 [nameof(HoverTextProduced)] = typeof(KernelEventEnvelope<HoverTextProduced>),
                 [nameof(KernelReady)] = typeof(KernelEventEnvelope<KernelReady>),
-                [nameof(InteractiveDocumentParsed)] = typeof(KernelEventEnvelope<InteractiveDocumentParsed>),
-                [nameof(InteractiveDocumentSerialized)] = typeof(KernelEventEnvelope<InteractiveDocumentSerialized>),
                 [nameof(PackageAdded)] = typeof(KernelEventEnvelope<PackageAdded>),
                 [nameof(ReturnValueProduced)] = typeof(KernelEventEnvelope<ReturnValueProduced>),
                 [nameof(SignatureHelpProduced)] = typeof(KernelEventEnvelope<SignatureHelpProduced>),
