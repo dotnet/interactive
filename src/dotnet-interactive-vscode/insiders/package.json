@@ -106,8 +106,7 @@
             "run",
             "dotnet-interactive",
             "--",
-            "[vscode]",
-            "stdio",
+            "vscode",
             "--working-dir",
             "{working_dir}"
           ],
