@@ -112,6 +112,17 @@
           ],
           "description": "Command and arguments used to start a notebook session."
         },
+        "dotnet-interactive.notebookParserArgs": {
+          "type": "array",
+          "default": [
+            "{dotnet_path}",
+            "tool",
+            "run",
+            "dotnet-interactive",
+            "--",
+            "notebook-parser"
+          ]
+        },
         "dotnet-interactive.kernelTransportWorkingDirectory": {
           "type": "string",
           "default": "{global_storage_path}",

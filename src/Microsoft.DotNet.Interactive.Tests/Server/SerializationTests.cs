@@ -8,11 +8,9 @@ using System.Linq;
 using Assent;
 
 using FluentAssertions;
-
 using Microsoft.AspNetCore.Html;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Server;
@@ -169,8 +167,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     new FormattedValue("text/html", "<b>hi!</b>")
                 );
 
-                yield return new ParseInteractiveDocument("interactive.ipynb", new byte[] { 0x01, 0x02, 0x03, 0x04 });
-
                 yield return new RequestCompletions("Cons", new LinePosition(0, 4), "csharp");
 
                 yield return new RequestDiagnostics("the-code");
@@ -181,36 +177,19 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new SendEditableCode("language", "code");
 
-                yield return new SerializeInteractiveDocument("interactive.ipynb", new Documents.InteractiveDocument(new[]
-                {
-                    new InteractiveDocumentElement("csharp", "user code", new InteractiveDocumentOutputElement[]
-                    {
-                        new DisplayElement(new Dictionary<string, object>
-                        {
-                            { "text/html", "<b></b>" }
-                        }),
-                        new TextElement("text"),
-                        new ErrorElement("e-name", "e-value", new[]
-                        {
-                            "at func1()",
-                            "at func2()"
-                        })
-                    })
-                }), "\r\n");
-
                 yield return new SubmitCode("123", "csharp", SubmissionType.Run);
 
                 yield return new UpdateDisplayedValue(
                     new FormattedValue("text/html", "<b>hi!</b>"),
                     "the-value-id");
-                
+
                 yield return new Quit();
 
                 yield return new Cancel("csharp");
 
                 yield return new RequestValueInfos("csharp");
 
-                yield return new RequestValue("a", "csharp",  HtmlFormatter.MimeType );
+                yield return new RequestValue("a", "csharp", HtmlFormatter.MimeType);
 
             }
         }
@@ -306,25 +285,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new KernelReady();
 
-                yield return new InteractiveDocumentParsed(new Documents.InteractiveDocument(new[]
-                {
-                    new InteractiveDocumentElement("language", "contents", new InteractiveDocumentOutputElement[]
-                    {
-                        new DisplayElement(new Dictionary<string, object>()
-                        {
-                            { "text/html", "<b></b>" }
-                        }),
-                        new TextElement("text"),
-                        new ErrorElement("e-name", "e-value", new[]
-                        {
-                            "at func1()",
-                            "at func2()"
-                        })
-                    })
-                }), new ParseInteractiveDocument("interactive.ipynb", new byte[0]));
-
-                yield return new InteractiveDocumentSerialized(new byte[] { 0x01, 0x02, 0x03, 0x04 }, new SerializeInteractiveDocument("interactive.ipynb", null,"\n"));
-               
                 yield return new PackageAdded(
                     new ResolvedPackageReference(
                         packageName: "ThePackage",
@@ -379,7 +339,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new ValueInfosProduced(new[] { new KernelValueInfo("a", typeof(string)), new KernelValueInfo("b", typeof(string)), new KernelValueInfo("c", typeof(string)) }, new RequestValueInfos("csharp"));
 
-                yield return new ValueProduced("raw value", "a", new FormattedValue(HtmlFormatter.MimeType, "<span>formatted value</span>"), new RequestValue("a", "csharp",  HtmlFormatter.MimeType ));
+                yield return new ValueProduced("raw value", "a", new FormattedValue(HtmlFormatter.MimeType, "<span>formatted value</span>"), new RequestValue("a", "csharp", HtmlFormatter.MimeType));
             }
         }
 

@@ -206,6 +206,14 @@ describe('Miscellaneous tests', () => {
         expect(text).to.equal(`{"rawData":"${expectedBase64}"}`);
     });
 
+    it('stringify function can handle cell output', () => {
+        const numbers = [97, 98, 99];
+        const text = stringify({
+            'text/html': Buffer.from(numbers)
+        });
+        expect(text).to.equal(`{"text/html":"abc"}`);
+    });
+
     describe('vs code output value reshaping', () => {
         it('error string is reshaped', () => {
             const reshaped = reshapeOutputValueForVsCode('some error message', vscodeLike.ErrorOutputMimeType);

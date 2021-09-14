@@ -4,6 +4,9 @@
     <TargetFramework>net5.0</TargetFramework>
     <RootNamespace>Microsoft.DotNet.Interactive.App.Tests</RootNamespace>
     <NoWarn>$(NoWarn);8002</NoWarn> <!-- Assent isn't strongly signed -->
+    <NoWarn>$(NoWarn);VSTHRD002</NoWarn><!-- Ignore: Avoid problematic synchronous waits -->
+    <NoWarn>$(NoWarn);VSTHRD110</NoWarn><!-- Ignore: Observe result of async calls -->
+    <NoWarn>$(NoWarn);VSTHRD200</NoWarn><!-- Ignore: Use "Async" suffix for async methods -->
     <IsPackable>false</IsPackable>
     <AssemblyName>Microsoft.DotNet.Interactive.App.Tests</AssemblyName>
   </PropertyGroup>

@@ -60,13 +60,11 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(ChangeWorkingDirectory)] = typeof(KernelCommandEnvelope<ChangeWorkingDirectory>),
                 [nameof(DisplayError)] = typeof(KernelCommandEnvelope<DisplayError>),
                 [nameof(DisplayValue)] = typeof(KernelCommandEnvelope<DisplayValue>),
-                [nameof(ParseInteractiveDocument)] = typeof(KernelCommandEnvelope<ParseInteractiveDocument>),
                 [nameof(RequestCompletions)] = typeof(KernelCommandEnvelope<RequestCompletions>),
                 [nameof(RequestDiagnostics)] = typeof(KernelCommandEnvelope<RequestDiagnostics>),
                 [nameof(RequestHoverText)] = typeof(KernelCommandEnvelope<RequestHoverText>),
                 [nameof(RequestSignatureHelp)] = typeof(KernelCommandEnvelope<RequestSignatureHelp>),
                 [nameof(SendEditableCode)] = typeof(KernelCommandEnvelope<SendEditableCode>),
-                [nameof(SerializeInteractiveDocument)] = typeof(KernelCommandEnvelope<SerializeInteractiveDocument>),
                 [nameof(SubmitCode)] = typeof(KernelCommandEnvelope<SubmitCode>),
                 [nameof(UpdateDisplayedValue)] = typeof(KernelCommandEnvelope<UpdateDisplayedValue>),
                 [nameof(Quit)] = typeof(KernelCommandEnvelope<Quit>),
@@ -153,9 +151,7 @@ namespace Microsoft.DotNet.Interactive.Server
                 return null;
             }
 
-            var command = (KernelCommand) JsonSerializer.Deserialize( commandJson,commandType, Serializer.JsonSerializerOptions);
-
-            
+            var command = (KernelCommand)JsonSerializer.Deserialize(commandJson, commandType, Serializer.JsonSerializerOptions);
             if (commandId is not null)
             {
                 command.SetId(commandId);

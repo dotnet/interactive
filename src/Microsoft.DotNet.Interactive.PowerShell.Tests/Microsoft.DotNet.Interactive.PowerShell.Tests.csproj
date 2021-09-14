@@ -4,6 +4,7 @@
     <TargetFramework>net5.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <NoWarn>$(NoWarn);8002;CS8002</NoWarn>
+    <NoWarn>$(NoWarn);VSTHRD200</NoWarn><!-- Ignore: Use "Async" suffix for async methods -->
     <Deterministic Condition="'$(NCrunch)' == '1'">false</Deterministic>
   </PropertyGroup>
 

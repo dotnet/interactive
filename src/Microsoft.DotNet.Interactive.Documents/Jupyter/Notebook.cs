@@ -120,7 +120,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
                 }
             }
 
-            return new InteractiveDocument(cells.ToArray());
+            return new InteractiveDocument(cells);
         }
 
         public static InteractiveDocument Read(
