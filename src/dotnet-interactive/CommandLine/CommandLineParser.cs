@@ -55,6 +55,11 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             KernelServer kernel,
             IConsole console);
 
+        public delegate Task StartVSCode(
+            StartupOptions options,
+            KernelServer kernel,
+            IConsole console);
+
         public delegate Task StartHttp(
             StartupOptions options,
             IConsole console,
@@ -66,6 +71,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             StartServer startServer = null,
             Jupyter jupyter = null,
             StartStdIO startStdIO = null,
+            StartVSCode startVSCode = null,
             StartHttp startHttp = null,
             Action onServerStarted = null,
             ITelemetry telemetry = null,
@@ -95,6 +101,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             startStdIO ??= StdIOCommand.Do;
 
+            startVSCode ??= VSCodeCommand.Do;
+
             startHttp ??= HttpCommand.Do;
 
             // Setup first time use notice sentinel.
@@ -122,7 +130,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     {
                         switch (directive.Key)
                         {
-                            case "vscode":
                             case "jupyter":
                             case "synapse":
                                 frontendTelemetryAdded = true;
@@ -133,13 +140,15 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                     if (!frontendTelemetryAdded)
                     {
-                        if (commandResult.Command.Name == "jupyter")
+                        switch (commandResult.Command.Name)
                         {
-                            entryItems.Add(new KeyValuePair<string, string>("frontend", "jupyter"));
-                        }
-                        else
-                        {
-                            entryItems.Add(new KeyValuePair<string, string>("frontend", "unknown"));
+                            case "jupyter":
+                            case "vscode":
+                                entryItems.Add(new KeyValuePair<string, string>("frontend", commandResult.Command.Name));
+                                break;
+                            default:
+                                entryItems.Add(new KeyValuePair<string, string>("frontend", "unknown"));
+                                break;
                         }
                     }
 
@@ -167,6 +176,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             rootCommand.AddCommand(Jupyter());
             rootCommand.AddCommand(StdIO());
+            rootCommand.AddCommand(VSCode());
             rootCommand.AddCommand(HttpServer());
 
             return new CommandLineBuilder(rootCommand)
@@ -399,7 +409,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 stdIOCommand.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext>(
                     async (startupOptions, options, console, context) =>
                     {
-                        var isVsCode = context.ParseResult.Directives.Contains("vscode");
                         FrontendEnvironment frontendEnvironment = startupOptions.EnableHttpApi 
                             ? new HtmlNotebookFrontendEnvironment() 
                             : new BrowserFrontendEnvironment();
@@ -415,35 +424,11 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         {
                             var clientSideKernelClient =new SignalRBackchannelKernelClient();
 
-                            if (isVsCode)
-                            {
-                                var frontEndKernel = kernelServer.GetFrontEndKernel("vscode");
-                                kernel.Add(frontEndKernel);
-                                await kernel.VisitSubkernelsAsync(async k =>
-                                {
-                                    switch (k)
-                                    {
-                                        case ISupportSetValue svk:
-                                            await svk.UseVSCodeHelpersAsync(kernel);
-                                            break;
-                                    }
-                                });
-
-                                services.AddSingleton(clientSideKernelClient);
-                                ((HtmlNotebookFrontendEnvironment)frontendEnvironment).RequiresAutomaticBootstrapping =
-                                    false;
-                                kernel.Add(
-                                    new JavaScriptKernel(clientSideKernelClient),
-                                    new[] { "js" });
-                            }
-                            else
-                            {
-                                services.AddSingleton(clientSideKernelClient);
+                            services.AddSingleton(clientSideKernelClient);
                               
-                                kernel.Add(
-                                    new JavaScriptKernel(clientSideKernelClient),
-                                    new[] { "js" });
-                            }
+                            kernel.Add(
+                                new JavaScriptKernel(clientSideKernelClient),
+                                new[] { "js" });
 
                             var _ = kernelServer.RunAsync();
                             onServerStarted ??= () =>
@@ -458,13 +443,127 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             new[] { "js" });
 
                         await startStdIO(
-                        startupOptions,
-                        kernelServer,
-                        console);
+                            startupOptions,
+                            kernelServer,
+                            console);
 
                     });
 
                 return stdIOCommand;
+            }
+
+            Command VSCode()
+            {
+                var httpPortRangeOption = new Option<HttpPortRange>(
+                    "--http-port-range",
+                    parseArgument: result => result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
+                    description: "Specifies the range of ports to use to enable HTTP services");
+
+                var httpPortOption = new Option<HttpPort>(
+                    "--http-port",
+                    description: "Specifies the port on which to enable HTTP services",
+                    parseArgument: result =>
+                    {
+                        if (result.FindResultFor(httpPortRangeOption) is { } conflictingOption)
+                        {
+                            var parsed = result.Parent as OptionResult;
+                            result.ErrorMessage = $"Cannot specify both {conflictingOption.Token.Value} and {parsed.Token.Value} together";
+                            return null;
+                        }
+
+                        if (result.Tokens.Count == 0)
+                        {
+                            return HttpPort.Auto;
+                        }
+
+                        var source = result.Tokens[0].Value;
+
+                        if (source == "*")
+                        {
+                            return HttpPort.Auto;
+                        }
+
+                        if (!int.TryParse(source, out var portNumber))
+                        {
+                            result.ErrorMessage = "Must specify a port number or *.";
+                            return null;
+                        }
+
+                        return new HttpPort(portNumber);
+                    });
+
+                var workingDirOption = new Option<DirectoryInfo>(
+                    "--working-dir",
+                    () => new DirectoryInfo(Environment.CurrentDirectory),
+                    "Working directory to which to change after launching the kernel.");
+
+                var vscodeCommand = new Command(
+                    "vscode",
+                    "Starts dotnet-interactive with kernel functionality exposed over standard I/O for VS Code")
+                {
+                    defaultKernelOption,
+                    httpPortRangeOption,
+                    httpPortOption,
+                    workingDirOption
+                };
+
+                vscodeCommand.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext>(
+                    async (startupOptions, options, console, context) =>
+                    {
+                        FrontendEnvironment frontendEnvironment = startupOptions.EnableHttpApi
+                            ? new HtmlNotebookFrontendEnvironment()
+                            : new BrowserFrontendEnvironment();
+
+                        var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
+
+                        services.AddKernel(kernel);
+
+                        kernel.UseQuitCommand();
+                        var kernelServer = kernel.CreateKernelServer(startupOptions.WorkingDir);
+
+                        if (startupOptions.EnableHttpApi)
+                        {
+                            var clientSideKernelClient = new SignalRBackchannelKernelClient();
+
+                            var frontEndKernel = kernelServer.GetFrontEndKernel("vscode");
+                            kernel.Add(frontEndKernel);
+                            await kernel.VisitSubkernelsAsync(async k =>
+                            {
+                                switch (k)
+                                {
+                                    case ISupportSetValue svk:
+                                        await svk.UseVSCodeHelpersAsync(kernel);
+                                        break;
+                                }
+                            });
+
+                            services.AddSingleton(clientSideKernelClient);
+                            ((HtmlNotebookFrontendEnvironment)frontendEnvironment).RequiresAutomaticBootstrapping =
+                                false;
+                            kernel.Add(
+                                new JavaScriptKernel(clientSideKernelClient),
+                                new[] { "js" });
+
+                            var _ = kernelServer.RunAsync();
+                            onServerStarted ??= () =>
+                            {
+                                kernelServer.NotifyIsReady();
+                            };
+                            await startHttp(startupOptions, console, startServer, context);
+                        }
+
+                        kernel.Add(
+                            new JavaScriptKernel(),
+                            new[] { "js" });
+
+                        await startVSCode(
+                            startupOptions,
+                            kernelServer,
+                            console);
+
+                    });
+
+                return vscodeCommand;
             }
 
             static HttpPortRange ParsePortRangeOption(ArgumentResult result)

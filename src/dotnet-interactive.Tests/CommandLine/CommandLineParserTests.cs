@@ -63,6 +63,11 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
                     _startOptions = startupOptions;
                     return Task.FromResult(1);
                 },
+                startVSCode: (startupOptions, kernel, console) =>
+                {
+                    _startOptions = startupOptions;
+                    return Task.FromResult(1);
+                },
                 startHttp: (startupOptions, console, startServer, context) =>
                 {
                     _startOptions = startupOptions;
@@ -349,6 +354,20 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
+        public void vscode_command_working_dir_defaults_to_process_current()
+        {
+            var result = _parser.Parse("vscode");
+
+            var binder = new ModelBinder<StartupOptions>();
+
+            var options = (StartupOptions)binder.CreateInstance(new BindingContext(result));
+
+            options.WorkingDir.FullName
+                .Should()
+                .Be(Environment.CurrentDirectory);
+        }
+
+        [Fact]
         public void stdio_command_working_dir_can_be_specified()
         {
             // StartupOptions.WorkingDir is of type DirectoryInfo which normalizes paths to OS type and ensures that
@@ -371,9 +390,42 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
+        public void vscode_command_working_dir_can_be_specified()
+        {
+            // StartupOptions.WorkingDir is of type DirectoryInfo which normalizes paths to OS type and ensures that
+            // they're rooted.  To ensure proper testing behavior we have to give an os-specific path.
+            var workingDir = Environment.OSVersion.Platform switch
+            {
+                PlatformID.Win32NT => "C:\\some\\dir",
+                _ => "/some/dir"
+            };
+
+            var result = _parser.Parse($"vscode --working-dir {workingDir}");
+
+            var binder = new ModelBinder<StartupOptions>();
+
+            var options = (StartupOptions)binder.CreateInstance(new BindingContext(result));
+
+            options.WorkingDir.FullName
+                .Should()
+                .Be(workingDir);
+        }
+
+        [Fact]
         public void stdio_command_does_not_support_http_port_and_http_port_range_options_at_same_time()
         {
             var result = _parser.Parse("stdio --http-port 8000 --http-port-range 3000-4000");
+
+            result.Errors
+                .Select(e => e.Message)
+                .Should()
+                .Contain(errorMessage => errorMessage == "Cannot specify both --http-port-range and --http-port together");
+        }
+
+        [Fact]
+        public void vscode_command_does_not_support_http_port_and_http_port_range_options_at_same_time()
+        {
+            var result = _parser.Parse("vscode --http-port 8000 --http-port-range 3000-4000");
 
             result.Errors
                 .Select(e => e.Message)
@@ -394,9 +446,32 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
+        public void vscode_command_parses_http_port_options()
+        {
+            var result = _parser.Parse("vscode --http-port 8000");
+
+            var binder = new ModelBinder<StartupOptions>();
+
+            var options = (StartupOptions)binder.CreateInstance(new BindingContext(result));
+
+            options.HttpPort.PortNumber.Should().Be(8000);
+        }
+
+        [Fact]
         public async Task stdio_command_parses_http_port_range_options()
         {
             await _parser.InvokeAsync("stdio --http-port-range 3000-4000");
+
+            using var scope = new AssertionScope();
+            _startOptions.HttpPortRange.Should().NotBeNull();
+            _startOptions.HttpPortRange.Start.Should().Be(3000);
+            _startOptions.HttpPortRange.End.Should().Be(4000);
+        }
+
+        [Fact]
+        public async Task vscode_command_parses_http_port_range_options()
+        {
+            await _parser.InvokeAsync("vscode --http-port-range 3000-4000");
 
             using var scope = new AssertionScope();
             _startOptions.HttpPortRange.Should().NotBeNull();
@@ -418,9 +493,9 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
-        public async Task stdio_command_with_vscode_frontend_environment_does_not_require_api_bootstrapping_when_http_is_enabled()
+        public async Task vscode_command_does_not_require_api_bootstrapping_when_http_is_enabled()
         {
-            await _parser.InvokeAsync("[vscode] stdio --http-port-range 3000-4000");
+            await _parser.InvokeAsync("vscode --http-port-range 3000-4000");
 
             var kernel = GetKernel();
 
@@ -441,6 +516,16 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
+        public void vscode_command_defaults_to_csharp_kernel()
+        {
+            var result = _parser.Parse("vscode");
+            var binder = new ModelBinder<StdIOOptions>();
+            var options = (StdIOOptions)binder.CreateInstance(new BindingContext(result));
+
+            options.DefaultKernel.Should().Be("csharp");
+        }
+
+        [Fact]
         public async Task stdio_command_does_not_enable_http_api_by_default()
         {
             await _parser.InvokeAsync("stdio");
@@ -449,9 +534,27 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
+        public async Task vscode_command_does_not_enable_http_api_by_default()
+        {
+            await _parser.InvokeAsync("vscode");
+
+            _startOptions.EnableHttpApi.Should().BeFalse();
+        }
+
+        [Fact]
         public void stdio_command_honors_default_kernel_option()
         {
             var result = _parser.Parse("stdio --default-kernel bsharp");
+            var binder = new ModelBinder<StdIOOptions>();
+            var options = (StdIOOptions)binder.CreateInstance(new BindingContext(result));
+
+            options.DefaultKernel.Should().Be("bsharp");
+        }
+
+        [Fact]
+        public void vscode_command_honors_default_kernel_option()
+        {
+            var result = _parser.Parse("vscode --default-kernel bsharp");
             var binder = new ModelBinder<StdIOOptions>();
             var options = (StdIOOptions)binder.CreateInstance(new BindingContext(result));
 
