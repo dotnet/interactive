@@ -5,8 +5,6 @@ import { AddressInfo, createServer } from "net";
 import * as cp from 'child_process';
 import {
     DisposableSubscription,
-    KernelCommand,
-    KernelCommandType,
     KernelEventEnvelope,
     KernelEventEnvelopeObserver,
     KernelTransport,
@@ -52,6 +50,7 @@ export class StdioKernelTransport implements KernelTransport {
 
             let args = await this.configureHttpArgs(processStart.args);
             // launch the process
+            this.diagnosticChannel.appendLine(`Starting kernel for '${notebookPath}' using: ${processStart.command} ${args.join(' ')}`);
             let childProcess = cp.spawn(processStart.command, args, { cwd: processStart.workingDirectory });
             let pid = childProcess.pid;
 
