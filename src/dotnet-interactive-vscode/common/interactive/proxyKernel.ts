@@ -27,11 +27,13 @@ export class ProxyKernel extends Kernel {
             Logger.default.info(`proxy ${this.name} got event ${envelope.eventType} from ${envelope.command?.command?.targetKernelName} with token ${envelope.command?.token}`);
             if (envelope.command!.token === token) {
                 commandInvocation.context.publish(envelope);
-                switch (envelope.eventType) {
-                    case contracts.CommandFailedType:
-                    case contracts.CommandSucceededType:
-                        completionSource.resolve(true);
-                        break;
+                if (envelope.command!.command!.id === commandInvocation.commandEnvelope.command.id) {
+                    switch (envelope.eventType) {
+                        case contracts.CommandFailedType:
+                        case contracts.CommandSucceededType:
+                            completionSource.resolve(true);
+                            break;
+                    }
                 }
             }
         });
@@ -43,7 +45,7 @@ export class ProxyKernel extends Kernel {
             Logger.default.info(`proxy ${this.name} done awaiting with token ${token}`);
         }
         catch (e) {
-            commandInvocation.context.fail(e.message);
+            commandInvocation.context.fail((<any>e).message);
         }
         finally {
             sub.dispose();

@@ -149,7 +149,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
         public static IEnumerable<object[]> Commands()
         {
-            foreach (var command in commands())
+            foreach (var command in commands().Select(c =>
+            {
+                c.OverrideId("command-id");
+                return c;
+            }))
             {
                 yield return new object[] { command };
             }
@@ -214,7 +218,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
         public static IEnumerable<object[]> Events()
         {
-            foreach (var @event in events())
+            foreach (var @event in events().Select(e =>
+            {
+                e.Command.OverrideId("command-id");
+                return e;
+            }))
             {
                 yield return new object[] { @event };
             }

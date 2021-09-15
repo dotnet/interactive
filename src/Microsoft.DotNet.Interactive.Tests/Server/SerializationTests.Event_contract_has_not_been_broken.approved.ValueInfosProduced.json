@@ -1,1 +1,1 @@
-{"event":{"valueInfos":[{"name":"a"},{"name":"b"},{"name":"c"}]},"eventType":"ValueInfosProduced","command":{"token":"the-token","commandType":"RequestValueInfos","command":{"targetKernelName":"csharp"}}}
+{"event":{"valueInfos":[{"name":"a"},{"name":"b"},{"name":"c"}]},"eventType":"ValueInfosProduced","command":{"token":"the-token","commandType":"RequestValueInfos","command":{"targetKernelName":"csharp","id":"command-id"}}}

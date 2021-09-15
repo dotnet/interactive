@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Interactive.Commands
             Properties = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
 
             TargetKernelName = targetKernelName;
-
+            Id = Guid.NewGuid().ToString("N");
             Parent = parent;
         }
 
@@ -32,6 +32,8 @@ namespace Microsoft.DotNet.Interactive.Commands
         public IDictionary<string, object> Properties { get; }
 
         public string TargetKernelName { get; internal set; }
+        
+        public string Id { get; internal set; }
 
         internal static KernelCommand None { get; } = new NoCommand();
 

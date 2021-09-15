@@ -125,7 +125,8 @@ namespace Microsoft.DotNet.Interactive.Server
             var commandTypeJson = string.Empty;
             string commandJson;
             var token = string.Empty;
-            
+            var commandId = string.Empty;
+
             if (json.TryGetProperty("commandType", out var commandTypeProperty))
             {
                 commandTypeJson = commandTypeProperty.GetString();
@@ -146,10 +147,19 @@ namespace Microsoft.DotNet.Interactive.Server
                 return null;
             }
 
-       
             var command = (KernelCommand) JsonSerializer.Deserialize( commandJson,commandType, Serializer.JsonSerializerOptions);
 
-           
+            // restore the command id
+            if (commandJsonProperty.TryGetProperty("id", out var commandIdProperty))
+            {
+                commandId = commandIdProperty.GetString();
+            }
+            if (commandId is not null)
+            {
+                command.Id = commandId;
+            }
+
+            // restore the command token
             if (json.TryGetProperty("token", out var tokenProperty))
             {
                 token = tokenProperty.GetString();
