@@ -9,7 +9,7 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 
-namespace Microsoft.DotNet.Interactive.SqlServer.Tests
+namespace Microsoft.DotNet.Interactive.Kql.Tests
 {
     public class KqlConnectionTests : IDisposable
     {

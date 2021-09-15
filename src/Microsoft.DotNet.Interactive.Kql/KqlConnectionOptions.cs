@@ -1,6 +1,6 @@
 ﻿using Microsoft.DotNet.Interactive.Connection;
 
-namespace Microsoft.DotNet.Interactive.SqlServer
+namespace Microsoft.DotNet.Interactive.Kql
 {
     public class KqlConnectionOptions : KernelConnectionOptions
     {

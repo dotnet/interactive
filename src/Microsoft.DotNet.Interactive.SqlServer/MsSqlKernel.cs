@@ -4,7 +4,6 @@
 using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.CommandLine.Parsing;
 using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
@@ -12,14 +11,14 @@ using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
-    public class MsSqlKernel : ToolsServiceKernel
+    internal class MsSqlKernel : ToolsServiceKernel
     {
         private readonly string _connectionString;
 
-        public MsSqlKernel(
+        internal MsSqlKernel(
             string name,
             string connectionString,
-            MsSqlServiceClient client) : base(name, client)
+            ToolsServiceClient client) : base(name, client)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
             {

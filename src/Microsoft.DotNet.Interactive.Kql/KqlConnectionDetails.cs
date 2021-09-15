@@ -1,4 +1,4 @@
-﻿namespace Microsoft.DotNet.Interactive.SqlServer
+﻿namespace Microsoft.DotNet.Interactive.Kql
 {
     public class KqlConnectionDetails
     {

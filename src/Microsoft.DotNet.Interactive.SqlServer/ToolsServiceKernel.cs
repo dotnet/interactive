@@ -14,7 +14,7 @@ using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
-    public abstract class ToolsServiceKernel : 
+    internal abstract class ToolsServiceKernel : 
         Kernel,
         IKernelCommandHandler<SubmitCode>,
         IKernelCommandHandler<RequestCompletions>
@@ -25,9 +25,9 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         private Func<MessageParams, Task> _queryMessageHandler;
         private bool _intellisenseReady;
         protected bool Connected;
-        protected readonly MsSqlServiceClient ServiceClient;
+        protected readonly ToolsServiceClient ServiceClient;
 
-        protected ToolsServiceKernel(string name, MsSqlServiceClient client) : base(name)
+        protected ToolsServiceKernel(string name, ToolsServiceClient client) : base(name)
         {
             var filePath = Path.GetTempFileName();
             TempFileUri = new Uri(filePath);

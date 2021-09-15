@@ -1,7 +1,7 @@
 ﻿using System;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.SqlServer.Tests
+namespace Microsoft.DotNet.Interactive.Kql.Tests
 {
     public sealed class KqlFact : FactAttribute
     {

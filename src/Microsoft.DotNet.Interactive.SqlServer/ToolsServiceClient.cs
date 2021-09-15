@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
@@ -13,7 +14,7 @@ using StreamJsonRpc;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
-    public class MsSqlServiceClient : IDisposable
+    public class ToolsServiceClient : IDisposable
     {
         private Process _process;
         private JsonRpc _rpc;
@@ -23,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         public const string SqlToolsServiceEnvironmentVariableName = "DOTNET_SQLTOOLSSERVICE";
 
-        public MsSqlServiceClient(string serviceExePath = null, string arguments = null)
+        public ToolsServiceClient(string serviceExePath = null, string arguments = null)
         {
             _serviceExePath = serviceExePath;
             _arguments = arguments;
@@ -99,7 +100,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         private void AddLocalRpcMethod(string localMethodName, string rpcMethodName)
         {
             _rpc.AddLocalRpcMethod(
-                handler: typeof(MsSqlServiceClient).GetMethod(localMethodName),
+                handler: GetType().GetMethod(localMethodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic),
                 target: this,
                 methodRpcSettings: new JsonRpcMethodAttribute(rpcMethodName)
                 {

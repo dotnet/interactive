@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.Interactive
 <p>To connect to a database, first add the KQL extension package by running the following in a C# cell:</p>
 <code>
     <pre>
-    #r ""nuget:Microsoft.DotNet.Interactive.SqlServer,*-*""
+    #r ""nuget:Microsoft.DotNet.Interactive.Kql,*-*""
     </pre>
 </code>
 Now, you can connect to a Microsoft Kusto Server database by running the following in a C# cell:
