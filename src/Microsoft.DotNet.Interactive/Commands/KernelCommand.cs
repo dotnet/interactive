@@ -49,5 +49,22 @@ namespace Microsoft.DotNet.Interactive.Commands
 
             return Handler(this, context);
         }
+        protected bool Equals(KernelCommand other)
+        {
+            return string.Equals(Id, other.Id, StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((KernelCommand)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return StringComparer.InvariantCultureIgnoreCase.GetHashCode(Id);
+        }
     }
 }
