@@ -112,13 +112,16 @@ namespace Microsoft.DotNet.Interactive.Connection
                 PublishEvent(kernelEvent);
             }
 
-            switch (kernelEvent)
+            if (pending.command.Equals(kernelEvent.Command))
             {
-                case CommandFailed _:
-                case CommandSucceeded _:
-                    _inflight.Remove(token);
-                    pending.completionSource.TrySetResult(true);
-                    break;
+                switch (kernelEvent)
+                {
+                    case CommandFailed _:
+                    case CommandSucceeded _:
+                        _inflight.Remove(token);
+                        pending.completionSource.TrySetResult(true);
+                        break;
+                }
             }
         }
     }
