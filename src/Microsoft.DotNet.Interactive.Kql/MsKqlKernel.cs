@@ -8,17 +8,18 @@ using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.SqlServer;
 
-namespace Microsoft.DotNet.Interactive.SqlServer
+namespace Microsoft.DotNet.Interactive.Kql
 {
-    public class MsKqlKernel : ToolsServiceKernel
+    internal class MsKqlKernel : ToolsServiceKernel
     {
         private readonly KqlConnectionDetails _connectionDetails;
 
         public MsKqlKernel(
             string name,
             KqlConnectionDetails connectionDetails,
-            MsSqlServiceClient client) : base(name, client)
+            ToolsServiceClient client) : base(name, client)
         {
             if (connectionDetails is null)
             {

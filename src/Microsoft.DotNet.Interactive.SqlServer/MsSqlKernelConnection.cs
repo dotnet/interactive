@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 }
             }
 
-            var sqlClient = new MsSqlServiceClient(pathToService, $"--parent-pid {Process.GetCurrentProcess().Id}");
+            var sqlClient = new ToolsServiceClient(pathToService, $"--parent-pid {Process.GetCurrentProcess().Id}");
 
             var kernel = new MsSqlKernel(
                 $"sql-{options.KernelName}",

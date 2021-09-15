@@ -11,8 +11,9 @@ using System.Threading.Tasks;
 using Kusto.Data;
 using Kusto.Data.Security;
 using Microsoft.DotNet.Interactive.Connection;
+using Microsoft.DotNet.Interactive.SqlServer;
 
-namespace Microsoft.DotNet.Interactive.SqlServer
+namespace Microsoft.DotNet.Interactive.Kql
 {
     public class KqlKernelConnection : ConnectKernelCommand<KqlConnectionOptions>
     {
@@ -64,7 +65,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 }
             }
 
-            var sqlClient = new MsSqlServiceClient(pathToService);
+            var sqlClient = new ToolsServiceClient(pathToService);
 
             var kernel = new MsKqlKernel(
                 $"kql-{options.KernelName}",
