@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { InstallInteractiveTool, InstallInteractiveArgs, CreateToolManifest, GetCurrentInteractiveVersion, InteractiveLaunchOptions, ReportInstallationStarted, ReportInstallationFinished } from './interfaces';
 
-import * as compareVersions from 'compare-versions';
+import { isVersionSufficient } from './utilities';
 
 // The acquisition function.  Uses predefined callbacks for external command invocations to make testing easier.
 export async function acquireDotnetInteractive(
@@ -36,7 +36,7 @@ export async function acquireDotnetInteractive(
     // determine if acquisition is necessary
     const requiredVersion = args.toolVersion ?? minDotNetInteractiveVersion;
     const currentVersion = await getInteractiveVersion(args.dotnetPath, globalStoragePath);
-    if (currentVersion && compareVersions.compare(currentVersion, requiredVersion, '>=')) {
+    if (currentVersion && isVersionSufficient(currentVersion, requiredVersion)) {
         // current is acceptable
         return launchOptions;
     }

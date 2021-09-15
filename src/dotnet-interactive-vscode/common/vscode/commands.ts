@@ -8,9 +8,8 @@ import { InstallInteractiveArgs, InteractiveLaunchOptions } from '../interfaces'
 import { ClientMapper } from '../clientMapper';
 import { getEol, toNotebookDocument } from './vscodeUtilities';
 import { DotNetPathManager, KernelIdForJupyter } from './extension';
-import { computeToolInstallArguments, executeSafe, executeSafeAndLog } from '../utilities';
+import { computeToolInstallArguments, executeSafe, executeSafeAndLog, getVersionNumber } from '../utilities';
 
-import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 import * as notebookControllers from '../../notebookControllers';
 import * as ipynbUtilities from '../../common/ipynbUtilities';
 import { ReportChannel } from '../interfaces/vscode-like';
@@ -293,7 +292,8 @@ export async function selectDotNetInteractiveKernelForJupyter(): Promise<void> {
 async function getInteractiveVersion(dotnetPath: string, globalStoragePath: string): Promise<string | undefined> {
     const result = await executeSafe(dotnetPath, ['tool', 'run', 'dotnet-interactive', '--', '--version'], globalStoragePath);
     if (result.code === 0) {
-        return result.output;
+        const versionString = getVersionNumber(result.output);
+        return versionString;
     }
 
     return undefined;

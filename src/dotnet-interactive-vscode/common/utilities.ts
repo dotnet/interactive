@@ -6,7 +6,7 @@ import * as cp from 'child_process';
 import * as path from 'path';
 import { v4 as uuid } from 'uuid';
 import { InstallInteractiveArgs, ProcessStart } from "./interfaces";
-import { ErrorOutputMimeType, NotebookCellOutput, NotebookCellOutputItem, ReportChannel, Uri } from './interfaces/vscode-like';
+import { NotebookCellOutput, NotebookCellOutputItem, ReportChannel, Uri } from './interfaces/vscode-like';
 
 export function executeSafe(command: string, args: Array<string>, workingDirectory?: string | undefined): Promise<{ code: number, output: string, error: string }> {
     return new Promise<{ code: number, output: string, error: string }>(resolve => {
@@ -74,7 +74,7 @@ export function createOutput(outputItems: Array<NotebookCellOutputItem>, outputI
 }
 
 export function isDotNetUpToDate(minVersion: string, commandResult: { code: number, output: string }): boolean {
-    return commandResult.code === 0 && compareVersions.compare(commandResult.output, minVersion, '>=');
+    return commandResult.code === 0 && isVersionSufficient(getVersionNumber(commandResult.output), minVersion);
 }
 
 export function processArguments(template: { args: Array<string>, workingDirectory: string }, workingDirectory: string, dotnetPath: string, globalStoragePath: string): ProcessStart {
@@ -248,4 +248,17 @@ export function computeToolInstallArguments(args: InstallInteractiveArgs | strin
     }
 
     return installArgs;
+}
+
+export function getVersionNumber(output: string): string {
+    const lines = output.trim().split('\n');
+    return lines[lines.length - 1];
+}
+
+export function isVersionSufficient(firstVersion: string, secondVersion: string): boolean {
+    try {
+        return compareVersions.compare(firstVersion, secondVersion, '>=');
+    } catch (_) {
+        return false;
+    }
 }

@@ -253,6 +253,45 @@ describe('Miscellaneous tests', () => {
             const isSupported = isDotNetUpToDate('5.0', { code: -1, output: '' });
             expect(isSupported).to.be.false;
         });
+
+        it('should fail when version number check returned garbage string', () => {
+            const isSupported = isDotNetUpToDate('5.0', { code: 0, output: 'version five point zero point one-oh-one' });
+            expect(isSupported).to.be.false;
+        });
+
+        for (const newline of ['\n', '\r\n']) {
+            // These tests mimic running the `--version` command, but when the output contains the first-run text that looks like:
+            //
+            // Welcome to .NET 5.0!
+            // --------------------
+            // ...
+            // --------------------
+            // 1.0.1234
+            it(`supported version number with first-run text is allowed with ${JSON.stringify(newline)} newlines`, () => {
+                const output = `${newline}Welcome to .NET 5.0!${newline}--------${newline}5.0.101`;
+                const isSupported = isDotNetUpToDate('5.0', { code: 0, output });
+                expect(isSupported).to.be.true;
+            });
+
+            it(`version number with first-run text acquisition passes, but version isn't sufficient with ${JSON.stringify(newline)} newlines`, () => {
+                const output = `${newline}Welcome to .NET 3.1!${newline}--------${newline}3.1.403`;
+                const isSupported = isDotNetUpToDate('5.0', { code: 0, output });
+                expect(isSupported).to.be.false;
+            });
+
+            // These tests ensure that a trailing newline doesn't break the version number check.
+            it(`supported version number with trailing newline of ${JSON.stringify(newline)} is allowed`, () => {
+                const output = `5.0.101${newline}`;
+                const isSupported = isDotNetUpToDate('5.0', { code: 0, output });
+                expect(isSupported).to.be.true;
+            });
+
+            it(`version number text acquisition passes, but isn't sufficient with ${JSON.stringify(newline)} newlines`, () => {
+                const output = `3.1.403${newline}`;
+                const isSupported = isDotNetUpToDate('5.0', { code: 0, output });
+                expect(isSupported).to.be.false;
+            });
+        }
     });
 
     describe('.ipynb helpers', () => {
