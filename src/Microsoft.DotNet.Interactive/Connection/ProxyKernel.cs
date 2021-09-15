@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,6 +20,7 @@ namespace Microsoft.DotNet.Interactive.Connection
         private readonly IKernelCommandAndEventSender _sender;
         private readonly CancellationTokenSource _cancellationTokenSource = new();
         private ExecutionContext _executionContext;
+        private readonly Dictionary<string,(KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<bool> completionSource)> _inflight = new();
 
         public ProxyKernel(string name, IKernelCommandAndEventReceiver receiver, IKernelCommandAndEventSender sender) : base(name)
         {
@@ -48,17 +50,7 @@ namespace Microsoft.DotNet.Interactive.Connection
 
                 if (d.Event is not null)
                 {
-                    if (_executionContext is { } ec)
-                    {
-                        ExecutionContext.Run(ec, _ =>
-                        {
-                            PublishEvent(d.Event);
-                        },null);
-                    }
-                    else
-                    {
-                        PublishEvent(d.Event);
-                    }
+                    DelegatePublication(d.Event);
                 }
                 else if (d.Command is not null)
                 {
@@ -78,13 +70,12 @@ namespace Microsoft.DotNet.Interactive.Connection
             }
         }
 
-        internal override async Task HandleAsync(KernelCommand command, KernelInvocationContext context)
+        internal override Task HandleAsync(KernelCommand command, KernelInvocationContext context)
         {
             switch (command)
             {
                 case DirectiveCommand { DirectiveNode: KernelNameDirectiveNode }:
-                    await base.HandleAsync(command, context);
-                    return;
+                    return base.HandleAsync(command, context);
             }
 
             _executionContext = ExecutionContext.Capture();
@@ -93,27 +84,42 @@ namespace Microsoft.DotNet.Interactive.Connection
             var localTargetKernelName = command.TargetKernelName;
             command.TargetKernelName = remoteTargetKernelName;
             var token = command.GetToken();
+          
             var completionSource = new TaskCompletionSource<bool>();
-            var sub = KernelEvents
-                .Where(e => e.Command.GetToken() == token)
-                .Subscribe(kernelEvent =>
-                {
-                    switch (kernelEvent)
-                    {
-                        case CommandFailed _:
-                        case CommandSucceeded _:
-                            completionSource.TrySetResult(true);
-                            _executionContext = null;
-                            break;
-
-                    }
-                });
+            _inflight[token] = (command, _executionContext, completionSource);
 
             var _ = _sender.SendAsync(command, context.CancellationToken);
-            await completionSource.Task;
-            sub.Dispose();
+            return completionSource.Task.ContinueWith(_ =>
+            {
+                command.TargetKernelName = localTargetKernelName;
+            });
+        }
 
-            command.TargetKernelName = localTargetKernelName;
+        protected internal override void DelegatePublication(KernelEvent kernelEvent)
+        {
+            var token = kernelEvent.Command.GetToken(); 
+            var pending = _inflight[token];
+
+            if (pending.executionContext is { } ec)
+            {
+                ExecutionContext.Run(ec, _ =>
+                {
+                    PublishEvent(kernelEvent);
+                }, null);
+            }
+            else
+            {
+                PublishEvent(kernelEvent);
+            }
+
+            switch (kernelEvent)
+            {
+                case CommandFailed _:
+                case CommandSucceeded _:
+                    _inflight.Remove(token);
+                    pending.completionSource.TrySetResult(true);
+                    break;
+            }
         }
     }
 }

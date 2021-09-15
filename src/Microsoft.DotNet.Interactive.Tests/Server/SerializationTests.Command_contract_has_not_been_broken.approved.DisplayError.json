@@ -1,1 +1,1 @@
-{"token":"the-token","commandType":"DisplayError","command":{"message":"oops!","targetKernelName":null}}
+{"token":"the-token","commandType":"DisplayError","command":{"message":"oops!","targetKernelName":null,"id":"command-id"}}

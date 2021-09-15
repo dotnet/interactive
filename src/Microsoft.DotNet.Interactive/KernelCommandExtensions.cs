@@ -33,6 +33,13 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
+        public static void OverrideId(
+            this KernelCommand command,
+            string id)
+        {
+            command.Id = id;
+        }
+
         public static string GetToken(this KernelCommand command)
         {
             if (command is null)

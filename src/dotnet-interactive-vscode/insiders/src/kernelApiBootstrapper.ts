@@ -42,7 +42,7 @@ export function configure(global?: any) {
         if (event.envelope) {
             const envelope = <contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope><any>(event.envelope);
             if (isKernelEventEnvelope(envelope)) {
-                Logger.default.info(`transport got ${envelope.eventType} with token ${envelope.command?.token}`);
+                Logger.default.info(`transport got ${envelope.eventType} with token ${envelope.command?.token} and id ${envelope.command?.command.id}`);
             }
             if (waitingOnMessages) {
                 let capturedMessageWaiter = waitingOnMessages;

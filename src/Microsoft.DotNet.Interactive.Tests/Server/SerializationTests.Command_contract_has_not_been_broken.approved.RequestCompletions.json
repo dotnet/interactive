@@ -1,1 +1,1 @@
-{"token":"the-token","commandType":"RequestCompletions","command":{"code":"Cons","linePosition":{"line":0,"character":4},"targetKernelName":"csharp"}}
+{"token":"the-token","commandType":"RequestCompletions","command":{"code":"Cons","linePosition":{"line":0,"character":4},"targetKernelName":"csharp","id":"command-id"}}

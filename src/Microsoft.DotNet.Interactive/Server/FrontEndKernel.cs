@@ -23,18 +23,18 @@ namespace Microsoft.DotNet.Interactive.Server
             _sender = sender;
         }
 
-        public void ForwardEvent(KernelEvent @event)
+        protected internal override void DelegatePublication(KernelEvent kernelEvent)
         {
-            if (ExecutionContext is not null)
+            if (ExecutionContext is { } ec)
             {
-                ExecutionContext.Run(ExecutionContext, (_) =>
+                ExecutionContext.Run(ec, _ =>
                 {
-                    PublishEvent(@event);
-                },null);
+                    PublishEvent(kernelEvent);
+                }, null);
             }
             else
             {
-                PublishEvent(@event);
+                PublishEvent(kernelEvent);
             }
         }
 

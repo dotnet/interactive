@@ -261,6 +261,17 @@ namespace Microsoft.DotNet.Interactive
             await command.InvokeAsync(context);
         }
 
+
+        protected internal virtual void DelegatePublication(KernelEvent kernelEvent)
+        {
+            if (kernelEvent == null)
+            {
+                throw new ArgumentNullException(nameof(kernelEvent));
+            }
+
+            PublishEvent(kernelEvent);
+        }
+
         public async Task<KernelCommandResult> SendAsync(
             KernelCommand command,
             CancellationToken cancellationToken)
@@ -673,6 +684,9 @@ namespace Microsoft.DotNet.Interactive
         protected virtual void SetHandlingKernel(
             KernelCommand command,
             KernelInvocationContext context) => context.HandlingKernel = this;
+
+        protected virtual Kernel GetDestinationKernel(
+            KernelEvent @event) => this;
 
         public void Dispose() => _disposables.Dispose();
 

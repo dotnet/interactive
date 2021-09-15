@@ -45,6 +45,7 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
             $"{nameof(DisplayEvent)}.{nameof(DisplayEvent.ValueId)}",
             $"{nameof(HoverTextProduced)}.{nameof(HoverTextProduced.LinePositionSpan)}",
             $"{nameof(KernelCommand)}.{nameof(KernelCommand.TargetKernelName)}",
+            $"{nameof(KernelCommand)}.{nameof(KernelCommand.Id)}",
             $"{nameof(SubmitCode)}.{nameof(SubmitCode.SubmissionType)}"
         };
 
