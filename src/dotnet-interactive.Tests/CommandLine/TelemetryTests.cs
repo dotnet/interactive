@@ -18,10 +18,10 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
     public class TelemetryTests : IDisposable
     {
         private readonly FakeTelemetry _fakeTelemetry;
-        private readonly TestConsole _console = new TestConsole();
+        private readonly TestConsole _console = new();
         private readonly Parser _parser;
         private readonly FileInfo _connectionFile;
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        private readonly CompositeDisposable _disposables = new();
 
         public TelemetryTests()
         {
@@ -122,7 +122,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
                 x => x.EventName == "command" &&
                      x.Properties["verb"] == Sha256Hasher.Hash("JUPYTER") &&
                      x.Properties["default-kernel"] == Sha256Hasher.Hash("CSHARP"));
-
         }
 
         [Fact]

@@ -43,6 +43,7 @@ namespace Microsoft.DotNet.Interactive.Connection
                 throw new InvalidOperationException($"ProxyKernel {Name} is already started.");
             }
             
+            // QUESTION: why Task.Run?
             return Task.Run(async () => { await ReceiveAndDispatchCommandsAndEvents(); }, _cancellationTokenSource.Token);
         }
 
@@ -61,6 +62,7 @@ namespace Microsoft.DotNet.Interactive.Connection
                 }
                 else if (d.Command is not null)
                 {
+                    // FIX: (ReceiveAndDispatchCommandsAndEvents) 
                     var _ = Task.Run(async () =>
                     {
                         var eventSubscription = RootKernel.KernelEvents
