@@ -30,36 +30,10 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             MsSqlConnectionOptions options,
             KernelInvocationContext context)
         {
-            var resolvedPackageReferences = ((ISupportNuget)context.HandlingKernel).ResolvedPackageReferences;
-            // Walk through the packages looking for the package that endswith the name "Microsoft.SqlToolsService"
-            // and grab the packageroot
-            var runtimePackageIdSuffix = "native.Microsoft.SqlToolsService";
-            var root = resolvedPackageReferences.FirstOrDefault(p => p.PackageName.EndsWith(runtimePackageIdSuffix, StringComparison.OrdinalIgnoreCase));
-            string pathToService = "";
-            if (root is not null)
-            {
-                // Extract the platform 'osx-x64' from the package name 'runtime.osx-x64.native.microsoft.sqltoolsservice'
-                string[] packageNameSegments = root.PackageName.Split(".");
-                if (packageNameSegments.Length > 2)
-                {
-                    string platform = packageNameSegments[1];
-                    
-                    // Build the path to the MicrosoftSqlToolsServiceLayer executable by reaching into the resolve nuget package
-                    // assuming a convention for native binaries.
-                    pathToService = Path.Combine(
-                        root.PackageRoot,
-                        "runtimes",
-                        platform,
-                        "native",
-                        "MicrosoftSqlToolsServiceLayer");
-                    
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                    {
-                        pathToService += ".exe";
-                    }
-                }
-            }
+            var root = Kernel.Root.FindResolvedPackageReference();
 
+            var pathToService = root.PathToService("MicrosoftSqlToolsServiceLayer");
+            
             var sqlClient = new ToolsServiceClient(pathToService, $"--parent-pid {Process.GetCurrentProcess().Id}");
 
             var kernel = new MsSqlKernel(
