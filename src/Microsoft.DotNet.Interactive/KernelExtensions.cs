@@ -373,9 +373,20 @@ namespace Microsoft.DotNet.Interactive
             Action<Kernel> onVisit,
             bool recursive = false)
         {
-            onVisit(kernel);
+            if (kernel is null)
+            {
+                throw new ArgumentNullException(nameof(kernel));
+            }
 
-            VisitSubkernels(kernel, onVisit, recursive);
+            if (onVisit is null)
+            {
+                throw new ArgumentNullException(nameof(onVisit));
+            }
+
+            foreach (var k in kernel.SubkernelsAndSelf(recursive))
+            {
+                onVisit(k);
+            }
         }
 
         public static async Task VisitSubkernelsAsync(
@@ -404,9 +415,20 @@ namespace Microsoft.DotNet.Interactive
             Func<Kernel, Task> onVisit,
             bool recursive = false)
         {
-            await onVisit(kernel);
+            if (kernel is null)
+            {
+                throw new ArgumentNullException(nameof(kernel));
+            }
 
-            await VisitSubkernelsAsync(kernel, onVisit, recursive);
+            if (onVisit is null)
+            {
+                throw new ArgumentNullException(nameof(onVisit));
+            }
+
+            foreach (var k in kernel.SubkernelsAndSelf(recursive))
+            {
+                await onVisit(k);
+            }
         }
 
         public static IEnumerable<Kernel> SubkernelsAndSelf(
