@@ -424,5 +424,22 @@ namespace Microsoft.DotNet.Interactive
 
             await VisitSubkernelsAsync(kernel, onVisit, recursive);
         }
+
+        public static IEnumerable<Kernel> SubkernelsAndSelf(
+            this Kernel kernel)
+        {
+            yield return kernel;
+
+            if (kernel is CompositeKernel compositeKernel)
+            {
+                foreach (var subKernel in compositeKernel.ChildKernels)
+                {
+                    foreach (var recursive in subKernel.SubkernelsAndSelf())
+                    {
+                        yield return recursive;
+                    }
+                }
+            }
+        }
     }
 }

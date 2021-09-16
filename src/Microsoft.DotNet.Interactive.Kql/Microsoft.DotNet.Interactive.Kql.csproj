@@ -18,6 +18,7 @@
    <Compile Include="..\Microsoft.DotNet.Interactive.SqlServer\MsSqlRpcObjects.cs">
      <Link>MsSqlRpcObjects.cs</Link>
    </Compile>
+   <Compile Include="..\Microsoft.DotNet.Interactive.SqlServer\SqlToolsServiceDiscovery.cs" Link="SqlToolsServiceDiscovery.cs" />
    <Compile Include="..\Microsoft.DotNet.Interactive.SqlServer\ToolsServiceClient.cs">
      <Link>ToolsServiceClient.cs</Link>
    </Compile>
