@@ -13,23 +13,11 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         public static ResolvedPackageReference FindResolvedPackageReference(this Kernel rootKernel)
         {
             var runtimePackageIdSuffix = "native.Microsoft.SqlToolsService";
-            foreach (var kernel in rootKernel.SubkernelsAndSelf().OfType<ISupportNuget>())
-            {
-                var resolvedPackageReferences = kernel.ResolvedPackageReferences;
-
-                // Walk through the packages looking for the package that ends with the name "Microsoft.SqlToolsService"
-                // and grab the packageroot
-
-                var resolved = resolvedPackageReferences.FirstOrDefault(p => p.PackageName.EndsWith(runtimePackageIdSuffix, StringComparison.OrdinalIgnoreCase));
-
-                if (resolved is { })
-                {
-                    return resolved;
-                }
-
-            }
-            ;
-            return null;
+            var resolved = rootKernel.SubkernelsAndSelf()
+                .OfType<ISupportNuget>()
+                .SelectMany(k => k.ResolvedPackageReferences)
+                .FirstOrDefault(p => p.PackageName.EndsWith(runtimePackageIdSuffix, StringComparison.OrdinalIgnoreCase));
+            return resolved;
         }
 
         public static string PathToService(this ResolvedPackageReference resolvedPackageReference, string serviceName)
@@ -38,10 +26,10 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             if (resolvedPackageReference is not null)
             {
                 // Extract the platform 'osx-x64' from the package name 'runtime.osx-x64.native.microsoft.sqltoolsservice'
-                string[] packageNameSegments = resolvedPackageReference.PackageName.Split(".");
+                var packageNameSegments = resolvedPackageReference.PackageName.Split(".");
                 if (packageNameSegments.Length > 2)
                 {
-                    string platform = packageNameSegments[1];
+                    var platform = packageNameSegments[1];
 
                     // Build the path to the MicrosoftSqlToolsServiceLayer executable by reaching into the resolve nuget package
                     // assuming a convention for native binaries.
