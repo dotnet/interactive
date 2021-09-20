@@ -4,7 +4,6 @@ Remove-Item -Recurse ~\.nuget\packages\microsoft.dotnet.interactive* -Force
 
 # build and pack dotnet-interactive 
 dotnet clean
-dotnet build
 dotnet pack  /p:PackageVersion=2.0.0
 
 # copy the dotnet-interactive packages to the temp directory
