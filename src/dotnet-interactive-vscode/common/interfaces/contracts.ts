@@ -50,7 +50,6 @@ export interface AddPackage extends KernelCommand {
 
 export interface KernelCommand {
     targetKernelName?: string;
-    id?: string;
 }
 
 export interface Cancel extends KernelCommand {

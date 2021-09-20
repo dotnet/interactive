@@ -312,9 +312,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 _internalReceiver.Dispose();
             }
 
-            public IAsyncEnumerable<CommandOrEvent> CommandsOrEventsAsync(CancellationToken cancellationToken)
+            public IAsyncEnumerable<CommandOrEvent> CommandsAndEventsAsync(CancellationToken cancellationToken)
             {
-                return _internalReceiver.CommandsOrEventsAsync(cancellationToken);
+                return _internalReceiver.CommandsAndEventsAsync(cancellationToken);
             }
         }
     }
