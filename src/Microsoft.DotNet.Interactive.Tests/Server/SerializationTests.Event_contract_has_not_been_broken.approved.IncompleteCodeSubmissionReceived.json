@@ -1,1 +1,1 @@
-{"event":{},"eventType":"IncompleteCodeSubmissionReceived","command":{"token":"the-token","commandType":"SubmitCode","command":{"code":"123","submissionType":0,"targetKernelName":null,"id":"command-id"}}}
+{"event":{},"eventType":"IncompleteCodeSubmissionReceived","command":{"token":"the-token","id":"command-id","commandType":"SubmitCode","command":{"code":"123","submissionType":0,"targetKernelName":null}}}

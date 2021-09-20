@@ -11,6 +11,7 @@ namespace Microsoft.DotNet.Interactive
     public static class KernelCommandExtensions
     {
         internal const string TokenKey = "token";
+        internal const string IdKey = "command-id";
         internal const string PublishInternalEventsKey = "publish-internal-events";
 
         public static void PublishInternalEvents(
@@ -33,12 +34,8 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public static void OverrideId(
-            this KernelCommand command,
-            string id)
-        {
-            command.Id = id;
-        }
+        
+
 
         public static string GetToken(this KernelCommand command)
         {
@@ -71,6 +68,30 @@ namespace Microsoft.DotNet.Interactive
             return command.GenerateToken();
         }
 
+        internal static void SetId(
+            this KernelCommand command,
+            string id)
+        {
+            command.Properties[IdKey] = id;
+        }
+
+        internal static string GetId(this KernelCommand command)
+        {
+            if (command is null)
+            {
+                throw new ArgumentNullException(nameof(command));
+            }
+
+            if (command.Properties.TryGetValue(IdKey, out var value))
+            {
+                return (string)value;
+            }
+
+            var id = Guid.NewGuid().ToString("N");
+            command.SetId(id);
+            return id;
+
+        }
         private static string GetNextToken(this KernelCommand command)
         {
             if (command.Properties.TryGetValue(TokenKey, out var value) &&
