@@ -133,7 +133,7 @@ namespace Microsoft.DotNet.Interactive.Server
             }
 
             // restore the command id
-            if (json.TryGetProperty("commandId", out var commandIdProperty))
+            if (json.TryGetProperty("id", out var commandIdProperty))
             {
                 commandId = commandIdProperty.GetString();
             }
