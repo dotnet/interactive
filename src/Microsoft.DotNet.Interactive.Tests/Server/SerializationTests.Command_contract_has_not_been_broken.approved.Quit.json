@@ -1,1 +1,1 @@
-{"token":"the-token","commandType":"Quit","command":{"targetKernelName":null,"id":"command-id"}}
+{"token":"the-token","commandId":"command-id","commandType":"Quit","command":{"targetKernelName":null}}

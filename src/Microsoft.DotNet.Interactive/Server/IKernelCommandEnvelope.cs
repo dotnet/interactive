@@ -12,5 +12,7 @@ namespace Microsoft.DotNet.Interactive.Server
         string CommandType { get; }
 
         string Token { get; }
+
+        string CommandId { get; }
     }
 }

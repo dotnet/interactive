@@ -32,7 +32,8 @@ namespace Microsoft.DotNet.Interactive.Commands
         public IDictionary<string, object> Properties { get; }
 
         public string TargetKernelName { get; internal set; }
-        
+
+        [JsonIgnore]
         public string Id { get; internal set; }
 
         internal static KernelCommand None { get; } = new NoCommand();

@@ -5,8 +5,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
-using System.Runtime.Serialization;
 using System.Text.Json;
 using Microsoft.DotNet.Interactive.Commands;
 
@@ -39,6 +37,8 @@ namespace Microsoft.DotNet.Interactive.Server
         public abstract string CommandType { get; }
 
         public string Token => _command.GetToken();
+
+        public string CommandId => _command.Id;
 
         KernelCommand IKernelCommandEnvelope.Command => _command;
 
@@ -124,12 +124,18 @@ namespace Microsoft.DotNet.Interactive.Server
         {
             var commandTypeJson = string.Empty;
             string commandJson;
-            var token = string.Empty;
+            var commandToken = string.Empty;
             var commandId = string.Empty;
 
             if (json.TryGetProperty("commandType", out var commandTypeProperty))
             {
                 commandTypeJson = commandTypeProperty.GetString();
+            }
+
+            // restore the command id
+            if (json.TryGetProperty("commandId", out var commandIdProperty))
+            {
+                commandId = commandIdProperty.GetString();
             }
 
             if (string.IsNullOrWhiteSpace(commandTypeJson))
@@ -149,11 +155,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
             var command = (KernelCommand) JsonSerializer.Deserialize( commandJson,commandType, Serializer.JsonSerializerOptions);
 
-            // restore the command id
-            if (commandJsonProperty.TryGetProperty("id", out var commandIdProperty))
-            {
-                commandId = commandIdProperty.GetString();
-            }
+            
             if (commandId is not null)
             {
                 command.Id = commandId;
@@ -162,11 +164,11 @@ namespace Microsoft.DotNet.Interactive.Server
             // restore the command token
             if (json.TryGetProperty("token", out var tokenProperty))
             {
-                token = tokenProperty.GetString();
+                commandToken = tokenProperty.GetString();
             }
-            if (token is not null)
+            if (commandToken is not null)
             {
-                command.SetToken(token);
+                command.SetToken(commandToken);
             }
 
             return Create(command);
@@ -180,7 +182,8 @@ namespace Microsoft.DotNet.Interactive.Server
             {
                 command = envelope.Command,
                 commandType = envelope.CommandType,
-                token = envelope.Token
+                token = envelope.Token,
+                commandId = envelope.CommandId
             };
 
             return JsonSerializer.Serialize(
@@ -191,6 +194,8 @@ namespace Microsoft.DotNet.Interactive.Server
         internal class SerializationModel
         {
             public string token { get; set; }
+
+            public string commandId { get; set; }
 
             public string commandType { get; set; }
 

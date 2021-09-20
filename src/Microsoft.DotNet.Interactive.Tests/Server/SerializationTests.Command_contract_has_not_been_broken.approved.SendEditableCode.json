@@ -1,1 +1,1 @@
-{"token":"the-token","commandType":"SendEditableCode","command":{"language":"language","code":"code","targetKernelName":"vscode","id":"command-id"}}
+{"token":"the-token","commandId":"command-id","commandType":"SendEditableCode","command":{"language":"language","code":"code","targetKernelName":"vscode"}}
