@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.CommandLine;
 using System.Linq;
 
 namespace Microsoft.DotNet.Interactive.Parsing
@@ -10,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
         public static bool IsUnknownActionDirective(this DirectiveNode directiveNode)
         {
             var parseResult = directiveNode.GetDirectiveParseResult();
-            return directiveNode is ActionDirectiveNode && parseResult.Errors.All(e => e.SymbolResult is null);
+            return directiveNode is ActionDirectiveNode && parseResult.Errors.All(e => e.SymbolResult?.Symbol is RootCommand);
         }
 
     }

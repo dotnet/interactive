@@ -3,6 +3,9 @@
 
 using System.CommandLine;
 using System.IO;
+using System.Linq;
+using System.Reactive.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Connection
@@ -12,12 +15,9 @@ namespace Microsoft.DotNet.Interactive.Connection
         public ConnectStdIoCommand() : base("stdio",
                                      "Connects to a kernel using the stdio protocol")
         {
-            AddOption(new Option<string[]>("--command", "The command to execute")
-            {
-                AllowMultipleArgumentsPerToken = true,
-                IsRequired = true,
-            });
-            AddOption(new Option<DirectoryInfo>("--working-directory", () => new DirectoryInfo(Directory.GetCurrentDirectory()), "The working directory"));
+            Add(new Argument<string[]>("command", "The command to execute"));
+            Add(new Option<DirectoryInfo>("--working-directory", () => new DirectoryInfo(Directory.GetCurrentDirectory()), "The working directory"));
+            Add(new Option<bool>("--wait-for-kernel-ready-event", "Wait for a kernel ready event before continuing"));
         }
 
         public override Task<Kernel> ConnectKernelAsync(KernelName kernelName, StdIoKernelConnector kernelConnector,

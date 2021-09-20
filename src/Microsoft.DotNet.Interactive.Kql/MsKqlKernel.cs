@@ -86,7 +86,7 @@ namespace Microsoft.DotNet.Interactive.Kql
                 switch (kernelInvocationContext.Command)
                 {
                     case SubmitCode c:
-                        var mimeType = commandLineInvocationContext.ParseResult.ValueForOption(MimeTypeOption);
+                        var mimeType = commandLineInvocationContext.ParseResult.GetValueForOption(MimeTypeOption);
 
                         c.Properties.Add("mime-type", mimeType);
                         break;

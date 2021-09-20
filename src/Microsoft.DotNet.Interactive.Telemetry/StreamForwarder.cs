@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
 
             // Using Read with buffer size 1 to prevent looping endlessly
             // like we would when using Read() with no buffer
-            while ((reader.Read(buffer, 0, bufferSize)) > 0)
+            while (reader.Read(buffer, 0, bufferSize) > 0)
             {
                 var currentCharacter = buffer[0];
 
