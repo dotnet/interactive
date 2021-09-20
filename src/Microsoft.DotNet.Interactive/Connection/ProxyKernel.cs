@@ -112,7 +112,7 @@ namespace Microsoft.DotNet.Interactive.Connection
                 PublishEvent(kernelEvent);
             }
 
-            if (pending.command.Equals(kernelEvent.Command))
+            if (pending.command.IsEquivalentTo(kernelEvent.Command))
             {
                 switch (kernelEvent)
                 {
