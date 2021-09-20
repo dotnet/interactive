@@ -450,7 +450,7 @@ Console.WriteLine(d);
 
         private class  NullKernelCommandAndEventReceiver: IKernelCommandAndEventReceiver
         {
-            public IAsyncEnumerable<CommandOrEvent> CommandsOrEventsAsync(CancellationToken cancellationToken)
+            public IAsyncEnumerable<CommandOrEvent> CommandsAndEventsAsync(CancellationToken cancellationToken)
             {
                 throw new NotImplementedException();
             }
@@ -506,7 +506,7 @@ Console.WriteLine(d);
             {
                 _commandsOrEvents.Add(commandOrEvent);
             }
-            public IAsyncEnumerable<CommandOrEvent> CommandsOrEventsAsync(CancellationToken cancellationToken)
+            public IAsyncEnumerable<CommandOrEvent> CommandsAndEventsAsync(CancellationToken cancellationToken)
             {
                 return _commandsOrEvents.GetConsumingEnumerable(cancellationToken).ToAsyncEnumerable();
             }

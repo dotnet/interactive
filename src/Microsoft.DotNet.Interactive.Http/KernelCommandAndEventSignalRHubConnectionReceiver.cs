@@ -33,9 +33,9 @@ namespace Microsoft.DotNet.Interactive.Http
                 receiver.On<string>("kernelEvent", e => _channel.OnNext(e)),
             };
         }
-        public IAsyncEnumerable<CommandOrEvent> CommandsOrEventsAsync(CancellationToken cancellationToken)
+        public IAsyncEnumerable<CommandOrEvent> CommandsAndEventsAsync(CancellationToken cancellationToken)
         {
-            return _internalReceiver.CommandsOrEventsAsync(cancellationToken);
+            return _internalReceiver.CommandsAndEventsAsync(cancellationToken);
         }
 
         public void Dispose()

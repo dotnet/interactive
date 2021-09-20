@@ -85,7 +85,7 @@ namespace Microsoft.DotNet.Interactive.Server
         {
             return Task.Run(async () =>
             {
-                await foreach (var commandOrEvent in _receiver.CommandsOrEventsAsync(_cancellationTokenSource.Token))
+                await foreach (var commandOrEvent in _receiver.CommandsAndEventsAsync(_cancellationTokenSource.Token))
                 {
                     if (commandOrEvent.IsParseError)
                     {

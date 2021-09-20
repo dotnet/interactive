@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             using var stringReader = new StringReader(message);
             var receiver = new KernelCommandAndEventTextReceiver(stringReader);
 
-            var d = await receiver.CommandsOrEventsAsync(CancellationToken.None).FirstAsync();
+            var d = await receiver.CommandsAndEventsAsync(CancellationToken.None).FirstAsync();
 
             d.Event.Should().BeEquivalentTo(kernelEvent);
         }
@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             using var stringReader = new StringReader(message);
             var receiver = new KernelCommandAndEventTextReceiver(stringReader);
 
-            var d = await receiver.CommandsOrEventsAsync(CancellationToken.None).FirstAsync();
+            var d = await receiver.CommandsAndEventsAsync(CancellationToken.None).FirstAsync();
 
             d.Command.Should().BeEquivalentTo(kernelCommand);
         }
@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             using var stringReader = new StringReader(invalidJson);
             var receiver = new KernelCommandAndEventTextReceiver(stringReader);
 
-            var d = await receiver.CommandsOrEventsAsync(CancellationToken.None).FirstAsync();
+            var d = await receiver.CommandsAndEventsAsync(CancellationToken.None).FirstAsync();
 
             d.Event.Should().BeOfType<DiagnosticLogEntryProduced>()
                 .Which

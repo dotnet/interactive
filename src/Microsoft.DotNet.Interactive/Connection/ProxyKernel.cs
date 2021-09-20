@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Interactive.Connection
 
         private async Task ReceiveAndDispatchCommandsAndEvents()
         {
-            await foreach (var d in _receiver.CommandsOrEventsAsync(_cancellationTokenSource.Token))
+            await foreach (var d in _receiver.CommandsAndEventsAsync(_cancellationTokenSource.Token))
             {
                 if (_cancellationTokenSource.IsCancellationRequested)
                 {
