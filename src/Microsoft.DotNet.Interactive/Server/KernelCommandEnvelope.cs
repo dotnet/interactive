@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public string Token => _command.GetToken();
 
-        public string CommandId => _command.Id;
+        public string CommandId => _command.GetId();
 
         KernelCommand IKernelCommandEnvelope.Command => _command;
 
@@ -158,7 +158,7 @@ namespace Microsoft.DotNet.Interactive.Server
             
             if (commandId is not null)
             {
-                command.Id = commandId;
+                command.SetId(commandId);
             }
 
             // restore the command token
@@ -183,7 +183,7 @@ namespace Microsoft.DotNet.Interactive.Server
                 command = envelope.Command,
                 commandType = envelope.CommandType,
                 token = envelope.Token,
-                commandId = envelope.CommandId
+                id = envelope.CommandId
             };
 
             return JsonSerializer.Serialize(
@@ -195,7 +195,7 @@ namespace Microsoft.DotNet.Interactive.Server
         {
             public string token { get; set; }
 
-            public string commandId { get; set; }
+            public string id { get; set; }
 
             public string commandType { get; set; }
 

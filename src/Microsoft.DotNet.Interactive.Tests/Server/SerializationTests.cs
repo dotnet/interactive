@@ -151,7 +151,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         {
             foreach (var command in commands().Select(c =>
             {
-                c.OverrideId("command-id");
+                c.Properties["command-id"] = "command-id";
                 return c;
             }))
             {
@@ -220,7 +220,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         {
             foreach (var @event in events().Select(e =>
             {
-                e.Command.OverrideId("command-id");
+                e.Command.Properties["command-id"] = "command-id";
                 return e;
             }))
             {

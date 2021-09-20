@@ -1,1 +1,1 @@
-{"token":"the-token","commandId":"command-id","commandType":"Cancel","command":{"targetKernelName":"csharp"}}
+{"token":"the-token","id":"command-id","commandType":"Cancel","command":{"targetKernelName":"csharp"}}

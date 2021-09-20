@@ -1,1 +1,1 @@
-{"event":{"name":"a","formattedValue":{"mimeType":"text/html","value":"<span>formatted value</span>"}},"eventType":"ValueProduced","command":{"token":"the-token","commandType":"RequestValue","command":{"name":"a","mimeType":"text/html","targetKernelName":"csharp","id":"command-id"}}}
+{"event":{"name":"a","formattedValue":{"mimeType":"text/html","value":"<span>formatted value</span>"}},"eventType":"ValueProduced","command":{"token":"the-token","id":"command-id","commandType":"RequestValue","command":{"name":"a","mimeType":"text/html","targetKernelName":"csharp"}}}
