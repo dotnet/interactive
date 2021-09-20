@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.DotNet.Interactive.Commands;
 
+#nullable enable
 namespace Microsoft.DotNet.Interactive
 {
     public static class KernelCommandExtensions
@@ -33,9 +34,6 @@ namespace Microsoft.DotNet.Interactive
                 throw new InvalidOperationException("Command token cannot be changed.");
             }
         }
-
-        
-
 
         public static string GetToken(this KernelCommand command)
         {
@@ -116,18 +114,11 @@ namespace Microsoft.DotNet.Interactive
 
         private class TokenSequence
         {
-            private readonly object _lock = new object();
+            private readonly object _lock = new();
 
-            public TokenSequence(string current = null)
+            public TokenSequence(string? current = null)
             {
-                if (current is not null)
-                {
-                    Current = current;
-                }
-                else
-                {
-                    Current = Hash(Guid.NewGuid().ToString());
-                }
+                Current = current ?? Hash(Guid.NewGuid().ToString());
             }
 
             internal string Current { get; private set; }
@@ -156,6 +147,12 @@ namespace Microsoft.DotNet.Interactive
 
                 return Convert.ToBase64String(hash);
             }
+        }
+
+        internal static bool IsEquivalentTo(this KernelCommand src, KernelCommand other)
+        {
+            return ReferenceEquals(src, other)
+                   || src.GetId() == other.GetId();
         }
     }
 }
