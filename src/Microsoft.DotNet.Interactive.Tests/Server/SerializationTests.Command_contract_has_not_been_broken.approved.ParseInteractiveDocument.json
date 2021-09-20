@@ -1,1 +1,1 @@
-{"token":"the-token","commandType":"ParseInteractiveDocument","command":{"fileName":"interactive.ipynb","rawData":"AQIDBA==","targetKernelName":null,"id":"command-id"}}
+{"token":"the-token","commandId":"command-id","commandType":"ParseInteractiveDocument","command":{"fileName":"interactive.ipynb","rawData":"AQIDBA==","targetKernelName":null}}
