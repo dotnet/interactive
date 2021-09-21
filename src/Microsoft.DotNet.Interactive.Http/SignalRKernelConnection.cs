@@ -8,7 +8,7 @@ using Microsoft.DotNet.Interactive.Connection;
 #nullable enable
 namespace Microsoft.DotNet.Interactive.Http
 {
-    public class SignalRConnection : KernelConnection
+    public class SignalRKernelConnection : KernelConnection
     {
         public string? HubUrl { get; set; }
 
