@@ -2,17 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
-using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
-using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Parsing;
@@ -446,70 +441,6 @@ Console.WriteLine(d);
             compositeKernel.UseDefaultMagicCommands();
 
             return compositeKernel.SubmissionParser;
-        }
-
-        private class  NullKernelCommandAndEventReceiver: IKernelCommandAndEventReceiver
-        {
-            public IAsyncEnumerable<CommandOrEvent> CommandsAndEventsAsync(CancellationToken cancellationToken)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        private class NullKernelCommandAndEventSender : IKernelCommandAndEventSender
-        {
-            public Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
-            {
-                throw new NotImplementedException();
-            }
-
-            public Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        private class RecordingKernelCommandAndEventSender : IKernelCommandAndEventSender
-        {
-            private Action<CommandOrEvent> _onSend;
-            public List<KernelCommand> Commands { get; } = new();
-            public List<KernelEvent> Events { get; } = new();
-            public Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
-            {
-                Commands.Add(kernelCommand);
-                _onSend?.Invoke(new CommandOrEvent(kernelCommand));
-                return Task.CompletedTask;
-            }
-
-            public Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
-            {
-                Events.Add(kernelEvent);
-                _onSend?.Invoke(new CommandOrEvent(kernelEvent));
-                return Task.CompletedTask;
-            }
-
-            public void OnSend(Action<CommandOrEvent> onSend)
-            {
-                _onSend = onSend;
-            }
-        }
-
-        private class BlockingCommandAndEventReceiver : IKernelCommandAndEventReceiver
-        {
-            private readonly BlockingCollection<CommandOrEvent> _commandsOrEvents;
-
-            public BlockingCommandAndEventReceiver()
-            {
-                _commandsOrEvents = new BlockingCollection<CommandOrEvent>();
-            }
-            public void Write(CommandOrEvent commandOrEvent)
-            {
-                _commandsOrEvents.Add(commandOrEvent);
-            }
-            public IAsyncEnumerable<CommandOrEvent> CommandsAndEventsAsync(CancellationToken cancellationToken)
-            {
-                return _commandsOrEvents.GetConsumingEnumerable(cancellationToken).ToAsyncEnumerable();
-            }
         }
     }
 }

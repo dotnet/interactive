@@ -8,9 +8,9 @@ using Microsoft.DotNet.Interactive.CSharp;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
-    public class MsSqlConnection : ConnectKernelCommand<MsSqlKernelConnection>
+    public class ConnectMsSql : ConnectKernelCommand<MsSqlKernelConnection>
     {
-        public MsSqlConnection()
+        public ConnectMsSql()
             : base("mssql", "Connects to a Microsoft SQL Server database")
         {
             Add(new Argument<string>(

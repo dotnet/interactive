@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Kql
                 kernel.UseSandDanceExplorer();
 
                 compositeKernel
-                    .UseKernelClientConnection(new KqlKernelConnection());
+                    .UseKernelClientConnection(new ConnectionKql());
 
                 KernelInvocationContext.Current?.Display(
                     new HtmlString(@"<details><summary>Query Microsoft Kusto Server databases.</summary>

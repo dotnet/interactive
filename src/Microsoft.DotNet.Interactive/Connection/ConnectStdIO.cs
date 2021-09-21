@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public class ConnectStdIO : ConnectKernelCommand<StdIoConnection>
+    public class ConnectStdIO : ConnectKernelCommand<StdIoKernelConnection>
     {
         public ConnectStdIO() : base("stdio",
                                      "Connects to a kernel using the stdio protocol")
@@ -21,9 +21,9 @@ namespace Microsoft.DotNet.Interactive.Connection
             AddOption(new Option<bool>("--wait-for-kernel-ready-event", () => false, "Wait for a kernel ready event before continuing"));
         }
 
-        public override Task<Kernel> ConnectKernelAsync(StdIoConnection connection, KernelInvocationContext context)
+        public override Task<Kernel> ConnectKernelAsync(StdIoKernelConnection kernelConnection, KernelInvocationContext context)
         {
-            return connection.ConnectKernelAsync();
+            return kernelConnection.ConnectKernelAsync();
         }
     }
 }

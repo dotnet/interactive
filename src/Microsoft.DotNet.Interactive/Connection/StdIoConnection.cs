@@ -13,7 +13,7 @@ using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public class StdIoConnection : KernelConnection
+    public class StdIoKernelConnection : KernelConnection
     {
         public string[] Command { get; set; } = Array.Empty<string>();
 
@@ -49,11 +49,11 @@ namespace Microsoft.DotNet.Interactive.Connection
                 process.Dispose();
             });
 
-            var _ = kernel.RunAsync();
+            var _ = kernel.StartAsync();
 
             if (WaitForKernelReadyEvent)
             {
-                TaskCompletionSource<bool> ready = new();
+                TaskCompletionSource<bool> ready = new(TaskCreationOptions.RunContinuationsAsynchronously);
                 var sub = kernel.KernelEvents.OfType<KernelReady>().Subscribe(_ =>
                 {
                     ready.SetResult(true);
