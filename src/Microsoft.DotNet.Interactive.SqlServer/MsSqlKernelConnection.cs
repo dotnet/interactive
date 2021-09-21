@@ -1,19 +1,15 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.CommandLine;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
-    public class MsSqlKernelConnection : ConnectKernelCommand<MsSqlConnectionOptions>
+    public class MsSqlKernelConnection : ConnectKernelCommand<MsSqlConnection>
     {
         public MsSqlKernelConnection()
             : base("mssql", "Connects to a Microsoft SQL Server database")
@@ -26,32 +22,27 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                     "Scaffold a DbContext in the C# kernel."));
         }
 
-        public override async Task<Kernel> CreateKernelAsync(
-            MsSqlConnectionOptions options,
+        public override async Task<Kernel> ConnectKernelAsync(
+            MsSqlConnection connection,
             KernelInvocationContext context)
         {
             var root = Kernel.Root.FindResolvedPackageReference();
 
             var pathToService = root.PathToService("MicrosoftSqlToolsServiceLayer");
-            
-            var sqlClient = new ToolsServiceClient(pathToService, $"--parent-pid {Process.GetCurrentProcess().Id}");
 
-            var kernel = new MsSqlKernel(
-                $"sql-{options.KernelName}",
-                options.ConnectionString, 
-                sqlClient);
+            connection.PathToService = pathToService;
 
-            await kernel.ConnectAsync();
+            var kernel = await connection.ConnectKernelAsync();
 
-            if (options.CreateDbContext)
+            if (connection.CreateDbContext)
             {
-                await InitializeDbContextAsync(options, context);
+                await InitializeDbContextAsync(connection, context);
             }
 
             return kernel;
         }
         
-        private async Task InitializeDbContextAsync(MsSqlConnectionOptions options, KernelInvocationContext context)
+        private async Task InitializeDbContextAsync(MsSqlConnection options, KernelInvocationContext context)
         {
             CSharpKernel csharpKernel = null;
 

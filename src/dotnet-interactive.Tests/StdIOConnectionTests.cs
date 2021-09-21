@@ -17,17 +17,6 @@ namespace Microsoft.DotNet.Interactive.Tests
 {
     public class StdIOConnectionTests
     {
-        private async Task<Kernel> CreateProxyKernel(Language language)
-        {
-            var kernel = await ConnectStdIO.CreateStdioKernelAsync(
-                kernelName: "proxy",
-                command: "dotnet-interactive",
-                arguments: $"stdio --default-kernel {language.LanguageName()}",
-                workingDirectory: new DirectoryInfo(Directory.GetCurrentDirectory()),
-                waitForKernelReadyEvent: true);
-            return kernel;
-        }
-
         private static CompositeKernel CreateCompositeKernel()
         {
             return new CompositeKernel().UseKernelClientConnection(new ConnectStdIO());

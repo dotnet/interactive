@@ -8,7 +8,7 @@ using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
-    public class SQLiteKernelConnection : ConnectKernelCommand<SQLiteConnectionOptions>
+    public class SQLiteKernelConnection : ConnectKernelCommand<SQLiteConnection>
     {
         public SQLiteKernelConnection()
             : base("sqlite", "Connects to a SQLite database")
@@ -16,15 +16,11 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             Add(new Argument<string>("connectionString", "The connection string used to connect to the database"));
         }
 
-        public override Task<Kernel> CreateKernelAsync(
-            SQLiteConnectionOptions options,
+        public override Task<Kernel> ConnectKernelAsync(
+            SQLiteConnection connection,
             KernelInvocationContext context)
         {
-            var kernel = new SQLiteKernel(
-                $"sql-{options.KernelName}",
-                options.ConnectionString);
-
-            return Task.FromResult<Kernel>(kernel);
+            return connection.ConnectKernelAsync();
         }
     }
 }

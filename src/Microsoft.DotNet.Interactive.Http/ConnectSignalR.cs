@@ -8,38 +8,18 @@ using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.Http
 {
-    public class ConnectSignalR : ConnectKernelCommand<SignalRConnectionOptions>
+    public class ConnectSignalR : ConnectKernelCommand<SignalRConnection>
     {
         public ConnectSignalR() : base("signalr", "Connects to a kernel using SignalR")
         {
             AddOption(new Option<string>("--hub-url", "The URL of the SignalR hub"));
         }
 
-        public override async Task<Kernel> CreateKernelAsync(
-            SignalRConnectionOptions options,
+        public override Task<Kernel> ConnectKernelAsync(
+            SignalRConnection connection,
             KernelInvocationContext context)
         {
-            var connection = new HubConnectionBuilder()
-                             .WithUrl(options.HubUrl)
-                             .Build();
-
-            await connection.StartAsync();
-
-            await connection.SendAsync("connect");
-
-            var receiver = new KernelCommandAndEventSignalRHubConnectionReceiver(connection);
-            var sender = new KernelCommandAndEventSignalRHubConnectionSender(connection);
-            var proxyKernel = new ProxyKernel(options.KernelName, receiver, sender);
-
-            var _ = proxyKernel.RunAsync();
-
-            proxyKernel.RegisterForDisposal(receiver);
-            proxyKernel.RegisterForDisposal(async () =>
-            {
-                await connection.DisposeAsync();
-            });
-
-            return proxyKernel;
+            return connection.ConnectKernelAsync();
         }
     }
 }

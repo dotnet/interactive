@@ -294,7 +294,7 @@ namespace Microsoft.DotNet.Interactive
         public static CompositeKernel UseKernelClientConnection<TOptions>(
             this CompositeKernel kernel,
             ConnectKernelCommand<TOptions> command)
-            where TOptions : KernelConnectionOptions
+            where TOptions : KernelConnection
         {
             kernel.AddKernelConnection(command);
 
