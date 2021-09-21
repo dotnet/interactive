@@ -8,7 +8,7 @@ using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.Http
 {
-    public class ConnectSignalR : ConnectKernelCommand<SignalRConnection>
+    public class ConnectSignalR : ConnectKernelCommand<SignalRKernelConnection>
     {
         public ConnectSignalR() : base("signalr", "Connects to a kernel using SignalR")
         {
@@ -16,10 +16,10 @@ namespace Microsoft.DotNet.Interactive.Http
         }
 
         public override Task<Kernel> ConnectKernelAsync(
-            SignalRConnection connection,
+            SignalRKernelConnection kernelConnection,
             KernelInvocationContext context)
         {
-            return connection.ConnectKernelAsync();
+            return kernelConnection.ConnectKernelAsync();
         }
     }
 }

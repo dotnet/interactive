@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 kernel.UseSandDanceExplorer();
 
                 compositeKernel
-                    .UseKernelClientConnection(new SQLiteKernelConnection());
+                    .UseKernelClientConnection(new SQLiteConnection());
 
                 KernelInvocationContext.Current?.Display(
                     new HtmlString(@"<details><summary>Query SQLite databases.</summary>
