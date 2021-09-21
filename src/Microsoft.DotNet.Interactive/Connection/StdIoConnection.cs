@@ -15,11 +15,11 @@ namespace Microsoft.DotNet.Interactive.Connection
 {
     public class StdIoKernelConnection : KernelConnection
     {
-        public string[] Command { get; set; } = Array.Empty<string>();
+        public string[] Command { get;  } 
 
-        public DirectoryInfo? WorkingDirectory { get; set; }
+        public DirectoryInfo WorkingDirectory { get;  }
 
-        public bool WaitForKernelReadyEvent { get; set; }
+        public bool WaitForKernelReadyEvent { get;  }
 
         public override async Task<Kernel> ConnectKernelAsync()
         {
@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.Connection
             {
                 FileName = command,
                 Arguments = arguments,
-                WorkingDirectory = WorkingDirectory?.FullName ?? Environment.CurrentDirectory,
+                WorkingDirectory = WorkingDirectory.FullName ,
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
@@ -64,6 +64,13 @@ namespace Microsoft.DotNet.Interactive.Connection
             }
 
             return kernel;
+        }
+
+        public StdIoKernelConnection(string kernelName, string[] command, DirectoryInfo? workingDirectory = null, bool waitForKernelReadyEvent = false) : base(kernelName)
+        {
+            Command = command;
+            WorkingDirectory = workingDirectory ?? new DirectoryInfo( Environment.CurrentDirectory);
+            WaitForKernelReadyEvent = waitForKernelReadyEvent;
         }
     }
 }

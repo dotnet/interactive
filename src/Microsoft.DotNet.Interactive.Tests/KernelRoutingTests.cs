@@ -132,12 +132,8 @@ x");
             var pipeName = Guid.NewGuid().ToString();
 
             StartServer(remoteCompositeKernel, pipeName);
-            
-            var connection = new NamedPipeKernelConnection
-            {
-                KernelName = "proxyKernel",
-                PipeName = pipeName
-            };
+
+            var connection = new NamedPipeKernelConnection("proxyKernel", pipeName);
 
             var proxyKernel = await connection.ConnectKernelAsync();
             
@@ -181,11 +177,8 @@ Console.WriteLine(1);";
             var pipeName = Guid.NewGuid().ToString();
 
             StartServer(remoteCompositeKernel, pipeName);
-            var connection = new NamedPipeKernelConnection
-            {
-                KernelName = "proxyKernel",
-                PipeName = pipeName
-            };
+
+            var connection = new NamedPipeKernelConnection("proxyKernel", pipeName);
 
             var proxyKernel = await connection.ConnectKernelAsync();
 

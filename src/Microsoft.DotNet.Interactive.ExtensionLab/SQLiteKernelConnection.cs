@@ -8,7 +8,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
     public class SQLiteKernelConnection : KernelConnection
     {
-        public string ConnectionString { get; set; }
+        public string ConnectionString { get; }
         public override Task<Kernel> ConnectKernelAsync()
         {
             var kernel = new SQLiteKernel(
@@ -16,6 +16,11 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 ConnectionString);
 
             return Task.FromResult<Kernel>(kernel);
+        }
+
+        public SQLiteKernelConnection(string kernelName, string connectionString) : base(kernelName)
+        {
+            ConnectionString = connectionString;
         }
     }
 }
