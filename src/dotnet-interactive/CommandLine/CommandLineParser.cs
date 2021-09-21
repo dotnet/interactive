@@ -221,20 +221,13 @@ public static class CommandLineParser
                     firstTimeUseNoticeSentinel.CreateIfNotExists();
                 }
 
-                await next(context);
-            })
-            .Build();
-
-        RootCommand DotnetInteractive()
-        {
-            var command = new RootCommand
-            {
-                Name = "dotnet-interactive",
-                Description = "Interactive programming for .NET."
-            };
-
-            command.AddGlobalOption(logPathOption);
-            command.AddGlobalOption(verboseOption);
+                var installCommand = new Command("install", "Install the .NET kernel for Jupyter")
+                {
+                    httpPortRangeOption,
+                    pathOption
+                };
+             
+                installCommand.SetHandler<Func<IConsole, InvocationContext, HttpPortRange, DirectoryInfo, Task>>(InstallHandler, httpPortRangeOption, pathOption);
 
             return command;
         }
