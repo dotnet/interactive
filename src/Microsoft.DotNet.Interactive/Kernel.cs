@@ -264,7 +264,7 @@ namespace Microsoft.DotNet.Interactive
 
         protected internal virtual void DelegatePublication(KernelEvent kernelEvent)
         {
-            if (kernelEvent == null)
+            if (kernelEvent is null)
             {
                 throw new ArgumentNullException(nameof(kernelEvent));
             }
