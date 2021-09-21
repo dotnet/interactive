@@ -12,15 +12,10 @@ namespace Microsoft.DotNet.Interactive.Connection
 {
     public class NamedPipeKernelConnection : KernelConnection
     {
-        public string? PipeName { get; set; }
+        public string PipeName { get; }
         public override async Task<Kernel> ConnectKernelAsync()
         {
-            if (string.IsNullOrWhiteSpace(PipeName))
-            {
-                throw new InvalidComObjectException($"{nameof(PipeName)} cannot be null or whitespaces.");
-            }
-
-            var clientStream = new NamedPipeClientStream(
+           var clientStream = new NamedPipeClientStream(
                 ".",
                 PipeName,
                 PipeDirection.InOut,
@@ -44,6 +39,11 @@ namespace Microsoft.DotNet.Interactive.Connection
 
             var _ = proxyKernel.StartAsync();
             return proxyKernel;
+        }
+
+        public NamedPipeKernelConnection(string kernelName, string pipeName) : base(kernelName)
+        {
+            PipeName = pipeName;
         }
     }
 }

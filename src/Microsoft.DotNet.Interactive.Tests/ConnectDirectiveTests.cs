@@ -215,5 +215,9 @@ hello!
         {
             return CreateKernel();
         }
+
+        public FakeKernelConnection(string kernelName) : base(kernelName)
+        {
+        }
     }
 }

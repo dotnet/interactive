@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.Http
 {
     public class SignalRKernelConnection : KernelConnection
     {
-        public string? HubUrl { get; set; }
+        public string HubUrl { get;  }
 
         public override async Task<Kernel> ConnectKernelAsync()
         {
@@ -35,6 +35,11 @@ namespace Microsoft.DotNet.Interactive.Http
             });
 
             return proxyKernel;
+        }
+
+        public SignalRKernelConnection(string kernelName, string hubUrl) : base(kernelName)
+        {
+            HubUrl = hubUrl;
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -13,14 +14,20 @@ namespace Microsoft.DotNet.Interactive.Kql
 {
     public class KqlKernelConnection : KernelConnection
     {
-        public string Cluster { get; set; }
+        public string Cluster { get; }
 
-        public string Database { get; set; }
+        public string Database { get; }
 
         public string PathToService { get; set; }
 
         public override async Task<Kernel> ConnectKernelAsync()
         {
+
+            if (string.IsNullOrWhiteSpace(PathToService))
+            {
+                throw new InvalidOperationException($"{nameof(PathToService)} cannot be null or whitespace.");
+            }
+
             var connectionDetails = await BuildConnectionDetailsAsync();
 
             var sqlClient = new ToolsServiceClient(PathToService);
@@ -59,5 +66,10 @@ namespace Microsoft.DotNet.Interactive.Kql
             return request.Headers.GetValues("Authorization").First().Split(' ').Last();
         }
 
+        public KqlKernelConnection(string kernelName, string cluster, string database) : base(kernelName)
+        {
+            Cluster = cluster;
+            Database = database;
+        }
     }
 }
