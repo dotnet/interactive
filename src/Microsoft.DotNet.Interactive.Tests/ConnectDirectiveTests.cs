@@ -186,7 +186,7 @@ hello!
             return compositeKernel;
         }
 
-        public class ConnectFakeKernel : ConnectKernelCommand<FakeKernelConnectionOptions>
+        public class ConnectFakeKernel : ConnectKernelCommand<FakeKernelConnection>
         {
             public ConnectFakeKernel(string name, string description) : base(name, description)
             {
@@ -195,17 +195,25 @@ hello!
                 ConnectedKernelDescription = "Doesn't really do anything at all.";
             }
 
-            public Func<FakeKernelConnectionOptions, KernelInvocationContext, Task<Kernel>> CreateKernel { get; set; }
+            public Func<FakeKernelConnection, KernelInvocationContext, Task<Kernel>> CreateKernel { get; set; }
 
-            public override Task<Kernel> CreateKernelAsync(FakeKernelConnectionOptions options, KernelInvocationContext context)
+            public override Task<Kernel> ConnectKernelAsync(FakeKernelConnection connection, KernelInvocationContext context)
             {
-                return CreateKernel(options, context);
+                connection.CreateKernel = () => CreateKernel(connection, context);
+                return connection.ConnectKernelAsync();
             }
         }
     }
 
-    public class FakeKernelConnectionOptions : KernelConnectionOptions
+    public class FakeKernelConnection : KernelConnection
     {
         public int FakenessLevel { get; set; }
+
+        public Func<Task<Kernel>> CreateKernel { get; set; }
+
+        public override Task<Kernel> ConnectKernelAsync()
+        {
+            return CreateKernel();
+        }
     }
 }

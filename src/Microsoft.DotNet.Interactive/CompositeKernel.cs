@@ -340,7 +340,7 @@ namespace Microsoft.DotNet.Interactive
 
         public void AddKernelConnection<TOptions>(
             ConnectKernelCommand<TOptions> connectionCommand)
-            where TOptions : KernelConnectionOptions
+            where TOptions : KernelConnection
         {
             var kernelNameOption = new Option<string>(
                 "--kernel-name",
@@ -361,7 +361,7 @@ namespace Microsoft.DotNet.Interactive
                 TOptions, KernelInvocationContext>(
                 async (options, context) =>
                 {
-                    var connectedKernel = await connectionCommand.CreateKernelAsync(options, context);
+                    var connectedKernel = await connectionCommand.ConnectKernelAsync(options, context);
 
                     if (string.IsNullOrWhiteSpace(connectedKernel.Name))
                     {

@@ -98,9 +98,10 @@ namespace Microsoft.DotNet.Interactive.Connection
         protected internal override void DelegatePublication(KernelEvent kernelEvent)
         {
             var token = kernelEvent.Command.GetToken(); 
-            var pending = _inflight[token];
+            
+            var hasPending =  _inflight.TryGetValue(token,out var pending);
 
-            if (pending.executionContext is { } ec)
+            if (hasPending && pending.executionContext is { } ec)
             {
                 ExecutionContext.Run(ec, _ =>
                 {
@@ -112,16 +113,13 @@ namespace Microsoft.DotNet.Interactive.Connection
                 PublishEvent(kernelEvent);
             }
 
-            if (pending.command.IsEquivalentTo(kernelEvent.Command))
+            switch (kernelEvent)
             {
-                switch (kernelEvent)
-                {
-                    case CommandFailed _:
-                    case CommandSucceeded _:
-                        _inflight.Remove(token);
-                        pending.completionSource.TrySetResult(true);
-                        break;
-                }
+                case CommandFailed _ when hasPending && pending.command.IsEquivalentTo(kernelEvent.Command):
+                case CommandSucceeded _ when hasPending && pending.command.IsEquivalentTo(kernelEvent.Command):
+                    _inflight.Remove(token);
+                    pending.completionSource.TrySetResult(true);
+                    break;
             }
         }
     }
