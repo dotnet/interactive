@@ -21,6 +21,7 @@ namespace Microsoft.DotNet.Interactive.Connection
         private readonly CancellationTokenSource _cancellationTokenSource = new();
         private ExecutionContext _executionContext;
         private readonly Dictionary<string,(KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<bool> completionSource)> _inflight = new();
+        private int _started = 0;
 
         public ProxyKernel(string name, IKernelCommandAndEventReceiver receiver, IKernelCommandAndEventSender sender) : base(name)
         {
@@ -34,8 +35,14 @@ namespace Microsoft.DotNet.Interactive.Connection
             });
         }
 
-        public Task RunAsync()
+
+        public Task StartAsync()
         {
+            if (Interlocked.CompareExchange(ref _started, 1, 0) == 1)
+            {
+                throw new InvalidOperationException($"ProxyKernel {Name} is already started.");
+            }
+            
             return Task.Run(async () => { await ReceiveAndDispatchCommandsAndEvents(); }, _cancellationTokenSource.Token);
         }
 

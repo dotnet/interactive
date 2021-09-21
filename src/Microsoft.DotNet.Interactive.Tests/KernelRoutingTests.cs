@@ -132,13 +132,14 @@ x");
             var pipeName = Guid.NewGuid().ToString();
 
             StartServer(remoteCompositeKernel, pipeName);
-            var connection = new ConnectNamedPipe();
-
-            var proxyKernel = await connection.ConnectKernelAsync(new NamedPipeConnection
+            
+            var connection = new NamedPipeKernelConnection
             {
                 KernelName = "proxyKernel",
                 PipeName = pipeName
-            }, null);
+            };
+
+            var proxyKernel = await connection.ConnectKernelAsync();
             
             var code = @"#i ""nuget:source1""
 #i ""nuget:source2""
@@ -180,13 +181,13 @@ Console.WriteLine(1);";
             var pipeName = Guid.NewGuid().ToString();
 
             StartServer(remoteCompositeKernel, pipeName);
-            var connection = new ConnectNamedPipe();
-
-            var proxyKernel = await connection.ConnectKernelAsync(new NamedPipeConnection
+            var connection = new NamedPipeKernelConnection
             {
                 KernelName = "proxyKernel",
                 PipeName = pipeName
-            }, null);
+            };
+
+            var proxyKernel = await connection.ConnectKernelAsync();
 
             var code = @"#i ""nuget:source1""
 #i ""nuget:source2""

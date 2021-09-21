@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.CommandLine;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -12,34 +11,53 @@ using Microsoft.DotNet.Interactive.SqlServer;
 
 namespace Microsoft.DotNet.Interactive.Kql
 {
-    public class KqlKernelConnection : ConnectKernelCommand<KqlConnection>
+    public class KqlKernelConnection : KernelConnection
     {
-        public KqlKernelConnection()
-            : base("kql", "Connects to a Microsoft Kusto Server database")
+        public string Cluster { get; set; }
+
+        public string Database { get; set; }
+
+        public string PathToService { get; set; }
+
+        public override async Task<Kernel> ConnectKernelAsync()
         {
-            Add(new Option<string>(
-                "--cluster",
-                "The cluster used to connect") {IsRequired = true});
-            Add(new Option<string>(
-                "--database",
-                "The database to query"));
-        }
+            var connectionDetails = await BuildConnectionDetailsAsync();
 
-        public override async Task<Kernel> ConnectKernelAsync(
-            KqlConnection connection,
-            KernelInvocationContext context)
-        {
-            var root = Kernel.Root.FindResolvedPackageReference();
+            var sqlClient = new ToolsServiceClient(PathToService);
 
-            var pathToService = root.PathToService("MicrosoftKustoServiceLayer");
+            var kernel = new MsKqlKernel(
+                $"kql-{KernelName}",
+                connectionDetails,
+                sqlClient);
 
-            connection.PathToService = pathToService;
-
-            var kernel = await connection.ConnectKernelAsync();
+            await kernel.ConnectAsync();
 
             return kernel;
         }
 
+        private async Task<KqlConnectionDetails> BuildConnectionDetailsAsync()
+        {
+            return new KqlConnectionDetails
+            {
+                Cluster = Cluster,
+                Database = Database,
+                Token = await GetKustoTokenAsync()
+            };
+        }
+
+        private async Task<string> GetKustoTokenAsync()
+        {
+            var kcsb = new KustoConnectionStringBuilder(Cluster, Database)
+                .WithAadUserPromptAuthentication();
+            var authenticator = HttpClientAuthenticatorFactory.CreateAuthenticator(kcsb);
+
+            var request = new HttpRequestMessage();
+            await authenticator.AuthenticateAsync(request);
+
+            // first value of authorization is the auth token
+            // stored in <bearer> <token> format
+            return request.Headers.GetValues("Authorization").First().Split(' ').Last();
+        }
 
     }
 }

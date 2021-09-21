@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.Http
             var sender = new KernelCommandAndEventSignalRHubConnectionSender(hubConnection);
             var proxyKernel = new ProxyKernel(KernelName, receiver, sender);
 
-            var _ = proxyKernel.RunAsync();
+            var _ = proxyKernel.StartAsync();
 
             proxyKernel.RegisterForDisposal(receiver);
             proxyKernel.RegisterForDisposal(async () =>

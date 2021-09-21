@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public class NamedPipeConnection : KernelConnection
+    public class NamedPipeKernelConnection : KernelConnection
     {
         public string? PipeName { get; set; }
         public override async Task<Kernel> ConnectKernelAsync()
@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.Interactive.Connection
             var sender = new KernelCommandAndEventPipeStreamSender(clientStream);
             var proxyKernel = new ProxyKernel(KernelName, receiver, sender);
 
-            var _ = proxyKernel.RunAsync();
+            var _ = proxyKernel.StartAsync();
             return proxyKernel;
         }
     }

@@ -11,6 +11,34 @@ using System.Threading;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
+    public class KernelConnectionManager: IDisposable
+    {
+        private readonly ConcurrentDictionary<string, (IKernelCommandAndEventSender sender, MultiplexingKernelCommandAndEventReceiver multiplexingReceiver)> _storage = new();
+
+        public bool TryGetConnection(string connectionId, out IKernelCommandAndEventSender sender,
+            out MultiplexingKernelCommandAndEventReceiver multiplexingReceiver)
+        {
+            var found = _storage.TryGetValue(connectionId, out var connection);
+            sender = found ? connection.sender : null;
+            multiplexingReceiver = found ? connection.multiplexingReceiver : null;
+            return found;
+        }
+
+        public void AddConnection(string connectionId, IKernelCommandAndEventSender sender,
+            MultiplexingKernelCommandAndEventReceiver multiplexingReceiver)
+        {
+            _storage[connectionId] = new (sender, multiplexingReceiver);
+        }
+
+        public void Dispose()
+        {
+            foreach (var connection in _storage)
+            {
+                connection.Value.multiplexingReceiver.Dispose();
+            }
+        }
+    }
+
     public class MultiplexingKernelCommandAndEventReceiver : IKernelCommandAndEventReceiver, IDisposable
     {
         private readonly IKernelCommandAndEventReceiver _source;

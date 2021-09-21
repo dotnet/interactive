@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 kernel.UseSandDanceExplorer();
 
                 compositeKernel
-                    .UseKernelClientConnection(new MsSqlConnection());
+                    .UseKernelClientConnection(new ConnectMsSql());
 
                 KernelInvocationContext.Current?.Display(
                     new HtmlString(@"<details><summary>Query Microsoft SQL Server databases.</summary>
