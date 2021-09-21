@@ -398,6 +398,7 @@ export interface KernelEventEnvelope {
 
 export interface KernelCommandEnvelope {
     token?: string;
+    id?: string;
     commandType: KernelCommandType;
     command: KernelCommand;
 }

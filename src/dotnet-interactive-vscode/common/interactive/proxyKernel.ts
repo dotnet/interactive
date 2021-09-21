@@ -27,7 +27,7 @@ export class ProxyKernel extends Kernel {
             Logger.default.info(`proxy ${this.name} got event ${envelope.eventType} from ${envelope.command?.command?.targetKernelName} with token ${envelope.command?.token}`);
             if (envelope.command!.token === token) {
                 commandInvocation.context.publish(envelope);
-                if (envelope.command!.command!.id === commandInvocation.commandEnvelope.command.id) {
+                if (envelope.command!.id === commandInvocation.commandEnvelope.id) {
                     switch (envelope.eventType) {
                         case contracts.CommandFailedType:
                         case contracts.CommandSucceededType:

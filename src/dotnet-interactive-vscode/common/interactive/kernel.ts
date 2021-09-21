@@ -35,14 +35,14 @@ export class Kernel {
             let nextToken = this._tokenGenerator.GetNewToken();
             if (KernelInvocationContext.current?.commandEnvelope) {
                 // a parent command exists, create a token hierarchy
-                nextToken = KernelInvocationContext.current.commandEnvelope.token;
+                nextToken = KernelInvocationContext.current.commandEnvelope.token!;
             }
 
             commandEnvelope.token = nextToken;
         }
 
-        if (!commandEnvelope.command.id) {
-            commandEnvelope.command.id = Guid.create().toString();
+        if (!commandEnvelope.id) {
+            commandEnvelope.id = Guid.create().toString();
         }
     }
 
