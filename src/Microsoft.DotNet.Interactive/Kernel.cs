@@ -15,7 +15,6 @@ using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.Server;
@@ -38,7 +37,6 @@ namespace Microsoft.DotNet.Interactive
         private KernelInvocationContext _inFlightContext;
         private int _countOfLanguageServiceCommandsInFlight = 0;
         private KernelName _name;
-        private string _name1;
 
         protected Kernel(string name)
         {

@@ -4,7 +4,6 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.DotNet.Interactive.Connection;
-using Microsoft.DotNet.Interactive.Documents;
 
 #nullable enable
 namespace Microsoft.DotNet.Interactive.Http

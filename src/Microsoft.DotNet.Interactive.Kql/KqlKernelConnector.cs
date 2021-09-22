@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Kusto.Data;
 using Kusto.Data.Security;
 using Microsoft.DotNet.Interactive.Connection;
-using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.SqlServer;
 
 namespace Microsoft.DotNet.Interactive.Kql
