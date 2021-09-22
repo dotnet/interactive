@@ -2,13 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.CommandLine.Binding;
 using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 using FluentAssertions;
@@ -24,16 +22,18 @@ using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.Extensions.DependencyInjection;
-
+using Pocket;
+using Pocket.For.Xunit;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
 {
+    [LogToPocketLogger(@"c:\temp\test.log")]
     public class CommandLineParserTests : IDisposable
     {
         private readonly ITestOutputHelper _output;
-        private readonly TestConsole _console = new TestConsole();
+        private readonly TestConsole _console = new();
         private StartupOptions _startOptions;
         private readonly Parser _parser;
         private readonly FileInfo _connectionFile;
@@ -46,6 +46,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             KernelEventEnvelope.ResetToDefaults();
 
             _output = output;
+
             _serviceCollection = new ServiceCollection();
             _parser = CommandLineParser.Create(
                 _serviceCollection,
@@ -104,38 +105,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
                 .FullName
                 .Should()
                 .Be(logPath.FullName);
-        }
-
-        [Fact]
-        public async Task kernel_server_honors_log_path()
-        {
-            using var logPath = DisposableDirectory.Create();
-
-            _output.WriteLine($"Created log file: {logPath.Directory.FullName}");
-
-            var waitTime = TimeSpan.FromSeconds(10);
-
-            using (var kernel = new CompositeKernel().UseKernelClientConnection(new ConnectStdIoCommand()))
-            {
-                await kernel.SendAsync(new SubmitCode($"#!connect stdio --kernel-name proxy --command \"{Dotnet.Path}\" \"{typeof(Program).Assembly.Location}\" stdio --log-path \"{logPath.Directory.FullName}\" --verbose"));
-
-                await kernel.SendAsync(new SubmitCode("1+1", "proxy"));
-            }
-
-            // wait for log file to be created
-            var logFile = await logPath.Directory.WaitForFile(
-                              timeout: waitTime,
-                              predicate: _file => true); // any matching file is the one we want
-            logFile.Should().NotBeNull($"a log file should have been created at {logFile.FullName}");
-
-            // check log file for expected contents
-            (await logFile.WaitForFileCondition(
-                 timeout: waitTime,
-                 predicate: file => file.Length > 0))
-                .Should()
-                .BeTrue($"expected non-empty log file within {waitTime.TotalSeconds}s");
-            var logFileContents = File.ReadAllText(logFile.FullName);
-            logFileContents.Should().Contain("CodeSubmissionReceived: 1+1");
         }
 
         [Fact]

@@ -258,6 +258,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             int timeout = 3000)
             where T : KernelEvent
         {
+            // FIX: (EventuallyContainSingle) remove this
             return Task.Run(async () =>
             {
                 if (where is null)
