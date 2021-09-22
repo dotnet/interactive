@@ -106,7 +106,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 return;
             }
 
-            var completion = new TaskCompletionSource<bool>();
+            var completion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             _queryCompletionHandler = async queryParams =>
             {
