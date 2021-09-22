@@ -291,10 +291,10 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public static CompositeKernel UseKernelClientConnection<TOptions>(
+        public static CompositeKernel UseKernelClientConnection<TConnector>(
             this CompositeKernel kernel,
-            ConnectKernelCommand<TOptions> command)
-            where TOptions : KernelConnection
+            ConnectKernelCommand<TConnector> command)
+            where TConnector : KernelConnector
         {
             kernel.AddKernelConnection(command);
 

@@ -115,7 +115,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
 
             var waitTime = TimeSpan.FromSeconds(10);
 
-            using (var kernel = new CompositeKernel().UseKernelClientConnection(new ConnectStdIO()))
+            using (var kernel = new CompositeKernel().UseKernelClientConnection(new ConnectStdIoCommand()))
             {
                 await kernel.SendAsync(new SubmitCode($"#!connect stdio --kernel-name proxy --command \"{Dotnet.Path}\" \"{typeof(Program).Assembly.Location}\" stdio --log-path \"{logPath.Directory.FullName}\" --verbose --wait-for-kernel-ready-event true"));
 

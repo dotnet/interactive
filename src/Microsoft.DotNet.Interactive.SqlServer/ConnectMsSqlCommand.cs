@@ -8,9 +8,9 @@ using Microsoft.DotNet.Interactive.CSharp;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
-    public class ConnectMsSql : ConnectKernelCommand<MsSqlKernelConnection>
+    public class ConnectMsSqlCommand : ConnectKernelCommand<MsSqlKernelConnector>
     {
-        public ConnectMsSql()
+        public ConnectMsSqlCommand()
             : base("mssql", "Connects to a Microsoft SQL Server database")
         {
             Add(new Argument<string>(
@@ -22,26 +22,26 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         }
 
         public override async Task<Kernel> ConnectKernelAsync(
-            MsSqlKernelConnection connection,
+            MsSqlKernelConnector connector,
             KernelInvocationContext context)
         {
             var root = Kernel.Root.FindResolvedPackageReference();
 
             var pathToService = root.PathToService("MicrosoftSqlToolsServiceLayer");
 
-            connection.PathToService = pathToService;
+            connector.PathToService = pathToService;
 
-            var kernel = await connection.ConnectKernelAsync();
+            var kernel = await connector.ConnectKernelAsync();
 
-            if (connection.CreateDbContext)
+            if (connector.CreateDbContext)
             {
-                await InitializeDbContextAsync(connection, context);
+                await InitializeDbContextAsync(connector, context);
             }
 
             return kernel;
         }
         
-        private async Task InitializeDbContextAsync(MsSqlKernelConnection options, KernelInvocationContext context)
+        private async Task InitializeDbContextAsync(MsSqlKernelConnector options, KernelInvocationContext context)
         {
             CSharpKernel csharpKernel = null;
 

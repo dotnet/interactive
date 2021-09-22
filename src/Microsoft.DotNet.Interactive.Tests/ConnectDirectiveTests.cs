@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             using var compositeKernel = new CompositeKernel();
 
-            compositeKernel.UseKernelClientConnection(new ConnectNamedPipe());
+            compositeKernel.UseKernelClientConnection(new ConnectNamedPipeCommand());
 
             compositeKernel.Directives
                            .Should()
@@ -186,7 +186,7 @@ hello!
             return compositeKernel;
         }
 
-        public class ConnectFakeKernel : ConnectKernelCommand<FakeKernelConnection>
+        public class ConnectFakeKernel : ConnectKernelCommand<FakeKernelConnector>
         {
             public ConnectFakeKernel(string name, string description) : base(name, description)
             {
@@ -195,17 +195,17 @@ hello!
                 ConnectedKernelDescription = "Doesn't really do anything at all.";
             }
 
-            public Func<FakeKernelConnection, KernelInvocationContext, Task<Kernel>> CreateKernel { get; set; }
+            public Func<FakeKernelConnector, KernelInvocationContext, Task<Kernel>> CreateKernel { get; set; }
 
-            public override Task<Kernel> ConnectKernelAsync(FakeKernelConnection connection, KernelInvocationContext context)
+            public override Task<Kernel> ConnectKernelAsync(FakeKernelConnector connector, KernelInvocationContext context)
             {
-                connection.CreateKernel = () => CreateKernel(connection, context);
-                return connection.ConnectKernelAsync();
+                connector.CreateKernel = () => CreateKernel(connector, context);
+                return connector.ConnectKernelAsync();
             }
         }
     }
 
-    public class FakeKernelConnection : KernelConnection
+    public class FakeKernelConnector : KernelConnector
     {
         public int FakenessLevel { get; set; }
 
@@ -216,7 +216,7 @@ hello!
             return CreateKernel();
         }
 
-        public FakeKernelConnection(string kernelName) : base(kernelName)
+        public FakeKernelConnector(string kernelName) : base(kernelName)
         {
         }
     }

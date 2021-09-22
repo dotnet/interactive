@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 #nullable enable
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public abstract class KernelConnection
+    public abstract class KernelConnector
     {
-        protected KernelConnection(string kernelName)
+        protected KernelConnector(string kernelName)
         {
             KernelName = kernelName;
         }

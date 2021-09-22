@@ -6,17 +6,17 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public class ConnectNamedPipe : ConnectKernelCommand<NamedPipeKernelConnection>
+    public class ConnectNamedPipeCommand : ConnectKernelCommand<NamedPipeKernelConnector>
     {
-        public ConnectNamedPipe() : base("named-pipe",
+        public ConnectNamedPipeCommand() : base("named-pipe",
                                          "Connects to a kernel using named pipes")
         {
             AddOption(new Option<string>("--pipe-name", "The name of the named pipe"));
         }
 
-        public override Task<Kernel> ConnectKernelAsync(NamedPipeKernelConnection connection, KernelInvocationContext context)
+        public override Task<Kernel> ConnectKernelAsync(NamedPipeKernelConnector connector, KernelInvocationContext context)
         {
-            return connection.ConnectKernelAsync();
+            return connector.ConnectKernelAsync();
         }
     }
 }

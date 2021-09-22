@@ -9,10 +9,10 @@ namespace Microsoft.DotNet.Interactive.Connection
     /// <summary>
     /// Defines a magic command that can be used to connect a subkernel dynamically.
     /// </summary>
-    /// <typeparam name="TConnection">The type bound to which custom command line options passed with the connect command will be bound.</typeparam>
-    public abstract class ConnectKernelCommand<TConnection> :
+    /// <typeparam name="TConnector">The type bound to which custom command line options passed with the connect command will be bound.</typeparam>
+    public abstract class ConnectKernelCommand<TConnector> :
         Command
-        where TConnection : KernelConnection
+        where TConnector : KernelConnector
     {
         protected ConnectKernelCommand(
             string name, 
@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.Interactive.Connection
         /// <param name="context">The <see cref="KernelInvocationContext"/> for the current command.</param>
         /// <returns>A new <see cref="Kernel"/> instance to be added to the <see cref="CompositeKernel"/>.</returns>
         public abstract Task<Kernel> ConnectKernelAsync(
-            TConnection connection,
+            TConnector connection,
             KernelInvocationContext context);
     }
 }

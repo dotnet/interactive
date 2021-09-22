@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 string markupCode,
                 string expected)
             {
-                var kernel = CreateKernel().UseKernelClientConnection(new ConnectSignalR());
+                var kernel = CreateKernel().UseKernelClientConnection(new ConnectSignalRCommand());
 
                 markupCode
                     .ParseMarkupCode()
@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 string markupCode,
                 string expected)
             {
-                var kernel = CreateKernel().UseKernelClientConnection(new ConnectSignalR());
+                var kernel = CreateKernel().UseKernelClientConnection(new ConnectSignalRCommand());
 
                 markupCode
                     .ParseMarkupCode()
@@ -166,7 +166,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
             [InlineData("#!connect [| |]")]
             public void Inner_symbol_completions_do_not_include_top_level_symbols(string markupCode)
             {
-                var kernel = CreateCompositeKernel().UseKernelClientConnection(new ConnectSignalR());
+                var kernel = CreateCompositeKernel().UseKernelClientConnection(new ConnectSignalRCommand());
 
                 markupCode
                     .ParseMarkupCode()
