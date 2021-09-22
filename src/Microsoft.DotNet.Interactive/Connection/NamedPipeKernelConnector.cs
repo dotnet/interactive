@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.Connection
     public class NamedPipeKernelConnector : KernelConnector
     {
         public string PipeName { get; }
-        public override async Task<Kernel> ConnectKernelAsync()
+        public override async Task<Kernel> ConnectKernelAsync(string kernelName)
         {
            var clientStream = new NamedPipeClientStream(
                 ".",
@@ -24,23 +24,23 @@ namespace Microsoft.DotNet.Interactive.Connection
             clientStream.ReadMode = PipeTransmissionMode.Message;
 
 
-            var proxyKernel = CreateProxyKernel(clientStream);
+            var proxyKernel = CreateProxyKernel(kernelName, clientStream);
 
             return proxyKernel;
         }
 
-        private ProxyKernel CreateProxyKernel(PipeStream clientStream)
+        private ProxyKernel CreateProxyKernel(string kernelName, PipeStream clientStream)
         {
             var receiver = new KernelCommandAndEventPipeStreamReceiver(clientStream);
 
             var sender = new KernelCommandAndEventPipeStreamSender(clientStream);
-            var proxyKernel = new ProxyKernel(KernelName, receiver, sender);
+            var proxyKernel = new ProxyKernel(kernelName, receiver, sender);
 
             var _ = proxyKernel.StartAsync();
             return proxyKernel;
         }
 
-        public NamedPipeKernelConnector(string kernelName, string pipeName) : base(kernelName)
+        public NamedPipeKernelConnector(string pipeName)
         {
             PipeName = pipeName;
         }

@@ -8,13 +8,6 @@ namespace Microsoft.DotNet.Interactive.Connection
 {
     public abstract class KernelConnector
     {
-        protected KernelConnector(string kernelName)
-        {
-            KernelName = kernelName;
-        }
-
-        public string KernelName { get; }
-
-        public abstract Task<Kernel> ConnectKernelAsync();
+        public abstract Task<Kernel> ConnectKernelAsync(string kernelName);
     }
 }

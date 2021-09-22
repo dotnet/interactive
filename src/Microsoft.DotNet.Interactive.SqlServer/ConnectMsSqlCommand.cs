@@ -21,9 +21,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                     "Scaffold a DbContext in the C# kernel."));
         }
 
-        public override async Task<Kernel> ConnectKernelAsync(
-            MsSqlKernelConnector connector,
-            KernelInvocationContext context)
+        public override async Task<Kernel> ConnectKernelAsync(string kernelName, MsSqlKernelConnector connector, KernelInvocationContext context)
         {
             var root = Kernel.Root.FindResolvedPackageReference();
 
@@ -31,17 +29,17 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
             connector.PathToService = pathToService;
 
-            var kernel = await connector.ConnectKernelAsync();
+            var kernel = await connector.ConnectKernelAsync(kernelName);
 
             if (connector.CreateDbContext)
             {
-                await InitializeDbContextAsync(connector, context);
+                await InitializeDbContextAsync(kernelName, connector, context);
             }
 
             return kernel;
         }
         
-        private async Task InitializeDbContextAsync(MsSqlKernelConnector options, KernelInvocationContext context)
+        private async Task InitializeDbContextAsync(string kernelName, MsSqlKernelConnector options, KernelInvocationContext context)
         {
             CSharpKernel csharpKernel = null;
 
@@ -58,7 +56,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 return;
             }
 
-            context.Display($"Scaffolding a `DbContext` and initializing an instance of it called `{options.KernelName}` in the C# kernel.", "text/markdown");
+            context.Display($"Scaffolding a `DbContext` and initializing an instance of it called `{kernelName}` in the C# kernel.", "text/markdown");
 
             var submission1 = @$"
 #r ""nuget:Microsoft.EntityFrameworkCore.Design,3.1.8""
@@ -88,8 +86,8 @@ var model = scaffolder.ScaffoldModel(
     new ModelReverseEngineerOptions(),
     new ModelCodeGenerationOptions()
     {{
-        ContextName = ""{options.KernelName}Context"",
-        ModelNamespace = ""{options.KernelName}""
+        ContextName = ""{kernelName}Context"",
+        ModelNamespace = ""{kernelName}""
     }});
 
 var code = @""using System;
@@ -101,7 +99,7 @@ foreach (var file in  new[] {{ model.ContextFile.Code }}.Concat(model.Additional
 {{
     var fileCode = file
         // remove namespaces, which don't compile in Roslyn scripting
-        .Replace(""namespace {options.KernelName}"", """")
+        .Replace(""namespace {kernelName}"", """")
 
         // remove the namespaces, which have been hoisted to the top of the code submission
         .Replace(""using System;"", """")
@@ -124,7 +122,7 @@ foreach (var file in  new[] {{ model.ContextFile.Code }}.Concat(model.Additional
             await csharpKernel.SubmitCodeAsync(submission2);
 
             var submission3 = $@"
-var {options.KernelName} = new {options.KernelName}Context();";
+var {kernelName} = new {kernelName}Context();";
 
             await csharpKernel.SubmitCodeAsync(submission3);
         }

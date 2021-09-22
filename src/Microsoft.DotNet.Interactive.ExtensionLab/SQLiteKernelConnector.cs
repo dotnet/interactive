@@ -9,16 +9,16 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
     public class SQLiteKernelConnector : KernelConnector
     {
         public string ConnectionString { get; }
-        public override Task<Kernel> ConnectKernelAsync()
+        public override Task<Kernel> ConnectKernelAsync(string kernelName)
         {
             var kernel = new SQLiteKernel(
-                $"sql-{KernelName}",
+                $"sql-{kernelName}",
                 ConnectionString);
 
             return Task.FromResult<Kernel>(kernel);
         }
 
-        public SQLiteKernelConnector(string kernelName, string connectionString) : base(kernelName)
+        public SQLiteKernelConnector(string connectionString)
         {
             ConnectionString = connectionString;
         }

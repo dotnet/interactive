@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.Kql
 
         public string PathToService { get; set; }
 
-        public override async Task<Kernel> ConnectKernelAsync()
+        public override async Task<Kernel> ConnectKernelAsync(string kernelName)
         {
 
             if (string.IsNullOrWhiteSpace(PathToService))
@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.Interactive.Kql
             var sqlClient = new ToolsServiceClient(PathToService);
 
             var kernel = new MsKqlKernel(
-                $"kql-{KernelName}",
+                $"kql-{kernelName}",
                 connectionDetails,
                 sqlClient);
 
@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.Interactive.Kql
             return request.Headers.GetValues("Authorization").First().Split(' ').Last();
         }
 
-        public KqlKernelConnector(string kernelName, string cluster, string database) : base(kernelName)
+        public KqlKernelConnector(string cluster, string database)
         {
             Cluster = cluster;
             Database = database;

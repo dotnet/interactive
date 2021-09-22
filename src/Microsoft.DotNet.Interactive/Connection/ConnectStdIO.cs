@@ -21,9 +21,9 @@ namespace Microsoft.DotNet.Interactive.Connection
             AddOption(new Option<bool>("--wait-for-kernel-ready-event", () => false, "Wait for a kernel ready event before continuing"));
         }
 
-        public override Task<Kernel> ConnectKernelAsync(StdIoKernelConnector kernelConnector, KernelInvocationContext context)
+        public override Task<Kernel> ConnectKernelAsync(string kernelName, StdIoKernelConnector kernelConnector, KernelInvocationContext context)
         {
-            return kernelConnector.ConnectKernelAsync();
+            return kernelConnector.ConnectKernelAsync(kernelName);
         }
     }
 }

@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.Connection
 
         public bool WaitForKernelReadyEvent { get;  }
 
-        public override async Task<Kernel> ConnectKernelAsync()
+        public override async Task<Kernel> ConnectKernelAsync(string kernelName)
         {
             string command = Command[0];
             string arguments = string.Join(" ", Command.Skip(1));
@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Interactive.Connection
             var receiver = new KernelCommandAndEventTextReceiver(process.StandardOutput);
             var sender = new KernelCommandAndEventTextStreamSender(process.StandardInput);
 
-            var kernel = new ProxyKernel(KernelName, receiver, sender);
+            var kernel = new ProxyKernel(kernelName, receiver, sender);
 
             kernel.RegisterForDisposal(() =>
             {
@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.Interactive.Connection
             return kernel;
         }
 
-        public StdIoKernelConnector(string kernelName, string[] command, DirectoryInfo? workingDirectory = null, bool waitForKernelReadyEvent = false) : base(kernelName)
+        public StdIoKernelConnector(string[] command, DirectoryInfo? workingDirectory = null, bool waitForKernelReadyEvent = false) 
         {
             Command = command;
             WorkingDirectory = workingDirectory ?? new DirectoryInfo( Environment.CurrentDirectory);

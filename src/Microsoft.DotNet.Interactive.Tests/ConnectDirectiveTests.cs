@@ -119,9 +119,9 @@ hello!
             using var compositeKernel = new CompositeKernel();
 
             compositeKernel.UseKernelClientConnection(
-                new ConnectFakeKernel("fake", "Connects the fake kernel")
+                new ConnectFakeKernelCommand("fake", "Connects the fake kernel")
                 {
-                    CreateKernel = (options, context) => Task.FromResult<Kernel>(new FakeKernel(options.KernelName))
+                    CreateKernel = (name, options, context) => Task.FromResult<Kernel>(new FakeKernel(name))
                 });
 
             await compositeKernel.SubmitCodeAsync("#!connect fake --kernel-name fake-kernel");
@@ -148,9 +148,9 @@ hello!
             using var compositeKernel = new CompositeKernel();
 
             compositeKernel.UseKernelClientConnection(
-                new ConnectFakeKernel("fake", "Connects the fake kernel")
+                new ConnectFakeKernelCommand("fake", "Connects the fake kernel")
                 {
-                    CreateKernel = (options, context) => Task.FromResult<Kernel>(new FakeKernel(options.KernelName))
+                    CreateKernel = (name, options, context) => Task.FromResult<Kernel>(new FakeKernel(name))
                 });
 
             await compositeKernel.SubmitCodeAsync("#!connect fake --kernel-name fake1");
@@ -171,13 +171,13 @@ hello!
             };
 
             compositeKernel.UseKernelClientConnection(
-                new ConnectFakeKernel("fake", "Connects the fake kernel")
+                new ConnectFakeKernelCommand("fake", "Connects the fake kernel")
                 {
-                    CreateKernel = (options, context) =>
+                    CreateKernel = (name, options, context) =>
                     {
                         var kernel = fakeKernel ?? new FakeKernel();
 
-                        kernel.Name = options.KernelName;
+                        kernel.Name = name;
                        
                         return Task.FromResult<Kernel>(kernel);
                     }
@@ -186,21 +186,21 @@ hello!
             return compositeKernel;
         }
 
-        public class ConnectFakeKernel : ConnectKernelCommand<FakeKernelConnector>
+        public class ConnectFakeKernelCommand : ConnectKernelCommand<FakeKernelConnector>
         {
-            public ConnectFakeKernel(string name, string description) : base(name, description)
+            public ConnectFakeKernelCommand(string name, string description) : base(name, description)
             {
                 AddOption(new Option<int>("--fakeness-level"));
 
                 ConnectedKernelDescription = "Doesn't really do anything at all.";
             }
 
-            public Func<FakeKernelConnector, KernelInvocationContext, Task<Kernel>> CreateKernel { get; set; }
+            public Func<string, FakeKernelConnector, KernelInvocationContext, Task<Kernel>> CreateKernel { get; set; }
 
-            public override Task<Kernel> ConnectKernelAsync(FakeKernelConnector connector, KernelInvocationContext context)
+            public override Task<Kernel> ConnectKernelAsync(string kernelName, FakeKernelConnector connector, KernelInvocationContext context)
             {
-                connector.CreateKernel = () => CreateKernel(connector, context);
-                return connector.ConnectKernelAsync();
+                connector.CreateKernel = (name) => CreateKernel(name, connector, context);
+                return connector.ConnectKernelAsync(kernelName);
             }
         }
     }
@@ -209,15 +209,11 @@ hello!
     {
         public int FakenessLevel { get; set; }
 
-        public Func<Task<Kernel>> CreateKernel { get; set; }
+        public Func<string,Task<Kernel>> CreateKernel { get; set; }
 
-        public override Task<Kernel> ConnectKernelAsync()
+        public override Task<Kernel> ConnectKernelAsync(string kernelName)
         {
-            return CreateKernel();
-        }
-
-        public FakeKernelConnector(string kernelName) : base(kernelName)
-        {
+            return CreateKernel(kernelName);
         }
     }
 }

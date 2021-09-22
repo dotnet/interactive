@@ -4,6 +4,7 @@
 using System.CommandLine;
 using System.Threading.Tasks;
 
+#nullable enable
 namespace Microsoft.DotNet.Interactive.Connection
 {
     /// <summary>
@@ -24,15 +25,17 @@ namespace Microsoft.DotNet.Interactive.Connection
         /// <summary>
         /// Description used for the kernel connected using this command.
         /// </summary>
-        public string ConnectedKernelDescription { get; set; }
+        public string? ConnectedKernelDescription { get; set; }
 
         /// <summary>
         /// Creates a kernel instance when this connection command is invoked.
         /// </summary>
+        /// <param name="kernelName">The name to use in kernel creation.</param>
         /// <param name="connection">The connection to establish.</param>
         /// <param name="context">The <see cref="KernelInvocationContext"/> for the current command.</param>
         /// <returns>A new <see cref="Kernel"/> instance to be added to the <see cref="CompositeKernel"/>.</returns>
         public abstract Task<Kernel> ConnectKernelAsync(
+            string kernelName,
             TConnector connection,
             KernelInvocationContext context);
     }

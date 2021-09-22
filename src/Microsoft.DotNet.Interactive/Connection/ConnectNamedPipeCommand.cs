@@ -14,9 +14,9 @@ namespace Microsoft.DotNet.Interactive.Connection
             AddOption(new Option<string>("--pipe-name", "The name of the named pipe"));
         }
 
-        public override Task<Kernel> ConnectKernelAsync(NamedPipeKernelConnector connector, KernelInvocationContext context)
+        public override Task<Kernel> ConnectKernelAsync(string kernelName, NamedPipeKernelConnector connector, KernelInvocationContext context)
         {
-            return connector.ConnectKernelAsync();
+            return connector.ConnectKernelAsync(kernelName);
         }
     }
 }

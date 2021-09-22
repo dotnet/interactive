@@ -358,14 +358,14 @@ namespace Microsoft.DotNet.Interactive
             }
 
             connectionCommand.Handler = CommandHandler.Create<
-                TOptions, KernelInvocationContext>(
-                async (options, context) =>
+                string, TOptions, KernelInvocationContext>(
+                async (kernelName, options, context) =>
                 {
-                    var connectedKernel = await connectionCommand.ConnectKernelAsync(options, context);
+                    var connectedKernel = await connectionCommand.ConnectKernelAsync(kernelName, options, context);
 
                     if (string.IsNullOrWhiteSpace(connectedKernel.Name))
                     {
-                        connectedKernel.Name = options.KernelName;
+                        connectedKernel.Name = kernelName;
                     }
 
                     Add(connectedKernel);
