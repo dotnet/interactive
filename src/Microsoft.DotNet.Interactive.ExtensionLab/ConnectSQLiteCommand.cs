@@ -7,19 +7,19 @@ using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
-    public class SQLiteConnection : ConnectKernelCommand<SQLiteKernelConnection>
+    public class ConnectSQLiteCommand : ConnectKernelCommand<SQLiteKernelConnector>
     {
-        public SQLiteConnection()
+        public ConnectSQLiteCommand()
             : base("sqlite", "Connects to a SQLite database")
         {
             Add(new Argument<string>("connectionString", "The connection string used to connect to the database"));
         }
 
         public override Task<Kernel> ConnectKernelAsync(
-            SQLiteKernelConnection kernelConnection,
+            SQLiteKernelConnector kernelConnector,
             KernelInvocationContext context)
         {
-            return kernelConnection.ConnectKernelAsync();
+            return kernelConnector.ConnectKernelAsync();
         }
     }
 }

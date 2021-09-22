@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                         return Task.CompletedTask;
                     }
                 },
-            }.UseKernelClientConnection(new ConnectNamedPipe());
+            }.UseKernelClientConnection(new ConnectNamedPipeCommand());
 
             localCompositeKernel.DefaultKernelName = "pwsh";
 
@@ -133,7 +133,7 @@ x");
 
             StartServer(remoteCompositeKernel, pipeName);
 
-            var connection = new NamedPipeKernelConnection("proxyKernel", pipeName);
+            var connection = new NamedPipeKernelConnector("proxyKernel", pipeName);
 
             var proxyKernel = await connection.ConnectKernelAsync();
             
@@ -178,7 +178,7 @@ Console.WriteLine(1);";
 
             StartServer(remoteCompositeKernel, pipeName);
 
-            var connection = new NamedPipeKernelConnection("proxyKernel", pipeName);
+            var connection = new NamedPipeKernelConnector("proxyKernel", pipeName);
 
             var proxyKernel = await connection.ConnectKernelAsync();
 

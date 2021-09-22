@@ -78,7 +78,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             using var localCompositeKernel = new CompositeKernel
             {
                 new FSharpKernel()
-            }.UseKernelClientConnection(new ConnectNamedPipe());
+            }.UseKernelClientConnection(new ConnectNamedPipeCommand());
 
             localCompositeKernel.DefaultKernelName = "fsharp";
 

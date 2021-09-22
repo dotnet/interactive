@@ -8,7 +8,7 @@ using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
-    public class MsSqlKernelConnection : KernelConnection
+    public class MsSqlKernelConnector : KernelConnector
     {
         public bool CreateDbContext { get;  }
 
@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             return kernel;
         }
 
-        public MsSqlKernelConnection(string kernelName, bool createDbContext, string connectionString) : base(kernelName)
+        public MsSqlKernelConnector(string kernelName, bool createDbContext, string connectionString) : base(kernelName)
         {
             CreateDbContext = createDbContext;
             ConnectionString = connectionString;

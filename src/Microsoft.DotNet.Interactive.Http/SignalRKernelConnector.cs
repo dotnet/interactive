@@ -8,7 +8,7 @@ using Microsoft.DotNet.Interactive.Connection;
 #nullable enable
 namespace Microsoft.DotNet.Interactive.Http
 {
-    public class SignalRKernelConnection : KernelConnection
+    public class SignalRKernelConnector : KernelConnector
     {
         public string HubUrl { get;  }
 
@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive.Http
             return proxyKernel;
         }
 
-        public SignalRKernelConnection(string kernelName, string hubUrl) : base(kernelName)
+        public SignalRKernelConnector(string kernelName, string hubUrl) : base(kernelName)
         {
             HubUrl = hubUrl;
         }

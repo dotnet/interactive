@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.Interactive.Kql.Tests
 
             kernel.DefaultKernelName = csharpKernel.Name;
            
-            kernel.UseKernelClientConnection(new ConnectionKql());
+            kernel.UseKernelClientConnection(new ConnectKqlCommand());
             kernel.UseNteractDataExplorer();
             kernel.UseSandDanceExplorer();
 

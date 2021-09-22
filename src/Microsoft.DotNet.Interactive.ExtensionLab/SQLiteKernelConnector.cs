@@ -6,7 +6,7 @@ using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
-    public class SQLiteKernelConnection : KernelConnection
+    public class SQLiteKernelConnector : KernelConnector
     {
         public string ConnectionString { get; }
         public override Task<Kernel> ConnectKernelAsync()
@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             return Task.FromResult<Kernel>(kernel);
         }
 
-        public SQLiteKernelConnection(string kernelName, string connectionString) : base(kernelName)
+        public SQLiteKernelConnector(string kernelName, string connectionString) : base(kernelName)
         {
             ConnectionString = connectionString;
         }

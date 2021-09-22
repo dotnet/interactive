@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.Tests
     {
         private static CompositeKernel CreateCompositeKernel()
         {
-            return new CompositeKernel().UseKernelClientConnection(new ConnectStdIO());
+            return new CompositeKernel().UseKernelClientConnection(new ConnectStdIoCommand());
         }
 
         [Theory]

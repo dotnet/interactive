@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.IO.Pipes;
-using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Threading.Tasks;
 
@@ -10,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public class NamedPipeKernelConnection : KernelConnection
+    public class NamedPipeKernelConnector : KernelConnector
     {
         public string PipeName { get; }
         public override async Task<Kernel> ConnectKernelAsync()
@@ -41,7 +40,7 @@ namespace Microsoft.DotNet.Interactive.Connection
             return proxyKernel;
         }
 
-        public NamedPipeKernelConnection(string kernelName, string pipeName) : base(kernelName)
+        public NamedPipeKernelConnector(string kernelName, string pipeName) : base(kernelName)
         {
             PipeName = pipeName;
         }

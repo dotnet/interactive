@@ -13,7 +13,7 @@ using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public class StdIoKernelConnection : KernelConnection
+    public class StdIoKernelConnector : KernelConnector
     {
         public string[] Command { get;  } 
 
@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.Interactive.Connection
             return kernel;
         }
 
-        public StdIoKernelConnection(string kernelName, string[] command, DirectoryInfo? workingDirectory = null, bool waitForKernelReadyEvent = false) : base(kernelName)
+        public StdIoKernelConnector(string kernelName, string[] command, DirectoryInfo? workingDirectory = null, bool waitForKernelReadyEvent = false) : base(kernelName)
         {
             Command = command;
             WorkingDirectory = workingDirectory ?? new DirectoryInfo( Environment.CurrentDirectory);

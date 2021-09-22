@@ -340,7 +340,7 @@ namespace Microsoft.DotNet.Interactive
 
         public void AddKernelConnection<TOptions>(
             ConnectKernelCommand<TOptions> connectionCommand)
-            where TOptions : KernelConnection
+            where TOptions : KernelConnector
         {
             var kernelNameOption = new Option<string>(
                 "--kernel-name",

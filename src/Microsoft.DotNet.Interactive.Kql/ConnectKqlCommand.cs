@@ -8,9 +8,9 @@ using Microsoft.DotNet.Interactive.SqlServer;
 
 namespace Microsoft.DotNet.Interactive.Kql
 {
-    public class ConnectionKql : ConnectKernelCommand<KqlKernelConnection>
+    public class ConnectKqlCommand : ConnectKernelCommand<KqlKernelConnector>
     {
-        public ConnectionKql()
+        public ConnectKqlCommand()
             : base("kql", "Connects to a Microsoft Kusto Server database")
         {
             Add(new Option<string>(
@@ -22,16 +22,16 @@ namespace Microsoft.DotNet.Interactive.Kql
         }
 
         public override async Task<Kernel> ConnectKernelAsync(
-            KqlKernelConnection connection,
+            KqlKernelConnector connector,
             KernelInvocationContext context)
         {
             var root = Kernel.Root.FindResolvedPackageReference();
 
             var pathToService = root.PathToService("MicrosoftKustoServiceLayer");
 
-            connection.PathToService = pathToService;
+            connector.PathToService = pathToService;
 
-            var kernel = await connection.ConnectKernelAsync();
+            var kernel = await connector.ConnectKernelAsync();
 
             return kernel;
         }

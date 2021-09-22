@@ -12,7 +12,7 @@ using Microsoft.DotNet.Interactive.SqlServer;
 
 namespace Microsoft.DotNet.Interactive.Kql
 {
-    public class KqlKernelConnection : KernelConnection
+    public class KqlKernelConnector : KernelConnector
     {
         public string Cluster { get; }
 
@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.Interactive.Kql
             return request.Headers.GetValues("Authorization").First().Split(' ').Last();
         }
 
-        public KqlKernelConnection(string kernelName, string cluster, string database) : base(kernelName)
+        public KqlKernelConnector(string kernelName, string cluster, string database) : base(kernelName)
         {
             Cluster = cluster;
             Database = database;
