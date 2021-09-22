@@ -8,6 +8,11 @@ namespace Microsoft.DotNet.Interactive.Documents
 {
     public class KernelName
     {
+        public override string ToString()
+        {
+            return Name;
+        }
+
         public KernelName(string kernelName) : this(kernelName, Array.Empty<string>())
         {
 
