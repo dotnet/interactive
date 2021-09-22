@@ -133,9 +133,9 @@ x");
 
             StartServer(remoteCompositeKernel, pipeName);
 
-            var connection = new NamedPipeKernelConnector("proxyKernel", pipeName);
+            var connection = new NamedPipeKernelConnector(pipeName);
 
-            var proxyKernel = await connection.ConnectKernelAsync();
+            var proxyKernel = await connection.ConnectKernelAsync("proxyKernel");
             
             var code = @"#i ""nuget:source1""
 #i ""nuget:source2""
@@ -178,9 +178,9 @@ Console.WriteLine(1);";
 
             StartServer(remoteCompositeKernel, pipeName);
 
-            var connection = new NamedPipeKernelConnector("proxyKernel", pipeName);
+            var connection = new NamedPipeKernelConnector(pipeName);
 
-            var proxyKernel = await connection.ConnectKernelAsync();
+            var proxyKernel = await connection.ConnectKernelAsync("proxyKernel");
 
             var code = @"#i ""nuget:source1""
 #i ""nuget:source2""

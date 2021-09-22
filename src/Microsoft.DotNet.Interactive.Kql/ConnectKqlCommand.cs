@@ -21,9 +21,7 @@ namespace Microsoft.DotNet.Interactive.Kql
                 "The database to query"));
         }
 
-        public override async Task<Kernel> ConnectKernelAsync(
-            KqlKernelConnector connector,
-            KernelInvocationContext context)
+        public override async Task<Kernel> ConnectKernelAsync(string kernelName, KqlKernelConnector connector, KernelInvocationContext context)
         {
             var root = Kernel.Root.FindResolvedPackageReference();
 
@@ -31,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.Kql
 
             connector.PathToService = pathToService;
 
-            var kernel = await connector.ConnectKernelAsync();
+            var kernel = await connector.ConnectKernelAsync(kernelName);
 
             return kernel;
         }

@@ -15,11 +15,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             Add(new Argument<string>("connectionString", "The connection string used to connect to the database"));
         }
 
-        public override Task<Kernel> ConnectKernelAsync(
-            SQLiteKernelConnector kernelConnector,
-            KernelInvocationContext context)
+        public override Task<Kernel> ConnectKernelAsync(string kernelName, SQLiteKernelConnector kernelConnector, KernelInvocationContext context)
         {
-            return kernelConnector.ConnectKernelAsync();
+            return kernelConnector.ConnectKernelAsync(kernelName);
         }
     }
 }
