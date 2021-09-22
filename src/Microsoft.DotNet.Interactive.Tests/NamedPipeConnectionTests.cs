@@ -30,6 +30,49 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [FactSkipLinux]
+        public async Task it_can_reuse_connection_for_multiple_proxy_kernel()
+        {
+            var pipeName = Guid.NewGuid().ToString();
+
+            // start server
+
+            var remoteDefaultKernelInvoked = false;
+
+            using var remoteCompositeKernel = new CompositeKernel
+            {
+                new FakeKernel("csharp")
+                {
+                    Handle = (command, context) =>
+                    {
+                        remoteDefaultKernelInvoked = true;
+                        return Task.CompletedTask;
+                    }
+                },
+                new FakeKernel("powershell")
+            };
+
+            remoteCompositeKernel.DefaultKernelName = "csharp";
+
+            StartServer(remoteCompositeKernel, pipeName);
+
+            // setup connection
+
+            //var namedPipeConnection = new NamedPipeKernelConnection(pipeName);
+
+            //var localKernel1 =  await namedPipeConnection.ConnectKernelAsync(new KernelName("kernel1"));
+
+            //var localKernel2 = await namedPipeConnection.ConnectKernelAsync(new KernelName("kernel2"));
+
+            //var kernelEvents1 = localKernel1.KernelEvents.ToSubscribedList();
+
+            //var kernelEvents2 = localKernel2.KernelEvents.ToSubscribedList();
+
+            
+
+            throw new NotImplementedException();
+        }
+
+        [FactSkipLinux]
         public async Task can_address_remote_composite_kernel_using_named_pipe()
         {
             using var localCompositeKernel = new CompositeKernel
