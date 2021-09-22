@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly ReplaySubject<KernelEvent> _events = new();
 
-        private readonly ConcurrentDictionary<KernelCommand, ReplaySubject<KernelEvent>> _childCommands = new();
+        private readonly ConcurrentDictionary<KernelCommand, ReplaySubject<KernelEvent>> _childCommands = new (new CommandEqualityComparer());
 
         private readonly CompositeDisposable _disposables = new();
 
@@ -183,7 +183,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 events.OnNext(@event);
             }
-            else if (Command == command)
+            else if (CommandEqualityComparer.Instance.Equals( Command ,command))
             {
                 _events.OnNext(@event);
             }
@@ -285,5 +285,33 @@ namespace Microsoft.DotNet.Interactive
         public Task ScheduleAsync(Func<KernelInvocationContext, Task> func) =>
             HandlingKernel.SendAsync(new AnonymousKernelCommand((_, invocationContext) =>
                                                                     func(invocationContext)));
+    }
+
+    internal class CommandEqualityComparer : IEqualityComparer<KernelCommand>
+    {
+        public static CommandEqualityComparer Instance { get; } = new();
+
+        public bool Equals(KernelCommand x, KernelCommand y)
+        {
+            if (ReferenceEquals(x, y))
+            {
+                return true;
+            }
+
+            if (x.Properties.TryGetValue(KernelCommandExtensions.IdKey, out var xId) &&
+                xId is string xIdString && 
+                y.Properties.TryGetValue(KernelCommandExtensions.IdKey, out var yId) &&
+                yId is string yIdString )
+            {
+                return string.Equals(xIdString, yIdString, StringComparison.Ordinal);
+            }
+
+            return false;
+        }
+
+        public int GetHashCode(KernelCommand obj)
+        {
+            return obj.GetOrCreateId().GetHashCode();
+        }
     }
 }

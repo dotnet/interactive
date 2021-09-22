@@ -36,9 +36,9 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public abstract string CommandType { get; }
 
-        public string Token => _command.GetToken();
+        public string Token => _command.GetOrCreateToken();
 
-        public string CommandId => _command.GetId();
+        public string CommandId => _command.GetOrCreateId();
 
         KernelCommand IKernelCommandEnvelope.Command => _command;
 

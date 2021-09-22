@@ -12,24 +12,41 @@ namespace Microsoft.DotNet.Interactive.Connection
 {
     public class NamedPipeKernelConnector : KernelConnector
     {
+        private MultiplexingKernelCommandAndEventReceiver? _receiver;
+        private KernelCommandAndEventPipeStreamSender? _sender;
+
         public string PipeName { get; }
         public override async Task<Kernel> ConnectKernelAsync(KernelName kernelName)
         {
-           var clientStream = new NamedPipeClientStream(
-                ".",
-                PipeName,
-                PipeDirection.InOut,
-                PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
+            ProxyKernel? proxyKernel;
 
-            await clientStream.ConnectAsync();
-            clientStream.ReadMode = PipeTransmissionMode.Message;
+            if (_receiver is not null)
+            {
+                proxyKernel = new ProxyKernel(kernelName.Name,_receiver.CreateChildReceiver(), _sender);
+            }
+            else
+            {
+                var clientStream = new NamedPipeClientStream(
+                    ".",
+                    PipeName,
+                    PipeDirection.InOut,
+                    PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
 
+                await clientStream.ConnectAsync();
+                clientStream.ReadMode = PipeTransmissionMode.Message;
 
-            var proxyKernel = CreateProxyKernel(kernelName, clientStream);
+                _receiver = new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventPipeStreamReceiver(clientStream));
+                _sender = new KernelCommandAndEventPipeStreamSender(clientStream);
 
-            return proxyKernel;
+        
+                proxyKernel = new ProxyKernel(kernelName.Name, _receiver, _sender);
+            }
+
+            var _ = proxyKernel.StartAsync();
+            return proxyKernel; ;
         }
 
+        
         private ProxyKernel CreateProxyKernel(KernelName kernelName, PipeStream clientStream)
         {
             var receiver = new KernelCommandAndEventPipeStreamReceiver(clientStream);
