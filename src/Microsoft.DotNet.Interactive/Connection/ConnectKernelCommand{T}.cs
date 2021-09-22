@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Documents;
 
 #nullable enable
 namespace Microsoft.DotNet.Interactive.Connection
@@ -34,8 +35,7 @@ namespace Microsoft.DotNet.Interactive.Connection
         /// <param name="connection">The connection to establish.</param>
         /// <param name="context">The <see cref="KernelInvocationContext"/> for the current command.</param>
         /// <returns>A new <see cref="Kernel"/> instance to be added to the <see cref="CompositeKernel"/>.</returns>
-        public abstract Task<Kernel> ConnectKernelAsync(
-            string kernelName,
+        public abstract Task<Kernel> ConnectKernelAsync(KernelName kernelName,
             TConnector connection,
             KernelInvocationContext context);
     }

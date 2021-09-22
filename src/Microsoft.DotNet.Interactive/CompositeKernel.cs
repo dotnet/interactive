@@ -361,7 +361,7 @@ namespace Microsoft.DotNet.Interactive
                 string, TOptions, KernelInvocationContext>(
                 async (kernelName, options, context) =>
                 {
-                    var connectedKernel = await connectionCommand.ConnectKernelAsync(kernelName, options, context);
+                    var connectedKernel = await connectionCommand.ConnectKernelAsync(new KernelName(kernelName), options, context);
 
                     if (string.IsNullOrWhiteSpace(connectedKernel.Name))
                     {

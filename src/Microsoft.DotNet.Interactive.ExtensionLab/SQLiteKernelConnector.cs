@@ -3,13 +3,14 @@
 
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
+using Microsoft.DotNet.Interactive.Documents;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
     public class SQLiteKernelConnector : KernelConnector
     {
         public string ConnectionString { get; }
-        public override Task<Kernel> ConnectKernelAsync(string kernelName)
+        public override Task<Kernel> ConnectKernelAsync(KernelName kernelName)
         {
             var kernel = new SQLiteKernel(
                 $"sql-{kernelName}",

@@ -4,6 +4,7 @@
 using System.CommandLine;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
+using Microsoft.DotNet.Interactive.Documents;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
@@ -15,7 +16,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             Add(new Argument<string>("connectionString", "The connection string used to connect to the database"));
         }
 
-        public override Task<Kernel> ConnectKernelAsync(string kernelName, SQLiteKernelConnector kernelConnector, KernelInvocationContext context)
+        public override Task<Kernel> ConnectKernelAsync(KernelName kernelName, SQLiteKernelConnector kernelConnector,
+            KernelInvocationContext context)
         {
             return kernelConnector.ConnectKernelAsync(kernelName);
         }

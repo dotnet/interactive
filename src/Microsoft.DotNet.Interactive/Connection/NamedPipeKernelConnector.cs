@@ -4,6 +4,7 @@
 using System.IO.Pipes;
 using System.Security.Principal;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Documents;
 
 #nullable enable
 
@@ -12,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Connection
     public class NamedPipeKernelConnector : KernelConnector
     {
         public string PipeName { get; }
-        public override async Task<Kernel> ConnectKernelAsync(string kernelName)
+        public override async Task<Kernel> ConnectKernelAsync(KernelName kernelName)
         {
            var clientStream = new NamedPipeClientStream(
                 ".",
@@ -29,12 +30,12 @@ namespace Microsoft.DotNet.Interactive.Connection
             return proxyKernel;
         }
 
-        private ProxyKernel CreateProxyKernel(string kernelName, PipeStream clientStream)
+        private ProxyKernel CreateProxyKernel(KernelName kernelName, PipeStream clientStream)
         {
             var receiver = new KernelCommandAndEventPipeStreamReceiver(clientStream);
 
             var sender = new KernelCommandAndEventPipeStreamSender(clientStream);
-            var proxyKernel = new ProxyKernel(kernelName, receiver, sender);
+            var proxyKernel = new ProxyKernel(kernelName.Name, receiver, sender);
 
             var _ = proxyKernel.StartAsync();
             return proxyKernel;

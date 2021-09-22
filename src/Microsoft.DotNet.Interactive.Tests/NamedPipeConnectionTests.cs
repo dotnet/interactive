@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
+using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -57,11 +58,11 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             // setup connection
 
-            //var namedPipeConnection = new NamedPipeKernelConnection(pipeName);
+            var namedPipeConnection = new NamedPipeKernelConnector(pipeName);
 
-            //var localKernel1 =  await namedPipeConnection.ConnectKernelAsync(new KernelName("kernel1"));
+            var localKernel1 =  await namedPipeConnection.ConnectKernelAsync(new KernelName("kernel1"));
 
-            //var localKernel2 = await namedPipeConnection.ConnectKernelAsync(new KernelName("kernel2"));
+            var localKernel2 = await namedPipeConnection.ConnectKernelAsync(new KernelName("kernel2"));
 
             //var kernelEvents1 = localKernel1.KernelEvents.ToSubscribedList();
 
