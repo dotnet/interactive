@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public static string GetToken(this KernelCommand command)
+        public static string GetOrCreateToken(this KernelCommand command)
         {
             if (command is null)
             {
@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.Interactive
 
             if (command.Parent is { } parent)
             {
-                var token = parent.GetToken();
+                var token = parent.GetOrCreateToken();
                 command.SetToken(token);
                 return token;
             }
@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.Interactive
             if (KernelInvocationContext.Current?.Command is { } contextCommand && 
                 contextCommand != command)
             {
-                var token = contextCommand.GetToken();
+                var token = contextCommand.GetOrCreateToken();
                 command.SetToken(token);
                 return token;
             }
@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.Interactive
             command.Properties[IdKey] = id;
         }
 
-        internal static string GetId(this KernelCommand command)
+        internal static string GetOrCreateId(this KernelCommand command)
         {
             if (command is null)
             {
@@ -152,7 +152,7 @@ namespace Microsoft.DotNet.Interactive
         internal static bool IsEquivalentTo(this KernelCommand src, KernelCommand other)
         {
             return ReferenceEquals(src, other)
-                   || src.GetId() == other.GetId();
+                   || src.GetOrCreateId() == other.GetOrCreateId();
         }
     }
 }

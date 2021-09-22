@@ -49,13 +49,13 @@ namespace Microsoft.DotNet.Interactive.Server
                     return;
             }
 
-            var token = command.GetToken();
+            var token = command.GetOrCreateToken();
             var completionSource = new TaskCompletionSource<bool>();
             var sub = KernelEvents
-                .Where(e => e.Command.GetToken() == token)
+                .Where(e => e.Command.GetOrCreateToken() == token)
                 .Subscribe(kernelEvent =>
                 {
-                    if (kernelEvent.Command.GetToken() == token)
+                    if (kernelEvent.Command.GetOrCreateToken() == token)
                     {
                         switch (kernelEvent)
                         {

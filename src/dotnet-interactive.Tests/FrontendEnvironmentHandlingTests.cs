@@ -121,15 +121,15 @@ await Object.getPrototypeOf(async function() {}).constructor(
             var (context, httpFrontend) = CreateTestHtmlFrontendAndContext();
             var events = context.KernelEvents.ToSubscribedList();
             _ = httpFrontend.ExecuteClientScript("console.log('test');", context);
-            httpFrontend.PublishEventFromCommand(context.Command.GetToken(), command => new ReturnValueProduced("content", command, new[] { new FormattedValue("text/plain", "content") }));
+            httpFrontend.PublishEventFromCommand(context.Command.GetOrCreateToken(), command => new ReturnValueProduced("content", command, new[] { new FormattedValue("text/plain", "content") }));
             events
                 .Should()
                 .ContainSingle<ReturnValueProduced>()
                 .Which
                 .Command
-                .GetToken()
+                .GetOrCreateToken()
                 .Should()
-                .Be(context.Command.GetToken());
+                .Be(context.Command.GetOrCreateToken());
         }
 
         [Fact]
@@ -139,7 +139,7 @@ await Object.getPrototypeOf(async function() {}).constructor(
             var events = context.KernelEvents.ToSubscribedList();
             _ = httpFrontend.ExecuteClientScript("console.log('test');", context);
             KernelCommand suppliedCommand = default;
-            httpFrontend.PublishEventFromCommand(context.Command.GetToken(), command =>
+            httpFrontend.PublishEventFromCommand(context.Command.GetOrCreateToken(), command =>
             {
                 suppliedCommand = command;
                 return new ReturnValueProduced("content", command, new[] { new FormattedValue("text/plain", "content") });
@@ -161,7 +161,7 @@ await Object.getPrototypeOf(async function() {}).constructor(
                 .Should()
                 .BeFalse();
 
-            httpFrontend.MarkExecutionComplete(context.Command.GetToken());
+            httpFrontend.MarkExecutionComplete(context.Command.GetOrCreateToken());
             await executeTask;
         }
     }

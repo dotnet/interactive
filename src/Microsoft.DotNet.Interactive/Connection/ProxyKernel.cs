@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.Connection
         private readonly IKernelCommandAndEventSender _sender;
         private readonly CancellationTokenSource _cancellationTokenSource = new();
         private ExecutionContext _executionContext;
-        private readonly Dictionary<string,(KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<bool> completionSource)> _inflight = new();
+        private readonly Dictionary<string,(KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<KernelEvent> completionSource ,KernelInvocationContext invocationContext)> _inflight = new();
         private int _started = 0;
 
         public ProxyKernel(string name, IKernelCommandAndEventReceiver receiver, IKernelCommandAndEventSender sender) : base(name)
@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.Interactive.Connection
                     var _ = Task.Run(async () =>
                     {
                         var eventSubscription = RootKernel.KernelEvents
-                            .Where(e => e.Command.GetToken() == d.Command.GetToken() && e.Command.GetType() == d.Command.GetType())
+                            .Where(e => e.Command.GetOrCreateToken() == d.Command.GetOrCreateToken() && e.Command.GetType() == d.Command.GetType())
                             .Subscribe(async e =>
                             {
                                 await _sender.SendAsync(e, _cancellationTokenSource.Token);
@@ -90,43 +90,52 @@ namespace Microsoft.DotNet.Interactive.Connection
             var remoteTargetKernelName = kernelUri.GetRemoteKernelName();
             var localTargetKernelName = command.TargetKernelName;
             command.TargetKernelName = remoteTargetKernelName;
-            var token = command.GetToken();
+            var token = command.GetOrCreateToken();
           
-            var completionSource = new TaskCompletionSource<bool>();
-            _inflight[token] = (command, _executionContext, completionSource);
+            var completionSource = new TaskCompletionSource<KernelEvent>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            _inflight[token] = (command, _executionContext, completionSource, context);
 
             var _ = _sender.SendAsync(command, context.CancellationToken);
-            return completionSource.Task.ContinueWith(_ =>
+            return completionSource.Task.ContinueWith(te =>
             {
                 command.TargetKernelName = localTargetKernelName;
+                if (te.Result is CommandFailed cf)
+                {
+                    context.Fail(command, cf.Exception, cf.Message);
+                }
             });
         }
 
         protected internal override void DelegatePublication(KernelEvent kernelEvent)
         {
-            var token = kernelEvent.Command.GetToken(); 
+            var token = kernelEvent.Command.GetOrCreateToken(); 
             
             var hasPending =  _inflight.TryGetValue(token,out var pending);
 
-            if (hasPending && pending.executionContext is { } ec)
+            if (hasPending)
             {
-                ExecutionContext.Run(ec, _ =>
+                switch (kernelEvent)
                 {
-                    PublishEvent(kernelEvent);
-                }, null);
-            }
-            else
-            {
-                PublishEvent(kernelEvent);
-            }
-
-            switch (kernelEvent)
-            {
-                case CommandFailed _ when hasPending && pending.command.IsEquivalentTo(kernelEvent.Command):
-                case CommandSucceeded _ when hasPending && pending.command.IsEquivalentTo(kernelEvent.Command):
-                    _inflight.Remove(token);
-                    pending.completionSource.TrySetResult(true);
-                    break;
+                    case CommandFailed cf when pending.command.IsEquivalentTo(kernelEvent.Command):
+                        _inflight.Remove(token);
+                        pending.completionSource.TrySetResult(cf);
+                        break;
+                    case CommandSucceeded cs when pending.command.IsEquivalentTo(kernelEvent.Command):
+                        _inflight.Remove(token);
+                        pending.completionSource.TrySetResult(cs);
+                        break;
+                    default:
+                        if (pending.executionContext is { } ec)
+                        {
+                            ExecutionContext.Run(ec, _ => { pending.invocationContext.Publish(kernelEvent); }, null);
+                        }
+                        else
+                        {
+                            pending.invocationContext.Publish(kernelEvent);
+                        }
+                        break;
+                }
             }
         }
     }

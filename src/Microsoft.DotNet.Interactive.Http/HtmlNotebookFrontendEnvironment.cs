@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.Interactive.Http
 
         public override async Task ExecuteClientScript(string code, KernelInvocationContext context)
         {
-            var commandToken = context.Command.GetToken();
+            var commandToken = context.Command.GetOrCreateToken();
             var apiUriTask = GetApiUriAsync();
             var completedTask = await Task.WhenAny(apiUriTask, Task.Delay(_getApiUriTimeout));
             if (completedTask != apiUriTask)

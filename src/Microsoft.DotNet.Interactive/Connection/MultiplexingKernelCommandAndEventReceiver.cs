@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.Interactive.Connection
             _internalChannel.OnCompleted();
         }
 
-        public IKernelCommandAndEventReceiver GetReceiver()
+        public IKernelCommandAndEventReceiver CreateChildReceiver()
         {
             var receiver = new MultiplexedKernelCommandAndEventReceiver(_internalChannel);
             _disposables.Add(receiver);

@@ -8,6 +8,7 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Documents;
+using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -36,16 +37,17 @@ namespace Microsoft.DotNet.Interactive.Tests
             var pipeName = Guid.NewGuid().ToString();
 
             // start server
-
-            var remoteDefaultKernelInvoked = false;
-
+            
             using var remoteCompositeKernel = new CompositeKernel
             {
                 new FakeKernel("csharp")
                 {
                     Handle = (command, context) =>
                     {
-                        remoteDefaultKernelInvoked = true;
+                        if (command is SubmitCode sc)
+                        {
+                            context.Display(sc.Code);
+                        }
                         return Task.CompletedTask;
                     }
                 },
@@ -58,19 +60,35 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             // setup connection
 
-            var namedPipeConnection = new NamedPipeKernelConnector(pipeName);
+            var connector = new NamedPipeKernelConnector(pipeName);
 
-            var localKernel1 =  await namedPipeConnection.ConnectKernelAsync(new KernelName("kernel1"));
+            // use same connection to create 2 proxy kernel
 
-            var localKernel2 = await namedPipeConnection.ConnectKernelAsync(new KernelName("kernel2"));
+            using var localKernel1 =  await connector.ConnectKernelAsync(new KernelName("kernel1"));
 
-            var kernelEvents1 = localKernel1.KernelEvents.ToSubscribedList();
+            using var localKernel2 = await connector.ConnectKernelAsync(new KernelName("kernel2"));
 
-            var kernelEvents2 = localKernel2.KernelEvents.ToSubscribedList();
+            var kernelCommand1 = new SubmitCode("echo1");
 
-            
+            var kernelCommand2 = new SubmitCode("echo2");
 
-            throw new NotImplementedException();
+            var res1 = await localKernel1.SendAsync(kernelCommand1);
+
+            var res2 = await localKernel2.SendAsync(kernelCommand2);
+
+            var kernelEvents1 = res1.KernelEvents.ToSubscribedList();
+
+            var kernelEvents2 = res2.KernelEvents.ToSubscribedList();
+
+            kernelEvents1.Should().ContainSingle<CommandSucceeded>().Which.Command.As<SubmitCode>().Code.Should()
+                .Be(kernelCommand1.Code);
+
+            kernelEvents1.Should().ContainSingle<DisplayedValueProduced>().Which.FormattedValues.Should().ContainSingle(f => f.Value == kernelCommand1.Code);
+
+            kernelEvents2.Should().ContainSingle<CommandSucceeded>().Which.Command.As<SubmitCode>().Code.Should()
+                .Be(kernelCommand2.Code);
+
+            kernelEvents2.Should().ContainSingle<DisplayedValueProduced>().Which.FormattedValues.Should().ContainSingle(f => f.Value == kernelCommand2.Code);
         }
 
         [FactSkipLinux]

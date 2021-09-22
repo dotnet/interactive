@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
             bool ShouldForward(KernelEvent e)
             {
-                return (e.Command?.GetToken() == context.Token) || e.Command.ShouldPublishInternalEvents();
+                return (e.Command?.GetOrCreateToken() == context.Token) || e.Command.ShouldPublishInternalEvents();
             }
         }
 

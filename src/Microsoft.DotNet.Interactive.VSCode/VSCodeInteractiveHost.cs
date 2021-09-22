@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Interactive.VSCode
         {
             var command = new GetInput(prompt, isPassword, targetKernelName: VSCodeKernelName);
             var completionSource = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var token = command.GetToken();
+            var token = command.GetOrCreateToken();
             _kernel.KernelEvents.Where(e => e.Command.GetToken() == token).Subscribe(e =>
             {
                 switch (e)
