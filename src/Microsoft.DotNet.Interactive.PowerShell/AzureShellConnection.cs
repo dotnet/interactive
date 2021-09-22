@@ -287,7 +287,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         {
             if (waitForExecutionCompletion)
             {
-                _codeExecutedTaskSource = new TaskCompletionSource<object>();
+                _codeExecutedTaskSource = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             }
 
             // The command could contain multi-line statement, which would require double line endings

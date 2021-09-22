@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using System.Web;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 
@@ -17,12 +16,12 @@ namespace Microsoft.DotNet.Interactive.Http
     {
         private readonly TimeSpan _getApiUriTimeout;
         private readonly TaskCompletionSource<Uri> _completionSource;
-        private Dictionary<string, (KernelInvocationContext Context, TaskCompletionSource CompletionSource)> _tokenToInvocationContext;
+        private readonly Dictionary<string, (KernelInvocationContext Context, TaskCompletionSource CompletionSource)> _tokenToInvocationContext;
        
         public HtmlNotebookFrontendEnvironment(TimeSpan? apiUriTimeout = null)
         {
             RequiresAutomaticBootstrapping = true;
-            _completionSource = new TaskCompletionSource<Uri>();
+            _completionSource = new TaskCompletionSource<Uri>(TaskCreationOptions.RunContinuationsAsynchronously);
             _tokenToInvocationContext = new Dictionary<string, (KernelInvocationContext, TaskCompletionSource)>();
             _getApiUriTimeout = apiUriTimeout ?? TimeSpan.FromSeconds(30);
         }
@@ -85,7 +84,7 @@ await Object.getPrototypeOf(async function() {{}}).constructor(
 }}
 ".Replace("\r\n", "\n");
             var wrappedCode = $"{codePrelude}{HttpUtility.JavaScriptStringEncode(code)}{codePostlude}";
-            var executionCompletionSource = new TaskCompletionSource();
+            var executionCompletionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             _tokenToInvocationContext[commandToken] = (context, executionCompletionSource);
             IHtmlContent content = PocketViewTags.script[type: "text/javascript"](wrappedCode.ToHtmlContent());
             var formattedValues = FormattedValue.FromObject(content);

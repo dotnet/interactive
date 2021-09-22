@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 {
     public class JupyterRequestContext
     {
-        private readonly TaskCompletionSource<Unit> _done = new TaskCompletionSource<Unit>();
+        private readonly TaskCompletionSource<Unit> _done = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         internal static JupyterRequestContext Current { get; set; }
 

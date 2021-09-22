@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         {
             var server = new InProcessTestServer();
 
-            var completionSource = new TaskCompletionSource<bool>();
+            var completionSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             var parser = CommandLineParser.Create(
                 server._serviceCollection,
                 (startupOptions, invocationContext) =>
