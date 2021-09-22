@@ -9,6 +9,7 @@ using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
+using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
@@ -135,7 +136,7 @@ x");
 
             var connection = new NamedPipeKernelConnector(pipeName);
 
-            var proxyKernel = await connection.ConnectKernelAsync("proxyKernel");
+            var proxyKernel = await connection.ConnectKernelAsync(new KernelName("proxyKernel"));
             
             var code = @"#i ""nuget:source1""
 #i ""nuget:source2""
@@ -180,7 +181,7 @@ Console.WriteLine(1);";
 
             var connection = new NamedPipeKernelConnector(pipeName);
 
-            var proxyKernel = await connection.ConnectKernelAsync("proxyKernel");
+            var proxyKernel = await connection.ConnectKernelAsync(new KernelName("proxyKernel"));
 
             var code = @"#i ""nuget:source1""
 #i ""nuget:source2""

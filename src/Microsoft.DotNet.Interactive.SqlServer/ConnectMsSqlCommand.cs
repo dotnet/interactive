@@ -5,6 +5,7 @@ using System.CommandLine;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Documents;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
@@ -21,7 +22,8 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                     "Scaffold a DbContext in the C# kernel."));
         }
 
-        public override async Task<Kernel> ConnectKernelAsync(string kernelName, MsSqlKernelConnector connector, KernelInvocationContext context)
+        public override async Task<Kernel> ConnectKernelAsync(KernelName kernelName, MsSqlKernelConnector connector,
+            KernelInvocationContext context)
         {
             var root = Kernel.Root.FindResolvedPackageReference();
 
@@ -33,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
             if (connector.CreateDbContext)
             {
-                await InitializeDbContextAsync(kernelName, connector, context);
+                await InitializeDbContextAsync(kernelName.Name, connector, context);
             }
 
             return kernel;

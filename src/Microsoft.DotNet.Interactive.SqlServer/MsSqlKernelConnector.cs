@@ -5,6 +5,7 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
+using Microsoft.DotNet.Interactive.Documents;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
@@ -16,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         public string PathToService { get; set; }
 
-        public override async Task<Kernel> ConnectKernelAsync(string kernelName)
+        public override async Task<Kernel> ConnectKernelAsync(KernelName kernelName)
         {
             if (string.IsNullOrWhiteSpace(PathToService))
             {

@@ -15,8 +15,8 @@ using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.Server;
 
@@ -37,6 +37,8 @@ namespace Microsoft.DotNet.Interactive
         private readonly SemaphoreSlim _fastPathSchedulerLock = new(1);
         private KernelInvocationContext _inFlightContext;
         private int _countOfLanguageServiceCommandsInFlight = 0;
+        private KernelName _name;
+        private string _name1;
 
         protected Kernel(string name)
         {
@@ -47,7 +49,7 @@ namespace Microsoft.DotNet.Interactive
 
             RootKernel = this;
 
-            Name = name;
+            _name = new KernelName(name);
 
             SubmissionParser = new SubmissionParser(this);
 
@@ -205,7 +207,11 @@ namespace Microsoft.DotNet.Interactive
 
         public IObservable<KernelEvent> KernelEvents => _kernelEvents;
 
-        public string Name { get; set; }
+        public string Name
+        {
+            get => _name.Name;
+            set => _name = new KernelName(value);
+        }
 
         internal KernelUri Uri =>
             ParentKernel is null

@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Connection
@@ -21,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.Connection
 
         public bool WaitForKernelReadyEvent { get;  }
 
-        public override async Task<Kernel> ConnectKernelAsync(string kernelName)
+        public override async Task<Kernel> ConnectKernelAsync(KernelName kernelName)
         {
             string command = Command[0];
             string arguments = string.Join(" ", Command.Skip(1));
@@ -41,7 +42,7 @@ namespace Microsoft.DotNet.Interactive.Connection
             var receiver = new KernelCommandAndEventTextReceiver(process.StandardOutput);
             var sender = new KernelCommandAndEventTextStreamSender(process.StandardInput);
 
-            var kernel = new ProxyKernel(kernelName, receiver, sender);
+            var kernel = new ProxyKernel(kernelName.Name, receiver, sender);
 
             kernel.RegisterForDisposal(() =>
             {

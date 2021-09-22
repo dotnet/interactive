@@ -4,6 +4,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.DotNet.Interactive.Connection;
+using Microsoft.DotNet.Interactive.Documents;
 
 #nullable enable
 namespace Microsoft.DotNet.Interactive.Http
@@ -12,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Http
     {
         public string HubUrl { get;  }
 
-        public override async Task<Kernel> ConnectKernelAsync(string kernelName)
+        public override async Task<Kernel> ConnectKernelAsync(KernelName kernelName)
         {
             var hubConnection = new HubConnectionBuilder()
                 .WithUrl(HubUrl)
@@ -24,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.Http
 
             var receiver = new KernelCommandAndEventSignalRHubConnectionReceiver(hubConnection);
             var sender = new KernelCommandAndEventSignalRHubConnectionSender(hubConnection);
-            var proxyKernel = new ProxyKernel(kernelName, receiver, sender);
+            var proxyKernel = new ProxyKernel(kernelName.Name, receiver, sender);
 
             var _ = proxyKernel.StartAsync();
 

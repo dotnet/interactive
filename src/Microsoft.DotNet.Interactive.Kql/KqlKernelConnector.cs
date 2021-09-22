@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Kusto.Data;
 using Kusto.Data.Security;
 using Microsoft.DotNet.Interactive.Connection;
+using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.SqlServer;
 
 namespace Microsoft.DotNet.Interactive.Kql
@@ -20,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.Kql
 
         public string PathToService { get; set; }
 
-        public override async Task<Kernel> ConnectKernelAsync(string kernelName)
+        public override async Task<Kernel> ConnectKernelAsync(KernelName kernelName)
         {
 
             if (string.IsNullOrWhiteSpace(PathToService))

@@ -8,19 +8,22 @@ namespace Microsoft.DotNet.Interactive.Documents
 {
     public class KernelName
     {
+        public KernelName(string kernelName) : this(kernelName, Array.Empty<string>())
+        {
+
+        }
+
         public KernelName(string name, IReadOnlyCollection<string> aliases)
         {
             Validate(name);
+            Name = name;
 
             foreach (var alias in aliases)
             {
                 Validate(alias);
             }
 
-            Name = name;
-
-            var distinctAliases = new HashSet<string>(aliases);
-            distinctAliases.Add(Name);
+            var distinctAliases = new HashSet<string>(aliases) { name };
             Aliases = distinctAliases;
         }
 

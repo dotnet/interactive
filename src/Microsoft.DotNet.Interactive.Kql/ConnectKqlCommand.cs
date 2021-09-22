@@ -4,6 +4,7 @@
 using System.CommandLine;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
+using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.SqlServer;
 
 namespace Microsoft.DotNet.Interactive.Kql
@@ -21,7 +22,8 @@ namespace Microsoft.DotNet.Interactive.Kql
                 "The database to query"));
         }
 
-        public override async Task<Kernel> ConnectKernelAsync(string kernelName, KqlKernelConnector connector, KernelInvocationContext context)
+        public override async Task<Kernel> ConnectKernelAsync(KernelName kernelName, KqlKernelConnector connector,
+            KernelInvocationContext context)
         {
             var root = Kernel.Root.FindResolvedPackageReference();
 
