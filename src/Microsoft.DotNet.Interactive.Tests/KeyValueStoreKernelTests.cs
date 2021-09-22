@@ -211,7 +211,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             new()
             {
                 new KeyValueStoreKernel(),
-                new FakeKernel("#!fake")
+                new FakeKernel("fake")
             };
     }
 }

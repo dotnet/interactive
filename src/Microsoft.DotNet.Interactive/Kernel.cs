@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive
 
             RootKernel = this;
 
-            _name = new KernelName(name);
+            Name = name;
 
             SubmissionParser = new SubmissionParser(this);
 

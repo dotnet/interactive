@@ -64,9 +64,9 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var localKernel2 = await namedPipeConnection.ConnectKernelAsync(new KernelName("kernel2"));
 
-            //var kernelEvents1 = localKernel1.KernelEvents.ToSubscribedList();
+            var kernelEvents1 = localKernel1.KernelEvents.ToSubscribedList();
 
-            //var kernelEvents2 = localKernel2.KernelEvents.ToSubscribedList();
+            var kernelEvents2 = localKernel2.KernelEvents.ToSubscribedList();
 
             
 
