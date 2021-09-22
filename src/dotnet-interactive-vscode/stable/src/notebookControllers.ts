@@ -218,26 +218,16 @@ export async function updateCellLanguages(document: vscode.NotebookDocument): Pr
     const documentLanguageInfo = getLanguageInfoMetadata(document.metadata);
 
     // update cell language
-    const edit = new vscode.WorkspaceEdit();
-    for (let i = 0; i < document.cellCount; i++) {
-        const cell = document.cellAt(i);
+    await Promise.all(document.getCells().map(async (cell) => {
         const cellMetadata = getDotNetMetadata(cell.metadata);
         const cellText = cell.document.getText();
         const newLanguage = cell.kind === vscode.NotebookCellKind.Code
             ? getCellLanguage(cellText, cellMetadata, documentLanguageInfo, cell.document.languageId)
             : 'markdown';
         if (cell.document.languageId !== newLanguage) {
-            const newCellData = new vscode.NotebookCellData(
-                cell.kind,
-                cellText,
-                newLanguage);
-            newCellData.outputs = cell.outputs.concat(); // can't pass through a readonly property, so we have to make it a regular array
-            newCellData.metadata = cell.metadata;
-            edit.replaceNotebookCells(document.uri, new vscode.NotebookRange(i, i + 1), [newCellData]);
+            await vscode.languages.setTextDocumentLanguage(cell.document, newLanguage)
         }
-    }
-
-    await vscode.workspace.applyEdit(edit);
+    }));
 }
 
 async function updateCellOutputs(executionTask: vscode.NotebookCellExecution, outputs: Array<vscodeLike.NotebookCellOutput>): Promise<void> {
