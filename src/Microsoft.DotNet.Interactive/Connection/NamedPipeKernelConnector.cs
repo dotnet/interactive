@@ -45,19 +45,7 @@ namespace Microsoft.DotNet.Interactive.Connection
             var _ = proxyKernel.StartAsync();
             return proxyKernel; ;
         }
-
         
-        private ProxyKernel CreateProxyKernel(KernelName kernelName, PipeStream clientStream)
-        {
-            var receiver = new KernelCommandAndEventPipeStreamReceiver(clientStream);
-
-            var sender = new KernelCommandAndEventPipeStreamSender(clientStream);
-            var proxyKernel = new ProxyKernel(kernelName.Name, receiver, sender);
-
-            var _ = proxyKernel.StartAsync();
-            return proxyKernel;
-        }
-
         public NamedPipeKernelConnector(string pipeName)
         {
             PipeName = pipeName;
