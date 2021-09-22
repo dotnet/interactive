@@ -21,6 +21,8 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Parsing;
 
+using DocumentKernelName = Microsoft.DotNet.Interactive.Documents.KernelName;
+
 namespace Microsoft.DotNet.Interactive
 {
     public sealed class CompositeKernel :
@@ -121,7 +123,7 @@ namespace Microsoft.DotNet.Interactive
 
             var kernelNames = kernelLanguageAliases
                 .GroupBy(x => x.Value)
-                .Select(g => new KernelName(g.Key, g.Select(f => f.Key).ToArray()))
+                .Select(g => new DocumentKernelName(g.Key, g.Select(f => f.Key).ToArray()))
                 .ToList();
 
             var notebook = Read(fileName, stream, DefaultKernelName, kernelNames);
@@ -394,7 +396,7 @@ namespace Microsoft.DotNet.Interactive
             string fileName, 
             Stream stream, 
             string defaultLanguage, 
-            IReadOnlyCollection<KernelName> kernelNames)
+            IReadOnlyCollection<DocumentKernelName> kernelNames)
         {
             var extension = Path.GetExtension(fileName);
             switch (extension.ToLowerInvariant())

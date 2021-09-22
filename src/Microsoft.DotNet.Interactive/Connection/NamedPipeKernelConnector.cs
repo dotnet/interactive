@@ -4,7 +4,6 @@
 using System.IO.Pipes;
 using System.Security.Principal;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Documents;
 
 #nullable enable
 

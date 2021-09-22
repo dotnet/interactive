@@ -3,7 +3,6 @@
 
 using System.CommandLine;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Documents;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
