@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.Http
         public HtmlNotebookFrontendEnvironment(TimeSpan? apiUriTimeout = null)
         {
             RequiresAutomaticBootstrapping = true;
-            _completionSource = new TaskCompletionSource<Uri>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _completionSource = new TaskCompletionSource<Uri>();
             _tokenToInvocationContext = new Dictionary<string, (KernelInvocationContext, TaskCompletionSource)>();
             _getApiUriTimeout = apiUriTimeout ?? TimeSpan.FromSeconds(30);
         }
@@ -37,7 +37,6 @@ namespace Microsoft.DotNet.Interactive.Http
         {
             _completionSource.TrySetResult(apiUri);
         }
-
 
         public Task<Uri> GetApiUriAsync()
         {
@@ -111,6 +110,5 @@ await Object.getPrototypeOf(async function() {{}}).constructor(
 
             _tokenToInvocationContext.Remove(token);
         }
-
     }
 }
