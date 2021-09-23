@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,11 +29,11 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             using var kernel = CreateCompositeKernel();
 
-            await kernel.SendAsync(new SubmitCode($"#!connect stdio --kernel-name proxy --command \"{Dotnet.Path}\" \"{typeof(App.Program).Assembly.Location}\" stdio --default-kernel {language.LanguageName()} --wait-for-kernel-ready-event true"));
+            await kernel.SendAsync(new SubmitCode($"#!connect stdio --kernel-name proxy --command \"{Dotnet.Path}\" \"{typeof(App.Program).Assembly.Location}\" stdio --default-kernel {language.LanguageName()}"));
 
-            var events = kernel.KernelEvents.ToSubscribedList();
+            var res = await kernel.SendAsync(new SubmitCode("1+1", targetKernelName: "proxy"));
 
-            await kernel.SendAsync(new SubmitCode("1+1", targetKernelName: "proxy"));
+            var events = res.KernelEvents.ToSubscribedList();
 
             events
                 .Should()
@@ -48,12 +47,12 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             using var kernel = CreateCompositeKernel();
 
-            await kernel.SendAsync(new SubmitCode($"#!connect stdio --kernel-name proxy --command \"{Dotnet.Path}\" \"{typeof(App.Program).Assembly.Location}\" stdio --default-kernel csharp --wait-for-kernel-ready-event true"));
-
-            var events = kernel.KernelEvents.ToSubscribedList();
-
-            await kernel.SendAsync(new SubmitCode("System.Console.InputEncoding.EncodingName + \"/\" + System.Console.OutputEncoding.EncodingName", "proxy"));
+            await kernel.SendAsync(new SubmitCode($"#!connect stdio --kernel-name proxy --command \"{Dotnet.Path}\" \"{typeof(App.Program).Assembly.Location}\" stdio --default-kernel csharp"));
+            
+            var res = await kernel.SendAsync(new SubmitCode("System.Console.InputEncoding.EncodingName + \"/\" + System.Console.OutputEncoding.EncodingName", "proxy"));
             var expected = Encoding.UTF8.EncodingName + "/" + Encoding.UTF8.EncodingName;
+
+            var events = res.KernelEvents.ToSubscribedList();
 
             events
                 .Should()

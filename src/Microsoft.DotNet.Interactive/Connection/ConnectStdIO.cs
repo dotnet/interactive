@@ -18,7 +18,6 @@ namespace Microsoft.DotNet.Interactive.Connection
                 IsRequired = true,
             });
             AddOption(new Option<DirectoryInfo>("--working-directory", () => new DirectoryInfo(Directory.GetCurrentDirectory()), "The working directory"));
-            AddOption(new Option<bool>("--wait-for-kernel-ready-event", () => false, "Wait for a kernel ready event before continuing"));
         }
 
         public override Task<Kernel> ConnectKernelAsync(KernelName kernelName, StdIoKernelConnector kernelConnector,
