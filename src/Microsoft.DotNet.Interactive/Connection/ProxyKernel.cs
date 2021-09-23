@@ -109,44 +109,35 @@ namespace Microsoft.DotNet.Interactive.Connection
 
         protected internal override void DelegatePublication(KernelEvent kernelEvent)
         {
-            if (kernelEvent is KernelReady)
-            { 
-               // PublishEvent(kernelEvent);
-            }
-            else
+            var token = kernelEvent.Command.GetOrCreateToken();
+
+            var hasPending = _inflight.TryGetValue(token, out var pending);
+
+            if (hasPending)
             {
-                var token = kernelEvent.Command.GetOrCreateToken();
-
-                var hasPending = _inflight.TryGetValue(token, out var pending);
-
-                if (hasPending)
+                switch (kernelEvent)
                 {
-                    switch (kernelEvent)
-                    {
-                        case CommandFailed cf when pending.command.IsEquivalentTo(kernelEvent.Command):
-                            _inflight.Remove(token);
-                            pending.completionSource.TrySetResult(cf);
-                            break;
-                        case CommandSucceeded cs when pending.command.IsEquivalentTo(kernelEvent.Command):
-                            _inflight.Remove(token);
-                            pending.completionSource.TrySetResult(cs);
-                            break;
-                        default:
-                            if (pending.executionContext is { } ec)
-                            {
-                                ExecutionContext.Run(ec, _ => { pending.invocationContext.Publish(kernelEvent); },
-                                    null);
-                            }
-                            else
-                            {
-                                pending.invocationContext.Publish(kernelEvent);
-                            }
-
-                            break;
-                    }
+                    case CommandFailed cf when pending.command.IsEquivalentTo(kernelEvent.Command):
+                        _inflight.Remove(token);
+                        pending.completionSource.TrySetResult(cf);
+                        break;
+                    case CommandSucceeded cs when pending.command.IsEquivalentTo(kernelEvent.Command):
+                        _inflight.Remove(token);
+                        pending.completionSource.TrySetResult(cs);
+                        break;
+                    default:
+                        if (pending.executionContext is { } ec)
+                        {
+                            ExecutionContext.Run(ec, _ => { pending.invocationContext.Publish(kernelEvent); },
+                                null);
+                        }
+                        else
+                        {
+                            pending.invocationContext.Publish(kernelEvent);
+                        }
+                        break;
                 }
             }
-
         }
     }
 }
