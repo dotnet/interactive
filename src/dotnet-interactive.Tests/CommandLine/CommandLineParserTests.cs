@@ -117,7 +117,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
 
             using (var kernel = new CompositeKernel().UseKernelClientConnection(new ConnectStdIoCommand()))
             {
-                await kernel.SendAsync(new SubmitCode($"#!connect stdio --kernel-name proxy --command \"{Dotnet.Path}\" \"{typeof(Program).Assembly.Location}\" stdio --log-path \"{logPath.Directory.FullName}\" --verbose --wait-for-kernel-ready-event true"));
+                await kernel.SendAsync(new SubmitCode($"#!connect stdio --kernel-name proxy --command \"{Dotnet.Path}\" \"{typeof(Program).Assembly.Location}\" stdio --log-path \"{logPath.Directory.FullName}\" --verbose"));
 
                 await kernel.SendAsync(new SubmitCode("1+1", "proxy"));
             }
