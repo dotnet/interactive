@@ -400,7 +400,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
 
             using var kernel = new CompositeKernel().UseKernelClientConnection(new ConnectStdIoCommand());
 
-            await kernel.SendAsync(new SubmitCode($"#!connect stdio --kernel-name proxy --command \"{Dotnet.Path}\" \"{typeof(Program).Assembly.Location}\" stdio --http-port {port} --wait-for-kernel-ready-event true"));
+            await kernel.SendAsync(new SubmitCode($"#!connect stdio --kernel-name proxy --command \"{Dotnet.Path}\" \"{typeof(Program).Assembly.Location}\" stdio --http-port {port}"));
 
             using var client = new HttpClient();
 
