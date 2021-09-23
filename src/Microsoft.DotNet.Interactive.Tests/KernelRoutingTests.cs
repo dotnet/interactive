@@ -159,7 +159,6 @@ Console.WriteLine(1);";
             var handledCommands = new List<KernelCommand>();
             using var remoteCompositeKernel = new CompositeKernel
             {
-
                 new FakeKernel("csharp")
                 {
                     Handle = (command, _) =>

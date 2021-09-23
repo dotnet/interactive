@@ -4,10 +4,12 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
@@ -42,8 +44,8 @@ namespace Microsoft.DotNet.Interactive.Connection
     public class MultiplexingKernelCommandAndEventReceiver : IKernelCommandAndEventReceiver, IDisposable
     {
         private readonly IKernelCommandAndEventReceiver _source;
-        private readonly Subject<CommandOrEvent> _internalChannel = new();
         private readonly CompositeDisposable _disposables = new();
+        private readonly List<MultiplexedKernelCommandAndEventReceiver> _children = new();
 
         public MultiplexingKernelCommandAndEventReceiver(IKernelCommandAndEventReceiver source)
         {
@@ -54,38 +56,38 @@ namespace Microsoft.DotNet.Interactive.Connection
         {
             await foreach (var commandOrEvent in _source.CommandsAndEventsAsync(cancellationToken))
             {
-                _internalChannel.OnNext(commandOrEvent);
+                if (_children.Count > 0)
+                {
+                    BlockingCollection<CommandOrEvent>.AddToAny(_children.Select(c => c.LocalStorage).ToArray(), commandOrEvent, cancellationToken);
+                }
                 yield return commandOrEvent;
             }
-
-            _internalChannel.OnCompleted();
         }
 
         public IKernelCommandAndEventReceiver CreateChildReceiver()
         {
-            var receiver = new MultiplexedKernelCommandAndEventReceiver(_internalChannel);
-            _disposables.Add(receiver);
+            var receiver = new MultiplexedKernelCommandAndEventReceiver();
+            _children.Add(receiver);
+            _disposables.Add( Disposable.Create(() =>
+            {
+                _children.Remove(receiver);
+                receiver.Dispose();
+            }));
            
             return receiver;
         }
 
         private class MultiplexedKernelCommandAndEventReceiver : IKernelCommandAndEventReceiver, IDisposable
         {
-            private readonly ConcurrentQueue<CommandOrEvent> _queue;
-            private readonly SemaphoreSlim _semaphore = new(0, 1);
+            public BlockingCollection<CommandOrEvent> LocalStorage { get; } = new();
             private readonly CompositeDisposable _disposables = new();
-
-            public MultiplexedKernelCommandAndEventReceiver(IObservable<CommandOrEvent> receiver)
+            public MultiplexedKernelCommandAndEventReceiver()
             {
-                receiver = receiver ?? throw new ArgumentNullException(nameof(receiver));
-                _queue = new ConcurrentQueue<CommandOrEvent>();
-                _disposables.Add(
-                    receiver.Subscribe(message =>
-                    {
-                        _queue.Enqueue(message);
-                        _semaphore.Release();
-                    }));
-                _disposables.Add(_semaphore);
+                _disposables.Add(Disposable.Create(() =>
+                {
+                    LocalStorage.CompleteAdding();
+                }));
+                _disposables.Add(LocalStorage);
             }
 
             public void Dispose()
@@ -97,13 +99,9 @@ namespace Microsoft.DotNet.Interactive.Connection
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    if (_queue.TryDequeue(out var message))
-                    {
-                        yield return message;
-                    }
-                    await _semaphore.WaitAsync(cancellationToken);
-                    _queue.TryDequeue(out message);
-                   yield return message;
+                    var commandOrEvent = LocalStorage.Take(cancellationToken);
+                    await Task.Yield();
+                    yield return commandOrEvent;
                 }
             }
         }
