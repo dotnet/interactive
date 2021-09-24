@@ -57,13 +57,14 @@ namespace Microsoft.DotNet.Interactive.Connection
             
             await foreach (var commandOrEvent in _source.CommandsAndEventsAsync(cancellationToken))
             {
-                var sources = Array.Empty<BlockingCollection<CommandOrEvent>>();
+                BlockingCollection<CommandOrEvent>[] sources;
 
                 lock (_children)
                 {
                     sources = _children.Select(c => c.LocalStorage).ToArray();
                 }
-                if (_children.Count > 0)
+
+                if (sources.Length > 0)
                 {
                     foreach (var destination in sources)
                     {
