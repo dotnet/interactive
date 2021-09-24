@@ -1,6 +1,8 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -68,9 +70,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             events = result.KernelEvents.ToSubscribedList();
 
             events.Should().NotContainErrors();
-
-            var events = res.KernelEvents.ToSubscribedList();
-
+            
             events
                 .Should()
                 .ContainSingle<DisplayEvent>(
@@ -81,8 +81,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         public async Task kernel_server_honors_log_path()
         {
             using var logPath = DisposableDirectory.Create();
-
-            _output.WriteLine($"Log file location: {logPath.Directory.FullName}");
 
             var waitTime = TimeSpan.FromSeconds(10);
 
@@ -109,7 +107,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                  predicate: file => file.Length > 0))
                 .Should()
                 .BeTrue($"expected non-empty log file within {waitTime.TotalSeconds}s");
-            var logFileContents = File.ReadAllText(logFile.FullName);
+            var logFileContents = await File.ReadAllTextAsync(logFile.FullName);
             logFileContents.Should().Contain("CodeSubmissionReceived: 1+1");
         }
 
