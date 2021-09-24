@@ -58,7 +58,10 @@ namespace Microsoft.DotNet.Interactive.Connection
             {
                 if (_children.Count > 0)
                 {
-                    BlockingCollection<CommandOrEvent>.AddToAny(_children.Select(c => c.LocalStorage).ToArray(), commandOrEvent, cancellationToken);
+                    foreach (var destination in _children.Select(c => c.LocalStorage).ToArray())
+                    {
+                        destination.Add(commandOrEvent, cancellationToken);
+                    }
                 }
                 yield return commandOrEvent;
             }
