@@ -4,49 +4,21 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Reactive.Disposables;
-using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public class KernelConnectionManager: IDisposable
-    {
-        private readonly ConcurrentDictionary<string, (IKernelCommandAndEventSender sender, MultiplexingKernelCommandAndEventReceiver multiplexingReceiver)> _storage = new();
-
-        public bool TryGetConnection(string connectionId, out IKernelCommandAndEventSender sender,
-            out MultiplexingKernelCommandAndEventReceiver multiplexingReceiver)
-        {
-            var found = _storage.TryGetValue(connectionId, out var connection);
-            sender = found ? connection.sender : null;
-            multiplexingReceiver = found ? connection.multiplexingReceiver : null;
-            return found;
-        }
-
-        public void AddConnection(string connectionId, IKernelCommandAndEventSender sender,
-            MultiplexingKernelCommandAndEventReceiver multiplexingReceiver)
-        {
-            _storage[connectionId] = new (sender, multiplexingReceiver);
-        }
-
-        public void Dispose()
-        {
-            foreach (var connection in _storage)
-            {
-                connection.Value.multiplexingReceiver.Dispose();
-            }
-        }
-    }
-
     public class MultiplexingKernelCommandAndEventReceiver : IKernelCommandAndEventReceiver, IDisposable
     {
         private readonly IKernelCommandAndEventReceiver _source;
         private readonly CompositeDisposable _disposables = new();
-        private readonly List<MultiplexedKernelCommandAndEventReceiver> _children = new();
-
+        private ImmutableList<MultiplexedKernelCommandAndEventReceiver> _children = ImmutableList<MultiplexedKernelCommandAndEventReceiver>.Empty;
+        
         public MultiplexingKernelCommandAndEventReceiver(IKernelCommandAndEventReceiver source)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
@@ -57,12 +29,7 @@ namespace Microsoft.DotNet.Interactive.Connection
             
             await foreach (var commandOrEvent in _source.CommandsAndEventsAsync(cancellationToken))
             {
-                BlockingCollection<CommandOrEvent>[] sources;
-
-                lock (_children)
-                {
-                    sources = _children.Select(c => c.LocalStorage).ToArray();
-                }
+                var sources = _children.Select(c => c.LocalStorage).ToArray();
 
                 if (sources.Length > 0)
                 {
@@ -78,18 +45,12 @@ namespace Microsoft.DotNet.Interactive.Connection
         public IKernelCommandAndEventReceiver CreateChildReceiver()
         {
             var receiver = new MultiplexedKernelCommandAndEventReceiver();
-            lock (_children)
-            {
-                _children.Add(receiver);
-            }
+            
+            _children = _children.Add(receiver);
             
             _disposables.Add( Disposable.Create(() =>
             {
-                lock (_children)
-                {
-                    _children.Remove(receiver);
-                }
-               
+                _children = _children.Remove(receiver);
                 receiver.Dispose();
             }));
            
