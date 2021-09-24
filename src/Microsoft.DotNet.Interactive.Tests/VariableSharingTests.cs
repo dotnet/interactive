@@ -100,14 +100,12 @@ x")]
             string codeToRead)
         {
             using var kernel = CreateKernel();
-
-            using var events = kernel.KernelEvents.ToSubscribedList();
-
+            
             await kernel.SubmitCodeAsync($"{from}\n{codeToWrite}");
 
-            await kernel.SubmitCodeAsync($"#!pwsh\n{codeToRead}");
+            var results = await kernel.SubmitCodeAsync($"#!pwsh\n{codeToRead}");
 
-            events.Should()
+            results.KernelEvents.ToSubscribedList().Should()
                   .ContainSingle<StandardOutputValueProduced>()
                   .Which
                   .FormattedValues
