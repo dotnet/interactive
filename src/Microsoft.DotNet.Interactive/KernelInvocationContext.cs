@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
@@ -83,7 +82,7 @@ namespace Microsoft.DotNet.Interactive
         {
             var commandSucceeded = new CommandSucceeded(command);
 
-            if (command == Command)
+            if ( CommandEqualityComparer.Instance.Equals(command,Command))
             {
                 Publish(commandSucceeded);
                 if (!_events.IsDisposed)
@@ -129,7 +128,7 @@ namespace Microsoft.DotNet.Interactive
             }
 
             if (command is { } &&
-                command != Command &&
+                !CommandEqualityComparer.Instance.Equals( command,Command) &&
                 command.ShouldPublishCompletionEvent == true)
             {
                 Publish(new CommandFailed(exception, command, message));
@@ -195,7 +194,7 @@ namespace Microsoft.DotNet.Interactive
 
         internal KernelCommandResult ResultFor(KernelCommand command)
         {
-            if (command == Command)
+            if (CommandEqualityComparer.Instance.Equals(command,Command))
             {
                 return Result;
             }
@@ -216,7 +215,7 @@ namespace Microsoft.DotNet.Interactive
             }
             else
             {
-                if (_current.Value.Command != command)
+                if (!CommandEqualityComparer.Instance.Equals( _current.Value.Command,command))
                 {
                     if (command.Parent is null)
                     {
@@ -285,33 +284,5 @@ namespace Microsoft.DotNet.Interactive
         public Task ScheduleAsync(Func<KernelInvocationContext, Task> func) =>
             HandlingKernel.SendAsync(new AnonymousKernelCommand((_, invocationContext) =>
                                                                     func(invocationContext)));
-    }
-
-    internal class CommandEqualityComparer : IEqualityComparer<KernelCommand>
-    {
-        public static CommandEqualityComparer Instance { get; } = new();
-
-        public bool Equals(KernelCommand x, KernelCommand y)
-        {
-            if (ReferenceEquals(x, y))
-            {
-                return true;
-            }
-
-            if (x.Properties.TryGetValue(KernelCommandExtensions.IdKey, out var xId) &&
-                xId is string xIdString && 
-                y.Properties.TryGetValue(KernelCommandExtensions.IdKey, out var yId) &&
-                yId is string yIdString )
-            {
-                return string.Equals(xIdString, yIdString, StringComparison.Ordinal);
-            }
-
-            return false;
-        }
-
-        public int GetHashCode(KernelCommand obj)
-        {
-            return obj.GetOrCreateId().GetHashCode();
-        }
     }
 }
