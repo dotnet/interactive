@@ -54,11 +54,18 @@ namespace Microsoft.DotNet.Interactive.Connection
 
         public async IAsyncEnumerable<CommandOrEvent> CommandsAndEventsAsync([EnumeratorCancellation] CancellationToken cancellationToken)
         {
+            
             await foreach (var commandOrEvent in _source.CommandsAndEventsAsync(cancellationToken))
             {
+                var sources = Array.Empty<BlockingCollection<CommandOrEvent>>();
+
+                lock (_children)
+                {
+                    sources = _children.Select(c => c.LocalStorage).ToArray();
+                }
                 if (_children.Count > 0)
                 {
-                    foreach (var destination in _children.Select(c => c.LocalStorage).ToArray())
+                    foreach (var destination in sources)
                     {
                         destination.Add(commandOrEvent, cancellationToken);
                     }
@@ -70,10 +77,18 @@ namespace Microsoft.DotNet.Interactive.Connection
         public IKernelCommandAndEventReceiver CreateChildReceiver()
         {
             var receiver = new MultiplexedKernelCommandAndEventReceiver();
-            _children.Add(receiver);
+            lock (_children)
+            {
+                _children.Add(receiver);
+            }
+            
             _disposables.Add( Disposable.Create(() =>
             {
-                _children.Remove(receiver);
+                lock (_children)
+                {
+                    _children.Remove(receiver);
+                }
+               
                 receiver.Dispose();
             }));
            
