@@ -60,5 +60,32 @@ namespace Microsoft.DotNet.Interactive.Tests
                     where: d => d.FormattedValues.Any(FormattedValue => FormattedValue.Value == expected),
                     timeout: 10_000);
         }
+
+        [Fact]
+        public async Task fast_path_commands_over_proxy_can_be_handled()
+        {
+            var connector = new StdIoKernelConnector(new[]
+            {
+                Dotnet.Path.FullName,
+                typeof(App.Program).Assembly.Location,
+                "stdio",
+                "--default-kernel",
+                "csharp",
+            });
+
+            using var kernel = await connector.ConnectKernelAsync(new KernelName("proxy"));
+
+            var markedCode = "var x = 12$$34;";
+
+            MarkupTestFile.GetLineAndColumn(markedCode, out var code, out var line, out var column);
+
+            var result = await kernel.SendAsync(new RequestHoverText(code, new LinePosition(line, column)));
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events
+                .Should()
+                .EventuallyContainSingle<HoverTextProduced>();
+        }
     }
 }
