@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive
     public static class KernelCommandExtensions
     {
         internal const string TokenKey = "token";
-        internal const string IdKey = "command-id";
+        internal const string IdKey = "id";
         internal const string PublishInternalEventsKey = "publish-internal-events";
 
         public static void PublishInternalEvents(
@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.Interactive
             }
             
             if (KernelInvocationContext.Current?.Command is { } contextCommand && 
-                contextCommand != command)
+                !CommandEqualityComparer.Instance.Equals(contextCommand, command))
             {
                 var token = contextCommand.GetOrCreateToken();
                 command.SetToken(token);

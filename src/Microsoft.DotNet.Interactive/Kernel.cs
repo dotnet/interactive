@@ -130,7 +130,7 @@ namespace Microsoft.DotNet.Interactive
                 }
 
                 if (command.Parent is null &&
-                    command != originalCommand)
+                    !CommandEqualityComparer.Instance.Equals(command, originalCommand))
                 {
                     command.Parent = originalCommand;
                 }
@@ -290,7 +290,7 @@ namespace Microsoft.DotNet.Interactive
             var context = KernelInvocationContext.Establish(command);
 
             // only subscribe for the root command 
-            var currentCommandOwnsContext = context.Command == command;
+            var currentCommandOwnsContext = CommandEqualityComparer.Instance.Equals(context.Command, command);
 
             IDisposable disposable;
 
@@ -450,7 +450,7 @@ namespace Microsoft.DotNet.Interactive
 
                 await Pipeline.SendAsync(command, context);
 
-                if (command != context.Command)
+                if (!CommandEqualityComparer.Instance.Equals(command, context.Command))
                 {
                     context.Complete(command);
                 }

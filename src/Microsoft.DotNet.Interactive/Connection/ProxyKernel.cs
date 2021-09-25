@@ -81,6 +81,8 @@ namespace Microsoft.DotNet.Interactive.Connection
         {
             switch (command)
             {
+                case AnonymousKernelCommand:
+                    return base.HandleAsync(command, context);
                 case DirectiveCommand { DirectiveNode: KernelNameDirectiveNode }:
                     return base.HandleAsync(command, context);
             }

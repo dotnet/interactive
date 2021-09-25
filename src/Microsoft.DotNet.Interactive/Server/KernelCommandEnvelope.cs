@@ -127,13 +127,13 @@ namespace Microsoft.DotNet.Interactive.Server
             var commandToken = string.Empty;
             var commandId = string.Empty;
 
-            if (json.TryGetProperty("commandType", out var commandTypeProperty))
+            if (json.TryGetProperty(nameof(SerializationModel.commandType), out var commandTypeProperty))
             {
                 commandTypeJson = commandTypeProperty.GetString();
             }
 
             // restore the command id
-            if (json.TryGetProperty("id", out var commandIdProperty))
+            if (json.TryGetProperty(nameof(SerializationModel.id), out var commandIdProperty))
             {
                 commandId = commandIdProperty.GetString();
             }
@@ -144,7 +144,7 @@ namespace Microsoft.DotNet.Interactive.Server
             }
 
             var commandType = CommandTypeByName(commandTypeJson);
-            if (json.TryGetProperty("command", out var commandJsonProperty))
+            if (json.TryGetProperty(nameof(SerializationModel.command), out var commandJsonProperty))
             {
                 commandJson = commandJsonProperty.GetRawText();
             }
@@ -162,7 +162,7 @@ namespace Microsoft.DotNet.Interactive.Server
             }
 
             // restore the command token
-            if (json.TryGetProperty("token", out var tokenProperty))
+            if (json.TryGetProperty(nameof(SerializationModel.token), out var tokenProperty))
             {
                 commandToken = tokenProperty.GetString();
             }
