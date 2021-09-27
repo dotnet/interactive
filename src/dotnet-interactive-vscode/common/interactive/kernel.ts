@@ -111,7 +111,7 @@ export class Kernel {
                     resolve();
                 }
                 catch (e) {
-                    context.fail(e.message);
+                    context.fail((<any>e)?.message || JSON.stringify(e));
                     if (isRootCommand) {
                         context.dispose();
                     }

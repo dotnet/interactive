@@ -47,6 +47,7 @@ import { clearDebounce, createOutput } from './utilities';
 import * as vscodeLike from './interfaces/vscode-like';
 import { CompositeKernel } from './interactive/compositeKernel';
 import { ProxyKernel } from './interactive/proxyKernel';
+import { Guid } from './interactive/tokenGenerator';
 
 export interface ErrorOutputCreator {
     (message: string, outputId?: string): vscodeLike.NotebookCellOutput;
@@ -124,6 +125,7 @@ export class InteractiveClient {
 
             let failureReported = false;
             const commandToken = configuration?.token ? configuration.token : this.getNextToken();
+            const commandId = Guid.create().toString();
 
             return this.submitCode(source, language, eventEnvelope => {
                 if (this.deferredOutput.length > 0) {
@@ -134,7 +136,7 @@ export class InteractiveClient {
                 switch (eventEnvelope.eventType) {
                     // if kernel languages were added, handle those events here
                     case CommandSucceededType:
-                        if (eventEnvelope.command?.token === commandToken) {
+                        if (eventEnvelope.command?.id === commandId) {
                             // only complete this promise if it's the root command
                             resolve();
                         }
@@ -146,7 +148,7 @@ export class InteractiveClient {
                             outputs.push(errorOutput);
                             reportOutputs();
                             failureReported = true;
-                            if (eventEnvelope.command?.token === commandToken) {
+                            if (eventEnvelope.command?.id === commandId) {
                                 // only complete this promise if it's the root command
                                 reject(err);
                             }
@@ -202,7 +204,7 @@ export class InteractiveClient {
                         }
                         break;
                 }
-            }, commandToken).catch(e => {
+            }, commandToken, commandId).catch(e => {
                 // only report a failure if it's not a `CommandFailed` event from above (which has already called `reject()`)
                 if (!failureReported) {
                     const errorMessage = typeof e?.message === 'string' ? <string>e.message : '' + e;
@@ -260,22 +262,24 @@ export class InteractiveClient {
         return diagsProduced.diagnostics;
     }
 
-    async submitCode(code: string, language: string, observer: KernelEventEnvelopeObserver, token?: string | undefined): Promise<DisposableSubscription> {
+    async submitCode(code: string, language: string, observer: KernelEventEnvelopeObserver, token?: string | undefined, id?: string | undefined): Promise<DisposableSubscription> {
         let command: SubmitCode = {
             code: code,
             submissionType: SubmissionType.Run,
             targetKernelName: language
         };
         token = token || this.getNextToken();
+        id = id || Guid.create().toString();
+
         let disposable = this.subscribeToKernelTokenEvents(token, observer);
-        await this.submitCommand(command, SubmitCodeType, token);
+        await this.submitCommand(command, SubmitCodeType, token, id);
         return disposable;
     }
 
     cancel(token?: string | undefined): Promise<void> {
         let command: Cancel = {};
         token = token || this.getNextToken();
-        return this.submitCommand(command, CancelType, token);
+        return this.submitCommand(command, CancelType, token, undefined);
     }
 
     dispose() {
@@ -286,6 +290,7 @@ export class InteractiveClient {
         return new Promise<TEvent>(async (resolve, reject) => {
             let handled = false;
             token = token || this.getNextToken();
+            const id = Guid.create().toString();
             let disposable = this.subscribeToKernelTokenEvents(token, eventEnvelope => {
                 if (eventEnvelope.command?.token === token) {
                     switch (eventEnvelope.eventType) {
@@ -315,26 +320,27 @@ export class InteractiveClient {
                     }
                 }
             });
-            await this.config.transport.submitCommand({ command, commandType, token });
+            await this.config.transport.submitCommand({ command, commandType, token, id });
         });
     }
 
-    private submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string | undefined): Promise<void> {
+    private submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string | undefined, id: string | undefined): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             let failureReported = false;
             token = token || this.getNextToken();
+            id = id || Guid.create().toString();
             let disposable = this.subscribeToKernelTokenEvents(token, eventEnvelope => {
                 switch (eventEnvelope.eventType) {
                     case CommandFailedType:
                         let err = <CommandFailed>eventEnvelope.event;
                         failureReported = true;
-                        if (eventEnvelope.command?.token === token) {
+                        if (eventEnvelope.command?.id === id) {
                             disposable.dispose();
                             reject(err);
                         }
                         break;
                     case CommandSucceededType:
-                        if (eventEnvelope.command?.token === token) {
+                        if (eventEnvelope.command?.id === id) {
                             disposable.dispose();
                             resolve();
                         }
@@ -343,7 +349,7 @@ export class InteractiveClient {
                         break;
                 }
             });
-            this.config.transport.submitCommand({ command, commandType, token }).catch(e => {
+            this.config.transport.submitCommand({ command, commandType, token, id }).catch(e => {
                 // only report a failure if it's not a `CommandFailed` event from above (which has already called `reject()`)
                 if (!failureReported) {
                     reject(e);
