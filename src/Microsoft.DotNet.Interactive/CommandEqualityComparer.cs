@@ -11,19 +11,19 @@ namespace Microsoft.DotNet.Interactive
     {
         public static CommandEqualityComparer Instance { get; } = new();
 
-        public bool Equals(KernelCommand x, KernelCommand y)
+        public bool Equals(KernelCommand xCommand, KernelCommand yCommand)
         {
-            if (ReferenceEquals(x, y))
+            if (ReferenceEquals(xCommand, yCommand))
             {
                 return true;
             }
 
-            if (x.Properties.TryGetValue(KernelCommandExtensions.IdKey, out var xId) &&
-                xId is string xIdString && 
-                y.Properties.TryGetValue(KernelCommandExtensions.IdKey, out var yId) &&
-                yId is string yIdString )
+            if (xCommand.Properties.TryGetValue(KernelCommandExtensions.IdKey, out var xCommandId) &&
+                xCommandId is string xCommandIdString &&
+                yCommand.Properties.TryGetValue(KernelCommandExtensions.IdKey, out var yCommandId) &&
+                yCommandId is string yCommandIdString)
             {
-                return string.Equals(xIdString, yIdString, StringComparison.Ordinal);
+                return string.Equals(xCommandIdString, yCommandIdString, StringComparison.Ordinal);
             }
 
             return false;
