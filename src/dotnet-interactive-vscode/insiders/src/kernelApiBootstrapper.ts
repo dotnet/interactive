@@ -43,7 +43,7 @@ export function configure(global?: any) {
             if (isKernelEventEnvelope(envelope)) {
                 Logger.default.info(`transport got ${envelope.eventType} with token ${envelope.command?.token} and id ${envelope.command?.id}`);
             }
-            receiver.publish(envelope);
+            receiver.delegate(envelope);
         }
     });
 

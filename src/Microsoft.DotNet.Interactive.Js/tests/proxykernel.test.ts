@@ -148,7 +148,7 @@ function createInMemoryTransport(eventProducer?: (commandEnvelope: contracts.Ker
         sentItems.push(item);
         let events = eventProducer(<contracts.KernelCommandEnvelope>item)
         for (let event of events) {
-            receiver.publish(event);
+            receiver.delegate(event);
         }
         return Promise.resolve();
     }
