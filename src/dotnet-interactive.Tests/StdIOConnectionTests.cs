@@ -15,7 +15,6 @@ using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.App.Tests
 {
