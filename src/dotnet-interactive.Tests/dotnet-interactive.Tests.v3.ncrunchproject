@@ -32,6 +32,9 @@
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.App.Tests.HttpApiTests.kernel_server_returns_javascript_api_via_http</TestName>
       </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.StdIOConnectionTests.fast_path_commands_over_proxy_can_be_handled</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>
