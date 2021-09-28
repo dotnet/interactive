@@ -98,7 +98,7 @@ export interface KernelCommandEnvelopeHandler {
 }
 
 export class CommandAndEventReceiver {
-    private _waitingOnMessages: PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope> | null;
+    private _waitingOnMessages: PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope> | null = null;
     private readonly _envelopeQueue: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] = [];
 
     public publish(commandOrEvent: contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope) {
