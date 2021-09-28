@@ -3,6 +3,7 @@
 
 import * as contracts from "../interfaces/contracts";
 import * as utilities from "../interfaces/utilities";
+import { Logger } from "../logger";
 
 export function isPromiseCompletionSource<T>(obj: any): obj is PromiseCompletionSource<T> {
     return obj.promise
@@ -94,4 +95,33 @@ export class GenericTransport implements contracts.Transport {
 
 export interface KernelCommandEnvelopeHandler {
     (eventEnvelope: contracts.KernelCommandEnvelope): Promise<void>;
+}
+
+export class CommandAndEventReceiver {
+    private _waitingOnMessages: PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope> | null;
+    private readonly _envelopeQueue: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] = [];
+
+    public publish(commandOrEvent: contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope) {
+        if (this._waitingOnMessages) {
+            let capturedMessageWaiter = this._waitingOnMessages;
+            this._waitingOnMessages = null;
+
+            capturedMessageWaiter.resolve(commandOrEvent);
+        } else {
+
+            this._envelopeQueue.push(commandOrEvent);
+        }
+    }
+
+    public read(): Promise<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope> {
+        let envelope = this._envelopeQueue.shift();
+        if (envelope) {
+            return Promise.resolve<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>(envelope);
+        }
+        else {
+            Logger.default.info(`transport building promise awaiter`);
+            this._waitingOnMessages = new PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>();
+            return this._waitingOnMessages.promise;
+        }
+    }
 }
