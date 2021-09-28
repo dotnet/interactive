@@ -101,7 +101,7 @@ export class CommandAndEventReceiver {
     private _waitingOnMessages: PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope> | null = null;
     private readonly _envelopeQueue: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] = [];
 
-    public publish(commandOrEvent: contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope) {
+    public delegate(commandOrEvent: contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope) {
         if (this._waitingOnMessages) {
             let capturedMessageWaiter = this._waitingOnMessages;
             this._waitingOnMessages = null;
