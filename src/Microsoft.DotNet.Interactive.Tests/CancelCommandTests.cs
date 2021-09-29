@@ -86,8 +86,10 @@ while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested
 
             var commandToCancel = new SubmitCode(@"
 using Microsoft.DotNet.Interactive;
-
-while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested){ await Task.Delay(10); }", targetKernelName: "csharp");
+var cancellationToken = KernelInvocationContext.Current.CancellationToken;
+while(!cancellationToken.IsCancellationRequested){ 
+    await Task.Delay(10); 
+}", targetKernelName: "csharp");
             
             var resultForCommandToCancel = kernel.SendAsync(commandToCancel);
 
@@ -95,9 +97,16 @@ while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested
 
             var results = await resultForCommandToCancel;
 
-            results.KernelEvents.ToSubscribedList()
+
+            var events = results.KernelEvents.ToSubscribedList();
+
+            events
                 .Should()
-                .ContainSingle<CommandFailed>(c => c.Command == commandToCancel);
+                .ContainSingle<CommandFailed>(c => c.Command == commandToCancel)
+                .Which
+                .Exception
+                .Should()
+                .BeOfType<OperationCanceledException>();
         }
 
         [Fact]
