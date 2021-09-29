@@ -70,7 +70,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 $"{nameof(CommandFailed)}.{nameof(CommandFailed.Exception)}",
                 $"{nameof(DisplayEvent)}.{nameof(DisplayEvent.Value)}",
                 $"{nameof(ValueProduced)}.{nameof(ValueProduced.Value)}",
-                $"{nameof(KernelValueInfo)}.{nameof(KernelValueInfo.Type)}"
+                $"{nameof(KernelValueInfo)}.{nameof(KernelValueInfo.Type)}",
+                $"{nameof(CommandCancelled)}.{nameof(CommandCancelled.CancelledCommand)}"
             };
 
             deserializedEnvelope
@@ -101,7 +102,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         [MemberData(nameof(EventsUniqueByType))]
         public void Event_contract_has_not_been_broken(KernelEvent @event)
         {
-            var _configuration = new Configuration()
+            var configuration = new Configuration()
                                  .UsingExtension($"{@event.GetType().Name}.json")
                                  .SetInteractive(Debugger.IsAttached);
 
@@ -109,7 +110,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
             var json = KernelEventEnvelope.Serialize(@event);
 
-            this.Assent(json, _configuration);
+            this.Assent(json, configuration);
         }
 
         [Fact]
@@ -341,7 +342,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new ValueProduced("raw value", "a", new FormattedValue(HtmlFormatter.MimeType, "<span>formatted value</span>"), new RequestValue("a", "csharp", HtmlFormatter.MimeType));
 
-                yield return new CommandCancelled(new SubmitCode("var value = 1;", "csharp"));
+                yield return new CommandCancelled( new Cancel() ,new SubmitCode("var value = 1;", "csharp"));
             }
         }
 
