@@ -13,11 +13,14 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive
 {
     public class KeyValueStoreKernel :
-        DotNetKernel,
+        Kernel,
+        ISupportGetValue,
+        ISupportSetValue,
         IKernelCommandHandler<SubmitCode>
     {
         internal const string DefaultKernelName = "value";
@@ -28,16 +31,16 @@ namespace Microsoft.DotNet.Interactive
         {
         }
 
-        public override Task SetVariableAsync(string name, object value, Type declaredType = null)
+        public Task SetValueAsync(string name, object value, Type declaredType = null)
         {
             _values[name] = value;
             return Task.CompletedTask;
         }
 
-        public override IReadOnlyCollection<string> GetVariableNames() =>
-            _values.Keys.ToArray();
+        public IReadOnlyCollection<KernelValueInfo> GetValueInfos() =>
+            _values.Select(e => new KernelValueInfo(e.Key, typeof(string))).ToArray();
 
-        public override bool TryGetVariable<T>(string name, out T value)
+        public bool TryGetValue<T>(string name, out T value)
         {
             if (_values.TryGetValue(name, out var obj) &&
                 obj is T t)
@@ -64,7 +67,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (!string.IsNullOrWhiteSpace(value))
                 {
-                    context.Fail(message: "The --from-file option cannot be used in combination with a content submission.");
+                    context.Fail(command, message: "The --from-file option cannot be used in combination with a content submission.");
                 }
 
                 return;
@@ -74,7 +77,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (!string.IsNullOrWhiteSpace(value))
                 {
-                    context.Fail(message: "The --from-url option cannot be used in combination with a content submission.");
+                    context.Fail(command, message: "The --from-url option cannot be used in combination with a content submission.");
                 }
 
                 return;
@@ -88,7 +91,7 @@ namespace Microsoft.DotNet.Interactive
             ValueDirectiveOptions options,
             KernelInvocationContext context)
         {
-            await SetVariableAsync(options.Name, value);
+            await SetValueAsync(options.Name, value);
 
             if (options.MimeType is { } mimeType)
             {

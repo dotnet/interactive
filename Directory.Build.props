@@ -7,7 +7,7 @@
   <PropertyGroup>
     <!-- private repo, don't do source-link -->
     <DeterministicSourcePaths>false</DeterministicSourcePaths>
-    <EnableSourceLink>false</EnableSourceLink>
+    <EnableSourceLink>true</EnableSourceLink>
 
     <!-- NuGet: A stable release of a package should not have a prerelease dependency. -->
     <NoWarn>$(NoWarn);NU5104</NoWarn>
@@ -15,14 +15,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-   <!-- These properties are needed so that version number can be same for MLS.Agent.Tools and the libraries that depend on it -->  
-    <NewtonsoftJsonVersion>12.0.3</NewtonsoftJsonVersion>
-    <PocketLoggerVersion>0.3.0</PocketLoggerVersion>
-    <SystemDiagnosticsProcessVersion>4.3.0</SystemDiagnosticsProcessVersion>
     <SystemReactiveVersion>5.0.0</SystemReactiveVersion>
-    <SystemRuntimeExtensionsVersion>4.3.0</SystemRuntimeExtensionsVersion>
-    <MicrosoftCodeAnalysisCommonVersion>3.10.0</MicrosoftCodeAnalysisCommonVersion>
-    <TaskExtensionsVersion>0.1.8580001</TaskExtensionsVersion>
+    <MicrosoftCodeAnalysisCommonVersion>3.11.0</MicrosoftCodeAnalysisCommonVersion>
   </PropertyGroup>
 
   <PropertyGroup>

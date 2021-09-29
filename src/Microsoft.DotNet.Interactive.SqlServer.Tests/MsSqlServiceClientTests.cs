@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
             string newText = string.Join(lineEnding, "abc", "def");
             var testUri = new Uri("untitled://test");
 
-            var docChange = MsSqlServiceClient.GetDocumentChangeForText(testUri, newText, oldText);
+            var docChange = ToolsServiceClient.GetDocumentChangeForText(testUri, newText, oldText);
 
             docChange.ContentChanges.Length
                 .Should()

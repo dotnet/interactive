@@ -13,9 +13,7 @@ namespace Microsoft.DotNet.Interactive.Commands
         protected KernelCommand(string targetKernelName = null, KernelCommand parent = null)
         {
             Properties = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
-
             TargetKernelName = targetKernelName;
-
             Parent = parent;
         }
 
@@ -24,6 +22,9 @@ namespace Microsoft.DotNet.Interactive.Commands
 
         [JsonIgnore]
         public KernelCommand Parent { get; internal set; }
+
+        [JsonIgnore]
+        public bool? ShouldPublishCompletionEvent { get; protected internal set; }
 
         [JsonIgnore]
         public IDictionary<string, object> Properties { get; }

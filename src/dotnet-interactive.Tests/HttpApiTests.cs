@@ -6,17 +6,20 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 
 using FluentAssertions;
 using FluentAssertions.Execution;
 
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.Extensions.DependencyInjection;
 
 using Newtonsoft.Json;
@@ -381,12 +384,40 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
                    .BeEquivalentTo(
                        ".NET",
                        "sql",
+                       "kql",
                        "csharp",
                        "fsharp",
                        "pwsh",
                        "html",
                        "javascript",
                        "value");
+        }
+
+        [Fact]
+        public async Task kernel_server_returns_javascript_api_via_http()
+        {
+            var port = GetFreePort();
+
+            using var kernel = new CompositeKernel().UseKernelClientConnection(new ConnectStdIoCommand());
+
+            await kernel.SendAsync(new SubmitCode($"#!connect stdio --kernel-name proxy --command \"{Dotnet.Path}\" \"{typeof(Program).Assembly.Location}\" stdio --http-port {port}"));
+
+            using var client = new HttpClient();
+
+            var response = await client.GetAsync($"http://localhost:{port}/resources/dotnet-interactive.js");
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            response.Content.Headers.ContentType.MediaType.Should().Be("application/javascript");
+        }
+
+        private static int GetFreePort()
+        {
+            var l = new TcpListener(IPAddress.Loopback, 0);
+            l.Start();
+            var port = ((IPEndPoint)l.LocalEndpoint).Port;
+            l.Stop();
+            return port;
         }
     }
 

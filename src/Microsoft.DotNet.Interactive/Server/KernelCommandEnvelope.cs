@@ -36,7 +36,9 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public abstract string CommandType { get; }
 
-        public string Token => _command.GetToken();
+        public string Token => _command.GetOrCreateToken();
+
+        public string CommandId => _command.GetOrCreateId();
 
         KernelCommand IKernelCommandEnvelope.Command => _command;
 
@@ -58,17 +60,17 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(ChangeWorkingDirectory)] = typeof(KernelCommandEnvelope<ChangeWorkingDirectory>),
                 [nameof(DisplayError)] = typeof(KernelCommandEnvelope<DisplayError>),
                 [nameof(DisplayValue)] = typeof(KernelCommandEnvelope<DisplayValue>),
-                [nameof(ParseNotebook)] = typeof(KernelCommandEnvelope<ParseNotebook>),
                 [nameof(RequestCompletions)] = typeof(KernelCommandEnvelope<RequestCompletions>),
                 [nameof(RequestDiagnostics)] = typeof(KernelCommandEnvelope<RequestDiagnostics>),
                 [nameof(RequestHoverText)] = typeof(KernelCommandEnvelope<RequestHoverText>),
                 [nameof(RequestSignatureHelp)] = typeof(KernelCommandEnvelope<RequestSignatureHelp>),
                 [nameof(SendEditableCode)] = typeof(KernelCommandEnvelope<SendEditableCode>),
-                [nameof(SerializeNotebook)] = typeof(KernelCommandEnvelope<SerializeNotebook>),
                 [nameof(SubmitCode)] = typeof(KernelCommandEnvelope<SubmitCode>),
                 [nameof(UpdateDisplayedValue)] = typeof(KernelCommandEnvelope<UpdateDisplayedValue>),
                 [nameof(Quit)] = typeof(KernelCommandEnvelope<Quit>),
-                [nameof(Cancel)] = typeof(KernelCommandEnvelope<Cancel>)
+                [nameof(Cancel)] = typeof(KernelCommandEnvelope<Cancel>),
+                [nameof(RequestValue)] = typeof(KernelCommandEnvelope<RequestValue>),
+                [nameof(RequestValueInfos)] = typeof(KernelCommandEnvelope<RequestValueInfos>)
             };
 
             _commandTypesByCommandTypeName = new ConcurrentDictionary<string, Type>(_envelopeTypesByCommandTypeName
@@ -83,7 +85,9 @@ namespace Microsoft.DotNet.Interactive.Server
                 command.GetType(),
                 commandType =>
                 {
-                    var genericType = _envelopeTypesByCommandTypeName[command.GetType().Name];
+                    var type = command.GetType();
+
+                    var genericType = _envelopeTypesByCommandTypeName[type.Name];
 
                     var constructor = genericType.GetConstructors().Single();
 
@@ -118,11 +122,18 @@ namespace Microsoft.DotNet.Interactive.Server
         {
             var commandTypeJson = string.Empty;
             string commandJson;
-            var token = string.Empty;
-            
-            if (json.TryGetProperty("commandType", out var commandTypeProperty))
+            var commandToken = string.Empty;
+            var commandId = string.Empty;
+
+            if (json.TryGetProperty(nameof(SerializationModel.commandType), out var commandTypeProperty))
             {
                 commandTypeJson = commandTypeProperty.GetString();
+            }
+
+            // restore the command id
+            if (json.TryGetProperty(nameof(SerializationModel.id), out var commandIdProperty))
+            {
+                commandId = commandIdProperty.GetString();
             }
 
             if (string.IsNullOrWhiteSpace(commandTypeJson))
@@ -131,7 +142,7 @@ namespace Microsoft.DotNet.Interactive.Server
             }
 
             var commandType = CommandTypeByName(commandTypeJson);
-            if (json.TryGetProperty("command", out var commandJsonProperty))
+            if (json.TryGetProperty(nameof(SerializationModel.command), out var commandJsonProperty))
             {
                 commandJson = commandJsonProperty.GetRawText();
             }
@@ -140,17 +151,20 @@ namespace Microsoft.DotNet.Interactive.Server
                 return null;
             }
 
-       
-            var command = (KernelCommand) JsonSerializer.Deserialize( commandJson,commandType, Serializer.JsonSerializerOptions);
-
-           
-            if (json.TryGetProperty("token", out var tokenProperty))
+            var command = (KernelCommand)JsonSerializer.Deserialize(commandJson, commandType, Serializer.JsonSerializerOptions);
+            if (commandId is not null)
             {
-                token = tokenProperty.GetString();
+                command.SetId(commandId);
             }
-            if (token is not null)
+
+            // restore the command token
+            if (json.TryGetProperty(nameof(SerializationModel.token), out var tokenProperty))
             {
-                command.SetToken(token);
+                commandToken = tokenProperty.GetString();
+            }
+            if (commandToken is not null)
+            {
+                command.SetToken(commandToken);
             }
 
             return Create(command);
@@ -164,7 +178,8 @@ namespace Microsoft.DotNet.Interactive.Server
             {
                 command = envelope.Command,
                 commandType = envelope.CommandType,
-                token = envelope.Token
+                token = envelope.Token,
+                id = envelope.CommandId
             };
 
             return JsonSerializer.Serialize(
@@ -175,6 +190,8 @@ namespace Microsoft.DotNet.Interactive.Server
         internal class SerializationModel
         {
             public string token { get; set; }
+
+            public string id { get; set; }
 
             public string commandType { get; set; }
 

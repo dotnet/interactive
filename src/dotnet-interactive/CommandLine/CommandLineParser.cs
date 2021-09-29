@@ -9,6 +9,7 @@ using System.CommandLine.Invocation;
 using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.IO;
+using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,6 +19,7 @@ using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.AspNetCore;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Documents.ParserServer;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Http;
@@ -55,6 +57,14 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             KernelServer kernel,
             IConsole console);
 
+        public delegate Task StartVSCode(
+            StartupOptions options,
+            KernelServer kernel,
+            IConsole console);
+
+        public delegate Task StartNotebookParser(
+            NotebookParserServer notebookParserServer);
+
         public delegate Task StartHttp(
             StartupOptions options,
             IConsole console,
@@ -66,6 +76,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             StartServer startServer = null,
             Jupyter jupyter = null,
             StartStdIO startStdIO = null,
+            StartVSCode startVSCode = null,
+            StartNotebookParser startNotebookParser = null,
             StartHttp startHttp = null,
             Action onServerStarted = null,
             ITelemetry telemetry = null,
@@ -95,6 +107,10 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             startStdIO ??= StdIOCommand.Do;
 
+            startVSCode ??= VSCodeCommand.Do;
+
+            startNotebookParser ??= ParseNotebookCommand.Do;
+
             startHttp ??= HttpCommand.Do;
 
             // Setup first time use notice sentinel.
@@ -122,7 +138,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     {
                         switch (directive.Key)
                         {
-                            case "vscode":
                             case "jupyter":
                             case "synapse":
                                 frontendTelemetryAdded = true;
@@ -133,13 +148,15 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                     if (!frontendTelemetryAdded)
                     {
-                        if (commandResult.Command.Name == "jupyter")
+                        switch (commandResult.Command.Name)
                         {
-                            entryItems.Add(new KeyValuePair<string, string>("frontend", "jupyter"));
-                        }
-                        else
-                        {
-                            entryItems.Add(new KeyValuePair<string, string>("frontend", "unknown"));
+                            case "jupyter":
+                            case "vscode":
+                                entryItems.Add(new KeyValuePair<string, string>("frontend", commandResult.Command.Name));
+                                break;
+                            default:
+                                entryItems.Add(new KeyValuePair<string, string>("frontend", "unknown"));
+                                break;
                         }
                     }
 
@@ -167,6 +184,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             rootCommand.AddCommand(Jupyter());
             rootCommand.AddCommand(StdIO());
+            rootCommand.AddCommand(VSCode());
+            rootCommand.AddCommand(NotebookParser());
             rootCommand.AddCommand(HttpServer());
 
             return new CommandLineBuilder(rootCommand)
@@ -179,7 +198,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                        }
 
                        // If sentinel does not exist, print the welcome message showing the telemetry notification.
-                       if (!Telemetry.Telemetry.SkipFirstTimeExperience && 
+                       if (!Telemetry.Telemetry.SkipFirstTimeExperience &&
                            !firstTimeUseNoticeSentinel.Exists())
                        {
                            context.Console.Out.WriteLine();
@@ -243,7 +262,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 {
                     var frontendEnvironment = new HtmlNotebookFrontendEnvironment();
                     var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
-                   
+
                     kernel.Add(
                         new JavaScriptKernel(),
                         new[] { "js" });
@@ -254,8 +273,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     {
                         switch (k)
                         {
-                            case DotNetKernel dk:
-                                await dk.UseJupyterHelpersAsync();
+                            case ISupportSetValue svk:
+                                await svk.UseJupyterHelpersAsync();
                                 break;
                         }
                     });
@@ -323,7 +342,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     {
                         var frontendEnvironment = new BrowserFrontendEnvironment();
                         var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
-                        
+
                         kernel.Add(
                             new JavaScriptKernel(),
                             new[] { "js" });
@@ -399,9 +418,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 stdIOCommand.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext>(
                     async (startupOptions, options, console, context) =>
                     {
-                        var isVsCode = context.ParseResult.Directives.Contains("vscode");
-                        FrontendEnvironment frontendEnvironment = startupOptions.EnableHttpApi 
-                            ? new HtmlNotebookFrontendEnvironment() 
+                        FrontendEnvironment frontendEnvironment = startupOptions.EnableHttpApi
+                            ? new HtmlNotebookFrontendEnvironment()
                             : new BrowserFrontendEnvironment();
 
                         var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
@@ -413,37 +431,13 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                         if (startupOptions.EnableHttpApi)
                         {
-                            var clientSideKernelClient =new SignalRBackchannelKernelClient();
+                            var clientSideKernelClient = new SignalRBackchannelKernelClient();
 
-                            if (isVsCode)
-                            {
-                                var frontEndKernel = kernelServer.GetFrontEndKernel("vscode");
-                                kernel.Add(frontEndKernel);
-                                await kernel.VisitSubkernelsAsync(async k =>
-                                {
-                                    switch (k)
-                                    {
-                                        case DotNetKernel dk:
-                                            await dk.UseVSCodeHelpersAsync(kernel);
-                                            break;
-                                    }
-                                });
+                            services.AddSingleton(clientSideKernelClient);
 
-                                services.AddSingleton(clientSideKernelClient);
-                                ((HtmlNotebookFrontendEnvironment)frontendEnvironment).RequiresAutomaticBootstrapping =
-                                    false;
-                                kernel.Add(
-                                    new JavaScriptKernel(clientSideKernelClient),
-                                    new[] { "js" });
-                            }
-                            else
-                            {
-                                services.AddSingleton(clientSideKernelClient);
-                              
-                                kernel.Add(
-                                    new JavaScriptKernel(clientSideKernelClient),
-                                    new[] { "js" });
-                            }
+                            kernel.Add(
+                                new JavaScriptKernel(clientSideKernelClient),
+                                new[] { "js" });
 
                             var _ = kernelServer.RunAsync();
                             onServerStarted ??= () =>
@@ -458,13 +452,142 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             new[] { "js" });
 
                         await startStdIO(
-                        startupOptions,
-                        kernelServer,
-                        console);
+                            startupOptions,
+                            kernelServer,
+                            console);
 
                     });
 
                 return stdIOCommand;
+            }
+
+            Command VSCode()
+            {
+                var httpPortRangeOption = new Option<HttpPortRange>(
+                    "--http-port-range",
+                    parseArgument: result => result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
+                    description: "Specifies the range of ports to use to enable HTTP services");
+
+                var httpPortOption = new Option<HttpPort>(
+                    "--http-port",
+                    description: "Specifies the port on which to enable HTTP services",
+                    parseArgument: result =>
+                    {
+                        if (result.FindResultFor(httpPortRangeOption) is { } conflictingOption)
+                        {
+                            var parsed = result.Parent as OptionResult;
+                            result.ErrorMessage = $"Cannot specify both {conflictingOption.Token.Value} and {parsed.Token.Value} together";
+                            return null;
+                        }
+
+                        if (result.Tokens.Count == 0)
+                        {
+                            return HttpPort.Auto;
+                        }
+
+                        var source = result.Tokens[0].Value;
+
+                        if (source == "*")
+                        {
+                            return HttpPort.Auto;
+                        }
+
+                        if (!int.TryParse(source, out var portNumber))
+                        {
+                            result.ErrorMessage = "Must specify a port number or *.";
+                            return null;
+                        }
+
+                        return new HttpPort(portNumber);
+                    });
+
+                var workingDirOption = new Option<DirectoryInfo>(
+                    "--working-dir",
+                    () => new DirectoryInfo(Environment.CurrentDirectory),
+                    "Working directory to which to change after launching the kernel.");
+
+                var vscodeCommand = new Command(
+                    "vscode",
+                    "Starts dotnet-interactive with kernel functionality exposed over standard I/O for VS Code")
+                {
+                    defaultKernelOption,
+                    httpPortRangeOption,
+                    httpPortOption,
+                    workingDirOption
+                };
+
+                vscodeCommand.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext>(
+                    async (startupOptions, options, console, context) =>
+                    {
+                        FrontendEnvironment frontendEnvironment = startupOptions.EnableHttpApi
+                            ? new HtmlNotebookFrontendEnvironment()
+                            : new BrowserFrontendEnvironment();
+
+                        var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
+
+                        services.AddKernel(kernel);
+
+                        kernel.UseQuitCommand();
+                        var kernelServer = kernel.CreateKernelServer(startupOptions.WorkingDir);
+
+                        if (startupOptions.EnableHttpApi)
+                        {
+                            var clientSideKernelClient = new SignalRBackchannelKernelClient();
+
+                            var frontEndKernel = kernelServer.GetFrontEndKernel("vscode");
+                            kernel.Add(frontEndKernel);
+                            await kernel.VisitSubkernelsAsync(async k =>
+                            {
+                                switch (k)
+                                {
+                                    case ISupportSetValue svk:
+                                        await svk.UseVSCodeHelpersAsync(kernel);
+                                        break;
+                                }
+                            });
+
+                            services.AddSingleton(clientSideKernelClient);
+                            ((HtmlNotebookFrontendEnvironment)frontendEnvironment).RequiresAutomaticBootstrapping =
+                                false;
+                            kernel.Add(
+                                new JavaScriptKernel(clientSideKernelClient),
+                                new[] { "js" });
+
+                            var _ = kernelServer.RunAsync();
+                            onServerStarted ??= () =>
+                            {
+                                kernelServer.NotifyIsReady();
+                            };
+                            await startHttp(startupOptions, console, startServer, context);
+                        }
+
+                        kernel.Add(
+                            new JavaScriptKernel(),
+                            new[] { "js" });
+
+                        await startVSCode(
+                            startupOptions,
+                            kernelServer,
+                            console);
+
+                    });
+
+                return vscodeCommand;
+            }
+
+            Command NotebookParser()
+            {
+                var notebookParserCommand = new Command(
+                    "notebook-parser",
+                    "Starts a process to parse and serialize notebooks.");
+                notebookParserCommand.Handler = CommandHandler.Create(async () =>
+                {
+                    Console.InputEncoding = Encoding.UTF8;
+                    Console.OutputEncoding = Encoding.UTF8;
+                    var notebookParserServer = new NotebookParserServer(Console.In, Console.Out);
+                    await startNotebookParser(notebookParserServer);
+                });
+                return notebookParserCommand;
             }
 
             static HttpPortRange ParsePortRangeOption(ArgumentResult result)
@@ -514,6 +637,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             // TODO: temporary measure to support vscode integrations
             compositeKernel.Add(new SQLKernel());
+            compositeKernel.Add(new KqlKernel());
 
             compositeKernel.Add(
                 new CSharpKernel()
@@ -522,7 +646,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseJupyterHelpers()
                     .UseWho()
                     .UseMathAndLaTeX()
-                    .UseDotNetVariableSharing()
+                    .UseValueSharing()
                     .UseAspNetCore(),
                 new[] { "c#", "C#" });
 
@@ -534,14 +658,14 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseWho()
                     .UseDefaultNamespaces()
                     .UseMathAndLaTeX()
-                    .UseDotNetVariableSharing(),
+                    .UseValueSharing(),
                 new[] { "f#", "F#" });
 
             compositeKernel.Add(
                 new PowerShellKernel()
                     .UseJupyterHelpers()
                     .UseProfiles()
-                    .UseDotNetVariableSharing(),
+                    .UseValueSharing(),
                 new[] { "powershell" });
 
 
@@ -556,8 +680,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                          .UseDefaultMagicCommands()
                          .UseLogMagicCommand()
                          .UseAboutMagicCommand()
-                         .UseKernelClientConnection(new ConnectNamedPipe())
-                         .UseKernelClientConnection(new ConnectSignalR());
+                         .UseKernelClientConnection(new ConnectNamedPipeCommand())
+                         .UseKernelClientConnection(new ConnectSignalRCommand())
+                         .UseKernelClientConnection(new ConnectStdIoCommand());
 
             if (startupOptions.Verbose)
             {
@@ -567,7 +692,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             SetUpFormatters(frontendEnvironment);
 
             kernel.DefaultKernelName = defaultKernelName;
-         
+
             return kernel;
         }
 

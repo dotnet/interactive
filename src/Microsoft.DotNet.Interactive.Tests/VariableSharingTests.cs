@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             "let x = 123",
             @"using Microsoft.DotNet.Interactive;
 
-(Kernel.Current.FindKernel(""fsharp"") as Microsoft.DotNet.Interactive.DotNetKernel).TryGetVariable(""x"", out int x);
+(Kernel.Current.FindKernel(""fsharp"") as Microsoft.DotNet.Interactive.ISupportGetValue).TryGetValue(""x"", out int x);
 x")]
         [InlineData(
             "#!fsharp",
@@ -100,14 +100,12 @@ x")]
             string codeToRead)
         {
             using var kernel = CreateKernel();
-
-            using var events = kernel.KernelEvents.ToSubscribedList();
-
+            
             await kernel.SubmitCodeAsync($"{from}\n{codeToWrite}");
 
-            await kernel.SubmitCodeAsync($"#!pwsh\n{codeToRead}");
+            var results = await kernel.SubmitCodeAsync($"#!pwsh\n{codeToRead}");
 
-            events.Should()
+            results.KernelEvents.ToSubscribedList().Should()
                   .ContainSingle<StandardOutputValueProduced>()
                   .Which
                   .FormattedValues
@@ -240,14 +238,14 @@ x")]
                 new CSharpKernel()
                     .UseNugetDirective()
                     .UseKernelHelpers()
-                    .UseDotNetVariableSharing(),
+                    .UseValueSharing(),
                 new FSharpKernel()
                     .UseNugetDirective()
                     .UseKernelHelpers()
                     .UseDefaultNamespaces() 
-                    .UseDotNetVariableSharing(),
+                    .UseValueSharing(),
                 new PowerShellKernel()
-                    .UseDotNetVariableSharing()
+                    .UseValueSharing()
             }.LogEventsToPocketLogger();
         }
 

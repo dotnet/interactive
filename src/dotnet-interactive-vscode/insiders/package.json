@@ -12,7 +12,7 @@
   "//version": "The version '42.42.42' is auto-set during CI package creation.",
   "version": "42.42.42",
   "engines": {
-    "vscode": "1.60.0-insider"
+    "vscode": "1.61.0-insider"
   },
   "bugs": {
     "url": "https://github.com/dotnet/interactive/issues"
@@ -55,7 +55,8 @@
   ],
   "capabilities": {
     "untrustedWorkspaces": {
-      "supported": true
+      "supported": "limited",
+      "description": "Execution of cells in Interactive Window and Notebooks is not supported in untrusted workspaces."
     },
     "virtualWorkspaces": true
   },
@@ -105,12 +106,22 @@
             "run",
             "dotnet-interactive",
             "--",
-            "[vscode]",
-            "stdio",
+            "vscode",
             "--working-dir",
             "{working_dir}"
           ],
           "description": "Command and arguments used to start a notebook session."
+        },
+        "dotnet-interactive.notebookParserArgs": {
+          "type": "array",
+          "default": [
+            "{dotnet_path}",
+            "tool",
+            "run",
+            "dotnet-interactive",
+            "--",
+            "notebook-parser"
+          ]
         },
         "dotnet-interactive.kernelTransportWorkingDirectory": {
           "type": "string",
@@ -134,7 +145,7 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.240403",
+          "default": "1.0.247402",
           "description": "The minimum required version of the .NET Interactive tool."
         },
         "dotnet-interactive.logLevel": {

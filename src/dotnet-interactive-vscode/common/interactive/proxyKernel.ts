@@ -22,15 +22,21 @@ export class ProxyKernel extends Kernel {
 
     private async _commandHandler(commandInvocation: IKernelCommandInvocation): Promise<void> {
         const token = commandInvocation.commandEnvelope.token;
-        const completionSource = new PromiseCompletionSource<boolean>();
+        const completionSource = new PromiseCompletionSource<contracts.KernelEventEnvelope>();
         let sub = this.transport.subscribeToKernelEvents((envelope: contracts.KernelEventEnvelope) => {
             Logger.default.info(`proxy ${this.name} got event ${envelope.eventType} from ${envelope.command?.command?.targetKernelName} with token ${envelope.command?.token}`);
             if (envelope.command!.token === token) {
-                commandInvocation.context.publish(envelope);
                 switch (envelope.eventType) {
                     case contracts.CommandFailedType:
                     case contracts.CommandSucceededType:
-                        completionSource.resolve(true);
+                        if (envelope.command!.id === commandInvocation.commandEnvelope.id) {
+                            completionSource.resolve(envelope);
+                        } else {
+                            commandInvocation.context.publish(envelope);
+                        }
+                        break;
+                    default:
+                        commandInvocation.context.publish(envelope);
                         break;
                 }
             }
@@ -39,11 +45,14 @@ export class ProxyKernel extends Kernel {
         try {
             this.transport.submitCommand(commandInvocation.commandEnvelope);
             Logger.default.info(`proxy ${this.name} about to await with token ${token}`);
-            await completionSource.promise;
+            const enventEnvelope = await completionSource.promise;
+            if (enventEnvelope.eventType === contracts.CommandFailedType) {
+                commandInvocation.context.fail((<contracts.CommandFailed>enventEnvelope.event).message);
+            }
             Logger.default.info(`proxy ${this.name} done awaiting with token ${token}`);
         }
         catch (e) {
-            commandInvocation.context.fail(e.message);
+            commandInvocation.context.fail((<any>e).message);
         }
         finally {
             sub.dispose();

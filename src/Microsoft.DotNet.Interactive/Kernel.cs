@@ -9,7 +9,6 @@ using System.CommandLine.Parsing;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -37,6 +36,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly SemaphoreSlim _fastPathSchedulerLock = new(1);
         private KernelInvocationContext _inFlightContext;
         private int _countOfLanguageServiceCommandsInFlight = 0;
+        private KernelName _name;
 
         protected Kernel(string name)
         {
@@ -60,6 +60,18 @@ namespace Microsoft.DotNet.Interactive
             _disposables.Add(Disposable.Create(
                 () => _kernelEvents.OnCompleted()
                 ));
+
+            RegisterCommandHandlers();
+        }
+
+        private void RegisterCommandHandlers()
+        {
+            if (this is ISupportGetValue supportGetValuesKernel)
+            {
+                RegisterCommandHandler<RequestValueInfos>((command, context) => command.InvokeAsync(context));
+
+                RegisterCommandHandler<RequestValue>((command, context) => command.InvokeAsync(context));
+            }
         }
 
         internal KernelCommandPipeline Pipeline { get; }
@@ -118,7 +130,7 @@ namespace Microsoft.DotNet.Interactive
                 }
 
                 if (command.Parent is null &&
-                    command != originalCommand)
+                    !CommandEqualityComparer.Instance.Equals(command, originalCommand))
                 {
                     command.Parent = originalCommand;
                 }
@@ -139,7 +151,7 @@ namespace Microsoft.DotNet.Interactive
                 || command.LinePosition.Character < 0
                 || command.LinePosition.Character > lines[command.LinePosition.Line].Span.Length)
             {
-                context.Fail(message: $"The specified position {command.LinePosition}");
+                context.Fail(command, message: $"The specified position {command.LinePosition}");
                 commands = null;
                 return false;
             }
@@ -193,7 +205,11 @@ namespace Microsoft.DotNet.Interactive
 
         public IObservable<KernelEvent> KernelEvents => _kernelEvents;
 
-        public string Name { get; set; }
+        public string Name
+        {
+            get => _name.Name;
+            set => _name = new KernelName(value);
+        }
 
         internal KernelUri Uri =>
             ParentKernel is null
@@ -249,6 +265,17 @@ namespace Microsoft.DotNet.Interactive
             await command.InvokeAsync(context);
         }
 
+
+        protected internal virtual void DelegatePublication(KernelEvent kernelEvent)
+        {
+            if (kernelEvent is null)
+            {
+                throw new ArgumentNullException(nameof(kernelEvent));
+            }
+
+            PublishEvent(kernelEvent);
+        }
+
         public async Task<KernelCommandResult> SendAsync(
             KernelCommand command,
             CancellationToken cancellationToken)
@@ -258,10 +285,12 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentNullException(nameof(command));
             }
 
+            command.ShouldPublishCompletionEvent ??= true;
+
             var context = KernelInvocationContext.Establish(command);
 
             // only subscribe for the root command 
-            var currentCommandOwnsContext = context.Command == command;
+            var currentCommandOwnsContext = CommandEqualityComparer.Instance.Equals(context.Command, command);
 
             IDisposable disposable;
 
@@ -310,7 +339,6 @@ namespace Microsoft.DotNet.Interactive
                                 {
                                     if (_countOfLanguageServiceCommandsInFlight > 0)
                                     {
-                                    
                                         context.CancelWithSuccess();
                                         return context.Result;
                                     }
@@ -330,7 +358,6 @@ namespace Microsoft.DotNet.Interactive
                             case RequestHoverText _:
                             case RequestCompletions _:
                             case RequestSignatureHelp _:
-                                // FIX: (SendAsync) 
                                 {
                                     if (_inFlightContext is { } inflight)
                                     {
@@ -369,7 +396,7 @@ namespace Microsoft.DotNet.Interactive
                 }
             }
 
-            return context.Result;
+            return context.ResultFor(command);
         }
 
         private async Task RunOnFastPath(KernelInvocationContext context,
@@ -423,18 +450,18 @@ namespace Microsoft.DotNet.Interactive
 
                 await Pipeline.SendAsync(command, context);
 
-                if (command != context.Command)
+                if (!CommandEqualityComparer.Instance.Equals(command, context.Command))
                 {
                     context.Complete(command);
                 }
-
-                return context.Result;
+                
+                return context.ResultFor(command);
             }
             catch (Exception exception)
             {
                 if (!context.IsComplete)
                 {
-                    context.Fail(exception);
+                    context.Fail(command, exception);
                 }
 
                 throw;
@@ -595,15 +622,6 @@ namespace Microsoft.DotNet.Interactive
             {
                 switch (command, this)
                 {
-                    case (ParseNotebook parseNotebook, IKernelCommandHandler<ParseNotebook> parseNotebookHandler):
-                        SetHandler(parseNotebookHandler, parseNotebook);
-                        break;
-
-                    case (SerializeNotebook serializeNotebook, IKernelCommandHandler<SerializeNotebook>
-                        serializeNotebookHandler):
-                        SetHandler(serializeNotebookHandler, serializeNotebook);
-                        break;
-
                     case (SubmitCode submitCode, IKernelCommandHandler<SubmitCode> submitCodeHandler):
                         SetHandler(submitCodeHandler, submitCode);
                         break;
@@ -662,6 +680,9 @@ namespace Microsoft.DotNet.Interactive
             KernelCommand command,
             KernelInvocationContext context) => context.HandlingKernel = this;
 
+        protected virtual Kernel GetDestinationKernel(
+            KernelEvent @event) => this;
+
         public void Dispose() => _disposables.Dispose();
 
         protected virtual ChooseKernelDirective CreateChooseKernelDirective()
@@ -670,5 +691,10 @@ namespace Microsoft.DotNet.Interactive
         }
 
         internal ChooseKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= CreateChooseKernelDirective();
+
+        public bool SupportsCommand<T>() where T : KernelCommand
+        {
+            return this is IKernelCommandHandler<T> || _dynamicHandlers.ContainsKey(typeof(T));
+        }
     }
 }

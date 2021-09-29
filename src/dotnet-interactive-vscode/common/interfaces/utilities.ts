@@ -14,19 +14,19 @@ export function isKernelCommandEnvelope(obj: any): obj is contracts.KernelComman
         && obj.command;
 }
 
-export function isErrorOutput(arg: any): arg is contracts.NotebookCellErrorOutput {
+export function isErrorOutput(arg: any): arg is contracts.ErrorElement {
     return arg
         && typeof arg.errorName === 'string'
         && typeof arg.errorValue === 'string'
         && Array.isArray(arg.stackTrace);
 }
 
-export function isDisplayOutput(arg: any): arg is contracts.NotebookCellDisplayOutput {
+export function isDisplayOutput(arg: any): arg is contracts.DisplayElement {
     return arg
         && typeof arg.data === 'object';
 }
 
-export function isTextOutput(arg: any): arg is contracts.NotebookCellTextOutput {
+export function isTextOutput(arg: any): arg is contracts.TextElement {
     return arg
         && typeof arg.text === 'string';
 }
@@ -46,4 +46,32 @@ export function reshapeOutputValueForVsCode(value: Uint8Array | string, mime: st
     } else {
         return value;
     }
+}
+
+export function isUint8Array(arg: any): arg is Uint8Array {
+    return arg
+        && (typeof arg.length === 'number' || arg.type === 'Buffer');
+}
+
+export function isNotebookParserServerResponse(arg: any): arg is contracts.NotebookParserServerResponse {
+    return arg
+        && typeof arg.id === 'string';
+}
+
+export function isNotebookParseResponse(arg: any): arg is contracts.NotebookParseResponse {
+    return arg
+        && typeof arg.id === 'string'
+        && typeof arg.document === 'object';
+}
+
+export function isNotebookSerializeResponse(arg: any): arg is contracts.NotebookSerializeResponse {
+    return arg
+        && typeof arg.id === 'string'
+        && isUint8Array(arg.rawData);
+}
+
+export function isNotebookParserServerError(arg: any): arg is contracts.NotebookErrorResponse {
+    return arg
+        && typeof arg.id === 'string'
+        && typeof arg.errorMessage === 'string';
 }

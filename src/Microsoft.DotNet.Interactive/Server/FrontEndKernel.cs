@@ -23,18 +23,18 @@ namespace Microsoft.DotNet.Interactive.Server
             _sender = sender;
         }
 
-        public void ForwardEvent(KernelEvent @event)
+        protected internal override void DelegatePublication(KernelEvent kernelEvent)
         {
-            if (ExecutionContext is not null)
+            if (ExecutionContext is { } ec)
             {
-                ExecutionContext.Run(ExecutionContext, (_) =>
+                ExecutionContext.Run(ec, _ =>
                 {
-                    PublishEvent(@event);
-                },null);
+                    PublishEvent(kernelEvent);
+                }, null);
             }
             else
             {
-                PublishEvent(@event);
+                PublishEvent(kernelEvent);
             }
         }
 
@@ -49,13 +49,14 @@ namespace Microsoft.DotNet.Interactive.Server
                     return;
             }
 
-            var token = command.GetToken();
+            var token = command.GetOrCreateToken();
+            var id = command.GetOrCreateId();
             var completionSource = new TaskCompletionSource<bool>();
             var sub = KernelEvents
-                .Where(e => e.Command.GetToken() == token)
+                .Where(e => e.Command.GetOrCreateToken() == token)
                 .Subscribe(kernelEvent =>
                 {
-                    if (kernelEvent.Command.GetToken() == token)
+                    if (kernelEvent.Command.GetOrCreateId() == id)
                     {
                         switch (kernelEvent)
                         {

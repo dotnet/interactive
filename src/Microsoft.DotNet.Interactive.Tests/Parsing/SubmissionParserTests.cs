@@ -4,14 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
-using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
-using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Parsing;
@@ -445,27 +441,6 @@ Console.WriteLine(d);
             compositeKernel.UseDefaultMagicCommands();
 
             return compositeKernel.SubmissionParser;
-        }
-
-        private class  NullKernelCommandAndEventReceiver: IKernelCommandAndEventReceiver
-        {
-            public IAsyncEnumerable<CommandOrEvent> CommandsOrEventsAsync(CancellationToken cancellationToken)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        private class NullKernelCommandAndEventSender : IKernelCommandAndEventSender
-        {
-            public Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
-            {
-                throw new NotImplementedException();
-            }
-
-            public Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
-            {
-                throw new NotImplementedException();
-            }
         }
     }
 }

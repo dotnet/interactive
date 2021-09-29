@@ -17,6 +17,24 @@
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.App.Tests.TypeScriptInterfacesContractTests.http_generated_TypeScript_interfaces_file_has_known_shape</TestName>
       </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.StdIOConnectionTests.stdio_server_encoding_is_utf_8</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.StdIOConnectionTests.dotnet_kernels_can_execute_code("PowerShell", "2")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.StdIOConnectionTests.dotnet_kernels_can_execute_code("FSharp", "&lt;div class=\"dni-plaintext\"&gt;2&lt;/div&gt;")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.StdIOConnectionTests.dotnet_kernels_can_execute_code("CSharp", "&lt;div class=\"dni-plaintext\"&gt;2&lt;/div&gt;")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.App.Tests.HttpApiTests.kernel_server_returns_javascript_api_via_http</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.StdIOConnectionTests.fast_path_commands_over_proxy_can_be_handled</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

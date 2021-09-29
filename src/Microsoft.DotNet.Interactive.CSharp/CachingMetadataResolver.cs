@@ -13,34 +13,43 @@ namespace Microsoft.DotNet.Interactive.CSharp
 {
     internal sealed class CachingMetadataResolver : MetadataReferenceResolver, IEquatable<ScriptMetadataResolver>
     {
+        private readonly ConcurrentDictionary<AssemblyIdentity, PortableExecutableReference> _resolvedAssembliesCache = new();
+        private readonly ConcurrentDictionary<(string, string, MetadataReferenceProperties), ImmutableArray<PortableExecutableReference>> _xmlReferencesCache = new();
+
         private readonly ScriptMetadataResolver _resolver;
-        public static CachingMetadataResolver Default { get; } = new CachingMetadataResolver(ImmutableArray<string>.Empty, null);
+        private readonly string _baseDirectory;
 
-        private CachingMetadataResolver(ImmutableArray<string> searchPaths, string baseDirectoryOpt)
+        public static CachingMetadataResolver Default { get; } = new(ImmutableArray<string>.Empty, null);
+
+        private CachingMetadataResolver(ImmutableArray<string> searchPaths, string baseDirectory)
         {
+            _baseDirectory = baseDirectory;
+            
             _resolver = ScriptMetadataResolver.Default
-                .WithBaseDirectory(baseDirectoryOpt)
-                .WithSearchPaths(searchPaths);
+                                              .WithBaseDirectory(baseDirectory)
+                                              .WithSearchPaths(searchPaths);
         }
 
-        public override ImmutableArray<PortableExecutableReference> ResolveReference(string reference, string baseFilePath, MetadataReferenceProperties properties)
-        {
-            var resolvedReferences = _resolver.ResolveReference(reference, baseFilePath, properties);
-            var xmlResolvedReferences = resolvedReferences.Select(r => ResolveReferenceWithXmlDocumentationProvider(r.FilePath, properties)).ToImmutableArray();
-            return xmlResolvedReferences;
-        }
+        public override ImmutableArray<PortableExecutableReference> ResolveReference(
+            string reference,
+            string baseFilePath,
+            MetadataReferenceProperties properties) =>
+            _xmlReferencesCache.GetOrAdd((reference, baseFilePath, properties), t =>
+            {
+                var resolvedReferences = _resolver.ResolveReference(t.Item1, t.Item2, t.Item3);
+                var xmlResolvedReferences = resolvedReferences.Select(r => ResolveReferenceWithXmlDocumentationProvider(r.FilePath, properties)).ToImmutableArray();
+
+                return xmlResolvedReferences;
+            });
 
         public override bool ResolveMissingAssemblies => _resolver.ResolveMissingAssemblies;
 
-        private readonly ConcurrentDictionary<AssemblyIdentity, PortableExecutableReference> _resolvedAssembliesCache = new ConcurrentDictionary<AssemblyIdentity, PortableExecutableReference>();
-        public override PortableExecutableReference ResolveMissingAssembly(MetadataReference definition, AssemblyIdentity referenceIdentity)
-        {
-            return _resolvedAssembliesCache.GetOrAdd(referenceIdentity, id => _resolver.ResolveMissingAssembly(definition, id));
-        }
+        public override PortableExecutableReference ResolveMissingAssembly(MetadataReference definition, AssemblyIdentity referenceIdentity) => 
+            _resolvedAssembliesCache.GetOrAdd(referenceIdentity, id => _resolver.ResolveMissingAssembly(definition, id));
 
         public CachingMetadataResolver WithBaseDirectory(string baseDirectory)
         {
-            if (BaseDirectory == baseDirectory)
+            if (_baseDirectory == baseDirectory)
             {
                 return this;
             }
@@ -50,13 +59,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public ImmutableArray<string> SearchPaths => _resolver.SearchPaths;
 
-        public string BaseDirectory => _resolver.BaseDirectory;
-
-        internal static PortableExecutableReference ResolveReferenceWithXmlDocumentationProvider(string path, MetadataReferenceProperties properties = default(MetadataReferenceProperties))
-        {
-            var peReference = MetadataReference.CreateFromFile(path, properties, XmlDocumentationProvider.CreateFromFile(Path.ChangeExtension(path, ".xml")));
-            return peReference;
-        }
+        internal static PortableExecutableReference ResolveReferenceWithXmlDocumentationProvider(string path, MetadataReferenceProperties properties = default) => 
+            MetadataReference.CreateFromFile(path, properties, XmlDocumentationProvider.CreateFromFile(Path.ChangeExtension(path, ".xml")));
 
         public bool Equals(ScriptMetadataResolver other) => _resolver.Equals(other);
 

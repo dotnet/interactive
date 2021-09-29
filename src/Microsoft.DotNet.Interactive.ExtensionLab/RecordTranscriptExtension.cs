@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             KernelInvocationContext.Current?.Display(
                 new HtmlString(@"<details><summary>Use the <code>#!record</code> magic command to keep a transcript of the code you run.</summary>
-    <p>Once you enable transcripts using <code>#!record</code>, each code submission (including re-running cells) is recorded in the specified file. The JSON format used is the same format recognized by the .NET Interactive <code>stdio</code> and <code>http</code> APIs and can be used to replay a notebook session via automation.</p>
+    <p>Once you enable transcripts using <code>#!record</code>, each code submission (including re-running cells) is recorded in the specified file. The JSON format used is the same format recognized by the .NET Interactive <code>stdio</code> and <code>http</code> APIs and can be used to replay an interactive session via automation.</p>
     <img src=""https://user-images.githubusercontent.com/547415/109562409-343b1300-7a93-11eb-8ebf-79bb6af028cf.png"" width=""75%"" />
     </details>"),
                 "text/html");

@@ -9,6 +9,8 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Documents;
+using Microsoft.DotNet.Interactive.Documents.ParserServer;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.VSCode;
 
@@ -29,13 +31,28 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
             { typeof(FileInfo), "string" },
         };
 
-        private static readonly HashSet<Type> AlwaysEmitTypes = new HashSet<Type>
+        private static readonly HashSet<Type> AlwaysEmitTypes = new()
         {
             typeof(KernelCommand),
-            typeof(KernelEvent)
+            typeof(KernelEvent),
+            typeof(DisplayElement),
+            typeof(TextElement),
+            typeof(ErrorElement),
         };
 
-        private static readonly HashSet<string> OptionalFields = new HashSet<string>
+        private static readonly HashSet<Type> ParserServerTypes = new()
+        {
+            // requests
+            typeof(NotebookParseRequest),
+            typeof(NotebookSerializeRequest),
+
+            // responses
+            typeof(NotebookParseResponse),
+            typeof(NotebookSerializeResponse),
+            typeof(NotebookErrorResponse),
+        };
+
+        private static readonly HashSet<string> OptionalFields = new()
         {
             $"{nameof(CompletionsProduced)}.{nameof(CompletionsProduced.LinePositionSpan)}",
             $"{nameof(DisplayEvent)}.{nameof(DisplayEvent.ValueId)}",
@@ -65,8 +82,6 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
                              .ToList();
 
             var emittedTypes = new HashSet<Type>(WellKnownTypes.Keys);
-
-            emittedTypes.RemoveWhere(AlwaysEmitTypes.Contains);
 
             builder.AppendLine(@"// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
@@ -114,6 +129,16 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
             {
                 GenerateType(builder, type, emittedTypes, additionalTypes);
             }
+
+            foreach (var type in AlwaysEmitTypes)
+            {
+                GenerateType(builder, type, emittedTypes, additionalTypes);
+            }
+
+            foreach (var type in ParserServerTypes)
+            {
+                GenerateType(builder, type, emittedTypes, additionalTypes);
+            }
         }
 
         private static void GenerateType(StringBuilder builder, Type type, ISet<Type> emittedTypes, ICollection<Type> requiredTypes)
@@ -137,6 +162,7 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 
             builder.AppendLine();
             builder.AppendLine($"export interface {TypeName(type)} {extends}{{");
+
             foreach (var property in GetProperties(type))
             {
                 builder.AppendLine($"    {PropertyName(type, property)}: {GetTypeScriptTypeName(property.PropertyType)};");
@@ -199,9 +225,9 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
         {
             builder.AppendLine();
             builder.AppendLine($"export enum {type.Name} {{");
-            foreach (var (name, value) in type.GetEnumNames().Zip(type.GetEnumValues().Cast<int>()))
+            foreach (var name in type.GetEnumNames())
             {
-                builder.AppendLine($"    {name} = {value},");
+                builder.AppendLine($"    {name} = \"{name.ToLowerInvariant()}\",");
             }
 
             builder.AppendLine("}");

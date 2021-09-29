@@ -5,16 +5,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-
 using Assent;
 
 using FluentAssertions;
-
 using Microsoft.AspNetCore.Html;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Notebook;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 
@@ -70,7 +68,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             var ignoredProperties = new HashSet<string>
             {
                 $"{nameof(CommandFailed)}.{nameof(CommandFailed.Exception)}",
-                $"{nameof(DisplayEvent)}.{nameof(DisplayEvent.Value)}"
+                $"{nameof(DisplayEvent)}.{nameof(DisplayEvent.Value)}",
+                $"{nameof(ValueProduced)}.{nameof(ValueProduced.Value)}",
+                $"{nameof(KernelValueInfo)}.{nameof(KernelValueInfo.Type)}"
             };
 
             deserializedEnvelope
@@ -116,10 +116,10 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         public void All_command_types_are_tested_for_round_trip_serialization()
         {
             var commandTypes = typeof(KernelCommand)
-                               .Assembly
-                               .ExportedTypes
-                               .Concrete()
-                               .DerivedFrom(typeof(KernelCommand));
+                .Assembly
+                .ExportedTypes
+                .Concrete()
+                .DerivedFrom(typeof(KernelCommand));
 
             Commands()
                 .Select(e => e[0].GetType())
@@ -146,7 +146,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
         public static IEnumerable<object[]> Commands()
         {
-            foreach (var command in commands())
+            foreach (var command in commands().Select(c =>
+            {
+                c.Properties["id"] = "command-id";
+                return c;
+            }))
             {
                 yield return new object[] { command };
             }
@@ -163,8 +167,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     new FormattedValue("text/html", "<b>hi!</b>")
                 );
 
-                yield return new ParseNotebook("notebook.ipynb", new byte[] { 0x01, 0x02, 0x03, 0x04 });
-
                 yield return new RequestCompletions("Cons", new LinePosition(0, 4), "csharp");
 
                 yield return new RequestDiagnostics("the-code");
@@ -175,38 +177,30 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new SendEditableCode("language", "code");
 
-                yield return new SerializeNotebook("notebook.ipynb", new NotebookDocument(new[]
-                {
-                    new NotebookCell("csharp", "user code", new NotebookCellOutput[]
-                    {
-                        new NotebookCellDisplayOutput(new Dictionary<string, object>
-                        {
-                            { "text/html", "<b></b>" }
-                        }),
-                        new NotebookCellTextOutput("text"),
-                        new NotebookCellErrorOutput("e-name", "e-value", new[]
-                        {
-                            "at func1()",
-                            "at func2()"
-                        })
-                    })
-                }), "\r\n");
-
                 yield return new SubmitCode("123", "csharp", SubmissionType.Run);
 
                 yield return new UpdateDisplayedValue(
                     new FormattedValue("text/html", "<b>hi!</b>"),
                     "the-value-id");
-                
+
                 yield return new Quit();
 
                 yield return new Cancel("csharp");
+
+                yield return new RequestValueInfos("csharp");
+
+                yield return new RequestValue("a", "csharp", HtmlFormatter.MimeType);
+
             }
         }
 
         public static IEnumerable<object[]> Events()
         {
-            foreach (var @event in events())
+            foreach (var @event in events().Select(e =>
+            {
+                e.Command.Properties["id"] = "command-id";
+                return e;
+            }))
             {
                 yield return new object[] { @event };
             }
@@ -291,25 +285,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new KernelReady();
 
-                yield return new NotebookParsed(new NotebookDocument(new[]
-                {
-                    new NotebookCell("language", "contents", new NotebookCellOutput[]
-                    {
-                        new NotebookCellDisplayOutput(new Dictionary<string, object>()
-                        {
-                            { "text/html", "<b></b>" }
-                        }),
-                        new NotebookCellTextOutput("text"),
-                        new NotebookCellErrorOutput("e-name", "e-value", new[]
-                        {
-                            "at func1()",
-                            "at func2()"
-                        })
-                    })
-                }), new ParseNotebook("notebook.ipynb", new byte[0]));
-
-                yield return new NotebookSerialized(new byte[] { 0x01, 0x02, 0x03, 0x04 }, new SerializeNotebook("notebook.ipynb", null,"\n"));
-               
                 yield return new PackageAdded(
                     new ResolvedPackageReference(
                         packageName: "ThePackage",
@@ -361,6 +336,10 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     new ChangeWorkingDirectory("some/different/directory"));
 
                 yield return new KernelExtensionLoaded(new SubmitCode(@"#r ""nuget:package"" "));
+
+                yield return new ValueInfosProduced(new[] { new KernelValueInfo("a", typeof(string)), new KernelValueInfo("b", typeof(string)), new KernelValueInfo("c", typeof(string)) }, new RequestValueInfos("csharp"));
+
+                yield return new ValueProduced("raw value", "a", new FormattedValue(HtmlFormatter.MimeType, "<span>formatted value</span>"), new RequestValue("a", "csharp", HtmlFormatter.MimeType));
             }
         }
 

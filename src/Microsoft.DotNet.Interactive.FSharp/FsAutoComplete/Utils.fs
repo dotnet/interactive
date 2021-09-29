@@ -30,7 +30,7 @@ open System.Threading.Tasks
 
 module internal ProcessHelper =
     let WaitForExitAsync(p: Process) = async {
-        let tcs = new TaskCompletionSource<obj>()
+        let tcs = new TaskCompletionSource<obj>(TaskCreationOptions.RunContinuationsAsynchronously)
         p.EnableRaisingEvents <- true
         p.Exited.Add(fun _args -> tcs.TrySetResult(null) |> ignore)
 

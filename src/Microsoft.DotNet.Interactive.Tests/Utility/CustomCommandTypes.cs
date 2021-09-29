@@ -8,7 +8,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
     public class CustomCommandTypes
     {
         // Multiple definitions of MyCommand simulate a user experimentally developing
-        // the command type in a notebook over time.
+        // the command type in a notebook  over time.
 
         public class FirstSubmission
         {

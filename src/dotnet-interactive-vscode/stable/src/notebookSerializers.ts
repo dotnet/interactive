@@ -5,71 +5,12 @@ import * as vscode from 'vscode';
 import * as contracts from './common/interfaces/contracts';
 import * as utilities from './common/interfaces/utilities';
 import * as vscodeLike from './common/interfaces/vscode-like';
-import { ClientMapper } from './common/clientMapper';
-import { InteractiveClient } from './common/interactiveClient';
-import { defaultNotebookCellLanguage, getNotebookSpecificLanguage, getSimpleLanguage, languageToCellKind } from './common/interactiveNotebook';
-import { OutputChannelAdapter } from './common/vscode/OutputChannelAdapter';
+import { getNotebookSpecificLanguage, getSimpleLanguage, languageToCellKind } from './common/interactiveNotebook';
 import { getEol, vsCodeCellOutputToContractCellOutput } from './common/vscode/vscodeUtilities';
+import { NotebookParserServer } from './common/notebookParserServer';
 import { Eol } from './common/interfaces';
-import { createUri } from './common/utilities';
 
-abstract class DotNetNotebookSerializer implements vscode.NotebookSerializer {
-
-    private serializerId = '*DOTNET-INTERACTIVE-NOTEBOOK-SERIALIZATION*';
-    private eol: Eol;
-
-    constructor(
-        private readonly clientMapper: ClientMapper,
-        private readonly outputChannel: OutputChannelAdapter,
-        private readonly extension: string,
-    ) {
-        this.eol = getEol();
-    }
-
-    async deserializeNotebook(content: Uint8Array, token: vscode.CancellationToken): Promise<vscode.NotebookData> {
-        const client = await this.getClient();
-        let notebookCells: contracts.NotebookCell[] = [];
-        try {
-            const notebook = await client.parseNotebook(this.getNotebookName(), content);
-            notebookCells = notebook.cells;
-        } catch (e) {
-            this.outputChannel.appendLine(`Error parsing file:\n${e}`);
-        }
-
-        if (notebookCells.length === 0) {
-            // ensure at least one cell
-            notebookCells.push({
-                language: defaultNotebookCellLanguage,
-                contents: '',
-                outputs: [],
-            });
-        }
-
-        const notebookData: vscode.NotebookData = {
-            cells: notebookCells.map(toVsCodeNotebookCellData)
-        };
-        return notebookData;
-    }
-
-    async serializeNotebook(data: vscode.NotebookData, token: vscode.CancellationToken): Promise<Uint8Array> {
-        const client = await this.getClient();
-        const notebook = {
-            cells: data.cells.map(toNotebookCell)
-        };
-        const content = await client.serializeNotebook(this.getNotebookName(), notebook, this.eol);
-        return content;
-    }
-
-    private getClient(): Promise<InteractiveClient> {
-        return this.clientMapper.getOrAddClient(createUri(this.serializerId));
-    }
-
-    private getNotebookName(): string {
-        return `dotnet-interactive-notebook${this.extension}`;
-    }
-}
-
-function toNotebookCell(cell: vscode.NotebookCellData): contracts.NotebookCell {
+function toInteractiveDocumentElement(cell: vscode.NotebookCellData): contracts.InteractiveDocumentElement {
     const outputs = cell.outputs || [];
     return {
         language: getSimpleLanguage(cell.languageId),
@@ -78,46 +19,56 @@ function toNotebookCell(cell: vscode.NotebookCellData): contracts.NotebookCell {
     };
 }
 
-export class DotNetDibNotebookSerializer extends DotNetNotebookSerializer {
-    constructor(clientMapper: ClientMapper, outputChannel: OutputChannelAdapter) {
-        super(clientMapper, outputChannel, '.dib');
-    }
+async function deserializeNotebookByType(parserServer: NotebookParserServer, serializationType: contracts.DocumentSerializationType, rawData: Uint8Array): Promise<vscode.NotebookData> {
+    const interactiveDocument = await parserServer.parseInteractiveDocument(serializationType, rawData);
+    const notebookData: vscode.NotebookData = {
+        cells: interactiveDocument.elements.map(toVsCodeNotebookCellData)
+    };
+    return notebookData;
+}
 
-    static registerNotebookSerializer(context: vscode.ExtensionContext, notebookType: string, clientMapper: ClientMapper, outputChannel: OutputChannelAdapter) {
-        const serializer = new DotNetDibNotebookSerializer(clientMapper, outputChannel);
+async function serializeNotebookByType(parserServer: NotebookParserServer, serializationType: contracts.DocumentSerializationType, eol: Eol, data: vscode.NotebookData): Promise<Uint8Array> {
+    const interactiveDocument: contracts.InteractiveDocument = {
+        elements: data.cells.map(toInteractiveDocumentElement)
+    };
+    const rawData = await parserServer.serializeNotebook(serializationType, eol, interactiveDocument);
+    return rawData;
+}
+
+export function createAndRegisterNotebookSerializers(context: vscode.ExtensionContext, parserServer: NotebookParserServer): Map<string, vscode.NotebookSerializer> {
+    const eol = getEol();
+    const createAndRegisterSerializer = (serializationType: contracts.DocumentSerializationType, notebookType: string): vscode.NotebookSerializer => {
+        const serializer: vscode.NotebookSerializer = {
+            deserializeNotebook(content: Uint8Array, _token: vscode.CancellationToken): Promise<vscode.NotebookData> {
+                return deserializeNotebookByType(parserServer, serializationType, content);
+            },
+            serializeNotebook(data: vscode.NotebookData, _token: vscode.CancellationToken): Promise<Uint8Array> {
+                return serializeNotebookByType(parserServer, serializationType, eol, data);
+            },
+        };
         const notebookSerializer = vscode.workspace.registerNotebookSerializer(notebookType, serializer);
         context.subscriptions.push(notebookSerializer);
-    }
+        return serializer;
+    };
+
+    const serializers = new Map<string, vscode.NotebookSerializer>();
+    const dibSerializer = createAndRegisterSerializer(contracts.DocumentSerializationType.Dib, 'dotnet-interactive');
+    serializers.set('.dib', dibSerializer);
+    serializers.set('.dotnet-interactive', dibSerializer);
+    serializers.set('.ipynb', createAndRegisterSerializer(contracts.DocumentSerializationType.Ipynb, 'dotnet-interactive-jupyter'));
+    return serializers;
 }
 
-export class DotNetLegacyNotebookSerializer extends DotNetNotebookSerializer {
-    constructor(clientMapper: ClientMapper, outputChannel: OutputChannelAdapter) {
-        super(clientMapper, outputChannel, '.dib');
-    }
-
-    static registerNotebookSerializer(context: vscode.ExtensionContext, notebookType: string, clientMapper: ClientMapper, outputChannel: OutputChannelAdapter) {
-        const serializer = new DotNetLegacyNotebookSerializer(clientMapper, outputChannel);
-        const notebookSerializer = vscode.workspace.registerNotebookSerializer(notebookType, serializer);
-        context.subscriptions.push(notebookSerializer);
-    }
-}
-
-export class DotNetJupyterNotebookSerializer extends DotNetNotebookSerializer {
-    constructor(clientMapper: ClientMapper, outputChannel: OutputChannelAdapter) {
-        super(clientMapper, outputChannel, '.ipynb');
-    }
-}
-
-function toVsCodeNotebookCellData(cell: contracts.NotebookCell): vscode.NotebookCellData {
+function toVsCodeNotebookCellData(cell: contracts.InteractiveDocumentElement): vscode.NotebookCellData {
     const cellData = new vscode.NotebookCellData(
         <number>languageToCellKind(cell.language),
         cell.contents,
         getNotebookSpecificLanguage(cell.language));
-    cellData.outputs = cell.outputs.map(contractCellOutputToVsCodeCellOutput);
+    cellData.outputs = cell.outputs.map(outputElementToVsCodeCellOutput);
     return cellData;
 }
 
-function contractCellOutputToVsCodeCellOutput(output: contracts.NotebookCellOutput): vscode.NotebookCellOutput {
+function outputElementToVsCodeCellOutput(output: contracts.InteractiveDocumentOutputElement): vscode.NotebookCellOutput {
     const outputItems: Array<vscode.NotebookCellOutputItem> = [];
     if (utilities.isDisplayOutput(output)) {
         for (const mimeKey in output.data) {

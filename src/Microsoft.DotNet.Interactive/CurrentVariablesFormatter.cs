@@ -8,14 +8,14 @@ using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive
 {
-    internal class CurrentVariablesFormatter : HtmlFormatter<CurrentVariables>
+    internal class CurrentVariablesFormatter : HtmlFormatter<KernelValues>
     {
         public CurrentVariablesFormatter() : base(FormatCurrentVariables)
         {
         }
 
         private static bool FormatCurrentVariables(
-            CurrentVariables instance, 
+            KernelValues instance, 
             FormatContext context)
         {
             PocketView output = null;

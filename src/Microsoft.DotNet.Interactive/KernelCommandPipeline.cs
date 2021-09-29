@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Interactive
             }
             catch (Exception exception)
             {
-                context.Fail(exception);
+                context.Fail(command, exception);
             }
         }
 

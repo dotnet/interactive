@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { areCommandsTheSame, KernelInvocationContext } from "./kernelInvocationContext";
-import { TokenGenerator } from "./tokenGenerator";
+import { Guid, TokenGenerator } from "./tokenGenerator";
 import * as contracts from "../interfaces/contracts";
 import { Logger } from "../logger";
 
@@ -30,15 +30,19 @@ export class Kernel {
     constructor(readonly name: string) {
     }
 
-    private ensureCommandToken(commandEnvelope: contracts.KernelCommandEnvelope) {
+    private ensureCommandTokenAndId(commandEnvelope: contracts.KernelCommandEnvelope) {
         if (!commandEnvelope.token) {
             let nextToken = this._tokenGenerator.GetNewToken();
             if (KernelInvocationContext.current?.commandEnvelope) {
                 // a parent command exists, create a token hierarchy
-                nextToken = `${KernelInvocationContext.current.commandEnvelope.token}/${nextToken}`;
+                nextToken = KernelInvocationContext.current.commandEnvelope.token!;
             }
 
             commandEnvelope.token = nextToken;
+        }
+
+        if (!commandEnvelope.id) {
+            commandEnvelope.id = Guid.create().toString();
         }
     }
 
@@ -61,7 +65,7 @@ export class Kernel {
     // the callback set up by attachKernelToTransport, and the callback is expected to return void, so
     // nothing is ever going to look at the promise we return here.
     async send(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
-        this.ensureCommandToken(commandEnvelope);
+        this.ensureCommandTokenAndId(commandEnvelope);
         let context = KernelInvocationContext.establish(commandEnvelope);
         let isRootCommand = areCommandsTheSame(context.commandEnvelope, commandEnvelope);
         let contextEventsSubscription: contracts.Disposable | null = null;
@@ -107,7 +111,7 @@ export class Kernel {
                     resolve();
                 }
                 catch (e) {
-                    context.fail(e.message);
+                    context.fail((<any>e)?.message || JSON.stringify(e));
                     if (isRootCommand) {
                         context.dispose();
                     }

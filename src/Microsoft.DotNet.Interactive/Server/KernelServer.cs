@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -38,7 +37,7 @@ namespace Microsoft.DotNet.Interactive.Server
             _sender = sender ?? throw new ArgumentNullException(nameof(sender));
             Environment.CurrentDirectory = workingDir.FullName;
 
-            _disposables.Add(_kernel.KernelEvents.Subscribe(async kernelEvent =>
+            _disposables.Add(_kernel.KernelEvents.Subscribe(kernelEvent =>
             {
                 var frontEndKernelNames = new HashSet<string>();
                 if (_frontEndKernel != null)
@@ -60,7 +59,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
                 try
                 {
-                    await SendAsync(kernelEvent, _cancellationTokenSource.Token);
+                    SendAsync(kernelEvent, _cancellationTokenSource.Token).Wait(_cancellationTokenSource.Token);
                 }
                 catch
                 {
@@ -78,7 +77,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public void NotifyIsReady()
         {
-            SendAsync(new KernelReady(), _cancellationTokenSource.Token)
+           _sender.NotifyIsReadyAsync(_cancellationTokenSource.Token)
                 .Wait(_cancellationTokenSource.Token);
         }
 
@@ -86,7 +85,7 @@ namespace Microsoft.DotNet.Interactive.Server
         {
             return Task.Run(async () =>
             {
-                await foreach (var commandOrEvent in _receiver.CommandsOrEventsAsync(_cancellationTokenSource.Token))
+                await foreach (var commandOrEvent in _receiver.CommandsAndEventsAsync(_cancellationTokenSource.Token))
                 {
                     if (commandOrEvent.IsParseError)
                     {
@@ -98,17 +97,17 @@ namespace Microsoft.DotNet.Interactive.Server
                         {
                             ExecutionContext.Run(_frontEndKernel.ExecutionContext, (c) =>
                             {
-                                var _ = _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
+                                var _ = _kernel?.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
                             }, null);
                         }                        
                         else
                         {
-                            var _ = _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
+                            var _ = _kernel?.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
                         }
                     }
                     else if (commandOrEvent.Event is { })
                     {
-                        _frontEndKernel?.ForwardEvent(commandOrEvent.Event);
+                        _frontEndKernel?.DelegatePublication(commandOrEvent.Event);
                     }
                 }
             }, _cancellationTokenSource.Token);

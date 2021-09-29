@@ -1,1 +1,1 @@
-{"token":"the-token","commandType":"UpdateDisplayedValue","command":{"formattedValue":{"mimeType":"text/html","value":"<b>hi!</b>"},"valueId":"the-value-id","targetKernelName":null}}
+{"token":"the-token","id":"command-id","commandType":"UpdateDisplayedValue","command":{"formattedValue":{"mimeType":"text/html","value":"<b>hi!</b>"},"valueId":"the-value-id","targetKernelName":null}}

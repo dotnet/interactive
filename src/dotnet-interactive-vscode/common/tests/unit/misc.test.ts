@@ -2,11 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { expect } from 'chai';
-import { NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellTextOutput } from '../../interfaces/contracts';
+import { DisplayElement, ErrorElement, TextElement } from '../../interfaces/contracts';
 import { isDisplayOutput, isErrorOutput, isTextOutput, reshapeOutputValueForVsCode } from '../../interfaces/utilities';
 import { isDotNetNotebookMetadata, isIpynbFile } from '../../ipynbUtilities';
 import { createUri, debounce, executeSafe, getWorkingDirectoryForNotebook, isDotNetUpToDate, parse, processArguments, stringify } from '../../utilities';
-import { decodeNotebookCellOutputs, decodeToString } from './utilities';
+import { decodeToString } from './utilities';
 
 import * as vscodeLike from '../../interfaces/vscode-like';
 
@@ -149,7 +149,7 @@ describe('Miscellaneous tests', () => {
 
     it('cell error output shape can be detected', () => {
         // strongly typed to catch interface changes
-        const error: NotebookCellErrorOutput = {
+        const error: ErrorElement = {
             errorName: 'ename',
             errorValue: 'evalue',
             stackTrace: [
@@ -162,7 +162,7 @@ describe('Miscellaneous tests', () => {
 
     it('cell display output shape can be detected', () => {
         // strongly typed to catch interface changes
-        const display: NotebookCellDisplayOutput = {
+        const display: DisplayElement = {
             data: {
                 'text/html': 'html',
                 'text/plain': 'text'
@@ -173,7 +173,7 @@ describe('Miscellaneous tests', () => {
 
     it('cell text output shape can be detected', () => {
         // strongly typed to catch interface changes
-        const text: NotebookCellTextOutput = {
+        const text: TextElement = {
             text: 'some text'
         };
         expect(isTextOutput(text)).to.be.true;
@@ -204,6 +204,14 @@ describe('Miscellaneous tests', () => {
         });
         const expectedBase64 = Buffer.from(numbers).toString('base64');
         expect(text).to.equal(`{"rawData":"${expectedBase64}"}`);
+    });
+
+    it('stringify function can handle cell output', () => {
+        const numbers = [97, 98, 99];
+        const text = stringify({
+            'text/html': Buffer.from(numbers)
+        });
+        expect(text).to.equal(`{"text/html":"abc"}`);
     });
 
     describe('vs code output value reshaping', () => {
@@ -253,6 +261,45 @@ describe('Miscellaneous tests', () => {
             const isSupported = isDotNetUpToDate('5.0', { code: -1, output: '' });
             expect(isSupported).to.be.false;
         });
+
+        it('should fail when version number check returned garbage string', () => {
+            const isSupported = isDotNetUpToDate('5.0', { code: 0, output: 'version five point zero point one-oh-one' });
+            expect(isSupported).to.be.false;
+        });
+
+        for (const newline of ['\n', '\r\n']) {
+            // These tests mimic running the `--version` command, but when the output contains the first-run text that looks like:
+            //
+            // Welcome to .NET 5.0!
+            // --------------------
+            // ...
+            // --------------------
+            // 1.0.1234
+            it(`supported version number with first-run text is allowed with ${JSON.stringify(newline)} newlines`, () => {
+                const output = `${newline}Welcome to .NET 5.0!${newline}--------${newline}5.0.101`;
+                const isSupported = isDotNetUpToDate('5.0', { code: 0, output });
+                expect(isSupported).to.be.true;
+            });
+
+            it(`version number with first-run text acquisition passes, but version isn't sufficient with ${JSON.stringify(newline)} newlines`, () => {
+                const output = `${newline}Welcome to .NET 3.1!${newline}--------${newline}3.1.403`;
+                const isSupported = isDotNetUpToDate('5.0', { code: 0, output });
+                expect(isSupported).to.be.false;
+            });
+
+            // These tests ensure that a trailing newline doesn't break the version number check.
+            it(`supported version number with trailing newline of ${JSON.stringify(newline)} is allowed`, () => {
+                const output = `5.0.101${newline}`;
+                const isSupported = isDotNetUpToDate('5.0', { code: 0, output });
+                expect(isSupported).to.be.true;
+            });
+
+            it(`version number text acquisition passes, but isn't sufficient with ${JSON.stringify(newline)} newlines`, () => {
+                const output = `3.1.403${newline}`;
+                const isSupported = isDotNetUpToDate('5.0', { code: 0, output });
+                expect(isSupported).to.be.false;
+            });
+        }
     });
 
     describe('.ipynb helpers', () => {

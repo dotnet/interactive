@@ -8,13 +8,13 @@ namespace Microsoft.DotNet.Interactive.VSCode
 {
     public static class KernelExtensions
     {
-        public static Task UseVSCodeHelpersAsync<TKernel>(this TKernel kernel, Kernel rootKernel) where TKernel : DotNetKernel
+        public static Task UseVSCodeHelpersAsync<TKernel>(this TKernel kernel, Kernel rootKernel) where TKernel : ISupportSetValue
         {
             rootKernel.RegisterCommandType<GetInput>();
             KernelEventEnvelope.RegisterEvent<InputProduced>();
 
             var interactiveHost = new VSCodeInteractiveHost(rootKernel);
-            return kernel.SetVariableAsync("InteractiveHost", interactiveHost, typeof(IInteractiveHost));
+            return kernel.SetValueAsync("InteractiveHost", interactiveHost, typeof(IInteractiveHost));
         }
     }
 }

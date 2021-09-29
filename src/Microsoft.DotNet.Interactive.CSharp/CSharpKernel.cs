@@ -29,9 +29,11 @@ using CompletionItem = Microsoft.DotNet.Interactive.Events.CompletionItem;
 namespace Microsoft.DotNet.Interactive.CSharp
 {
     public class CSharpKernel :
-        DotNetKernel,
+        Kernel,
         IExtensibleKernel,
         ISupportNuget,
+        ISupportGetValue,
+        ISupportSetValue,
         IKernelCommandHandler<RequestCompletions>,
         IKernelCommandHandler<RequestDiagnostics>,
         IKernelCommandHandler<RequestHoverText>,
@@ -110,21 +112,34 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return Task.FromResult(SyntaxFactory.IsCompleteSubmission(syntaxTree));
         }
 
-        public override IReadOnlyCollection<string> GetVariableNames() =>
+        public IReadOnlyCollection<KernelValueInfo> GetValueInfos() =>
             ScriptState?.Variables
-                       .Select(v => v.Name)
+                       .Select(v => new KernelValueInfo(v.Name, v.Type))
                        .Distinct()
                        .ToArray() ??
-            Array.Empty<string>();
+            Array.Empty<KernelValueInfo>();
 
-        public override bool TryGetVariable<T>(
+        public bool TryGetValue<T>(
             string name,
             out T value)
         {
+            object rawValue;
+            bool ret;
             if (ScriptState?.Variables
-                           .LastOrDefault(v => v.Name == name) is { } variable)
+                .LastOrDefault(v => v.Name == name) is { } variable)
             {
-                value = (T)variable.Value;
+                rawValue = variable.Value;
+                ret = true;
+            }
+            else
+            {
+                rawValue = default;
+                ret = false;
+            }
+
+            if (ret)
+            {
+                value = (T)rawValue;
                 return true;
             }
 
@@ -132,7 +147,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return false;
         }
 
-        public override async Task SetVariableAsync(string name, object value, Type declaredType = null)
+        public async Task SetValueAsync(string name, object value, Type declaredType = null)
         {
             var csharpTypeDeclaration = new StringWriter();
 
@@ -290,7 +305,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 // Report the compilation failure or exception
                 if (exception is not null)
                 {
-                    context.Fail(exception, message);
+                    context.Fail(submitCode, exception, message);
                 }
                 else
                 {
@@ -307,13 +322,12 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }
             else
             {
-                context.Fail(null, "Command cancelled");
+                context.Fail(submitCode, null, "Command cancelled");
             }
         }
 
         public Task HandleAsync(ChangeWorkingDirectory command, KernelInvocationContext context)
         {
-            _workingDirectory = command.WorkingDirectory;
             return Task.CompletedTask;
         }
 
@@ -322,12 +336,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             CancellationToken cancellationToken = default,
             Func<Exception, bool> catchException = default)
         {
-            if (_workingDirectory == null)
-                _workingDirectory = Directory.GetCurrentDirectory();
-
-            ScriptOptions = ScriptOptions
-                .WithMetadataResolver(CachingMetadataResolver.Default.WithBaseDirectory(_workingDirectory))
-                .WithSourceResolver(new SourceFileResolver(ImmutableArray<string>.Empty, _workingDirectory));
+            UpdateScriptOptionsIfWorkingDirectoryChanged();
 
             if (ScriptState is null)
             {
@@ -335,7 +344,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                                                     code,
                                                     ScriptOptions,
                                                     cancellationToken: cancellationToken)
-                    .UntilCancelled(cancellationToken) ?? ScriptState;
+                                                .UntilCancelled(cancellationToken) ?? ScriptState;
             }
             else
             {
@@ -355,6 +364,20 @@ namespace Microsoft.DotNet.Interactive.CSharp
             if (ScriptState is not null && ScriptState.Exception is null)
             {
                 _workspace.UpdateWorkspace(ScriptState);
+            }
+
+            void UpdateScriptOptionsIfWorkingDirectoryChanged()
+            {
+                var currentDir = Directory.GetCurrentDirectory();
+
+                if (!currentDir.Equals(_workingDirectory, StringComparison.Ordinal))
+                {
+                    _workingDirectory = currentDir;
+
+                    ScriptOptions = ScriptOptions
+                                    .WithMetadataResolver(CachingMetadataResolver.Default.WithBaseDirectory(_workingDirectory))
+                                    .WithSourceResolver(new SourceFileResolver(ImmutableArray<string>.Empty, _workingDirectory));
+                }
             }
         }
 
@@ -477,5 +500,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public IEnumerable<string> RestoreSources =>
             PackageRestoreContext.RestoreSources;
+
     }
 }

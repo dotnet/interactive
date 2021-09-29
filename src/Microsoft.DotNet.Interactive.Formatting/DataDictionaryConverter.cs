@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 reader.Read();
 
-                value.Add(keyString, GetValue(ref reader, options));
+                value.Add(keyString ?? throw new InvalidOperationException(), GetValue(ref reader, options));
             }
 
             throw new JsonException($"Cannot deserialize {typeToConvert.Name}");

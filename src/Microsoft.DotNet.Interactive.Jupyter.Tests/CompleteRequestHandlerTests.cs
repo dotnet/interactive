@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 using FluentAssertions;
 using FluentAssertions.Extensions;
-
+using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
-using Microsoft.DotNet.Interactive.Notebook;
-
 using Recipes;
 
 using Xunit;
