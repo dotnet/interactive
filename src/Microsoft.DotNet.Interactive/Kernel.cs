@@ -331,7 +331,10 @@ namespace Microsoft.DotNet.Interactive
                             case Cancel cancel:
                                 cancel.KernelUri = Uri;
                                 cancel.TargetKernelName = Name;
-                                Scheduler.CancelCurrentOperation();
+                                Scheduler.CancelCurrentOperation((inflight) =>
+                                {
+                                    context.Publish(new CommandCancelled(cancel, inflight));
+                                });
                                 await InvokePipelineAndCommandHandler(cancel);
                                 break;
 

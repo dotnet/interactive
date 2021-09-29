@@ -29,10 +29,11 @@ namespace Microsoft.DotNet.Interactive
                 _schedulerDisposalSource.Token);
         }
 
-        public void CancelCurrentOperation()
+        public void CancelCurrentOperation(Action<T> onCancellation = null)
         {
             if (_currentlyRunningOperation is { } operation)
             {
+                onCancellation?.Invoke(operation.Value);
                 operation.TaskCompletionSource.TrySetCanceled(_schedulerDisposalSource.Token);
                 _currentlyRunningOperation = null;
             }
