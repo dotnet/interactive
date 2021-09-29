@@ -340,6 +340,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 yield return new ValueInfosProduced(new[] { new KernelValueInfo("a", typeof(string)), new KernelValueInfo("b", typeof(string)), new KernelValueInfo("c", typeof(string)) }, new RequestValueInfos("csharp"));
 
                 yield return new ValueProduced("raw value", "a", new FormattedValue(HtmlFormatter.MimeType, "<span>formatted value</span>"), new RequestValue("a", "csharp", HtmlFormatter.MimeType));
+
+                yield return new CommandCancelled(new SubmitCode("var value = 1;", "csharp"));
             }
         }
 

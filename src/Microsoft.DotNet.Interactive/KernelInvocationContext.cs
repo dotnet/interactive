@@ -162,6 +162,14 @@ namespace Microsoft.DotNet.Interactive
             catch (ObjectDisposedException)
             {
             }
+
+            foreach (var childCommand in _childCommands.Keys)
+            {
+                Publish(new CommandCancelled(childCommand));
+            }
+
+            Publish(new CommandCancelled(Command));
+           
         }
 
         public void OnComplete(Func<KernelInvocationContext, Task> onComplete)

@@ -170,6 +170,7 @@ export interface NotebookErrorResponse extends NotebookParserServerResponse {
 // --------------------------------------------- Kernel events
 
 export const CodeSubmissionReceivedType = "CodeSubmissionReceived";
+export const CommandCancelledType = "CommandCancelled";
 export const CommandFailedType = "CommandFailed";
 export const CommandSucceededType = "CommandSucceeded";
 export const CompleteCodeSubmissionReceivedType = "CompleteCodeSubmissionReceived";
@@ -195,6 +196,7 @@ export const WorkingDirectoryChangedType = "WorkingDirectoryChanged";
 
 export type KernelEventType =
       typeof CodeSubmissionReceivedType
+    | typeof CommandCancelledType
     | typeof CommandFailedType
     | typeof CommandSucceededType
     | typeof CompleteCodeSubmissionReceivedType
@@ -220,6 +222,9 @@ export type KernelEventType =
 
 export interface CodeSubmissionReceived extends KernelEvent {
     code: string;
+}
+
+export interface CommandCancelled extends KernelEvent {
 }
 
 export interface CommandFailed extends KernelEvent {

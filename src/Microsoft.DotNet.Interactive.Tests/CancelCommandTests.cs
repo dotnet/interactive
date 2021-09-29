@@ -94,19 +94,18 @@ while(!cancellationToken.IsCancellationRequested){
             var resultForCommandToCancel = kernel.SendAsync(commandToCancel);
 
             await kernel.SendAsync(cancelCommand);
+            
 
             var results = await resultForCommandToCancel;
 
-
             var events = results.KernelEvents.ToSubscribedList();
 
-            events
-                .Should()
-                .ContainSingle<CommandFailed>(c => c.Command == commandToCancel)
+            events.Should()
+                .ContainSingle<CommandCancelled>()
                 .Which
-                .Exception
+                .Command
                 .Should()
-                .BeOfType<OperationCanceledException>();
+                .Be(commandToCancel);
         }
 
         [Fact]
