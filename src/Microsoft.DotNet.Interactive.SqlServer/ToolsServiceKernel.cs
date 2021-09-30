@@ -131,7 +131,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                                     RowsStartIndex = 0,
                                     RowsCount = Convert.ToInt32(resultSummary.RowCount)
                                 };
-                                var subsetResult = await ServiceClient.ExecuteQueryExecuteSubsetAsync(subsetParams);
+                                var subsetResult = await ServiceClient.ExecuteQueryExecuteSubsetAsync(subsetParams, context.CancellationToken);
                                 var tables = GetEnumerableTables(resultSummary.ColumnInfo, subsetResult.ResultSubset.Rows);
                                 foreach (var table in tables)
                                 {
@@ -178,7 +178,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
             try
             {
-                await ServiceClient.ExecuteQueryStringAsync(TempFileUri, command.Code);
+                await ServiceClient.ExecuteQueryStringAsync(TempFileUri, command.Code, context.CancellationToken);
 
                 context.CancellationToken.Register(() =>
                 {
