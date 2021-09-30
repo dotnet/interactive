@@ -54,11 +54,8 @@ using static {typeof(JupyterInteractiveHost).FullName};
 
 [<AutoOpen>]
 module JupyterTopLevelModule =
-    let GetInputAsync (prompt : string, isPassword : bool) = 
-        async {{
-            let! result = {typeof(JupyterInteractiveHost).FullName}.{nameof(JupyterInteractiveHost.GetInputAsync)}( prompt, isPassword ) |> Async.AwaitTask
-            return result
-        }}
+    let GetInputAsync ( prompt : string ) ( isPassword : bool) = 
+        {typeof(JupyterInteractiveHost).FullName}.{nameof(JupyterInteractiveHost.GetInputAsync)}( prompt, isPassword ) |> Async.AwaitTask
 ");
 
             kernel.DeferCommand(command);
