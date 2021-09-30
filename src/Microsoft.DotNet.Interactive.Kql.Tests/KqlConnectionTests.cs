@@ -139,7 +139,7 @@ StormEvents | take 10
                  .Which
                  .Type
                  .Should()
-                 .Be(TableSchemaFieldType.String);
+                 .Be(TableSchemaFieldType.DateTime);
         }
 
         [KqlFact]
