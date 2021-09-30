@@ -224,7 +224,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                     {
                         var columnInfo = columnInfos[colIndex];
 
-                        var expectedType = GetType(columnInfo.DataType);
+                        var expectedType = Type.GetType(columnInfo.DataType);
 
                         if (TypeDescriptor.GetConverter(expectedType) is { } typeConverter)
                         {
@@ -258,8 +258,6 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
             yield return displayTable;
         }
-        
-        protected abstract Type GetType(string typeName);
 
         public async Task HandleAsync(RequestCompletions command, KernelInvocationContext context)
         {

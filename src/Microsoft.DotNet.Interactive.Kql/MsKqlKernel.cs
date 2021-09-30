@@ -39,31 +39,6 @@ namespace Microsoft.DotNet.Interactive.Kql
             }
         }
 
-        /// <summary>
-        /// Map Kusto type to .NET Type equivalent using scalar data types
-        /// </summary>
-        /// <seealso href="https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/">Here</seealso>
-        /// <param name="type">Kusto Type</param>
-        /// <returns>.NET Equivalent Type</returns>
-        protected override Type GetType(string type)
-        {
-            switch (type)
-            {
-                case "bool": return Type.GetType("System.Boolean");
-                case "datetime": return Type.GetType("System.DateTime");
-                case "dynamic": return Type.GetType("System.Object");
-                case "guid": return Type.GetType("System.Guid");
-                case "int": return Type.GetType("System.Int32");
-                case "long": return Type.GetType("System.Int64");
-                case "real": return Type.GetType("System.Double");
-                case "string": return Type.GetType("System.String");
-                case "timespan": return Type.GetType("System.TimeSpan");
-                case "decimal": return Type.GetType("System.Data.SqlTypes.SqlDecimal");
-                
-                default: return typeof(string);
-            }
-        }
-
         protected override ChooseKernelDirective CreateChooseKernelDirective() =>
             new ChooseKqlKernelDirective(this);
 

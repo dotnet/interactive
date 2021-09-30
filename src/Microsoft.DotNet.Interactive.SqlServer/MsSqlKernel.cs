@@ -38,11 +38,6 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             }
         }
 
-        protected override Type GetType(string typeName)
-        {
-            return Type.GetType(typeName);
-        }
-
         protected override ChooseKernelDirective CreateChooseKernelDirective() =>
             new ChooseMsSqlKernelDirective(this);
 
