@@ -13,7 +13,6 @@ namespace Microsoft.DotNet.Interactive.VSCode
     {
         private const string VSCodeKernelName = "vscode";
 
-
         /// <summary>
         /// Gets input from the user.
         /// </summary>
@@ -23,10 +22,11 @@ namespace Microsoft.DotNet.Interactive.VSCode
         /// <returns>The user input value.</returns>
         public static Task<string> GetInputAsync(string prompt = "", bool isPassword = false, CancellationToken cancellationToken = default)
         {
+            var kernel = Kernel.Root.FindKernel(VSCodeKernelName) ?? throw new ArgumentNullException($"Cannot find kernel {VSCodeKernelName}");
+
             var command = new GetInput(prompt, isPassword, targetKernelName: VSCodeKernelName);
             var completionSource = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
             var token = command.GetOrCreateToken();
-            var kernel = Kernel.Root.FindKernel(VSCodeKernelName);
 
             kernel.KernelEvents.Where(e => e.Command.GetOrCreateToken() == token).Subscribe(e =>
             {
