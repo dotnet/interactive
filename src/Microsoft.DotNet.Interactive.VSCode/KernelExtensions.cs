@@ -7,6 +7,8 @@ using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Server;
 
+using System.Threading.Tasks;
+
 namespace Microsoft.DotNet.Interactive.VSCode
 {
     public static class KernelExtensions
@@ -39,10 +41,10 @@ open {typeof(VSCodeInteractiveHost).FullName};
 
         public static PowerShellKernel UseVSCodeHelpers(this PowerShellKernel kernel)
         {
-            kernel.ReadInput = prompt => VSCodeInteractiveHost.GetInputAsync(prompt: prompt).Result;
+            kernel.ReadInput = prompt => Task.Run(() =>VSCodeInteractiveHost.GetInputAsync(prompt: prompt)).Result;
             kernel.ReadPassword = prompt =>
             {
-                var value = VSCodeInteractiveHost.GetInputAsync(prompt: prompt, isPassword: true).Result;
+                var value = Task.Run( () => VSCodeInteractiveHost.GetInputAsync(prompt: prompt, isPassword: true)).Result;
                 return new PasswordString(value);
             };
 
