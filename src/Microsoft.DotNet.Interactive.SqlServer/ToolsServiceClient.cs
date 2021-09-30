@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
@@ -163,15 +164,17 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             }
         }
 
-        public async Task<QueryExecuteResult> ExecuteQueryStringAsync(Uri ownerUri, string queryString)
+        public async Task<QueryExecuteResult> ExecuteQueryStringAsync(Uri ownerUri, string queryString,
+            CancellationToken contextCancellationToken)
         {
             var queryParams = new QueryExecuteStringParams() { Query = queryString, OwnerUri = ownerUri.AbsolutePath };
-            return await _rpc.InvokeWithParameterObjectAsync<QueryExecuteResult>("query/executeString", queryParams);
+            return await _rpc.InvokeWithParameterObjectAsync<QueryExecuteResult>("query/executeString", queryParams, contextCancellationToken);
         }
 
-        public async Task<QueryExecuteSubsetResult> ExecuteQueryExecuteSubsetAsync(QueryExecuteSubsetParams subsetParams)
+        public async Task<QueryExecuteSubsetResult> ExecuteQueryExecuteSubsetAsync(QueryExecuteSubsetParams subsetParams,
+            CancellationToken cancellationToken)
         {
-            return await _rpc.InvokeWithParameterObjectAsync<QueryExecuteSubsetResult>("query/subset", subsetParams);
+            return await _rpc.InvokeWithParameterObjectAsync<QueryExecuteSubsetResult>("query/subset", subsetParams, cancellationToken);
         }
 
         public async Task<QueryCancelResult> CancelQueryExecutionAsync(Uri ownerUri)
