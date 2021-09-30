@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
             var jupyter = typeof(JupyterInteractiveHost).GetMethod(nameof(JupyterInteractiveHost.GetInputAsync));
             
-            jupyter.ReturnType.Should().Be(vscode.ReturnType);
+            jupyter!.ReturnType.Should().Be(vscode!.ReturnType);
            
             GetParameters(jupyter)
                 .Should()
