@@ -33,7 +33,14 @@ using static {typeof(VSCodeInteractiveHost).FullName};
         {
             var command = new SubmitCode($@"
 #r ""{typeof(VSCodeInteractiveHost).Assembly.Location.Replace("\\", "/")}""
-open {typeof(VSCodeInteractiveHost).FullName};
+
+[<AutoOpen>]
+module VSCodeTopLevelModule =
+    let GetInputAsync (prompt : string, isPassword : bool) = 
+        async {{
+            let! result = {typeof(VSCodeInteractiveHost).FullName}.{nameof(VSCodeInteractiveHost.GetInputAsync)}( prompt, isPassword ) |> Async.AwaitTask
+            return result
+        }}
 ");
             kernel.DeferCommand(command);
             return kernel;
