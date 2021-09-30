@@ -8,13 +8,9 @@ using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
 {
-    public class JupyterInteractiveHost : IInteractiveHost
+    public static class JupyterInteractiveHost 
     {
-        public JupyterInteractiveHost()
-        {
-        }
-
-        public Task<string> GetInputAsync(string prompt = "", bool isPassword = false, CancellationToken cancellationToken = default)
+        public static  Task<string> GetInputAsync(string prompt = "", bool isPassword = false, CancellationToken cancellationToken = default)
         {
             var result = isPassword
                 ? GetPassword(prompt).GetClearTextPassword()
