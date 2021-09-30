@@ -191,7 +191,7 @@ input
 
 #!fsharp
 
-let input = async { return! GetInputAsync "give me data" } |> Async.RunSynchronously
+let input = GetInputAsync "give me data" false |> Async.RunSynchronously
 input
 
 #!markdown

@@ -36,11 +36,8 @@ using static {typeof(VSCodeInteractiveHost).FullName};
 
 [<AutoOpen>]
 module VSCodeTopLevelModule =
-    let GetInputAsync (prompt : string, isPassword : bool) = 
-        async {{
-            let! result = {typeof(VSCodeInteractiveHost).FullName}.{nameof(VSCodeInteractiveHost.GetInputAsync)}( prompt, isPassword ) |> Async.AwaitTask
-            return result
-        }}
+    let GetInputAsync ( prompt : string ) ( isPassword : bool) = 
+        {typeof(VSCodeInteractiveHost).FullName}.{nameof(VSCodeInteractiveHost.GetInputAsync)}( prompt, isPassword ) |> Async.AwaitTask
 ");
             kernel.DeferCommand(command);
             return kernel;
