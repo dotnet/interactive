@@ -206,8 +206,9 @@ export async function activate(context: vscode.ExtensionContext) {
     const preloads = versionSpecificFunctions.getPreloads(context.extensionPath);
 
     ////////////////////////////////////////////////////////////////////////////////
+    const launchOptions = await getInteractiveLaunchOptions();
     const serializerCommand = <string[]>config.get('notebookParserArgs') || []; // TODO: fallback values?
-    const serializerCommandProcessStart = processArguments({ args: serializerCommand, workingDirectory: '.' }, '.', DotNetPathManager.getDotNetPath(), context.globalStorageUri.fsPath);
+    const serializerCommandProcessStart = processArguments({ args: serializerCommand, workingDirectory: launchOptions!.workingDirectory }, '.', DotNetPathManager.getDotNetPath(), context.globalStorageUri.fsPath);
     const serializerLineAdapter = new ChildProcessLineAdapter(serializerCommandProcessStart.command, serializerCommandProcessStart.args, serializerCommandProcessStart.workingDirectory, true, diagnosticsChannel);
     const messageClient = new MessageClient(serializerLineAdapter);
     const parserServer = new NotebookParserServer(messageClient);
