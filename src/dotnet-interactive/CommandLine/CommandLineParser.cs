@@ -269,15 +269,22 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                     services.AddKernel(kernel);
 
-                    await kernel.VisitSubkernelsAsync(async k =>
+                    kernel.VisitSubkernels(k =>
                     {
                         switch (k)
                         {
-                            case ISupportSetValue svk:
-                                await svk.UseJupyterHelpersAsync();
+                            case CSharpKernel csharpKernel:
+                                csharpKernel.UseJupyterHelpers();
+                                break;
+                            case FSharpKernel fsharpKernel:
+                                fsharpKernel.UseJupyterHelpers();
+                                break;
+                            case PowerShellKernel powerShellKernel:
+                                powerShellKernel.UseJupyterHelpers();
                                 break;
                         }
                     });
+
 
                     var clientSideKernelClient = new SignalRBackchannelKernelClient();
 
@@ -527,25 +534,36 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                         services.AddKernel(kernel);
 
-                        kernel.UseQuitCommand();
+                        kernel = kernel
+                            .UseQuitCommand()
+                            .UseVSCodeCommands();
+                        
                         var kernelServer = kernel.CreateKernelServer(startupOptions.WorkingDir);
+
+                        kernel.VisitSubkernels(k =>
+                        {
+                            switch (k)
+                            {
+                                case CSharpKernel csharpKernel:
+                                    csharpKernel.UseVSCodeHelpers();
+                                    break;
+                                case FSharpKernel fsharpKernel:
+                                    fsharpKernel.UseVSCodeHelpers();
+                                    break;
+                                case PowerShellKernel powerShellKernel:
+                                    powerShellKernel.UseVSCodeHelpers();
+                                    break;
+                            }
+                        });
+
+
+                        var frontEndKernel = kernelServer.GetFrontEndKernel("vscode");
+                        kernel.Add(frontEndKernel, new[] { "frontend" });
 
                         if (startupOptions.EnableHttpApi)
                         {
                             var clientSideKernelClient = new SignalRBackchannelKernelClient();
-
-                            var frontEndKernel = kernelServer.GetFrontEndKernel("vscode");
-                            kernel.Add(frontEndKernel);
-                            await kernel.VisitSubkernelsAsync(async k =>
-                            {
-                                switch (k)
-                                {
-                                    case ISupportSetValue svk:
-                                        await svk.UseVSCodeHelpersAsync(kernel);
-                                        break;
-                                }
-                            });
-
+                            
                             services.AddSingleton(clientSideKernelClient);
                             ((HtmlNotebookFrontendEnvironment)frontendEnvironment).RequiresAutomaticBootstrapping =
                                 false;
@@ -643,7 +661,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 new CSharpKernel()
                     .UseNugetDirective()
                     .UseKernelHelpers()
-                    .UseJupyterHelpers()
                     .UseWho()
                     .UseMathAndLaTeX()
                     .UseValueSharing()
@@ -663,7 +680,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             compositeKernel.Add(
                 new PowerShellKernel()
-                    .UseJupyterHelpers()
                     .UseProfiles()
                     .UseValueSharing(),
                 new[] { "powershell" });

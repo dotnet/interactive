@@ -186,7 +186,7 @@ This cell should prompt the user for input
 
 #!csharp
 
-var input = await InteractiveHost.GetInputAsync("give me data");
+var input = await GetInputAsync("give me data");
 input
 
 #!markdown
