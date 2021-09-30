@@ -51,8 +51,14 @@ using static {typeof(JupyterInteractiveHost).FullName};
         {
             var command = new SubmitCode($@"
 #r ""{typeof(TopLevelMethods).Assembly.Location.Replace("\\", "/")}""
-open {typeof(TopLevelMethods).FullName};
-open {typeof(JupyterInteractiveHost).FullName};
+
+[<AutoOpen>]
+module JupyterTopLevelModule =
+    let GetInputAsync (prompt : string, isPassword : bool) = 
+        async {{
+            let! result = {typeof(JupyterInteractiveHost).FullName}.{nameof(JupyterInteractiveHost.GetInputAsync)}( prompt, isPassword ) |> Async.AwaitTask
+            return result
+        }}
 ");
 
             kernel.DeferCommand(command);

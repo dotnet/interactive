@@ -189,6 +189,11 @@ This cell should prompt the user for input
 var input = await GetInputAsync("give me data");
 input
 
+#!fsharp
+
+let input = async { return! GetInputAsync "give me data" } |> Async.RunSynchronously
+input
+
 #!markdown
 
 Test adding cell to notebook (VSCode only)
