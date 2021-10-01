@@ -138,7 +138,7 @@ namespace Microsoft.DotNet.Interactive.Extensions
                                             $"Failed to load kernel extension \"{extensionType.Name}\" from assembly {assemblyFile.FullName}",
                                             context.Command));
 
-                        context.Fail(new KernelExtensionLoadException(e));
+                        context.Fail(context.Command, new KernelExtensionLoadException(e));
                     }
                 }
             }

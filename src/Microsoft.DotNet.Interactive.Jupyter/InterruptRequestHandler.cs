@@ -22,8 +22,12 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
         public Task Handle(JupyterRequestContext context)
         {
-            KernelInvocationContext.Current?.Fail(
-                new OperationCanceledException());
+            if (KernelInvocationContext.Current is { } invocationContext)
+            {
+                invocationContext.Fail(
+                    invocationContext.Command,
+                    new OperationCanceledException());
+            }
 
             // reply 
             var interruptReplyPayload = new InterruptReply();

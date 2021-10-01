@@ -6,11 +6,13 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.DotNet.Interactive.Commands;
 
+#nullable enable
 namespace Microsoft.DotNet.Interactive
 {
     public static class KernelCommandExtensions
     {
         internal const string TokenKey = "token";
+        internal const string IdKey = "id";
         internal const string PublishInternalEventsKey = "publish-internal-events";
 
         public static void PublishInternalEvents(
@@ -33,7 +35,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public static string GetToken(this KernelCommand command)
+        public static string GetOrCreateToken(this KernelCommand command)
         {
             if (command is null)
             {
@@ -48,15 +50,15 @@ namespace Microsoft.DotNet.Interactive
 
             if (command.Parent is { } parent)
             {
-                var token = parent.GetToken();
+                var token = parent.GetOrCreateToken();
                 command.SetToken(token);
                 return token;
             }
             
             if (KernelInvocationContext.Current?.Command is { } contextCommand && 
-                contextCommand != command)
+                !CommandEqualityComparer.Instance.Equals(contextCommand, command))
             {
-                var token = contextCommand.GetToken();
+                var token = contextCommand.GetOrCreateToken();
                 command.SetToken(token);
                 return token;
             }
@@ -64,6 +66,30 @@ namespace Microsoft.DotNet.Interactive
             return command.GenerateToken();
         }
 
+        internal static void SetId(
+            this KernelCommand command,
+            string id)
+        {
+            command.Properties[IdKey] = id;
+        }
+
+        internal static string GetOrCreateId(this KernelCommand command)
+        {
+            if (command is null)
+            {
+                throw new ArgumentNullException(nameof(command));
+            }
+
+            if (command.Properties.TryGetValue(IdKey, out var value))
+            {
+                return (string)value;
+            }
+
+            var id = Guid.NewGuid().ToString("N");
+            command.SetId(id);
+            return id;
+
+        }
         private static string GetNextToken(this KernelCommand command)
         {
             if (command.Properties.TryGetValue(TokenKey, out var value) &&
@@ -88,18 +114,11 @@ namespace Microsoft.DotNet.Interactive
 
         private class TokenSequence
         {
-            private readonly object _lock = new object();
+            private readonly object _lock = new();
 
-            public TokenSequence(string current = null)
+            public TokenSequence(string? current = null)
             {
-                if (current is not null)
-                {
-                    Current = current;
-                }
-                else
-                {
-                    Current = Hash(Guid.NewGuid().ToString());
-                }
+                Current = current ?? Hash(Guid.NewGuid().ToString());
             }
 
             internal string Current { get; private set; }
@@ -128,6 +147,12 @@ namespace Microsoft.DotNet.Interactive
 
                 return Convert.ToBase64String(hash);
             }
+        }
+
+        internal static bool IsEquivalentTo(this KernelCommand src, KernelCommand other)
+        {
+            return ReferenceEquals(src, other)
+                   || src.GetOrCreateId() == other.GetOrCreateId();
         }
     }
 }

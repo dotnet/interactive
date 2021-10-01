@@ -7,8 +7,8 @@ using System.CommandLine.IO;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive.App
 {
@@ -93,8 +93,8 @@ namespace Microsoft.DotNet.Interactive.App
         {
             var kernelSpec = directory.GetFiles("kernel.json", SearchOption.AllDirectories).Single();
 
-            var parsed = JObject.Parse(File.ReadAllText(kernelSpec.FullName));
-            return parsed["display_name"].Value<string>();
+            var parsed = JsonDocument.Parse(File.ReadAllText(kernelSpec.FullName));
+            return parsed.RootElement.GetProperty("display_name").GetString();
         }
 
 

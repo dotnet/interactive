@@ -228,7 +228,7 @@ namespace Microsoft.DotNet.Interactive
             if (iDependencyManager is null)
             {
                 // If this happens it is because of a bug in the Dependency provider. or deployment failed to deploy the nuget provider dll.
-                // We guarantee the presence of the nuget provider, by shipping it with the notebook product
+                // We guarantee the presence of the nuget provider, by shipping it with the interactive product
                 throw new InvalidOperationException("Internal error - unable to locate the nuget package manager, please try to reinstall.");
             }
 

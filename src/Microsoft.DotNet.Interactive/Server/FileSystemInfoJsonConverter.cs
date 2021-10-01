@@ -7,7 +7,7 @@ using System.Text.Json;
 
 namespace Microsoft.DotNet.Interactive.Server
 {
-    public class FileSystemInfoJsonConverter : Formatting.JsonConverter<FileSystemInfo>
+    public class FileSystemInfoJsonConverter : JsonConverter<FileSystemInfo>
     {
         public override FileSystemInfo Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {

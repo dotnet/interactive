@@ -3,7 +3,7 @@
 
 using System.Collections.Generic;
 using System.Text.Json;
-using Microsoft.DotNet.Interactive.Notebook;
+using Microsoft.DotNet.Interactive.Documents.Jupyter;
 
 
 namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ

@@ -102,14 +102,14 @@ namespace Microsoft.DotNet.Interactive.Parsing
                             {
                                 commands.Clear();
                                 commands.Add(
-                                    new AnonymousKernelCommand((kernelCommand, context) =>
+                                    new AnonymousKernelCommand((_, context) =>
                                     {
                                         var message =
                                             string.Join(Environment.NewLine,
                                                 parseResult.Errors
                                                     .Select(e => e.ToString()));
 
-                                        context.Fail(message: message);
+                                        context.Fail(originalCommand, message: message);
                                         return Task.CompletedTask;
                                     }, parent: originalCommand));
                             }
@@ -154,7 +154,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         else if (parseResult.CommandResult.Command.Name == "#i")
                         {
                             directiveCommand.KernelUri = lastKernelUri;
-                            directiveCommand.TargetKernelName = targetKernelName;
+                            directiveCommand.TargetKernelName = KernelLanguage;
                             AddHoistedCommand(directiveCommand);
                             nugetRestoreOnKernels.Add(targetKernelName);
                         }
@@ -195,9 +195,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 }
             }
 
-            if (NoSplitWasNeeded(out var originalSubmission))
+            if (NoSplitWasNeeded())
             {
-                return originalSubmission;
+                originalCommand.TargetKernelName ??= targetKernelName;
+                return new []{originalCommand};
             }
 
             foreach (var command in commands)
@@ -212,11 +213,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 commands.Insert(hoistedCommandsIndex++, command);
             }
 
-            bool NoSplitWasNeeded(out IReadOnlyList<KernelCommand> splitSubmission)
+            bool NoSplitWasNeeded()
             {
                 if (commands.Count == 0)
                 {
-                    splitSubmission = new[] { originalCommand };
                     return true;
                 }
 
@@ -226,13 +226,20 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     {
                         if (code.Equals(sc.Code, StringComparison.Ordinal))
                         {
-                            splitSubmission = new[] { originalCommand };
                             return true;
                         }
                     }
                 }
 
-                splitSubmission = null;
+                if (commands.All(c => c.GetType() == 
+                                      originalCommand.GetType() 
+                                      && (
+                                          c.TargetKernelName == originalCommand.TargetKernelName||c.TargetKernelName == commands[0].TargetKernelName)))
+                {
+                    
+                    return true;
+                }
+                
                 return false;
             }
         }

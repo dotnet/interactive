@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         {
             using var kernel = await CreateKernelAndGenerateType();
 
-            kernel.TryGetVariable("frame", out DataFrame newFrame)
+            kernel.TryGetValue("frame", out DataFrame newFrame)
                   .Should()
                   .BeTrue();
 
@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         {
             using var kernel = await CreateKernelAndGenerateType();
 
-            kernel.TryGetVariable("frame", out DataFrame newFrame)
+            kernel.TryGetValue("frame", out DataFrame newFrame)
                   .Should()
                   .BeTrue();
 
@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 #r ""{typeof(DataFrame).Assembly.Location}""
 using Microsoft.Data.Analysis;
 ");
-            await kernel.SetVariableAsync("frame", CreateDataFrame());
+            await kernel.SetValueAsync("frame", CreateDataFrame());
 
             var result = await kernel.SubmitCodeAsync("#!linqify frame --show-code");
 
@@ -128,7 +128,7 @@ using Microsoft.Data.Analysis;
 using Microsoft.Data.Analysis;
 ");
             var dataFrameVariableName = "myDataFrame";
-            await kernel.SetVariableAsync(dataFrameVariableName, CreateDataFrame());
+            await kernel.SetValueAsync(dataFrameVariableName, CreateDataFrame());
 
             var code = "#!linqify ";
             var result = await kernel.SendAsync(new RequestCompletions(code, new LinePosition(0, code.Length)));
@@ -153,7 +153,7 @@ using Microsoft.Data.Analysis;
 #r ""{typeof(DataFrame).Assembly.Location}""
 using Microsoft.Data.Analysis;
 ");
-            await kernel.SetVariableAsync("frame", CreateDataFrame());
+            await kernel.SetValueAsync("frame", CreateDataFrame());
 
             await kernel.SubmitCodeAsync(magicCommand);
 

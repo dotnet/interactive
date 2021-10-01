@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using System.Web;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 
@@ -17,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.Http
     {
         private readonly TimeSpan _getApiUriTimeout;
         private readonly TaskCompletionSource<Uri> _completionSource;
-        private Dictionary<string, (KernelInvocationContext Context, TaskCompletionSource CompletionSource)> _tokenToInvocationContext;
+        private readonly Dictionary<string, (KernelInvocationContext Context, TaskCompletionSource CompletionSource)> _tokenToInvocationContext;
        
         public HtmlNotebookFrontendEnvironment(TimeSpan? apiUriTimeout = null)
         {
@@ -39,7 +38,6 @@ namespace Microsoft.DotNet.Interactive.Http
             _completionSource.TrySetResult(apiUri);
         }
 
-
         public Task<Uri> GetApiUriAsync()
         {
             return _completionSource.Task;
@@ -47,7 +45,7 @@ namespace Microsoft.DotNet.Interactive.Http
 
         public override async Task ExecuteClientScript(string code, KernelInvocationContext context)
         {
-            var commandToken = context.Command.GetToken();
+            var commandToken = context.Command.GetOrCreateToken();
             var apiUriTask = GetApiUriAsync();
             var completedTask = await Task.WhenAny(apiUriTask, Task.Delay(_getApiUriTimeout));
             if (completedTask != apiUriTask)
@@ -85,7 +83,7 @@ await Object.getPrototypeOf(async function() {{}}).constructor(
 }}
 ".Replace("\r\n", "\n");
             var wrappedCode = $"{codePrelude}{HttpUtility.JavaScriptStringEncode(code)}{codePostlude}";
-            var executionCompletionSource = new TaskCompletionSource();
+            var executionCompletionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             _tokenToInvocationContext[commandToken] = (context, executionCompletionSource);
             IHtmlContent content = PocketViewTags.script[type: "text/javascript"](wrappedCode.ToHtmlContent());
             var formattedValues = FormattedValue.FromObject(content);
@@ -112,6 +110,5 @@ await Object.getPrototypeOf(async function() {{}}).constructor(
 
             _tokenToInvocationContext.Remove(token);
         }
-
     }
 }

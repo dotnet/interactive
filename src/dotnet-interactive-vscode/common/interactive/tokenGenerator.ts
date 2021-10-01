@@ -3,7 +3,7 @@
 
 import { KernelCommandEnvelope } from "../interfaces/contracts";
 
-class Guid {
+export class Guid {
 
     public static validator = new RegExp("^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$", "i");
 

@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 .Which
                 .Event
                 .Command
-                .GetToken()
+                .GetOrCreateToken()
                 .Should()
                 .Be("abc");
         }
@@ -123,7 +123,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
             KernelEvents
                 .Should()
-                .ContainSingle<KernelEventEnvelope<IncompleteCodeSubmissionReceived>>(e => e.Event.Command.GetToken() == "abc");
+                .ContainSingle<KernelEventEnvelope<IncompleteCodeSubmissionReceived>>(e => e.Event.Command.GetOrCreateToken() == "abc");
         }
 
         [Fact]
@@ -198,7 +198,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         private async Task WaitForCompletion(string commandToken)
         {
             var semaphore = new SemaphoreSlim(0, 1);
-            var sub = _kernel.KernelEvents.ObserveOn(TaskPoolScheduler.Default).Where(e => e is CommandSucceeded or CommandFailed && e.Command.GetToken() == commandToken).Take(1).Subscribe(
+            var sub = _kernel.KernelEvents.ObserveOn(TaskPoolScheduler.Default).Where(e => e is CommandSucceeded or CommandFailed && e.Command.GetOrCreateToken() == commandToken).Take(1).Subscribe(
                  _ =>
                  {
                      semaphore.Release();
@@ -222,7 +222,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             KernelEvents
                 .Should()
                 .ContainSingle<KernelEventEnvelope<PackageAdded>>(
-                    where: e => e.Event.Command.GetToken() == "abc" &&
+                    where: e => e.Event.Command.GetOrCreateToken() == "abc" &&
                                 e.Event.PackageReference.PackageName == "Microsoft.Spark");
         }
 
@@ -312,9 +312,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 _internalReceiver.Dispose();
             }
 
-            public IAsyncEnumerable<CommandOrEvent> CommandsOrEventsAsync(CancellationToken cancellationToken)
+            public IAsyncEnumerable<CommandOrEvent> CommandsAndEventsAsync(CancellationToken cancellationToken)
             {
-                return _internalReceiver.CommandsOrEventsAsync(cancellationToken);
+                return _internalReceiver.CommandsAndEventsAsync(cancellationToken);
             }
         }
     }

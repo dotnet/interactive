@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import * as vscodeLike from '../interfaces/vscode-like';
 import { ClientMapper } from '../clientMapper';
+import { MessageClient } from '../messageClient';
 
 import { StdioKernelTransport } from '../stdioKernelTransport';
 import { registerLanguageProviders } from './languageProvider';
@@ -24,11 +25,13 @@ import * as notebookSerializers from '../../notebookSerializers';
 import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 import { ErrorOutputCreator } from '../../common/interactiveClient';
 
-import { isInsidersBuild, isStableBuild } from './vscodeUtilities';
+import { isInsidersBuild } from './vscodeUtilities';
 import { getDotNetMetadata, withDotNetCellMetadata } from '../ipynbUtilities';
 import fetch from 'node-fetch';
 import { CompositeKernel } from '../interactive/compositeKernel';
 import { Logger, LogLevel } from '../logger';
+import { ChildProcessLineAdapter } from '../childProcessLineAdapter';
+import { NotebookParserServer } from '../notebookParserServer';
 
 export const KernelIdForJupyter = 'dotnet-interactive-for-jupyter';
 
@@ -138,7 +141,7 @@ export async function activate(context: vscode.ExtensionContext) {
             await transport.setExternalUri({ externalUri, localUri });
         }
         catch (e) {
-            vscode.window.showErrorMessage(`Error configuring http connection with .NET Interactive on ${externalUri.toString()} : ${e.message}`);
+            vscode.window.showErrorMessage(`Error configuring http connection with .NET Interactive on ${externalUri.toString()} : ${(<any>e)?.message}`);
         }
 
         return transport;
@@ -194,6 +197,34 @@ export async function activate(context: vscode.ExtensionContext) {
     };
     const clientMapper = new ClientMapper(clientMapperConfig);
 
+    registerKernelCommands(context, clientMapper);
+
+    const hostVersionSuffix = isInsidersBuild() ? 'Insiders' : 'Stable';
+    diagnosticsChannel.appendLine(`Extension started for VS Code ${hostVersionSuffix}.`);
+    const languageServiceDelay = config.get<number>('languageServiceDelay') || 500; // fall back to something reasonable
+
+    const preloads = versionSpecificFunctions.getPreloads(context.extensionPath);
+
+    ////////////////////////////////////////////////////////////////////////////////
+    const serializerCommand = <string[]>config.get('notebookParserArgs') || []; // TODO: fallback values?
+    const serializerCommandProcessStart = processArguments({ args: serializerCommand, workingDirectory: '.' }, '.', DotNetPathManager.getDotNetPath(), context.globalStorageUri.fsPath);
+    const serializerLineAdapter = new ChildProcessLineAdapter(serializerCommandProcessStart.command, serializerCommandProcessStart.args, serializerCommandProcessStart.workingDirectory, true, diagnosticsChannel);
+    const messageClient = new MessageClient(serializerLineAdapter);
+    const parserServer = new NotebookParserServer(messageClient);
+    // startup time consistently <300ms
+    // old startup time ~4800ms
+    ////////////////////////////////////////////////////////////////////////////////
+
+    const serializerMap = registerWithVsCode(context, clientMapper, parserServer, clientMapperConfig.createErrorOutput, ...preloads);
+    registerFileCommands(context, parserServer);
+
+    context.subscriptions.push(vscode.workspace.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
+    context.subscriptions.push(vscode.workspace.onDidRenameFiles(e => handleFileRenames(e, clientMapper)));
+
+    // language registration
+    context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(async e => await updateNotebookCellLanguageInMetadata(e)));
+    context.subscriptions.push(registerLanguageProviders(clientMapper, languageServiceDelay));
+
     vscode.window.registerUriHandler({
         handleUri(uri: vscode.Uri): vscode.ProviderResult<void> {
             const params = new URLSearchParams(uri.query);
@@ -222,30 +253,12 @@ export async function activate(context: vscode.ExtensionContext) {
                             vscode.commands.executeCommand('dotnet-interactive.openNotebook', vscode.Uri.file(notebookPath)).then(() => { });
                         });
                     } else if (url) {
-                        openNotebookFromUrl(url, clientMapper, diagnosticsChannel).then(() => { });
+                        openNotebookFromUrl(url, serializerMap, diagnosticsChannel).then(() => { });
                     }
                     break;
             }
         }
     });
-
-    registerKernelCommands(context, clientMapper);
-
-    const hostVersionSuffix = isInsidersBuild() ? 'Insiders' : 'Stable';
-    diagnosticsChannel.appendLine(`Extension started for VS Code ${hostVersionSuffix}.`);
-    const languageServiceDelay = config.get<number>('languageServiceDelay') || 500; // fall back to something reasonable
-
-    const preloads = versionSpecificFunctions.getPreloads(context.extensionPath);
-
-    registerWithVsCode(context, clientMapper, diagnosticsChannel, clientMapperConfig.createErrorOutput, ...preloads);
-    registerFileCommands(context, clientMapper);
-
-    context.subscriptions.push(vscode.workspace.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
-    context.subscriptions.push(vscode.workspace.onDidRenameFiles(e => handleFileRenames(e, clientMapper)));
-
-    // language registration
-    context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(async e => await updateNotebookCellLanguageInMetadata(e)));
-    context.subscriptions.push(registerLanguageProviders(clientMapper, languageServiceDelay));
 }
 
 export function deactivate() {
@@ -258,32 +271,31 @@ function createErrorOutput(message: string, outputId?: string): vscodeLike.Noteb
     return cellOutput;
 }
 
-function registerWithVsCode(context: vscode.ExtensionContext, clientMapper: ClientMapper, outputChannel: OutputChannelAdapter, createErrorOutput: ErrorOutputCreator, ...preloadUris: vscode.Uri[]) {
+function registerWithVsCode(context: vscode.ExtensionContext, clientMapper: ClientMapper, parserServer: NotebookParserServer, createErrorOutput: ErrorOutputCreator, ...preloadUris: vscode.Uri[]): Map<string, vscode.NotebookSerializer> {
     const config = {
         clientMapper,
         preloadUris,
         createErrorOutput,
     };
     context.subscriptions.push(new notebookControllers.DotNetNotebookKernel(config));
-    notebookSerializers.DotNetDibNotebookSerializer.registerNotebookSerializer(context, 'dotnet-interactive', clientMapper, outputChannel);
-    notebookSerializers.DotNetLegacyNotebookSerializer.registerNotebookSerializer(context, 'dotnet-interactive-legacy', clientMapper, outputChannel);
+    return notebookSerializers.createAndRegisterNotebookSerializers(context, parserServer);
 }
 
-async function openNotebookFromUrl(notebookUrl: string, clientMapper: ClientMapper, diagnosticsChannel: OutputChannelAdapter): Promise<void> {
+async function openNotebookFromUrl(notebookUrl: string, serializerMap: Map<string, vscode.NotebookSerializer>, diagnosticsChannel: OutputChannelAdapter): Promise<void> {
     await vscode.commands.executeCommand('dotnet-interactive.acquire');
     const extension = path.extname(notebookUrl);
-    let serializer: notebookSerializers.DotNetDibNotebookSerializer | undefined = undefined;
+    const serializer = serializerMap.get(extension);
     let viewType: string | undefined = undefined;
-    switch (extension) {
-        case '.dib':
-        case '.dotnet-interactive':
-            serializer = new notebookSerializers.DotNetDibNotebookSerializer(clientMapper, diagnosticsChannel);
-            viewType = 'dotnet-interactive';
-            break;
-        case '.ipynb':
-            serializer = new notebookSerializers.DotNetJupyterNotebookSerializer(clientMapper, diagnosticsChannel);
-            viewType = 'jupyter-notebook';
-            break;
+    if (serializer) {
+        switch (extension) {
+            case '.dib':
+            case '.dotnet-interactive':
+                viewType = 'dotnet-interactive';
+                break;
+            case '.ipynb':
+                viewType = 'jupyter-notebook';
+                break;
+        }
     }
 
     if (serializer && viewType) {

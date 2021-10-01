@@ -34,6 +34,46 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Theory]
         [InlineData(Language.FSharp)]
         [InlineData(Language.CSharp)]
+        public async Task it_fails_to_get_value_with_unsupported_mimetype(Language language)
+        {
+            var valueName = "x";
+            var mimeType = "unsupported-mimeType";
+
+            var kernel = CreateKernel(language);
+
+            var source = language switch
+            {
+                Language.FSharp => new[]
+                {
+                    $"let {valueName} = 123"
+                },
+
+                Language.CSharp => new[]
+                {
+                    $"var {valueName} = 123;"
+                }
+            };
+
+            await SubmitCode(kernel, source);
+
+            var result = await kernel.SendAsync(new RequestValue(valueName, kernel.Name, mimeType));
+            var kernelEvents = result.KernelEvents.ToSubscribedList();
+
+            kernelEvents
+                .Should().ContainSingle<CommandFailed>()
+                .Which
+                .Exception
+                .Should()
+                .BeOfType<InvalidOperationException>()
+                .Which
+                .Message
+                .Should()
+                .Be($"MimeType {mimeType} is not supported");
+        }
+
+        [Theory]
+        [InlineData(Language.FSharp)]
+        [InlineData(Language.CSharp)]
         public async Task it_returns_the_result_of_a_non_null_expression(Language language)
         {
             var kernel = CreateKernel(language);
@@ -41,8 +81,9 @@ namespace Microsoft.DotNet.Interactive.Tests
             await SubmitCode(kernel, "123");
 
             KernelEvents
-                .OfType<ReturnValueProduced>()
-                .Last()
+                .Should()
+                .ContainSingle<ReturnValueProduced>()
+                .Which
                 .Value
                 .Should()
                 .Be(123);
@@ -147,8 +188,9 @@ location.EndsWith(""System.Text.Json.dll"")"
             var events = KernelEvents;
 
             events
-                .OfType<ReturnValueProduced>()
-                .Last()
+                .Should()
+                .ContainSingle<ReturnValueProduced>()
+                .Which
                 .Value
                 .Should()
                 .Be(10);
@@ -651,12 +693,14 @@ $${languageSpecificCode}
         public async Task RequestCompletions_prevents_RequestDiagnostics_from_producing_events(Language language)
         {
             var kernel = CreateKernel(language);
+            
             MarkupTestFile.GetLineAndColumn("Console.$$", out var output, out var line, out var column);
-
+            
             var requestDiagnosticsCommand = new RequestDiagnostics(output);
 
-            var results = await  Task.WhenAll(
-                kernel.SendAsync(new RequestCompletions(output, new LinePosition(line,column))),
+            var requestCompletionsCommand = new RequestCompletions(output, new LinePosition(line,column));
+            var results = await Task.WhenAll(
+                kernel.SendAsync(requestCompletionsCommand),
                 kernel.SendAsync(requestDiagnosticsCommand)
             );
 
@@ -1212,9 +1256,9 @@ Console.Write(2);
 
             await kernel.SubmitCodeAsync(codeToSetVariable);
 
-            var languageKernel = kernel.ChildKernels.OfType<DotNetKernel>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<ISupportGetValue>().Single();
 
-            var succeeded = languageKernel.TryGetVariable("x", out int x);
+            var succeeded = languageKernel.TryGetValue("x", out int x);
 
             using var _ = new AssertionScope();
 
@@ -1239,9 +1283,9 @@ Console.Write(2);
 
             await kernel.SubmitCodeAsync(codeToSetVariable);
 
-            var languageKernel = kernel.ChildKernels.OfType<DotNetKernel>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<ISupportGetValue>().Single();
 
-            languageKernel.GetVariableNames().Should().Contain("x");
+            languageKernel.GetValueInfos().Should().Contain(v => v.Name == "x");
         }
 
         [Theory]
@@ -1252,11 +1296,11 @@ Console.Write(2);
         {
             var kernel = CreateKernel(language);
 
-            var languageKernel = kernel.ChildKernels.OfType<DotNetKernel>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<ISupportSetValue>().Single();
 
-            await languageKernel.SetVariableAsync("x", 123);
+            await languageKernel.SetValueAsync("x", 123);
 
-            var succeeded = languageKernel.TryGetVariable("x", out int x);
+            var succeeded = ((ISupportGetValue)languageKernel).TryGetValue("x", out int x);
 
             using var _ = new AssertionScope();
 
@@ -1272,12 +1316,12 @@ Console.Write(2);
         {
             var kernel = CreateKernel(language);
 
-            var languageKernel = kernel.ChildKernels.OfType<DotNetKernel>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<ISupportSetValue>().Single();
 
-            await languageKernel.SetVariableAsync("x", 123);
-            await languageKernel.SetVariableAsync("x", 456);
+            await languageKernel.SetValueAsync("x", 123);
+            await languageKernel.SetValueAsync("x", 456);
 
-            var succeeded = languageKernel.TryGetVariable("x", out int x);
+            var succeeded = ((ISupportGetValue)languageKernel).TryGetValue("x", out int x);
 
             using var _ = new AssertionScope();
 
@@ -1293,12 +1337,12 @@ Console.Write(2);
         {
             var kernel = CreateKernel(language);
 
-            var languageKernel = kernel.ChildKernels.OfType<DotNetKernel>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<ISupportSetValue>().Single();
 
-            await languageKernel.SetVariableAsync("x", 123);
-            await languageKernel.SetVariableAsync("x", "hello");
+            await languageKernel.SetValueAsync("x", 123);
+            await languageKernel.SetValueAsync("x", "hello");
 
-            var succeeded = languageKernel.TryGetVariable("x", out string x);
+            var succeeded = ((ISupportGetValue)languageKernel).TryGetValue("x", out string x);
 
             using var _ = new AssertionScope();
 

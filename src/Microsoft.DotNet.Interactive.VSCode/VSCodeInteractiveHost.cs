@@ -30,9 +30,9 @@ namespace Microsoft.DotNet.Interactive.VSCode
         public Task<string> GetInputAsync(string prompt = "", bool isPassword = false, CancellationToken cancellationToken = default)
         {
             var command = new GetInput(prompt, isPassword, targetKernelName: VSCodeKernelName);
-            var completionSource = new TaskCompletionSource<string>();
-            var token = command.GetToken();
-            _kernel.KernelEvents.Where(e => e.Command.GetToken() == token).Subscribe(e =>
+            var completionSource = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var token = command.GetOrCreateToken();
+            _kernel.KernelEvents.Where(e => e.Command.GetOrCreateToken() == token).Subscribe(e =>
             {
                 switch (e)
                 {

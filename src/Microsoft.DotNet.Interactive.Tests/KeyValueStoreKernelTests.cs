@@ -48,9 +48,9 @@ namespace Microsoft.DotNet.Interactive.Tests
 #!value --name hi
 {storedValue}");
 
-            var keyValueStoreKernel = (DotNetKernel) kernel.FindKernel("value");
+            var keyValueStoreKernel = (ISupportGetValue) kernel.FindKernel("value");
 
-            keyValueStoreKernel.TryGetVariable("hi", out object retrievedValue);
+            keyValueStoreKernel.TryGetValue("hi", out object retrievedValue);
 
             retrievedValue
                 .Should()
@@ -98,9 +98,9 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             await kernel.SubmitCodeAsync(string.Format(code, filePath));
 
-            var keyValueStoreKernel = (DotNetKernel) kernel.FindKernel("value");
+            var keyValueStoreKernel = (ISupportGetValue) kernel.FindKernel("value");
 
-            keyValueStoreKernel.TryGetVariable("hi", out object retrievedValue);
+            keyValueStoreKernel.TryGetValue("hi", out object retrievedValue);
 
             retrievedValue
                 .Should()
@@ -117,9 +117,9 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             await kernel.SubmitCodeAsync("#!value --name hi --from-url http://bing.com");
 
-            var keyValueStoreKernel = (DotNetKernel) kernel.FindKernel("value");
+            var keyValueStoreKernel = (ISupportGetValue) kernel.FindKernel("value");
 
-            keyValueStoreKernel.TryGetVariable("hi", out object retrievedValue);
+            keyValueStoreKernel.TryGetValue("hi", out object retrievedValue);
 
             retrievedValue
                 .Should()
@@ -201,17 +201,17 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             kernel
                 .FindKernel("value")
-                .As<DotNetKernel>()
-                .GetVariableNames()
+                .As<ISupportGetValue>()
+                .GetValueInfos()
                 .Should()
-                .NotContain("hi");
+                .NotContain(vi => vi.Name == "hi");
         }
 
         private static CompositeKernel CreateKernel() =>
             new()
             {
                 new KeyValueStoreKernel(),
-                new FakeKernel("#!fake")
+                new FakeKernel("fake")
             };
     }
 }

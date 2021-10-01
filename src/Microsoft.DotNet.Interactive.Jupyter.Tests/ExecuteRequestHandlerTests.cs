@@ -10,9 +10,8 @@ using FluentAssertions;
 using FluentAssertions.Execution;
 using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
-using Microsoft.DotNet.Interactive.Notebook;
 using Microsoft.DotNet.Interactive.Tests;
 using Pocket;
 using Recipes;
@@ -127,7 +126,7 @@ f();"));
             await context.Done().Timeout(5.Seconds());
 
             JupyterMessageSender.PubSubMessages.Should()
-                .ContainSingle<Stream>()
+                .ContainSingle<Protocol.Stream>()
                 .Which
                 .Text
                 .Should()
@@ -148,7 +147,7 @@ f();"));
             await context.Done().Timeout(5.Seconds());
 
             JupyterMessageSender.PubSubMessages.Should()
-                .ContainSingle<Stream>()
+                .ContainSingle<Protocol.Stream>()
                 .Which
                 .Text
                 .Should()
@@ -234,7 +233,7 @@ f();"));
 
             await context.Done().Timeout(20.Seconds());
 
-            JupyterMessageSender.PubSubMessages.Should().Contain(r => r is Stream && r.As<Stream>().Name == Stream.StandardOutput);
+            JupyterMessageSender.PubSubMessages.Should().Contain(r => r is Protocol.Stream && r.As<Protocol.Stream>().Name == Protocol.Stream.StandardOutput);
         }
 
         [Fact]
@@ -247,7 +246,7 @@ f();"));
 
             await context.Done().Timeout(20.Seconds());
 
-            JupyterMessageSender.PubSubMessages.Should().Contain(r => r is Stream && r.As<Stream>().Name == Stream.StandardError);
+            JupyterMessageSender.PubSubMessages.Should().Contain(r => r is Protocol.Stream && r.As<Protocol.Stream>().Name == Protocol.Stream.StandardError);
         }
 
         [Fact]
@@ -345,9 +344,9 @@ f();"));
 
             JupyterMessageSender.RequestMessages.Should().Contain(r => r.Prompt == prompt && r.Password == false);
             JupyterMessageSender.PubSubMessages
-                .OfType<Stream>()
+                .OfType<Protocol.Stream>()
                 .Should()
-                .Contain(s => s.Name == Stream.StandardOutput && s.Text == (expectedDisplayValue + Environment.NewLine));
+                .Contain(s => s.Name == Protocol.Stream.StandardOutput && s.Text == (expectedDisplayValue + Environment.NewLine));
         }
 
         [Fact]
@@ -401,9 +400,9 @@ f();"));
 
             JupyterMessageSender.RequestMessages.Should().Contain(r => r.Prompt == prompt && r.Password == true);
             JupyterMessageSender.PubSubMessages
-                .OfType<Stream>()
+                .OfType<Protocol.Stream>()
                 .Should()
-                .Contain(s => s.Name == Stream.StandardOutput && s.Text == $"System.Security.SecureString{Environment.NewLine}");
+                .Contain(s => s.Name == Protocol.Stream.StandardOutput && s.Text == $"System.Security.SecureString{Environment.NewLine}");
         }
 
         [Fact]

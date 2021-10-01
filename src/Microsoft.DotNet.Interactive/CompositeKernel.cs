@@ -17,17 +17,16 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
-using Microsoft.DotNet.Interactive.Notebook;
 using Microsoft.DotNet.Interactive.Parsing;
+
+using DocumentKernelName = Microsoft.DotNet.Interactive.Documents.KernelName;
 
 namespace Microsoft.DotNet.Interactive
 {
     public sealed class CompositeKernel :
         Kernel,
         IExtensibleKernel,
-        IEnumerable<Kernel>,
-        IKernelCommandHandler<ParseNotebook>,
-        IKernelCommandHandler<SerializeNotebook>
+        IEnumerable<Kernel>
     {
         private readonly ConcurrentQueue<PackageAdded> _packagesToCheckForExtensions = new();
         private readonly List<Kernel> _childKernels = new();
@@ -102,29 +101,6 @@ namespace Microsoft.DotNet.Interactive
 
             RegisterForDisposal(kernel.KernelEvents.Subscribe(PublishEvent));
             RegisterForDisposal(kernel);
-        }
-
-        public Task HandleAsync(ParseNotebook command, KernelInvocationContext context)
-        {
-            var notebook = ParseNotebook(command.FileName, command.RawData);
-            context.Publish(new NotebookParsed(notebook, command));
-            return Task.CompletedTask;
-        }
-
-        public NotebookDocument ParseNotebook(string fileName, byte[] rawData)
-        {
-            // FIX: (ParseNotebook) make this internal, make name congruent with SerializeNotebook
-            var kernelLanguageAliases = _kernelsByNameOrAlias.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Name);
-            kernelLanguageAliases.Remove(Name); // remove `.NET`
-            var notebook = NotebookFileFormatHandler.Parse(fileName, rawData, DefaultKernelName, kernelLanguageAliases);
-            return notebook;
-        }
-
-        public Task HandleAsync(SerializeNotebook command, KernelInvocationContext context)
-        {
-            var rawData = NotebookFileFormatHandler.Serialize(command.FileName, command.Notebook, command.NewLine);
-            context.Publish(new NotebookSerialized(rawData, command));
-            return Task.CompletedTask;
         }
 
         private void AddChooseKernelDirective(
@@ -330,7 +306,7 @@ namespace Microsoft.DotNet.Interactive
 
         public void AddKernelConnection<TOptions>(
             ConnectKernelCommand<TOptions> connectionCommand)
-            where TOptions : KernelConnectionOptions
+            where TOptions : KernelConnector
         {
             var kernelNameOption = new Option<string>(
                 "--kernel-name",
@@ -348,14 +324,14 @@ namespace Microsoft.DotNet.Interactive
             }
 
             connectionCommand.Handler = CommandHandler.Create<
-                TOptions, KernelInvocationContext>(
-                async (options, context) =>
+                string, TOptions, KernelInvocationContext>(
+                async (kernelName, options, context) =>
                 {
-                    var connectedKernel = await connectionCommand.CreateKernelAsync(options, context);
+                    var connectedKernel = await connectionCommand.ConnectKernelAsync(new KernelName(kernelName), options, context);
 
                     if (string.IsNullOrWhiteSpace(connectedKernel.Name))
                     {
-                        connectedKernel.Name = options.KernelName;
+                        connectedKernel.Name = kernelName;
                     }
 
                     Add(connectedKernel);

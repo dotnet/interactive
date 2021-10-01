@@ -4,8 +4,13 @@
     <TargetFramework>net6.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <AssetTargetFallback>portable-net45+win8+wp8+wpa81</AssetTargetFallback>
-    <NoWarn>$(NoWarn);8002</NoWarn>
-    <!-- Assent isn't strongly signed -->
+    <NoWarn>$(NoWarn);8002</NoWarn><!-- Assent isn't strongly signed -->
+    <NoWarn>$(NoWarn);VSTHRD002</NoWarn><!-- Ignore: Avoid problematic synchronous waits -->
+    <NoWarn>$(NoWarn);VSTHRD003</NoWarn><!-- Ignore: Avoid awaiting foreign Tasks -->
+    <NoWarn>$(NoWarn);VSTHRD103</NoWarn><!-- Ignore: Call async methods when in an async method -->
+    <NoWarn>$(NoWarn);VSTHRD105</NoWarn><!-- Ignore: Avoid method overloads that assume TaskScheduler.Current -->
+    <NoWarn>$(NoWarn);VSTHRD110</NoWarn><!-- Ignore: Observe result of async calls -->
+    <NoWarn>$(NoWarn);VSTHRD200</NoWarn><!-- Ignore: Use "Async" suffix for async methods -->
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Microsoft.DotNet.Interactive.Jupyter\(Recipes)\BareObjectConverter.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Jupyter\(Recipes)\JsonSerializationExtensions.cs" />
   </ItemGroup>
 
@@ -33,6 +39,7 @@
     <PackageReference Include="Serilog.Sinks.RollingFileAlternate" Version="2.0.9" />
     <PackageReference Include="FluentAssertions" Version="5.10.3" />
     <PackageReference Include="FluentAssertions.Json" Version="5.5.0" />
+    <PackageReference Include="Nerdbank.Streams" Version="2.7.74" />
     <PackageReference Include="Pocket.Disposable" Version="1.1.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

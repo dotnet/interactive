@@ -34,29 +34,16 @@ export function configure(global?: any) {
 
     compositeKernel.add(jsKernel, ["js"]);
 
-    let waitingOnMessages: genericTransport.PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope> | null;
-    let envelopeQueue: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] = [];
+    const receiver = new genericTransport.CommandAndEventReceiver();
 
     // @ts-ignore
     onDidReceiveKernelMessage(event => {
         if (event.envelope) {
             const envelope = <contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope><any>(event.envelope);
             if (isKernelEventEnvelope(envelope)) {
-                Logger.default.info(`transport got ${envelope.eventType} with token ${envelope.command?.token}`);
+                Logger.default.info(`transport got ${envelope.eventType} with token ${envelope.command?.token} and id ${envelope.command?.id}`);
             }
-            if (waitingOnMessages) {
-                let capturedMessageWaiter = waitingOnMessages;
-                waitingOnMessages = null;
-                if (isKernelEventEnvelope(envelope)) {
-                    Logger.default.info(`transport using awaiter`);
-                }
-                capturedMessageWaiter.resolve(envelope);
-            } else {
-                if (isKernelEventEnvelope(envelope)) {
-                    Logger.default.info(`transport adding to queue`);
-                }
-                envelopeQueue.push(envelope);
-            }
+            receiver.delegate(envelope);
         }
     });
 
@@ -67,18 +54,7 @@ export function configure(global?: any) {
             return Promise.resolve();
         },
         () => {
-            let envelope = envelopeQueue.shift();
-            if (envelope) {
-                if (isKernelEventEnvelope(envelope)) {
-                    Logger.default.info(`transport extracting from queue`);
-                }
-                return Promise.resolve<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>(envelope);
-            }
-            else {
-                Logger.default.info(`transport building promise awaiter`);
-                waitingOnMessages = new genericTransport.PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>();
-                return waitingOnMessages.promise;
-            }
+            return receiver.read();
         }
     );
 

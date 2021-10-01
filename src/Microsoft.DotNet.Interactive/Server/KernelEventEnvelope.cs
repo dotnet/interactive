@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Server
     public abstract class KernelEventEnvelope : IKernelEventEnvelope
     {
         private static readonly ConcurrentDictionary<Type, Func<KernelEvent, IKernelEventEnvelope>> _envelopeFactories =
-            new ConcurrentDictionary<Type, Func<KernelEvent, IKernelEventEnvelope>>();
+            new();
 
         private static Dictionary<string, Type> _envelopeTypesByEventTypeName;
 
@@ -67,8 +67,6 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(IncompleteCodeSubmissionReceived)] = typeof(KernelEventEnvelope<IncompleteCodeSubmissionReceived>),
                 [nameof(HoverTextProduced)] = typeof(KernelEventEnvelope<HoverTextProduced>),
                 [nameof(KernelReady)] = typeof(KernelEventEnvelope<KernelReady>),
-                [nameof(NotebookParsed)] = typeof(KernelEventEnvelope<NotebookParsed>),
-                [nameof(NotebookSerialized)] = typeof(KernelEventEnvelope<NotebookSerialized>),
                 [nameof(PackageAdded)] = typeof(KernelEventEnvelope<PackageAdded>),
                 [nameof(ReturnValueProduced)] = typeof(KernelEventEnvelope<ReturnValueProduced>),
                 [nameof(SignatureHelpProduced)] = typeof(KernelEventEnvelope<SignatureHelpProduced>),
@@ -76,6 +74,8 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(StandardOutputValueProduced)] = typeof(KernelEventEnvelope<StandardOutputValueProduced>),
                 [nameof(WorkingDirectoryChanged)] = typeof(KernelEventEnvelope<WorkingDirectoryChanged>),
                 [nameof(KernelExtensionLoaded)] = typeof(KernelEventEnvelope<KernelExtensionLoaded>),
+                [nameof(ValueInfosProduced)] = typeof(KernelEventEnvelope<ValueInfosProduced>),
+                [nameof(ValueProduced)] = typeof(KernelEventEnvelope<ValueProduced>)
             };
 
             _eventTypesByEventTypeName = _envelopeTypesByEventTypeName
@@ -193,7 +193,8 @@ namespace Microsoft.DotNet.Interactive.Server
                 {
                     command = commandEnvelope.Command,
                     commandType = commandEnvelope.CommandType,
-                    token = eventEnvelope.Event.Command.GetToken()
+                    token = eventEnvelope.Event.Command.GetOrCreateToken(),
+                    id = commandEnvelope.CommandId
                 };
             }
 

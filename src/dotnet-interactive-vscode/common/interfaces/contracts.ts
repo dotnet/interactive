@@ -11,14 +11,14 @@ export const ChangeWorkingDirectoryType = "ChangeWorkingDirectory";
 export const DisplayErrorType = "DisplayError";
 export const DisplayValueType = "DisplayValue";
 export const GetInputType = "GetInput";
-export const ParseNotebookType = "ParseNotebook";
 export const QuitType = "Quit";
 export const RequestCompletionsType = "RequestCompletions";
 export const RequestDiagnosticsType = "RequestDiagnostics";
 export const RequestHoverTextType = "RequestHoverText";
 export const RequestSignatureHelpType = "RequestSignatureHelp";
+export const RequestValueType = "RequestValue";
+export const RequestValueInfosType = "RequestValueInfos";
 export const SendEditableCodeType = "SendEditableCode";
-export const SerializeNotebookType = "SerializeNotebook";
 export const SubmitCodeType = "SubmitCode";
 export const UpdateDisplayedValueType = "UpdateDisplayedValue";
 
@@ -29,14 +29,14 @@ export type KernelCommandType =
     | typeof DisplayErrorType
     | typeof DisplayValueType
     | typeof GetInputType
-    | typeof ParseNotebookType
     | typeof QuitType
     | typeof RequestCompletionsType
     | typeof RequestDiagnosticsType
     | typeof RequestHoverTextType
     | typeof RequestSignatureHelpType
+    | typeof RequestValueType
+    | typeof RequestValueInfosType
     | typeof SendEditableCodeType
-    | typeof SerializeNotebookType
     | typeof SubmitCodeType
     | typeof UpdateDisplayedValueType;
 
@@ -69,11 +69,6 @@ export interface GetInput extends KernelCommand {
     isPassword: boolean;
 }
 
-export interface ParseNotebook extends KernelCommand {
-    fileName: string;
-    rawData: Uint8Array;
-}
-
 export interface Quit extends KernelCommand {
 }
 
@@ -95,15 +90,17 @@ export interface RequestHoverText extends LanguageServiceCommand {
 export interface RequestSignatureHelp extends LanguageServiceCommand {
 }
 
+export interface RequestValue extends KernelCommand {
+    name: string;
+    mimeType: string;
+}
+
+export interface RequestValueInfos extends KernelCommand {
+}
+
 export interface SendEditableCode extends KernelCommand {
     language: string;
     code: string;
-}
-
-export interface SerializeNotebook extends KernelCommand {
-    fileName: string;
-    notebook: NotebookDocument;
-    newLine: string;
 }
 
 export interface SubmitCode extends KernelCommand {
@@ -114,6 +111,60 @@ export interface SubmitCode extends KernelCommand {
 export interface UpdateDisplayedValue extends KernelCommand {
     formattedValue: FormattedValue;
     valueId: string;
+}
+
+export interface KernelEvent {
+}
+
+export interface DisplayElement extends InteractiveDocumentOutputElement {
+    data: { [key: string]: any; };
+}
+
+export interface InteractiveDocumentOutputElement {
+}
+
+export interface TextElement extends InteractiveDocumentOutputElement {
+    text: string;
+}
+
+export interface ErrorElement extends InteractiveDocumentOutputElement {
+    errorName: string;
+    errorValue: string;
+    stackTrace: Array<string>;
+}
+
+export interface NotebookParseRequest extends NotebookParseOrSerializeRequest {
+    type: RequestType;
+    rawData: Uint8Array;
+}
+
+export interface NotebookParseOrSerializeRequest {
+    type: RequestType;
+    id: string;
+    serializationType: DocumentSerializationType;
+    defaultLanguage: string;
+}
+
+export interface NotebookSerializeRequest extends NotebookParseOrSerializeRequest {
+    type: RequestType;
+    newLine: string;
+    document: InteractiveDocument;
+}
+
+export interface NotebookParseResponse extends NotebookParserServerResponse {
+    document: InteractiveDocument;
+}
+
+export interface NotebookParserServerResponse {
+    id: string;
+}
+
+export interface NotebookSerializeResponse extends NotebookParserServerResponse {
+    rawData: Uint8Array;
+}
+
+export interface NotebookErrorResponse extends NotebookParserServerResponse {
+    errorMessage: string;
 }
 
 // --------------------------------------------- Kernel events
@@ -133,13 +184,13 @@ export const IncompleteCodeSubmissionReceivedType = "IncompleteCodeSubmissionRec
 export const InputProducedType = "InputProduced";
 export const KernelExtensionLoadedType = "KernelExtensionLoaded";
 export const KernelReadyType = "KernelReady";
-export const NotebookParsedType = "NotebookParsed";
-export const NotebookSerializedType = "NotebookSerialized";
 export const PackageAddedType = "PackageAdded";
 export const ReturnValueProducedType = "ReturnValueProduced";
 export const SignatureHelpProducedType = "SignatureHelpProduced";
 export const StandardErrorValueProducedType = "StandardErrorValueProduced";
 export const StandardOutputValueProducedType = "StandardOutputValueProduced";
+export const ValueInfosProducedType = "ValueInfosProduced";
+export const ValueProducedType = "ValueProduced";
 export const WorkingDirectoryChangedType = "WorkingDirectoryChanged";
 
 export type KernelEventType =
@@ -158,20 +209,17 @@ export type KernelEventType =
     | typeof InputProducedType
     | typeof KernelExtensionLoadedType
     | typeof KernelReadyType
-    | typeof NotebookParsedType
-    | typeof NotebookSerializedType
     | typeof PackageAddedType
     | typeof ReturnValueProducedType
     | typeof SignatureHelpProducedType
     | typeof StandardErrorValueProducedType
     | typeof StandardOutputValueProducedType
+    | typeof ValueInfosProducedType
+    | typeof ValueProducedType
     | typeof WorkingDirectoryChangedType;
 
 export interface CodeSubmissionReceived extends KernelEvent {
     code: string;
-}
-
-export interface KernelEvent {
 }
 
 export interface CommandFailed extends KernelEvent {
@@ -235,14 +283,6 @@ export interface KernelExtensionLoaded extends KernelEvent {
 export interface KernelReady extends KernelEvent {
 }
 
-export interface NotebookParsed extends KernelEvent {
-    notebook: NotebookDocument;
-}
-
-export interface NotebookSerialized extends KernelEvent {
-    rawData: Uint8Array;
-}
-
 export interface PackageAdded extends KernelEvent {
     packageReference: ResolvedPackageReference;
 }
@@ -260,6 +300,15 @@ export interface StandardErrorValueProduced extends DisplayEvent {
 }
 
 export interface StandardOutputValueProduced extends DisplayEvent {
+}
+
+export interface ValueInfosProduced extends KernelEvent {
+    valueInfos: Array<KernelValueInfo>;
+}
+
+export interface ValueProduced extends KernelEvent {
+    name: string;
+    formattedValue: FormattedValue;
 }
 
 export interface WorkingDirectoryChanged extends KernelEvent {
@@ -285,10 +334,10 @@ export interface Diagnostic {
 }
 
 export enum DiagnosticSeverity {
-    Hidden = 0,
-    Info = 1,
-    Warning = 2,
-    Error = 3,
+    Hidden = "hidden",
+    Info = "info",
+    Warning = "warning",
+    Error = "error",
 }
 
 export interface LinePositionSpan {
@@ -301,42 +350,39 @@ export interface LinePosition {
     character: number;
 }
 
+export enum DocumentSerializationType {
+    Dib = "dib",
+    Ipynb = "ipynb",
+}
+
 export interface FormattedValue {
     mimeType: string;
     value: string;
 }
 
-export interface NotebookDocument {
-    cells: Array<NotebookCell>;
+export interface InteractiveDocument {
+    elements: Array<InteractiveDocumentElement>;
 }
 
-export interface NotebookCell {
+export interface InteractiveDocumentElement {
     language: string;
     contents: string;
-    outputs: Array<NotebookCellOutput>;
+    outputs: Array<InteractiveDocumentOutputElement>;
 }
 
-export interface NotebookCellOutput {
-}
-
-export interface NotebookCellDisplayOutput extends NotebookCellOutput {
-    data: { [key: string]: any; };
-}
-
-export interface NotebookCellErrorOutput extends NotebookCellOutput {
-    errorName: string;
-    errorValue: string;
-    stackTrace: Array<string>;
-}
-
-export interface NotebookCellTextOutput extends NotebookCellOutput {
-    text: string;
+export interface KernelValueInfo {
+    name: string;
 }
 
 export interface PackageReference {
     packageName: string;
     packageVersion: string;
     isPackageVersionSpecified: boolean;
+}
+
+export enum RequestType {
+    Parse = "parse",
+    Serialize = "serialize",
 }
 
 export interface ResolvedPackageReference extends PackageReference {
@@ -357,8 +403,8 @@ export interface ParameterInformation {
 }
 
 export enum SubmissionType {
-    Run = 0,
-    Diagnose = 1,
+    Run = "run",
+    Diagnose = "diagnose",
 }
 
 export interface KernelEventEnvelope {
@@ -369,6 +415,7 @@ export interface KernelEventEnvelope {
 
 export interface KernelCommandEnvelope {
     token?: string;
+    id?: string;
     commandType: KernelCommandType;
     command: KernelCommand;
 }

@@ -8,13 +8,13 @@ import { InstallInteractiveArgs, InteractiveLaunchOptions } from '../interfaces'
 import { ClientMapper } from '../clientMapper';
 import { getEol, toNotebookDocument } from './vscodeUtilities';
 import { DotNetPathManager, KernelIdForJupyter } from './extension';
-import { computeToolInstallArguments, executeSafe, executeSafeAndLog } from '../utilities';
+import { computeToolInstallArguments, executeSafe, executeSafeAndLog, extensionToDocumentType, getVersionNumber } from '../utilities';
 
-import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 import * as notebookControllers from '../../notebookControllers';
 import * as ipynbUtilities from '../../common/ipynbUtilities';
 import { ReportChannel } from '../interfaces/vscode-like';
 import { jupyterViewType } from '../interactiveNotebook';
+import { NotebookParserServer } from '../notebookParserServer';
 
 export function registerAcquisitionCommands(context: vscode.ExtensionContext, diagnosticChannel: ReportChannel) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
@@ -138,7 +138,7 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
     }));
 }
 
-export function registerFileCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
+export function registerFileCommands(context: vscode.ExtensionContext, parserServer: NotebookParserServer) {
 
     const eol = getEol();
 
@@ -268,9 +268,10 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
 
             const { document } = vscode.window.activeNotebookEditor;
             const notebook = toNotebookDocument(document);
-            const client = await clientMapper.getOrAddClient(uri);
             const uriPath = uri.toString();
-            const buffer = await client.serializeNotebook(uriPath, notebook, eol);
+            const extension = path.extname(uriPath);
+            const documentType = extensionToDocumentType(extension);
+            const buffer = await parserServer.serializeNotebook(documentType, eol, notebook);
             await vscode.workspace.fs.writeFile(uri, buffer);
             switch (path.extname(uriPath)) {
                 case '.dib':
@@ -293,7 +294,8 @@ export async function selectDotNetInteractiveKernelForJupyter(): Promise<void> {
 async function getInteractiveVersion(dotnetPath: string, globalStoragePath: string): Promise<string | undefined> {
     const result = await executeSafe(dotnetPath, ['tool', 'run', 'dotnet-interactive', '--', '--version'], globalStoragePath);
     if (result.code === 0) {
-        return result.output;
+        const versionString = getVersionNumber(result.output);
+        return versionString;
     }
 
     return undefined;

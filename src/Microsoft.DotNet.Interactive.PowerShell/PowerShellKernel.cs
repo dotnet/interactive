@@ -26,7 +26,9 @@ namespace Microsoft.DotNet.Interactive.PowerShell
     using Microsoft.DotNet.Interactive.Utility;
 
     public class PowerShellKernel :
-        DotNetKernel,
+        Kernel,
+        ISupportGetValue,
+        ISupportSetValue,
         IKernelCommandHandler<RequestCompletions>,
         IKernelCommandHandler<RequestDiagnostics>,
         IKernelCommandHandler<SubmitCode>
@@ -128,19 +130,19 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             _addAccelerator?.Invoke(null, new object[] { name, type });
         }
 
-        public override IReadOnlyCollection<string> GetVariableNames()
+        public IReadOnlyCollection<KernelValueInfo> GetValueInfos()
         {
             var psObject = pwsh.Runspace.SessionStateProxy.InvokeProvider.Item.Get("variable:")?.FirstOrDefault();
 
             if (psObject?.BaseObject is Dictionary<string, PSVariable>.ValueCollection valueCollection)
             {
-                return valueCollection.Select(v => v.Name).ToArray();
+                return valueCollection.Select(v => new KernelValueInfo( v.Name, v.Value?.GetType())).ToArray();
             }
 
-            return Array.Empty<string>();
+            return Array.Empty<KernelValueInfo>();
         }
 
-        public override bool TryGetVariable<T>(string name, out T value)
+        public bool TryGetValue<T>(string name, out T value)
         {
             var variable = pwsh.Runspace.SessionStateProxy.PSVariable.Get(name);
 
@@ -159,7 +161,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             return false;
         }
 
-        public override Task SetVariableAsync(string name, object value, Type declaredType)
+        public Task SetValueAsync(string name, object value, Type declaredType)
         {
             _lazyPwsh.Value.Runspace.SessionStateProxy.PSVariable.Set(name, value);
             return Task.CompletedTask;
@@ -210,7 +212,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             if (context.CancellationToken.IsCancellationRequested)
             {
-                context.Fail(null, "Command cancelled");
+                context.Fail(submitCode, null, "Command cancelled");
                 return;
             }
 

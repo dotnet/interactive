@@ -11,8 +11,8 @@ namespace Microsoft.DotNet.Interactive
 {
     public class ChooseKernelDirective : Command
     {
-        public ChooseKernelDirective(Kernel kernel, string? description = null) : 
-            base($"#!{kernel.Name}", 
+        public ChooseKernelDirective(Kernel kernel, string? description = null) :
+            base($"#!{kernel.Name}",
                  description ?? $"Run the code that follows using the {kernel.Name} kernel.")
         {
             Kernel = kernel;

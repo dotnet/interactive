@@ -4,11 +4,10 @@
 using System;
 using System.Text.Json;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.Server
 {
-    public class KernelEventConverter : JsonConverter<KernelEvent>
+    internal class KernelEventConverter : JsonConverter<KernelEvent>
     {
         public override bool CanConvert(Type typeToConvert)
         {

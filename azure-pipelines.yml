@@ -18,14 +18,12 @@ variables:
     value: true
   - name: _DotNetArtifactsCategory
     value: .NETCore
-  - name: DotNetSdkVersion
-    value: '6.0.100-preview.6.21355.2'
   - name: PocketLoggerLogPath
     value: $(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)
   - name: TryDotNetPackagesPath
     value: $(Build.SourcesDirectory)/artifacts/.trydotnet/packages
   - name: NodeJSVersion
-    value: '12.16.1'
+    value: '14.17.5'
   - name: _TestArgs
     value: ''
 
@@ -104,8 +102,10 @@ stages:
           displayName: Use .NET SDK
           inputs:
             packageType: sdk
-            version: $(DotNetSdkVersion)
-            installationPath: $(Agent.ToolsDirectory)\dotnet
+            useGlobalJson: true
+            includePreviewVersions: true
+            workingDirectory: $(Build.SourcesDirectory)
+            installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - script: |
             robocopy "eng\resources" "$(Build.SourcesDirectory)\artifacts"
@@ -282,7 +282,9 @@ stages:
           displayName: Use .NET SDK
           inputs:
             packageType: sdk
-            version: $(DotNetSdkVersion)
+            useGlobalJson: true
+            includePreviewVersions: true
+            workingDirectory: $(Build.SourcesDirectory)
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - script: |
@@ -343,108 +345,47 @@ stages:
             command: build
             Dockerfile: "$(Build.SourcesDirectory)/samples/docker-image/Dockerfile"
 
-  - template: /eng/common/templates/jobs/jobs.yml
-    parameters:
-      enableMicrobuild: true
-      jobs:
-      - job: Dockerfile_Main
-        pool:
-          ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-            name: NetCorePublic-Pool
-            queue: BuildPool.Ubuntu.1604.amd64.Open
-          ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-            name: NetCoreInternal-Pool
-            queue: BuildPool.Ubuntu.1604.amd64
-        steps:
-        - checkout: self
-          clean: true
-        - task: Docker@2
-          displayName: Build main Dockerfile
-          inputs:
-            command: build
-            Dockerfile: "$(Build.SourcesDirectory)/Dockerfile"
+  # - template: /eng/common/templates/jobs/jobs.yml
+  #   parameters:
+  #     enableMicrobuild: true
+  #     jobs:
+  #     - job: Dockerfile_Main
+  #       pool:
+  #         ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+  #           name: NetCorePublic-Pool
+  #           queue: BuildPool.Ubuntu.1604.amd64.Open
+  #         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+  #           name: NetCoreInternal-Pool
+  #           queue: BuildPool.Ubuntu.1604.amd64
+  #       steps:
+  #       - checkout: self
+  #         clean: true
+  #       - task: Docker@2
+  #         displayName: Build main Dockerfile
+  #         inputs:
+  #           command: build
+  #           Dockerfile: "$(Build.SourcesDirectory)/Dockerfile"
 
-  - template: /eng/common/templates/jobs/jobs.yml
-    parameters:
-      enableMicrobuild: true
-      jobs:
-      - job: Dockerfile_Binder_Dependency
-        pool:
-          ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-            name: NetCorePublic-Pool
-            queue: BuildPool.Ubuntu.1604.amd64.Open
-          ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-            name: NetCoreInternal-Pool
-            queue: BuildPool.Ubuntu.1604.amd64
-        steps:
-        - checkout: self
-          clean: true
-        - task: Docker@2
-          displayName: Build Binder dependency Dockerfile
-          inputs:
-            command: build
-            Dockerfile: "$(Build.SourcesDirectory)/samples/my binder/Dockerfile"
-
-  - template: /eng/common/templates/jobs/jobs.yml
-    parameters:
-      enableMicrobuild: true
-      jobs:
-      - job: IntegrationTest
-        dependsOn: Windows_NT
-        condition: and(succeeded(), ne(variables['SkipTests'], 'true'))
-        pool:
-          ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-            name: NetCorePublic-Pool
-            queue: BuildPool.Ubuntu.1604.amd64.Open
-          ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-            name: NetCoreInternal-Pool
-            queue: BuildPool.Ubuntu.1604.amd64
-        variables:
-        - name: DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT
-          value: 1
-        - name: DOTNET_INTERACTIVE_SKIP_FIRST_TIME_EXPERIENCE
-          value: 1
-        # specify tool version on public CI builds
-        - ${{ if eq(variables['System.TeamProject'], 'public') }}:
-          - name: ToolVersionArgs
-            value: --version 1.0.0-ci
-        # else
-        - ${{ if ne(variables['System.TeamProject'], 'public') }}:
-          - name: ToolVersionArgs
-            value: ''
-        steps:
-        - checkout: self
-          clean: true
-        - task: UseDotNet@2
-          displayName: Use .NET SDK
-          inputs:
-            packageType: sdk
-            version: $(DotNetSdkVersion)
-            installationPath: $(Agent.ToolsDirectory)/dotnet
-        - task: DownloadBuildArtifacts@0
-          displayName: Download built packages
-          inputs:
-            artifactName: packages
-            downloadPath: $(Build.ArtifactStagingDirectory)
-        - script: echo "<configuration><packageSources><clear /></packageSources></configuration>" > "$(Build.ArtifactStagingDirectory)/NuGet.config"
-          displayName: Generate empty NuGet.config
-        - script: dotnet tool install -g --configfile "$(Build.ArtifactStagingDirectory)/NuGet.config" $(ToolVersionArgs) --add-source "$(Build.ArtifactStagingDirectory)/packages/Shipping" Microsoft.dotnet-interactive
-          displayName: Install global tool
-        - script: dotnet interactive --version
-          displayName: Write version
-        - script: dotnet test
-            "$(Build.SourcesDirectory)/src/dotnet-interactive.IntegrationTests/dotnet-interactive.IntegrationTests.csproj"
-            --logger "trx;LogFileName=$(Build.ArtifactStagingDirectory)/TestResults/IntegrationTests.trx"
-          displayName: Execute integration tests
-          env:
-            INTEGRATION_TEST_RUN: true
-        - task: PublishTestResults@2
-          displayName: Publish Test Results
-          inputs:
-            testResultsFormat: VSTest
-            testResultsFiles: '**/*.trx'
-            searchFolder: '$(Build.ArtifactStagingDirectory)/TestResults'
-          condition: always()
+  # - template: /eng/common/templates/jobs/jobs.yml
+  #   parameters:
+  #     enableMicrobuild: true
+  #     jobs:
+  #     - job: Dockerfile_Binder_Dependency
+  #       pool:
+  #         ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+  #           name: NetCorePublic-Pool
+  #           queue: BuildPool.Ubuntu.1604.amd64.Open
+  #         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+  #           name: NetCoreInternal-Pool
+  #           queue: BuildPool.Ubuntu.1604.amd64
+  #       steps:
+  #       - checkout: self
+  #         clean: true
+  #       - task: Docker@2
+  #         displayName: Build Binder dependency Dockerfile
+  #         inputs:
+  #           command: build
+  #           Dockerfile: "$(Build.SourcesDirectory)/samples/my binder/Dockerfile"
 
 #---------------------------------------------------------------------------------------------------------------------#
 #                                                    Post Build                                                       #

@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         {
             var command = new SubmitCode("123");
 
-            command.GetToken()
+            command.GetOrCreateToken()
                    .Should()
                    .NotBeNullOrWhiteSpace();
         }
@@ -26,8 +26,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         {
             var command = new SubmitCode("123");
 
-            var token1 = command.GetToken();
-            var token2 = command.GetToken();
+            var token1 = command.GetOrCreateToken();
+            var token2 = command.GetOrCreateToken();
 
             token2.Should().Be(token1);
         }
@@ -42,8 +42,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
             await using (KernelInvocationContext.Establish(parentCommand))
             {
-                token1 = new SubmitCode("456").GetToken();
-                token2 = new SubmitCode("456").GetToken();
+                token1 = new SubmitCode("456").GetOrCreateToken();
+                token2 = new SubmitCode("456").GetOrCreateToken();
             }
 
             token1.Should().Be(token2);
@@ -60,12 +60,12 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
             await using (KernelInvocationContext.Establish(parentCommand))
             {
-                token1 = new SubmitCode("456").GetToken();
+                token1 = new SubmitCode("456").GetOrCreateToken();
             }
 
             await using (KernelInvocationContext.Establish(parentCommand))
             {
-                token2 = new SubmitCode("456").GetToken();
+                token2 = new SubmitCode("456").GetOrCreateToken();
             }
 
             token1.Should().Be(token2);
@@ -76,11 +76,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         {
             var command1 = new SubmitCode("123");
             command1.SetToken("the-token");
-            string token1 = command1.GetToken();
+            string token1 = command1.GetOrCreateToken();
 
             var command2 = new SubmitCode("123");
             command2.SetToken("the-token");
-            string token2 = command2.GetToken();
+            string token2 = command2.GetOrCreateToken();
 
             token2.Should().Be(token1);
         }

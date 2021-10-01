@@ -70,13 +70,12 @@ while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested
 
             var cancelCommand = new Cancel();
 
-            await kernel.SendAsync(cancelCommand);
+            var results = await kernel.SendAsync(cancelCommand);
 
-            KernelEvents
+            results.KernelEvents.ToSubscribedList()
                 .Should()
                 .ContainSingle<CommandSucceeded>(c => c.Command == cancelCommand);
         }
-
      
         [Fact]
         public async Task can_cancel_user_loop_using_CancellationToken()
@@ -94,9 +93,9 @@ while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested
 
             await kernel.SendAsync(cancelCommand);
 
-            await resultForCommandToCancel;
+            var results = await resultForCommandToCancel;
 
-            KernelEvents
+            results.KernelEvents.ToSubscribedList()
                 .Should()
                 .ContainSingle<CommandFailed>(c => c.Command == commandToCancel);
         }

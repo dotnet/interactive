@@ -33,7 +33,7 @@ open FSharp.Compiler.Symbols
 
 type FSharpKernel () as this =
 
-    inherit DotNetKernel("fsharp")
+    inherit Kernel("fsharp")
 
     static let lockObj = Object();
 
@@ -219,11 +219,11 @@ type FSharpKernel () as this =
                     | Error (:? FsiCompilationException) 
                     | Ok _ ->
                         let ex = CodeSubmissionCompilationErrorException(Exception(aggregateError))
-                        context.Fail(ex, aggregateError)
+                        context.Fail(codeSubmission, ex, aggregateError)
                     | Error ex ->
-                        context.Fail(ex, null)
+                        context.Fail(codeSubmission, ex, null)
                 else
-                    context.Fail(null, "Command cancelled")
+                    context.Fail(codeSubmission, null, "Command cancelled")
         }
 
     let handleRequestCompletions (requestCompletions: RequestCompletions) (context: KernelInvocationContext) =
@@ -350,8 +350,7 @@ type FSharpKernel () as this =
                 context.Publish(HoverTextProduced(requestHoverText, reply, lps))
                 ()
         }
-
-
+   
     let handleRequestDiagnostics (requestDiagnostics: RequestDiagnostics) (context: KernelInvocationContext) =
         async {
             let _parseResults, checkFileResults, _checkProjectResults = script.Value.Fsi.ParseAndCheckInteraction(requestDiagnostics.Code)
@@ -367,17 +366,25 @@ type FSharpKernel () as this =
 
     let _packageRestoreContext = lazy createPackageRestoreContext this.RegisterForDisposal
 
-    member this.GetCurrentVariables() =
+    member this.GetValues() =
         script.Value.Fsi.GetBoundValues()
         |> List.filter (fun x -> x.Name <> "it") // don't report special variable `it`
-        |> List.map (fun x -> CurrentVariable(x.Name, x.Value.ReflectionType, x.Value.ReflectionValue))
+        |> List.map (fun x -> KernelValue( new KernelValueInfo(x.Name, x.Value.ReflectionType), x.Value.ReflectionValue, this.Name))
 
-    override _.GetVariableNames() =
-        this.GetCurrentVariables()
-        |> List.map (fun x -> x.Name)
-        :> IReadOnlyCollection<string>
 
-    override _.TryGetVariable<'a>(name: string, [<Out>] value: 'a byref) =
+    member this.handleGetValueValueInfos() =
+        this.GetValues()
+        |> List.map (fun x -> new KernelValueInfo( x.Name, this.getValueType(x.Name)))
+        :> IReadOnlyCollection<KernelValueInfo>
+
+    member this.getValueType(name:string) = 
+        match script.Value.Fsi.TryFindBoundValue(name) with
+        | Some cv ->
+            cv.Value.ReflectionValue.GetType()            
+        | _ ->
+            null
+
+    member this.handleTryGetValue<'a>(name: string, [<Out>] value: 'a byref) =
         match script.Value.Fsi.TryFindBoundValue(name) with
         | Some cv ->
             value <- cv.Value.ReflectionValue :?> 'a
@@ -385,7 +392,7 @@ type FSharpKernel () as this =
         | _ ->
             false
 
-    override _.SetVariableAsync(name: string, value: Object, [<Optional>] declaredType: Type) : Task = 
+    member this.handleSetValueAsync(name: string, value: Object, [<Optional>] declaredType: Type) : Task = 
         script.Value.Fsi.AddBoundValue(name, value) |> ignore
         Task.CompletedTask
 
@@ -452,6 +459,13 @@ type FSharpKernel () as this =
                             sb.Append(Environment.NewLine) |> ignore
             let command = new SubmitCode(sb.ToString(), "fsharp")
             this.DeferCommand(command)
+
+    interface ISupportGetValue with
+        member _.GetValueInfos() = this.handleGetValueValueInfos()
+        member _.TryGetValue<'a>(name: string, [<Out>] value: 'a byref)  = this.handleTryGetValue(name, &value)
+
+    interface ISupportSetValue with
+        member _.SetValueAsync(name: string, value: obj, declaredType: Type): Task = this.handleSetValueAsync(name, value, declaredType)
 
     interface IExtensibleKernel with
         member this.LoadExtensionsFromDirectoryAsync(directory:DirectoryInfo, context:KernelInvocationContext) =

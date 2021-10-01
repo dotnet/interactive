@@ -76,7 +76,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.IO.Pipelines" Version="5.0.1" />
-    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.1.3" />
+    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.1.4" />
   </ItemGroup>
 
 </Project>

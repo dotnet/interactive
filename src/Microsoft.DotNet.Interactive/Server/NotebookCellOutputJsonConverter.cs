@@ -4,7 +4,6 @@
 using System;
 using System.Linq;
 using System.Text.Json.Serialization;
-using Microsoft.DotNet.Interactive.Notebook;
 
 
 namespace Microsoft.DotNet.Interactive.Server
@@ -17,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.Server
     //    public override bool CanConvert(Type objectType)
     //    {
     //        // only convert the base type, otherwise we infinitely recurse when parsing in `ReadJson`
-    //        return objectType == typeof(NotebookCellOutput);
+    //        return objectType == typeof(InteractiveDocumentOutputElement);
     //    }
 
     //    public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
@@ -26,17 +25,17 @@ namespace Microsoft.DotNet.Interactive.Server
     //        var item = JObject.Load(reader);
     //        if (HasAllProperties(item, "data"))
     //        {
-    //            return item.ToObject<NotebookCellDisplayOutput>(serializer);
+    //            return item.ToObject<DisplayElement>(serializer);
     //        }
 
     //        if (HasAllProperties(item, "errorName", "errorValue", "stackTrace"))
     //        {
-    //            return item.ToObject<NotebookCellErrorOutput>(serializer);
+    //            return item.ToObject<ErrorElement>(serializer);
     //        }
 
     //        if (HasAllProperties(item, "text"))
     //        {
-    //            return item.ToObject<NotebookCellTextOutput>(serializer);
+    //            return item.ToObject<TextElement>(serializer);
     //        }
 
     //        return null;
