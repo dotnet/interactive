@@ -12,11 +12,21 @@ namespace Microsoft.DotNet.Interactive.Server
 {
     public static class ConnectableKernel
     {
-        public static  KernelServer CreateKernelServer(this Kernel kernel, DirectoryInfo workingDir)
+        public static IKernelCommandAndEventReceiver CreateStdInCommandAndEventReceiver()
         {
             Console.InputEncoding = Encoding.UTF8;
+            return new KernelCommandAndEventTextReceiver(Console.In);
+        }
+
+        public static IKernelCommandAndEventSender CreateStdOutCommandAndEventSender()
+        {
             Console.OutputEncoding = Encoding.UTF8;
-            return kernel.CreateKernelServer(new KernelCommandAndEventTextReceiver(Console.In), new KernelCommandAndEventTextStreamSender(Console.Out), workingDir);
+            return new KernelCommandAndEventTextStreamSender(Console.Out);
+        }
+
+        public static  KernelServer CreateKernelServer(this Kernel kernel, DirectoryInfo workingDir)
+        {
+            return kernel.CreateKernelServer(CreateStdInCommandAndEventReceiver(), CreateStdOutCommandAndEventSender(), workingDir);
         }
 
         public static KernelServer CreateKernelServer(this Kernel kernel, IKernelCommandAndEventReceiver receiver, IKernelCommandAndEventSender sender, DirectoryInfo workingDir)
