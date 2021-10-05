@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 
@@ -28,21 +26,4 @@ namespace Microsoft.DotNet.Interactive.Connection
             IsParseError = isParseError;
         }
     };
-
-    public static class CommandOrEventExtensions
-    {
-        public static Task DispatchAsync(this CommandOrEvent commandOrEvent, Kernel kernel, CancellationToken cancellationToken)
-        {
-            if (commandOrEvent.Command is { })
-            {
-                var _ = kernel.SendAsync(commandOrEvent.Command, cancellationToken);
-            }
-            else if (commandOrEvent.Event is { })
-            {
-                kernel.DelegatePublication(commandOrEvent.Event);
-            }
-
-            return Task.CompletedTask;
-        }
-    }
 }
