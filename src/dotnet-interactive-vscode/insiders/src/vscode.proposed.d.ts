@@ -162,6 +162,9 @@ declare module 'vscode' {
 			 * @deprecated Use privacy instead
 			 */
 			public: boolean;
+			/**
+			 * One of the the options must have the ID "private".
+			 */
 			privacyOptions: TunnelPrivacy[];
 		};
 
@@ -1121,7 +1124,7 @@ declare module 'vscode' {
 	export interface QuickPick<T extends QuickPickItem> extends QuickInput {
 
 		/*
-		 * An optional flag that can be set to true to maintain the scroll position of the quick pick when the quick pick items are updated. Defaults to false.
+		 * An optional flag to maintain the scroll position of the quick pick when the quick pick items are updated. Defaults to false.
 		 */
 		keepScrollPosition?: boolean;
 	}
@@ -1405,7 +1408,7 @@ declare module 'vscode' {
 	export interface NotebookDecorationRenderOptions {
 		backgroundColor?: string | ThemeColor;
 		borderColor?: string | ThemeColor;
-		top: ThemableDecorationAttachmentRenderOptions;
+		top?: ThemableDecorationAttachmentRenderOptions;
 	}
 
 	export interface NotebookEditorDecorationType {
@@ -1841,7 +1844,7 @@ declare module 'vscode' {
 		 * An optional event to signal that inlay hints have changed.
 		 * @see {@link EventEmitter}
 		 */
-		onDidChangeInlayHints?: Event<void>;
+		onDidChangeInlayHints?: Event<undefined | Uri>;
 
 		/**
 		 *
@@ -2821,7 +2824,11 @@ declare module 'vscode' {
 
 	//#endregion
 
+	//#region @eamodio https://github.com/microsoft/vscode/issues/133935
+
 	export interface SourceControl {
 		actionButton?: Command;
 	}
+
+	//#endregion
 }
