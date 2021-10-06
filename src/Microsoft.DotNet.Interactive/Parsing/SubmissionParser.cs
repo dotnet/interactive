@@ -154,7 +154,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         else if (parseResult.CommandResult.Command.Name == "#i")
                         {
                             directiveCommand.KernelUri = lastKernelUri;
-                            directiveCommand.TargetKernelName = KernelLanguage;
+                            directiveCommand.TargetKernelName = targetKernelName;
                             AddHoistedCommand(directiveCommand);
                             nugetRestoreOnKernels.Add(targetKernelName);
                         }
