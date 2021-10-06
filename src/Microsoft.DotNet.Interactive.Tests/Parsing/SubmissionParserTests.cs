@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
 using FluentAssertions.Execution;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
@@ -101,6 +102,24 @@ x
                 .Text
                 .Should()
                 .Be("#i \"nuget:/some/path\"");
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, Language.CSharp)]
+        [InlineData(Language.CSharp, Language.FSharp)]
+        [InlineData(Language.FSharp, Language.CSharp)]
+        [InlineData(Language.FSharp, Language.FSharp)]
+        public void Pound_i_is_dispatched_to_the_correct_kernel(Language defaultKernel, Language targetKernel)
+        {
+            var parser = CreateSubmissionParser(defaultKernel.LanguageName());
+
+            var command = new SubmitCode("#i \"nuget: SomeLocation\"", targetKernelName: targetKernel.LanguageName());
+
+            var subCommands = parser.SplitSubmission(command);
+
+            subCommands
+                .Should()
+                .AllSatisfy(c => c.TargetKernelName.Should().Be(targetKernel.LanguageName()));
         }
 
         [Fact]
