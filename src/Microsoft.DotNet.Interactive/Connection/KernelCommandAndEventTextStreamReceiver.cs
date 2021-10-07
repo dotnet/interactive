@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public class KernelCommandAndEventTextReceiver : KernelCommandAndEventReceiverBase
+    public class KernelCommandAndEventTextReceiver : InteractiveProtocolKernelCommandAndEventReceiverBase
     {
         private readonly TextReader _reader;
 

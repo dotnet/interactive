@@ -75,11 +75,17 @@ namespace Microsoft.DotNet.Interactive
                 throw new InvalidOperationException($"Kernel \"{kernel.Name}\" already has a parent: \"{kernel.ParentKernel.Name}\".");
             }
 
+            if (kernel is CompositeKernel)
+            {
+                throw new ArgumentException($"{nameof(CompositeKernel)} cannot be added as a child kernel.", nameof(kernel));
+            }
+
             kernel.ParentKernel = this;
             kernel.RootKernel = RootKernel;
 
             kernel.AddMiddleware(LoadExtensions);
             kernel.SetScheduler(Scheduler);
+            kernel.SetHost(Host);
 
             AddChooseKernelDirective(kernel, aliases);
 
@@ -354,6 +360,15 @@ namespace Microsoft.DotNet.Interactive
             _connectDirective.Add(connectionCommand);
 
             SubmissionParser.ResetParser();
+        }
+
+        public override void SetHost(KernelHost host)
+        {
+            base.SetHost(host);
+            foreach (var childKernel in _childKernels)
+            {
+                childKernel.SetHost(Host);
+            }
         }
     }
 }

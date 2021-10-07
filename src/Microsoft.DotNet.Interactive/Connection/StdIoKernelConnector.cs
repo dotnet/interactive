@@ -7,7 +7,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,7 +16,7 @@ using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public class StdIoKernelConnector : KernelConnector
+   public class StdIoKernelConnector : KernelConnector
     {
         public string[] Command { get; }
 
@@ -25,8 +24,8 @@ namespace Microsoft.DotNet.Interactive.Connection
 
         public override async Task<Kernel> ConnectKernelAsync(KernelName kernelName)
         {
-            string command = Command[0];
-            string arguments = string.Join(" ", Command.Skip(1));
+            var command = Command[0];
+            var arguments = string.Join(" ", Command.Skip(1));
             var psi = new ProcessStartInfo
             {
                 FileName = command,
@@ -88,7 +87,7 @@ namespace Microsoft.DotNet.Interactive.Connection
             });
 
             await Task.WhenAny(checkProcessError, checkReady);
-
+            
             return kernel;
 
         }

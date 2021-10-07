@@ -2,13 +2,17 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.CommandLine;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Tests.Parsing;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Microsoft.Extensions.Hosting;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -128,6 +132,55 @@ namespace Microsoft.DotNet.Interactive.Tests
                         .As<string>()
                         .Should()
                         .Contain("ScriptExtension");
+        }
+
+        [Fact]
+        public async Task extensions_can_access_connections_to_create_proxies()
+        {
+            using var kernel = CreateCompositeKernel();
+
+            var blockingCommandAndEventReceiver = new BlockingCommandAndEventReceiver(); 
+            var sender = new RecordingKernelCommandAndEventSender();
+
+            sender.OnSend(coe =>
+            {
+                if (coe.Command is { })
+                {
+                    blockingCommandAndEventReceiver.Write(new CommandOrEvent(new CommandSucceeded(coe.Command)));
+
+                }
+            });
+
+            var receiver = new MultiplexingKernelCommandAndEventReceiver(blockingCommandAndEventReceiver);
+
+            var host = new KernelHost(sender, receiver);
+
+            kernel.SetHost(host);
+
+            var _ = receiver.ConnectAsync(kernel);
+
+            var ext = new VSCodeConfiguration();
+
+            await ext.OnLoadAsync(kernel);
+
+            await kernel.SendAsync(new SubmitCode("test", "frontend"));
+
+            sender.Commands.Should().ContainSingle<SubmitCode>();
+
+        }
+
+        public class VSCodeConfiguration : IKernelExtension
+        {
+            public async Task OnLoadAsync(Kernel kernel)
+            {
+                var root = kernel.RootKernel;
+
+                var connector = root.Host.DefaultConnector;
+
+                var proxy = await connector.ConnectKernelAsync(new KernelName("frontend"));
+
+                ((CompositeKernel)root).Add(proxy);
+            }
         }
     }
 }

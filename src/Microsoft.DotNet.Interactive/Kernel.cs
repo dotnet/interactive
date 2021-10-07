@@ -37,6 +37,7 @@ namespace Microsoft.DotNet.Interactive
         private KernelInvocationContext _inFlightContext;
         private int _countOfLanguageServiceCommandsInFlight = 0;
         private KernelName _name;
+        private KernelHost _host;
 
         protected Kernel(string name)
         {
@@ -74,6 +75,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
+      
         internal KernelCommandPipeline Pipeline { get; }
 
         public CompositeKernel ParentKernel { get; internal set; }
@@ -470,6 +472,18 @@ namespace Microsoft.DotNet.Interactive
                 throw;
             }
         }
+
+        public KernelHost Host => _host;
+
+        public virtual void SetHost(KernelHost host)
+        {
+            if (_host is { })
+            {
+                throw new InvalidOperationException("Host cannot be changed");
+            }
+            _host = host;
+        }
+
 
         protected internal KernelScheduler<KernelCommand, KernelCommandResult> Scheduler
         {

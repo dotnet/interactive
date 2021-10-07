@@ -21,31 +21,31 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             return 0;
         }
 
-        public static async Task<int> Do(StartupOptions startupOptions, Kernel kernel, IKernelCommandAndEventSender sender, IKernelCommandAndEventReceiver receiver, IConsole console)
+        public static async Task<int> Do(StartupOptions startupOptions, Kernel kernel, IKernelCommandAndEventSender sender, IKernelCommandAndEventReceiver receiver, IConsole console, CancellationToken cancellationToken)
         {
             var disposable = Program.StartToolLogging(startupOptions);
             var eventsSubs = kernel.KernelEvents.Subscribe(e =>
             {
                 var _ = sender.SendAsync(e, CancellationToken.None);
             });
-            var cancellationTokenSource = new CancellationTokenSource();
+
             kernel.RegisterForDisposal(disposable);
             kernel.RegisterForDisposal(eventsSubs);
-            kernel.RegisterForDisposal(cancellationTokenSource);
+
             var run = Task.Run(async () =>
             {
-                await foreach (var commandOrEvent in receiver.CommandsAndEventsAsync(cancellationTokenSource.Token))
+                await foreach (var commandOrEvent in receiver.CommandsAndEventsAsync(cancellationToken))
                 {
                     if (commandOrEvent.IsParseError)
                     {
-                        var _ = sender.SendAsync(commandOrEvent.Event, cancellationTokenSource.Token);
+                        var _ = sender.SendAsync(commandOrEvent.Event, cancellationToken);
                     }
                     else
                     {
-                        await commandOrEvent.DispatchAsync(kernel, cancellationTokenSource.Token);
+                        await commandOrEvent.DispatchAsync(kernel, cancellationToken);
                     }
                 }
-            }, cancellationTokenSource.Token);
+            }, cancellationToken);
 
             await sender.NotifyIsReadyAsync(CancellationToken.None);
             await run;

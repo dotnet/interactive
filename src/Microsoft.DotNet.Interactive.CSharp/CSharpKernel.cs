@@ -501,5 +501,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
         public IEnumerable<string> RestoreSources =>
             PackageRestoreContext.RestoreSources;
 
+        
     }
 }

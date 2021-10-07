@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             // use same connection to create 2 proxy kernel
 
             using var localKernel1 =  await connector.ConnectKernelAsync(new KernelName("kernel1"));
-
+           
             using var localKernel2 = await connector.ConnectKernelAsync(new KernelName("kernel2"));
 
             var kernelCommand1 = new SubmitCode("echo1");

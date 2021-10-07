@@ -8,6 +8,7 @@ using System.CommandLine.Invocation;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentAssertions.Common;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -579,6 +580,41 @@ new [] {1,2,3}");
             contextPassedToHandler
                 .Should()
                 .NotBeNull();
+        }
+
+        [Fact]
+        public void Added_kernels_host_return_the_parent_kernelHost()
+        {
+            using var compositeKernel = new CompositeKernel();
+            var childKernel = new CSharpKernel();
+            var host = new KernelHost(null);
+
+            compositeKernel.SetHost(host);
+            compositeKernel.Add(childKernel);
+
+            childKernel.Host.Should().BeSameAs(compositeKernel.Host);
+        }
+
+        [Fact]
+        public void Setting_the_KernelHost_configures_subKernels()
+        {
+            using var compositeKernel = new CompositeKernel();
+            var childKernel = new CSharpKernel();
+            var host = new KernelHost(null);
+
+            compositeKernel.Add(childKernel);
+            compositeKernel.SetHost(host);
+
+            childKernel.Host.Should().BeSameAs(compositeKernel.Host);
+        }
+
+        [Fact]
+        public void Cannot_add_CompositeKernel_as_child()
+        {
+            using var compositeKernel = new CompositeKernel();
+            var childKernel = new CompositeKernel();
+            var action = new Action( () => compositeKernel.Add(childKernel));
+            action.Should().Throw<ArgumentException>();
         }
     }
 }

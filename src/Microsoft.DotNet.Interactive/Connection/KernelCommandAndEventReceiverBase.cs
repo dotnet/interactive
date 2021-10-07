@@ -15,53 +15,72 @@ namespace Microsoft.DotNet.Interactive.Connection
 {
     public abstract class KernelCommandAndEventReceiverBase : IKernelCommandAndEventReceiver
     {
-        protected abstract Task<string> ReadMessageAsync(CancellationToken cancellationToken);
+        protected abstract Task<CommandOrEvent> ReadCommandOrEventAsync(CancellationToken cancellationToken);
 
         public async IAsyncEnumerable<CommandOrEvent> CommandsAndEventsAsync([EnumeratorCancellation] CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                KernelCommand kernelCommand = null;
-                KernelEvent kernelEvent = null;
 
-                var message = await ReadMessageAsync(cancellationToken);
-                
-                if (string.IsNullOrWhiteSpace(message))
+                var commandOrEvent = await ReadCommandOrEventAsync(cancellationToken);
+
+                if (commandOrEvent is null)
                 {
                     continue;
                 }
-
-                var isParseError = false;
-                try
-                {
-                    var jsonObject = JsonDocument.Parse(message).RootElement;
-                    if (IsEventEnvelope(jsonObject))
-                    {
-                        var kernelEventEnvelope = KernelEventEnvelope.Deserialize(jsonObject);
-                        kernelEvent = kernelEventEnvelope.Event;
-                    }
-                    else if (IsCommandEnvelope(jsonObject))
-                    {
-                        var kernelCommandEnvelope = KernelCommandEnvelope.Deserialize(jsonObject);
-                        kernelCommand = kernelCommandEnvelope.Command;
-                    }
-                    else
-                    {
-                        kernelEvent = new DiagnosticLogEntryProduced(
-                            $"Expected {nameof(KernelCommandEnvelope)} or {nameof(KernelEventEnvelope)} but received: \n{message}", KernelCommand.None);
-                        isParseError = true;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    kernelEvent = new DiagnosticLogEntryProduced(
-                        $"Error while parsing Envelope: {message} \n{ex.Message}", KernelCommand.None);
-                    isParseError = true;
-                }
-
-                yield return kernelCommand is null ? new CommandOrEvent(kernelEvent, isParseError) : new CommandOrEvent(kernelCommand);
+               
+                yield return commandOrEvent;
             }
         }
+    }
+
+    public abstract class InteractiveProtocolKernelCommandAndEventReceiverBase : KernelCommandAndEventReceiverBase
+    {
+        protected abstract Task<string> ReadMessageAsync(CancellationToken cancellationToken);
+
+        protected override async Task<CommandOrEvent> ReadCommandOrEventAsync(CancellationToken cancellationToken)
+        {
+            KernelCommand kernelCommand = null;
+            KernelEvent kernelEvent = null;
+
+            var message = await ReadMessageAsync(cancellationToken);
+
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                return null;
+            }
+
+            var isParseError = false;
+            try
+            {
+                var jsonObject = JsonDocument.Parse(message).RootElement;
+                if (IsEventEnvelope(jsonObject))
+                {
+                    var kernelEventEnvelope = KernelEventEnvelope.Deserialize(jsonObject);
+                    kernelEvent = kernelEventEnvelope.Event;
+                }
+                else if (IsCommandEnvelope(jsonObject))
+                {
+                    var kernelCommandEnvelope = KernelCommandEnvelope.Deserialize(jsonObject);
+                    kernelCommand = kernelCommandEnvelope.Command;
+                }
+                else
+                {
+                    kernelEvent = new DiagnosticLogEntryProduced(
+                        $"Expected {nameof(KernelCommandEnvelope)} or {nameof(KernelEventEnvelope)} but received: \n{message}", KernelCommand.None);
+                    isParseError = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                kernelEvent = new DiagnosticLogEntryProduced(
+                    $"Error while parsing Envelope: {message} \n{ex.Message}", KernelCommand.None);
+                isParseError = true;
+            }
+
+            return kernelCommand is null ? new CommandOrEvent(kernelEvent, isParseError) : new CommandOrEvent(kernelCommand);
+        }
+
 
         private static bool IsEventEnvelope(JsonElement jsonObject)
         {
