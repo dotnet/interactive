@@ -15,7 +15,7 @@ Run the following command(s) to install the .NET 6 version of the global tool:
 dotnet tool uninstall -g Microsoft.dotnet-interactive
 
 # install the .NET 6 version
-dotnet tool install -g Microsoft.dotnet-interactive --version 1.0.250102 --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-experimental/nuget/v3/index.json
+dotnet tool install -g Microsoft.dotnet-interactive --version 1.0.250602 --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-experimental/nuget/v3/index.json
 ```
 
 ### Set VS Code - Insiders to use the .NET 6 global tool
@@ -47,7 +47,7 @@ dotnet tool install -g Microsoft.dotnet-interactive --version 1.0.250102 --add-s
 
 ``` csharp
 #i "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-experimental/nuget/v3/index.json"
-#r "nuget:Microsoft.dotnet-interactive, 1.0.250102"
+#r "nuget:Microsoft.dotnet-interactive, 1.0.250602"
 ```
 
 ### Set VS Code - Insiders to use the .NET 6 version of the tool
@@ -60,7 +60,7 @@ dotnet tool install -g Microsoft.dotnet-interactive --version 1.0.250102 --add-s
     // ...
     "dotnet-interactive.kernelTransportArgs": [
         "{dotnet_path}",
-        "C:/Users/brett/.nuget/packages/microsoft.dotnet-interactive/1.0.250102/tools/net6.0/any/Microsoft.DotNet.Interactive.App.dll",
+        "C:/Users/brett/.nuget/packages/microsoft.dotnet-interactive/1.0.250602/tools/net6.0/any/Microsoft.DotNet.Interactive.App.dll",
         //        ^^^^^ this should be updated to match your current user name
         "vscode",
         "--working-dir",
