@@ -52,14 +52,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             StartServer startServer = null,
             InvocationContext context = null);
 
-        public delegate Task StartStdIO(
-            StartupOptions options,
-            KernelServer kernel,
-            IConsole console);
-
-        public delegate Task StartVSCode(
-            StartupOptions options,
-            KernelServer kernel,
+        public delegate Task StartKernelHost(
+            StartupOptions startupOptions,
+            KernelHost kernelHost,
             IConsole console);
 
         public delegate Task StartNotebookParser(
@@ -75,8 +70,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             IServiceCollection services,
             StartServer startServer = null,
             Jupyter jupyter = null,
-            StartStdIO startStdIO = null,
-            StartVSCode startVSCode = null,
+            StartKernelHost startKernelHost = null,
             StartNotebookParser startNotebookParser = null,
             StartHttp startHttp = null,
             Action onServerStarted = null,
@@ -105,10 +99,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             jupyter ??= JupyterCommand.Do;
 
-            startStdIO ??= StdIOCommand.Do;
-
-            startVSCode ??= VSCodeCommand.Do;
-
+            startKernelHost ??= KernelHostLauncher.Do;
+            
             startNotebookParser ??= ParseNotebookCommand.Do;
 
             startHttp ??= HttpCommand.Do;
@@ -426,6 +418,10 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 stdIOCommand.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext>(
                     async (startupOptions, options, console, context) =>
                     {
+                        Console.InputEncoding = Encoding.UTF8;
+                        Console.OutputEncoding = Encoding.UTF8;
+                        Environment.CurrentDirectory = startupOptions.WorkingDir.FullName;
+
                         FrontendEnvironment frontendEnvironment = startupOptions.EnableHttpApi
                             ? new HtmlNotebookFrontendEnvironment()
                             : new BrowserFrontendEnvironment();
@@ -435,8 +431,13 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         services.AddKernel(kernel);
 
                         kernel.UseQuitCommand();
-                        var kernelServer = kernel.CreateKernelServer(startupOptions.WorkingDir);
 
+                        var host = new KernelHost(kernel, new KernelCommandAndEventTextStreamSender(Console.Out),
+                            new MultiplexingKernelCommandAndEventReceiver(
+                                new KernelCommandAndEventTextReceiver(Console.In)));
+
+
+                       
                         if (startupOptions.EnableHttpApi)
                         {
                             var clientSideKernelClient = new SignalRBackchannelKernelClient();
@@ -446,11 +447,10 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             kernel.Add(
                                 new JavaScriptKernel(clientSideKernelClient),
                                 new[] { "js" });
-
-                            var _ = kernelServer.RunAsync();
+                            
                             onServerStarted ??= () =>
                             {
-                                kernelServer.NotifyIsReady();
+                                var _ = host.ConnectAsync();
                             };
                             await startHttp(startupOptions, console, startServer, context);
                         }
@@ -459,11 +459,10 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             new JavaScriptKernel(),
                             new[] { "js" });
 
-                        await startStdIO(
-                            startupOptions,
-                            kernelServer,
-                            console);
+                        await startKernelHost(startupOptions, host, console);
 
+                        return 0;
+                        ;
                     });
 
                 return stdIOCommand;
@@ -527,6 +526,10 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 vscodeCommand.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext>(
                     async (startupOptions, options, console, context) =>
                     {
+                        Console.InputEncoding = Encoding.UTF8;
+                        Console.OutputEncoding = Encoding.UTF8;
+                        Environment.CurrentDirectory = startupOptions.WorkingDir.FullName;
+
                         FrontendEnvironment frontendEnvironment = startupOptions.EnableHttpApi
                             ? new HtmlNotebookFrontendEnvironment()
                             : new BrowserFrontendEnvironment();
@@ -538,8 +541,12 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         kernel = kernel
                             .UseQuitCommand()
                             .UseVSCodeCommands();
-                        
-                        var kernelServer = kernel.CreateKernelServer(startupOptions.WorkingDir);
+
+                        var host = new KernelHost(kernel, new KernelCommandAndEventTextStreamSender(Console.Out),
+                            new MultiplexingKernelCommandAndEventReceiver(
+                                new KernelCommandAndEventTextReceiver(Console.In)));
+
+                     
 
                         kernel.VisitSubkernels(k =>
                         {
@@ -558,9 +565,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         });
 
 
-                        var frontEndKernel = kernelServer.GetFrontEndKernel("vscode");
-                        kernel.Add(frontEndKernel, new[] { "frontend" });
-
                         if (startupOptions.EnableHttpApi)
                         {
                             var clientSideKernelClient = new SignalRBackchannelKernelClient();
@@ -572,22 +576,17 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                 new JavaScriptKernel(clientSideKernelClient),
                                 new[] { "js" });
 
-                            var _ = kernelServer.RunAsync();
+                           
                             onServerStarted ??= () =>
                             {
-                                kernelServer.NotifyIsReady();
+                                var _ = host.ConnectAsync();
                             };
                             await startHttp(startupOptions, console, startServer, context);
                         }
 
-                        kernel.Add(
-                            new JavaScriptKernel(),
-                            new[] { "js" });
 
-                        await startVSCode(
-                            startupOptions,
-                            kernelServer,
-                            console);
+                        await startKernelHost(startupOptions, host, console);
+                        return 0;
 
                     });
 

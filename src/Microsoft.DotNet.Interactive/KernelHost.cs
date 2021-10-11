@@ -1,28 +1,33 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.IO;
+using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public class KernelHost 
+    public class KernelHost : IDisposable
     {
-        
-        public KernelConnector DefaultConnector { get; }
+        private readonly CancellationTokenSource _cancellationTokenSource = new ();
+        private readonly CompositeKernel _kernel;
+        private readonly IKernelCommandAndEventSender _defaultSender;
+        private readonly MultiplexingKernelCommandAndEventReceiver _defaultReceiver;
+        private Task<Task> _runningLoop;
+        public IKernelConnector DefaultConnector { get; }
 
-        public KernelHost(KernelConnector defaultConnector)
+
+        public KernelHost(CompositeKernel kernel,IKernelCommandAndEventSender defaultSender, MultiplexingKernelCommandAndEventReceiver defaultReceiver)
         {
-            DefaultConnector = defaultConnector;
+            _kernel = kernel;
+            _defaultSender = defaultSender;
+            _defaultReceiver = defaultReceiver;
+            DefaultConnector = new DefaultKernelConnector(_defaultSender, _defaultReceiver);
+            _kernel.SetHost(this);
         }
 
-        public KernelHost(IKernelCommandAndEventSender defaultSender, MultiplexingKernelCommandAndEventReceiver defaultReceiver): this(new DefaultKernelConnector(defaultSender, defaultReceiver))
-        {
-            
-        }
-
-        private class DefaultKernelConnector : KernelConnector
+        private class DefaultKernelConnector : IKernelConnector
         {
             private readonly IKernelCommandAndEventSender _defaultSender;
             private readonly MultiplexingKernelCommandAndEventReceiver _defaultReceiver;
@@ -33,7 +38,7 @@ namespace Microsoft.DotNet.Interactive
                 _defaultReceiver = defaultReceiver;
             }
 
-            public override Task<Kernel> ConnectKernelAsync(KernelName kernelName)
+            public Task<Kernel> ConnectKernelAsync(KernelName kernelName)
             {
                 var proxy = new ProxyKernel(kernelName.Name, _defaultReceiver.CreateChildReceiver(), _defaultSender);
                 var _ = proxy.StartAsync();
@@ -41,28 +46,41 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-       
-    }
-
-    public static class KernelHostExtensions
-    {
-        public static Task ConfigureAndStartHostAsync
-            (this Kernel kernel, IKernelCommandAndEventSender sender, MultiplexingKernelCommandAndEventReceiver receiver)
+        public async Task ConnectAsync()
         {
+            if (_runningLoop is { })
+            {
+                throw new InvalidOperationException("The host is already connected.");
+            }
 
-            var host = new KernelHost(sender, receiver);
+            await _defaultSender.NotifyIsReadyAsync(_cancellationTokenSource.Token);
 
-            kernel.SetHost(host);
-
-            return receiver.ConnectAsync(kernel);
+            _runningLoop = Task.Factory.StartNew(async () =>
+            {
+                await foreach (var commandOrEvent in _defaultReceiver.CommandsAndEventsAsync(_cancellationTokenSource.Token))
+                {
+                    if (commandOrEvent.IsParseError)
+                    {
+                        var _ = _defaultSender.SendAsync(commandOrEvent.Event, _cancellationTokenSource.Token);
+                    }
+                    else
+                    {
+                        await commandOrEvent.DispatchAsync(_kernel, _cancellationTokenSource.Token);
+                    }
+                }
+            }, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
-        public static Task ConfigureAndStartHostAsync(this Kernel kernel, TextWriter writer, TextReader reader)
+        public async Task ConnectAndWaitAsync()
         {
-            var sender = new KernelCommandAndEventTextStreamSender(writer);
-            var receiver = new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventTextReceiver(reader));
+            await ConnectAsync();
+            await _runningLoop;
+        }
 
-            return ConfigureAndStartHostAsync(kernel, sender, receiver);
+        public void Dispose()
+        {
+            _cancellationTokenSource.Cancel();
+            _cancellationTokenSource.Dispose();
         }
     }
 }

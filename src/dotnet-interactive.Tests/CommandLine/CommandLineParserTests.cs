@@ -58,12 +58,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
                     _startOptions = startupOptions;
                     return Task.FromResult(1);
                 },
-                startStdIO: (startupOptions, kernel, console) =>
-                {
-                    _startOptions = startupOptions;
-                    return Task.FromResult(1);
-                },
-                startVSCode: (startupOptions, kernel, console) =>
+                startKernelHost: (startupOptions, host, console) =>
                 {
                     _startOptions = startupOptions;
                     return Task.FromResult(1);

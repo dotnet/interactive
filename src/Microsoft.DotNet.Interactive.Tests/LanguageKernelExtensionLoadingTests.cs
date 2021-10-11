@@ -142,23 +142,25 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var receiver = new MultiplexingKernelCommandAndEventReceiver(remoteKernel.Receiver);
 
-            var _ = kernel.ConfigureAndStartHostAsync(remoteKernel.Sender, receiver);
+            using var host = new KernelHost(kernel, remoteKernel.Sender, receiver);
+
+            var _ = host.ConnectAsync();
 
             var ext = new ConfiguringExtension();
 
             await ext.OnLoadAsync(kernel);
 
-           var result =  await kernel.SendAsync(new SubmitCode("test for remote kernel", "frontend"));
+            var result = await kernel.SendAsync(new SubmitCode("test for remote kernel", "frontend"));
 
-           result.KernelEvents.ToSubscribedList().Should().ContainSingle<CommandSucceeded>()
-               .Which
-               .Command
-               .Should()
-               .BeOfType<SubmitCode>()
-               .Which
-               .Code
-               .Should()
-               .Be("test for remote kernel");
+            result.KernelEvents.ToSubscribedList().Should().ContainSingle<CommandSucceeded>()
+                .Which
+                .Command
+                .Should()
+                .BeOfType<SubmitCode>()
+                .Which
+                .Code
+                .Should()
+                .Be("test for remote kernel");
 
         }
 
@@ -166,13 +168,13 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             public async Task OnLoadAsync(Kernel kernel)
             {
-                var root = kernel.RootKernel;
+                var root = (CompositeKernel)kernel.RootKernel;
 
                 var connector = root.Host.DefaultConnector;
 
                 var proxy = await connector.ConnectKernelAsync(new KernelName("frontend"));
 
-                ((CompositeKernel)root).Add(proxy);
+                root.Add(proxy);
             }
         }
     }

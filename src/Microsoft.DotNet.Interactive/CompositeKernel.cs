@@ -35,6 +35,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly ScriptBasedExtensionLoader _scriptExtensionLoader = new();
         private string _defaultKernelName;
         private Command _connectDirective;
+        private KernelHost _host;
 
         public CompositeKernel() : base(".NET")
         {
@@ -85,7 +86,6 @@ namespace Microsoft.DotNet.Interactive
 
             kernel.AddMiddleware(LoadExtensions);
             kernel.SetScheduler(Scheduler);
-            kernel.SetHost(Host);
 
             AddChooseKernelDirective(kernel, aliases);
 
@@ -312,7 +312,7 @@ namespace Microsoft.DotNet.Interactive
 
         public void AddKernelConnection<TOptions>(
             ConnectKernelCommand<TOptions> connectionCommand)
-            where TOptions : KernelConnector
+            where TOptions : IKernelConnector
         {
             var kernelNameOption = new Option<string>(
                 "--kernel-name",
@@ -362,13 +362,17 @@ namespace Microsoft.DotNet.Interactive
             SubmissionParser.ResetParser();
         }
 
-        public override void SetHost(KernelHost host)
+
+
+        public KernelHost Host => _host;
+
+        internal void SetHost(KernelHost host)
         {
-            base.SetHost(host);
-            foreach (var childKernel in _childKernels)
+            if (_host is { })
             {
-                childKernel.SetHost(Host);
+                throw new InvalidOperationException("Host cannot be changed");
             }
+            _host = host;
         }
     }
 }

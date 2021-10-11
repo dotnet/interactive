@@ -16,13 +16,13 @@ using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-   public class StdIoKernelConnector : KernelConnector
+   public class StdIoKernelConnector : IKernelConnector
     {
         public string[] Command { get; }
 
         public DirectoryInfo WorkingDirectory { get; }
 
-        public override async Task<Kernel> ConnectKernelAsync(KernelName kernelName)
+        public async Task<Kernel> ConnectKernelAsync(KernelName kernelName)
         {
             var command = Command[0];
             var arguments = string.Join(" ", Command.Skip(1));

@@ -10,6 +10,15 @@ using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive.App.CommandLine
 {
+    internal static class KernelHostLauncher{
+        public static async Task<int> Do(StartupOptions startupOptions, KernelHost kernelHost, IConsole console)
+        {
+            var disposable = Program.StartToolLogging(startupOptions);
+            await kernelHost.ConnectAndWaitAsync();
+            disposable.Dispose();
+            return 0;
+        }
+    }
     internal static class VSCodeCommand
     {
         public static async Task<int> Do(StartupOptions startupOptions, KernelServer kernelServer, IConsole console)

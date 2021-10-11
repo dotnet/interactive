@@ -11,7 +11,7 @@ using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
-    public class MsSqlKernelConnector : KernelConnector
+    public class MsSqlKernelConnector : IKernelConnector
     {
         public bool CreateDbContext { get; }
 
@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         public string PathToService { get; set; }
 
-        public override async Task<Kernel> ConnectKernelAsync(KernelName kernelName)
+        public async Task<Kernel> ConnectKernelAsync(KernelName kernelName)
         {
             if (string.IsNullOrWhiteSpace(PathToService))
             {

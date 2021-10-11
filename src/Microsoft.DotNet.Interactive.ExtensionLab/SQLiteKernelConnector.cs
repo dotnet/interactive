@@ -6,10 +6,10 @@ using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
-    public class SQLiteKernelConnector : KernelConnector
+    public class SQLiteKernelConnector : IKernelConnector
     {
         public string ConnectionString { get; }
-        public override Task<Kernel> ConnectKernelAsync(KernelName kernelName)
+        public Task<Kernel> ConnectKernelAsync(KernelName kernelName)
         {
             var kernel = new SQLiteKernel(
                 $"sql-{kernelName}",

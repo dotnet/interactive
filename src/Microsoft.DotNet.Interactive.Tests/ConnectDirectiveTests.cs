@@ -207,13 +207,13 @@ hello!
         }
     }
 
-    public class FakeKernelConnector : KernelConnector
+    public class FakeKernelConnector : IKernelConnector
     {
         public int FakenessLevel { get; set; }
 
         public Func<KernelName,Task<Kernel>> CreateKernel { get; set; }
 
-        public override Task<Kernel> ConnectKernelAsync(KernelName kernelName)
+        public Task<Kernel> ConnectKernelAsync(KernelName kernelName)
         {
             return CreateKernel(kernelName);
         }

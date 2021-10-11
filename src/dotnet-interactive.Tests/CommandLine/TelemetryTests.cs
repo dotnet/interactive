@@ -35,8 +35,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
                 new ServiceCollection(),
                 startServer: (options, invocationContext) => { },
                 jupyter: (startupOptions, console, startServer, context) => Task.FromResult(1),
-                startStdIO: (startupOptions, kernel, console) => Task.FromResult(1),
-                startVSCode: (startupOptions, kernel, console) => Task.FromResult(1),
+                startKernelHost: (startupOptions, host, console) => Task.FromResult(1),
                 telemetry: _fakeTelemetry,
                 firstTimeUseNoticeSentinel: new NopFirstTimeUseNoticeSentinel());
         }

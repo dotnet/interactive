@@ -8,11 +8,11 @@ using Microsoft.DotNet.Interactive.Connection;
 #nullable enable
 namespace Microsoft.DotNet.Interactive.Http
 {
-    public class SignalRKernelConnector : KernelConnector
+    public class SignalRKernelConnector : IKernelConnector
     {
         public string HubUrl { get;  }
 
-        public override async Task<Kernel> ConnectKernelAsync(KernelName kernelName)
+        public async Task<Kernel> ConnectKernelAsync(KernelName kernelName)
         {
             var hubConnection = new HubConnectionBuilder()
                 .WithUrl(HubUrl)
