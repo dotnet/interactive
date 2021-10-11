@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 
@@ -40,13 +41,28 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public static void  ConfigureAndStart(Kernel kernel, IKernelCommandAndEventSender sender, MultiplexingKernelCommandAndEventReceiver receiver){
-            
+       
+    }
+
+    public static class KernelHostExtensions
+    {
+        public static Task ConfigureAndStartHostAsync
+            (this Kernel kernel, IKernelCommandAndEventSender sender, MultiplexingKernelCommandAndEventReceiver receiver)
+        {
+
             var host = new KernelHost(sender, receiver);
 
             kernel.SetHost(host);
 
-            var _ = receiver.ConnectAsync(kernel);
+            return receiver.ConnectAsync(kernel);
+        }
+
+        public static Task ConfigureAndStartHostAsync(this Kernel kernel, TextWriter writer, TextReader reader)
+        {
+            var sender = new KernelCommandAndEventTextStreamSender(writer);
+            var receiver = new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventTextReceiver(reader));
+
+            return ConfigureAndStartHostAsync(kernel, sender, receiver);
         }
     }
 }

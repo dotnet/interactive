@@ -142,7 +142,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var receiver = new MultiplexingKernelCommandAndEventReceiver(remoteKernel.Receiver);
 
-            KernelHost.ConfigureAndStart(kernel, remoteKernel.Sender, receiver);
+            var _ = kernel.ConfigureAndStartHostAsync(remoteKernel.Sender, receiver);
 
             var ext = new VSCodeConfiguration();
 
