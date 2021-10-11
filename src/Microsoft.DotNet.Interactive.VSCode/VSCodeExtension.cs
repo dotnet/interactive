@@ -8,7 +8,7 @@ using Microsoft.DotNet.Interactive.PowerShell;
 
 namespace Microsoft.DotNet.Interactive.VSCode
 {
-    public class VSCodeConfigurator : IKernelExtension
+    public class VSCodeClientKernelsExtension : IKernelExtension
     {
         public async Task OnLoadAsync(Kernel kernel)
         {
