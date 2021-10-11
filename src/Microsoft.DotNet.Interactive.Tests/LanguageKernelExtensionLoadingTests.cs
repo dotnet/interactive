@@ -138,34 +138,27 @@ namespace Microsoft.DotNet.Interactive.Tests
         public async Task extensions_can_access_connections_to_create_proxies()
         {
             using var kernel = CreateCompositeKernel();
+            using var remoteKernel = new FakeRemoteKernel();
 
-            var blockingCommandAndEventReceiver = new BlockingCommandAndEventReceiver(); 
-            var sender = new RecordingKernelCommandAndEventSender();
+            var receiver = new MultiplexingKernelCommandAndEventReceiver(remoteKernel.Receiver);
 
-            sender.OnSend(coe =>
-            {
-                if (coe.Command is { })
-                {
-                    blockingCommandAndEventReceiver.Write(new CommandOrEvent(new CommandSucceeded(coe.Command)));
-
-                }
-            });
-
-            var receiver = new MultiplexingKernelCommandAndEventReceiver(blockingCommandAndEventReceiver);
-
-            var host = new KernelHost(sender, receiver);
-
-            kernel.SetHost(host);
-
-            var _ = receiver.ConnectAsync(kernel);
+            KernelHost.ConfigureAndStart(kernel, remoteKernel.Sender, receiver);
 
             var ext = new VSCodeConfiguration();
 
             await ext.OnLoadAsync(kernel);
 
-            await kernel.SendAsync(new SubmitCode("test", "frontend"));
+           var result =  await kernel.SendAsync(new SubmitCode("test for remote kernel", "frontend"));
 
-            sender.Commands.Should().ContainSingle<SubmitCode>();
+           result.KernelEvents.ToSubscribedList().Should().ContainSingle<CommandSucceeded>()
+               .Which
+               .Command
+               .Should()
+               .BeOfType<SubmitCode>()
+               .Which
+               .Code
+               .Should()
+               .Be("test for remote kernel");
 
         }
 

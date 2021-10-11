@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 
@@ -9,8 +8,7 @@ namespace Microsoft.DotNet.Interactive
 {
     public class KernelHost 
     {
-        private readonly IKernelCommandAndEventSender _defaultSender;
-        private readonly MultiplexingKernelCommandAndEventReceiver _defaultReceiver;
+        
         public KernelConnector DefaultConnector { get; }
 
         public KernelHost(KernelConnector defaultConnector)
@@ -20,8 +18,7 @@ namespace Microsoft.DotNet.Interactive
 
         public KernelHost(IKernelCommandAndEventSender defaultSender, MultiplexingKernelCommandAndEventReceiver defaultReceiver): this(new DefaultKernelConnector(defaultSender, defaultReceiver))
         {
-            _defaultSender = defaultSender;
-            _defaultReceiver = defaultReceiver;
+            
         }
 
         private class DefaultKernelConnector : KernelConnector
@@ -41,6 +38,15 @@ namespace Microsoft.DotNet.Interactive
                 var _ = proxy.StartAsync();
                 return Task.FromResult((Kernel)proxy);
             }
+        }
+
+        public static void  ConfigureAndStart(Kernel kernel, IKernelCommandAndEventSender sender, MultiplexingKernelCommandAndEventReceiver receiver){
+            
+            var host = new KernelHost(sender, receiver);
+
+            kernel.SetHost(host);
+
+            var _ = receiver.ConnectAsync(kernel);
         }
     }
 }

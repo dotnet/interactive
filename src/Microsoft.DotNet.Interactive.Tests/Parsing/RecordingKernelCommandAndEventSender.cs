@@ -13,26 +13,36 @@ namespace Microsoft.DotNet.Interactive.Tests.Parsing
 {
     internal class RecordingKernelCommandAndEventSender : IKernelCommandAndEventSender
     {
-        private Action<CommandOrEvent> _onSend;
+        private Func<CommandOrEvent, Task> _onSendAsync;
         public List<KernelCommand> Commands { get; } = new();
         public List<KernelEvent> Events { get; } = new();
         public Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
         {
             Commands.Add(kernelCommand);
-            _onSend?.Invoke(new CommandOrEvent(kernelCommand));
+            _onSendAsync?.Invoke(new CommandOrEvent(kernelCommand));
             return Task.CompletedTask;
         }
 
         public Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
         {
             Events.Add(kernelEvent);
-            _onSend?.Invoke(new CommandOrEvent(kernelEvent));
+            _onSendAsync?.Invoke(new CommandOrEvent(kernelEvent));
             return Task.CompletedTask;
         }
 
         public void OnSend(Action<CommandOrEvent> onSend)
         {
-            _onSend = onSend;
+            _onSendAsync = (commandOrEvent) =>
+            {
+                
+                onSend(commandOrEvent);
+                return Task.CompletedTask;
+            };
+        }
+
+        public void OnSend(Func<CommandOrEvent, Task> onSendAsync)
+        {
+            _onSendAsync = onSendAsync;
         }
     }
 }
