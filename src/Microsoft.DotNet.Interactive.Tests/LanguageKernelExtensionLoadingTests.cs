@@ -144,7 +144,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var _ = kernel.ConfigureAndStartHostAsync(remoteKernel.Sender, receiver);
 
-            var ext = new VSCodeConfiguration();
+            var ext = new ConfiguringExtension();
 
             await ext.OnLoadAsync(kernel);
 
@@ -162,7 +162,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
         }
 
-        public class VSCodeConfiguration : IKernelExtension
+        public class ConfiguringExtension : IKernelExtension
         {
             public async Task OnLoadAsync(Kernel kernel)
             {
