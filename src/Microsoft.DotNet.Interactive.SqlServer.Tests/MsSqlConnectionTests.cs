@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -20,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
     {
         private async Task<CompositeKernel> CreateKernel()
         {
-            var csharpKernel = new CSharpKernel().UseNugetDirective();
+            var csharpKernel = new CSharpKernel().UseNugetDirective().UseValueSharing();
             await csharpKernel.SubmitCodeAsync(@$"
 #r ""nuget:microsoft.sqltoolsservice,3.0.0-release.53""
 ");
@@ -206,32 +207,84 @@ drop table dbo.EmptyTable;
         }
 
         [MsSqlFact]
-        public async Task Last_result_set_is_saved_correctly()
+        public async Task Can_share_last_result_set_with_other_kernels()
         {
             var connectionString = MsSqlFact.GetConnectionStringForTests();
             using var kernel = await CreateKernel();
-            var result = await kernel.SubmitCodeAsync(
+            await kernel.SubmitCodeAsync(
                              $"#!connect --kernel-name adventureworks mssql \"{connectionString}\"");
 
-            result.KernelEvents
-                  .ToSubscribedList()
-                  .Should()
-                  .NotContainErrors();
-
-            result = await kernel.SubmitCodeAsync($@"
+            // Run query with result set
+            await kernel.SubmitCodeAsync($@"
 #!sql-adventureworks
 select * from sys.databases
 ");
 
-            var csharpResults = await kernel.SubmitCodeAsync(@"
+            // Use share to fetch result set
+            var csharpResults = await kernel.SubmitCodeAsync($@"
 #!csharp
-#!share --from sql-adventureworks lastQueryResults
-lastQueryResults");
+#!share --from sql-adventureworks {ToolsServiceKernel.LastQueryResultsInfoName}
+{ToolsServiceKernel.LastQueryResultsInfoName}");
 
-            var events = result.KernelEvents.ToSubscribedList();
+            // Verify the variable loaded is of the correct type and has the expected number of result sets
             var csharpEvents = csharpResults.KernelEvents.ToSubscribedList();
+            csharpEvents
+                .Should()
+                .ContainSingle<ReturnValueProduced>()
+                .Which
+                .Value
+                .Should()
+                .BeAssignableTo<IEnumerable<TabularDataResource>>()
+                .Which.Count()
+                .Should()
+                .Be(1);
+        }
 
-       
+        [MsSqlFact]
+        public async Task Last_result_set_reflects_last_query_ran()
+        {
+            var connectionString = MsSqlFact.GetConnectionStringForTests();
+            using var kernel = await CreateKernel();
+            await kernel.SubmitCodeAsync(
+                             $"#!connect --kernel-name adventureworks mssql \"{connectionString}\"");
+
+            // Run first query with 1 result set returned
+            await kernel.SubmitCodeAsync($@"
+#!sql-adventureworks
+select * from sys.databases
+");
+
+            // Load the last 
+            await kernel.SubmitCodeAsync($@"
+#!csharp
+#!share --from sql-adventureworks {ToolsServiceKernel.LastQueryResultsInfoName}
+{ToolsServiceKernel.LastQueryResultsInfoName}");
+
+            // Now run another query with 2 result sets
+            await kernel.SubmitCodeAsync($@"
+#!sql-adventureworks
+select * from sys.databases
+select * from sys.tables
+");
+
+            // Refresh lastQueryResults variable
+            var csharpResults = await kernel.SubmitCodeAsync($@"
+#!csharp
+#!share --from sql-adventureworks {ToolsServiceKernel.LastQueryResultsInfoName}
+{ToolsServiceKernel.LastQueryResultsInfoName}");
+
+            // And verify that the lastQueryResults has the expected number of result sets
+            var csharpEvents = csharpResults.KernelEvents.ToSubscribedList();
+            csharpEvents
+                .Should()
+                .ContainSingle<ReturnValueProduced>()
+                .Which
+                .Value
+                .Should()
+                .BeAssignableTo<IEnumerable<TabularDataResource>>()
+                .Which.Count()
+                .Should()
+                .Be(2);
         }
 
         public void Dispose()

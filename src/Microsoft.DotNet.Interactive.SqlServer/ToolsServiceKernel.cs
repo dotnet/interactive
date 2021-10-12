@@ -14,12 +14,14 @@ using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
-    internal abstract class ToolsServiceKernel : 
+    public abstract class ToolsServiceKernel : 
         Kernel,
         IKernelCommandHandler<SubmitCode>,
         IKernelCommandHandler<RequestCompletions>,
         ISupportGetValue
     {
+        public const string LastQueryResultsInfoName = "lastQueryResults";
+
         protected readonly Uri TempFileUri;
         protected readonly TaskCompletionSource<ConnectionCompleteParams> ConnectionCompleted = new();
         private Func<QueryCompleteParams, Task> _queryCompletionHandler;
@@ -274,8 +276,6 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             var completionItems = await ServiceClient.ProvideCompletionItemsAsync(TempFileUri, command);
             context.Publish(new CompletionsProduced(completionItems, command));
         }
-
-        private const string LastQueryResultsInfoName = "lastQueryResults";
 
         public bool TryGetValue<T>(string name, out T value)
         {
