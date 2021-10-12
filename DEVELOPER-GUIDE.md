@@ -140,7 +140,7 @@ If you've made changes to one of the `dotnet-interactive` extensions and want to
 
 2. Ensure that there aren't any kernels running for the extension in question. It's generally best to close all Notebooks opened in VS Code to accomplish this.
 
-3. Run the `.NET Interactive: Create a new blank notebook` command in VS Code. Select `.dib` as the extension and `C#` as the language.
+3. Run the `.NET Interactive: Create a new blank notebook` command in VS Code. Select `.dib` or `.ipynb` as the extension and any language as deafult.
 
 4. Save the Notebook anywhere you like
 
