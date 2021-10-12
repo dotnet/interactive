@@ -62,9 +62,9 @@ Powershell for .NET Core is required. This will uninstall any previous version o
 
 ## Arcade build system
 
-.NET Interactive is built with the support of the [Arcade](https://github.com/dotnet/arcade) build system. The Arcade tools provide common infrastructure for building, testing, and publishing .NET Foundation projects. This build system is not required for local development work, but using it will provide a higher-fidelity 
+.NET Interactive is built with the support of the [Arcade](https://github.com/dotnet/arcade) build system. The Arcade tools provide common infrastructure for building, testing, and publishing .NET Foundation projects. This build system is not required for local development work, but using it will provide a higher-fidelity
 
-If you prefer a development environment that's more consistent with the out-of-the-box .NET experience, you can set the environment variable `DisableArcade` to `1`. 
+If you prefer a development environment that's more consistent with the out-of-the-box .NET experience, you can set the environment variable `DisableArcade` to `1`.
 
 # Building the Visual Studio Code extension
 
@@ -90,7 +90,7 @@ To get started, you'll need:
 
 5. Run `.NET Interactive: Create new blank notebook` or open a file with the `.ipynb` extension.
 
-## Use a local build of the `dotnet-interactive` tool 
+## Use a local build of the `dotnet-interactive` tool
 
 If you've made changes to `dotnet-interactive` and want to try them out with Visual Studio Code, follow these steps:
 
@@ -117,7 +117,7 @@ If you've made changes to `dotnet-interactive` and want to try them out with Vis
       -  "--",
       +  "/PATH/TO/REPO/ROOT/artifacts/bin/dotnet-interactive/Debug/net5.0/Microsoft.DotNet.Interactive.App.dll",
          "[vscode]",
-         "stdio",
+         "vscode",
       +  "--log-path",
       +  "/path/to/a/folder/for/your/logs/",
       +  "--verbose",
@@ -131,3 +131,48 @@ If you've made changes to `dotnet-interactive` and want to try them out with Vis
 4. Any subsequently opened notebooks will use your local changes.
 
 5. To revert back to the original settings, follow steps 1-3 then next to the text `Dotnet-interactive: Kernel transport args`, click the gear icon then `Reset Setting`.
+
+## Use a local build of a `dotnet-interactive` extension
+
+If you've made changes to one of the `dotnet-interactive` extensions and want to use them locally follow these steps:
+
+1. Run `build.[cmd/sh]` --pack to create the Nuget packages for the extensions
+
+2. Ensure that there aren't any kernels running for the extension in question. It's generally best to close all Notebooks opened in VS Code to accomplish this.
+
+3. Run the `.NET Interactive: Create a new blank notebook` command in VS Code. Select `.dib` or `.ipynb` as the extension and any language as default.
+
+4. Save the Notebook anywhere you like
+
+5. Run the `.NET Interactive: Restart the current Notebook's kernel` command
+
+6. In the first code cell paste this code
+   * In the FolderName give the path to the nuget cache, this should be `%userprofile%\.nuget\packages` on Windows and `~/.nuget/packages` on Mac/Linux
+   * Also replace `EXTENSIONNAME` with the name of the extension (e.g. `microsoft.dotnet.interactive.sqlserver`)
+   * On the #i line fill in the path to the `dotnet-interactive` repo root
+   * On the #r line use the same `EXTENSIONNAME` above, and then look in the `artifacts\packages\Debug\Shipping` folder for the package you're using and get the version number from the name. e.g. a package named `Microsoft.DotNet.Interactive.SqlServer.1.0.0-dev.nupkg` would result in this line `#r "nuget: Microsoft.DotNet.Interactive.SqlServer, 1.0.0-dev"`
+
+```
+#!powershell
+
+$FolderName = "\PATH\TO\NUGET\CACHE\packages\microsoft.dotnet.interactive.<EXTENSIONNAME>"
+if (Test-Path $FolderName) {
+
+    Remove-Item $FolderName -Recurse -Force
+}
+else
+{
+    Write-Host "Folder Doesn't Exist"
+}
+
+#!csharp
+
+#i "nuget: \PATH\TO\REPO\ROOT\artifacts\packages\Debug\Shipping"
+
+#r "nuget: Microsoft.DotNet.Interactive.<EXTENSIONNAME>, <EXTENSIONVERSION>"
+```
+
+7. Run the cell
+   *  If you get an error about access being denied ensure that all other Notebooks are closed and then restart the kernel again as in step 5
+   *
+8. Now use the kernel as you normally would. You should see your local changes being used by the extension.
