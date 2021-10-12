@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
             };
 
             kernel.DefaultKernelName = csharpKernel.Name;
-           
+
             kernel.UseKernelClientConnection(new ConnectMsSqlCommand());
             kernel.UseNteractDataExplorer();
             kernel.UseSandDanceExplorer();
@@ -163,7 +163,7 @@ select * from sys.databases
                         e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
                               .Which;
 
-            var table = (NteractDataExplorer) value.Value;
+            var table = (NteractDataExplorer)value.Value;
 
             table.Data
                  .Schema
