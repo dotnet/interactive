@@ -14,12 +14,15 @@ using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
-    public abstract class ToolsServiceKernel : 
+    public abstract class ToolsServiceKernel :
         Kernel,
         IKernelCommandHandler<SubmitCode>,
         IKernelCommandHandler<RequestCompletions>,
         ISupportGetValue
     {
+        /// <summary>
+        /// Special key for saving the result set of the last query ran
+        /// </summary>
         public const string LastQueryResultsInfoName = "lastQueryResults";
 
         protected readonly Uri TempFileUri;
@@ -29,13 +32,18 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         private bool _intellisenseReady;
         protected bool Connected;
         protected readonly ToolsServiceClient ServiceClient;
+        /// <summary>
+        /// The set of query result lists to save for sharing later. 
+        /// The key will be the name of the value.
+        /// The value is a list of result sets (multiple if multiple queries are ran as a batch)
+        /// </summary>
         private readonly Dictionary<string, List<TabularDataResource>> _queryResults = new();
 
         protected ToolsServiceKernel(string name, ToolsServiceClient client) : base(name)
         {
             var filePath = Path.GetTempFileName();
             TempFileUri = new Uri(filePath);
-            
+
             ServiceClient = client ?? throw new ArgumentNullException(nameof(client));
             ServiceClient.Initialize();
 
@@ -92,7 +100,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 _intellisenseReady = true;
             }
         }
-        
+
         public abstract Task ConnectAsync();
 
         public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
@@ -116,6 +124,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             {
                 try
                 {
+                    // Clear the last result set list before we start execution
                     _queryResults[LastQueryResultsInfoName] = new();
                     foreach (var batchSummary in queryParams.BatchSummaries)
                     {
@@ -141,6 +150,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                                 foreach (var table in tables)
                                 {
                                     var tabularDataResource = table.ToTabularDataResource();
+                                    // Store each result set in the list of result sets being saved
                                     _queryResults[LastQueryResultsInfoName].Add(tabularDataResource);
                                     var explorer = new NteractDataExplorer(tabularDataResource);
                                     context.Display(explorer);
@@ -211,7 +221,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 _queryMessageHandler = null;
             }
         }
-        
+
         private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> GetEnumerableTables(ColumnInfo[] columnInfos, CellValue[][] rows)
         {
             var displayTable = new List<(string, object)[]>();
@@ -279,7 +289,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         public bool TryGetValue<T>(string name, out T value)
         {
-            if(_queryResults.TryGetValue(name, out var resultSet))
+            if (_queryResults.TryGetValue(name, out var resultSet))
             {
                 value = (T)(resultSet as object);
                 return true;
