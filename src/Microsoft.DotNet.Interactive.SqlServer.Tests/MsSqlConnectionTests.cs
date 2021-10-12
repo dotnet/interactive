@@ -205,6 +205,35 @@ drop table dbo.EmptyTable;
                         e.FormattedValues.Any(f => f.MimeType == PlainTextFormatter.MimeType && f.Value.ToString().StartsWith("Info")));
         }
 
+        [MsSqlFact]
+        public async Task Last_result_set_is_saved_correctly()
+        {
+            var connectionString = MsSqlFact.GetConnectionStringForTests();
+            using var kernel = await CreateKernel();
+            var result = await kernel.SubmitCodeAsync(
+                             $"#!connect --kernel-name adventureworks mssql \"{connectionString}\"");
+
+            result.KernelEvents
+                  .ToSubscribedList()
+                  .Should()
+                  .NotContainErrors();
+
+            result = await kernel.SubmitCodeAsync($@"
+#!sql-adventureworks
+select * from sys.databases
+");
+
+            var csharpResults = await kernel.SubmitCodeAsync(@"
+#!csharp
+#!share --from sql-adventureworks lastQueryResults
+lastQueryResults");
+
+            var events = result.KernelEvents.ToSubscribedList();
+            var csharpEvents = csharpResults.KernelEvents.ToSubscribedList();
+
+       
+        }
+
         public void Dispose()
         {
             Formatter.ResetToDefault();
