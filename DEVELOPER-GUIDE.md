@@ -174,5 +174,5 @@ else
 
 7. Run the cell
    *  If you get an error about access being denied ensure that all other Notebooks are closed and then restart the kernel again as in step 5
-   *  
+   *
 8. Now use the kernel as you normally would. You should see your local changes being used by the extension.
