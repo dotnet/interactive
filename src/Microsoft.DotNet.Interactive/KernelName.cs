@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Interactive
                 Validate(alias);
             }
 
-            var distinctAliases = new HashSet<string>(aliases) { name };
+            var distinctAliases = new HashSet<string>(aliases);
             Aliases = distinctAliases;
         }
 

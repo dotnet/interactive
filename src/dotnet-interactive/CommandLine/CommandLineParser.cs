@@ -540,55 +540,34 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         services.AddKernel(kernel);
 
                         kernel = kernel
-                            .UseQuitCommand()
-                            .UseVSCodeCommands();
+                            .UseQuitCommand();
 
                         var host = new KernelHost(kernel, new KernelCommandAndEventTextStreamSender(Console.Out),
                             new MultiplexingKernelCommandAndEventReceiver(
                                 new KernelCommandAndEventTextReceiver(Console.In)));
 
-                     
+                        var vscodeSetup = new VSCodeClientKernelsExtension();
 
-                        kernel.VisitSubkernels(k =>
-                        {
-                            switch (k)
-                            {
-                                case CSharpKernel csharpKernel:
-                                    csharpKernel.UseVSCodeHelpers();
-                                    break;
-                                case FSharpKernel fsharpKernel:
-                                    fsharpKernel.UseVSCodeHelpers();
-                                    break;
-                                case PowerShellKernel powerShellKernel:
-                                    powerShellKernel.UseVSCodeHelpers();
-                                    break;
-                            }
-                        });
-
+                        await vscodeSetup.OnLoadAsync(kernel);
 
                         if (startupOptions.EnableHttpApi)
                         {
                             var clientSideKernelClient = new SignalRBackchannelKernelClient();
-                            
                             services.AddSingleton(clientSideKernelClient);
-                            ((HtmlNotebookFrontendEnvironment)frontendEnvironment).RequiresAutomaticBootstrapping =
-                                false;
-                            kernel.Add(
-                                new JavaScriptKernel(clientSideKernelClient),
-                                new[] { "js" });
 
-                           
+                            ((HtmlNotebookFrontendEnvironment)frontendEnvironment).RequiresAutomaticBootstrapping = false;
+
                             onServerStarted ??= () =>
                             {
                                 var _ = host.ConnectAsync();
                             };
                             await startHttp(startupOptions, console, startServer, context);
                         }
-
-
-                        await startKernelHost(startupOptions, host, console);
+                        else
+                        {
+                            await startKernelHost(startupOptions, host, console);
+                        }
                         return 0;
-
                     });
 
                 return vscodeCommand;
