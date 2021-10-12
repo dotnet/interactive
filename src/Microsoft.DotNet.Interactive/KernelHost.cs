@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
@@ -15,6 +16,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly IKernelCommandAndEventSender _defaultSender;
         private readonly MultiplexingKernelCommandAndEventReceiver _defaultReceiver;
         private Task<Task> _runningLoop;
+        private IDisposable _kernelEventSubscription;
         public IKernelConnector DefaultConnector { get; }
 
 
@@ -53,7 +55,10 @@ namespace Microsoft.DotNet.Interactive
                 throw new InvalidOperationException("The host is already connected.");
             }
 
-            await _defaultSender.NotifyIsReadyAsync(_cancellationTokenSource.Token);
+            _kernelEventSubscription =  _kernel.KernelEvents.Subscribe(e =>
+            {
+                var _ = _defaultSender.SendAsync(e, _cancellationTokenSource.Token);
+            });
 
             _runningLoop = Task.Factory.StartNew(async () =>
             {
@@ -69,6 +74,8 @@ namespace Microsoft.DotNet.Interactive
                     }
                 }
             }, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+
+            await _defaultSender.NotifyIsReadyAsync(_cancellationTokenSource.Token);
         }
 
         public async Task ConnectAndWaitAsync()
@@ -79,6 +86,7 @@ namespace Microsoft.DotNet.Interactive
 
         public void Dispose()
         {
+            _kernelEventSubscription?.Dispose();
             _cancellationTokenSource.Cancel();
             _cancellationTokenSource.Dispose();
         }

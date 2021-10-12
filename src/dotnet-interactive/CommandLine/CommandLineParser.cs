@@ -454,12 +454,14 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             };
                             await startHttp(startupOptions, console, startServer, context);
                         }
+                        else
+                        {
+                            kernel.Add(
+                                new JavaScriptKernel(),
+                                new[] { "js" });
 
-                        kernel.Add(
-                            new JavaScriptKernel(),
-                            new[] { "js" });
-
-                        await startKernelHost(startupOptions, host, console);
+                            await startKernelHost(startupOptions, host, console);
+                        }
 
                         return 0;
                         ;
