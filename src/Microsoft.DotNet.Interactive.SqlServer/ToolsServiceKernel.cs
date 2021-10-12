@@ -17,7 +17,8 @@ namespace Microsoft.DotNet.Interactive.SqlServer
     internal abstract class ToolsServiceKernel : 
         Kernel,
         IKernelCommandHandler<SubmitCode>,
-        IKernelCommandHandler<RequestCompletions>
+        IKernelCommandHandler<RequestCompletions>,
+        ISupportGetValue
     {
         protected readonly Uri TempFileUri;
         protected readonly TaskCompletionSource<ConnectionCompleteParams> ConnectionCompleted = new();
@@ -26,6 +27,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         private bool _intellisenseReady;
         protected bool Connected;
         protected readonly ToolsServiceClient ServiceClient;
+        private readonly Dictionary<string, List<TabularDataResource>> _queryResults = new();
 
         protected ToolsServiceKernel(string name, ToolsServiceClient client) : base(name)
         {
@@ -112,6 +114,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             {
                 try
                 {
+                    _queryResults[LastQueryResultsInfoName] = new();
                     foreach (var batchSummary in queryParams.BatchSummaries)
                     {
                         foreach (var resultSummary in batchSummary.ResultSetSummaries)
@@ -135,7 +138,9 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                                 var tables = GetEnumerableTables(resultSummary.ColumnInfo, subsetResult.ResultSubset.Rows);
                                 foreach (var table in tables)
                                 {
-                                    var explorer = new NteractDataExplorer(table.ToTabularDataResource());
+                                    var tabularDataResource = table.ToTabularDataResource();
+                                    _queryResults[LastQueryResultsInfoName].Add(tabularDataResource);
+                                    var explorer = new NteractDataExplorer(tabularDataResource);
                                     context.Display(explorer);
                                 }
                             }
@@ -268,6 +273,24 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
             var completionItems = await ServiceClient.ProvideCompletionItemsAsync(TempFileUri, command);
             context.Publish(new CompletionsProduced(completionItems, command));
+        }
+
+        private const string LastQueryResultsInfoName = "lastQueryResults";
+
+        public bool TryGetValue<T>(string name, out T value)
+        {
+            if(_queryResults.TryGetValue(name, out var resultSet))
+            {
+                value = (T)(resultSet as object);
+                return true;
+            }
+            value = default;
+            return false;
+        }
+
+        public IReadOnlyCollection<KernelValueInfo> GetValueInfos()
+        {
+            return _queryResults.Keys.Select(key => new KernelValueInfo(key, typeof(IEnumerable<TabularDataResource>))).ToArray();
         }
     }
 }
