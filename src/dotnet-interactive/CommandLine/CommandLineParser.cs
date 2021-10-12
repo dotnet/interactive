@@ -436,7 +436,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             new MultiplexingKernelCommandAndEventReceiver(
                                 new KernelCommandAndEventTextReceiver(Console.In)));
 
-
                        
                         if (startupOptions.EnableHttpApi)
                         {
@@ -464,7 +463,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         }
 
                         return 0;
-                        ;
+                        
                     });
 
                 return stdIOCommand;
