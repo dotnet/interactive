@@ -136,7 +136,7 @@ If you've made changes to `dotnet-interactive` and want to try them out with Vis
 
 If you've made changes to one of the `dotnet-interactive` extensions and want to use them locally follow these steps:
 
-1. Run `build.[cmd/sh]` --pack to create the Nuget packages for the extensions
+1. Run `build.[cmd/sh] --pack` to create the Nuget packages for the extensions
 
 2. Ensure that there aren't any kernels running for the extension in question. It's generally best to close all Notebooks opened in VS Code to accomplish this.
 
