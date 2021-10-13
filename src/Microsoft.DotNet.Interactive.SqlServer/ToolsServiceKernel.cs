@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         protected bool Connected;
         protected readonly ToolsServiceClient ServiceClient;
         /// <summary>
-        /// The set of query result lists to save for sharing later. 
+        /// The set of query result lists to save for sharing later.
         /// The key will be the name of the value.
         /// The value is a list of result sets (multiple if multiple queries are ran as a batch)
         /// </summary>
