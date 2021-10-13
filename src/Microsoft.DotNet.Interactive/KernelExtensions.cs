@@ -176,7 +176,7 @@ namespace Microsoft.DotNet.Interactive
                 "--from",
                 "The name of the kernel where the variable has been previously declared");
 
-            fromKernelOption.AddSuggestions((_,__) =>
+            fromKernelOption.AddSuggestions((_,_) =>
             {
                 if (kernel.ParentKernel is { } composite)
                 {

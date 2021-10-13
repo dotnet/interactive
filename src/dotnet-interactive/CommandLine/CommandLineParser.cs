@@ -655,8 +655,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             compositeKernel.FrontendEnvironment = frontendEnvironment;
 
             // TODO: temporary measure to support vscode integrations
-            compositeKernel.Add(new SQLKernel());
-            compositeKernel.Add(new KqlKernel());
+            compositeKernel.Add(new SqlDiscoverabilityKernel());
+            compositeKernel.Add(new KqlDiscoverabilityKernel());
 
             compositeKernel.Add(
                 new CSharpKernel()

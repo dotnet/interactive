@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.Kql.Tests
             // TODO: remove KQLKernel it is used to test current patch
             var kernel = new CompositeKernel
             {
-                new KqlKernel(),
+                new KqlDiscoverabilityKernel(),
                 csharpKernel,
                 new KeyValueStoreKernel()
             };
@@ -34,7 +34,6 @@ namespace Microsoft.DotNet.Interactive.Kql.Tests
 
             kernel.UseKernelClientConnection(new ConnectKqlCommand());
             kernel.UseNteractDataExplorer();
-            kernel.UseSandDanceExplorer();
 
             return kernel;
         }

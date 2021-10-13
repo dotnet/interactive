@@ -10,20 +10,15 @@ using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive
 {
-    /* This kernel is used as a placeholder for the MSSQL kernel in order to enable SQL language coloring
-* in the editor. Language grammars can only be defined for fixed kernel names, but MSSQL subkernels
-* are user-defined via the #!connect magic command. So, this kernel is specified in addition to the
-* user-defined kernel as a kind of "styling" kernel as well as to provide guidance and discoverability
-* for SQL features.
-*/
-    public class SQLKernel :
+    /// <remarks>This kernel is used as a placeholder for the MSSQL kernel in order to enable SQL language coloring in the editor. Language grammars can only be defined for fixed kernel names, but MSSQL subkernels are user-defined via the #!connect magic command. So, this kernel is specified in addition to the user-defined kernel as a kind of "styling" kernel as well as to provide guidance and discoverability for SQL features.</remarks>
+    public class SqlDiscoverabilityKernel :
         Kernel,
         IKernelCommandHandler<SubmitCode>
     {
         private readonly HashSet<string> _kernelNameFilter;
         public const string DefaultKernelName = "sql";
 
-        public SQLKernel() : base(DefaultKernelName)
+        public SqlDiscoverabilityKernel() : base(DefaultKernelName)
         {
             _kernelNameFilter = new HashSet<string>
             {
