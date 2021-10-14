@@ -320,7 +320,7 @@ stages:
           condition: failed()
 
         - script: npm run ciTest
-          displayName: NPM testsr
+          displayName: NPM tests
           workingDirectory: "$(Build.SourcesDirectory)/src/Microsoft.DotNet.Interactive.Js"
           condition: ne(variables['SkipTests'], 'true')
 
