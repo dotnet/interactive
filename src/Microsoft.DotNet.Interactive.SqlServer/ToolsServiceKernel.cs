@@ -204,7 +204,6 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             try
             {
                 var query = PrependVariableDeclarationsToCode(command, context);
-                context.Display(query);
                 await ServiceClient.ExecuteQueryStringAsync(TempFileUri, query, context.CancellationToken);
 
                 context.CancellationToken.Register(() =>
@@ -329,18 +328,30 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Generates the language-specific declaraction statement to insert into the code being executed.
+        /// </summary>
+        /// <param name="variableNameAndValue">The name and value of the input variable</param>
+        /// <returns></returns>
         protected abstract string GenerateVariableDeclaration(KeyValuePair<string, object> variableNameAndValue);
+        /// <summary>
+        /// Whether the kernel can support turning the specified input variable into some sort of declaraction statement.
+        /// </summary>
+        /// <param name="name">The name of the parameter</param>
+        /// <param name="value">The actual parameter value</param>
+        /// <param name="msg">The error message to display if the variable isn't supported</param>
+        /// <returns></returns>
         protected abstract bool CanSupportVariable(string name, object value, out string msg);
 
         public Task SetValueAsync(string name, object value, Type declaredType = null)
         {
             if (value == null)
             {
-                throw new KernelValueSharingException($"Sharing null values is not supported at this time.");
+                throw new ArgumentNullException(nameof(name), $"Sharing null values is not supported at this time.");
             }
             else if (!CanSupportVariable(name, value, out string msg))
             {
-                throw new KernelValueSharingException($"Cannot support value of Type {value.GetType()}. {msg}");
+                throw new ArgumentException($"Cannot support value of Type {value.GetType()}. {msg}");
             }
             _variables[name] = value;
             return Task.CompletedTask;
