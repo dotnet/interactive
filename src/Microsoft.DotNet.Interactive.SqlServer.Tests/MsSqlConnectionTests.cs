@@ -157,16 +157,7 @@ select * from sys.databases
 
             var events = result.KernelEvents.ToSubscribedList();
 
-            events.Should().NotContainErrors();
-
-            var value = events.Should()
-                    .ContainSingle<DisplayedValueProduced>(e =>
-                        e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
-                              .Which;
-
-            var table = (NteractDataExplorer)value.Value;
-
-            table.Data
+            GetTabularData(events)
                  .Schema
                  .Fields
                  .Should()
