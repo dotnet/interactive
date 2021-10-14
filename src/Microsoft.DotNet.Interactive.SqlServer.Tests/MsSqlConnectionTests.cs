@@ -246,7 +246,7 @@ select * from sys.databases
 select * from sys.databases
 ");
 
-            // Load the last 
+            // Load the last
             await kernel.SubmitCodeAsync($@"
 #!csharp
 #!share --from sql-adventureworks {ToolsServiceKernel.LastQueryResultsInfoName}
