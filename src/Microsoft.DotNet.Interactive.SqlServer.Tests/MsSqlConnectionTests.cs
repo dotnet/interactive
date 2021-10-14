@@ -289,25 +289,23 @@ select * from sys.tables
         }
 
         [MsSqlTheory]
-        [InlineData("var testVar = 2;", 2)]
-        [InlineData("string testVar = \"hi!\";", "hi!")]
-        [InlineData("string testVar = \"tricky'string\";", "tricky'string")]
-        [InlineData("string testVar = \"«ταБЬℓσ»\";", "«ταБЬℓσ»")]
-        [InlineData("string testVar = \"\";", "")]
-        [InlineData("double testVar = 123456.789;", 123456.789)]
-        [InlineData("decimal testVar = 123456.789M;", 123456.789, typeof(Decimal))]
-        [InlineData("bool testVar = false;", false)]
-        [InlineData("char testVar = 'a';", "a")]
-        [InlineData("char testVar = '\'';", "'")]
-        [InlineData("char testVar = '';", "")]
-        [InlineData("byte testVar = 123;", (byte)123)]
-        [InlineData("int testVar = 123456;", 123456)]
-        [InlineData("long testVar = 123456789012345;", 123456789012345)]
-        [InlineData("short testVar = 123;", (short)123)]
+        [InlineData("var testVar = 2;", 2)] // var
+        [InlineData("string testVar = \"hi!\";", "hi!")] // string
+        [InlineData("string testVar = \"tricky'string\";", "tricky'string")] // string with '
+        [InlineData("string testVar = \"«ταБЬℓσ»\";", "«ταБЬℓσ»")] // unicode
+        [InlineData("string testVar = \"\";", "")] // Empty string
+        [InlineData("double testVar = 123456.789;", 123456.789)] // double
+        [InlineData("decimal testVar = 123456.789M;", 123456.789, typeof(Decimal))] // decimal
+        [InlineData("bool testVar = false;", false)] // bool
+        [InlineData("char testVar = 'a';", "a")] // char
+        [InlineData("char testVar = '\\'';", "'")] // ' char
+        [InlineData("byte testVar = 123;", (byte)123)] // byte
+        [InlineData("int testVar = 123456;", 123456)] // int
+        [InlineData("long testVar = 123456789012345;", 123456789012345)] // long
+        [InlineData("short testVar = 123;", (short)123)] // short
         public async Task Shared_variable_can_be_used_to_parameterize_a_sql_query(string csharpVariableDeclaration, object expectedValue, Type changeType = null)
         {
             using var kernel = await CreateKernel();
-
             var result = await kernel.SubmitCodeAsync(
                              $"#!connect --kernel-name adventureworks mssql \"{MsSqlFact.GetConnectionStringForTests()}\"");
 
@@ -350,11 +348,11 @@ select @testVar";
         [InlineData("string testVar = null;")] // Don't support null vars currently
         [InlineData("decimal testVar = 123456.789;")] // Incorrect type
         [InlineData("nint testVar = 123456;")] // Unsupported type
-        [InlineData("nuint testVar = 123456;")]
-        [InlineData("sbyte testVar = 123;")]
-        [InlineData("uint testVar = 123456;")]
-        [InlineData("ulong testVar = 123456789012345;")]
-        [InlineData("ushort testVar = 123;")]
+        [InlineData("nuint testVar = 123456;")] // Unsupported type
+        [InlineData("sbyte testVar = 123;")] // Unsupported type
+        [InlineData("uint testVar = 123456;")] // Unsupported type
+        [InlineData("ulong testVar = 123456789012345;")] // Unsupported type
+        [InlineData("ushort testVar = 123;")] // Unsupported type
         public async Task Invalid_shared_variables_are_handled_correctly(string csharpVariableDeclaration)
         {
             using var kernel = await CreateKernel();
