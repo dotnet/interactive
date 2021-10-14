@@ -42,11 +42,11 @@ stages:
       - job: Windows_NT
         pool:
           ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-            name: NetCorePublic-Pool
-            queue: BuildPool.Windows.10.Amd64.VS2019.Open
+            name: NetCore1ESPool-Svc-Public
+            demands: ImageOverride -equals build.Windows.10.Amd64.VS2019.Open
           ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-            name: NetCoreInternal-Pool
-            queue: buildpool.windows.10.amd64.vs2019
+            name: NetCore1ESPool-Svc-Internal
+            demands: ImageOverride -equals build.windows.10.amd64.vs2019
         timeoutInMinutes: 90
         variables:
         # Enable signing for internal, non-PR builds
@@ -240,11 +240,11 @@ stages:
       - job: Linux
         pool:
           ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-            name: NetCorePublic-Pool
-            queue: BuildPool.Ubuntu.1604.amd64.Open
+            name: NetCore1ESPool-Svc-Public
+            demands: ImageOverride -equals build.Ubuntu.1604.amd64.Open
           ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-            name: NetCoreInternal-Pool
-            queue: BuildPool.Ubuntu.1604.amd64
+            name: NetCore1ESPool-Svc-Internal
+            demands: ImageOverride -equals build.Ubuntu.1604.amd64
         variables:
         # Enable signing for internal, non-PR builds
         - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
@@ -331,11 +331,11 @@ stages:
       - job: Dockerfile_official_image
         pool:
           ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-            name: NetCorePublic-Pool
-            queue: BuildPool.Ubuntu.1604.amd64.Open
+            name: NetCore1ESPool-Svc-Public
+            demands: ImageOverride -equals build.Ubuntu.1604.amd64.Open
           ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-            name: NetCoreInternal-Pool
-            queue: BuildPool.Ubuntu.1604.amd64
+            name: NetCore1ESPool-Svc-Internal
+            demands: ImageOverride -equals build.Ubuntu.1604.amd64
         steps:
         - checkout: self
           clean: true
@@ -352,11 +352,11 @@ stages:
   #     - job: Dockerfile_Main
   #       pool:
   #         ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-  #           name: NetCorePublic-Pool
-  #           queue: BuildPool.Ubuntu.1604.amd64.Open
+  #           name: NetCore1ESPool-Svc-Public
+  #           demands: ImageOverride -equals build.Ubuntu.1604.amd64.Open
   #         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-  #           name: NetCoreInternal-Pool
-  #           queue: BuildPool.Ubuntu.1604.amd64
+  #           name: NetCore1ESPool-Svc-Internal
+  #           demands: ImageOverride -equals build.Ubuntu.1604.amd64
   #       steps:
   #       - checkout: self
   #         clean: true
@@ -373,11 +373,11 @@ stages:
   #     - job: Dockerfile_Binder_Dependency
   #       pool:
   #         ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-  #           name: NetCorePublic-Pool
-  #           queue: BuildPool.Ubuntu.1604.amd64.Open
+  #           name: NetCore1ESPool-Svc-Public
+  #           demands: ImageOverride -equals build.Ubuntu.1604.amd64.Open
   #         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-  #           name: NetCoreInternal-Pool
-  #           queue: BuildPool.Ubuntu.1604.amd64
+  #           name: NetCore1ESPool-Svc-Internal
+  #           demands: ImageOverride -equals build.Ubuntu.1604.amd64
   #       steps:
   #       - checkout: self
   #         clean: true
