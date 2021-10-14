@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
             }
         }
         
-        private static string TestConnectionAndReturnSkipReason()
+        internal static string TestConnectionAndReturnSkipReason()
         {
             string connectionString = GetConnectionStringForTests();
             if (string.IsNullOrWhiteSpace(connectionString))

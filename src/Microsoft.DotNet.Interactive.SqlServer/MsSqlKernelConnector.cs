@@ -2,17 +2,20 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Microsoft.Data.SqlClient.Server;
 using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
     public class MsSqlKernelConnector : KernelConnector
     {
-        public bool CreateDbContext { get;  }
+        public bool CreateDbContext { get; }
 
-        public string ConnectionString { get;  }
+        public string ConnectionString { get; }
 
         public string PathToService { get; set; }
 
@@ -28,7 +31,8 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             var kernel = new MsSqlKernel(
                 $"sql-{kernelName}",
                 ConnectionString,
-                sqlClient);
+                sqlClient)
+            .UseValueSharing();
 
             kernel.RegisterForDisposal(sqlClient);
 

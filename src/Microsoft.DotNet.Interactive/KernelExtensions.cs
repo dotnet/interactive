@@ -200,7 +200,13 @@ namespace Microsoft.DotNet.Interactive
                 {
                     if (fromKernel.TryGetValue(name, out object shared))
                     {
-                        await ((ISupportSetValue)kernel).SetValueAsync(name, shared);
+                        try
+                        {
+                            await ((ISupportSetValue)kernel).SetValueAsync(name, shared);
+                        } catch (KernelValueSharingException ex)
+                        {
+                            context.Fail(context.Command, message: $"Error setting value '{name}' from kernel '{from}'. {ex.Message}");
+                        }
                     }
                 }
             });
@@ -474,6 +480,13 @@ namespace Microsoft.DotNet.Interactive
                     }
                 }
             }
+        }
+    }
+
+    public class KernelValueSharingException : Exception
+    {
+        public KernelValueSharingException(string message) : base(message)
+        {
         }
     }
 }

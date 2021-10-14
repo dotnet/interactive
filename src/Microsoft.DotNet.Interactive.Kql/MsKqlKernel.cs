@@ -2,10 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Threading.Tasks;
-
+using Kusto.Data.Common;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.SqlServer;
@@ -41,6 +42,18 @@ namespace Microsoft.DotNet.Interactive.Kql
 
         protected override ChooseKernelDirective CreateChooseKernelDirective() =>
             new ChooseKqlKernelDirective(this);
+
+        protected override string GenerateVariableDeclaration(KeyValuePair<string, object> variableNameAndValue)
+        {
+            // TODO Implement
+            // CslType.FromClrType()
+            throw new NotImplementedException();
+        }
+
+        protected override bool CanSupportVariable(string name, object value, out string msg)
+        {
+            throw new NotImplementedException();
+        }
 
         private class ChooseKqlKernelDirective : ChooseKernelDirective
         {

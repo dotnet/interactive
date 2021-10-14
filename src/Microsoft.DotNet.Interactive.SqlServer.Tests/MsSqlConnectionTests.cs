@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.ExtensionLab;
@@ -285,6 +286,114 @@ select * from sys.tables
                 .Which.Count()
                 .Should()
                 .Be(2);
+        }
+
+        [MsSqlTheory]
+        [InlineData("var testVar = 2;", 2)]
+        [InlineData("string testVar = \"hi!\";", "hi!")]
+        [InlineData("string testVar = \"tricky'string\";", "tricky'string")]
+        [InlineData("string testVar = \"«ταБЬℓσ»\";", "«ταБЬℓσ»")]
+        [InlineData("string testVar = \"\";", "")]
+        [InlineData("double testVar = 123456.789;", 123456.789)]
+        [InlineData("decimal testVar = 123456.789M;", 123456.789, typeof(Decimal))]
+        [InlineData("bool testVar = false;", false)]
+        [InlineData("char testVar = 'a';", "a")]
+        [InlineData("char testVar = '\'';", "'")]
+        [InlineData("char testVar = '';", "")]
+        [InlineData("byte testVar = 123;", (byte)123)]
+        [InlineData("int testVar = 123456;", 123456)]
+        [InlineData("long testVar = 123456789012345;", 123456789012345)]
+        [InlineData("short testVar = 123;", (short)123)]
+        public async Task Shared_variable_can_be_used_to_parameterize_a_sql_query(string csharpVariableDeclaration, object expectedValue, Type changeType = null)
+        {
+            using var kernel = await CreateKernel();
+
+            var result = await kernel.SubmitCodeAsync(
+                             $"#!connect --kernel-name adventureworks mssql \"{MsSqlFact.GetConnectionStringForTests()}\"");
+
+            result.KernelEvents
+                .ToSubscribedList()
+                .Should()
+                .NotContainErrors();
+
+            await kernel.SendAsync(new SubmitCode(csharpVariableDeclaration));
+
+            var code = @"
+#!sql-adventureworks
+#!share --from csharp testVar
+select @testVar";
+
+            result = await kernel.SendAsync(new SubmitCode(code));
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events
+                .Should()
+                .NotContainErrors();
+
+            var data = GetTabularData(events);
+
+            if (changeType != null)
+            {
+                // Decimals can't be made constants so need to convert at runtime
+                expectedValue = Convert.ChangeType(expectedValue, changeType);
+            }
+            data.Data
+                .Should()
+                .ContainSingle()
+                .Which
+                .Should()
+                .ContainValue(expectedValue);
+        }
+
+        [MsSqlTheory]
+        [InlineData("string testVar = null;")] // Don't support null vars currently
+        [InlineData("decimal testVar = 123456.789;")] // Incorrect type
+        [InlineData("nint testVar = 123456;")] // Unsupported type
+        [InlineData("nuint testVar = 123456;")]
+        [InlineData("sbyte testVar = 123;")]
+        [InlineData("uint testVar = 123456;")]
+        [InlineData("ulong testVar = 123456789012345;")]
+        [InlineData("ushort testVar = 123;")]
+        public async Task Invalid_shared_variables_are_handled_correctly(string csharpVariableDeclaration)
+        {
+            using var kernel = await CreateKernel();
+
+            var result = await kernel.SubmitCodeAsync(
+                             $"#!connect --kernel-name adventureworks mssql \"{MsSqlFact.GetConnectionStringForTests()}\"");
+
+            result.KernelEvents
+                .ToSubscribedList()
+                .Should()
+                .NotContainErrors();
+
+            await kernel.SendAsync(new SubmitCode(csharpVariableDeclaration));
+
+            var code = @"
+#!sql-adventureworks
+#!share --from csharp testVar
+select @testVar";
+
+            result = await kernel.SendAsync(new SubmitCode(code));
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events
+                .Should()
+                .ContainSingle<CommandFailed>();
+        }
+
+        private static TabularDataResource GetTabularData(SubscribedList<KernelEvent> events)
+        {
+            events.Should().NotContainErrors();
+
+            return ((NteractDataExplorer)events
+                           .Should()
+                           .ContainSingle<DisplayedValueProduced>(e =>
+                                                                      e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
+                           .Which
+                           .Value
+                    ).Data;
         }
 
         public void Dispose()
