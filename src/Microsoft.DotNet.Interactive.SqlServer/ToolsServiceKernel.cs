@@ -42,6 +42,9 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         /// The value is a list of result sets (multiple if multiple queries are ran as a batch)
         /// </summary>
         private readonly Dictionary<string, List<TabularDataResource>> _queryResults = new();
+        /// <summary>
+        /// Used to store incoming variables passed in via #!share
+        /// </summary>
         private readonly Dictionary<string, object> _variables = new(StringComparer.Ordinal);
 
         protected ToolsServiceKernel(string name, ToolsServiceClient client) : base(name)
@@ -200,7 +203,9 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
             try
             {
-                await ServiceClient.ExecuteQueryStringAsync(TempFileUri, PrependVariableDeclarationsToCode(command, context), context.CancellationToken);
+                var query = PrependVariableDeclarationsToCode(command, context);
+                context.Display(query);
+                await ServiceClient.ExecuteQueryStringAsync(TempFileUri, query, context.CancellationToken);
 
                 context.CancellationToken.Register(() =>
                 {
@@ -314,7 +319,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
             foreach (var variableNameAndValue in _variables)
             {
-                var declareStatement = GenerateSqlVariableDeclaration(variableNameAndValue);
+                var declareStatement = GenerateVariableDeclaration(variableNameAndValue);
                 context.Display($"Adding statement : {declareStatement}");
                 sb.AppendLine(declareStatement);
             }
@@ -324,45 +329,19 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             return sb.ToString();
         }
 
-        private string GenerateSqlVariableDeclaration(KeyValuePair<string, object> variableNameAndValue)
-        {
-            return $"DECLARE @{variableNameAndValue.Key} {MapToSqlDataType(variableNameAndValue)} = {MapToSqlValueDeclaration(variableNameAndValue.Value)};";
-
-            static string MapToSqlDataType(KeyValuePair<string, object> variableNameAndValue)
-            {
-                var sqlMetaData = SqlMetaData.InferFromValue(
-                    variableNameAndValue.Value,
-                    variableNameAndValue.Key);
-
-                var dbType = sqlMetaData.SqlDbType;
-
-                switch (dbType)
-                {
-                    case SqlDbType.Char:
-                    case SqlDbType.NChar:
-                    case SqlDbType.NVarChar:
-                    case SqlDbType.VarChar:
-                        return $"{dbType}({sqlMetaData.MaxLength})";
-
-                    case SqlDbType.Decimal:
-                        return $"{dbType}({sqlMetaData.Precision},{sqlMetaData.Scale})";
-
-                    default:
-                        return dbType.ToString();
-                }
-            }
-
-            string MapToSqlValueDeclaration(object value) =>
-                value switch
-                {
-                    string s => $"N'{s}'",
-                    null => "NULL",
-                    _ => value.ToString()
-                };
-        }
+        protected abstract string GenerateVariableDeclaration(KeyValuePair<string, object> variableNameAndValue);
+        protected abstract bool CanSupportVariable(string name, object value, out string msg);
 
         public Task SetValueAsync(string name, object value, Type declaredType = null)
         {
+            if (value == null)
+            {
+                throw new KernelValueSharingException($"Sharing null values is not supported at this time.");
+            }
+            else if (!CanSupportVariable(name, value, out string msg))
+            {
+                throw new KernelValueSharingException($"Cannot support value of Type {value.GetType()}. {msg}");
+            }
             _variables[name] = value;
             return Task.CompletedTask;
         }

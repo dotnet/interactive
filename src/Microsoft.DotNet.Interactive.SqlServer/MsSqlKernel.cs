@@ -2,10 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.Data;
 using System.Threading.Tasks;
-
+using Microsoft.Data.SqlClient.Server;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
 
@@ -66,6 +68,59 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                         break;
                 }
             }
+        }
+
+        protected override string GenerateVariableDeclaration(KeyValuePair<string, object> variableNameAndValue)
+        {
+            return $"DECLARE @{variableNameAndValue.Key} {MapToSqlDataType(variableNameAndValue)} = {MapToSqlValueDeclaration(variableNameAndValue.Value)};";
+
+            static string MapToSqlDataType(KeyValuePair<string, object> variableNameAndValue)
+            {
+                var sqlMetaData = SqlMetaData.InferFromValue(
+                    variableNameAndValue.Value,
+                    variableNameAndValue.Key);
+
+                var dbType = sqlMetaData.SqlDbType;
+
+                switch (dbType)
+                {
+                    case SqlDbType.Char:
+                    case SqlDbType.NChar:
+                    case SqlDbType.NVarChar:
+                    case SqlDbType.VarChar:
+                        return $"{dbType}({sqlMetaData.MaxLength})";
+                    case SqlDbType.Decimal:
+                        return $"{dbType}({sqlMetaData.Precision},{sqlMetaData.Scale})";
+                    default:
+                        return dbType.ToString();
+                }
+            }
+
+            static string MapToSqlValueDeclaration(object value) =>
+            value switch
+            {
+                string s => $"N{s.AsSingleQuotedString()}",
+                char c => $"N{c.ToString().AsSingleQuotedString()}",
+                bool b => b ? "1" : "0",
+                null => "NULL",
+                _ => value.ToString()
+            };
+        }
+
+        protected override bool CanSupportVariable(string name, object value, out string msg)
+        {
+            msg = default;
+            try
+            {
+                SqlMetaData.InferFromValue(
+                    value,
+                    name);
+            } catch(Exception e)
+            {
+                msg = e.Message;
+                return false;
+            }
+            return true;
         }
     }
 }
