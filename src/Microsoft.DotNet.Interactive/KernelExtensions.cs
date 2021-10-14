@@ -482,11 +482,4 @@ namespace Microsoft.DotNet.Interactive
             }
         }
     }
-
-    public class KernelValueSharingException : Exception
-    {
-        public KernelValueSharingException(string message) : base(message)
-        {
-        }
-    }
 }
