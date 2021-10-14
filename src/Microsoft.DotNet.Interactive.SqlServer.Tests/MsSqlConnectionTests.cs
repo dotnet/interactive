@@ -344,6 +344,7 @@ select @testVar";
         [InlineData("uint testVar = 123456;")] // Unsupported type
         [InlineData("ulong testVar = 123456789012345;")] // Unsupported type
         [InlineData("ushort testVar = 123;")] // Unsupported type
+        [InlineData("var testVar = new List<int>();")] // Unsupported type
         public async Task Invalid_shared_variables_are_handled_correctly(string csharpVariableDeclaration)
         {
             using var kernel = await CreateKernel();
