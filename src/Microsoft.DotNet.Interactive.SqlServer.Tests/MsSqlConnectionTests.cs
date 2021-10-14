@@ -335,6 +335,48 @@ select @testVar";
                 .ContainValue(expectedValue);
         }
 
+        [MsSqlFact]
+        public async Task Multiple_shared_variable_can_be_used_to_parameterize_a_sql_query()
+        {
+            using var kernel = await CreateKernel();
+            var result = await kernel.SubmitCodeAsync(
+                             $"#!connect --kernel-name adventureworks mssql \"{MsSqlFact.GetConnectionStringForTests()}\"");
+
+            result.KernelEvents
+                .ToSubscribedList()
+                .Should()
+                .NotContainErrors();
+
+            var csharpCode = "string x = \"Hello world!\";";
+            await kernel.SendAsync(new SubmitCode(csharpCode));
+
+            csharpCode = "int y = 123;";
+            await kernel.SendAsync(new SubmitCode(csharpCode));
+
+            var code = @"
+#!sql-adventureworks
+#!share --from csharp x
+#!share --from csharp y
+select @x, @y";
+
+            result = await kernel.SendAsync(new SubmitCode(code));
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events
+                .Should()
+                .NotContainErrors();
+
+            var data = GetTabularData(events);
+
+            data.Data
+                .Should()
+                .ContainSingle()
+                .Which
+                .Should()
+                .ContainValues(new object[] { "Hello world!", 123 });
+        }
+
         [MsSqlTheory]
         [InlineData("string testVar = null;")] // Don't support null vars currently
         [InlineData("decimal testVar = 123456.789;")] // Incorrect type
