@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive.Tests.Parsing
 {
@@ -19,14 +20,14 @@ namespace Microsoft.DotNet.Interactive.Tests.Parsing
         public Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
         {
             Commands.Add(kernelCommand);
-            _onSendAsync?.Invoke(new CommandOrEvent(kernelCommand));
+            _onSendAsync?.Invoke(new CommandOrEvent(KernelCommandEnvelope.Deserialize(KernelCommandEnvelope.Serialize(kernelCommand)).Command));
             return Task.CompletedTask;
         }
 
         public Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
         {
             Events.Add(kernelEvent);
-            _onSendAsync?.Invoke(new CommandOrEvent(kernelEvent));
+            _onSendAsync?.Invoke(new CommandOrEvent(KernelEventEnvelope.Deserialize(KernelEventEnvelope.Serialize(kernelEvent)).Event));
             return Task.CompletedTask;
         }
 

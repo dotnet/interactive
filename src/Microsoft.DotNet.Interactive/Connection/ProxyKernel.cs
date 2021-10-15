@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -61,6 +61,7 @@ namespace Microsoft.DotNet.Interactive.Connection
                 }
                 else if (d.Command is not null)
                 {
+                    // if using the host default connect and this is not the host root kernel do not send
                     var _ = Task.Run(async () =>
                     {
                         var eventSubscription = RootKernel.KernelEvents

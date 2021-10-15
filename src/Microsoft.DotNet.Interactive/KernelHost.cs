@@ -68,9 +68,10 @@ namespace Microsoft.DotNet.Interactive
                     {
                         var _ = _defaultSender.SendAsync(commandOrEvent.Event, _cancellationTokenSource.Token);
                     }
-                    else
+                    else if (commandOrEvent.Command is { })
                     {
-                        await commandOrEvent.DispatchAsync(_kernel, _cancellationTokenSource.Token);
+                        // forward only commands to the composite kernel to avoid event replications.
+                        var _ = _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
                     }
                 }
             }, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);

@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
+using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive.Tests.Parsing
 {
@@ -19,7 +20,16 @@ namespace Microsoft.DotNet.Interactive.Tests.Parsing
 
         public void Write(CommandOrEvent commandOrEvent)
         {
-            _commandsOrEvents.Add(commandOrEvent);
+            if (commandOrEvent.Command is { })
+            {
+                _commandsOrEvents.Add(new CommandOrEvent(KernelCommandEnvelope
+                    .Deserialize(KernelCommandEnvelope.Serialize(commandOrEvent.Command)).Command));
+            }
+            else if (commandOrEvent.Event is { })
+            {
+                _commandsOrEvents.Add(new CommandOrEvent(KernelEventEnvelope
+                    .Deserialize(KernelEventEnvelope.Serialize(commandOrEvent.Event)).Event));
+            }
         }
 
         protected override Task<CommandOrEvent> ReadCommandOrEventAsync(CancellationToken cancellationToken)

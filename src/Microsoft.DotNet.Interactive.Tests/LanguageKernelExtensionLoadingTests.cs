@@ -5,6 +5,7 @@ using System;
 using System.CommandLine;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
@@ -150,9 +151,14 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             await ext.OnLoadAsync(kernel);
 
-            var result = await kernel.SendAsync(new SubmitCode("test for remote kernel", "frontend"));
+            var submitCode = new SubmitCode(
+                @"#!vscode/javascript
+test for remote kernel");
 
-            result.KernelEvents.ToSubscribedList().Should().ContainSingle<CommandSucceeded>()
+            var result = await kernel.SendAsync(submitCode);
+
+            var kernelEvents = result.KernelEvents.ToSubscribedList();
+            kernelEvents.Should().ContainSingle<CommandSucceeded>()
                 .Which
                 .Command
                 .Should()
@@ -160,7 +166,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .Which
                 .Code
                 .Should()
-                .Be("test for remote kernel");
+                .Be(submitCode.Code);
 
         }
 
@@ -170,11 +176,14 @@ namespace Microsoft.DotNet.Interactive.Tests
             {
                 var root = (CompositeKernel)kernel.RootKernel;
 
-                var connector = root.Host.DefaultConnector;
+                var vscodeKernelName = new KernelName("vscode", new[] { "frontend" });
+                var vscode = await root.Host.DefaultConnector.ConnectKernelAsync(vscodeKernelName);
 
-                var proxy = await connector.ConnectKernelAsync(new KernelName("frontend"));
+                var jsKernelName = new KernelName("javascript", new[] { "js" });
+                var js = await root.Host.DefaultConnector.ConnectKernelAsync(jsKernelName);
 
-                root.Add(proxy);
+                root.Add(vscode, vscodeKernelName.Aliases);
+                root.Add(js, jsKernelName.Aliases);
             }
         }
     }

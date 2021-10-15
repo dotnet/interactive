@@ -4,6 +4,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Tests.Parsing;
 
@@ -27,10 +28,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             sender.OnSend(async coe =>
             {
                 if (coe.Command is { })
-                {
-                    await SendAsync(coe.Command, CancellationToken.None);
+                { 
+                    ExecutionContext.SuppressFlow();
+                    await  Task.Run(() => SendAsync(coe.Command, CancellationToken.None));
+                    ExecutionContext.RestoreFlow();
                 }
-
             });
 
             Sender = sender;
