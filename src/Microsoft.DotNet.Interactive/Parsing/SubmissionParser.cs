@@ -61,8 +61,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
                    requestDiagnostics,
                    requestDiagnostics.Code,
                    (languageNode, parent, _) => new RequestDiagnostics(languageNode, parent));
-
-            return commands.Where(c => c is RequestDiagnostics).ToList();
+            
+            return commands.Where(c => c is RequestDiagnostics ).ToList();
         }
 
         private delegate KernelCommand CreateChildCommand(
@@ -170,10 +170,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         break;
 
                     case LanguageNode languageNode:
-                        if (!string.IsNullOrWhiteSpace(languageNode.Text))
-                        {
-                            commands.Add(createCommand(languageNode, originalCommand, lastKernelNameNode));
-                        }
+                        commands.Add(createCommand(languageNode, originalCommand, lastKernelNameNode));
                         break;
 
                     default:
@@ -201,7 +198,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             if (NoSplitWasNeeded())
             {
                 originalCommand.TargetKernelName ??= targetKernelName;
-                return new[] { originalCommand };
+                return new []{originalCommand};
             }
 
             foreach (var command in commands)
@@ -234,15 +231,15 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     }
                 }
 
-                if (commands.All(c => c.GetType() ==
-                                      originalCommand.GetType()
+                if (commands.All(c => c.GetType() == 
+                                      originalCommand.GetType() 
                                       && (
-                                          c.TargetKernelName == originalCommand.TargetKernelName || c.TargetKernelName == commands[0].TargetKernelName)))
+                                          c.TargetKernelName == originalCommand.TargetKernelName||c.TargetKernelName == commands[0].TargetKernelName)))
                 {
-
+                    
                     return true;
                 }
-
+                
                 return false;
             }
         }
@@ -254,7 +251,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 return null;
             }
 
-            var dict = new Dictionary<string, (KernelUri, Func<Parser>)>();
+            var dict = new Dictionary<string, (KernelUri , Func<Parser>)>();
 
             for (var i = 0; i < compositeKernel.ChildKernels.Count; i++)
             {
@@ -268,7 +265,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     }
                 }
 
-                (KernelUri, Func<Parser>) GetParser() => (childKernel.Uri, () => childKernel.SubmissionParser.GetDirectiveParser());
+                (KernelUri, Func<Parser>) GetParser() => (childKernel.Uri,() => childKernel.SubmissionParser.GetDirectiveParser());
             }
 
             return dict;
