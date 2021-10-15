@@ -205,7 +205,7 @@ namespace Microsoft.DotNet.Interactive
                             await ((ISupportSetValue)kernel).SetValueAsync(name, shared);
                         } catch (Exception ex)
                         {
-                            throw new InvalidOperationException($"Error setting value '{name}' from kernel '{from}'. {ex.Message}", ex);
+                            throw new InvalidOperationException($"Error sharing value '{name}' from kernel '{from}' into kernel '{kernel.Name}'. {ex.Message}", ex);
                         }
                     }
                 }
