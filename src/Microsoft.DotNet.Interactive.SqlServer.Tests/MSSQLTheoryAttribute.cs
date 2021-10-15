@@ -5,16 +5,16 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.SqlServer.Tests
 {
-    public sealed class MsSqlTheory : TheoryAttribute
+    public sealed class MsSqlTheoryAttribute : TheoryAttribute
     {
         private static readonly string _skipReason;
 
-        static MsSqlTheory()
+        static MsSqlTheoryAttribute()
         {
-            _skipReason = MsSqlFact.TestConnectionAndReturnSkipReason();
+            _skipReason = MsSqlFactAttribute.TestConnectionAndReturnSkipReason();
         }
 
-        public MsSqlTheory()
+        public MsSqlTheoryAttribute()
         {
             if (_skipReason is not null)
             {

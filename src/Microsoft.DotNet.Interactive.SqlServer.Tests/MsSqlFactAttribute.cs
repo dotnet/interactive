@@ -7,17 +7,17 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.SqlServer.Tests
 {
-    public sealed class MsSqlFact : FactAttribute
+    public sealed class MsSqlFactAttribute : FactAttribute
     {
         private const string TEST_MSSQL_CONNECTION_STRING = nameof(TEST_MSSQL_CONNECTION_STRING);
         private static readonly string _skipReason;
         
-        static MsSqlFact()
+        static MsSqlFactAttribute()
         {
             _skipReason = TestConnectionAndReturnSkipReason();
         }
         
-        public MsSqlFact()
+        public MsSqlFactAttribute()
         {
             if (_skipReason is not null)
             {

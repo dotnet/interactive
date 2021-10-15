@@ -17,6 +17,8 @@ using FluentAssertions.Primitives;
 
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.Server;
 
@@ -312,5 +314,21 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
         public T this[int index] => _list[index];
 
         public void Dispose() => _subscription.Dispose();
+    }
+
+    internal static class TestUtility
+    {
+        internal static TabularDataResource GetTabularData(SubscribedList<KernelEvent> events)
+        {
+            events.Should().NotContainErrors();
+
+            return ((DataExplorer<TabularDataResource>)events
+                           .Should()
+                           .ContainSingle<DisplayedValueProduced>(e =>
+                                                                      e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
+                           .Which
+                           .Value
+                    ).Data;
+        }
     }
 }
