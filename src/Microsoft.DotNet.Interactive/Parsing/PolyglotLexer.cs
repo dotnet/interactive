@@ -183,6 +183,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         if (foundArgs)
                         {
                             FlushToken(TokenKind.DirectiveArgs);
+                            LexTrivia();
                         }
                         else
                         {

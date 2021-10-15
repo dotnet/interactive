@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
@@ -461,5 +462,40 @@ Console.WriteLine(d);
 
             return compositeKernel.SubmissionParser;
         }
+
+        [Fact]
+        public async Task ParsedDirectives_With_Args_Consume_Newlines()
+        {
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel().UseValueSharing(),
+                new FSharpKernel().UseValueSharing(),
+            };
+
+            var csharpCode = @"
+int x = 123;
+int y = 456;";
+
+            await kernel.SubmitCodeAsync(csharpCode);
+
+            var fsharpCode = @"
+#!share --from csharp x
+#!share --from csharp y
+Console.WriteLine($""{x} {y}"");";
+            var commands = kernel.SubmissionParser.SplitSubmission(new SubmitCode(fsharpCode));
+
+            commands
+                .Should()
+                .HaveCount(3)
+                .And
+                .ContainSingle<SubmitCode>()
+                .Which
+                .Code
+                .Should()
+                .NotBeEmpty();
+
+        }
     }
+
+    
 }
