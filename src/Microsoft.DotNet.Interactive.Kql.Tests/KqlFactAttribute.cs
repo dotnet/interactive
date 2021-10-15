@@ -3,17 +3,17 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Kql.Tests
 {
-    public sealed class KqlFact : FactAttribute
+    public sealed class KqlFactAttribute : FactAttribute
     {
         private const string TEST_KQL_CONNECTION_STRING = nameof(TEST_KQL_CONNECTION_STRING);
         private static readonly string _skipReason;
         
-        static KqlFact()
+        static KqlFactAttribute()
         {
             _skipReason = TestConnectionAndReturnSkipReason();
         }
         
-        public KqlFact()
+        public KqlFactAttribute()
         {
             if (_skipReason is not null)
             {
@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.Kql.Tests
             }
         }
         
-        private static string TestConnectionAndReturnSkipReason()
+        internal static string TestConnectionAndReturnSkipReason()
         {
             string clusterName = GetClusterForTests();
             if (string.IsNullOrWhiteSpace(clusterName))
@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.Kql.Tests
         
         public static string GetClusterForTests()
         {
-            return Environment.GetEnvironmentVariable(TEST_KQL_CONNECTION_STRING);
+            return Environment.GetEnvironmentVariable(TEST_KQL_CONNECTION_STRING); // "https://help.kusto.windows.net"
         }  
     }
 }

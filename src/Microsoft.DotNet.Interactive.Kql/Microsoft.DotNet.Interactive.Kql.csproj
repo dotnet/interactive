@@ -15,16 +15,11 @@
 
  <ItemGroup>
    <Compile Remove="bin\**" />
-   <Compile Include="..\Microsoft.DotNet.Interactive.SqlServer\MsSqlRpcObjects.cs">
-     <Link>MsSqlRpcObjects.cs</Link>
-   </Compile>
+   <Compile Include="..\Microsoft.DotNet.Interactive.SqlServer\MsSqlRpcObjects.cs" Link="MsSqlRpcObjects.cs" />
    <Compile Include="..\Microsoft.DotNet.Interactive.SqlServer\SqlToolsServiceDiscovery.cs" Link="SqlToolsServiceDiscovery.cs" />
-   <Compile Include="..\Microsoft.DotNet.Interactive.SqlServer\ToolsServiceClient.cs">
-     <Link>ToolsServiceClient.cs</Link>
-   </Compile>
-   <Compile Include="..\Microsoft.DotNet.Interactive.SqlServer\ToolsServiceKernel.cs">
-     <Link>ToolsServiceKernel.cs</Link>
-   </Compile>
+   <Compile Include="..\Microsoft.DotNet.Interactive.SqlServer\ToolsServiceClient.cs" Link="ToolsServiceClient.cs" />
+   <Compile Include="..\Microsoft.DotNet.Interactive.SqlServer\ToolsServiceKernel.cs" Link="ToolsServiceKernel.cs" />
+   <Compile Include="..\Microsoft.DotNet.Interactive.SqlServer\Utils.cs" Link="Utils.cs" />
    <EmbeddedResource Remove="bin\**" />
    <None Remove="bin\**" />
  </ItemGroup>
