@@ -99,6 +99,7 @@ namespace Microsoft.DotNet.Interactive.Connection
 
             _inflight[token] = (command, _executionContext, completionSource, context);
 
+            ExecutionContext.SuppressFlow();
             var _ = _sender.SendAsync(command, context.CancellationToken);
             return completionSource.Task.ContinueWith(te =>
             {

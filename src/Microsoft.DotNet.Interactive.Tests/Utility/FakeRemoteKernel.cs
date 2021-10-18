@@ -28,10 +28,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             sender.OnSend(async coe =>
             {
                 if (coe.Command is { })
-                { 
-                    ExecutionContext.SuppressFlow();
+                {
                     await  Task.Run(() => SendAsync(coe.Command, CancellationToken.None));
-                    ExecutionContext.RestoreFlow();
                 }
             });
 
