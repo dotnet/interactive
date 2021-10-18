@@ -61,13 +61,14 @@ namespace Microsoft.DotNet.Interactive.CSharp
                         Directory.GetDirectories(appRefDir)
                         .Select(Path.GetFileName)
                         .Select(dir => new { Directory = dir, Version = Version.TryParse(dir, out var version) ? version : new Version() })
-                        .OrderBy(dirPair => dirPair.Version)
-                        .LastOrDefault(dirPair => dirPair.Version <= runtimeVersion);
+                        .Where(dir => dir.Version <= runtimeVersion)
+                        .OrderByDescending(dirPair => dirPair.Version)
+                        .Select(dirInfo => Path.Combine(appRefDir, dirInfo.Directory, "ref", $"net{dirInfo.Version.Major}.{dirInfo.Version.Minor}"))
+                        .Where(candidateRefDir => Directory.Exists(candidateRefDir))
+                        .FirstOrDefault();
                     if (latestRuntimeDirAndVersion is { })
                     {
-                        var refVersion = latestRuntimeDirAndVersion.Directory; // e.g., `5.0.0`
-                        var tfmName = $"net{latestRuntimeDirAndVersion.Version.Major}.{latestRuntimeDirAndVersion.Version.Minor}"; // e.g., `net5.0`
-                        refAssemblyDir = Path.Combine(appRefDir, refVersion, "ref", tfmName);
+                        refAssemblyDir = latestRuntimeDirAndVersion;
                     }
                 }
             }

@@ -3,7 +3,7 @@
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
-    public static class Utils
+    internal static class Utils
     {
         /// <summary>
         /// Returns a version of the string quoted with single quotes. Any single quotes in the string are escaped as ''
