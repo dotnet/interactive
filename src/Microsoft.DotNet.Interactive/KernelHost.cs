@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
@@ -31,8 +32,7 @@ namespace Microsoft.DotNet.Interactive
             _defaultSender = defaultSender;
             _defaultReceiver = defaultReceiver;
             DefaultConnector = new DefaultKernelConnector(_defaultSender, _defaultReceiver);
-            Uri = KernelUri.Parse($".net/{Guid.NewGuid():N}");
-            AddKernelInfo(kernel, new KernelInfo(kernel.Name));
+            Uri = KernelUri.Parse($".net://{Guid.NewGuid():N}");
             _kernel.SetHost(this);
 
         }
