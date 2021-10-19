@@ -157,12 +157,12 @@ x");
             var child = new ProxyKernel("localName", host);
             composite.Add(child);
 
-            host.SetRemoteUri(child.Name, KernelUri.Parse($"vscode://{child.Name}"));
+            host.SetRemoteUri(child.Name, KernelUri.Parse($"kernel://vscode/{child.Name}"));
           
 
             host.TryGetKernelInfo(child, out var kernelInfo);
             kernelInfo.RemoteUri.Should().NotBeNull();
-            kernelInfo.RemoteUri.Should().Be(KernelUri.Parse($"vscode://{child.Name}"));
+            kernelInfo.RemoteUri.Should().Be(KernelUri.Parse($"kernel://vscode/{child.Name}"));
         }
 
 

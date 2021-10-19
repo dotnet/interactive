@@ -2,11 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Diagnostics;
 using System.Threading.Tasks;
-using Microsoft.Data.SqlClient.Server;
 using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
@@ -26,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 throw new InvalidOperationException($"{nameof(PathToService)} cannot be null or whitespace.");
             }
 
-            var sqlClient = new ToolsServiceClient(PathToService, $"--parent-pid {Process.GetCurrentProcess().Id}");
+            var sqlClient = new ToolsServiceClient(PathToService, $"--parent-pid {Environment.ProcessId}");
 
             var kernel = new MsSqlKernel(
                 $"sql-{kernelInfo}",

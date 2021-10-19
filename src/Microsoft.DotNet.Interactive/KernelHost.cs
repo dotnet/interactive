@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Interactive
             _defaultSender = defaultSender;
             _defaultReceiver = defaultReceiver;
             DefaultConnector = new DefaultKernelConnector(_defaultSender, _defaultReceiver);
-            Uri = KernelUri.Parse($".net://{Guid.NewGuid():N}");
+            Uri = KernelUri.Parse($"kernel://.net/{Guid.NewGuid():N}");
             _kernel.SetHost(this);
 
         }
