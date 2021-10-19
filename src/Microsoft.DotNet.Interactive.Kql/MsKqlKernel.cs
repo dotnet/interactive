@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.Kql
             {
                 throw new ArgumentException("Value cannot be null or whitespace.", nameof(connectionDetails));
             }
-            
+
             _connectionDetails = connectionDetails;
         }
 
@@ -45,14 +45,35 @@ namespace Microsoft.DotNet.Interactive.Kql
 
         protected override string GenerateVariableDeclaration(KeyValuePair<string, object> variableNameAndValue)
         {
-            // TODO Implement
-            // CslType.FromClrType()
-            throw new NotImplementedException();
+            return $"let {variableNameAndValue.Key} = {MapToKqlValueDeclaration(variableNameAndValue.Value)};";
+
+            static string MapToKqlValueDeclaration(object value) =>
+            value switch
+            {
+                string s => s.AsDoubleQuotedString(),
+                char c => c.ToString().AsDoubleQuotedString(),
+                _ => value.ToString()
+            };
         }
 
         protected override bool CanSupportVariable(string name, object value, out string msg)
         {
-            throw new NotImplementedException();
+            msg = default;
+            if (value.GetType() == typeof(char))
+            {
+                // CslType doesn't support char but we just convert it to a string for our use here
+                return true;
+            }
+            try
+            {
+                CslType.FromClrType(value.GetType());
+            }
+            catch (Exception e)
+            {
+                msg = e.Message;
+                return false;
+            }
+            return true;
         }
 
         private class ChooseKqlKernelDirective : ChooseKernelDirective

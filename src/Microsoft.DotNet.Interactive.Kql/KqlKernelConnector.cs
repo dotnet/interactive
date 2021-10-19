@@ -35,7 +35,8 @@ namespace Microsoft.DotNet.Interactive.Kql
             var kernel = new MsKqlKernel(
                 $"kql-{kernelName}",
                 connectionDetails,
-                sqlClient);
+                sqlClient)
+                .UseValueSharing();
 
             await kernel.ConnectAsync();
 

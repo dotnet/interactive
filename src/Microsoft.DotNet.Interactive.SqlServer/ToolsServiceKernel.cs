@@ -9,7 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Data.SqlClient.Server;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.ExtensionLab;
@@ -37,7 +36,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         protected bool Connected;
         protected readonly ToolsServiceClient ServiceClient;
         /// <summary>
-        /// The set of query result lists to save for sharing later. 
+        /// The set of query result lists to save for sharing later.
         /// The key will be the name of the value.
         /// The value is a list of result sets (multiple if multiple queries are ran as a batch)
         /// </summary>
@@ -231,7 +230,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             }
         }
 
-        private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> GetEnumerableTables(ColumnInfo[] columnInfos, CellValue[][] rows)
+        private static IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> GetEnumerableTables(ColumnInfo[] columnInfos, CellValue[][] rows)
         {
             var displayTable = new List<(string, object)[]>();
             var columnNames = columnInfos.Select(info => info.ColumnName).ToArray();
@@ -319,7 +318,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             foreach (var variableNameAndValue in _variables)
             {
                 var declareStatement = GenerateVariableDeclaration(variableNameAndValue);
-                context.Display($"Adding statement : {declareStatement}");
+                context.Display($"Adding shared variable declaration statement : {declareStatement}");
                 sb.AppendLine(declareStatement);
             }
 
