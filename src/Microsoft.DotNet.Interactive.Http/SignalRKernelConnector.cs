@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.Http
     {
         public string HubUrl { get;  }
 
-        public async Task<Kernel> ConnectKernelAsync(KernelName kernelName)
+        public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
         {
             var hubConnection = new HubConnectionBuilder()
                 .WithUrl(HubUrl)
@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.Http
 
             var receiver = new KernelCommandAndEventSignalRHubConnectionReceiver(hubConnection);
             var sender = new KernelCommandAndEventSignalRHubConnectionSender(hubConnection);
-            var proxyKernel = new ProxyKernel(kernelName.Name, receiver, sender);
+            var proxyKernel = new ProxyKernel(kernelInfo.LocalName, receiver, sender);
 
             var _ = proxyKernel.StartAsync();
 

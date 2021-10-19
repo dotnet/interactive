@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                     "Scaffold a DbContext in the C# kernel."));
         }
 
-        public override async Task<Kernel> ConnectKernelAsync(KernelName kernelName, MsSqlKernelConnector connector,
+        public override async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo, MsSqlKernelConnector connector,
             KernelInvocationContext context)
         {
             var root = Kernel.Root.FindResolvedPackageReference();
@@ -31,11 +31,11 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
             connector.PathToService = pathToService;
 
-            var kernel = await connector.ConnectKernelAsync(kernelName);
+            var kernel = await connector.ConnectKernelAsync(kernelInfo);
 
             if (connector.CreateDbContext)
             {
-                await InitializeDbContextAsync(kernelName.Name, connector, context);
+                await InitializeDbContextAsync(kernelInfo.LocalName, connector, context);
             }
 
             return kernel;

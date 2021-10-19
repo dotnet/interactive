@@ -11,8 +11,10 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Server;
+using Microsoft.DotNet.Interactive.Tests.Parsing;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests
@@ -106,7 +108,55 @@ x");
             hitRemoteCSharp.Should().BeTrue();
             hitRemoteFSharp.Should().BeFalse();
         }
-        
+
+        [Fact]
+        public void the_host_provides_uri_for_kernels()
+        {
+            using var composite = new CompositeKernel();
+            using var host = KernelHost.InProcess(composite);
+
+            var child = new FakeKernel("localName");
+            composite.Add(child);
+
+            host.TryGetKernelInfo(child, out var kernelInfo);
+            kernelInfo.Uri.Should().NotBeNull();
+            kernelInfo.Uri.Contains(host.Uri).Should().Be(true);
+        }
+
+        [Fact]
+        public void when_attaching_host_to_composite_kernels_subkernels_are_provided_with_uri()
+        {
+            using var composite = new CompositeKernel();
+            var child = new FakeKernel("localName");
+            composite.Add(child);
+
+            using var host = KernelHost.InProcess(composite);
+
+            host.TryGetKernelInfo(child, out var kernelInfo);
+            kernelInfo.Uri.Should().NotBeNull();
+            kernelInfo.Uri.Contains(host.Uri).Should().Be(true);
+        }
+
+        [Fact]
+        public void detached_kernels_do_not_have_uri()
+        {
+            using var composite = new CompositeKernel();
+            using var host = KernelHost.InProcess(composite);
+
+            var child = new FakeKernel("localName");
+
+            var found = host.TryGetKernelInfo(child, out _);
+            found.Should().Be(false);
+        }
+
+        [Fact]
+        public void kernelHost_tracks_remote_uris_for_proxy_kernels()
+        {
+
+
+            throw new NotImplementedException();
+        }
+
 
         [FactSkipLinux]
         public async Task proxyKernel_does_not_perform_split_if_all_parts_go_to_same_targetKernel_as_the_original_command()
@@ -136,7 +186,7 @@ x");
 
             var connection = new NamedPipeKernelConnector(pipeName);
 
-            var proxyKernel = await connection.ConnectKernelAsync(new KernelName("proxyKernel"));
+            var proxyKernel = await connection.ConnectKernelAsync(new KernelInfo("proxyKernel"));
             
             var code = @"#i ""nuget:source1""
 #i ""nuget:source2""
@@ -180,7 +230,7 @@ Console.WriteLine(1);";
 
             var connection = new NamedPipeKernelConnector(pipeName);
 
-            var proxyKernel = await connection.ConnectKernelAsync(new KernelName("proxyKernel"));
+            var proxyKernel = await connection.ConnectKernelAsync(new KernelInfo("proxyKernel"));
 
             var code = @"#i ""nuget:source1""
 #i ""nuget:source2""

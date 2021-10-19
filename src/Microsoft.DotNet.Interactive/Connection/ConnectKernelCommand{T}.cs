@@ -30,11 +30,11 @@ namespace Microsoft.DotNet.Interactive.Connection
         /// <summary>
         /// Creates a kernel instance when this connection command is invoked.
         /// </summary>
-        /// <param name="kernelName">The name to use in kernel creation.</param>
+        /// <param name="kernelInfo">The name to use in kernel creation.</param>
         /// <param name="connection">The connection to establish.</param>
         /// <param name="context">The <see cref="KernelInvocationContext"/> for the current command.</param>
         /// <returns>A new <see cref="Kernel"/> instance to be added to the <see cref="CompositeKernel"/>.</returns>
-        public abstract Task<Kernel> ConnectKernelAsync(KernelName kernelName,
+        public abstract Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo,
             TConnector connection,
             KernelInvocationContext context);
     }

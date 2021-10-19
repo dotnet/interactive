@@ -15,13 +15,13 @@ namespace Microsoft.DotNet.Interactive.Connection
         private KernelCommandAndEventPipeStreamSender? _sender;
 
         public string PipeName { get; }
-        public async Task<Kernel> ConnectKernelAsync(KernelName kernelName)
+        public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
         {
             ProxyKernel? proxyKernel;
 
             if (_receiver is not null)
             {
-                proxyKernel = new ProxyKernel(kernelName.Name,_receiver.CreateChildReceiver(), _sender);
+                proxyKernel = new ProxyKernel(kernelInfo.LocalName,_receiver.CreateChildReceiver(), _sender);
             }
             else
             {
@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.Interactive.Connection
                 _sender = new KernelCommandAndEventPipeStreamSender(clientStream);
 
         
-                proxyKernel = new ProxyKernel(kernelName.Name, _receiver, _sender);
+                proxyKernel = new ProxyKernel(kernelInfo.LocalName, _receiver, _sender);
             }
 
             var _ = proxyKernel.StartAsync();

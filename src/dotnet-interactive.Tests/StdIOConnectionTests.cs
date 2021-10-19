@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 "csharp",
             });
 
-            using var kernel = await connector.ConnectKernelAsync(new KernelName("proxy"));
+            using var kernel = await connector.ConnectKernelAsync(new KernelInfo("proxy"));
 
             var markedCode = "var x = 12$$34;";
 

@@ -90,6 +90,10 @@ namespace Microsoft.DotNet.Interactive
             AddChooseKernelDirective(kernel, aliases);
 
             _childKernels.Add(kernel);
+            if (Host is { })
+            {
+                Host.AddKernelInfo(kernel, new KernelInfo(kernel.Name, aliases));
+            }
 
             _kernelsByNameOrAlias.Add(kernel.Name, kernel);
             if (aliases is { })
@@ -333,13 +337,9 @@ namespace Microsoft.DotNet.Interactive
                 string, TOptions, KernelInvocationContext>(
                 async (kernelName, options, context) =>
                 {
-                    var connectedKernel = await connectionCommand.ConnectKernelAsync(new KernelName(kernelName), options, context);
+                    var connectedKernel = await connectionCommand.ConnectKernelAsync(new KernelInfo(kernelName), options, context);
 
-                    if (string.IsNullOrWhiteSpace(connectedKernel.Name))
-                    {
-                        connectedKernel.Name = kernelName;
-                    }
-
+                 
                     Add(connectedKernel);
 
                     var chooseKernelDirective =
@@ -373,6 +373,22 @@ namespace Microsoft.DotNet.Interactive
                 throw new InvalidOperationException("Host cannot be changed");
             }
             _host = host;
+
+            var kernelsToRegister = _kernelsByNameOrAlias
+                .GroupBy(e => e.Value)
+                .Select(g =>
+                {
+                    var localName = g.Key.Name;
+                    var aliases = new HashSet<string>(g.Select(v => v.Key));
+                    aliases.Remove(localName);
+
+                    return (g.Key,new KernelInfo(localName, aliases.ToArray()));
+                });
+
+            foreach (var (kernel, kernelInfo) in kernelsToRegister)
+            {
+             _host.AddKernelInfo(kernel, kernelInfo);   
+            }
         }
     }
 }

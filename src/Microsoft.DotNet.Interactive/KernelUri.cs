@@ -5,7 +5,7 @@ using System;
 
 namespace Microsoft.DotNet.Interactive
 {
-    internal class KernelUri
+    public class KernelUri
     {
         protected bool Equals(KernelUri other)
         {

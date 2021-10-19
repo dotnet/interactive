@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         public string PathToService { get; set; }
 
-        public async Task<Kernel> ConnectKernelAsync(KernelName kernelName)
+        public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
         {
             if (string.IsNullOrWhiteSpace(PathToService))
             {
@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             var sqlClient = new ToolsServiceClient(PathToService, $"--parent-pid {Process.GetCurrentProcess().Id}");
 
             var kernel = new MsSqlKernel(
-                $"sql-{kernelName}",
+                $"sql-{kernelInfo}",
                 ConnectionString,
                 sqlClient)
             .UseValueSharing();

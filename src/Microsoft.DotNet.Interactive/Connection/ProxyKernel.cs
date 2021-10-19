@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+// ReSharper disable once RedundantUsingDirective
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,6 +23,11 @@ namespace Microsoft.DotNet.Interactive.Connection
         private ExecutionContext _executionContext;
         private readonly Dictionary<string,(KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<KernelEvent> completionSource ,KernelInvocationContext invocationContext)> _inflight = new();
         private int _started = 0;
+
+        public ProxyKernel(string name, KernelHost kernelHost) : this(name, kernelHost.DefaultReceiver, kernelHost.DefaultSender)
+        {
+
+        }
 
         public ProxyKernel(string name, IKernelCommandAndEventReceiver receiver, IKernelCommandAndEventSender sender) : base(name)
         {
@@ -58,22 +64,6 @@ namespace Microsoft.DotNet.Interactive.Connection
                 if (d.Event is not null)
                 {
                     DelegatePublication(d.Event);
-                }
-                else if (d.Command is not null)
-                {
-                    // if using the host default connect and this is not the host root kernel do not send
-                    var _ = Task.Run(async () =>
-                    {
-                        var eventSubscription = RootKernel.KernelEvents
-                            .Where(e => e.Command.GetOrCreateToken() == d.Command.GetOrCreateToken() && e.Command.GetType() == d.Command.GetType())
-                            .Subscribe(async e =>
-                            {
-                                await _sender.SendAsync(e, _cancellationTokenSource.Token);
-                            });
-
-                        await RootKernel.SendAsync(d.Command, _cancellationTokenSource.Token);
-                        eventSubscription.Dispose();
-                    }, _cancellationTokenSource.Token);
                 }
             }
         }

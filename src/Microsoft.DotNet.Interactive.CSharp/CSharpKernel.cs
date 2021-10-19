@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         private string _workingDirectory;
 
-        public CSharpKernel() : base(DefaultKernelName)
+        public CSharpKernel(string name = null) : base(string.IsNullOrWhiteSpace(name)? DefaultKernelName: name)
         {
             _workspace = new InteractiveWorkspace();
 

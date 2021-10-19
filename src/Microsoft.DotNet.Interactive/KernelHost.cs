@@ -2,10 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Diagnostics;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
+using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -17,6 +21,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly MultiplexingKernelCommandAndEventReceiver _defaultReceiver;
         private Task<Task> _runningLoop;
         private IDisposable _kernelEventSubscription;
+        private readonly Dictionary<Kernel, KernelInfo> _kernelInfos = new();
         public IKernelConnector DefaultConnector { get; }
 
 
@@ -26,8 +31,23 @@ namespace Microsoft.DotNet.Interactive
             _defaultSender = defaultSender;
             _defaultReceiver = defaultReceiver;
             DefaultConnector = new DefaultKernelConnector(_defaultSender, _defaultReceiver);
+            Uri = KernelUri.Parse($".net/{Guid.NewGuid():N}");
+            AddKernelInfo(kernel, new KernelInfo(kernel.Name));
             _kernel.SetHost(this);
+
         }
+
+        public static KernelHost InProcess(CompositeKernel kernel)
+        {
+
+            var receiver = new MultiplexingKernelCommandAndEventReceiver(new BlockingCommandAndEventReceiver());
+
+            return new KernelHost(kernel, new RecordingKernelCommandAndEventSender(), receiver);
+        }
+
+        internal IKernelCommandAndEventSender DefaultSender => _defaultSender;
+
+        internal MultiplexingKernelCommandAndEventReceiver DefaultReceiver => _defaultReceiver;
 
         private class DefaultKernelConnector : IKernelConnector
         {
@@ -40,9 +60,9 @@ namespace Microsoft.DotNet.Interactive
                 _defaultReceiver = defaultReceiver;
             }
 
-            public Task<Kernel> ConnectKernelAsync(KernelName kernelName)
+            public Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
             {
-                var proxy = new ProxyKernel(kernelName.Name, _defaultReceiver.CreateChildReceiver(), _defaultSender);
+                var proxy = new ProxyKernel(kernelInfo.LocalName, _defaultReceiver.CreateChildReceiver(), _defaultSender);
                 var _ = proxy.StartAsync();
                 return Task.FromResult((Kernel)proxy);
             }
@@ -70,7 +90,6 @@ namespace Microsoft.DotNet.Interactive
                     }
                     else if (commandOrEvent.Command is { })
                     {
-                        // forward only commands to the composite kernel to avoid event replications.
                         var _ = _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
                     }
                 }
@@ -90,6 +109,80 @@ namespace Microsoft.DotNet.Interactive
             _kernelEventSubscription?.Dispose();
             _cancellationTokenSource.Cancel();
             _cancellationTokenSource.Dispose();
+        }
+
+        public object TryGetKernelInfo(Kernel kernel, out KernelInfo kernelInfo)
+        {
+            return _kernelInfos.TryGetValue(kernel, out kernelInfo);
+        }
+
+        public void AddKernelInfo(Kernel kernel, KernelInfo kernelInfo)
+        {
+            kernelInfo.Uri = Uri.Append(kernel.Name);
+            _kernelInfos.Add(kernel,kernelInfo);
+        }
+
+        public KernelUri Uri { get;  }
+    }
+
+    internal class RecordingKernelCommandAndEventSender : IKernelCommandAndEventSender
+    {
+        private Func<CommandOrEvent, Task> _onSendAsync;
+
+        public Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
+        {
+            _onSendAsync?.Invoke(new CommandOrEvent(KernelCommandEnvelope.Deserialize(KernelCommandEnvelope.Serialize(kernelCommand)).Command));
+            return Task.CompletedTask;
+        }
+
+        public Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
+        {
+            _onSendAsync?.Invoke(new CommandOrEvent(KernelEventEnvelope.Deserialize(KernelEventEnvelope.Serialize(kernelEvent)).Event));
+            return Task.CompletedTask;
+        }
+
+        public void OnSend(Action<CommandOrEvent> onSend)
+        {
+            _onSendAsync = (commandOrEvent) =>
+            {
+
+                onSend(commandOrEvent);
+                return Task.CompletedTask;
+            };
+        }
+
+        public void OnSend(Func<CommandOrEvent, Task> onSendAsync)
+        {
+            _onSendAsync = onSendAsync;
+        }
+    }
+
+    internal class BlockingCommandAndEventReceiver : KernelCommandAndEventReceiverBase
+    {
+        private readonly BlockingCollection<CommandOrEvent> _commandsOrEvents;
+
+        public BlockingCommandAndEventReceiver()
+        {
+            _commandsOrEvents = new BlockingCollection<CommandOrEvent>();
+        }
+
+        public void Write(CommandOrEvent commandOrEvent)
+        {
+            if (commandOrEvent.Command is { })
+            {
+                _commandsOrEvents.Add(new CommandOrEvent(KernelCommandEnvelope
+                    .Deserialize(KernelCommandEnvelope.Serialize(commandOrEvent.Command)).Command));
+            }
+            else if (commandOrEvent.Event is { })
+            {
+                _commandsOrEvents.Add(new CommandOrEvent(KernelEventEnvelope
+                    .Deserialize(KernelEventEnvelope.Serialize(commandOrEvent.Event)).Event));
+            }
+        }
+
+        protected override Task<CommandOrEvent> ReadCommandOrEventAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(_commandsOrEvents.Take(cancellationToken));
         }
     }
 }

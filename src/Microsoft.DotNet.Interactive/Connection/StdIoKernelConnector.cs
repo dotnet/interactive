@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.Connection
 
         public DirectoryInfo WorkingDirectory { get; }
 
-        public async Task<Kernel> ConnectKernelAsync(KernelName kernelName)
+        public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
         {
             var command = Command[0];
             var arguments = string.Join(" ", Command.Skip(1));
@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.Interactive.Connection
             process.BeginErrorReadLine();
             var receiver = new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventTextReceiver(process.StandardOutput));
             var sender = new KernelCommandAndEventTextStreamSender(process.StandardInput);
-            var kernel = new ProxyKernel(kernelName.Name, receiver, sender);
+            var kernel = new ProxyKernel(kernelInfo.LocalName, receiver, sender);
             kernel.RegisterForDisposal(() =>
             {
                 process.Kill();

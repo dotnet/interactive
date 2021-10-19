@@ -54,7 +54,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                 .UseDefaultMagicCommands();
 
             SetKernelLanguage(Language.CSharp);
-            _compositeKernel.Name = ".NET";
 
             Kernel = _compositeKernel;
 

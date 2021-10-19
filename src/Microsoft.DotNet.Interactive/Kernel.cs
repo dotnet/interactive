@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly SemaphoreSlim _fastPathSchedulerLock = new(1);
         private KernelInvocationContext _inFlightContext;
         private int _countOfLanguageServiceCommandsInFlight = 0;
-        private KernelName _name;
+   
 
         protected Kernel(string name)
         {
@@ -206,11 +206,8 @@ namespace Microsoft.DotNet.Interactive
 
         public IObservable<KernelEvent> KernelEvents => _kernelEvents;
 
-        public string Name
-        {
-            get => _name.Name;
-            set => _name = new KernelName(value);
-        }
+        public string Name { get; }
+    
 
         internal KernelUri Uri =>
             ParentKernel is null

@@ -8,6 +8,6 @@ namespace Microsoft.DotNet.Interactive.Connection
 {
     public interface IKernelConnector
     {
-        Task<Kernel> ConnectKernelAsync(KernelName kernelName);
+        Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo);
     }
 }

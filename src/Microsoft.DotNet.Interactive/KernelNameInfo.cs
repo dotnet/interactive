@@ -6,23 +6,23 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public class KernelName
+    public class KernelInfo
     {
         public override string ToString()
         {
-            return Name;
+            return LocalName;
         }
 
-        public KernelName(string kernelName) : this(kernelName, Array.Empty<string>())
+        public KernelInfo(string localName) : this(localName, Array.Empty<string>())
         {
 
         }
 
-        public KernelName(string name, IReadOnlyCollection<string> aliases)
+        public KernelInfo(string localName, IReadOnlyCollection<string> aliases)
         {
-            Validate(name);
-            Name = name;
-
+            Validate(localName);
+            LocalName = localName;
+            aliases ??= Array.Empty<string>();
             foreach (var alias in aliases)
             {
                 Validate(alias);
@@ -47,6 +47,7 @@ namespace Microsoft.DotNet.Interactive
 
         public IReadOnlyCollection<string> Aliases { get; }
 
-        public string Name { get; }
+        public string LocalName { get; }
+        public KernelUri Uri { get; internal set; }
     }
 }

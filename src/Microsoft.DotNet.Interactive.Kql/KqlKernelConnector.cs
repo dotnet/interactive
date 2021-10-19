@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.Kql
 
         public string PathToService { get; set; }
 
-        public async Task<Kernel> ConnectKernelAsync(KernelName kernelName)
+        public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
         {
 
             if (string.IsNullOrWhiteSpace(PathToService))
@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.Interactive.Kql
             var sqlClient = new ToolsServiceClient(PathToService);
 
             var kernel = new MsKqlKernel(
-                $"kql-{kernelName}",
+                $"kql-{kernelInfo}",
                 connectionDetails,
                 sqlClient)
                 .UseValueSharing();
