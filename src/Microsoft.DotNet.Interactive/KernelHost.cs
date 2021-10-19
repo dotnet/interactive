@@ -115,7 +115,7 @@ namespace Microsoft.DotNet.Interactive
             _cancellationTokenSource.Dispose();
         }
 
-        public object TryGetKernelInfo(Kernel kernel, out KernelInfo kernelInfo)
+        public bool TryGetKernelInfo(Kernel kernel, out KernelInfo kernelInfo)
         {
             return _kernelInfos.TryGetValue(kernel, out kernelInfo);
         }
@@ -186,6 +186,48 @@ namespace Microsoft.DotNet.Interactive
             protected override Task<CommandOrEvent> ReadCommandOrEventAsync(CancellationToken cancellationToken)
             {
                 return Task.FromResult(_commandsOrEvents.Take(cancellationToken));
+            }
+        }
+
+        public void SetRemoteUri(string kernelName, KernelUri remoteKernelUri)
+        {
+            var childKernel = _kernel.FindKernel(kernelName);
+            if (childKernel is ProxyKernel proxyKernel)
+            {
+                SetRemoteUri(proxyKernel, remoteKernelUri);
+            }
+            else
+            {
+                throw new InvalidOperationException($"Cannot find Kernel {kernelName} or it is not a valid ProxyKernel");
+            }
+        }
+
+        public async Task<Kernel> ConnectKernelOnDefaultConnectorAsync(KernelInfo kernelInfo)
+        {
+            var childKernel = await DefaultConnector.ConnectKernelAsync(kernelInfo);
+            _kernel.Add(childKernel, kernelInfo.Aliases);
+            SetRemoteUri(kernelInfo.LocalName, kernelInfo.RemoteUri);
+            return childKernel;
+        }
+
+        public void SetRemoteUri(ProxyKernel kernel, KernelUri remoteKernelUri)
+        {
+            if (kernel == null)
+            {
+                throw new ArgumentNullException(nameof(kernel));
+            }
+
+            if (remoteKernelUri == null)
+            {
+                throw new ArgumentNullException(nameof(remoteKernelUri));
+            }
+            
+            if (TryGetKernelInfo(kernel, out var kernelInfo))
+            {
+                kernelInfo.RemoteUri = remoteKernelUri;
+            }else
+            {
+                throw new InvalidOperationException($"The kernel {kernel.Name} is not part of the current host");
             }
         }
     }

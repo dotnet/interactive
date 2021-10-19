@@ -223,7 +223,7 @@ namespace Microsoft.DotNet.Interactive
                 };
             }
 
-            return (kernel ?? this).Uri;
+            return  (kernel ?? this).Uri;
         }
 
         internal override async Task HandleAsync(

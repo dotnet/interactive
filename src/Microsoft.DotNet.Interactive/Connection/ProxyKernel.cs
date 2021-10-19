@@ -3,8 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-// ReSharper disable once RedundantUsingDirective
-using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 

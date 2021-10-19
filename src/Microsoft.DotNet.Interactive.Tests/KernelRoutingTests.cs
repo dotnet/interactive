@@ -152,8 +152,17 @@ x");
         public void kernelHost_tracks_remote_uris_for_proxy_kernels()
         {
 
+            using var composite = new CompositeKernel();
+            using var host = KernelHost.InProcess(composite);
+            var child = new ProxyKernel("localName", host);
+            composite.Add(child);
 
-            throw new NotImplementedException();
+            host.SetRemoteUri(child.Name, KernelUri.Parse($"vscode://{child.Name}"));
+          
+
+            host.TryGetKernelInfo(child, out var kernelInfo);
+            kernelInfo.RemoteUri.Should().NotBeNull();
+            kernelInfo.RemoteUri.Should().Be(KernelUri.Parse($"vscode://{child.Name}"));
         }
 
 

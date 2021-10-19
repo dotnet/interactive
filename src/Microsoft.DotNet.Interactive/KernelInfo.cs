@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -13,12 +14,12 @@ namespace Microsoft.DotNet.Interactive
             return LocalName;
         }
 
-        public KernelInfo(string localName) : this(localName, Array.Empty<string>())
+        public KernelInfo(string localName) : this(localName, Array.Empty<string>(), null)
         {
 
         }
 
-        public KernelInfo(string localName, IReadOnlyCollection<string> aliases)
+        public KernelInfo(string localName, IReadOnlyCollection<string> aliases, KernelUri remoteUri = null)
         {
             Validate(localName);
             LocalName = localName;
@@ -30,6 +31,7 @@ namespace Microsoft.DotNet.Interactive
 
             var distinctAliases = new HashSet<string>(aliases);
             Aliases = distinctAliases;
+            RemoteUri = remoteUri;
         }
 
         private static void Validate(string name)
@@ -49,5 +51,6 @@ namespace Microsoft.DotNet.Interactive
 
         public string LocalName { get; }
         public KernelUri Uri { get; internal set; }
+        public KernelUri RemoteUri { get; internal set; }
     }
 }

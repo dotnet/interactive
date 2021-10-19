@@ -176,14 +176,11 @@ test for remote kernel");
             {
                 var root = (CompositeKernel)kernel.RootKernel;
 
-                var vscodeKernelName = new KernelInfo("vscode", new[] { "frontend" });
-                var vscode = await root.Host.DefaultConnector.ConnectKernelAsync(vscodeKernelName);
+                var vscodeKernelInfo = new KernelInfo("vscode", new[] { "frontend" }, KernelUri.Parse("vscode://vscode"));
+                var javascriptKernelInfo = new KernelInfo("javascript", new[] { "js" }, KernelUri.Parse("webview://javascript"));
 
-                var jsKernelName = new KernelInfo("javascript", new[] { "js" });
-                var js = await root.Host.DefaultConnector.ConnectKernelAsync(jsKernelName);
-
-                root.Add(vscode, vscodeKernelName.Aliases);
-                root.Add(js, jsKernelName.Aliases);
+                await root.Host.ConnectKernelOnDefaultConnectorAsync(vscodeKernelInfo);
+                await root.Host.ConnectKernelOnDefaultConnectorAsync(javascriptKernelInfo);
             }
         }
     }
