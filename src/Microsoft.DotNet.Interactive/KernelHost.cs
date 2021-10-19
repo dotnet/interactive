@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
@@ -36,13 +35,18 @@ namespace Microsoft.DotNet.Interactive
             _kernel.SetHost(this);
 
         }
-
-        public static KernelHost InProcess(CompositeKernel kernel)
+        
+        public static KernelHost InProcess(CompositeKernel kernel, Func<CommandOrEvent, Task> onSend = null)
         {
 
-            var receiver = new MultiplexingKernelCommandAndEventReceiver(new BlockingCommandAndEventReceiver());
+            var receiver = new MultiplexingKernelCommandAndEventReceiver(new InProcessCommandAndEventReceiver());
 
-            return new KernelHost(kernel, new RecordingKernelCommandAndEventSender(), receiver);
+            var sender = new InProcessCommandAndEventSender();
+            if (onSend is not null)
+            {
+                sender.OnSend(onSend);
+            }
+            return new KernelHost(kernel, sender, receiver);
         }
 
         internal IKernelCommandAndEventSender DefaultSender => _defaultSender;
@@ -123,66 +127,68 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public KernelUri Uri { get;  }
-    }
 
-    internal class RecordingKernelCommandAndEventSender : IKernelCommandAndEventSender
-    {
-        private Func<CommandOrEvent, Task> _onSendAsync;
-
-        public Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
+        private class InProcessCommandAndEventSender : IKernelCommandAndEventSender
         {
-            _onSendAsync?.Invoke(new CommandOrEvent(KernelCommandEnvelope.Deserialize(KernelCommandEnvelope.Serialize(kernelCommand)).Command));
-            return Task.CompletedTask;
-        }
+            private Func<CommandOrEvent, Task> _onSendAsync;
 
-        public Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
-        {
-            _onSendAsync?.Invoke(new CommandOrEvent(KernelEventEnvelope.Deserialize(KernelEventEnvelope.Serialize(kernelEvent)).Event));
-            return Task.CompletedTask;
-        }
-
-        public void OnSend(Action<CommandOrEvent> onSend)
-        {
-            _onSendAsync = (commandOrEvent) =>
+            public Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
             {
-
-                onSend(commandOrEvent);
+                _onSendAsync?.Invoke(new CommandOrEvent(KernelCommandEnvelope.Deserialize(KernelCommandEnvelope.Serialize(kernelCommand)).Command));
                 return Task.CompletedTask;
-            };
-        }
-
-        public void OnSend(Func<CommandOrEvent, Task> onSendAsync)
-        {
-            _onSendAsync = onSendAsync;
-        }
-    }
-
-    internal class BlockingCommandAndEventReceiver : KernelCommandAndEventReceiverBase
-    {
-        private readonly BlockingCollection<CommandOrEvent> _commandsOrEvents;
-
-        public BlockingCommandAndEventReceiver()
-        {
-            _commandsOrEvents = new BlockingCollection<CommandOrEvent>();
-        }
-
-        public void Write(CommandOrEvent commandOrEvent)
-        {
-            if (commandOrEvent.Command is { })
-            {
-                _commandsOrEvents.Add(new CommandOrEvent(KernelCommandEnvelope
-                    .Deserialize(KernelCommandEnvelope.Serialize(commandOrEvent.Command)).Command));
             }
-            else if (commandOrEvent.Event is { })
+
+            public Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
             {
-                _commandsOrEvents.Add(new CommandOrEvent(KernelEventEnvelope
-                    .Deserialize(KernelEventEnvelope.Serialize(commandOrEvent.Event)).Event));
+                _onSendAsync?.Invoke(new CommandOrEvent(KernelEventEnvelope.Deserialize(KernelEventEnvelope.Serialize(kernelEvent)).Event));
+                return Task.CompletedTask;
+            }
+
+            public void OnSend(Action<CommandOrEvent> onSend)
+            {
+                _onSendAsync = (commandOrEvent) =>
+                {
+
+                    onSend(commandOrEvent);
+                    return Task.CompletedTask;
+                };
+            }
+
+            public void OnSend(Func<CommandOrEvent, Task> onSendAsync)
+            {
+                _onSendAsync = onSendAsync;
             }
         }
 
-        protected override Task<CommandOrEvent> ReadCommandOrEventAsync(CancellationToken cancellationToken)
+        private class InProcessCommandAndEventReceiver : KernelCommandAndEventReceiverBase
         {
-            return Task.FromResult(_commandsOrEvents.Take(cancellationToken));
+            private readonly BlockingCollection<CommandOrEvent> _commandsOrEvents;
+
+            public InProcessCommandAndEventReceiver()
+            {
+                _commandsOrEvents = new BlockingCollection<CommandOrEvent>();
+            }
+
+            public void Write(CommandOrEvent commandOrEvent)
+            {
+                if (commandOrEvent.Command is { })
+                {
+                    _commandsOrEvents.Add(new CommandOrEvent(KernelCommandEnvelope
+                        .Deserialize(KernelCommandEnvelope.Serialize(commandOrEvent.Command)).Command));
+                }
+                else if (commandOrEvent.Event is { })
+                {
+                    _commandsOrEvents.Add(new CommandOrEvent(KernelEventEnvelope
+                        .Deserialize(KernelEventEnvelope.Serialize(commandOrEvent.Event)).Event));
+                }
+            }
+
+            protected override Task<CommandOrEvent> ReadCommandOrEventAsync(CancellationToken cancellationToken)
+            {
+                return Task.FromResult(_commandsOrEvents.Take(cancellationToken));
+            }
         }
     }
+
+   
 }

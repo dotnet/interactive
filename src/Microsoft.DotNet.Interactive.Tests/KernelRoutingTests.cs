@@ -142,7 +142,6 @@ x");
         {
             using var composite = new CompositeKernel();
             using var host = KernelHost.InProcess(composite);
-
             var child = new FakeKernel("localName");
 
             var found = host.TryGetKernelInfo(child, out _);
