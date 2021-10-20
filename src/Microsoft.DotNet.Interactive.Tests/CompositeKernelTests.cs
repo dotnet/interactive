@@ -140,17 +140,17 @@ new [] {1,2,3}");
         public async Task when_target_kernel_is_specified_and_not_found_then_command_fails(int kernelCount)
         {
             using var kernel = new CompositeKernel();
-            using var events = kernel.KernelEvents.ToSubscribedList();
             foreach (var kernelName in Enumerable.Range(0, kernelCount).Select(i => $"kernel{i}"))
             {
                     kernel.Add(new FakeKernel(kernelName));
             }
 
-            await kernel.SendAsync(
+            var results = await kernel.SendAsync(
                 new SubmitCode(
                     @"var x = 123;",
                     "unregistered kernel name"));
 
+            using var events = results.KernelEvents.ToSubscribedList();
             events.Should()
                   .ContainSingle<CommandFailed>(cf => cf.Exception is NoSuitableKernelException);
         }

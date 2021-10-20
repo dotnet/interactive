@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.Commands
         {
             ParseResult = parseResult;
             DirectiveNode = directiveNode;
-            KernelUri = directiveNode?.KernelUri;
+            SchedulingScope = directiveNode?.CommandScope;
         }
 
         public ParseResult ParseResult { get; }

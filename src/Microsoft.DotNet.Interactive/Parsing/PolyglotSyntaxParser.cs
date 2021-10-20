@@ -9,6 +9,7 @@ using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Utility;
 
@@ -21,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
         public string DefaultLanguage { get; }
         private readonly SourceText _sourceText;
         private readonly Parser _rootKernelDirectiveParser;
-        private readonly IDictionary<string, (KernelUri kernelUri, Func<Parser> getParser)> _subkernelInfoByKernelName;
+        private readonly IDictionary<string, (SchedulingScope commandScope, Func<Parser> getParser)> _subkernelInfoByKernelName;
         private IReadOnlyList<SyntaxToken>? _tokens;
         private Dictionary<string, ChooseKernelDirectiveInfo>? _kernelChooserDirectives;
 
@@ -29,12 +30,12 @@ namespace Microsoft.DotNet.Interactive.Parsing
             SourceText sourceText,
             string defaultLanguage,
             Parser rootKernelDirectiveParser,
-            IDictionary<string, (KernelUri kernelUri, Func<Parser> getParser)> subkernelInfoByKernelName)
+            IDictionary<string, (SchedulingScope commandScope, Func<Parser> getParser)> subkernelInfoByKernelName)
         {
             DefaultLanguage = defaultLanguage;
             _sourceText = sourceText;
             _rootKernelDirectiveParser = rootKernelDirectiveParser;
-            _subkernelInfoByKernelName = subkernelInfoByKernelName ?? new ConcurrentDictionary<string, (KernelUri kernelUri, Func<Parser> getParser)>();
+            _subkernelInfoByKernelName = subkernelInfoByKernelName ?? new ConcurrentDictionary<string, (SchedulingScope commandScope, Func<Parser> getParser)>();
         }
 
         public PolyglotSyntaxTree Parse()
@@ -102,7 +103,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                             if (_subkernelInfoByKernelName.TryGetValue(currentKernelName ?? string.Empty, out currentKernelInfo))
                             {
-                                directiveNode.KernelUri = currentKernelInfo.kernelUri;
+                                directiveNode.CommandScope = currentKernelInfo.commandScope;
                             }
                         }
                         else
@@ -115,7 +116,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                             if (_subkernelInfoByKernelName.TryGetValue(directiveNode.KernelName ?? string.Empty,
                                 out currentKernelInfo))
                             {
-                                directiveNode.KernelUri = currentKernelInfo.kernelUri;
+                                directiveNode.CommandScope = currentKernelInfo.commandScope;
                             }
 
                         }
@@ -145,7 +146,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                                     if (_subkernelInfoByKernelName.TryGetValue(currentKernelName ?? string.Empty,
                                         out currentKernelInfo))
                                     {
-                                        directiveNode.KernelUri = currentKernelInfo.kernelUri;
+                                        directiveNode.CommandScope = currentKernelInfo.commandScope;
                                     }
 
                                     if (parseResult.Errors.Count == 0)
@@ -203,7 +204,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         targetKernelName,
                         _sourceText,
                         rootNode.SyntaxTree);
-                    languageNode.KernelUri = currentKernelInfo.kernelUri;
+                    languageNode.CommandScope = currentKernelInfo.commandScope;
                     languageNode.Add(nodeOrToken);
 
                     rootNode.Add(languageNode);

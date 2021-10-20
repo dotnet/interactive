@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.Commands
             LanguageNode = languageNode;
             SubmissionType = submissionType;
             KernelNameDirectiveNode = kernelNameDirectiveNode;
-            KernelUri = languageNode.KernelUri;
+            SchedulingScope = languageNode.CommandScope;
 
             if (languageNode is ActionDirectiveNode actionDirectiveNode)
             {

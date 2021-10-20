@@ -36,6 +36,7 @@ namespace Microsoft.DotNet.Interactive
         private string _defaultKernelName;
         private Command _connectDirective;
         private KernelHost _host;
+        private readonly Dictionary<Kernel, HashSet<string>> _kernelToNameOrAlias;
 
         public CompositeKernel() : base(".NET")
         {
@@ -44,6 +45,11 @@ namespace Microsoft.DotNet.Interactive
             _kernelsByNameOrAlias = new Dictionary<string, Kernel>
             {
                 [Name] = this
+            };
+
+            _kernelToNameOrAlias = new Dictionary<Kernel, HashSet<string>>
+            {
+                [this] = new HashSet<string> { Name }
             };
         }
 
@@ -90,17 +96,17 @@ namespace Microsoft.DotNet.Interactive
             AddChooseKernelDirective(kernel, aliases);
 
             _childKernels.Add(kernel);
-            if (Host is { })
-            {
-                Host.AddKernelInfo(kernel, new KernelInfo(kernel.Name, aliases));
-            }
+            
+            Host?.AddKernelInfo(kernel, new KernelInfo(kernel.Name, aliases));
 
+            _kernelToNameOrAlias.Add(kernel, new HashSet<string>{kernel.Name});
             _kernelsByNameOrAlias.Add(kernel.Name, kernel);
             if (aliases is { })
             {
                 foreach (var alias in aliases)
                 {
                     _kernelsByNameOrAlias.Add(alias, kernel);
+                    _kernelToNameOrAlias[kernel].Add(alias);
                 }
             }
 
@@ -186,7 +192,7 @@ namespace Microsoft.DotNet.Interactive
                 {
                     0 => this,
                     1 => _childKernels[0],
-                    _ => context.HandlingKernel
+                    _ => context?.HandlingKernel
                 };
             }
 
@@ -194,46 +200,32 @@ namespace Microsoft.DotNet.Interactive
 
             string GetKernelNameFromCommand()
             {
-                return _childKernels.FirstOrDefault(k => k.Uri.Equals(command.KernelUri))?.Name;
+                return command.TargetKernelName;
             }
         }
 
-        private protected override KernelUri GetHandlingKernelUri(
-            KernelCommand command)
+        private protected override SchedulingScope GetHandlingKernelCommandScope(
+            KernelCommand command, KernelInvocationContext context)
         {
-            var targetKernelName = command switch
-            {
-                { } kcb => kcb.TargetKernelName ?? DefaultKernelName,
-                _ => DefaultKernelName
-            };
+            return GetHandlingKernel(command, context).SchedulingScope;
+        }
 
-            Kernel kernel;
-
-            if (targetKernelName is not null)
-            {
-                _kernelsByNameOrAlias.TryGetValue(targetKernelName, out kernel);
-            }
-            else
-            {
-                kernel = _childKernels.Count switch
-                {
-                    0 => this,
-                    1 => _childKernels[0],
-                    _ => null
-                };
-            }
-
-            return  (kernel ?? this).Uri;
+        private protected override string GetHandlingKernelName(
+            KernelCommand command, KernelInvocationContext context)
+        {
+            return GetHandlingKernel(command, context).Name;
         }
 
         internal override async Task HandleAsync(
             KernelCommand command,
             KernelInvocationContext context)
         {
-            if (!command.KernelUri.Equals(Uri))
+            if (!string.IsNullOrWhiteSpace(command.TargetKernelName) 
+                && !_kernelToNameOrAlias[this].Contains(command.TargetKernelName) 
+                && _kernelsByNameOrAlias.TryGetValue(command.TargetKernelName, out var kernel))
             {
                 // route to a subkernel
-                var kernel = ChildKernels.Single(ck => ck.Uri.Equals(command.KernelUri));
+               
                 await kernel.Pipeline.SendAsync(command, context);
             }
             else

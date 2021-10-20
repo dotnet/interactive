@@ -36,6 +36,9 @@ namespace Microsoft.DotNet.Interactive.Commands
         [JsonIgnore]
         internal KernelUri KernelUri { get; set; }
 
+        [JsonIgnore]
+        internal SchedulingScope SchedulingScope { get; set; }
+
         public virtual Task InvokeAsync(KernelInvocationContext context)
         {
             if (Handler is null)

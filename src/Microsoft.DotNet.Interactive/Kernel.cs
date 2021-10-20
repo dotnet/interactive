@@ -125,10 +125,8 @@ namespace Microsoft.DotNet.Interactive
 
             foreach (var command in commands)
             {
-                if (command.KernelUri is null)
-                {
-                    command.KernelUri = GetHandlingKernelUri(command);
-                }
+                command.SchedulingScope ??= GetHandlingKernelCommandScope(command, context);
+                command.TargetKernelName ??= GetHandlingKernelName(command, context);
 
                 if (command.Parent is null &&
                     !CommandEqualityComparer.Instance.Equals(command, originalCommand))
@@ -140,6 +138,7 @@ namespace Microsoft.DotNet.Interactive
             return true;
         }
 
+      
         private bool TryPreprocessLanguageServiceCommand(LanguageServiceCommand command, KernelInvocationContext context, out IReadOnlyList<KernelCommand> commands)
         {
             var postProcessCommands = new List<KernelCommand>();
@@ -207,12 +206,6 @@ namespace Microsoft.DotNet.Interactive
         public IObservable<KernelEvent> KernelEvents => _kernelEvents;
 
         public string Name { get; }
-    
-
-        internal KernelUri Uri =>
-            ParentKernel is null
-                ? KernelUri.Parse(Name)
-                : ParentKernel.Uri.Append($"{Name}");
 
         public IReadOnlyCollection<ICommand> Directives => SubmissionParser.Directives;
 
@@ -321,13 +314,13 @@ namespace Microsoft.DotNet.Interactive
                         switch (c)
                         {
                             case Quit quit:
-                                quit.KernelUri = Uri;
+                                quit.SchedulingScope = SchedulingScope;
                                 quit.TargetKernelName = Name;
                                 await InvokePipelineAndCommandHandler(quit);
                                 break;
 
                             case Cancel cancel:
-                                cancel.KernelUri = Uri;
+                                cancel.SchedulingScope = SchedulingScope;
                                 cancel.TargetKernelName = Name;
                                 Scheduler.CancelCurrentOperation((inflight) =>
                                 {
@@ -377,7 +370,7 @@ namespace Microsoft.DotNet.Interactive
                                 await Scheduler.RunAsync(
                                     c,
                                     InvokePipelineAndCommandHandler,
-                                    c.KernelUri.ToString(),
+                                    c.SchedulingScope.ToString(),
                                     cancellationToken: cancellationToken)
                                     .ContinueWith(t =>
                                     {
@@ -400,6 +393,12 @@ namespace Microsoft.DotNet.Interactive
             return context.ResultFor(command);
         }
 
+       
+        internal SchedulingScope SchedulingScope =>
+            ParentKernel is null
+                ? SchedulingScope.Parse(Name)
+                : ParentKernel.SchedulingScope.Append($"{Name}");
+
         private async Task RunOnFastPath(KernelInvocationContext context,
             KernelCommand command, CancellationToken cancellationToken)
         {
@@ -407,7 +406,7 @@ namespace Microsoft.DotNet.Interactive
             await fastPathScheduler.RunAsync(
                     command,
                     InvokePipelineAndCommandHandler,
-                    command.KernelUri.ToString(),
+                    command.SchedulingScope.ToString(),
                     cancellationToken: cancellationToken)
                 .ContinueWith(t =>
                 {
@@ -492,7 +491,7 @@ namespace Microsoft.DotNet.Interactive
 
         protected IReadOnlyList<KernelCommand> GetDeferredOperations(KernelCommand command, string scope)
         {
-            if (!command.KernelUri.Contains(Uri))
+            if (!command.SchedulingScope.Contains(SchedulingScope))
             {
                 return EmptyCommandList;
             }
@@ -502,7 +501,8 @@ namespace Microsoft.DotNet.Interactive
             while (_deferredCommands.TryDequeue(out var kernelCommand))
             {
                 kernelCommand.TargetKernelName = Name;
-                kernelCommand.KernelUri = Uri;
+                kernelCommand.SchedulingScope = SchedulingScope;
+
                 var currentInvocationContext = KernelInvocationContext.Current;
 
                 if (TryPreprocessCommands(kernelCommand, currentInvocationContext, out var commands))
@@ -514,9 +514,14 @@ namespace Microsoft.DotNet.Interactive
             return splitCommands;
         }
 
-        private protected virtual KernelUri GetHandlingKernelUri(KernelCommand command)
+        private protected virtual SchedulingScope GetHandlingKernelCommandScope(KernelCommand command, KernelInvocationContext invocationContext)
         {
-            return Uri;
+            return SchedulingScope;
+        }
+
+        private protected virtual string GetHandlingKernelName(KernelCommand command, KernelInvocationContext invocationContext)
+        {
+            return Name;
         }
 
         protected internal void PublishEvent(KernelEvent kernelEvent)

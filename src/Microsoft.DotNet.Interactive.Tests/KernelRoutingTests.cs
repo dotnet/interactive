@@ -148,23 +148,6 @@ x");
             found.Should().Be(false);
         }
 
-        [Fact]
-        public void kernelHost_tracks_remote_uris_for_proxy_kernels()
-        {
-
-            using var composite = new CompositeKernel();
-            using var host = KernelHost.InProcess(composite);
-            var child = new ProxyKernel("localName", host);
-            composite.Add(child);
-
-            host.SetRemoteUri(child.Name, KernelUri.Parse($"kernel://vscode/{child.Name}"));
-          
-
-            host.TryGetKernelInfo(child, out var kernelInfo);
-            kernelInfo.RemoteUri.Should().NotBeNull();
-            kernelInfo.RemoteUri.Should().Be(KernelUri.Parse($"kernel://vscode/{child.Name}"));
-        }
-
 
         [FactSkipLinux]
         public async Task proxyKernel_does_not_perform_split_if_all_parts_go_to_same_targetKernel_as_the_original_command()

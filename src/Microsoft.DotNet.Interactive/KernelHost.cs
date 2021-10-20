@@ -189,46 +189,41 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public void SetRemoteUri(string kernelName, KernelUri remoteKernelUri)
+        private void RegisterRemoteUriForProxy(string proxyLocalKernelName, KernelUri remoteKernelUri)
         {
-            var childKernel = _kernel.FindKernel(kernelName);
+            var childKernel = _kernel.FindKernel(proxyLocalKernelName);
             if (childKernel is ProxyKernel proxyKernel)
             {
-                SetRemoteUri(proxyKernel, remoteKernelUri);
+                if (proxyKernel == null)
+                {
+                    throw new ArgumentNullException(nameof(proxyKernel));
+                }
+
+                if (remoteKernelUri == null)
+                {
+                    throw new ArgumentNullException(nameof(remoteKernelUri));
+                }
+            
+                if (TryGetKernelInfo(proxyKernel, out var kernelInfo))
+                {
+                    kernelInfo.RemoteUri = remoteKernelUri;
+                }else
+                {
+                    throw new ArgumentException($"Unknown kernel name : {proxyKernel.Name}");
+                }
             }
             else
             {
-                throw new InvalidOperationException($"Cannot find Kernel {kernelName} or it is not a valid ProxyKernel");
+                throw new ArgumentException($"Cannot find Kernel {proxyLocalKernelName} or it is not a valid ProxyKernel");
             }
         }
 
-        public async Task<Kernel> ConnectKernelOnDefaultConnectorAsync(KernelInfo kernelInfo)
+        public async Task<ProxyKernel> CreateProxyKernelOnDefaultConnectorAsync(KernelInfo kernelInfo)
         {
-            var childKernel = await DefaultConnector.ConnectKernelAsync(kernelInfo);
+            var childKernel = await DefaultConnector.ConnectKernelAsync(kernelInfo) as ProxyKernel;
             _kernel.Add(childKernel, kernelInfo.Aliases);
-            SetRemoteUri(kernelInfo.LocalName, kernelInfo.RemoteUri);
+            RegisterRemoteUriForProxy(kernelInfo.LocalName, kernelInfo.RemoteUri);
             return childKernel;
-        }
-
-        public void SetRemoteUri(ProxyKernel kernel, KernelUri remoteKernelUri)
-        {
-            if (kernel == null)
-            {
-                throw new ArgumentNullException(nameof(kernel));
-            }
-
-            if (remoteKernelUri == null)
-            {
-                throw new ArgumentNullException(nameof(remoteKernelUri));
-            }
-            
-            if (TryGetKernelInfo(kernel, out var kernelInfo))
-            {
-                kernelInfo.RemoteUri = remoteKernelUri;
-            }else
-            {
-                throw new InvalidOperationException($"The kernel {kernel.Name} is not part of the current host");
-            }
         }
     }
 
