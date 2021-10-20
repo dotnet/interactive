@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Pipes;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
@@ -236,6 +237,22 @@ Console.WriteLine(1);";
             handledCommands.Should().ContainSingle<SubmitCode>();
         }
 
-        void StartServer(Kernel remoteKernel, string pipeName) => remoteKernel.UseNamedPipeKernelServer(pipeName, new DirectoryInfo(Environment.CurrentDirectory));
+        void StartServer(CompositeKernel remoteKernel, string pipeName)
+        {
+           
+            var serverStream = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+            var kernelCommandAndEventPipeStreamReceiver = new KernelCommandAndEventPipeStreamReceiver(serverStream);
+            var kernelCommandAndEventPipeStreamSender = new KernelCommandAndEventPipeStreamSender(serverStream);
+            var host = new KernelHost(remoteKernel,
+                kernelCommandAndEventPipeStreamSender,
+                new MultiplexingKernelCommandAndEventReceiver(kernelCommandAndEventPipeStreamReceiver));
+            remoteKernel.RegisterForDisposal(serverStream);
+
+            Task.Run(() =>
+            {
+                serverStream.WaitForConnection();
+                var _ = host.ConnectAsync();
+            });
+        }
     }
 }

@@ -2,14 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.IO;
+using System.IO.Pipes;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
-using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
 using Xunit.Abstractions;
@@ -137,6 +136,21 @@ x");
                                       .BeTrue();
         }
 
-        void StartServer(Kernel remoteKernel, string pipeName) =>  remoteKernel.UseNamedPipeKernelServer(pipeName, new DirectoryInfo(Environment.CurrentDirectory)); 
+        void StartServer(CompositeKernel remoteKernel, string pipeName)
+        {
+            var serverStream = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+            var kernelCommandAndEventPipeStreamReceiver = new KernelCommandAndEventPipeStreamReceiver(serverStream);
+            var kernelCommandAndEventPipeStreamSender = new KernelCommandAndEventPipeStreamSender(serverStream);
+            var host = new KernelHost(remoteKernel,
+                kernelCommandAndEventPipeStreamSender,
+                new MultiplexingKernelCommandAndEventReceiver(kernelCommandAndEventPipeStreamReceiver));
+            remoteKernel.RegisterForDisposal(serverStream);
+
+            Task.Run(() =>
+            {
+                serverStream.WaitForConnection();
+                var _ = host.ConnectAsync();
+            });
+        }
     }
 }

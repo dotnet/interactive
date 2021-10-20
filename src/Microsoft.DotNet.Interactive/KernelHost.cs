@@ -81,6 +81,10 @@ namespace Microsoft.DotNet.Interactive
 
             _kernelEventSubscription =  _kernel.KernelEvents.Subscribe(e =>
             {
+                if (e is ReturnValueProduced { Value: DisplayedValue })
+                {
+                    return;
+                }
                 var _ = _defaultSender.SendAsync(e, _cancellationTokenSource.Token);
             });
 

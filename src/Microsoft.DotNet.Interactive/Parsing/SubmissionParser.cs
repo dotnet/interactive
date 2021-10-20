@@ -204,8 +204,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
             foreach (var command in commands)
             {
                 command.Parent = originalCommand;
-                command.DestinationUri = originalCommand.DestinationUri;
-                command.OriginUri = originalCommand.OriginUri;
             }
 
             return commands;
