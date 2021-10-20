@@ -119,8 +119,8 @@ x");
             composite.Add(child);
 
             host.TryGetKernelInfo(child, out var kernelInfo);
-            kernelInfo.Origin.Should().NotBeNull();
-            kernelInfo.Origin.Contains(host.Uri).Should().Be(true);
+            kernelInfo.OriginUri.Should().NotBeNull();
+            host.Uri.IsBaseOf(kernelInfo.OriginUri).Should().Be(true);
         }
 
         [Fact]
@@ -133,8 +133,8 @@ x");
             using var host = KernelHost.InProcess(composite);
 
             host.TryGetKernelInfo(child, out var kernelInfo);
-            kernelInfo.Origin.Should().NotBeNull();
-            kernelInfo.Origin.Contains(host.Uri).Should().Be(true);
+            kernelInfo.OriginUri.Should().NotBeNull();
+            host.Uri.IsBaseOf(kernelInfo.OriginUri).Should().Be(true);
         }
 
         [Fact]

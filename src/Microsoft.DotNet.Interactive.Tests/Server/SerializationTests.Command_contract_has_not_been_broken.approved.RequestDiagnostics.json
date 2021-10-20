@@ -1,1 +1,1 @@
-{"token":"the-token","id":"command-id","commandType":"RequestDiagnostics","command":{"code":"the-code","targetKernelName":null},"origin":"","destination":""}
+{"token":"the-token","id":"command-id","commandType":"RequestDiagnostics","command":{"code":"the-code","targetKernelName":null},"originUri":"","destinationUri":""}

@@ -423,8 +423,8 @@ export interface KernelCommandEnvelope {
     id?: string;
     commandType: KernelCommandType;
     command: KernelCommand;
-    origin?: string;
-    destination?: string;
+    originUri?: string;
+    destinationUri?: string;
 }
 
 export interface KernelEventEnvelopeObserver {

@@ -152,7 +152,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             await ext.OnLoadAsync(kernel);
 
             var submitCode = new SubmitCode(
-                @"#!vscode/javascript
+                @"#!javascript
 test for remote kernel");
 
             var result = await kernel.SendAsync(submitCode);
@@ -176,8 +176,8 @@ test for remote kernel");
             {
                 var root = (CompositeKernel)kernel.RootKernel;
 
-                var vscodeKernelInfo = new KernelInfo("vscode", new[] { "frontend" }, KernelUri.Parse("kernel://vscode/vscode"));
-                var javascriptKernelInfo = new KernelInfo("javascript", new[] { "js" }, KernelUri.Parse("kernel://webview/javascript"));
+                var vscodeKernelInfo = new KernelInfo("vscode", new[] { "frontend" }, new Uri("kernel://vscode/vscode", UriKind.Absolute));
+                var javascriptKernelInfo = new KernelInfo("javascript", new[] { "js" }, new Uri("kernel://webview/javascript", UriKind.Absolute));
 
                 await root.Host.CreateProxyKernelOnDefaultConnectorAsync(vscodeKernelInfo);
                 await root.Host.CreateProxyKernelOnDefaultConnectorAsync(javascriptKernelInfo);

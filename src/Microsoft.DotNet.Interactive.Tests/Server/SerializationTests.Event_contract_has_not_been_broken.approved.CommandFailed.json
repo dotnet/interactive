@@ -1,1 +1,1 @@
-{"event":{"message":"oops"},"eventType":"CommandFailed","command":{"token":"the-token","id":"command-id","commandType":"SubmitCode","command":{"code":"123","submissionType":"run","targetKernelName":null},"origin":null,"destination":null}}
+{"event":{"message":"oops"},"eventType":"CommandFailed","command":{"token":"the-token","id":"command-id","commandType":"SubmitCode","command":{"code":"123","submissionType":"run","targetKernelName":null},"originUri":"","destinationUri":""}}

@@ -1,1 +1,1 @@
-{"token":"the-token","id":"command-id","commandType":"RequestSignatureHelp","command":{"code":"sig-help-contents","linePosition":{"line":1,"character":2},"targetKernelName":null},"origin":"","destination":""}
+{"token":"the-token","id":"command-id","commandType":"RequestSignatureHelp","command":{"code":"sig-help-contents","linePosition":{"line":1,"character":2},"targetKernelName":null},"originUri":"","destinationUri":""}

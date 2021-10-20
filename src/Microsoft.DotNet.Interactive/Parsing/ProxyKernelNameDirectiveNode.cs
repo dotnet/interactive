@@ -11,15 +11,12 @@ namespace Microsoft.DotNet.Interactive.Parsing
     [DebuggerStepThrough]
     public class ProxyKernelNameDirectiveNode : KernelNameDirectiveNode
     {
-        public string RemoteKernelName { get; }
 
         internal ProxyKernelNameDirectiveNode(
-            string remoteKernelName,
             DirectiveToken directiveToken,
             SourceText sourceText,
             PolyglotSyntaxTree? syntaxTree) : base(directiveToken, sourceText, syntaxTree)
         {
-            RemoteKernelName = remoteKernelName;
         }
     }
 }

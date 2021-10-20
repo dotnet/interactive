@@ -1,1 +1,1 @@
-{"event":{"code":"123"},"eventType":"CompleteCodeSubmissionReceived","command":{"token":"the-token","id":"command-id","commandType":"SubmitCode","command":{"code":"123","submissionType":"run","targetKernelName":null},"origin":null,"destination":null}}
+{"event":{"code":"123"},"eventType":"CompleteCodeSubmissionReceived","command":{"token":"the-token","id":"command-id","commandType":"SubmitCode","command":{"code":"123","submissionType":"run","targetKernelName":null},"originUri":"","destinationUri":""}}

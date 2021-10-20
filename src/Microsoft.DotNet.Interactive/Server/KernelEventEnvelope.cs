@@ -195,7 +195,9 @@ namespace Microsoft.DotNet.Interactive.Server
                     command = commandEnvelope.Command,
                     commandType = commandEnvelope.CommandType,
                     token = eventEnvelope.Event.Command.GetOrCreateToken(),
-                    id = commandEnvelope.CommandId
+                    id = commandEnvelope.CommandId,
+                    originUri = commandEnvelope.OriginUri?.ToString()?? string.Empty,
+                    destinationUri = commandEnvelope.DestinationUri?.ToString() ?? string.Empty
                 };
             }
 

@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive
 
         }
 
-        public KernelInfo(string localName, IReadOnlyCollection<string> aliases, KernelUri destination = null)
+        public KernelInfo(string localName, IReadOnlyCollection<string> aliases, Uri destinationUri = null)
         {
             Validate(localName);
             LocalName = localName;
@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.Interactive
 
             var distinctAliases = new HashSet<string>(aliases);
             Aliases = distinctAliases;
-            Destination = destination;
+            DestinationUri = destinationUri;
         }
 
         private static void Validate(string name)
@@ -47,9 +47,8 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public IReadOnlyCollection<string> Aliases { get; }
-
         public string LocalName { get; }
-        public KernelUri Origin { get; internal set; }
-        public KernelUri Destination { get; internal set; }
+        public Uri OriginUri { get; internal set; }
+        public Uri DestinationUri { get; internal set; }
     }
 }
