@@ -140,6 +140,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         {
                             case "jupyter":
                             case "synapse":
+                            case "vscode":
                                 frontendTelemetryAdded = true;
                                 entryItems.Add(new KeyValuePair<string, string>("frontend", directive.Key));
                                 break;

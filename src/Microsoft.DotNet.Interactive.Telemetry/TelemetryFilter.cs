@@ -263,6 +263,11 @@ namespace Microsoft.DotNet.Interactive.Telemetry
             new CommandRule("stdio",
                 new[]{
                     Option("--default-kernel", new[]{ "csharp", "fsharp", "powershell" }, "default-kernel")
+                }),
+
+            new CommandRule("vscode",
+                new[]{
+                    Option("--default-kernel", new[]{ "csharp", "fsharp", "powershell" }, "default-kernel")
                 })
         };
     }
