@@ -122,7 +122,7 @@ namespace Microsoft.DotNet.Interactive
 
         public void AddKernelInfo(Kernel kernel, KernelInfo kernelInfo)
         {
-            kernelInfo.Uri = Uri.Append(kernel.Name);
+            kernelInfo.Origin = Uri.Append(kernel.Name);
             _kernelInfos.Add(kernel,kernelInfo);
         }
 
@@ -206,7 +206,7 @@ namespace Microsoft.DotNet.Interactive
             
                 if (TryGetKernelInfo(proxyKernel, out var kernelInfo))
                 {
-                    kernelInfo.RemoteUri = remoteKernelUri;
+                    kernelInfo.Destination = remoteKernelUri;
                 }else
                 {
                     throw new ArgumentException($"Unknown kernel name : {proxyKernel.Name}");
@@ -222,7 +222,7 @@ namespace Microsoft.DotNet.Interactive
         {
             var childKernel = await DefaultConnector.ConnectKernelAsync(kernelInfo) as ProxyKernel;
             _kernel.Add(childKernel, kernelInfo.Aliases);
-            RegisterRemoteUriForProxy(kernelInfo.LocalName, kernelInfo.RemoteUri);
+            RegisterRemoteUriForProxy(kernelInfo.LocalName, kernelInfo.Destination);
             return childKernel;
         }
     }

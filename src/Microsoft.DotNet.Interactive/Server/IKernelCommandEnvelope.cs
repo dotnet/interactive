@@ -14,5 +14,9 @@ namespace Microsoft.DotNet.Interactive.Server
         string Token { get; }
 
         string CommandId { get; }
+
+        KernelUri Origin { get; }
+
+        KernelUri Destination { get; }
     }
 }

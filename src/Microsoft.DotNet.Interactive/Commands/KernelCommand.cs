@@ -34,7 +34,10 @@ namespace Microsoft.DotNet.Interactive.Commands
         internal static KernelCommand None { get; } = new NoCommand();
 
         [JsonIgnore]
-        internal KernelUri KernelUri { get; set; }
+        internal KernelUri Origin { get; set; }
+
+        [JsonIgnore]
+        internal KernelUri Destination { get; set; }
 
         [JsonIgnore]
         internal SchedulingScope SchedulingScope { get; set; }

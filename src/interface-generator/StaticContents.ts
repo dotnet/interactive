@@ -9,6 +9,8 @@ export interface KernelCommandEnvelope {
     id?: string;
     commandType: KernelCommandType;
     command: KernelCommand;
+    origin?: string;
+    destination?: string;
 }
 
 export interface KernelEventEnvelopeObserver {

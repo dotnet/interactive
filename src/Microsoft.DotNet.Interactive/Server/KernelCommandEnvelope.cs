@@ -40,6 +40,10 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public string CommandId => _command.GetOrCreateId();
 
+        public KernelUri Origin => _command.Origin;
+
+        public KernelUri Destination => _command.Destination;
+
         KernelCommand IKernelCommandEnvelope.Command => _command;
 
         internal static void RegisterCommandTypeForSerialization<T>() where T : KernelCommand
@@ -124,6 +128,8 @@ namespace Microsoft.DotNet.Interactive.Server
             string commandJson;
             var commandToken = string.Empty;
             var commandId = string.Empty;
+            var origin = string.Empty;
+            var destination = string.Empty;
 
             if (json.TryGetProperty(nameof(SerializationModel.commandType), out var commandTypeProperty))
             {
@@ -162,9 +168,36 @@ namespace Microsoft.DotNet.Interactive.Server
             {
                 commandToken = tokenProperty.GetString();
             }
+            
             if (commandToken is not null)
             {
                 command.SetToken(commandToken);
+            }
+
+            // restore the command origin
+            if (json.TryGetProperty(nameof(SerializationModel.origin), out var originProperty))
+            {
+                origin = originProperty.GetString();
+            }
+
+            if (origin is not null)
+            {
+                command.Origin = KernelUri.Parse(origin);
+            }
+
+            // restore the command destination
+            if (json.TryGetProperty(nameof(SerializationModel.destination), out var destinationProperty))
+            {
+                destination = destinationProperty.GetString();
+            }
+
+            if (destination is not null)
+            {
+                command.Destination = KernelUri.Parse(destination);
+            }
+            else
+            {
+                command.Destination = command.Origin;
             }
 
             return Create(command);
@@ -179,7 +212,9 @@ namespace Microsoft.DotNet.Interactive.Server
                 command = envelope.Command,
                 commandType = envelope.CommandType,
                 token = envelope.Token,
-                id = envelope.CommandId
+                id = envelope.CommandId,
+                origin = envelope.Origin?.ToString()??string.Empty,
+                destination = envelope.Origin?.ToString() ?? string.Empty,
             };
 
             return JsonSerializer.Serialize(
@@ -196,6 +231,10 @@ namespace Microsoft.DotNet.Interactive.Server
             public string commandType { get; set; }
 
             public object command { get; set; }
+
+            public string origin { get; set; }
+
+            public string destination { get; set; }
         }
     }
 }
