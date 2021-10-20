@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             remoteCompositeKernel.DefaultKernelName = "csharp";
 
-            StartServer(remoteCompositeKernel, pipeName);
+            using var _ = StartServer(remoteCompositeKernel, pipeName);
 
             // setup connection
 
@@ -117,7 +117,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             remoteCompositeKernel.DefaultKernelName = "csharp";
 
-            StartServer(remoteCompositeKernel, pipeName);
+            using var _ = StartServer(remoteCompositeKernel, pipeName);
 
             using var events = localCompositeKernel.KernelEvents.ToSubscribedList();
 
@@ -136,7 +136,7 @@ x");
                                       .BeTrue();
         }
 
-        void StartServer(CompositeKernel remoteKernel, string pipeName)
+        KernelHost StartServer(CompositeKernel remoteKernel, string pipeName)
         {
             var serverStream = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
             var kernelCommandAndEventPipeStreamReceiver = new KernelCommandAndEventPipeStreamReceiver(serverStream);
@@ -151,6 +151,8 @@ x");
                 serverStream.WaitForConnection();
                 var _ = host.ConnectAsync();
             });
+
+            return host;
         }
     }
 }

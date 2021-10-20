@@ -142,7 +142,7 @@ Console.WriteLine(1);";
             remoteCompositeKernel.DefaultKernelName = "csharp";
             var pipeName = Guid.NewGuid().ToString();
 
-            StartServer(remoteCompositeKernel, pipeName);
+            using var _ = StartServer(remoteCompositeKernel, pipeName);
 
             var connection = new NamedPipeKernelConnector(pipeName);
 
@@ -161,7 +161,7 @@ Console.WriteLine(1);";
             handledCommands.Should().ContainSingle<SubmitCode>();
         }
 
-        void StartServer(CompositeKernel remoteKernel, string pipeName)
+        KernelHost StartServer(CompositeKernel remoteKernel, string pipeName)
         {
            
             var serverStream = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
@@ -177,6 +177,8 @@ Console.WriteLine(1);";
                 serverStream.WaitForConnection();
                 var _ = host.ConnectAsync();
             });
+
+            return host;
         }
     }
 }
