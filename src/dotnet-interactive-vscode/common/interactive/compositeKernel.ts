@@ -3,9 +3,13 @@
 
 import * as contracts from "../interfaces/contracts";
 import { Kernel } from "./kernel";
+import { KernelHost } from "./kernelHost";
+import { KernelInfo } from "./kernelInfo";
 
 export class CompositeKernel extends Kernel {
 
+
+    private _host: KernelHost | null = null;
     private readonly _kernelMap: Map<string, Kernel> = new Map();
     defaultKernelName: string | undefined;
 
@@ -15,6 +19,10 @@ export class CompositeKernel extends Kernel {
 
     get childKernels() {
         return Array.from(this._kernelMap.values());
+    }
+
+    SetHost(kernelHost: KernelHost) {
+        this._host = kernelHost;
     }
 
     add(kernel: Kernel, aliases?: string[]) {
@@ -31,6 +39,13 @@ export class CompositeKernel extends Kernel {
                 this._kernelMap.set(alias, kernel);
             });
         }
+
+        let kernelInfo: KernelInfo = {
+            localName: kernel.name,
+            aliases: aliases === undefined ? [] : [...aliases],
+        };
+
+        this._host?.addKernelInfo(kernel, kernelInfo);
     }
 
     findKernelByName(kernelName: string): Kernel | undefined {

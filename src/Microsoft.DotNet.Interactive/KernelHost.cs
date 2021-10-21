@@ -26,15 +26,20 @@ namespace Microsoft.DotNet.Interactive
         private readonly Dictionary<Uri, Kernel> _originUriToKernel = new();
         public IKernelConnector DefaultConnector { get; }
 
-
-        public KernelHost(CompositeKernel kernel,IKernelCommandAndEventSender defaultSender, MultiplexingKernelCommandAndEventReceiver defaultReceiver)
+        public KernelHost(CompositeKernel kernel, IKernelCommandAndEventSender defaultSender, MultiplexingKernelCommandAndEventReceiver defaultReceiver, Uri hostUri)
         {
             _kernel = kernel;
             _defaultSender = defaultSender;
             _defaultReceiver = defaultReceiver;
             DefaultConnector = new DefaultKernelConnector(_defaultSender, _defaultReceiver);
-            Uri = new Uri($"kernel://dotnet/{Guid.NewGuid():N}", UriKind.Absolute);
+            Uri = hostUri;
             _kernel.SetHost(this);
+
+        }
+
+        public KernelHost(CompositeKernel kernel,IKernelCommandAndEventSender defaultSender, MultiplexingKernelCommandAndEventReceiver defaultReceiver) : this(kernel, defaultSender, defaultReceiver, new Uri($"kernel://dotnet/{Guid.NewGuid():N}", UriKind.Absolute))
+        {
+          
 
         }
         

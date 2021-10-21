@@ -135,31 +135,3 @@ describe("proxyKernel", () => {
 });
 
 
-function createInMemoryTransport(eventProducer?: (commandEnvelope: contracts.KernelCommandEnvelope) => contracts.KernelEventEnvelope[]): { transport: GenericTransport, sentItems: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] } {
-    let sentItems: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] = [];
-    if (!eventProducer) {
-        eventProducer = (ce) => {
-            return [{ eventType: contracts.CommandSucceededType, event: <contracts.CommandSucceeded>{}, command: ce }];
-        }
-    }
-
-    const receiver = new CommandAndEventReceiver();
-    let sender: (message: contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope) => Promise<void> = (item) => {
-        sentItems.push(item);
-        let events = eventProducer(<contracts.KernelCommandEnvelope>item)
-        for (let event of events) {
-            receiver.delegate(event);
-        }
-        return Promise.resolve();
-    }
-    let transport = new GenericTransport(
-        sender,
-        () => {
-            return receiver.read();
-        }
-    );
-    return {
-        transport,
-        sentItems
-    };
-}
