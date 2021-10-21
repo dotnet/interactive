@@ -22,13 +22,32 @@ describe("kernelHost",
             const kernelHost = new KernelHost(compositeKernel, inMemory.transport, "kernel://vscode");
 
             const childKernel = new Kernel("test");
-            compositeKernel.add(childKernel);
+            compositeKernel.add(childKernel, ["test1", "test2"]);
 
             const kernelInfo = kernelHost.tryGetKernelInfo(childKernel);
 
             expect(kernelInfo).to.not.be.undefined;
             expect(kernelInfo.originUri).to.not.be.undefined;
             expect(kernelInfo!.originUri).to.equal("kernel://vscode/test");
+            expect(kernelInfo.aliases).to.be.deep.eq(["test1", "test2"]);
+
+        });
+
+        it("provides uri for kernels as it is attached to composite kernel", () => {
+            const inMemory = createInMemoryTransport();
+            const compositeKernel = new CompositeKernel("vscode");
+
+
+            const childKernel = new Kernel("test");
+            compositeKernel.add(childKernel, ["test1", "test2"]);
+
+            const kernelHost = new KernelHost(compositeKernel, inMemory.transport, "kernel://vscode");
+            const kernelInfo = kernelHost.tryGetKernelInfo(childKernel);
+
+            expect(kernelInfo).to.not.be.undefined;
+            expect(kernelInfo.originUri).to.not.be.undefined;
+            expect(kernelInfo!.originUri).to.equal("kernel://vscode/test");
+            expect(kernelInfo.aliases).to.be.deep.eq(["test1", "test2"]);
 
         });
     }

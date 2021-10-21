@@ -43,6 +43,13 @@ export class ProxyKernel extends Kernel {
         });
 
         try {
+
+            const kernelInfo = this.parentKernel?.host?.tryGetKernelInfo(this);
+            if (kernelInfo) {
+                commandInvocation.commandEnvelope.originUri = kernelInfo.originUri;
+                commandInvocation.commandEnvelope.destinationUri = kernelInfo.destinationUri;
+            }
+
             this.transport.submitCommand(commandInvocation.commandEnvelope);
             Logger.default.info(`proxy ${this.name} about to await with token ${token}`);
             const enventEnvelope = await completionSource.promise;

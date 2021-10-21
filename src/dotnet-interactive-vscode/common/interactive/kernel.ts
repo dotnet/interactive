@@ -5,6 +5,7 @@ import { areCommandsTheSame, KernelInvocationContext } from "./kernelInvocationC
 import { Guid, TokenGenerator } from "./tokenGenerator";
 import * as contracts from "../interfaces/contracts";
 import { Logger } from "../logger";
+import { CompositeKernel } from "./compositeKernel";
 
 export interface IKernelCommandInvocation {
     commandEnvelope: contracts.KernelCommandEnvelope;
@@ -25,7 +26,7 @@ export class Kernel {
     private readonly _eventObservers: { [token: string]: contracts.KernelEventEnvelopeObserver } = {};
     private readonly _tokenGenerator: TokenGenerator = new TokenGenerator();
     public rootKernel: Kernel = this;
-    public parentKernel: Kernel | null = null;
+    public parentKernel: CompositeKernel | null = null;
 
     constructor(readonly name: string) {
     }

@@ -11,9 +11,10 @@ export class KernelHost {
     private readonly _originUriToKernel = new Map<string, Kernel>();
     private readonly _kernelToKernelInfo = new Map<Kernel, KernelInfo>();
     private readonly _uri: string;
+
     constructor(private readonly _kernel: CompositeKernel, private readonly _transport: contracts.Transport, hostUri: string) {
         this._uri = hostUri || "kernel://vscode";
-        this._kernel.SetHost(this);
+        this._kernel.host = this;
     }
 
     public tryGetKernelByDestinationUri(destinationUri: string): Kernel | undefined {
@@ -51,7 +52,7 @@ export class KernelHost {
             }
         }
 
-        return this._kernel
+        return this._kernel;
     }
 
 }

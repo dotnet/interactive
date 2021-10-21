@@ -10,7 +10,9 @@ export class CompositeKernel extends Kernel {
 
 
     private _host: KernelHost | null = null;
-    private readonly _kernelMap: Map<string, Kernel> = new Map();
+    private readonly _namesTokernelMap: Map<string, Kernel> = new Map();
+    private readonly _kernelToNamesMap: Map<Kernel, Set<string>> = new Map();
+
     defaultKernelName: string | undefined;
 
     constructor(name: string) {
@@ -18,11 +20,27 @@ export class CompositeKernel extends Kernel {
     }
 
     get childKernels() {
-        return Array.from(this._kernelMap.values());
+        return Array.from(this._namesTokernelMap.values());
     }
 
-    SetHost(kernelHost: KernelHost) {
-        this._host = kernelHost;
+    get host(): KernelHost | null {
+        return this._host;
+    }
+
+    set host(host: KernelHost) {
+        this._host = host;
+        this._host.addKernelInfo(this, { localName: this.name, aliases: [] });
+
+        for (let kernel of this._kernelToNamesMap.keys()) {
+            let aliases = [];
+            for (let name of this._kernelToNamesMap.get(kernel)!) {
+                if (name !== kernel.name) {
+                    aliases.push(name);
+                }
+            }
+            this._host.addKernelInfo(kernel, { localName: kernel.name, aliases: [...aliases] });
+        }
+
     }
 
     add(kernel: Kernel, aliases?: string[]) {
@@ -33,24 +51,31 @@ export class CompositeKernel extends Kernel {
         kernel.parentKernel = this;
         kernel.rootKernel = this.rootKernel;
 
-        this._kernelMap.set(kernel.name, kernel);
+        this._namesTokernelMap.set(kernel.name, kernel);
+
+        let kernelNames = new Set<string>();
+        kernelNames.add(kernel.name);
         if (aliases) {
             aliases.forEach(alias => {
-                this._kernelMap.set(alias, kernel);
+                this._namesTokernelMap.set(alias, kernel);
+                kernelNames.add(alias);
             });
         }
+
+        this._kernelToNamesMap.set(kernel, kernelNames);
 
         let kernelInfo: KernelInfo = {
             localName: kernel.name,
             aliases: aliases === undefined ? [] : [...aliases],
         };
 
-        this._host?.addKernelInfo(kernel, kernelInfo);
+        this.host?.addKernelInfo(kernel, kernelInfo);
     }
 
     findKernelByName(kernelName: string): Kernel | undefined {
-        return this._kernelMap.get(kernelName);
+        return this._namesTokernelMap.get(kernelName);
     }
+
     handleCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
 
         let kernel = commandEnvelope.command.targetKernelName === this.name

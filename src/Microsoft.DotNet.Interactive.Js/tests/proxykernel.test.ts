@@ -6,7 +6,7 @@ import * as contracts from "../src/common/interfaces/contracts";
 import { CompositeKernel } from "../src/common/interactive/compositeKernel";
 import { Kernel } from "../src/common/interactive/kernel";
 import { ProxyKernel } from "../src/common/interactive/proxyKernel";
-import { findEventFromKernel } from "./testSupport";
+import { createInMemoryTransport, findEventFromKernel } from "./testSupport";
 import { CommandAndEventReceiver, GenericTransport, PromiseCompletionSource } from "../src/common/interactive/genericTransport";
 import { Logger } from "../src/common/logger";
 
