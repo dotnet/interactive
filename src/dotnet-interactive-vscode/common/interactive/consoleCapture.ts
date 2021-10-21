@@ -33,9 +33,7 @@ export class ConsoleCapture implements contracts.Disposable {
     error(message?: any, ...optionalParams: any[]): void {
         this.redirectAndPublish(this.originalConsole.error, ...[message, ...optionalParams]);
     }
-    exception(message?: string, ...optionalParams: any[]): void {
-        this.originalConsole.exception(message, optionalParams);
-    }
+
     group(...label: any[]): void {
         this.originalConsole.group(label);
     }
