@@ -27,20 +27,21 @@ export class CompositeKernel extends Kernel {
         return this._host;
     }
 
-    set host(host: KernelHost) {
+    set host(host: KernelHost | null) {
         this._host = host;
-        this._host.addKernelInfo(this, { localName: this.name, aliases: [] });
+        if (this._host) {
+            this._host.addKernelInfo(this, { localName: this.name, aliases: [] });
 
-        for (let kernel of this._kernelToNamesMap.keys()) {
-            let aliases = [];
-            for (let name of this._kernelToNamesMap.get(kernel)!) {
-                if (name !== kernel.name) {
-                    aliases.push(name);
+            for (let kernel of this._kernelToNamesMap.keys()) {
+                let aliases = [];
+                for (let name of this._kernelToNamesMap.get(kernel)!) {
+                    if (name !== kernel.name) {
+                        aliases.push(name);
+                    }
                 }
+                this._host.addKernelInfo(kernel, { localName: kernel.name, aliases: [...aliases] });
             }
-            this._host.addKernelInfo(kernel, { localName: kernel.name, aliases: [...aliases] });
         }
-
     }
 
     add(kernel: Kernel, aliases?: string[]) {

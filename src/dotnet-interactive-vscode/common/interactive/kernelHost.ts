@@ -5,6 +5,8 @@ import { CompositeKernel } from './compositeKernel';
 import * as contracts from '../interfaces/contracts';
 import { Kernel } from './kernel';
 import { KernelInfo } from './kernelInfo';
+import { ProxyKernel } from './proxyKernel';
+import { Logger } from '../logger';
 
 export class KernelHost {
     private readonly _destinationUriToKernel = new Map<string, Kernel>();
@@ -41,6 +43,7 @@ export class KernelHost {
         if (kernelCommandEnvelope.destinationUri) {
             let fromDestinationUri = this._destinationUriToKernel.get(kernelCommandEnvelope.destinationUri);
             if (fromDestinationUri) {
+                Logger.default.info(`Kernel ${fromDestinationUri.name} found for destination uri ${kernelCommandEnvelope.destinationUri}`);
                 return fromDestinationUri;
             }
         }
@@ -48,11 +51,41 @@ export class KernelHost {
         if (kernelCommandEnvelope.originUri) {
             let fromOriginUri = this._originUriToKernel.get(kernelCommandEnvelope.originUri);
             if (fromOriginUri) {
+                Logger.default.info(`Kernel ${fromOriginUri.name} found for origin uri ${kernelCommandEnvelope.originUri}`);
                 return fromOriginUri;
             }
         }
 
+        Logger.default.info(`Using Kernel ${this._kernel.name}`);
         return this._kernel;
     }
 
+    public registerDestinationUriForProxy(proxyLocalKernelName: string, destinationUri: string) {
+        const kernel = this._kernel.findKernelByName(proxyLocalKernelName);
+        if (!(kernel as ProxyKernel)) {
+            throw new Error(`Kernel ${proxyLocalKernelName} is not a proxy kernel`);
+        }
+
+        const kernelinfo = this._kernelToKernelInfo.get(kernel);
+        if (!kernelinfo) {
+            throw new Error("kernelinfo not found");
+        }
+        if (kernelinfo?.destinationUri) {
+            Logger.default.info(`Removing destination uri ${kernelinfo.destinationUri} for proxy kernel ${kernel.name}`);
+            this._destinationUriToKernel.delete(kernelinfo.destinationUri);
+        }
+        kernelinfo.destinationUri = destinationUri;
+
+        if (kernel) {
+            Logger.default.info(`Registering destination uri ${destinationUri} for proxy kernel ${kernel.name}`);
+            this._destinationUriToKernel.set(destinationUri, kernel);
+        }
+    }
+
+    public connect() {
+        this._transport.setCommandHandler((kernelCommandEnvelope: contracts.KernelCommandEnvelope) => {
+            const kernel = this.getKernel(kernelCommandEnvelope);
+            return kernel.send(kernelCommandEnvelope);
+        });
+    }
 }
