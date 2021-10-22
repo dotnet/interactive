@@ -29,7 +29,8 @@ namespace Microsoft.DotNet.Interactive.Tests
             _disposables.Dispose();
         }
 
-        [FactSkipLinux]
+        [WindowsFact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
         public async Task it_can_reuse_connection_for_multiple_proxy_kernel()
         {
             var pipeName = Guid.NewGuid().ToString();
@@ -89,7 +90,8 @@ namespace Microsoft.DotNet.Interactive.Tests
             kernelEvents2.Should().ContainSingle<DisplayedValueProduced>().Which.FormattedValues.Should().ContainSingle(f => f.Value == kernelCommand2.Code);
         }
 
-        [FactSkipLinux]
+        [WindowsFact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
         public async Task can_address_remote_composite_kernel_using_named_pipe()
         {
             using var localCompositeKernel = new CompositeKernel
@@ -136,6 +138,7 @@ x");
                                       .BeTrue();
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platform")]
         KernelHost StartServer(CompositeKernel remoteKernel, string pipeName)
         {
             var serverStream = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);

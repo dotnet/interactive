@@ -3,16 +3,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.IO.Pipes;
 using System.Threading.Tasks;
 using FluentAssertions;
-using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
-using Microsoft.DotNet.Interactive.Documents;
-using Microsoft.DotNet.Interactive.Server;
-using Microsoft.DotNet.Interactive.Tests.Parsing;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
 using Xunit;
@@ -74,7 +69,8 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
 
-        [FactSkipLinux]
+        [WindowsFact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
         public async Task proxyKernel_does_not_perform_split_if_all_parts_go_to_same_targetKernel_as_the_original_command()
         {
             var handledCommands = new List<KernelCommand>();
@@ -118,7 +114,8 @@ Console.WriteLine(1);";
         }
 
 
-        [FactSkipLinux]
+        [WindowsFact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
         public async Task proxyKernel_does_not_perform_split_if_all_parts_go_to_same_targetKernel_original_command_has_not_target_kernel()
         {
 
@@ -161,6 +158,7 @@ Console.WriteLine(1);";
             handledCommands.Should().ContainSingle<SubmitCode>();
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
         KernelHost StartServer(CompositeKernel remoteKernel, string pipeName)
         {
            
