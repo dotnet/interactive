@@ -89,7 +89,7 @@ describe("proxyKernel", () => {
         });
     });
 
-    it("forwards events ofremotely split commands", async () => {
+    it("forwards events of remotely split commands", async () => {
         let inMemory = createInMemoryTransport(ce => {
             return [
                 { eventType: contracts.ValueProducedType, event: <contracts.ValueProduced>{ name: "a", formattedValue: { mimeType: "text/plain", value: "variable a" } }, command: { ...ce, ["command.id"]: "newId" } },

@@ -5,9 +5,10 @@ import { expect } from "chai";
 import * as contracts from "../src/common/interfaces/contracts";
 import { CompositeKernel } from "../src/common/interactive/compositeKernel";
 import { Kernel } from "../src/common/interactive/kernel";
-import { createInMemoryTransport, findEventFromKernel } from "./testSupport";
+import { createInMemoryChannel, createInMemoryTransport, findEventFromKernel } from "./testSupport";
 import { Logger } from "../src/common/logger";
 import { KernelHost } from "../src/common/interactive/kernelHost";
+import { ProxyKernel } from "../src/common/interactive/proxyKernel";
 
 describe("kernelHost",
 
@@ -50,5 +51,86 @@ describe("kernelHost",
             expect(kernelInfo.aliases).to.be.deep.eq(["test1", "test2"]);
 
         });
+
+        it("routes commands to the appropriate kernels", async () => {
+            const events: contracts.KernelEventEnvelope[] = [];
+            const vscodeKernel = new CompositeKernel("composite-kernel");
+
+            const inMemory = createInMemoryChannel();
+
+            const pythonProxy = new ProxyKernel("python", inMemory.channels[0].transport);
+            const goProxy = new ProxyKernel("go", inMemory.channels[0].transport);
+
+
+            vscodeKernel.add(pythonProxy);
+            vscodeKernel.add(goProxy);
+
+            const vscodeHost = new KernelHost(vscodeKernel, inMemory.channels[0].transport, "kernel://vscode");
+
+            vscodeHost.registerDestinationUriForProxy(pythonProxy.name, "kernel://remote/python");
+            vscodeHost.registerDestinationUriForProxy(goProxy.name, "kernel://remote/go");
+
+            vscodeHost.connect();
+
+            vscodeKernel.subscribeToKernelEvents(e => {
+                events.push(e);
+            });
+
+            const remote = new CompositeKernel("remote-kernel");
+            const python = new Kernel("python");
+            const go = new Kernel("go");
+            remote.add(python);
+            remote.add(go);
+
+            python.registerCommandHandler({
+                commandType: contracts.SubmitCodeType, handle: (invocation) => {
+                    invocation.context.publish({
+                        eventType: contracts.ReturnValueProducedType,
+                        event: {
+                            formattedValues: [
+                                {
+                                    mimeType: "text/plain",
+                                    value: "12"
+                                }
+                            ]
+                        },
+                        command: invocation.commandEnvelope
+                    });
+                    return Promise.resolve();
+                }
+            });
+
+            go.registerCommandHandler({
+                commandType: contracts.SubmitCodeType, handle: (invocation) => {
+                    invocation.context.publish({
+                        eventType: contracts.ReturnValueProducedType,
+                        event: {
+                            formattedValues: [
+                                {
+                                    mimeType: "text/plain",
+                                    value: "21"
+                                }
+                            ]
+                        },
+                        command: invocation.commandEnvelope
+                    });
+                    return Promise.resolve();
+                }
+            });
+
+            const remoteHost = new KernelHost(remote, inMemory.channels[1].transport, "kernel://remote");
+            remoteHost.connect();
+
+            inMemory.channels[0].transport.run();
+            inMemory.channels[1].transport.run();
+
+            await vscodeKernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "pytonCode", targetKernelName: pythonProxy.name } });
+            await vscodeKernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "goCode", targetKernelName: goProxy.name } });
+
+            expect(events.find(e => e.command.command.targetKernelName === pythonProxy.name)).not.to.be.undefined;
+            expect(events.find(e => e.command.command.targetKernelName === goProxy.name)).not.to.be.undefined;
+        });
+
+
     }
 );

@@ -150,7 +150,7 @@ export class Kernel {
         return targetKernelName === this.name ? this : undefined;
     }
 
-    private publishEvent(kernelEvent: contracts.KernelEventEnvelope) {
+    protected publishEvent(kernelEvent: contracts.KernelEventEnvelope) {
         let keys = Object.keys(this._eventObservers);
         for (let subToken of keys) {
             let observer = this._eventObservers[subToken];

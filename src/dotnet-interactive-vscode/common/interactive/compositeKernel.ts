@@ -51,7 +51,9 @@ export class CompositeKernel extends Kernel {
 
         kernel.parentKernel = this;
         kernel.rootKernel = this.rootKernel;
-
+        kernel.subscribeToKernelEvents(event => {
+            this.publishEvent(event);
+        });
         this._namesTokernelMap.set(kernel.name, kernel);
 
         let kernelNames = new Set<string>();

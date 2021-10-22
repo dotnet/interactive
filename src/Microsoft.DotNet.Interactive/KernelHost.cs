@@ -116,7 +116,7 @@ namespace Microsoft.DotNet.Interactive
 
         private Kernel GetKernel(KernelCommand command)
         {
-            if (command.DestinationUri is { } && TryGetKernelByDestinationUri(command.DestinationUri, out var kernel))
+            if (command.DestinationUri is { } && TryGetKernelByOriginUri(command.DestinationUri, out var kernel))
             {
                 return kernel;
             }
