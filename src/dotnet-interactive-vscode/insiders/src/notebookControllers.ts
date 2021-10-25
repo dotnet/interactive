@@ -117,21 +117,6 @@ export class DotNetNotebookKernel {
                     break;
             }
 
-            switch (e.message.command) {
-                case "getHttpApiEndpoint":
-                    this.config.clientMapper.tryGetClient(documentUri).then(client => {
-                        if (client) {
-                            const uri = client.tryGetProperty<vscode.Uri>("externalUri");
-                            controller.postMessage({ command: "configureFactories", endpointUri: uri?.toString() });
-
-                            this.config.clientMapper.onClientCreate(documentUri, async (client) => {
-                                const uri = client.tryGetProperty<vscode.Uri>("externalUri");
-                                await controller.postMessage({ command: "resetFactories", endpointUri: uri?.toString() });
-                            });
-                        }
-                    });
-                    break;
-            }
 
             if (e.message.logEntry) {
                 Logger.default.write(<LogEntry>e.message.logEntry);

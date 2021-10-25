@@ -27,7 +27,7 @@ using Xunit.Abstractions;
 namespace Microsoft.DotNet.Interactive.Tests.Server
 {
 
-    public class KernelServerTests : IDisposable
+    public class KernelHostTests : IDisposable
     {
         private readonly CompositeDisposable _disposables = new();
         private readonly RecordingKernelCommandAndEventSender _serverOutputChannel;
@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
         private IList<IKernelEventEnvelope> KernelEvents => _serverOutputChannel.KernelEventEventEnvelopes.ToList();
 
-        public KernelServerTests(ITestOutputHelper output)
+        public KernelHostTests(ITestOutputHelper output)
         {
             _kernel = new CompositeKernel
             {
@@ -48,11 +48,13 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
             _serverOutputChannel = new RecordingKernelCommandAndEventSender();
             _serverInputChannel = new RecordingKernelCommandAndEventReceiver();
-            var kernelServer = _kernel.CreateKernelServer(_serverInputChannel, _serverOutputChannel, new DirectoryInfo(Environment.CurrentDirectory));
-            _kernel.RegisterForDisposal(kernelServer);
+            var host = new KernelHost(_kernel, _serverOutputChannel,
+                new MultiplexingKernelCommandAndEventReceiver(_serverInputChannel));
+          
             _kernel.RegisterForDisposal(_serverInputChannel);
-            var _ = kernelServer.RunAsync();
+            var _ = host.ConnectAsync();
 
+            _disposables.Add(host);
             _disposables.Add(output.SubscribeToPocketLogger());
             _disposables.Add(_kernel.LogEventsToPocketLogger());
             _disposables.Add(_kernel);

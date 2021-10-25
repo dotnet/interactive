@@ -11,8 +11,13 @@ import { provideSignatureHelp } from '../../languageServices/signatureHelp';
 import { CommandSucceededType, CompletionsProducedType, HoverTextProducedType, SignatureHelpProducedType } from '../../interfaces/contracts';
 import { createUri } from '../../utilities';
 import { createKernelTransportConfig } from './utilities';
+import { Logger } from '../../logger';
 
 describe('LanguageProvider tests', () => {
+    before(() => {
+        Logger.configure("test", () => { });
+    });
+
     it('CompletionProvider', async () => {
         const token = '123';
         const config = createKernelTransportConfig(async (_notebookPath) => new TestKernelTransport({

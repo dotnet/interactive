@@ -34,7 +34,7 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, messageHandlerMap: M
         messageHandlerMap.set(documentUriString, messageHandler);
     }
 
-    const transport = new genericTransport.GenericTransport(envelope => {
+    const documentWebViewTrasport = new genericTransport.GenericTransport(envelope => {
         controllerPostMessage({ envelope });
         return Promise.resolve();
     }, () => {
@@ -49,21 +49,21 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, messageHandlerMap: M
     });
 
     clientMapper.getOrAddClient(documentUri).then(client => {
-        const proxyJsKernel = new ProxyKernel('javascript', transport);
+        const proxyJsKernel = new ProxyKernel('javascript', documentWebViewTrasport);
         client.kernel.add(proxyJsKernel, ['js']);
 
-        transport.setCommandHandler(envelope => {
-            return client.kernel.send(envelope);
-        });
+        client.kernelHost.registerDestinationUriForProxy(proxyJsKernel.name, "kernel://webview/javascript");
 
-        transport.subscribeToKernelEvents(envelope => {
-            client.transport.publishKernelEvent(envelope);
+        documentWebViewTrasport.setCommandHandler(envelope => {
+            const kernel = client.kernelHost.getKernel(envelope);
+            kernel.send(envelope);
+            return Promise.resolve();
         });
 
         client.transport.subscribeToKernelEvents(eventEnvelope => {
-            return transport.publishKernelEvent(eventEnvelope);
+            return documentWebViewTrasport.publishKernelEvent(eventEnvelope);
         });
 
-        transport.run();
+        documentWebViewTrasport.run();
     });
 }

@@ -5,11 +5,10 @@ using System;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.VSCode
 {
-    public static class VSCodeInteractiveHost 
+    public static class VSCodeInteractiveHost
     {
         private const string VSCodeKernelName = "vscode";
 
@@ -20,31 +19,17 @@ namespace Microsoft.DotNet.Interactive.VSCode
         /// <param name="isPassword">Whether the input should be treated as a password.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The user input value.</returns>
-        public static Task<string> GetInputAsync(string prompt = "", bool isPassword = false, CancellationToken cancellationToken = default)
+        public static async Task<string> GetInputAsync(string prompt = "", bool isPassword = false, CancellationToken cancellationToken = default)
         {
             var kernel = Kernel.Root.FindKernel(VSCodeKernelName) ?? throw new ArgumentNullException($"Cannot find kernel {VSCodeKernelName}");
 
             var command = new GetInput(prompt, isPassword, targetKernelName: VSCodeKernelName);
-            var completionSource = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var token = command.GetOrCreateToken();
 
-            kernel.KernelEvents.Where(e => e.Command.GetOrCreateToken() == token).Subscribe(e =>
-            {
-                switch (e)
-                {
-                    case CommandFailed ex:
-                        completionSource.TrySetException(ex.Exception ?? new Exception(ex.Message));
-                        break;
-                    case CommandSucceeded _:
-                        completionSource.TrySetResult(null);
-                        break;
-                    case InputProduced iv:
-                        completionSource.TrySetResult(iv.Value);
-                        break;
-                }
-            }, cancellationToken);
-            var _ = kernel.SendAsync(command, cancellationToken);
-            return completionSource.Task;
+            var results = await kernel.SendAsync(command, cancellationToken);
+
+            var inputProduced = await results.KernelEvents.OfType<InputProduced>().FirstOrDefaultAsync();
+
+            return inputProduced?.Value;
         }
     }
 }

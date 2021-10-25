@@ -8,7 +8,6 @@ using System.CommandLine.Invocation;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
-using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
@@ -141,17 +140,17 @@ new [] {1,2,3}");
         public async Task when_target_kernel_is_specified_and_not_found_then_command_fails(int kernelCount)
         {
             using var kernel = new CompositeKernel();
-            using var events = kernel.KernelEvents.ToSubscribedList();
             foreach (var kernelName in Enumerable.Range(0, kernelCount).Select(i => $"kernel{i}"))
             {
                     kernel.Add(new FakeKernel(kernelName));
             }
 
-            await kernel.SendAsync(
+            var results = await kernel.SendAsync(
                 new SubmitCode(
                     @"var x = 123;",
                     "unregistered kernel name"));
 
+            using var events = results.KernelEvents.ToSubscribedList();
             events.Should()
                   .ContainSingle<CommandFailed>(cf => cf.Exception is NoSuitableKernelException);
         }
@@ -579,6 +578,15 @@ new [] {1,2,3}");
             contextPassedToHandler
                 .Should()
                 .NotBeNull();
+        }
+
+        [Fact]
+        public void Cannot_add_CompositeKernel_as_child()
+        {
+            using var compositeKernel = new CompositeKernel();
+            var childKernel = new CompositeKernel();
+            var action = new Action( () => compositeKernel.Add(childKernel));
+            action.Should().Throw<ArgumentException>();
         }
     }
 }

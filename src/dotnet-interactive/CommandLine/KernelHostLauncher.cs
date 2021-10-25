@@ -3,19 +3,17 @@
 
 using System.CommandLine;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive.App.CommandLine
 {
-    internal static class VSCodeCommand
-    {
-        public static async Task<int> Do(StartupOptions startupOptions, KernelServer kernelServer, IConsole console)
+    internal static class KernelHostLauncher{
+        public static async Task<int> Do(StartupOptions startupOptions, KernelHost kernelHost, IConsole console)
         {
             var disposable = Program.StartToolLogging(startupOptions);
-            var run = kernelServer.RunAsync();
-            kernelServer.NotifyIsReady();
-            await run;
+            await kernelHost.ConnectAndWaitAsync();
+            disposable.Dispose();
             return 0;
         }
     }
+  
 }

@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.DotNet.Interactive.Commands;
 
 #nullable enable
 
@@ -22,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         public string KernelName { get; }
 
-        internal KernelUri? KernelUri { get; set; }
+        internal SchedulingScope? CommandScope { get; set; }
 
         public override IEnumerable<Diagnostic> GetDiagnostics() =>
             LanguageSpecificParseResult.None.GetDiagnostics();

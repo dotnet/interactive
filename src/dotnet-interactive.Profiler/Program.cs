@@ -111,7 +111,6 @@ Console.Write(""value three"")", "fsharp");
                 .UseDefaultMagicCommands();
 
             kernel.DefaultKernelName = kernelName;
-            kernel.Name = ".NET";
 
             switch (operation)
             {

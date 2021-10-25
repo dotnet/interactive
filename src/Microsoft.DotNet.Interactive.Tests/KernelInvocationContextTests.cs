@@ -89,8 +89,8 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             using var kernel = new CompositeKernel
             {
-                new CSharpKernel{Name = "cs1"},
-                new CSharpKernel{Name = "cs2"}
+                new CSharpKernel ( "cs1" ),
+                new CSharpKernel ( "cs2" )
             };
             var kernelEvents = kernel.KernelEvents.ToSubscribedList();
             var command = new SubmitCode(@"
@@ -112,8 +112,8 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             using var kernel = new CompositeKernel
             {
-                new CSharpKernel{Name = "cs1"},
-                new CSharpKernel{Name = "cs2"}
+                new CSharpKernel ( "cs1" ),
+                new CSharpKernel ( "cs2" )
             };
             var kernelEvents = kernel.KernelEvents.ToSubscribedList();
             var command = new SubmitCode(@"

@@ -60,7 +60,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         private string _workingDirectory;
 
-        public CSharpKernel() : base(DefaultKernelName)
+        public CSharpKernel() : this(DefaultKernelName)
+        {
+
+        }
+        public CSharpKernel(string name) : base(name)
         {
             _workspace = new InteractiveWorkspace();
 
@@ -501,5 +505,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
         public IEnumerable<string> RestoreSources =>
             PackageRestoreContext.RestoreSources;
 
+        
     }
 }

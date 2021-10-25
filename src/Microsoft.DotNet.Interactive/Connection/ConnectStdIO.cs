@@ -20,10 +20,10 @@ namespace Microsoft.DotNet.Interactive.Connection
             AddOption(new Option<DirectoryInfo>("--working-directory", () => new DirectoryInfo(Directory.GetCurrentDirectory()), "The working directory"));
         }
 
-        public override Task<Kernel> ConnectKernelAsync(KernelName kernelName, StdIoKernelConnector kernelConnector,
+        public override Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo, StdIoKernelConnector kernelConnector,
             KernelInvocationContext context)
         {
-            return kernelConnector.ConnectKernelAsync(kernelName);
+            return kernelConnector.ConnectKernelAsync(kernelInfo);
         }
     }
 }

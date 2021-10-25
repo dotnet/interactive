@@ -6,30 +6,31 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public class KernelName
+    public class KernelInfo
     {
         public override string ToString()
         {
-            return Name;
+            return LocalName;
         }
 
-        public KernelName(string kernelName) : this(kernelName, Array.Empty<string>())
+        public KernelInfo(string localName) : this(localName, Array.Empty<string>(), null)
         {
 
         }
 
-        public KernelName(string name, IReadOnlyCollection<string> aliases)
+        public KernelInfo(string localName, IReadOnlyCollection<string> aliases, Uri destinationUri = null)
         {
-            Validate(name);
-            Name = name;
-
+            Validate(localName);
+            LocalName = localName;
+            aliases ??= Array.Empty<string>();
             foreach (var alias in aliases)
             {
                 Validate(alias);
             }
 
-            var distinctAliases = new HashSet<string>(aliases) { name };
+            var distinctAliases = new HashSet<string>(aliases);
             Aliases = distinctAliases;
+            DestinationUri = destinationUri;
         }
 
         private static void Validate(string name)
@@ -46,7 +47,8 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public IReadOnlyCollection<string> Aliases { get; }
-
-        public string Name { get; }
+        public string LocalName { get; }
+        public Uri OriginUri { get; internal set; }
+        public Uri DestinationUri { get; internal set; }
     }
 }

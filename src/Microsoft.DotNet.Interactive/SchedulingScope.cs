@@ -5,11 +5,11 @@ using System;
 
 namespace Microsoft.DotNet.Interactive
 {
-    internal class KernelUri
+    internal class SchedulingScope
     {
-        protected bool Equals(KernelUri other)
+        protected bool Equals(SchedulingScope other)
         {
-            return StringComparer.Ordinal.Equals( _stringValue, other._stringValue);
+            return StringComparer.Ordinal.Equals(_stringValue, other._stringValue);
         }
 
         public override bool Equals(object obj)
@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Interactive
                 return false;
             }
 
-            return Equals((KernelUri) obj);
+            return Equals((SchedulingScope)obj);
         }
 
         public override int GetHashCode()
@@ -39,15 +39,15 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly string _stringValue;
 
-        private KernelUri(string kernelUri)
+        private SchedulingScope(string scope)
         {
-            if (string.IsNullOrWhiteSpace(kernelUri))
+            if (string.IsNullOrWhiteSpace(scope))
             {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(kernelUri));
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(scope));
             }
 
-            Parts = kernelUri.Split('/');
-            _stringValue = kernelUri;
+            Parts = scope.Split('/');
+            _stringValue = scope;
         }
 
         public override string ToString()
@@ -55,29 +55,29 @@ namespace Microsoft.DotNet.Interactive
             return _stringValue;
         }
 
-        public static KernelUri Parse(string kernelUri)
+        public static SchedulingScope Parse(string scope)
         {
-            return new(kernelUri);
+            return new(scope);
 
         }
 
         public string[] Parts { get; }
 
-        public KernelUri Append(string part)
+        public SchedulingScope Append(string part)
         {
             return new($"{_stringValue}/{part}");
         }
 
-
-        public bool Contains(KernelUri uri)
+        public bool Contains(SchedulingScope scope)
         {
-            if (uri.Parts.Length > Parts.Length){
+            if (scope.Parts.Length > Parts.Length)
+            {
                 return false;
             }
 
-            for (var i = 0; i < uri.Parts.Length; i++)
+            for (var i = 0; i < scope.Parts.Length; i++)
             {
-                if(!StringComparer.Ordinal.Equals(Parts[i],uri.Parts[i]))
+                if (!StringComparer.Ordinal.Equals(Parts[i], scope.Parts[i]))
                 {
                     return false;
                 }

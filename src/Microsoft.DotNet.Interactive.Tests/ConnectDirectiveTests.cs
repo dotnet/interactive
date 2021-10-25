@@ -78,7 +78,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         public async Task When_a_new_kernel_is_connected_then_it_becomes_addressable_by_name()
         {
             var wasCalled = false;
-            var fakeKernel = new FakeKernel
+            var fakeKernel = new FakeKernel("my-fake-kernel")
             {
                 Handle = (command, context) =>
                 {
@@ -122,7 +122,7 @@ hello!
             compositeKernel.UseKernelClientConnection(
                 new ConnectFakeKernelCommand("fake", "Connects the fake kernel")
                 {
-                    CreateKernel = (name, options, context) => Task.FromResult<Kernel>(new FakeKernel(name.Name))
+                    CreateKernel = (name, options, context) => Task.FromResult<Kernel>(new FakeKernel(name.LocalName))
                 });
 
             await compositeKernel.SubmitCodeAsync("#!connect fake --kernel-name fake-kernel");
@@ -151,7 +151,7 @@ hello!
             compositeKernel.UseKernelClientConnection(
                 new ConnectFakeKernelCommand("fake", "Connects the fake kernel")
                 {
-                    CreateKernel = (name, options, context) => Task.FromResult<Kernel>(new FakeKernel(name.Name))
+                    CreateKernel = (name, options, context) => Task.FromResult<Kernel>(new FakeKernel(name.LocalName))
                 });
 
             await compositeKernel.SubmitCodeAsync("#!connect fake --kernel-name fake1");
@@ -176,10 +176,8 @@ hello!
                 {
                     CreateKernel = (name, options, context) =>
                     {
-                        var kernel = fakeKernel ?? new FakeKernel();
+                        var kernel = fakeKernel ?? new FakeKernel(name.LocalName);
 
-                        kernel.Name = name.Name;
-                       
                         return Task.FromResult<Kernel>(kernel);
                     }
                 });
@@ -196,26 +194,26 @@ hello!
                 ConnectedKernelDescription = "Doesn't really do anything at all.";
             }
 
-            public Func<KernelName, FakeKernelConnector, KernelInvocationContext, Task<Kernel>> CreateKernel { get; set; }
+            public Func<KernelInfo, FakeKernelConnector, KernelInvocationContext, Task<Kernel>> CreateKernel { get; set; }
 
-            public override Task<Kernel> ConnectKernelAsync(KernelName kernelName, FakeKernelConnector connector,
+            public override Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo, FakeKernelConnector connector,
                 KernelInvocationContext context)
             {
                 connector.CreateKernel = (name) => CreateKernel(name, connector, context);
-                return connector.ConnectKernelAsync(kernelName);
+                return connector.ConnectKernelAsync(kernelInfo);
             }
         }
     }
 
-    public class FakeKernelConnector : KernelConnector
+    public class FakeKernelConnector : IKernelConnector
     {
         public int FakenessLevel { get; set; }
 
-        public Func<KernelName,Task<Kernel>> CreateKernel { get; set; }
+        public Func<KernelInfo,Task<Kernel>> CreateKernel { get; set; }
 
-        public override Task<Kernel> ConnectKernelAsync(KernelName kernelName)
+        public Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
         {
-            return CreateKernel(kernelName);
+            return CreateKernel(kernelInfo);
         }
     }
 }

@@ -122,28 +122,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
         await transport.waitForReady();
 
-        let localUriString = `http://localhost:${transport.httpPort}`;
-        let externalUriString = localUriString;
-
-        try {
-            let tunnel = await vscode.workspace.openTunnel({ remoteAddress: { host: "localhost", port: <number>transport.httpPort } });
-            externalUriString = typeof tunnel.localAddress === 'string'
-                ? tunnel.localAddress
-                : `http://${tunnel.localAddress.host}:${tunnel.localAddress.port}`;
-        }
-        catch (_) {
-            const x = 12;
-        }
-
-        let localUri = <vscodeLike.Uri>vscode.Uri.parse(localUriString);
-        let externalUri = <vscodeLike.Uri>vscode.Uri.parse(externalUriString);
-        try {
-            await transport.setExternalUri({ externalUri, localUri });
-        }
-        catch (e) {
-            vscode.window.showErrorMessage(`Error configuring http connection with .NET Interactive on ${externalUri.toString()} : ${(<any>e)?.message}`);
-        }
-
         return transport;
     }
 

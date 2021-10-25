@@ -300,7 +300,7 @@ namespace Microsoft.DotNet.Interactive
         public static CompositeKernel UseKernelClientConnection<TConnector>(
             this CompositeKernel kernel,
             ConnectKernelCommand<TConnector> command)
-            where TConnector : KernelConnector
+            where TConnector : IKernelConnector
         {
             kernel.AddKernelConnection(command);
 
