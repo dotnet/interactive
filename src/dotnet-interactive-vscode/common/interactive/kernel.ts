@@ -80,7 +80,11 @@ export class Kernel {
 
         try {
             await this.handleCommand(commandEnvelope);
-        } finally {
+        }
+        catch (e) {
+            context.fail((<any>e)?.message || JSON.stringify(e));
+        }
+        finally {
             if (contextEventsSubscription) {
                 contextEventsSubscription.dispose();
             }

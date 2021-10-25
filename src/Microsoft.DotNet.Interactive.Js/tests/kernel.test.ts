@@ -103,18 +103,20 @@ describe("dotnet-interactive", () => {
                 moreData: "Test 2"
             };
 
+            let events: contracts.KernelEventEnvelope[] = [];
             let handlerInvocations: IKernelCommandInvocation[] = [];
             kernel.registerCommandHandler({ commandType: commandType1, handle: async (a: IKernelCommandInvocation) => { handlerInvocations.push(a); } })
 
+            kernel.subscribeToKernelEvents(e => events.push(e));
             let errorFromSend = null;
             await kernel.send({
                 commandType: commandType2,
                 command: command2In
-            })
-                .catch(e => { errorFromSend = e; });
+            });
 
             expect(handlerInvocations.length).to.be.equal(0);
-            expect(errorFromSend).is.not.null;
+
+            expect(events.find(e => e.eventType === contracts.CommandFailedType)).is.not.null;
         });
 
         it("raises suitable kernel event when command type matches no handlers", async () => {
