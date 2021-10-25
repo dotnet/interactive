@@ -30,16 +30,16 @@ export class CompositeKernel extends Kernel {
     set host(host: KernelHost | null) {
         this._host = host;
         if (this._host) {
-            this._host.addKernelInfo(this, { localName: this.name, aliases: [] });
+            this._host.addKernelInfo(this, { localName: this.name.toLowerCase(), aliases: [] });
 
             for (let kernel of this._kernelToNamesMap.keys()) {
                 let aliases = [];
                 for (let name of this._kernelToNamesMap.get(kernel)!) {
                     if (name !== kernel.name) {
-                        aliases.push(name);
+                        aliases.push(name.toLowerCase());
                     }
                 }
-                this._host.addKernelInfo(kernel, { localName: kernel.name, aliases: [...aliases] });
+                this._host.addKernelInfo(kernel, { localName: kernel.name.toLowerCase(), aliases: [...aliases] });
             }
         }
     }
@@ -54,14 +54,14 @@ export class CompositeKernel extends Kernel {
         kernel.subscribeToKernelEvents(event => {
             this.publishEvent(event);
         });
-        this._namesTokernelMap.set(kernel.name, kernel);
+        this._namesTokernelMap.set(kernel.name.toLowerCase(), kernel);
 
         let kernelNames = new Set<string>();
         kernelNames.add(kernel.name);
         if (aliases) {
             aliases.forEach(alias => {
-                this._namesTokernelMap.set(alias, kernel);
-                kernelNames.add(alias);
+                this._namesTokernelMap.set(alias.toLowerCase(), kernel);
+                kernelNames.add(alias.toLowerCase());
             });
         }
 
@@ -76,7 +76,7 @@ export class CompositeKernel extends Kernel {
     }
 
     findKernelByName(kernelName: string): Kernel | undefined {
-        return this._namesTokernelMap.get(kernelName);
+        return this._namesTokernelMap.get(kernelName.toLowerCase());
     }
 
     handleCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {

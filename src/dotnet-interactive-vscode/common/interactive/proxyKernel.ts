@@ -43,11 +43,12 @@ export class ProxyKernel extends Kernel {
         });
 
         try {
-
-            const kernelInfo = this.parentKernel?.host?.tryGetKernelInfo(this);
-            if (kernelInfo) {
-                commandInvocation.commandEnvelope.originUri = kernelInfo.originUri;
-                commandInvocation.commandEnvelope.destinationUri = kernelInfo.destinationUri;
+            if (!commandInvocation.commandEnvelope.destinationUri || !commandInvocation.commandEnvelope.originUri) {
+                const kernelInfo = this.parentKernel?.host?.tryGetKernelInfo(this);
+                if (kernelInfo) {
+                    commandInvocation.commandEnvelope.originUri ??= kernelInfo.originUri;
+                    commandInvocation.commandEnvelope.destinationUri ??= kernelInfo.destinationUri;
+                }
             }
 
             this.transport.submitCommand(commandInvocation.commandEnvelope);

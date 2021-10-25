@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive.VSCode
 
                 var vscodeKernelInfo = new KernelInfo("vscode", new []{"frontend"}, new Uri("kernel://vscode/vscode",UriKind.Absolute));
 
-                var jsKernelInfo = new KernelInfo("javascript", new[] { "js", "vscode/js", "vscode/javascript" },new Uri("kernel://webview/jsavascript", UriKind.Absolute));
+                var jsKernelInfo = new KernelInfo("javascript", new[] { "js", "vscode/js", "vscode/javascript" },new Uri("kernel://webview/javascript", UriKind.Absolute));
 
                 await root.Host.CreateProxyKernelOnDefaultConnectorAsync(vscodeKernelInfo);
                 await root.Host.CreateProxyKernelOnDefaultConnectorAsync(jsKernelInfo);

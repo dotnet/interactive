@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { CompositeKernel } from "./common/interactive/compositeKernel";
-import { ProxyKernel } from "./common/interactive/proxyKernel";
 import * as genericTransport from "./common/interactive/genericTransport";
 import { JavascriptKernel } from "./common/interactive/javascriptKernel";
 import { Kernel } from "./common/interactive/kernel";
@@ -44,7 +43,7 @@ export function configure(global?: any) {
     );
 
     const compositeKernel = new CompositeKernel("webview");
-    const kernelHost = new KernelHost(compositeKernel, transport, "kernel://webveiew");
+    const kernelHost = new KernelHost(compositeKernel, transport, "kernel://webview");
 
     // @ts-ignore
     onDidReceiveKernelMessage(event => {
@@ -56,8 +55,6 @@ export function configure(global?: any) {
             receiver.delegate(envelope);
         }
     });
-
-
 
     const jsKernel = new JavascriptKernel();
     compositeKernel.add(jsKernel, ["js"]);

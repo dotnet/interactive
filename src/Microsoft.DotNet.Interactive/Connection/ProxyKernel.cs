@@ -78,10 +78,13 @@ namespace Microsoft.DotNet.Interactive.Connection
             var token = command.GetOrCreateToken();
             
             KernelInfo kernelInfo = null;
-            if (ParentKernel?.Host?.TryGetKernelInfo(this, out kernelInfo) == true && kernelInfo is not null)
+            if (command.OriginUri is null || command.DestinationUri is null)
             {
-                command.OriginUri = kernelInfo.OriginUri;
-                command.DestinationUri = kernelInfo.DestinationUri;
+                if (ParentKernel?.Host?.TryGetKernelInfo(this, out kernelInfo) == true && kernelInfo is not null)
+                {
+                    command.OriginUri??= kernelInfo.OriginUri;
+                    command.DestinationUri??= kernelInfo.DestinationUri;
+                }
             }
 
             var targetKernelName = command.TargetKernelName;

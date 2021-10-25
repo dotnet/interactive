@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive
 
         }
 
-        public KernelHost(CompositeKernel kernel,IKernelCommandAndEventSender defaultSender, MultiplexingKernelCommandAndEventReceiver defaultReceiver) : this(kernel, defaultSender, defaultReceiver, new Uri($"kernel://dotnet/{Guid.NewGuid():N}", UriKind.Absolute))
+        public KernelHost(CompositeKernel kernel,IKernelCommandAndEventSender defaultSender, MultiplexingKernelCommandAndEventReceiver defaultReceiver) : this(kernel, defaultSender, defaultReceiver, new Uri("kernel://dotnet", UriKind.Absolute))
         {
           
 
@@ -117,6 +117,11 @@ namespace Microsoft.DotNet.Interactive
         private Kernel GetKernel(KernelCommand command)
         {
             if (command.DestinationUri is { } && TryGetKernelByOriginUri(command.DestinationUri, out var kernel))
+            {
+                return kernel;
+            }
+
+            if (command.DestinationUri is { } && TryGetKernelByDestinationUri(command.DestinationUri, out  kernel))
             {
                 return kernel;
             }

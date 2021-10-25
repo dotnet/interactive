@@ -26,8 +26,14 @@ import { createKernelTransportConfig, decodeNotebookCellOutputs, withFakeGlobalS
 import { createUri } from '../../utilities';
 import { backupNotebook, languageToCellKind } from '../../interactiveNotebook';
 import * as vscodeLike from '../../interfaces/vscode-like';
+import { Logger } from '../../logger';
 
 describe('Notebook tests', () => {
+    before(() => {
+        Logger.configure("test", () => { });
+    });
+
+
     for (const language of ['csharp', 'fsharp']) {
         it(`executes and returns expected value: ${language}`, async () => {
             const token = '123';

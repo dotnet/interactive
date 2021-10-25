@@ -44,10 +44,16 @@ export class KernelHost {
         this._originUriToKernel.set(kernelInfo.originUri, kernel);
     }
 
-    private getKernel(kernelCommandEnvelope: contracts.KernelCommandEnvelope): Kernel {
+    public getKernel(kernelCommandEnvelope: contracts.KernelCommandEnvelope): Kernel {
 
         if (kernelCommandEnvelope.destinationUri) {
-            let fromDestinationUri = this._originUriToKernel.get(kernelCommandEnvelope.destinationUri);
+            let fromDestinationUri = this._originUriToKernel.get(kernelCommandEnvelope.destinationUri.toLowerCase());
+            if (fromDestinationUri) {
+                Logger.default.info(`Kernel ${fromDestinationUri.name} found for destination uri ${kernelCommandEnvelope.destinationUri}`);
+                return fromDestinationUri;
+            }
+
+            fromDestinationUri = this._destinationUriToKernel.get(kernelCommandEnvelope.destinationUri.toLowerCase());
             if (fromDestinationUri) {
                 Logger.default.info(`Kernel ${fromDestinationUri.name} found for destination uri ${kernelCommandEnvelope.destinationUri}`);
                 return fromDestinationUri;
@@ -55,7 +61,7 @@ export class KernelHost {
         }
 
         if (kernelCommandEnvelope.originUri) {
-            let fromOriginUri = this._originUriToKernel.get(kernelCommandEnvelope.originUri);
+            let fromOriginUri = this._originUriToKernel.get(kernelCommandEnvelope.originUri.toLowerCase());
             if (fromOriginUri) {
                 Logger.default.info(`Kernel ${fromOriginUri.name} found for origin uri ${kernelCommandEnvelope.originUri}`);
                 return fromOriginUri;
@@ -79,13 +85,13 @@ export class KernelHost {
         }
         if (kernelinfo?.destinationUri) {
             Logger.default.info(`Removing destination uri ${kernelinfo.destinationUri} for proxy kernel ${kernelinfo.localName}`);
-            this._destinationUriToKernel.delete(kernelinfo.destinationUri);
+            this._destinationUriToKernel.delete(kernelinfo.destinationUri.toLowerCase());
         }
         kernelinfo.destinationUri = destinationUri;
 
         if (kernel) {
             Logger.default.info(`Registering destination uri ${destinationUri} for proxy kernel ${kernelinfo.localName}`);
-            this._destinationUriToKernel.set(destinationUri, kernel);
+            this._destinationUriToKernel.set(destinationUri.toLowerCase(), kernel);
         }
     }
 
