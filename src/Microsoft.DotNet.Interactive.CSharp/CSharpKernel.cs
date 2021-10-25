@@ -373,7 +373,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 if (!currentDir.Equals(_workingDirectory, StringComparison.Ordinal))
                 {
                     _workingDirectory = currentDir;
-
+                    
                     ScriptOptions = ScriptOptions
                                     .WithMetadataResolver(CachingMetadataResolver.Default.WithBaseDirectory(_workingDirectory))
                                     .WithSourceResolver(new SourceFileResolver(ImmutableArray<string>.Empty, _workingDirectory));

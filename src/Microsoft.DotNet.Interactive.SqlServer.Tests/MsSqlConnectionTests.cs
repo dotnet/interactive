@@ -14,6 +14,7 @@ using Microsoft.DotNet.Interactive.ExtensionLab;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Xunit;
 
 namespace Microsoft.DotNet.Interactive.SqlServer.Tests
 {
