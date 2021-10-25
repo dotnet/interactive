@@ -118,15 +118,5 @@ describe("dotnet-interactive", () => {
 
             expect(events.find(e => e.eventType === contracts.CommandFailedType)).is.not.null;
         });
-
-        it("raises suitable kernel event when command type matches no handlers", async () => {
-            // TODO
-            // What's the right event? We probably need to understand this in the broader
-            // context of what sort of error we think this is. Should the dotnet-interactive side
-            // only ever send a command to the client if it's confident the client will handle
-            // it? (In which case, this is a "this should never happen" type error.) Or do we
-            // let user code attempt to send whatever commands they like to the client? (In which
-            // case this is a "we need to tell the user what they did wrong" type error.)
-        });
     });
 });
