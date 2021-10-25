@@ -5,11 +5,12 @@ using System;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.VSCode
 {
-    public static class VSCodeInteractiveHost 
+    public static class VSCodeInteractiveHost
     {
         private const string VSCodeKernelName = "vscode";
 
@@ -28,23 +29,36 @@ namespace Microsoft.DotNet.Interactive.VSCode
             var completionSource = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
             var token = command.GetOrCreateToken();
 
-            kernel.KernelEvents.Where(e => e.Command.GetOrCreateToken() == token).Subscribe(e =>
-            {
-                switch (e)
+            var sub = Kernel.Root.KernelEvents
+                .Where(e => e.Command.GetOrCreateToken() == token)
+                .Subscribe(e =>
                 {
-                    case CommandFailed ex:
-                        completionSource.TrySetException(ex.Exception ?? new Exception(ex.Message));
-                        break;
-                    case CommandSucceeded _:
-                        completionSource.TrySetResult(null);
-                        break;
-                    case InputProduced iv:
-                        completionSource.TrySetResult(iv.Value);
-                        break;
+                    switch (e)
+                    {
+                        case CommandFailed ex:
+                            completionSource.TrySetException(ex.Exception ?? new Exception(ex.Message));
+                            break;
+                        case CommandSucceeded _:
+                            completionSource.TrySetResult(null);
+                            break;
+                        case InputProduced iv:
+                            completionSource.TrySetResult(iv.Value);
+                            break;
+                    }
+                });
+            var _ = kernel.SendAsync(command, cancellationToken);
+            return completionSource.Task.ContinueWith(t =>
+            {
+                sub.Dispose();
+                if (t.IsCompletedSuccessfully)
+                {
+                    return t.Result;
+                }
+                else
+                {
+                    throw t.Exception;
                 }
             }, cancellationToken);
-            var _ = kernel.SendAsync(command, cancellationToken);
-            return completionSource.Task;
         }
     }
 }
