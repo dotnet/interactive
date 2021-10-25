@@ -83,9 +83,9 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
                         await startHostTask.ConfigureAwait(false);
 
                         var httpClient = HttpClientFormatter.CreateEnhancedHttpClient(interactiveHost.Address, interactiveLoggerProvider);
-                        await kernel.SetVariableAsync<IApplicationBuilder>("App", interactiveHost.App).ConfigureAwait(false);
-                        await kernel.SetVariableAsync<IEndpointRouteBuilder>("Endpoints", interactiveHost.Endpoints).ConfigureAwait(false);
-                        await kernel.SetVariableAsync<HttpClient>("HttpClient", httpClient).ConfigureAwait(false);
+                        await kernel.SetValueAsync<IApplicationBuilder>("App", interactiveHost.App).ConfigureAwait(false);
+                        await kernel.SetValueAsync<IEndpointRouteBuilder>("Endpoints", interactiveHost.Endpoints).ConfigureAwait(false);
+                        await kernel.SetValueAsync<HttpClient>("HttpClient", httpClient).ConfigureAwait(false);
                     }
                 })
             };

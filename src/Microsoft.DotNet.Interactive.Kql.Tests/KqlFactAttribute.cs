@@ -35,7 +35,8 @@ namespace Microsoft.DotNet.Interactive.Kql.Tests
         
         public static string GetClusterForTests()
         {
-            return Environment.GetEnvironmentVariable(TEST_KQL_CONNECTION_STRING); // "https://help.kusto.windows.net"
+            // e.g. https://help.kusto.windows.net
+            return Environment.GetEnvironmentVariable(TEST_KQL_CONNECTION_STRING);
         }  
     }
 }

@@ -1292,7 +1292,7 @@ Console.Write(2);
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         [InlineData(Language.PowerShell)]
-        public async Task SetVariableAsync_declares_the_specified_variable(Language language)
+        public async Task SetValueAsync_declares_the_specified_variable(Language language)
         {
             var kernel = CreateKernel(language);
 
@@ -1312,7 +1312,7 @@ Console.Write(2);
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         [InlineData(Language.PowerShell)]
-        public async Task SetVariableAsync_overwrites_an_existing_variable_of_the_same_type(Language language)
+        public async Task SetValueAsync_overwrites_an_existing_variable_of_the_same_type(Language language)
         {
             var kernel = CreateKernel(language);
 
@@ -1333,7 +1333,7 @@ Console.Write(2);
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         [InlineData(Language.PowerShell)]
-        public async Task SetVariableAsync_can_redeclare_an_existing_variable_and_change_its_type(Language language)
+        public async Task SetValueAsync_can_redeclare_an_existing_variable_and_change_its_type(Language language)
         {
             var kernel = CreateKernel(language);
 

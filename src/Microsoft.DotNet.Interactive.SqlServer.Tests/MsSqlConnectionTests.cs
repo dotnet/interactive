@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
 {
     public class MsSqlConnectionTests : IDisposable
     {
-        private async Task<CompositeKernel> CreateKernel()
+        private async Task<CompositeKernel> CreateKernelAsync()
         {
             var csharpKernel = new CSharpKernel().UseNugetDirective().UseValueSharing();
             await csharpKernel.SubmitCodeAsync(@$"
@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
             // TODO: remove SQLKernel it is used to test current patch
             var kernel = new CompositeKernel
             {
-                new SQLKernel(),
+                new SqlDiscoverabilityKernel(),
                 csharpKernel,
                 new KeyValueStoreKernel()
             };
@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
         public async Task It_can_connect_and_query_data()
         {
             var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
-            using var kernel = await CreateKernel();
+            using var kernel = await CreateKernelAsync();
             var result = await kernel.SubmitCodeAsync(
                              $"#!connect --kernel-name adventureworks mssql \"{connectionString}\"");
 
@@ -79,7 +79,7 @@ SELECT TOP 100 * FROM Person.Person
         public async Task sending_query_to_sql_will_generate_suggestions()
         {
             var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
-            using var kernel = await CreateKernel();
+            using var kernel = await CreateKernelAsync();
             var result = await kernel.SubmitCodeAsync(
                 $"#!connect --kernel-name adventureworks mssql \"{connectionString}\"");
 
@@ -114,7 +114,7 @@ SELECT TOP 100 * FROM Person.Person
         {
             var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
 
-            using var kernel = await CreateKernel();
+            using var kernel = await CreateKernelAsync();
             var result = await kernel.SubmitCodeAsync(
                              $"#!connect --kernel-name adventureworks mssql \"{connectionString}\" --create-dbcontext");
 
@@ -141,7 +141,7 @@ SELECT TOP 100 * FROM Person.Person
         public async Task Field_types_are_deserialized_correctly()
         {
             var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
-            using var kernel = await CreateKernel();
+            using var kernel = await CreateKernelAsync();
             var result = await kernel.SubmitCodeAsync(
                              $"#!connect --kernel-name adventureworks mssql \"{connectionString}\"");
 
@@ -172,7 +172,7 @@ select * from sys.databases
         public async Task Empty_results_are_displayed_correctly()
         {
             var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
-            using var kernel = await CreateKernel();
+            using var kernel = await CreateKernelAsync();
             var result = await kernel.SubmitCodeAsync(
                              $"#!connect --kernel-name adventureworks mssql \"{connectionString}\"");
 
@@ -202,7 +202,7 @@ drop table dbo.EmptyTable;
         public async Task Can_share_last_result_set_with_other_kernels()
         {
             var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
-            using var kernel = await CreateKernel();
+            using var kernel = await CreateKernelAsync();
             await kernel.SubmitCodeAsync(
                              $"#!connect --kernel-name adventureworks mssql \"{connectionString}\"");
 
@@ -236,7 +236,7 @@ select * from sys.databases
         public async Task Last_result_set_reflects_last_query_ran()
         {
             var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
-            using var kernel = await CreateKernel();
+            using var kernel = await CreateKernelAsync();
             await kernel.SubmitCodeAsync(
                              $"#!connect --kernel-name adventureworks mssql \"{connectionString}\"");
 
@@ -296,7 +296,7 @@ select * from sys.tables
         [InlineData("short testVar = 123;", (short)123)] // short
         public async Task Shared_variable_can_be_used_to_parameterize_a_sql_query(string csharpVariableDeclaration, object expectedValue, Type changeType = null)
         {
-            using var kernel = await CreateKernel();
+            using var kernel = await CreateKernelAsync();
             var result = await kernel.SubmitCodeAsync(
                              $"#!connect --kernel-name adventureworks mssql \"{MsSqlFactAttribute.GetConnectionStringForTests()}\"");
 
@@ -338,7 +338,7 @@ select @testVar";
         [MsSqlFact]
         public async Task Multiple_shared_variable_can_be_used_to_parameterize_a_sql_query()
         {
-            using var kernel = await CreateKernel();
+            using var kernel = await CreateKernelAsync();
             var result = await kernel.SubmitCodeAsync(
                              $"#!connect --kernel-name adventureworks mssql \"{MsSqlFactAttribute.GetConnectionStringForTests()}\"");
 
@@ -389,7 +389,7 @@ select @x, @y";
         [InlineData("var testVar = new List<int>();")] // Unsupported type
         public async Task Invalid_shared_variables_are_handled_correctly(string csharpVariableDeclaration, bool isCSharpError = false)
         {
-            using var kernel = await CreateKernel();
+            using var kernel = await CreateKernelAsync();
 
             var result = await kernel.SubmitCodeAsync(
                              $"#!connect --kernel-name adventureworks mssql \"{MsSqlFactAttribute.GetConnectionStringForTests()}\"");

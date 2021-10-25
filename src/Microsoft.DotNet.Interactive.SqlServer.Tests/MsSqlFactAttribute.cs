@@ -51,7 +51,9 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
         
         public static string GetConnectionStringForTests()
         {
-            return Environment.GetEnvironmentVariable(TEST_MSSQL_CONNECTION_STRING); // "Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks; Server=localhost"
+            // example:
+            // "Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks; Server=localhost"
+            return Environment.GetEnvironmentVariable(TEST_MSSQL_CONNECTION_STRING); 
         }  
     }
 }

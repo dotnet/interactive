@@ -32,7 +32,6 @@ namespace Microsoft.DotNet.Interactive
         private ChooseKernelDirective _chooseKernelDirective;
         private KernelScheduler<KernelCommand, KernelCommandResult> _commandScheduler;
         private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new();
-        private static readonly List<KernelCommand> EmptyCommandList = new(0);
         private readonly SemaphoreSlim _fastPathSchedulerLock = new(1);
         private KernelInvocationContext _inFlightContext;
         private int _countOfLanguageServiceCommandsInFlight = 0;
@@ -495,7 +494,7 @@ namespace Microsoft.DotNet.Interactive
         {
             if (!command.KernelUri.Contains(Uri))
             {
-                return EmptyCommandList;
+                return Array.Empty<KernelCommand>();
             }
 
             var splitCommands = new List<KernelCommand>();
@@ -584,6 +583,13 @@ namespace Microsoft.DotNet.Interactive
 
             directiveParsers.AddRange(
                 GetDirectiveParsersForCompletion(directiveNode, requestPosition));
+
+            var result = directiveNode.GetDirectiveParseResult();
+            if (result.CommandResult.Command == ChooseKernelDirective)
+            {
+                return result.GetSuggestions()
+                             .Select(s => SubmissionParser.CompletionItemFor(s, result));
+            }
 
             var allCompletions = new List<CompletionItem>();
             var topDirectiveParser = SubmissionParser.GetDirectiveParser();
