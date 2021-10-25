@@ -58,18 +58,10 @@ describe("kernelHost",
 
             const inMemory = createInMemoryChannel();
 
-            const pythonProxy = new ProxyKernel("python", inMemory.channels[0].transport);
-            const goProxy = new ProxyKernel("go", inMemory.channels[0].transport);
-
-
-            vscodeKernel.add(pythonProxy);
-            vscodeKernel.add(goProxy);
-
             const vscodeHost = new KernelHost(vscodeKernel, inMemory.channels[0].transport, "kernel://vscode");
 
-            vscodeHost.registerDestinationUriForProxy(pythonProxy.name, "kernel://remote/python");
-            vscodeHost.registerDestinationUriForProxy(goProxy.name, "kernel://remote/go");
-
+            vscodeHost.createProxyKernelOnDefaultConnector({ localName: "python", destinationUri: "kernel://remote/python" });
+            vscodeHost.createProxyKernelOnDefaultConnector({ localName: "go", destinationUri: "kernel://remote/go" });
             vscodeHost.connect();
 
             vscodeKernel.subscribeToKernelEvents(e => {
@@ -124,11 +116,11 @@ describe("kernelHost",
             inMemory.channels[0].transport.run();
             inMemory.channels[1].transport.run();
 
-            await vscodeKernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "pytonCode", targetKernelName: pythonProxy.name } });
-            await vscodeKernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "goCode", targetKernelName: goProxy.name } });
+            await vscodeKernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "pytonCode", targetKernelName: "python" } });
+            await vscodeKernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "goCode", targetKernelName: "go" } });
 
-            expect(events.find(e => e.command.command.targetKernelName === pythonProxy.name)).not.to.be.undefined;
-            expect(events.find(e => e.command.command.targetKernelName === goProxy.name)).not.to.be.undefined;
+            expect(events.find(e => e.command.command.targetKernelName === "python")).not.to.be.undefined;
+            expect(events.find(e => e.command.command.targetKernelName === "go")).not.to.be.undefined;
         });
 
 

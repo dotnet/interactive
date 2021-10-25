@@ -3,7 +3,7 @@
 
 export interface KernelInfo {
     localName: string;
-    aliases: string[];
+    aliases?: string[];
     originUri?: string;
     destinationUri?: string;
 }

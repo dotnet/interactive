@@ -7,16 +7,22 @@ import { Kernel } from './kernel';
 import { KernelInfo } from './kernelInfo';
 import { ProxyKernel } from './proxyKernel';
 import { Logger } from '../logger';
+import { KernelCommandScheduler } from './kernelCommandScheduler';
 
 export class KernelHost {
     private readonly _destinationUriToKernel = new Map<string, Kernel>();
     private readonly _originUriToKernel = new Map<string, Kernel>();
     private readonly _kernelToKernelInfo = new Map<Kernel, KernelInfo>();
     private readonly _uri: string;
+    private readonly _scheduler: KernelCommandScheduler;
 
     constructor(private readonly _kernel: CompositeKernel, private readonly _transport: contracts.Transport, hostUri: string) {
         this._uri = hostUri || "kernel://vscode";
         this._kernel.host = this;
+        this._scheduler = new KernelCommandScheduler(commandEnvelope => {
+            const kernel = this.getKernel(commandEnvelope);
+            return kernel.send(commandEnvelope);
+        });
     }
 
     public tryGetKernelByDestinationUri(destinationUri: string): Kernel | undefined {
@@ -83,10 +89,20 @@ export class KernelHost {
         }
     }
 
+    public createProxyKernelOnDefaultConnector(kernelInfo: KernelInfo): ProxyKernel {
+        const proxyKernel = new ProxyKernel(kernelInfo.localName, this._transport);
+        this._kernel.add(proxyKernel, kernelInfo.aliases);
+        if (kernelInfo.destinationUri) {
+            this.registerDestinationUriForProxy(proxyKernel.name, kernelInfo.destinationUri);
+        }
+        return proxyKernel;
+    }
+
     public connect() {
         this._transport.setCommandHandler((kernelCommandEnvelope: contracts.KernelCommandEnvelope) => {
-            const kernel = this.getKernel(kernelCommandEnvelope);
-            return kernel.send(kernelCommandEnvelope);
+            // fire and forget this one
+            this._scheduler.schedule(kernelCommandEnvelope);
+            return Promise.resolve();
         });
 
         this._kernel.subscribeToKernelEvents(e => {
