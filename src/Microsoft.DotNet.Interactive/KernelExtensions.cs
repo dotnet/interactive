@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive
     {
         public static T UseQuitCommand<T>(this T kernel, Func<Task> onQuitAsync = null) where T : Kernel
         {
-            kernel.RegisterCommandHandler<Quit>(async (quit, context) =>
+            kernel.RegisterCommandHandler<Quit>(async (_, _) =>
             {
                 if (onQuitAsync is not null)
                 {
@@ -160,7 +160,7 @@ namespace Microsoft.DotNet.Interactive
                 "name",
                 "The name of the variable to create in the destination kernel");
 
-            variableNameArg.AddSuggestions((_,__) =>
+            variableNameArg.AddSuggestions((_,_) =>
             {
                 if (kernel.ParentKernel is { } composite)
                 {
@@ -194,7 +194,7 @@ namespace Microsoft.DotNet.Interactive
                 variableNameArg
             };
 
-            share.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (from, name, context) =>
+            share.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (from, name, _) =>
             {
                 if (kernel.FindKernel(from) is ISupportGetValue fromKernel)
                 {
@@ -229,7 +229,7 @@ namespace Microsoft.DotNet.Interactive
         {
             var command = new Command("#!who", "Display the names of the current top-level variables.")
             {
-                Handler = CommandHandler.Create(async (ParseResult parseResult, KernelInvocationContext context) =>
+                Handler = CommandHandler.Create(async (ParseResult _, KernelInvocationContext context) =>
                 {
                     await DisplayValues(context, false);
                 })
@@ -266,14 +266,11 @@ namespace Microsoft.DotNet.Interactive
                 var valueEvents = new List<ValueProduced>();
                 var valueCommands = valueNames.Select(valueName => new RequestValue(valueName, context.HandlingKernel.Name));
 
-
-
                 foreach (var valueCommand in valueCommands)
                 {
                     result = await context.HandlingKernel.SendAsync(valueCommand);
                     using var __ = result.KernelEvents.OfType<ValueProduced>().Subscribe(e => valueEvents.Add(e));
                 }
-
 
                 var kernelValues = valueEvents.Select(e => new KernelValue( new KernelValueInfo( e.Name, e.Value.GetType()), e.Value, context.HandlingKernel.Name));
 

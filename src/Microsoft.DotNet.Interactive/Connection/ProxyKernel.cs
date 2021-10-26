@@ -20,11 +20,6 @@ namespace Microsoft.DotNet.Interactive.Connection
         private readonly Dictionary<string,(KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<KernelEvent> completionSource, KernelInfo kernelInfo ,KernelInvocationContext invocationContext)> _inflight = new();
         private int _started = 0;
 
-        public ProxyKernel(string name, KernelHost kernelHost) : this(name, kernelHost.DefaultReceiver, kernelHost.DefaultSender)
-        {
-
-        }
-
         public ProxyKernel(string name, IKernelCommandAndEventReceiver receiver, IKernelCommandAndEventSender sender) : base(name)
         {
             _receiver = receiver ?? throw new ArgumentNullException(nameof(receiver));
@@ -36,7 +31,6 @@ namespace Microsoft.DotNet.Interactive.Connection
                 _cancellationTokenSource.Dispose();
             });
         }
-
 
         public Task StartAsync()
         {
