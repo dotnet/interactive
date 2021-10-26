@@ -434,7 +434,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         var host = new KernelHost(kernel, new KernelCommandAndEventTextStreamSender(Console.Out),
                             new MultiplexingKernelCommandAndEventReceiver(
                                 new KernelCommandAndEventTextReceiver(Console.In)));
-
                        
                         if (startupOptions.EnableHttpApi)
                         {
@@ -454,9 +453,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         }
                         else
                         {
-                            kernel.Add(
-                                new JavaScriptKernel(),
-                                new[] { "js" });
+                            await host.DefaultConnector.ConnectKernelAsync(new KernelInfo("javascript", new[] { "js" }, new Uri("kernel://webview/javascript")));
 
                             await startKernelHost(startupOptions, host, console);
                         }

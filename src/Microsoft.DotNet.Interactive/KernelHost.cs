@@ -24,7 +24,6 @@ namespace Microsoft.DotNet.Interactive
         private readonly Dictionary<Kernel, KernelInfo> _kernelInfos = new();
         private readonly Dictionary<Uri,Kernel> _destinationUriToKernel = new ();
         private readonly Dictionary<Uri, Kernel> _originUriToKernel = new();
-        public IKernelConnector DefaultConnector { get; }
 
         public KernelHost(CompositeKernel kernel, IKernelCommandAndEventSender defaultSender, MultiplexingKernelCommandAndEventReceiver defaultReceiver, Uri hostUri)
         {
@@ -34,31 +33,23 @@ namespace Microsoft.DotNet.Interactive
             DefaultConnector = new DefaultKernelConnector(_defaultSender, _defaultReceiver);
             Uri = hostUri;
             _kernel.SetHost(this);
-
         }
 
         public KernelHost(CompositeKernel kernel,IKernelCommandAndEventSender defaultSender, MultiplexingKernelCommandAndEventReceiver defaultReceiver) : this(kernel, defaultSender, defaultReceiver, new Uri("kernel://dotnet", UriKind.Absolute))
         {
-          
-
         }
-        
-        public static KernelHost InProcess(CompositeKernel kernel, Func<CommandOrEvent, Task> onSend = null)
-        {
 
+        public IKernelConnector DefaultConnector { get; }
+
+        public static KernelHost InProcess(CompositeKernel kernel)
+        {
+            // QUESTION: (InProcess) does this need to be here? the implementation looks incomplete.
             var receiver = new MultiplexingKernelCommandAndEventReceiver(new InProcessCommandAndEventReceiver());
 
             var sender = new InProcessCommandAndEventSender();
-            if (onSend is not null)
-            {
-                sender.OnSend(onSend);
-            }
+          
             return new KernelHost(kernel, sender, receiver);
         }
-
-        internal IKernelCommandAndEventSender DefaultSender => _defaultSender;
-
-        internal MultiplexingKernelCommandAndEventReceiver DefaultReceiver => _defaultReceiver;
 
         private class DefaultKernelConnector : IKernelConnector
         {
@@ -179,7 +170,7 @@ namespace Microsoft.DotNet.Interactive
 
             public void OnSend(Action<CommandOrEvent> onSend)
             {
-                _onSendAsync = (commandOrEvent) =>
+                _onSendAsync = commandOrEvent =>
                 {
 
                     onSend(commandOrEvent);
@@ -224,7 +215,6 @@ namespace Microsoft.DotNet.Interactive
 
         private void RegisterDestinationUriForProxy(string proxyLocalKernelName, Uri destinationUri)
         {
-            
             var childKernel = _kernel.FindKernel(proxyLocalKernelName);
             if (childKernel is ProxyKernel proxyKernel)
             {
@@ -276,22 +266,5 @@ namespace Microsoft.DotNet.Interactive
         {
             return _originUriToKernel.TryGetValue(originUri, out kernel);
         }
-
-        public bool TryGetKernelByDestinationOrOriginUri(Uri uri, out Kernel kernel)
-        {
-            if (TryGetKernelByDestinationUri(uri, out kernel))
-            {
-                return true;
-            }
-
-            if (TryGetKernelByOriginUri(uri, out kernel))
-            {
-                return true;
-            }
-            kernel = null;
-            return false;
-        }
     }
-
-   
 }

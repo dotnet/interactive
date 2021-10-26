@@ -46,7 +46,7 @@ And the output below the next cell should display the same value.
 
 #!javascript
 
-const x = await interactive.csharp.getVariable("x");
+x = 123;
 document.getElementById("output").innerText = `The value is ${x}.`;
 console.log(`The value is ${x}.`);
 

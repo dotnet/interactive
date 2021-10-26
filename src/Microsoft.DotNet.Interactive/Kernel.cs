@@ -255,7 +255,6 @@ namespace Microsoft.DotNet.Interactive
             await command.InvokeAsync(context);
         }
 
-
         protected internal virtual void DelegatePublication(KernelEvent kernelEvent)
         {
             if (kernelEvent is null)

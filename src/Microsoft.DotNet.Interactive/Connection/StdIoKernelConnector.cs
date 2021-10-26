@@ -67,12 +67,11 @@ namespace Microsoft.DotNet.Interactive.Connection
                         return;
                     }
                 }
-                
             });
 
             var checkProcessError = Task.Run(async () =>
             {
-                while (true)
+                while (!checkReady.IsCompleted)
                 {
                     await Task.Delay(200);
                     if (process.HasExited)
@@ -89,7 +88,6 @@ namespace Microsoft.DotNet.Interactive.Connection
             await Task.WhenAny(checkProcessError, checkReady);
             
             return kernel;
-
         }
 
         public StdIoKernelConnector(string[] command, DirectoryInfo? workingDirectory = null)
