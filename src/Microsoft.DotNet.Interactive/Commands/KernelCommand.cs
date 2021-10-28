@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Interactive.Commands
 
         public string TargetKernelName { get; internal set; }
 
-        internal static KernelCommand None { get; } = new NoCommand();
+        internal static KernelCommand None => new NoCommand();
 
         [JsonIgnore]
         internal Uri OriginUri { get; set; }
