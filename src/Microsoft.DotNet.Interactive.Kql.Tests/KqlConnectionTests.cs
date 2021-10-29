@@ -34,6 +34,7 @@ namespace Microsoft.DotNet.Interactive.Kql.Tests
 
             kernel.UseKernelClientConnection(new ConnectKqlCommand());
             kernel.UseNteractDataExplorer();
+            kernel.UseSandDanceExplorer();
 
             return kernel;
         }
@@ -130,7 +131,7 @@ StormEvents | take 10
                         e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
                               .Which;
 
-            var table = (NteractDataExplorer)value.Value;
+            var table = (DataExplorer<TabularDataResource>)value.Value;
 
             table.Data
                  .Schema
@@ -237,6 +238,7 @@ print testVar";
         {
             var cluster = KqlFactAttribute.GetClusterForTests();
             using var kernel = await CreateKernel();
+            
             var result = await kernel.SubmitCodeAsync(
                 $"#!connect kql --kernel-name KustoHelp --cluster \"{cluster}\" --database \"Samples\"");
 
@@ -283,6 +285,7 @@ print testVar";
         public void Dispose()
         {
             Formatter.ResetToDefault();
+            DataExplorer.ResetToDefault();
         }
     }
 }

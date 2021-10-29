@@ -1,10 +1,8 @@
-﻿using FluentAssertions;
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using FluentAssertions;
 using Microsoft.AspNetCore.Html;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests
@@ -12,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.Tests
     public class DataExplorerTests
     {
         [Fact]
-        public void when_there_is_single_dataexplorer_return_it_as_default()
+        public void when_there_is_single_DataExplorer_return_it_as_default()
         {
             DataExplorer<string>.Register<StringDataExplorer>();
             var dataExplorer = DataExplorer.CreateDefault("hello world");
@@ -21,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
 
         [Fact]
-        public void can_create_specific_dataexplorer_for_a_datatype()
+        public void can_create_specific_DataExplorer_for_a_data_type()
         {
             DataExplorer<string>.Register<StringDataExplorer>();
             DataExplorer<string>.Register<AdvancedStringDataExplorer>();
@@ -30,11 +28,11 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
-        public void can_specify_default_dataexplorer_for_a_datatype()
+        public void can_specify_default_DataExplorer_for_a_data_type()
         {
             DataExplorer<string>.Register<StringDataExplorer>();
             DataExplorer<string>.Register<AdvancedStringDataExplorer>();
-            DataExplorer.SetDefault<string>(nameof(AdvancedStringDataExplorer));
+            DataExplorer.SetDefault<string, AdvancedStringDataExplorer>();
             var dataExplorer = DataExplorer.CreateDefault("hello world");
             dataExplorer.Should().BeOfType<AdvancedStringDataExplorer>();
         }

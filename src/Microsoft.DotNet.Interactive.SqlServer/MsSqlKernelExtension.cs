@@ -3,7 +3,6 @@
 
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
-using Microsoft.DotNet.Interactive.ExtensionLab;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
@@ -13,8 +12,6 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         {
             if (kernel is CompositeKernel compositeKernel)
             {
-                kernel.UseNteractDataExplorer();
-                kernel.UseSandDanceExplorer();
 
                 compositeKernel
                     .UseKernelClientConnection(new ConnectMsSqlCommand());

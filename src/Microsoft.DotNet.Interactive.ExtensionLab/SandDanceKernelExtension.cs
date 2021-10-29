@@ -27,6 +27,12 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
     dataFrame.ExploreWithSandDance().Display();
     </code>
 </pre>
+<p>To set the SandDance Explorer use the following code</p>
+<pre>
+    <code>
+    DataExplorer.SetDefault<TabularDataResource, SandDanceDataExplorer>();
+    </code>
+</pre>
     <img src=""https://user-images.githubusercontent.com/11507384/54236654-52d42800-44d1-11e9-859e-6c5d297a46d2.gif"" width=""30%"">
     </details>"),
                 "text/html");
