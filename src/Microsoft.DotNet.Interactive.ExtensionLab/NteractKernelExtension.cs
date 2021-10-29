@@ -27,6 +27,13 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
     dataFrame.ExploreWithNteract().Display();
     </code>
 </pre>
+
+<p>To set the nteract Data Explorer use the following code</p>
+<pre>
+    <code>
+    DataExplorer.SetDefault<TabularDataResource, NteractDataExplorer>();
+    </code>
+</pre>
     <img src=""https://user-images.githubusercontent.com/547415/109559345-621e5880-7a8f-11eb-8b98-d4feeaac116f.png"" width=""75%"">
     </details>"),
                 "text/html");

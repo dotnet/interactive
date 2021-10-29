@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Microsoft.DotNet.Interactive;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {

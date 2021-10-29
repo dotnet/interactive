@@ -159,7 +159,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                                     var tabularDataResource = table.ToTabularDataResource();
                                     // Store each result set in the list of result sets being saved
                                     _queryResults[LastQueryResultsInfoName].Add(tabularDataResource);
-                                    var explorer = new NteractDataExplorer(tabularDataResource);
+                                    var explorer = DataExplorer.CreateDefault(tabularDataResource);
                                     context.Display(explorer);
                                 }
                             }

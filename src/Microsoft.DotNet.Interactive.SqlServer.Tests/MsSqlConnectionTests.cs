@@ -436,6 +436,7 @@ select @testVar";
         public void Dispose()
         {
             Formatter.ResetToDefault();
+            DataExplorer.ResetToDefault();
         }
     }
 }

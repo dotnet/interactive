@@ -13,9 +13,6 @@ namespace Microsoft.DotNet.Interactive.Kql
         {
             if (kernel is CompositeKernel compositeKernel)
             {
-                kernel.UseNteractDataExplorer();
-                kernel.UseSandDanceExplorer();
-
                 compositeKernel
                     .UseKernelClientConnection(new ConnectKqlCommand());
 

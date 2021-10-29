@@ -22,12 +22,7 @@ namespace Microsoft.DotNet.Interactive.Kql
             KqlConnectionDetails connectionDetails,
             ToolsServiceClient client) : base(name, client)
         {
-            if (connectionDetails is null)
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(connectionDetails));
-            }
-
-            _connectionDetails = connectionDetails;
+            _connectionDetails = connectionDetails ?? throw new ArgumentException("Value cannot be null or whitespace.", nameof(connectionDetails));
         }
 
         public override async Task ConnectAsync()
