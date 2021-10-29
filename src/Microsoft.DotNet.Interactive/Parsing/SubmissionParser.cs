@@ -116,6 +116,12 @@ namespace Microsoft.DotNet.Interactive.Parsing
                             break;
                         }
 
+                        if (directiveNode is KernelNameDirectiveNode kernelNameNode)
+                        {
+                            targetKernelName = kernelNameNode.KernelName;
+                            lastKernelNameNode = kernelNameNode;
+                        }
+
                         var directiveCommand = new DirectiveCommand(
                             parseResult,
                             originalCommand,
@@ -123,12 +129,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         {
                             TargetKernelName = targetKernelName
                         };
-
-                        if (directiveNode is KernelNameDirectiveNode kernelNameNode)
-                        {
-                            targetKernelName = kernelNameNode.KernelName;
-                            lastKernelNameNode = kernelNameNode;
-                        }
 
                         if (parseResult.CommandResult.Command.Name == "#r")
                         {
