@@ -24,6 +24,7 @@ namespace Microsoft.DotNet.Interactive.Connection
 
         public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
         {
+            // QUESTION: (ConnectKernelAsync) tests?
             var command = Command[0];
             var arguments = string.Join(" ", Command.Skip(1));
             var psi = new ProcessStartInfo

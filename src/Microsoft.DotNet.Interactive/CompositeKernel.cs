@@ -354,8 +354,6 @@ namespace Microsoft.DotNet.Interactive
             SubmissionParser.ResetParser();
         }
 
-
-
         public KernelHost Host => _host;
 
         internal void SetHost(KernelHost host)
@@ -364,22 +362,23 @@ namespace Microsoft.DotNet.Interactive
             {
                 throw new InvalidOperationException("Host cannot be changed");
             }
+
             _host = host;
 
             var kernelsToRegister = _kernelsByNameOrAlias
-                .GroupBy(e => e.Value)
-                .Select(g =>
-                {
-                    var localName = g.Key.Name;
-                    var aliases = new HashSet<string>(g.Select(v => v.Key));
-                    aliases.Remove(localName);
+                                    .GroupBy(e => e.Value)
+                                    .Select(g =>
+                                    {
+                                        var localName = g.Key.Name;
+                                        var aliases = new HashSet<string>(g.Select(v => v.Key));
+                                        aliases.Remove(localName);
 
-                    return (g.Key,new KernelInfo(localName, aliases.ToArray()));
-                });
+                                        return (g.Key, new KernelInfo(localName, aliases.ToArray()));
+                                    });
 
             foreach (var (kernel, kernelInfo) in kernelsToRegister)
             {
-             _host.AddKernelInfo(kernel, kernelInfo);   
+                _host.AddKernelInfo(kernel, kernelInfo);
             }
         }
     }

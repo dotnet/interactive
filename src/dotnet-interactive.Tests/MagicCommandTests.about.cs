@@ -11,7 +11,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.App.Tests
 {
-    public partial class MagicCommandTests
+    public class MagicCommandTests
     {
         [Collection("Do not parallelize")]
         public class about

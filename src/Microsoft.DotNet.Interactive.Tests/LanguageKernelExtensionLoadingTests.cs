@@ -167,7 +167,6 @@ test for remote kernel");
                 .Code
                 .Should()
                 .Be(submitCode.Code);
-
         }
 
         public class ConfiguringExtension : IKernelExtension

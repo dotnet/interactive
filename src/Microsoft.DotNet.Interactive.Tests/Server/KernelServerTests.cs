@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Reactive.Linq;
 using FluentAssertions;
 using System.Linq;
@@ -34,7 +33,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         private readonly RecordingKernelCommandAndEventReceiver _serverInputChannel;
         private readonly CompositeKernel _kernel;
 
-        private IList<IKernelEventEnvelope> KernelEvents => _serverOutputChannel.KernelEventEventEnvelopes.ToList();
+        private IReadOnlyList<IKernelEventEnvelope> KernelEvents => _serverOutputChannel.KernelEventEventEnvelopes.ToList();
 
         public KernelHostTests(ITestOutputHelper output)
         {
@@ -257,6 +256,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
         class RecordingKernelCommandAndEventSender : IKernelCommandAndEventSender
         {
+            // QUESTION: (RecordingKernelCommandAndEventSender) why are there two different implementations of this?
             public Subject<KernelEvent> EventStream { get; } = new();
             private readonly ConcurrentQueue<IKernelCommandEnvelope> _commandEnvelopes;
             private readonly ConcurrentQueue<IKernelEventEnvelope> _eventEventEnvelopes;

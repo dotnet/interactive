@@ -4,6 +4,7 @@
 using System;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Connection;
+using Microsoft.DotNet.Interactive.Tests.Server;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests.Parsing
@@ -14,7 +15,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Parsing
         public void cannot_be_started_multiple_times()
         {
             using var kernel = new ProxyKernel("proxy", new BlockingCommandAndEventReceiver(),
-                new NullKernelCommandAndEventSender());
+                new RecordingKernelCommandAndEventSender());
 
             kernel.StartAsync();
 

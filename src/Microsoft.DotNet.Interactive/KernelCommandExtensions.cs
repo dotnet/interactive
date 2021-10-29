@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 command.Properties.Add(TokenKey, new TokenSequence(token));
             }
-            else if (!(existing is TokenSequence sequence) || sequence.Current != token)
+            else if (existing is not TokenSequence sequence || sequence.Current != token)
             {
                 throw new InvalidOperationException("Command token cannot be changed.");
             }

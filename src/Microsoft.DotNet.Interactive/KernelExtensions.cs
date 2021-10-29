@@ -154,7 +154,7 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public static T UseValueSharing<T>(this T kernel)
-            where T : Kernel, ISupportGetValue
+            where T : Kernel
         {
             var variableNameArg = new Argument<string>(
                 "name",
@@ -188,26 +188,37 @@ namespace Microsoft.DotNet.Interactive
                 return Array.Empty<string>();
             });
 
-            var share = new Command("#!share", "Share a .NET variable between subkernels")
+            var share = new Command("#!share", "Share a value between subkernels")
             {
                 fromKernelOption,
                 variableNameArg
             };
 
-            share.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (from, name, _) =>
+            share.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (from, name, context) =>
             {
-                if (kernel.FindKernel(from) is ISupportGetValue fromKernel)
+                if (kernel.FindKernel(from) is { } fromKernel)
                 {
-                    if (fromKernel.TryGetValue(name, out object shared))
+                    if (fromKernel is ISupportGetValue fromInProcessKernel)
                     {
-                        try
+                        if (fromInProcessKernel.TryGetValue(name, out object shared))
                         {
-                            await ((ISupportSetValue)kernel).SetValueAsync(name, shared);
-                        } catch (Exception ex)
-                        {
-                            throw new InvalidOperationException($"Error sharing value '{name}' from kernel '{from}' into kernel '{kernel.Name}'. {ex.Message}", ex);
+                            try
+                            {
+                                await ((ISupportSetValue)kernel).SetValueAsync(name, shared);
+                            } catch (Exception ex)
+                            {
+                                throw new InvalidOperationException($"Error sharing value '{name}' from kernel '{from}' into kernel '{kernel.Name}'. {ex.Message}", ex);
+                            }
                         }
                     }
+                    else
+                    {
+
+                    }
+                }
+                else
+                {
+                    context.Fail(context.Command,message: $"Kernel not found: {from}");
                 }
             });
 
