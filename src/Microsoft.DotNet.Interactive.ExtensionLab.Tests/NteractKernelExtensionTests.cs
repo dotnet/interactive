@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Assent;
@@ -11,7 +12,7 @@ using Assent;
 using FluentAssertions;
 
 using Microsoft.DotNet.Interactive.Formatting;
-
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
@@ -28,7 +29,23 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         }
 
         [Fact]
-        public async Task it_registers_formatters()
+        public async Task it_configures_preferred_mimeTypes()
+        {
+            using var kernel = new CompositeKernel();
+
+            var kernelExtension = new NteractKernelExtension();
+
+            await kernelExtension.OnLoadAsync(kernel);
+
+            var mimetypes = Formatter.GetPreferredMimeTypesFor(typeof(NteractDataExplorer));
+
+            mimetypes
+                .Should().BeEquivalentTo(HtmlFormatter.MimeType, TabularDataResourceFormatter.MimeType);
+        }
+
+
+        [Fact]
+        public async Task it_registers_html_formatter()
         {
             using var kernel = new CompositeKernel();
 
@@ -44,9 +61,52 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             };
 
 
-            var formatted = data.ExploreWithNteract().ToDisplayString(HtmlFormatter.MimeType);
+            var formattedValue = data.ExploreWithNteract().ToDisplayString(HtmlFormatter.MimeType);
+            formattedValue.Should().Contain("configureRequireFromExtension('nteract','1.0.0')(['nteract/nteractapi'], (nteract) => {");
+        }
 
-            formatted.Should().Contain("configureRequireFromExtension('nteract','1.0.0')(['nteract/nteractapi'], (nteract) => {");
+        [Fact]
+        public async Task it_registers_tabularResource_formatter()
+        {
+            using var kernel = new CompositeKernel();
+
+            var kernelExtension = new NteractKernelExtension();
+
+            await kernelExtension.OnLoadAsync(kernel);
+
+            var data = new[]
+            {
+                new {Type="orange", Price=1.2},
+                new {Type="apple" , Price=1.3},
+                new {Type="grape" , Price=1.4}
+            };
+
+
+            var formattedValue = data.ExploreWithNteract().ToDisplayString(TabularDataResourceFormatter.MimeType);
+            formattedValue.Should().Contain("\"profile\": \"tabular-data-resource\"");
+        }
+
+        [Fact]
+        public async Task it_is_formatted_as_multiple_mimeTypes()
+        {
+            using var kernel = new CompositeKernel();
+
+            var kernelExtension = new NteractKernelExtension();
+
+            await kernelExtension.OnLoadAsync(kernel);
+
+            var data = new[]
+            {
+                new {Type="orange", Price=1.2},
+                new {Type="apple" , Price=1.3},
+                new {Type="grape" , Price=1.4}
+            };
+
+
+            var formattedValues = FormattedValue.FromObject( data.ExploreWithNteract());
+            formattedValues.Select(fv => fv.MimeType)
+                .Should()
+                .BeEquivalentTo(HtmlFormatter.MimeType, TabularDataResourceFormatter.MimeType);
         }
 
         [Fact]

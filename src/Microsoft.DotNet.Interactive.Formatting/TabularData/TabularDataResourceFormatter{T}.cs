@@ -14,6 +14,17 @@ namespace Microsoft.DotNet.Interactive.Formatting.TabularData
             _format = format;
         }
 
+        public TabularDataResourceFormatter(Action<T, FormatContext> format)
+        {
+            _format = FormatInstance;
+
+            bool FormatInstance(T instance, FormatContext context)
+            {
+                format(instance, context);
+                return true;
+            }
+        }
+
         public override bool Format(T value, FormatContext context)
         {
             return _format(value, context);

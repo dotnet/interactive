@@ -22,14 +22,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
         private static string _defaultMimeType;
 
         // user specification
-        private static readonly ConcurrentStack<(Type type, string mimeType)> _preferredMimeTypes = new();
+        private static readonly ConcurrentStack<(Type type, HashSet<string> mimeTypes)> _preferredMimeTypes = new();
         private static readonly ConcurrentStack<(Type type, string mimeType)> _defaultPreferredMimeTypes = new();
         internal static readonly ConcurrentStack<ITypeFormatter> _userTypeFormatters = new();
         internal static readonly ConcurrentStack<ITypeFormatter> _defaultTypeFormatters = new();
         internal static readonly ConcurrentDictionary<Type, bool> _typesThatHaveBeenCheckedForFormatters = new();
 
         // computed state
-        private static readonly ConcurrentDictionary<Type, string> _preferredMimeTypesTable = new();
+        private static readonly ConcurrentDictionary<Type, HashSet<string>> _preferredMimeTypesTable = new();
         private static readonly ConcurrentDictionary<(Type type, string mimeType), ITypeFormatter> _typeFormattersTable = new();
         private static readonly ConcurrentDictionary<Type, Action<FormatContext, object, string>> _genericFormattersTable = new();
 
@@ -133,21 +133,22 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _preferredMimeTypesTable.Clear();
         }
 
-        public static void SetPreferredMimeTypeFor(Type type, string preferredMimeType)
+        public static void SetPreferredMimeTypesFor(Type type, params string[] preferredMimeTypes)
         {
             if (type is null)
             {
                 throw new ArgumentNullException(nameof(type));
             }
 
-            if (string.IsNullOrWhiteSpace(preferredMimeType))
+            if (preferredMimeTypes is null
+                || preferredMimeTypes.Count( mimeType =>  !string.IsNullOrWhiteSpace(mimeType)) ==0)
             {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(preferredMimeType));
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(preferredMimeTypes));
             }
 
             ClearComputedState();
             
-            _preferredMimeTypes.Push((type, preferredMimeType));
+            _preferredMimeTypes.Push((type, new HashSet<string>(preferredMimeTypes)));
         }
 
         public static string DefaultMimeType
@@ -157,8 +158,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
                                       throw new ArgumentNullException(nameof(value));
         }
 
-        public static string GetPreferredMimeTypeFor(Type type) =>
-            _preferredMimeTypesTable.GetOrAdd(type ??= typeof(object), InferMimeType);
+        public static IReadOnlyCollection<string> GetPreferredMimeTypesFor(Type type) =>
+            _preferredMimeTypesTable.GetOrAdd(type ??= typeof(object), InferMimeTypes);
 
         private class SortByRelevanceAndOrder<T> : IComparer<T>
         {
@@ -215,10 +216,30 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
         }
 
-        private static string InferMimeType(Type type) =>
-            TryInferMimeType(type, _preferredMimeTypes)  ?? 
-            TryInferMimeType(type, _defaultPreferredMimeTypes) ?? 
-            _defaultMimeType;
+        private static HashSet<string> TryInferMimeTypes(Type type, IEnumerable<(Type type, HashSet<string> mimeTypes)> mimeTypes)
+        {
+            // Find the most specific type that specifies a mimeType
+            var candidates =
+                mimeTypes
+                    .Where(mimeSpec => mimeSpec.type.IsRelevantFormatterFor(type))
+                    .Select((x, index) => (x.type, x.mimeTypes, index))
+                    .ToArray();
+
+            if (candidates.Length > 0)
+            {
+                Array.Sort(candidates, new SortByRelevanceAndOrder<(Type type, HashSet<string> mimeTypes, int index)>(tup => tup.type, tup => tup.index));
+                return candidates[0].mimeTypes;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private static HashSet<string> InferMimeTypes(Type type) =>
+            TryInferMimeTypes(type, _preferredMimeTypes)  ?? 
+            new HashSet<string>{ TryInferMimeType(type, _defaultPreferredMimeTypes) ?? 
+            _defaultMimeType};
 
         public static string ToDisplayString(
             this object obj,
@@ -481,6 +502,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
         }
 
+        public static IEnumerable<ITypeFormatter> GetRegisteredFormattersFor(Type actualType) =>
+            RegisteredFormatters().Where(f => f.Type.IsAssignableFrom(actualType));
+
         public static ITypeFormatter GetPreferredFormatterFor(Type actualType, string mimeType) =>
             _typeFormattersTable
                 .GetOrAdd(
@@ -530,9 +554,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             // Last resort use preferred mimeType
 
-            var preferredMimeType = GetPreferredMimeTypeFor(actualType);
+            var preferredMimeType = GetPreferredMimeTypesFor(actualType);
 
-            return GetPreferredFormatterFor(actualType, preferredMimeType);
+            return GetPreferredFormatterFor(actualType, preferredMimeType.FirstOrDefault());
         }
 
         internal static ITypeFormatter TryInferPreferredFormatter(Type actualType, string mimeType, IEnumerable<ITypeFormatter> formatters)

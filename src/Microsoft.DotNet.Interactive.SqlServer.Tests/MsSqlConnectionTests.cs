@@ -169,6 +169,36 @@ select * from sys.databases
         }
 
         [MsSqlFact]
+        public async Task query_produces_expected_formatted_values()
+        {
+            var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
+            using var kernel = await CreateKernelAsync();
+            var result = await kernel.SubmitCodeAsync(
+                $"#!connect --kernel-name adventureworks mssql \"{connectionString}\"");
+
+            result.KernelEvents
+                .ToSubscribedList()
+                .Should()
+                .NotContainErrors();
+
+            result = await kernel.SubmitCodeAsync($@"
+#!sql-adventureworks --mime-type {TabularDataResourceFormatter.MimeType}
+select * from sys.databases
+");
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should().NotContainErrors();
+
+            events.Should()
+                .ContainSingle<DisplayedValueProduced>(fvp => fvp.Value is DataExplorer<TabularDataResource>)
+                .Which
+                .FormattedValues.Select(fv => fv.MimeType)
+                .Should()
+                .BeEquivalentTo(HtmlFormatter.MimeType, TabularDataResourceFormatter.MimeType);
+        }
+
+        [MsSqlFact]
         public async Task Empty_results_are_displayed_correctly()
         {
             var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();

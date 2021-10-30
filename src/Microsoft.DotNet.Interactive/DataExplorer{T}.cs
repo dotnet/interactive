@@ -2,12 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Linq;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
 namespace Microsoft.DotNet.Interactive
 {
+    [TypeFormatterSource(typeof(DataExplorerFormatterSource))]
     public abstract class DataExplorer<TData>
     {
         public string Id { get; } = Guid.NewGuid().ToString("N");
@@ -26,6 +29,7 @@ namespace Microsoft.DotNet.Interactive
                 explorer.ToHtml().WriteTo(writer, HtmlEncoder.Default);
             }, HtmlFormatter.MimeType);
             
+            Formatter.SetPreferredMimeTypesFor(typeof(DataExplorer<TData>), HtmlFormatter.MimeType, TabularDataResourceFormatter.MimeType);
         }
 
         static DataExplorer()

@@ -15,11 +15,11 @@ namespace Microsoft.DotNet.Interactive
         public static DisplayedValue Display(
             this KernelInvocationContext context,
             object value,
-            string mimeType = null)
+            params string[] mimeTypes)
         {
             var displayId = Guid.NewGuid().ToString();
 
-            var formattedValues = FormattedValue.FromObject(value, mimeType);
+            var formattedValues = FormattedValue.FromObject(value, mimeTypes);
 
             context.Publish(
                 new DisplayedValueProduced(
@@ -28,11 +28,11 @@ namespace Microsoft.DotNet.Interactive
                     formattedValues,
                     displayId));
 
-            var displayedValue = new DisplayedValue(displayId, mimeType ?? formattedValues.FirstOrDefault()?.MimeType, context);
+            var displayedValue = new DisplayedValue(displayId, formattedValues.Select(fv => fv.MimeType).ToArray(), context);
 
             return displayedValue;
         }
-        
+
         public static DisplayedValue DisplayAs(
             this KernelInvocationContext context,
             string value,
