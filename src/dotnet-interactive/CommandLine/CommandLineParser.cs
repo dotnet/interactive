@@ -696,10 +696,10 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                 case BrowserFrontendEnvironment browserFrontendEnvironment:
                     Formatter.DefaultMimeType = HtmlFormatter.MimeType;
-                    Formatter.SetPreferredMimeTypeFor(typeof(LaTeXString), "text/latex");
-                    Formatter.SetPreferredMimeTypeFor(typeof(MathString), "text/latex");
-                    Formatter.SetPreferredMimeTypeFor(typeof(string), PlainTextFormatter.MimeType);
-                    Formatter.SetPreferredMimeTypeFor(typeof(ScriptContent), HtmlFormatter.MimeType);
+                    Formatter.SetPreferredMimeTypesFor(typeof(LaTeXString), "text/latex");
+                    Formatter.SetPreferredMimeTypesFor(typeof(MathString), "text/latex");
+                    Formatter.SetPreferredMimeTypesFor(typeof(string), PlainTextFormatter.MimeType);
+                    Formatter.SetPreferredMimeTypesFor(typeof(ScriptContent), HtmlFormatter.MimeType);
 
                     Formatter.Register<LaTeXString>((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
                     Formatter.Register<MathString>((math, writer) => writer.Write(math.ToString()), "text/latex");

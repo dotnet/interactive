@@ -16,15 +16,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     var tabularDataSet = value.Cast<object>().ToTabularDataResource();
                     var tabularData = tabularDataSet.ToJsonString();
                     context.Writer.Write(tabularData.ToString());
-                    return true;
-                }),
-
-                new TabularDataResourceFormatter<TabularDataResource>((value, context) =>
-                {
-                    var tabularData = value.ToJsonString();
-                    context.Writer.Write(tabularData);
-                    return true;
-                }),
+                })
             };
     }
 }

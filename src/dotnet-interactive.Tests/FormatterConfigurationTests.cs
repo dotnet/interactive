@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Linq;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.App.CommandLine;
@@ -38,7 +39,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         {
             var latex = new LaTeXString(@"F(k) = \int_{-\infty}^{\infty} f(x) e^{2\pi i k} dx");
 
-            var mimeType = Formatter.GetPreferredMimeTypeFor(latex.GetType());
+            var mimeType = Formatter.GetPreferredMimeTypesFor(latex.GetType()).FirstOrDefault();
 
             var formattedValue = new FormattedValue(
                 mimeType,
@@ -53,7 +54,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         {
             var latex = new MathString(@"F(k) = \int_{-\infty}^{\infty} f(x) e^{2\pi i k} dx");
 
-            var mimeType = Formatter.GetPreferredMimeTypeFor(latex.GetType());
+            var mimeType = Formatter.GetPreferredMimeTypesFor(latex.GetType()).FirstOrDefault();
 
             var formattedValue = new FormattedValue(
                 mimeType,
@@ -67,7 +68,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         public void ScriptContent_type_is_formatted()
         {
             var script = new ScriptContent("alert('hello');");
-            var mimeType = Formatter.GetPreferredMimeTypeFor(script.GetType());
+            var mimeType = Formatter.GetPreferredMimeTypesFor(script.GetType()).FirstOrDefault();
 
             var formattedValue = new FormattedValue(
                 mimeType,
@@ -82,7 +83,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         {
             var scriptText = "if (true && false) { alert('hello with embedded <>\" escapes'); };";
             var script = new ScriptContent(scriptText);
-            var mimeType = Formatter.GetPreferredMimeTypeFor(script.GetType());
+            var mimeType = Formatter.GetPreferredMimeTypesFor(script.GetType()).FirstOrDefault();
 
             var formattedValue = new FormattedValue(
                 mimeType,

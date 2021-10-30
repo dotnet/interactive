@@ -145,6 +145,36 @@ StormEvents | take 10
         }
 
         [KqlFact]
+        public async Task query_produces_expected_formatted_values()
+        {
+            var cluster = KqlFactAttribute.GetClusterForTests();
+            using var kernel = await CreateKernel();
+            var result = await kernel.SubmitCodeAsync(
+                $"#!connect kql --kernel-name KustoHelp --cluster \"{cluster}\" --database \"Samples\"");
+
+            result.KernelEvents
+                .ToSubscribedList()
+                .Should()
+                .NotContainErrors();
+
+            result = await kernel.SubmitCodeAsync($@"
+#!kql-KustoHelp --mime-type {TabularDataResourceFormatter.MimeType}
+StormEvents | take 10
+");
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should().NotContainErrors();
+
+            events.Should()
+                .ContainSingle<DisplayedValueProduced>(fvp => fvp.Value is DataExplorer<TabularDataResource>)
+                .Which
+                .FormattedValues.Select(fv => fv.MimeType)
+                .Should()
+                .BeEquivalentTo(HtmlFormatter.MimeType, TabularDataResourceFormatter.MimeType);
+        }
+
+        [KqlFact]
         public async Task Empty_results_are_displayed_correctly()
         {
             var cluster = KqlFactAttribute.GetClusterForTests();
