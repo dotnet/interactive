@@ -10,39 +10,42 @@ using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Server;
 
-namespace Microsoft.DotNet.Interactive.Tests.Server;
-
-internal class RecordingKernelCommandAndEventSender : IKernelCommandAndEventSender
+namespace Microsoft.DotNet.Interactive.Tests.Server
 {
-    private Func<CommandOrEvent, Task> _onSendAsync;
-    public List<KernelCommand> Commands { get; } = new();
-    public List<KernelEvent> Events { get; } = new();
-
-    public Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
+    internal class RecordingKernelCommandAndEventSender : IKernelCommandAndEventSender
     {
-        Commands.Add(kernelCommand);
-        _onSendAsync?.Invoke(new CommandOrEvent(KernelCommandEnvelope.Deserialize(KernelCommandEnvelope.Serialize(kernelCommand)).Command));
-        return Task.CompletedTask;
-    }
+        private Func<CommandOrEvent, Task> _onSendAsync;
+        public List<KernelCommand> Commands { get; } = new();
+        public List<KernelEvent> Events { get; } = new();
 
-    public Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
-    {
-        Events.Add(kernelEvent);
-        _onSendAsync?.Invoke(new CommandOrEvent(KernelEventEnvelope.Deserialize(KernelEventEnvelope.Serialize(kernelEvent)).Event));
-        return Task.CompletedTask;
-    }
-
-    public void OnSend(Action<CommandOrEvent> onSend)
-    {
-        _onSendAsync = commandOrEvent =>
+        public Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
         {
-            onSend(commandOrEvent);
+            Commands.Add(kernelCommand);
+            _onSendAsync?.Invoke(new CommandOrEvent(KernelCommandEnvelope
+                .Deserialize(KernelCommandEnvelope.Serialize(kernelCommand)).Command));
             return Task.CompletedTask;
-        };
-    }
+        }
 
-    public void OnSend(Func<CommandOrEvent, Task> onSendAsync)
-    {
-        _onSendAsync = onSendAsync;
+        public Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
+        {
+            Events.Add(kernelEvent);
+            _onSendAsync?.Invoke(new CommandOrEvent(KernelEventEnvelope
+                .Deserialize(KernelEventEnvelope.Serialize(kernelEvent)).Event));
+            return Task.CompletedTask;
+        }
+
+        public void OnSend(Action<CommandOrEvent> onSend)
+        {
+            _onSendAsync = commandOrEvent =>
+            {
+                onSend(commandOrEvent);
+                return Task.CompletedTask;
+            };
+        }
+
+        public void OnSend(Func<CommandOrEvent, Task> onSendAsync)
+        {
+            _onSendAsync = onSendAsync;
+        }
     }
 }

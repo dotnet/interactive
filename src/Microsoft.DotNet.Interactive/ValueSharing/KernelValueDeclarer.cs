@@ -3,18 +3,19 @@
 
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.ValueSharing;
-
-public static class KernelValueDeclarer
+namespace Microsoft.DotNet.Interactive.ValueSharing
 {
-    public static IKernelValueDeclarer Default { get; } = new DefaultKernelValueDeclarer();
-
-    private class DefaultKernelValueDeclarer : IKernelValueDeclarer
+    public static class KernelValueDeclarer
     {
-        public bool TryGetValueDeclaration(string valueName, object value, out KernelCommand command)
+        public static IKernelValueDeclarer Default { get; } = new DefaultKernelValueDeclarer();
+
+        private class DefaultKernelValueDeclarer : IKernelValueDeclarer
         {
-            command = null;
-            return false;
+            public bool TryGetValueDeclaration(string valueName, object value, out KernelCommand command)
+            {
+                command = null;
+                return false;
+            }
         }
     }
 }

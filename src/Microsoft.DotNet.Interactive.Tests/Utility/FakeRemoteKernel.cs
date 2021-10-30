@@ -8,33 +8,31 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Tests.Server;
 
-namespace Microsoft.DotNet.Interactive.Tests.Utility;
-
-internal class FakeRemoteKernel : FakeKernel
+namespace Microsoft.DotNet.Interactive.Tests.Utility
 {
-    public RecordingKernelCommandAndEventSender Sender { get; }
-
-    public BlockingCommandAndEventReceiver Receiver { get; }
-
-    public FakeRemoteKernel([CallerMemberName] string name = null) : base(name)
+    internal class FakeRemoteKernel : FakeKernel
     {
-        var receiver = new BlockingCommandAndEventReceiver();
-        var sender = new RecordingKernelCommandAndEventSender();
+        public RecordingKernelCommandAndEventSender Sender { get; }
 
-        RegisterForDisposal(KernelEvents.Subscribe(e =>
-        {
-            receiver.Write(new CommandOrEvent(e));
-        }));
+        public BlockingCommandAndEventReceiver Receiver { get; }
 
-        sender.OnSend(async coe =>
+        public FakeRemoteKernel([CallerMemberName] string name = null) : base(name)
         {
-            if (coe.Command is { })
+            var receiver = new BlockingCommandAndEventReceiver();
+            var sender = new RecordingKernelCommandAndEventSender();
+
+            RegisterForDisposal(KernelEvents.Subscribe(e => { receiver.Write(new CommandOrEvent(e)); }));
+
+            sender.OnSend(async coe =>
             {
-                await Task.Run(() => SendAsync(coe.Command, CancellationToken.None));
-            }
-        });
+                if (coe.Command is { })
+                {
+                    await Task.Run(() => SendAsync(coe.Command, CancellationToken.None));
+                }
+            });
 
-        Sender = sender;
-        Receiver = receiver;
+            Sender = sender;
+            Receiver = receiver;
+        }
     }
 }

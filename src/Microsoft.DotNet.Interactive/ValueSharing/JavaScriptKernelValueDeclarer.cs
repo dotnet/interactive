@@ -6,31 +6,33 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.ValueSharing;
-
-public class JavaScriptKernelValueDeclarer : IKernelValueDeclarer
+namespace Microsoft.DotNet.Interactive.ValueSharing
 {
-    private static readonly JsonSerializerOptions _serializerOptions;
-
-    static JavaScriptKernelValueDeclarer()
+    public class JavaScriptKernelValueDeclarer : IKernelValueDeclarer
     {
-        _serializerOptions = new JsonSerializerOptions
+        private static readonly JsonSerializerOptions _serializerOptions;
+
+        static JavaScriptKernelValueDeclarer()
         {
-            WriteIndented = false,
-            IgnoreNullValues = false,
-            NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-            Converters =
+            _serializerOptions = new JsonSerializerOptions
             {
-                new DataDictionaryConverter()
-            }
-        };
-    }
+                WriteIndented = false,
+                IgnoreNullValues = false,
+                NumberHandling = JsonNumberHandling.AllowReadingFromString |
+                                 JsonNumberHandling.AllowNamedFloatingPointLiterals,
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                Converters =
+                {
+                    new DataDictionaryConverter()
+                }
+            };
+        }
 
-    public bool TryGetValueDeclaration(string valueName, object value, out KernelCommand command)
-    {
-        var code = $"{valueName} = {JsonSerializer.Serialize(value, _serializerOptions)};";
-        command = new SubmitCode(code);
-        return true;
+        public bool TryGetValueDeclaration(string valueName, object value, out KernelCommand command)
+        {
+            var code = $"{valueName} = {JsonSerializer.Serialize(value, _serializerOptions)};";
+            command = new SubmitCode(code);
+            return true;
+        }
     }
 }

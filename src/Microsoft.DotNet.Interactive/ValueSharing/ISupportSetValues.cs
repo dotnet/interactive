@@ -4,9 +4,10 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.ValueSharing;
-
-public interface ISupportSetClrValue
+namespace Microsoft.DotNet.Interactive.ValueSharing
 {
-    public Task SetValueAsync(string name, object value, Type declaredType = null);
+    public interface ISupportSetClrValue
+    {
+        public Task SetValueAsync(string name, object value, Type declaredType = null);
+    }
 }

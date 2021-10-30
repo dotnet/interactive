@@ -3,9 +3,10 @@
 
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.ValueSharing;
-
-public interface IKernelValueDeclarer
+namespace Microsoft.DotNet.Interactive.ValueSharing
 {
-    bool TryGetValueDeclaration(string valueName, object value, out KernelCommand command);
+    public interface IKernelValueDeclarer
+    {
+        bool TryGetValueDeclaration(string valueName, object value, out KernelCommand command);
+    }
 }
