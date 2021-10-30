@@ -26,7 +26,6 @@ using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Jupyter.Formatting;
 using Microsoft.DotNet.Interactive.PowerShell;
-using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.DotNet.Interactive.VSCode;
 using Microsoft.Extensions.DependencyInjection;
@@ -453,7 +452,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         }
                         else
                         {
-                            await host.DefaultConnector.ConnectKernelAsync(new KernelInfo("javascript", new[] { "js" }, new Uri("kernel://webview/javascript")));
+                            await host.CreateProxyKernelOnDefaultConnectorAsync(new KernelInfo("javascript", new[] { "js" }, new Uri("kernel://webview/javascript")));
 
                             await startKernelHost(startupOptions, host, console);
                         }

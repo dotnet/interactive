@@ -4,7 +4,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.DotNet.Interactive.Commands;
 
 #nullable enable
 

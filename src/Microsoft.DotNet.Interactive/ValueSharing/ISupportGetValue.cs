@@ -3,7 +3,7 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive.ValueSharing
 {
     public interface ISupportGetValue
     {

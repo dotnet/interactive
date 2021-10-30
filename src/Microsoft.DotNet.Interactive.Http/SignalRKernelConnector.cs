@@ -14,6 +14,7 @@ namespace Microsoft.DotNet.Interactive.Http
 
         public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
         {
+            // QUESTION: (ConnectKernelAsync) tests?
             var hubConnection = new HubConnectionBuilder()
                 .WithUrl(HubUrl)
                 .Build();

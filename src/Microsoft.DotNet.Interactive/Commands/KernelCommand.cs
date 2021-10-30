@@ -10,10 +10,12 @@ namespace Microsoft.DotNet.Interactive.Commands
 {
     public abstract class KernelCommand
     {
+        private string _targetKernelName;
+
         protected KernelCommand(string targetKernelName = null, KernelCommand parent = null)
         {
             Properties = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
-            TargetKernelName = targetKernelName;
+            _targetKernelName = targetKernelName;
             Parent = parent;
         }
 
@@ -29,7 +31,11 @@ namespace Microsoft.DotNet.Interactive.Commands
         [JsonIgnore]
         public IDictionary<string, object> Properties { get; }
 
-        public string TargetKernelName { get; internal set; }
+        public string TargetKernelName
+        {
+            get => _targetKernelName;
+            internal set => _targetKernelName = value;
+        }
 
         internal static KernelCommand None => new NoCommand();
 

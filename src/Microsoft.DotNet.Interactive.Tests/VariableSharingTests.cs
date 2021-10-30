@@ -6,12 +6,15 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Microsoft.DotNet.Interactive.ValueSharing;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests
@@ -24,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             "let x = 123",
             @"using Microsoft.DotNet.Interactive;
 
-(Kernel.Current.FindKernel(""fsharp"") as Microsoft.DotNet.Interactive.ISupportGetValue).TryGetValue(""x"", out int x);
+(Kernel.Current.FindKernel(""fsharp"") as Microsoft.DotNet.Interactive.ValueSharing.ISupportGetValue).TryGetValue(""x"", out int x);
 x")]
         [InlineData(
             "#!fsharp",
@@ -229,6 +232,45 @@ x")]
             await kernel.SubmitCodeAsync("#!grab $x");
 
             receivedValue.Should().Be(123);
+        }
+
+        [Fact]
+        public async Task javascript_ProxyKernel_can_share_a_value_from_csharp()
+        {
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel()
+            };
+            kernel.DefaultKernelName = "csharp";
+            using var remoteKernel = new FakeRemoteKernel();
+
+            var receiver = new MultiplexingKernelCommandAndEventReceiver(remoteKernel.Receiver);
+
+            using var host = new KernelHost(kernel, remoteKernel.Sender, receiver);
+
+            var _ = host.ConnectAsync();
+
+            var kernelInfo = new KernelInfo("javascript", null, new Uri("kernel://remote/js"));
+
+            var javascriptKernel = await host.CreateProxyKernelOnDefaultConnectorAsync(kernelInfo);
+            
+            javascriptKernel.UseValueSharing(new JavaScriptKernelValueDeclarer());
+
+            await kernel.SubmitCodeAsync("var csharpVariable = 123;");
+
+            var submitCode = new SubmitCode(@"
+#!javascript
+#!share --from csharp csharpVariable");
+            await kernel.SendAsync(submitCode);
+
+            var remoteCommands = remoteKernel.Sender.Commands;
+
+            remoteCommands.Should()
+                          .ContainSingle<SubmitCode>()
+                          .Which
+                          .Code
+                          .Should()
+                          .Be("csharpVariable = 123;");
         }
 
         private static CompositeKernel CreateKernel()

@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -13,6 +12,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.ExtensionLab;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
+using Microsoft.DotNet.Interactive.ValueSharing;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         IKernelCommandHandler<SubmitCode>,
         IKernelCommandHandler<RequestCompletions>,
         ISupportGetValue,
-        ISupportSetValue
+        ISupportSetClrValue
     {
         /// <summary>
         /// Special key for saving the result set of the last query ran
@@ -317,7 +317,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
             foreach (var variableNameAndValue in _variables)
             {
-                var declareStatement = GenerateVariableDeclaration(variableNameAndValue);
+                var declareStatement = CreateVariableDeclaration(variableNameAndValue.Key, variableNameAndValue.Value);
                 context.Display($"Adding shared variable declaration statement : {declareStatement}");
                 sb.AppendLine(declareStatement);
             }
@@ -328,19 +328,18 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         }
 
         /// <summary>
-        /// Generates the language-specific declaraction statement to insert into the code being executed.
+        /// Generates the language-specific declaration statement to insert into the code being executed.
         /// </summary>
-        /// <param name="variableNameAndValue">The name and value of the input variable</param>
-        /// <returns></returns>
-        protected abstract string GenerateVariableDeclaration(KeyValuePair<string, object> variableNameAndValue);
+        protected abstract string CreateVariableDeclaration(string name, object value);
+
         /// <summary>
-        /// Whether the kernel can support turning the specified input variable into some sort of declaraction statement.
+        /// Whether the kernel can support turning the specified input variable into some sort of declaration statement.
         /// </summary>
         /// <param name="name">The name of the parameter</param>
         /// <param name="value">The actual parameter value</param>
         /// <param name="msg">The error message to display if the variable isn't supported</param>
         /// <returns></returns>
-        protected abstract bool CanSupportVariable(string name, object value, out string msg);
+        protected abstract bool CanDeclareVariable(string name, object value, out string msg);
 
         public Task SetValueAsync(string name, object value, Type declaredType = null)
         {
@@ -348,7 +347,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             {
                 throw new ArgumentNullException(nameof(name), $"Sharing null values is not supported at this time.");
             }
-            else if (!CanSupportVariable(name, value, out string msg))
+            else if (!CanDeclareVariable(name, value, out string msg))
             {
                 throw new ArgumentException($"Cannot support value of Type {value.GetType()}. {msg}");
             }

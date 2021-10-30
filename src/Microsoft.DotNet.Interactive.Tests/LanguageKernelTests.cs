@@ -16,7 +16,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-
+using Microsoft.DotNet.Interactive.ValueSharing;
 using Xunit;
 using Xunit.Abstractions;
 using DiagnosticsProduced = Microsoft.DotNet.Interactive.Events.DiagnosticsProduced;
@@ -1296,7 +1296,7 @@ Console.Write(2);
         {
             var kernel = CreateKernel(language);
 
-            var languageKernel = kernel.ChildKernels.OfType<ISupportSetValue>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<ISupportSetClrValue>().Single();
 
             await languageKernel.SetValueAsync("x", 123);
 
@@ -1316,7 +1316,7 @@ Console.Write(2);
         {
             var kernel = CreateKernel(language);
 
-            var languageKernel = kernel.ChildKernels.OfType<ISupportSetValue>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<ISupportSetClrValue>().Single();
 
             await languageKernel.SetValueAsync("x", 123);
             await languageKernel.SetValueAsync("x", 456);
@@ -1337,7 +1337,7 @@ Console.Write(2);
         {
             var kernel = CreateKernel(language);
 
-            var languageKernel = kernel.ChildKernels.OfType<ISupportSetValue>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<ISupportSetClrValue>().Single();
 
             await languageKernel.SetValueAsync("x", 123);
             await languageKernel.SetValueAsync("x", "hello");

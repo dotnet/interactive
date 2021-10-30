@@ -35,6 +35,12 @@
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.Tests.StdIOConnectionTests.fast_path_commands_over_proxy_can_be_handled</TestName>
       </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.App.Tests.HttpApiTests.HttpApiTunneling_route_serves_bootstrapper_js</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.App.Tests.AspNetCoreTests.can_define_aspnet_endpoint_with_MapGet</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

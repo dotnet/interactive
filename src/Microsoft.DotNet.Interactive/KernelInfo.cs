@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#nullable enable
 using System;
 using System.Collections.Generic;
 
@@ -8,24 +9,34 @@ namespace Microsoft.DotNet.Interactive
 {
     public class KernelInfo
     {
-        public override string ToString()
+        public KernelInfo(
+            string localName,
+            IReadOnlyCollection<string>? aliases = null,
+            Uri? destinationUri = null)
         {
-            return LocalName;
-        }
+            if (string.IsNullOrWhiteSpace(localName))
+            {
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(localName));
+            }
 
-        public KernelInfo(string localName) : this(localName, Array.Empty<string>(), null)
-        {
+            if (localName.StartsWith("#"))
+            {
+                throw new ArgumentException("Kernel names or aliases cannot begin with \"#\"");
+            }
 
-        }
-
-        public KernelInfo(string localName, IReadOnlyCollection<string> aliases, Uri destinationUri = null)
-        {
-            Validate(localName);
             LocalName = localName;
             aliases ??= Array.Empty<string>();
             foreach (var alias in aliases)
             {
-                Validate(alias);
+                if (string.IsNullOrWhiteSpace(alias))
+                {
+                    throw new ArgumentException("Value cannot be null or consist entirely of whitespace.");
+                }
+
+                if (alias.StartsWith("#"))
+                {
+                    throw new ArgumentException("Kernel names or aliases cannot begin with \"#\"");
+                }
             }
 
             var distinctAliases = new HashSet<string>(aliases);
@@ -33,22 +44,14 @@ namespace Microsoft.DotNet.Interactive
             DestinationUri = destinationUri;
         }
 
-        private static void Validate(string name)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                throw new ArgumentException("Value cannot be null or consist entirely of whitespace.");
-            }
-
-            if (name.StartsWith("#"))
-            {
-                throw new ArgumentException("Kernel names or aliases cannot begin with \"#\"");
-            }
-        }
-
         public IReadOnlyCollection<string> Aliases { get; }
+
         public string LocalName { get; }
-        public Uri OriginUri { get; internal set; }
-        public Uri DestinationUri { get; internal set; }
+
+        public Uri? OriginUri { get; internal set; }
+
+        public Uri? DestinationUri { get; internal set; }
+
+        public override string ToString() => LocalName;
     }
 }

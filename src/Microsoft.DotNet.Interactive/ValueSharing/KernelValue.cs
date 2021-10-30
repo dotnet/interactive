@@ -3,7 +3,7 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive.ValueSharing
 {
     public class KernelValue
     {

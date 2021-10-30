@@ -7,6 +7,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.ValueSharing;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {

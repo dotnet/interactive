@@ -10,6 +10,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.LanguageServices;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Microsoft.DotNet.Interactive.ValueSharing;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests

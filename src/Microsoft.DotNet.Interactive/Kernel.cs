@@ -18,6 +18,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.Server;
+using Microsoft.DotNet.Interactive.ValueSharing;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -692,9 +693,6 @@ namespace Microsoft.DotNet.Interactive
             KernelCommand command,
             KernelInvocationContext context) => context.HandlingKernel = this;
 
-        protected virtual Kernel GetDestinationKernel(
-            KernelEvent @event) => this;
-
         public void Dispose() => _disposables.Dispose();
 
         protected virtual ChooseKernelDirective CreateChooseKernelDirective()
@@ -708,5 +706,7 @@ namespace Microsoft.DotNet.Interactive
         {
             return this is IKernelCommandHandler<T> || _dynamicHandlers.ContainsKey(typeof(T));
         }
+
+        public virtual IKernelValueDeclarer GetValueDeclarer(object value) => KernelValueDeclarer.Default;
     }
 }

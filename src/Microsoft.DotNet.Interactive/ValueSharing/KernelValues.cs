@@ -6,7 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive.ValueSharing
 {
     public class KernelValues : IEnumerable<KernelValue>
     {

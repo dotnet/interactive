@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Parsing;
+using Microsoft.DotNet.Interactive.ValueSharing;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
@@ -19,6 +19,7 @@ namespace Microsoft.DotNet.Interactive.Connection
         private ExecutionContext _executionContext;
         private readonly Dictionary<string,(KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<KernelEvent> completionSource, KernelInfo kernelInfo ,KernelInvocationContext invocationContext)> _inflight = new();
         private int _started = 0;
+        private IKernelValueDeclarer _valueDeclarer;
 
         public ProxyKernel(string name, IKernelCommandAndEventReceiver receiver, IKernelCommandAndEventSender sender) : base(name)
         {
@@ -64,7 +65,7 @@ namespace Microsoft.DotNet.Interactive.Connection
             {
                 case AnonymousKernelCommand:
                     return base.HandleAsync(command, context);
-                case DirectiveCommand { DirectiveNode: KernelNameDirectiveNode }:
+                case DirectiveCommand:
                     return base.HandleAsync(command, context);
             }
 
@@ -146,5 +147,12 @@ namespace Microsoft.DotNet.Interactive.Connection
 
             return false;
         }
+
+        internal IKernelValueDeclarer ValueDeclarer
+        {
+            set => _valueDeclarer = value;
+        }
+
+        public override IKernelValueDeclarer GetValueDeclarer(object value) => _valueDeclarer ?? KernelValueDeclarer.Default;
     }
 }

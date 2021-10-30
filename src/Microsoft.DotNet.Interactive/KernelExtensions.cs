@@ -16,6 +16,7 @@ using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
+using Microsoft.DotNet.Interactive.ValueSharing;
 using Pocket;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
@@ -153,8 +154,19 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
-        public static T UseValueSharing<T>(this T kernel)
-            where T : Kernel, ISupportGetValue
+        public static ProxyKernel UseValueSharing(this ProxyKernel kernel, IKernelValueDeclarer kernelValueDeclarer)
+        {
+            if (kernelValueDeclarer is null)
+            {
+                throw new ArgumentNullException(nameof(kernelValueDeclarer));
+            }
+
+            kernel.UseValueSharing();
+            kernel.ValueDeclarer = kernelValueDeclarer;
+            return kernel;
+        }
+
+        public static T UseValueSharing<T>(this T kernel) where T : Kernel
         {
             var variableNameArg = new Argument<string>(
                 "name",
@@ -188,32 +200,60 @@ namespace Microsoft.DotNet.Interactive
                 return Array.Empty<string>();
             });
 
-            var share = new Command("#!share", "Share a .NET variable between subkernels")
+            var share = new Command("#!share", "Share a value between subkernels")
             {
                 fromKernelOption,
                 variableNameArg
             };
 
-            share.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (from, name, _) =>
+            share.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (from, name, context) =>
             {
-                if (kernel.FindKernel(from) is ISupportGetValue fromKernel)
+                if (kernel.FindKernel(from) is { } fromKernel)
                 {
-                    if (fromKernel.TryGetValue(name, out object shared))
-                    {
-                        try
-                        {
-                            await ((ISupportSetValue)kernel).SetValueAsync(name, shared);
-                        } catch (Exception ex)
-                        {
-                            throw new InvalidOperationException($"Error sharing value '{name}' from kernel '{from}' into kernel '{kernel.Name}'. {ex.Message}", ex);
-                        }
-                    }
+                    await fromKernel.ShareValue(kernel, name);
+                }
+                else
+                {
+                    context.Fail(context.Command, message: $"Kernel not found: {from}");
                 }
             });
 
             kernel.AddDirective(share);
 
             return kernel;
+        }
+
+        public static async Task ShareValue(this Kernel fromKernel, Kernel toKernel, string valueName)
+        {
+            if (fromKernel is ISupportGetValue fromInProcessKernel)
+            {
+                if (fromInProcessKernel.TryGetValue(valueName, out object value))
+                {
+                    if (toKernel is ISupportSetClrValue toInProcessKernel)
+                    {
+                        try
+                        {
+                            await toInProcessKernel.SetValueAsync(valueName, value);
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new InvalidOperationException($"Error sharing value '{valueName}' from kernel '{fromKernel.Name}' into kernel '{toKernel.Name}'. {ex.Message}", ex);
+                        }
+                    }
+                    else
+                    {
+                        var declarer = toKernel.GetValueDeclarer(value);
+                        if (declarer.TryGetValueDeclaration(valueName, value, out KernelCommand command))
+                        {
+                            await toKernel.SendAsync(command);
+                        }
+                        else
+                        {
+                            throw new ArgumentException($"Value '{valueName}' cannot be declared in kernel '{toKernel.Name}'");
+                        }
+                    }
+                }
+            }
         }
 
         public static TKernel UseWho<TKernel>(this TKernel kernel)

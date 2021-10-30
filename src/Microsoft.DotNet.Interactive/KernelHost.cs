@@ -23,6 +23,7 @@ namespace Microsoft.DotNet.Interactive
         private IDisposable _kernelEventSubscription;
         private readonly Dictionary<Kernel, KernelInfo> _kernelInfos = new();
         private readonly Dictionary<Uri,Kernel> _destinationUriToKernel = new ();
+        private readonly IKernelConnector _defaultConnector;
         private readonly Dictionary<Uri, Kernel> _originUriToKernel = new();
 
         public KernelHost(CompositeKernel kernel, IKernelCommandAndEventSender defaultSender, MultiplexingKernelCommandAndEventReceiver defaultReceiver, Uri hostUri)
@@ -30,7 +31,7 @@ namespace Microsoft.DotNet.Interactive
             _kernel = kernel;
             _defaultSender = defaultSender;
             _defaultReceiver = defaultReceiver;
-            DefaultConnector = new DefaultKernelConnector(_defaultSender, _defaultReceiver);
+            _defaultConnector = new DefaultKernelConnector(_defaultSender, _defaultReceiver);
             Uri = hostUri;
             _kernel.SetHost(this);
         }
@@ -38,8 +39,6 @@ namespace Microsoft.DotNet.Interactive
         public KernelHost(CompositeKernel kernel,IKernelCommandAndEventSender defaultSender, MultiplexingKernelCommandAndEventReceiver defaultReceiver) : this(kernel, defaultSender, defaultReceiver, new Uri("kernel://dotnet", UriKind.Absolute))
         {
         }
-
-        public IKernelConnector DefaultConnector { get; }
 
         public static KernelHost InProcess(CompositeKernel kernel)
         {
@@ -77,7 +76,7 @@ namespace Microsoft.DotNet.Interactive
                 throw new InvalidOperationException("The host is already connected.");
             }
 
-            _kernelEventSubscription =  _kernel.KernelEvents.Subscribe(e =>
+            _kernelEventSubscription = _kernel.KernelEvents.Subscribe(e =>
             {
                 if (e is ReturnValueProduced { Value: DisplayedValue })
                 {
@@ -107,6 +106,7 @@ namespace Microsoft.DotNet.Interactive
 
         private Kernel GetKernel(KernelCommand command)
         {
+            // QUESTION: (GetKernel) coverage indicates we can delete some of this?
             if (command.DestinationUri is { } && TryGetKernelByOriginUri(command.DestinationUri, out var kernel))
             {
                 return kernel;
@@ -143,7 +143,7 @@ namespace Microsoft.DotNet.Interactive
             return _kernelInfos.TryGetValue(kernel, out kernelInfo);
         }
 
-        public void AddKernelInfo(Kernel kernel, KernelInfo kernelInfo)
+        internal void AddKernelInfo(Kernel kernel, KernelInfo kernelInfo)
         {
             kernelInfo.OriginUri = new Uri(Uri, kernel.Name);
             _kernelInfos.Add(kernel,kernelInfo);
@@ -154,6 +154,7 @@ namespace Microsoft.DotNet.Interactive
 
         private class InProcessCommandAndEventSender : IKernelCommandAndEventSender
         {
+            // QUESTION: (InProcessCommandAndEventSender) does this need to be tested for compliance with other implementations?
             private Func<CommandOrEvent, Task> _onSendAsync;
 
             public Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
@@ -186,6 +187,7 @@ namespace Microsoft.DotNet.Interactive
 
         private class InProcessCommandAndEventReceiver : KernelCommandAndEventReceiverBase
         {
+            // QUESTION: (InProcessCommandAndEventReceiver) does this need to be tested for compliance with other implementations?
             private readonly BlockingCollection<CommandOrEvent> _commandsOrEvents;
 
             public InProcessCommandAndEventReceiver()
@@ -251,7 +253,7 @@ namespace Microsoft.DotNet.Interactive
 
         public async Task<ProxyKernel> CreateProxyKernelOnDefaultConnectorAsync(KernelInfo kernelInfo)
         {
-            var childKernel = await DefaultConnector.ConnectKernelAsync(kernelInfo) as ProxyKernel;
+            var childKernel = await _defaultConnector.ConnectKernelAsync(kernelInfo) as ProxyKernel;
             _kernel.Add(childKernel, kernelInfo.Aliases);
             RegisterDestinationUriForProxy(kernelInfo.LocalName, kernelInfo.DestinationUri);
             return childKernel;

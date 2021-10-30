@@ -4,7 +4,7 @@
 using System;
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive.ValueSharing
 {
     public class KernelValueInfo
     {
