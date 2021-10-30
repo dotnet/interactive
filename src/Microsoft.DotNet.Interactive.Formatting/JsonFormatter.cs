@@ -12,7 +12,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
     {
         static JsonFormatter()
         {
-            SerializerOptions = new JsonSerializerOptions{
+            SerializerOptions = new JsonSerializerOptions
+            {
                 WriteIndented = false,
                 IgnoreNullValues = true,
                 NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
@@ -24,9 +25,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             return Formatter.GetPreferredFormatterFor(type, MimeType);
         }
-
-        public static ITypeFormatter GetPreferredFormatterFor<T>() =>
-            GetPreferredFormatterFor(typeof(T));
 
         public const string MimeType = "application/json";
 

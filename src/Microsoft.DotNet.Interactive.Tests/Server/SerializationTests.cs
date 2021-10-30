@@ -15,7 +15,7 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-
+using Microsoft.DotNet.Interactive.ValueSharing;
 using Pocket;
 
 using Xunit;

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
+using Microsoft.DotNet.Interactive.ValueSharing;
 
 namespace Microsoft.DotNet.Interactive.VSCode
 {
@@ -38,7 +39,10 @@ namespace Microsoft.DotNet.Interactive.VSCode
                 var jsKernelInfo = new KernelInfo("javascript", new[] { "js" }, new Uri("kernel://webview/javascript", UriKind.Absolute));
 
                 await root.Host.CreateProxyKernelOnDefaultConnectorAsync(vscodeKernelInfo);
-                await root.Host.CreateProxyKernelOnDefaultConnectorAsync(jsKernelInfo);
+
+                var jsKernel = await root.Host.CreateProxyKernelOnDefaultConnectorAsync(jsKernelInfo);
+
+                jsKernel.UseValueSharing(new JavaScriptKernelValueDeclarer());
             }
         }
     }

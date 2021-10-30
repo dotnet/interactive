@@ -22,6 +22,7 @@ open Microsoft.DotNet.Interactive.Commands
 open Microsoft.DotNet.Interactive.Events
 open Microsoft.DotNet.Interactive.Extensions
 open Microsoft.DotNet.Interactive.FSharp.ScriptHelpers
+open Microsoft.DotNet.Interactive.ValueSharing
 
 open FSharp.Compiler.Diagnostics
 open FSharp.Compiler.EditorServices
@@ -464,7 +465,7 @@ type FSharpKernel () as this =
         member _.GetValueInfos() = this.handleGetValueValueInfos()
         member _.TryGetValue<'a>(name: string, [<Out>] value: 'a byref)  = this.handleTryGetValue(name, &value)
 
-    interface ISupportSetValue with
+    interface ISupportSetClrValue with
         member _.SetValueAsync(name: string, value: obj, declaredType: Type): Task = this.handleSetValueAsync(name, value, declaredType)
 
     interface IExtensibleKernel with

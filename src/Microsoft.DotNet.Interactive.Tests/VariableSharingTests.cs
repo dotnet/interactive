@@ -14,6 +14,7 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Microsoft.DotNet.Interactive.ValueSharing;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests
@@ -26,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             "let x = 123",
             @"using Microsoft.DotNet.Interactive;
 
-(Kernel.Current.FindKernel(""fsharp"") as Microsoft.DotNet.Interactive.ISupportGetValue).TryGetValue(""x"", out int x);
+(Kernel.Current.FindKernel(""fsharp"") as Microsoft.DotNet.Interactive.ValueSharing.ISupportGetValue).TryGetValue(""x"", out int x);
 x")]
         [InlineData(
             "#!fsharp",
@@ -236,7 +237,6 @@ x")]
         [Fact]
         public async Task javascript_ProxyKernel_can_share_a_value_from_csharp()
         {
-            // FIX: (javascript_ProxyKernel_can_share_a_value_from_csharp) make this a theory and add other JavaScript data types
             using var kernel = new CompositeKernel
             {
                 new CSharpKernel()
@@ -254,15 +254,13 @@ x")]
 
             var javascriptKernel = await host.CreateProxyKernelOnDefaultConnectorAsync(kernelInfo);
             
-            javascriptKernel.UseValueSharing();
+            javascriptKernel.UseValueSharing(new JavaScriptKernelValueDeclarer());
 
             await kernel.SubmitCodeAsync("var csharpVariable = 123;");
 
             var submitCode = new SubmitCode(@"
 #!javascript
-#!share --from csharp csharpVariable
-console.log(csharpVariable);
-");
+#!share --from csharp csharpVariable");
             await kernel.SendAsync(submitCode);
 
             var remoteCommands = remoteKernel.Sender.Commands;

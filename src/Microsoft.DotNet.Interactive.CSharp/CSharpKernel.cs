@@ -22,8 +22,7 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
-
-
+using Microsoft.DotNet.Interactive.ValueSharing;
 using CompletionItem = Microsoft.DotNet.Interactive.Events.CompletionItem;
 
 namespace Microsoft.DotNet.Interactive.CSharp
@@ -33,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         IExtensibleKernel,
         ISupportNuget,
         ISupportGetValue,
-        ISupportSetValue,
+        ISupportSetClrValue,
         IKernelCommandHandler<RequestCompletions>,
         IKernelCommandHandler<RequestDiagnostics>,
         IKernelCommandHandler<RequestHoverText>,

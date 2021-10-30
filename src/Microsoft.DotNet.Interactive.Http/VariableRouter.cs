@@ -4,17 +4,12 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
-
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
-
-using Newtonsoft.Json;
+using Microsoft.DotNet.Interactive.ValueSharing;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive.Http
@@ -127,9 +122,9 @@ namespace Microsoft.DotNet.Interactive.Http
 
         private FormattedValue TryGetValue(Kernel targetKernel, string variableName)
         {
-            if (targetKernel is ISupportGetValue doteNetKernel)
+            if (targetKernel is ISupportGetValue fromInProcessKernel)
             {
-                if (doteNetKernel.TryGetValue(variableName, out object value))
+                if (fromInProcessKernel.TryGetValue(variableName, out object value))
                 {
                     return new FormattedValue(JsonFormatter.MimeType, value.ToDisplayString(JsonFormatter.MimeType));
                 }

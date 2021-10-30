@@ -70,15 +70,13 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             }
         }
 
-        protected override string GenerateVariableDeclaration(KeyValuePair<string, object> variableNameAndValue)
+        protected override string CreateVariableDeclaration(string name, object value)
         {
-            return $"DECLARE @{variableNameAndValue.Key} {MapToSqlDataType(variableNameAndValue)} = {MapToSqlValueDeclaration(variableNameAndValue.Value)};";
+            return $"DECLARE @{name} {MapToSqlDataType(name, value)} = {MapToSqlValueDeclaration(value)};";
 
-            static string MapToSqlDataType(KeyValuePair<string, object> variableNameAndValue)
+            static string MapToSqlDataType(string name, object value)
             {
-                var sqlMetaData = SqlMetaData.InferFromValue(
-                    variableNameAndValue.Value,
-                    variableNameAndValue.Key);
+                var sqlMetaData = SqlMetaData.InferFromValue(value, name);
 
                 var dbType = sqlMetaData.SqlDbType;
 
@@ -97,17 +95,17 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             }
 
             static string MapToSqlValueDeclaration(object value) =>
-            value switch
-            {
-                string s => $"N{s.AsSingleQuotedString()}",
-                char c => $"N{c.ToString().AsSingleQuotedString()}",
-                bool b => b ? "1" : "0",
-                null => "NULL",
-                _ => value.ToString()
-            };
+                value switch
+                {
+                    string s => $"N{s.AsSingleQuotedString()}",
+                    char c => $"N{c.ToString().AsSingleQuotedString()}",
+                    bool b => b ? "1" : "0",
+                    null => "NULL",
+                    _ => value.ToString()
+                };
         }
 
-        protected override bool CanSupportVariable(string name, object value, out string msg)
+        protected override bool CanDeclareVariable(string name, object value, out string msg)
         {
             msg = default;
             try
@@ -115,11 +113,13 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 SqlMetaData.InferFromValue(
                     value,
                     name);
-            } catch(Exception e)
+            }
+            catch (Exception e)
             {
                 msg = e.Message;
                 return false;
             }
+
             return true;
         }
     }

@@ -13,14 +13,14 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.ValueSharing;
 
 namespace Microsoft.DotNet.Interactive
 {
     public class KeyValueStoreKernel :
         Kernel,
         ISupportGetValue,
-        ISupportSetValue,
+        ISupportSetClrValue,
         IKernelCommandHandler<SubmitCode>
     {
         internal const string DefaultKernelName = "value";
