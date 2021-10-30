@@ -7,33 +7,34 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Server;
 
-namespace Microsoft.DotNet.Interactive.Tests.Server;
-
-internal class BlockingCommandAndEventReceiver : KernelCommandAndEventReceiverBase
+namespace Microsoft.DotNet.Interactive.Tests.Server
 {
-    private readonly BlockingCollection<CommandOrEvent> _commandsOrEvents;
-
-    public BlockingCommandAndEventReceiver()
+    internal class BlockingCommandAndEventReceiver : KernelCommandAndEventReceiverBase
     {
-        _commandsOrEvents = new BlockingCollection<CommandOrEvent>();
-    }
+        private readonly BlockingCollection<CommandOrEvent> _commandsOrEvents;
 
-    public void Write(CommandOrEvent commandOrEvent)
-    {
-        if (commandOrEvent.Command is { })
+        public BlockingCommandAndEventReceiver()
         {
-            _commandsOrEvents.Add(new CommandOrEvent(KernelCommandEnvelope
-                                                     .Deserialize(KernelCommandEnvelope.Serialize(commandOrEvent.Command)).Command));
+            _commandsOrEvents = new BlockingCollection<CommandOrEvent>();
         }
-        else if (commandOrEvent.Event is { })
-        {
-            _commandsOrEvents.Add(new CommandOrEvent(KernelEventEnvelope
-                                                     .Deserialize(KernelEventEnvelope.Serialize(commandOrEvent.Event)).Event));
-        }
-    }
 
-    protected override Task<CommandOrEvent> ReadCommandOrEventAsync(CancellationToken cancellationToken)
-    {
-        return Task.FromResult(_commandsOrEvents.Take(cancellationToken));
+        public void Write(CommandOrEvent commandOrEvent)
+        {
+            if (commandOrEvent.Command is { })
+            {
+                _commandsOrEvents.Add(new CommandOrEvent(KernelCommandEnvelope
+                    .Deserialize(KernelCommandEnvelope.Serialize(commandOrEvent.Command)).Command));
+            }
+            else if (commandOrEvent.Event is { })
+            {
+                _commandsOrEvents.Add(new CommandOrEvent(KernelEventEnvelope
+                    .Deserialize(KernelEventEnvelope.Serialize(commandOrEvent.Event)).Event));
+            }
+        }
+
+        protected override Task<CommandOrEvent> ReadCommandOrEventAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(_commandsOrEvents.Take(cancellationToken));
+        }
     }
 }
