@@ -5,6 +5,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
 namespace Microsoft.DotNet.Interactive.ValueSharing
 {
@@ -23,6 +24,8 @@ namespace Microsoft.DotNet.Interactive.ValueSharing
                 Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
                 Converters =
                 {
+                    new TableSchemaFieldTypeConverter(),
+                    new TabularDataResourceConverter(),
                     new DataDictionaryConverter()
                 }
             };

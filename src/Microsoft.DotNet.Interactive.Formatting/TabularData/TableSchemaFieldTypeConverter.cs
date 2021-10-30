@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace Microsoft.DotNet.Interactive.Formatting.TabularData
 {
-    internal class TableSchemaFieldTypeConverter : JsonConverter<TableSchemaFieldType>
+    public class TableSchemaFieldTypeConverter : JsonConverter<TableSchemaFieldType>
     {
         public override TableSchemaFieldType Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
