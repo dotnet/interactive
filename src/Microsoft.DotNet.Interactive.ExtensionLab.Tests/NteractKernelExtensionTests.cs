@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         }
 
         [Fact]
-        public async Task it_registers_tabularResource_formatter()
+        public async Task it_registers_TabularDataResourceFormatter()
         {
             using var kernel = new CompositeKernel();
 
