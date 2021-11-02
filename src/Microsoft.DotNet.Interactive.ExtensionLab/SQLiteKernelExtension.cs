@@ -1,11 +1,9 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
-using System.Linq;
+using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
-using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
@@ -15,8 +13,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         {
             if (kernel is CompositeKernel compositeKernel)
             {
-                kernel.UseNteractDataExplorer();
-                kernel.UseSandDanceExplorer();
+                kernel.UseNteractDataExplorer(libraryUri: new Uri(@"https://colombod.github.io/dotnet-interactive-cdn/extensionlab/1.0.252001/nteract/nteractapi.js", UriKind.Absolute), libraryVersion: "1.0.252001");
+                kernel.UseSandDanceExplorer(libraryUri: new Uri(@"https://colombod.github.io/dotnet-interactive-cdn/extensionlab/1.0.252001/SandDance/sanddanceapi.js", UriKind.Absolute), libraryVersion: "1.0.252001");
 
                 compositeKernel
                     .UseKernelClientConnection(new ConnectSQLiteCommand());

@@ -170,11 +170,12 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             }
         }
 
-        public static T UseMermaid<T>(this T kernel, string libraryUri = null, string libraryVersion = null, string cacheBuster = null) where T : Kernel
+        public static T UseMermaid<T>(this T kernel, Uri libraryUri = null, string libraryVersion = null, string cacheBuster = null) where T : Kernel
         {
+            cacheBuster = string.IsNullOrWhiteSpace(cacheBuster) ? Guid.NewGuid().ToString("N") : cacheBuster;
             Formatter.Register<MermaidMarkdown>((markdown, writer) =>
             {
-                var html = GenerateHtml(markdown, string.IsNullOrWhiteSpace(libraryUri) ? null : new Uri(libraryUri),
+                var html = GenerateHtml(markdown, libraryUri,
                     libraryVersion,
                     cacheBuster);
                 html.WriteTo(writer, HtmlEncoder.Default);
@@ -218,7 +219,7 @@ let {functionName} = () => {{");
             if (libraryUri is not null)
             {
                 var libraryAbsoluteUri = libraryUri.AbsoluteUri.Replace(".js", string.Empty);
-                cacheBuster ??= libraryAbsoluteUri.GetHashCode().ToString("0");
+                cacheBuster ??= Guid.NewGuid().ToString("N");
                 stringBuilder.AppendLine($@" 
         (require.config({{ 'paths': {{ 'context': '{libraryVersion}', 'mermaidUri' : '{libraryAbsoluteUri}', 'urlArgs': 'cacheBuster={cacheBuster}' }}}}) || require)(['mermaidUri'], (mermaid) => {{");
             }

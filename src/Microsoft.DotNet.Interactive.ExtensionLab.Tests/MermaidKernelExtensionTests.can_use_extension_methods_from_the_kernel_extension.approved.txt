@@ -2,8 +2,8 @@
 <script type="text/javascript">
 
 let loadMermaid_00000000000000000000000000000000 = () => {
-
-        configureRequireFromExtension('Mermaid','1.0.0')(['Mermaid/mermaidapi'], (mermaid) => {
+ 
+        (require.config({ 'paths': { 'context': '1.0.252001', 'mermaidUri' : 'https://colombod.github.io/dotnet-interactive-cdn/extensionlab/1.0.252001/mermaid/mermaidapi', 'urlArgs': 'cacheBuster=00000000000000000000000000000000' }}) || require)(['mermaidUri'], (mermaid) => {
 
             let renderTarget = document.getElementById('00000000000000000000000000000000');
             mermaid.render( 

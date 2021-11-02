@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
 
@@ -11,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public string Name => "SandDance";
         public Task OnLoadAsync(Kernel kernel)
         {
-            kernel.UseSandDanceExplorer();
+            kernel.UseSandDanceExplorer(libraryUri:new Uri(@"https://colombod.github.io/dotnet-interactive-cdn/extensionlab/1.0.252001/SandDance/sanddanceapi.js", UriKind.Absolute), libraryVersion: "1.0.252001");
 
             KernelInvocationContext.Current?.Display(
                 new HtmlString($@"<details><summary>Explore data visually using the <a href=""https://github.com/microsoft/SandDance"">SandDance Explorer</a>.</summary>

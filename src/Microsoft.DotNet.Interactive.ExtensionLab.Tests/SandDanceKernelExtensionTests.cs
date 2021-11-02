@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var formatted = data.ExploreWithSandDance().ToDisplayString(HtmlFormatter.MimeType);
 
-            formatted.Should().Contain("configureRequireFromExtension('SandDance','1.0.0')(['SandDance/sanddanceapi'], (sandDance) => {");
+            formatted.Should().Contain("(['sandDanceUri'], (sandDance) => {");
         }
 
         [Fact]
@@ -113,7 +113,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         {
             using var kernel = new CompositeKernel();
 
-            var kernelExtension = new NteractKernelExtension();
+            var kernelExtension = new SandDanceKernelExtension();
 
             await kernelExtension.OnLoadAsync(kernel);
 
@@ -127,7 +127,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var html = data.ExploreWithSandDance().ToDisplayString(HtmlFormatter.MimeType);
 
-            this.Assent(html.FixedGuid());
+            this.Assent(html.FixedGuid().FixedCacheBuster());
         }
 
         [Fact]
@@ -138,6 +138,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             var kernelExtension = new SandDanceKernelExtension();
 
             await kernelExtension.OnLoadAsync(kernel);
+
+            kernel.UseSandDanceExplorer();
 
             var data = new[]
             {
