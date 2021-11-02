@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
 
             var formattedValue = data.ExploreWithNteract().ToDisplayString(HtmlFormatter.MimeType);
-            formattedValue.Should().Contain("configureRequireFromExtension('nteract','1.0.0')(['nteract/nteractapi'], (nteract) => {");
+            formattedValue.Should().Contain("(['nteractUri'], (nteract) => {");
         }
 
         [Fact]
