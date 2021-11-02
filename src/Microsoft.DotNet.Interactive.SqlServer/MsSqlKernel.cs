@@ -4,13 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 using System.Data;
 using System.Threading.Tasks;
 using Microsoft.Data.SqlClient.Server;
-using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
@@ -100,7 +97,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             return true;
         }
 
-        protected override void StoreQueryResults(List<TabularDataResource> results, ParseResult commandKernelChooserParseResult)
+        protected override void StoreQueryResults(IReadOnlyCollection<TabularDataResource> results, ParseResult commandKernelChooserParseResult)
         {
             var chooser = (ChooseMsSqlKernelDirective)ChooseKernelDirective;
             var name = commandKernelChooserParseResult.ValueForOption(chooser.NameOption);

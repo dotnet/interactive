@@ -3,15 +3,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Kusto.Data;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.ExtensionLab;
@@ -41,7 +38,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         /// The key will be the name of the value.
         /// The value is a list of result sets (multiple if multiple queries are ran as a batch)
         /// </summary>
-        protected Dictionary<string, List<TabularDataResource>> QueryResults { get; } = new();
+        protected Dictionary<string, IReadOnlyCollection<TabularDataResource>> QueryResults { get; } = new();
         /// <summary>
         /// Used to store incoming variables passed in via #!share
         /// </summary>
@@ -237,7 +234,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             }
         }
 
-        protected virtual void StoreQueryResults(List<TabularDataResource> results, ParseResult commandKernelChooserParseResult)
+        protected virtual void StoreQueryResults(IReadOnlyCollection<TabularDataResource> results, ParseResult commandKernelChooserParseResult)
         {
             
         }

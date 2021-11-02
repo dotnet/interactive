@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Interactive.Kql
         }
 
 
-        protected override void StoreQueryResults(List<TabularDataResource> results, ParseResult commandKernelChooserParseResult)
+        protected override void StoreQueryResults(IReadOnlyCollection<TabularDataResource> results, ParseResult commandKernelChooserParseResult)
         {
             var chooser = (ChooseMsKqlKernelDirective)ChooseKernelDirective;
             var name = commandKernelChooserParseResult.ValueForOption(chooser.NameOption);
