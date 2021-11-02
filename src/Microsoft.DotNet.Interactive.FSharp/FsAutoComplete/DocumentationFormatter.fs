@@ -79,7 +79,7 @@ module internal DocumentationFormatter =
             [formatLink name xmlDocSig assemblyName]
         else
           if typ.HasTypeDefinition then
-            let name = typ.TypeDefinition.DisplayName |> FSharpKeywords.QuoteIdentifierIfNeeded
+            let name = typ.TypeDefinition.DisplayName |> FSharpKeywords.AddBackticksToIdentifierIfNeeded
             [formatLink name xmlDocSig assemblyName]
           else
             let name = typ.Format displayContext
@@ -105,7 +105,7 @@ module internal DocumentationFormatter =
                         chopped, true
                     | _, _ ->
                         if PrettyNaming.IsMangledOpName c.MemberName then
-                            PrettyNaming.DemangleOperatorName c.MemberName, false
+                            PrettyNaming.DecompileOpName c.MemberName, false
                         else
                             c.MemberName, false
 
@@ -188,10 +188,10 @@ module internal DocumentationFormatter =
                     match func.EnclosingEntitySafe with
                     | Some ent -> ent.DisplayName
                     | _ -> func.DisplayName
-                    |> FSharpKeywords.QuoteIdentifierIfNeeded
+                    |> FSharpKeywords.AddBackticksToIdentifierIfNeeded
                 elif func.IsOperatorOrActivePattern then func.DisplayName
-                elif func.DisplayName.StartsWith "( " then FSharpKeywords.QuoteIdentifierIfNeeded func.LogicalName
-                else FSharpKeywords.QuoteIdentifierIfNeeded func.DisplayName
+                elif func.DisplayName.StartsWith "( " then FSharpKeywords.AddBackticksToIdentifierIfNeeded func.LogicalName
+                else FSharpKeywords.AddBackticksToIdentifierIfNeeded func.DisplayName
             name
 
         let modifiers =
@@ -246,7 +246,7 @@ module internal DocumentationFormatter =
                 argInfos
                 |> List.concat
                 |> List.map (fun p -> let name = Option.defaultValue p.DisplayName p.Name
-                                      let normalisedName = FSharpKeywords.QuoteIdentifierIfNeeded name
+                                      let normalisedName = FSharpKeywords.AddBackticksToIdentifierIfNeeded name
                                       normalisedName.Length)
             match allLengths with
             | [] -> 0
@@ -254,7 +254,7 @@ module internal DocumentationFormatter =
 
         let formatName indent padding (parameter:FSharpParameter) =
             let name = Option.defaultValue parameter.DisplayName parameter.Name
-            let normalisedName = FSharpKeywords.QuoteIdentifierIfNeeded name
+            let normalisedName = FSharpKeywords.AddBackticksToIdentifierIfNeeded name
             indent + normalisedName.PadRight padding + ":"
 
         let isDelegate =
@@ -315,7 +315,7 @@ module internal DocumentationFormatter =
             let name =
                 if func.IsConstructor then "new"
                 elif func.IsOperatorOrActivePattern then func.DisplayName
-                elif func.DisplayName.StartsWith "( " then FSharpKeywords.QuoteIdentifierIfNeeded func.LogicalName
+                elif func.DisplayName.StartsWith "( " then FSharpKeywords.AddBackticksToIdentifierIfNeeded func.LogicalName
                 elif func.LogicalName.StartsWith "get_" || func.LogicalName.StartsWith "set_" then PrettyNaming.TryChopPropertyName func.DisplayName |> Option.defaultValue func.DisplayName
                 else func.DisplayName
             fst (formatLink name func.XmlDocSig func.Assembly.SimpleName)
@@ -420,7 +420,7 @@ module internal DocumentationFormatter =
         let name =
             if v.DisplayName.StartsWith "( "
             then v.LogicalName else v.DisplayName
-            |> FSharpKeywords.QuoteIdentifierIfNeeded
+            |> FSharpKeywords.AddBackticksToIdentifierIfNeeded
         let constraints =
             match v.FullTypeSafe with
             | Some fulltype when fulltype.IsGenericParameter ->
@@ -580,7 +580,7 @@ module internal DocumentationFormatter =
 
         let typeDisplay =
             let name =
-                let normalisedName = FSharpKeywords.QuoteIdentifierIfNeeded fse.DisplayName
+                let normalisedName = FSharpKeywords.AddBackticksToIdentifierIfNeeded fse.DisplayName
                 if fse.GenericParameters.Count > 0 then
                     let paramsAndConstraints =
                         fse.GenericParameters
