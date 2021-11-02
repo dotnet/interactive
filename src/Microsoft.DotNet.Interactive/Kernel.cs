@@ -700,7 +700,8 @@ namespace Microsoft.DotNet.Interactive
             return new(this);
         }
 
-        internal ChooseKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= CreateChooseKernelDirective();
+        public ChooseKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= CreateChooseKernelDirective();
+        protected internal ParseResult SelectorParserResults { protected get; set; }
 
         public bool SupportsCommand<T>() where T : KernelCommand
         {

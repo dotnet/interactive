@@ -127,7 +127,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
                             originalCommand,
                             directiveNode)
                         {
-                            TargetKernelName = targetKernelName
+                            TargetKernelName = targetKernelName,
+                            KernelChooserParseResult = lastKernelNameNode?.GetDirectiveParseResult()
                         };
 
                         if (parseResult.CommandResult.Command.Name == "#r")
@@ -136,7 +137,9 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                             if (value?.Value is FileInfo)
                             {
-                                AddHoistedCommand(createCommand(directiveNode, originalCommand, lastKernelNameNode));
+                                var hoistedCommand = createCommand(directiveNode, originalCommand, lastKernelNameNode);
+                                hoistedCommand.KernelChooserParseResult = lastKernelNameNode?.GetDirectiveParseResult();
+                                AddHoistedCommand(hoistedCommand);
                             }
                             else
                             {
@@ -165,7 +168,11 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         break;
 
                     case LanguageNode languageNode:
-                        commands.Add(createCommand(languageNode, originalCommand, lastKernelNameNode));
+                    {
+                        var kernelCommand = createCommand(languageNode, originalCommand, lastKernelNameNode);
+                        kernelCommand.KernelChooserParseResult = lastKernelNameNode?.GetDirectiveParseResult();
+                        commands.Add(kernelCommand);
+                    }
                         break;
 
                     default:
