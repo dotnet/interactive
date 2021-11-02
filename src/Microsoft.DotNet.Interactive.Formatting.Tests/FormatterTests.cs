@@ -165,38 +165,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 widget.ToDisplayString().Should().Be(defaultValue);
             }
-
-            [Fact]
-            public void Check_default_formatting_of_strings_with_escapes()
-            {
-                var value = "hola! \n \t \" \" ' ' the joy of escapes! and    white  space  ";
-
-                var mimeType = Formatter.GetPreferredMimeTypesFor(typeof(string));
-                var text = value.ToDisplayString(mimeType.FirstOrDefault());
-
-                mimeType.Should().BeEquivalentTo("text/plain");
-                text.Should().Be(value);
-            }
-
-            [Fact]
-            public void Check_default_HTML_formatting_of_strings_with_escapes()
-            {
-                var value = "hola! \n \t \" \" ' ' the joy of escapes! ==> &   white  space  ";
-
-                var text = value.ToDisplayString("text/html");
-
-                text.Should().Be("<div class=\"dni-plaintext\">hola! \n \t &quot; &quot; &#39; &#39; the joy of escapes! ==&gt; &amp;   white  space  </div>");
-            }
-
-            [Fact]
-            public void Check_default_HTML_formatting_of_unicode()
-            {
-                var value = "hola! ʰ˽˵ΘϱϪԘÓŴ𝓌🦁♿🌪🍒☝🏿";
-
-                var text = value.ToDisplayString("text/html");
-
-                text.Should().Be($"<div class=\"dni-plaintext\">{value.HtmlEncode()}</div>");
-            }
         }
 
         public class Registration : FormatterTestBase
