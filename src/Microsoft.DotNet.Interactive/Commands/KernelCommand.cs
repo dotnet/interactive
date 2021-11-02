@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.CommandLine.Parsing;
 using System.Threading.Tasks;
 using System.Text.Json.Serialization;
 
@@ -47,6 +48,9 @@ namespace Microsoft.DotNet.Interactive.Commands
 
         [JsonIgnore]
         internal SchedulingScope SchedulingScope { get; set; }
+
+        [JsonIgnore]
+        public ParseResult KernelChooserParseResult { get; internal set; }
 
         public virtual Task InvokeAsync(KernelInvocationContext context)
         {
