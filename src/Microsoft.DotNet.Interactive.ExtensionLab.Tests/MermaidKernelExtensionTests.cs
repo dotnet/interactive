@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var formatted = new MermaidMarkdown(markdown).ToDisplayString(HtmlFormatter.MimeType);
             var doc = new HtmlDocument();
-            doc.LoadHtml(formatted.FixedGuid());
+            doc.LoadHtml(formatted.FixedGuid().FixedCacheBuster());
             var scriptNode = doc.DocumentNode.SelectSingleNode("//div/script");
             var renderTarget = doc.DocumentNode.SelectSingleNode("//div[@id='00000000000000000000000000000000']");
             using var _ = new AssertionScope();
@@ -79,7 +79,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             scriptNode.InnerText.Should()
                 .Contain(markdown);
             scriptNode.InnerText.Should()
-                .Contain("configureRequireFromExtension('Mermaid','1.0.0')(['Mermaid/mermaidapi'], (mermaid) => {");
+                .Contain("(['mermaidUri'], (mermaid) => {");
 
             renderTarget.Should().NotBeNull();
         }
@@ -101,7 +101,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             var markdown = explorer.ToMarkdown().ToString();
 
             var doc = new HtmlDocument();
-            doc.LoadHtml(formatted.FixedGuid());
+            doc.LoadHtml(formatted.FixedGuid().FixedCacheBuster());
             var scriptNode = doc.DocumentNode.SelectSingleNode("//div/script");
             var renderTarget = doc.DocumentNode.SelectSingleNode("//div[@id='00000000000000000000000000000000']");
             
@@ -111,7 +111,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             scriptNode.InnerText.Should()
                 .Contain(markdown);
             scriptNode.InnerText.Should()
-                .Contain("configureRequireFromExtension('Mermaid','1.0.0')(['Mermaid/mermaidapi'], (mermaid) => {");
+                .Contain("(['mermaidUri'], (mermaid) => {");
 
             renderTarget.Should().NotBeNull();
         }
@@ -146,7 +146,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
                 .Single(fm => fm.MimeType == HtmlFormatter.MimeType)
                 .Value;
 
-            this.Assent(formattedData.FixedGuid(), _configuration);
+            this.Assent(formattedData.FixedGuid().FixedCacheBuster(), _configuration);
         }
 
         [Fact]
@@ -160,6 +160,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             var extension = new MermaidKernelExtension();
 
             await extension.OnLoadAsync(kernel);
+
 
             await kernel.SendAsync(new SubmitCode($@"#r ""{typeof(MermaidKernelExtension).Assembly.Location}""", "csharp"));
 
@@ -178,7 +179,7 @@ typeof(List<string>).ExploreWithUmlClassDiagram().Display();
                 .Single(fm => fm.MimeType == HtmlFormatter.MimeType)
                 .Value;
 
-            this.Assent(formattedData.FixedGuid(), _configuration);
+            this.Assent(formattedData.FixedGuid().FixedCacheBuster(), _configuration);
         }
 
         [Fact]

@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
 
             var formattedValue = data.ExploreWithNteract().ToDisplayString(HtmlFormatter.MimeType);
-            formattedValue.Should().Contain("configureRequireFromExtension('nteract','1.0.0')(['nteract/nteractapi'], (nteract) => {");
+            formattedValue.Should().Contain("(['nteractUri'], (nteract) => {");
         }
 
         [Fact]
@@ -128,7 +128,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var html = data.ExploreWithNteract().ToDisplayString(HtmlFormatter.MimeType);
 
-           this.Assent(html.FixedGuid());
+           this.Assent(html.FixedGuid().FixedCacheBuster());
         }
 
         [Fact]
@@ -139,6 +139,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             var kernelExtension = new NteractKernelExtension();
 
             await kernelExtension.OnLoadAsync(kernel);
+
+            kernel.UseNteractDataExplorer();
 
             var data = new[]
             {
@@ -228,7 +230,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var kernelExtension = new NteractKernelExtension();
             await kernelExtension.OnLoadAsync(kernel);
-            kernel.UseNteractDataExplorer("https://a.cdn.url/script.js");
+            kernel.UseNteractDataExplorer(new Uri("https://a.cdn.url/script.js"));
 
             var data = new[]
             {

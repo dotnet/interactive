@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         {
             _defaultLibraryUri = libraryUri;
             _defaultLibraryVersion = libraryVersion;
-            _defaultCacheBuster = cacheBuster;
+            _defaultCacheBuster = string.IsNullOrWhiteSpace(cacheBuster) ? Guid.NewGuid().ToString("N") : cacheBuster;
         }
 
         public static void ResetDefaultConfiguration()

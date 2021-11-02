@@ -8,10 +8,10 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
     public static class NteractDataExplorerExtensions
     {
-        public static T UseNteractDataExplorer<T>(this T kernel, string uri = null, string context = null, string cacheBuster = null) where T : Kernel
+        public static T UseNteractDataExplorer<T>(this T kernel, Uri libraryUri = null, string libraryVersion = null, string cacheBuster = null) where T : Kernel
         {
             NteractDataExplorer.RegisterFormatters();
-            NteractDataExplorer.SetDefaultConfiguration(string.IsNullOrWhiteSpace(uri) ? null : new Uri(uri), context, cacheBuster);
+            NteractDataExplorer.SetDefaultConfiguration(libraryUri, libraryVersion, cacheBuster);
             DataExplorer.Register<TabularDataResource, NteractDataExplorer>();
             return kernel;
         }
