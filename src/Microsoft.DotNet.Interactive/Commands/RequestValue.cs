@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.Interactive.Commands
                     if (value is { })
                     {
                         var valueType = value.GetType();
-                        var mimeType = MimeType ?? Formatter.GetPreferredMimeTypesFor(valueType).FirstOrDefault();
+                        var mimeType = MimeType ?? JsonFormatter.MimeType;
                         var formatter = Formatter.GetPreferredFormatterFor(valueType, mimeType);
                         if (formatter.MimeType != mimeType)
                         {
@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.Interactive.Commands
                     }
                     else
                     {
-                        var mimeType = MimeType ?? Formatter.GetPreferredMimeTypesFor(typeof(object)).FirstOrDefault();
+                        var mimeType = MimeType ?? JsonFormatter.MimeType;
                         var formatted = new FormattedValue(mimeType, "null");
 
                         context.Publish(new ValueProduced(value, Name, formatted, this));
