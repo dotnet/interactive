@@ -43,7 +43,7 @@
     "onUri",
     "onNotebook:dotnet-interactive",
     "onNotebook:dotnet-interactive-legacy",
-    "onNotebook:*",
+    "onNotebook:jupyter-notebook",
     "onCommand:dotnet-interactive.acquire",
     "onCommand:dotnet-interactive.newNotebook",
     "onCommand:dotnet-interactive.openNotebook",
