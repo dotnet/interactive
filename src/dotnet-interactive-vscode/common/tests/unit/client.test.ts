@@ -375,6 +375,58 @@ describe('InteractiveClient tests', () => {
         ]);
     });
 
+    it('display events with multiple mimeTyoes', async () => {
+        const code = '1 + 1';
+        const config = createKernelTransportConfig(async (notebookPath) => new TestKernelTransport({
+            'SubmitCode#1': [
+                {
+                    eventType: DisplayedValueProducedType,
+                    event: {
+                        value: 1,
+                        valueId: "displayId",
+                        formattedValues: [
+                            {
+                                mimeType: 'text/html',
+                                value: '1'
+                            },
+                            {
+                                mimeType: 'apllication/json',
+                                value: '{}'
+                            }
+                        ]
+                    },
+                    token: 'token 1'
+                },
+                {
+                    eventType: CommandSucceededType,
+                    event: {},
+                    token: 'token 1'
+                }
+            ]
+        }));
+        const clientMapper = new ClientMapper(config);
+        const client = await clientMapper.getOrAddClient(createUri('test/path'));
+
+        // execute first command
+        let result1: Array<vscodeLike.NotebookCellOutput> = [];
+        await client.execute(code, 'csharp', outputs => result1 = outputs, _ => { }, { token: 'token 1' });
+        let decodedResults1 = decodeNotebookCellOutputs(result1);
+        expect(decodedResults1).to.deep.equal([
+            {
+                id: '1',
+                items: [
+                    {
+                        mime: 'text/html',
+                        decodedData: '1',
+                    }, {
+                        mime: 'apllication/json',
+                        decodedData: '{}'
+                    }
+                ]
+            }
+        ]);
+    });
+
     it('CommandFailedEvent rejects the execution promise', (done) => {
         const token = 'token';
         const config = createKernelTransportConfig(async (notebookPath) => new TestKernelTransport({
