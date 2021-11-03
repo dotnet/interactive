@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly ConcurrentDictionary<string, object> _values = new();
         private ChooseKeyValueStoreKernelDirective _chooseKernelDirective;
-        private (bool hadValue, object previousValue, string newValue)? _lastOperation;
+        private (bool hadValue, object previousValue, object newValue)? _lastOperation;
 
         public KeyValueStoreKernel() : base(DefaultKernelName)
         {
