@@ -3,27 +3,14 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import * as contracts from './common/interfaces/contracts';
-import * as vscodeLike from './common/interfaces/vscode-like';
-import * as interactiveNotebook from './common/interactiveNotebook';
-import * as ipynbUtilities from './common/ipynbUtilities';
-import * as utilities from './common/utilities';
-import * as diagnostics from './common/vscode/diagnostics';
-import * as vscodeUtilities from './common/vscode/vscodeUtilities';
-import * as notebookControllers from './notebookControllers';
-import * as notebookSerializers from './notebookSerializers';
-import { ClientMapper } from './common/clientMapper';
-import { OutputChannelAdapter } from './common/vscode/OutputChannelAdapter';
-import { ErrorOutputCreator } from './common/interactiveClient';
-import fetch from 'node-fetch';
 import * as fs from 'fs';
 
 export function getPreloads(extensionPath: string): vscode.Uri[] {
     const preloads: vscode.Uri[] = [];
     const errors: string[] = [];
     const apiFiles: string[] = [
-        //'kernelApiBootstrapper.js',
-        'kernelHttpApiBootstrapper.js'];
+        'kernelApiBootstrapper.js'
+    ];
 
     for (const apiFile of apiFiles) {
         const apiFileUri = vscode.Uri.file(path.join(extensionPath, 'resources', apiFile));
