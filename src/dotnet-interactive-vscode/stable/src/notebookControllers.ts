@@ -117,21 +117,6 @@ export class DotNetNotebookKernel {
                     break;
             }
 
-            switch (e.message.command) {
-                case "getHttpApiEndpoint":
-                    this.config.clientMapper.tryGetClient(documentUri).then(client => {
-                        if (client) {
-                            const uri = client.tryGetProperty<vscode.Uri>("externalUri");
-                            controller.postMessage({ command: "configureFactories", endpointUri: uri?.toString() });
-
-                            this.config.clientMapper.onClientCreate(documentUri, async (client) => {
-                                const uri = client.tryGetProperty<vscode.Uri>("externalUri");
-                                await controller.postMessage({ command: "resetFactories", endpointUri: uri?.toString() });
-                            });
-                        }
-                    });
-                    break;
-            }
 
             if (e.message.logEntry) {
                 Logger.default.write(<LogEntry>e.message.logEntry);
@@ -226,24 +211,27 @@ export async function updateCellLanguages(document: vscode.NotebookDocument): Pr
 }
 
 async function updateCellOutputs(executionTask: vscode.NotebookCellExecution, outputs: Array<vscodeLike.NotebookCellOutput>): Promise<void> {
+    const streamMimetypes = ['application/vnd.code.notebook.stderr', 'application/vnd.code.notebook.stdout'];
     const reshapedOutputs: vscode.NotebookCellOutput[] = [];
     outputs.forEach(async (o) => {
-        const items = o.items.map(oi => generateVsCodeNotebookCellOutputItem(oi.data, oi.mime, oi.stream));
-
-        // If all of these items are of the same stream type & previous item is the same stream, then append it.
-        const streamMimetypes = ['application/vnd.code.notebook.stderr', 'application/vnd.code.notebook.stdout'];
-        items.forEach(currentItem => {
+        if (o.items.length > 1) {
+            // multi mimeType outputs should not be processed
+            reshapedOutputs.push(new vscode.NotebookCellOutput(o.items));
+        } else {
+            // If current nad previous items are of the same stream type then append currentItem to previousOutput.
+            const currentItem = generateVsCodeNotebookCellOutputItem(o.items[0].data, o.items[0].mime, o.items[0].stream);
             const previousOutput = reshapedOutputs.length ? reshapedOutputs[reshapedOutputs.length - 1] : undefined;
-            const previousOutputItem = previousOutput?.items.length ? previousOutput.items[previousOutput.items.length - 1] : undefined;
+            const previousOutputItem = previousOutput?.items.length === 1 ? previousOutput.items[0] : undefined;
+
             if (previousOutput && previousOutputItem?.mime && streamMimetypes.includes(previousOutputItem?.mime) && streamMimetypes.includes(currentItem.mime)) {
                 const decoder = new TextDecoder();
                 const newText = `${decoder.decode(previousOutputItem.data)}${decoder.decode(currentItem.data)}`;
                 const newItem = previousOutputItem.mime === 'application/vnd.code.notebook.stderr' ? vscode.NotebookCellOutputItem.stderr(newText) : vscode.NotebookCellOutputItem.stdout(newText);
                 previousOutput.items[previousOutput.items.length - 1] = newItem;
             } else {
-                reshapedOutputs.push(new vscode.NotebookCellOutput(items));
+                reshapedOutputs.push(new vscode.NotebookCellOutput([currentItem]));
             }
-        });
+        }
     });
     await executionTask.replaceOutput(reshapedOutputs);
 }
