@@ -3,7 +3,7 @@
 </div>
 <script type="text/javascript">
 
-let renderNteractDataExplorer_00000000000000000000000000000000 = () => {
+renderNteractDataExplorer_00000000000000000000000000000000 = () => {
 
     (require.config({ 'paths': { 'context': '1.0.252001', 'nteractUri' : 'https://colombod.github.io/dotnet-interactive-cdn/extensionlab/1.0.252001/nteract/nteractapi', 'urlArgs': 'cacheBuster=00000000000000000000000000000000' }}) || require)(['nteractUri'], (nteract) => {
 

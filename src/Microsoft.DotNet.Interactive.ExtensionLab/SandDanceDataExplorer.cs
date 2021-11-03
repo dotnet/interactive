@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         {
             libraryVersion ??= "1.0.0";
             stringBuilder.AppendLine($@"
-let {functionName} = () => {{");
+{functionName} = () => {{");
             if (libraryUri is not null)
             {
                 var libraryAbsoluteUri = libraryUri.AbsoluteUri.Replace(".js", string.Empty);
