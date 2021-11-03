@@ -3,10 +3,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Data;
 using System.Threading.Tasks;
+
 using Microsoft.Data.SqlClient.Server;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
@@ -15,6 +15,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
     internal class MsSqlKernel : ToolsServiceKernel
     {
         private readonly string _connectionString;
+        private ChooseMsSqlKernelDirective _chooseKernelDirective;
 
         internal MsSqlKernel(
             string name,
@@ -25,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             {
                 throw new ArgumentException("Value cannot be null or whitespace.", nameof(connectionString));
             }
-            
+
             _connectionString = connectionString;
         }
 
@@ -39,10 +40,8 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             }
         }
 
-        protected override ChooseKernelDirective CreateChooseKernelDirective() =>
-            new ChooseMsSqlKernelDirective(this);
+        public override ChooseMsSqlKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= new(this);
 
-       
 
         protected override string CreateVariableDeclaration(string name, object value)
         {
@@ -105,20 +104,6 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             {
                 QueryResults[name] = results;
             }
-        }
-
-        private class ChooseMsSqlKernelDirective : ChooseKernelDirective
-        {
-            public ChooseMsSqlKernelDirective(Kernel kernel) : base(kernel, $"Run a T-SQL query using the \"{kernel.Name}\" connection.")
-            {
-                Add(NameOption);
-            }
-
-            public Option<string> NameOption { get; } = new(
-                "--name",
-                description: "Specify the value name to store the results.",
-                getDefaultValue: () => "lastResults");
-
         }
     }
 }
