@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -9,6 +10,7 @@ using Microsoft.DotNet.Interactive.ExtensionLab;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Microsoft.DotNet.Interactive.ValueSharing;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Kql.Tests
@@ -70,6 +72,30 @@ StormEvents | take 10
                     e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType));
         }
 
+
+        [KqlFact]
+        public async Task It_can_store_result_set_with_a_name()
+        {
+            var cluster = KqlFactAttribute.GetClusterForTests();
+            using var kernel = await CreateKernel();
+            var result = await kernel.SubmitCodeAsync(
+                $"#!connect kql --kernel-name KustoHelp --cluster \"{cluster}\" --database \"Samples\"");
+
+            result.KernelEvents
+                .ToSubscribedList()
+                .Should()
+                .NotContainErrors();
+
+            result = await kernel.SubmitCodeAsync(@"
+#!kql-KustoHelp --name my_data_result
+StormEvents | take 10
+            ");
+
+            var kqlKernel = kernel.FindKernel("kql-KustoHelp") as ISupportGetValue;
+            kqlKernel.TryGetValue("my_data_result", out object variable).Should().BeTrue();
+            variable.Should().BeAssignableTo<IEnumerable<TabularDataResource>>();
+        }
+
         [KqlFact]
         public async Task sending_query_to_kusto_will_generate_suggestions()
         {
@@ -118,7 +144,7 @@ StormEvents | take 10
                   .NotContainErrors();
 
             result = await kernel.SubmitCodeAsync($@"
-#!kql-KustoHelp --mime-type {TabularDataResourceFormatter.MimeType}
+#!kql-KustoHelp
 StormEvents | take 10
 ");
 
@@ -158,7 +184,7 @@ StormEvents | take 10
                 .NotContainErrors();
 
             result = await kernel.SubmitCodeAsync($@"
-#!kql-KustoHelp --mime-type {TabularDataResourceFormatter.MimeType}
+#!kql-KustoHelp
 StormEvents | take 10
 ");
 
@@ -188,7 +214,7 @@ StormEvents | take 10
                   .NotContainErrors();
 
             result = await kernel.SubmitCodeAsync($@"
-#!kql-KustoHelp --mime-type {TabularDataResourceFormatter.MimeType}
+#!kql-KustoHelp
 StormEvents | take 0
 ");
 

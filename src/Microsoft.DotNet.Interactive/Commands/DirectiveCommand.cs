@@ -31,7 +31,6 @@ namespace Microsoft.DotNet.Interactive.Commands
             {
                 throw new InvalidOperationException($"{string.Join(";", ParseResult.Errors)}");
             }
-
             await ParseResult.InvokeAsync();
         }
 

@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.CommandLine.Parsing;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -23,10 +24,6 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         ISupportGetValue,
         ISupportSetClrValue
     {
-        /// <summary>
-        /// Special key for saving the result set of the last query ran
-        /// </summary>
-        public const string LastQueryResultsInfoName = "lastQueryResults";
 
         protected readonly Uri TempFileUri;
         protected readonly TaskCompletionSource<ConnectionCompleteParams> ConnectionCompleted = new();
@@ -35,17 +32,19 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         private bool _intellisenseReady;
         protected bool Connected;
         protected readonly ToolsServiceClient ServiceClient;
+
         /// <summary>
         /// The set of query result lists to save for sharing later.
         /// The key will be the name of the value.
         /// The value is a list of result sets (multiple if multiple queries are ran as a batch)
         /// </summary>
-        private readonly Dictionary<string, List<TabularDataResource>> _queryResults = new();
+        protected Dictionary<string, IReadOnlyCollection<TabularDataResource>> QueryResults { get; } = new();
         /// <summary>
         /// Used to store incoming variables passed in via #!share
         /// </summary>
         private readonly Dictionary<string, object> _variables = new(StringComparer.Ordinal);
 
+ 
         protected ToolsServiceKernel(string name, ToolsServiceClient client) : base(name)
         {
             var filePath = Path.GetTempFileName();
@@ -117,6 +116,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 return;
             }
 
+           
             // If a query handler is already defined, then it means another query is already running in parallel.
             // We only want to run one query at a time, so we display an error here instead.
             if (_queryCompletionHandler is not null)
@@ -131,8 +131,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             {
                 try
                 {
-                    // Clear the last result set list before we start execution
-                    _queryResults[LastQueryResultsInfoName] = new();
+                   
                     foreach (var batchSummary in queryParams.BatchSummaries)
                     {
                         foreach (var resultSummary in batchSummary.ResultSetSummaries)
@@ -154,14 +153,19 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                                 };
                                 var subsetResult = await ServiceClient.ExecuteQueryExecuteSubsetAsync(subsetParams, context.CancellationToken);
                                 var tables = GetEnumerableTables(resultSummary.ColumnInfo, subsetResult.ResultSubset.Rows);
+                                var results = new List<TabularDataResource>();
                                 foreach (var table in tables)
                                 {
                                     var tabularDataResource = table.ToTabularDataResource();
                                     // Store each result set in the list of result sets being saved
-                                    _queryResults[LastQueryResultsInfoName].Add(tabularDataResource);
-                                    var explorer = DataExplorer.CreateDefault(tabularDataResource);
+
+                                    results.Add(tabularDataResource);
+
+                                     var explorer = DataExplorer.CreateDefault(tabularDataResource);
                                     context.Display(explorer);
                                 }
+
+                                StoreQueryResults(results, command.KernelChooserParseResult);
                             }
                             else
                             {
@@ -230,6 +234,12 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             }
         }
 
+        protected virtual void StoreQueryResults(IReadOnlyCollection<TabularDataResource> results, ParseResult commandKernelChooserParseResult)
+        {
+            
+        }
+
+
         private static IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> GetEnumerableTables(ColumnInfo[] columnInfos, CellValue[][] rows)
         {
             var displayTable = new List<(string, object)[]>();
@@ -297,7 +307,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         public bool TryGetValue<T>(string name, out T value)
         {
-            if (_queryResults.TryGetValue(name, out var resultSet))
+            if (QueryResults.TryGetValue(name, out var resultSet))
             {
                 value = (T)(resultSet as object);
                 return true;
@@ -308,7 +318,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         public IReadOnlyCollection<KernelValueInfo> GetValueInfos()
         {
-            return _queryResults.Keys.Select(key => new KernelValueInfo(key, typeof(IEnumerable<TabularDataResource>))).ToArray();
+            return QueryResults.Keys.Select(key => new KernelValueInfo(key, typeof(IEnumerable<TabularDataResource>))).ToArray();
         }
 
         private string PrependVariableDeclarationsToCode(SubmitCode command, KernelInvocationContext context)
