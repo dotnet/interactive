@@ -16,6 +16,7 @@ using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
+using Microsoft.DotNet.Interactive.ValueSharing;
 using Pocket;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
@@ -26,7 +27,7 @@ namespace Microsoft.DotNet.Interactive
     {
         public static T UseQuitCommand<T>(this T kernel, Func<Task> onQuitAsync = null) where T : Kernel
         {
-            kernel.RegisterCommandHandler<Quit>(async (quit, context) =>
+            kernel.RegisterCommandHandler<Quit>(async (_, _) =>
             {
                 if (onQuitAsync is not null)
                 {
@@ -40,7 +41,7 @@ namespace Microsoft.DotNet.Interactive
 
             return kernel;
 
-            void ShutDown() 
+            void ShutDown()
             {
                 Environment.Exit(0);
             }
@@ -122,8 +123,8 @@ namespace Microsoft.DotNet.Interactive
                     {
                         if (KernelInvocationContext.Current is {} currentContext)
                         {
-                            if (e is DiagnosticEvent || 
-                                e is DisplayEvent || 
+                            if (e is DiagnosticEvent ||
+                                e is DisplayEvent ||
                                 e is DiagnosticsProduced)
                             {
                                 return;
@@ -153,14 +154,25 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
-        public static T UseValueSharing<T>(this T kernel)
-            where T : Kernel, ISupportGetValue
+        public static ProxyKernel UseValueSharing(this ProxyKernel kernel, IKernelValueDeclarer kernelValueDeclarer)
+        {
+            if (kernelValueDeclarer is null)
+            {
+                throw new ArgumentNullException(nameof(kernelValueDeclarer));
+            }
+
+            kernel.UseValueSharing();
+            kernel.ValueDeclarer = kernelValueDeclarer;
+            return kernel;
+        }
+
+        public static T UseValueSharing<T>(this T kernel) where T : Kernel
         {
             var variableNameArg = new Argument<string>(
                 "name",
                 "The name of the variable to create in the destination kernel");
 
-            variableNameArg.AddSuggestions((_,__) =>
+            variableNameArg.AddSuggestions((_,_) =>
             {
                 if (kernel.ParentKernel is { } composite)
                 {
@@ -176,7 +188,7 @@ namespace Microsoft.DotNet.Interactive
                 "--from",
                 "The name of the kernel where the variable has been previously declared");
 
-            fromKernelOption.AddSuggestions((_,__) =>
+            fromKernelOption.AddSuggestions((_,_) =>
             {
                 if (kernel.ParentKernel is { } composite)
                 {
@@ -188,7 +200,7 @@ namespace Microsoft.DotNet.Interactive
                 return Array.Empty<string>();
             });
 
-            var share = new Command("#!share", "Share a .NET variable between subkernels")
+            var share = new Command("#!share", "Share a value between subkernels")
             {
                 fromKernelOption,
                 variableNameArg
@@ -196,18 +208,52 @@ namespace Microsoft.DotNet.Interactive
 
             share.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (from, name, context) =>
             {
-                if (kernel.FindKernel(from) is ISupportGetValue fromKernel)
+                if (kernel.FindKernel(from) is { } fromKernel)
                 {
-                    if (fromKernel.TryGetValue(name, out object shared))
-                    {
-                        await ((ISupportSetValue)kernel).SetValueAsync(name, shared);
-                    }
+                    await fromKernel.ShareValue(kernel, name);
+                }
+                else
+                {
+                    context.Fail(context.Command, message: $"Kernel not found: {from}");
                 }
             });
 
             kernel.AddDirective(share);
 
             return kernel;
+        }
+
+        public static async Task ShareValue(this Kernel fromKernel, Kernel toKernel, string valueName)
+        {
+            if (fromKernel is ISupportGetValue fromInProcessKernel)
+            {
+                if (fromInProcessKernel.TryGetValue(valueName, out object value))
+                {
+                    if (toKernel is ISupportSetClrValue toInProcessKernel)
+                    {
+                        try
+                        {
+                            await toInProcessKernel.SetValueAsync(valueName, value);
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new InvalidOperationException($"Error sharing value '{valueName}' from kernel '{fromKernel.Name}' into kernel '{toKernel.Name}'. {ex.Message}", ex);
+                        }
+                    }
+                    else
+                    {
+                        var declarer = toKernel.GetValueDeclarer(value);
+                        if (declarer.TryGetValueDeclaration(valueName, value, out KernelCommand command))
+                        {
+                            await toKernel.SendAsync(command);
+                        }
+                        else
+                        {
+                            throw new ArgumentException($"Value '{valueName}' cannot be declared in kernel '{toKernel.Name}'");
+                        }
+                    }
+                }
+            }
         }
 
         public static TKernel UseWho<TKernel>(this TKernel kernel)
@@ -223,7 +269,7 @@ namespace Microsoft.DotNet.Interactive
         {
             var command = new Command("#!who", "Display the names of the current top-level variables.")
             {
-                Handler = CommandHandler.Create(async (ParseResult parseResult, KernelInvocationContext context) =>
+                Handler = CommandHandler.Create(async (ParseResult _, KernelInvocationContext context) =>
                 {
                     await DisplayValues(context, false);
                 })
@@ -260,14 +306,11 @@ namespace Microsoft.DotNet.Interactive
                 var valueEvents = new List<ValueProduced>();
                 var valueCommands = valueNames.Select(valueName => new RequestValue(valueName, context.HandlingKernel.Name));
 
-
-
                 foreach (var valueCommand in valueCommands)
                 {
                     result = await context.HandlingKernel.SendAsync(valueCommand);
                     using var __ = result.KernelEvents.OfType<ValueProduced>().Subscribe(e => valueEvents.Add(e));
                 }
-
 
                 var kernelValues = valueEvents.Select(e => new KernelValue( new KernelValueInfo( e.Name, e.Value.GetType()), e.Value, context.HandlingKernel.Name));
 
@@ -294,7 +337,7 @@ namespace Microsoft.DotNet.Interactive
         public static CompositeKernel UseKernelClientConnection<TConnector>(
             this CompositeKernel kernel,
             ConnectKernelCommand<TConnector> command)
-            where TConnector : KernelConnector
+            where TConnector : IKernelConnector
         {
             kernel.AddKernelConnection(command);
 
@@ -302,7 +345,7 @@ namespace Microsoft.DotNet.Interactive
         }
 
         [DebuggerStepThrough]
-        public static T LogCommandsToPocketLogger<T>(this T kernel) 
+        public static T LogCommandsToPocketLogger<T>(this T kernel)
             where T : Kernel
         {
             kernel.AddMiddleware(async (command, context, next) =>

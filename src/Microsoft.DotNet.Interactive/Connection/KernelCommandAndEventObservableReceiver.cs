@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public class KernelCommandAndEventObservableReceiver : KernelCommandAndEventReceiverBase, IDisposable
+    public class KernelCommandAndEventObservableReceiver : InteractiveProtocolKernelCommandAndEventReceiverBase, IDisposable
     {
         private readonly IObservable<string> _receiver;
         private readonly ConcurrentQueue<string> _queue;

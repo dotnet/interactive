@@ -48,6 +48,7 @@ import * as vscodeLike from './interfaces/vscode-like';
 import { CompositeKernel } from './interactive/compositeKernel';
 import { ProxyKernel } from './interactive/proxyKernel';
 import { Guid } from './interactive/tokenGenerator';
+import { KernelHost } from './interactive/kernelHost';
 
 export interface ErrorOutputCreator {
     (message: string, outputId?: string): vscodeLike.NotebookCellOutput;
@@ -65,25 +66,25 @@ export class InteractiveClient {
     private deferredOutput: Array<vscodeLike.NotebookCellOutput> = [];
     private valueIdMap: Map<string, { idx: number, outputs: Array<vscodeLike.NotebookCellOutput>, observer: { (outputs: Array<vscodeLike.NotebookCellOutput>): void } }> = new Map<string, { idx: number, outputs: Array<vscodeLike.NotebookCellOutput>, observer: { (outputs: Array<vscodeLike.NotebookCellOutput>): void } }>();
     private _kernel: CompositeKernel;
-
+    private _kernelHost: KernelHost;
     constructor(readonly config: InteractiveClientConfiguration) {
         config.transport.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
 
         this._kernel = new CompositeKernel("vscode");
+        this._kernelHost = new KernelHost(this._kernel, config.transport, "kernel://vscode");
 
-        const reverseProxy = new ProxyKernel('reverse-to-interactive-server', config.transport);
-        this._kernel.add(reverseProxy, ['csharp', 'fsharp', 'pwsh']);
-
-        config.transport.setCommandHandler(commandEnvelope => {
-            return this._kernel.send(commandEnvelope);
-        });
-        this._kernel.subscribeToKernelEvents((eEventEnvelope) => {
-            config.transport.publishKernelEvent(eEventEnvelope);
-        });
+        this._kernelHost.createProxyKernelOnDefaultConnector({ localName: 'csharp', aliases: ['c#', 'C#'] });
+        this._kernelHost.createProxyKernelOnDefaultConnector({ localName: 'fsharp', aliases: ['fs', 'F#'] });
+        this._kernelHost.createProxyKernelOnDefaultConnector({ localName: 'pwsh', aliases: ['powershell'] });
+        this._kernelHost.connect();
     }
 
     get kernel(): CompositeKernel {
         return this._kernel;
+    }
+
+    get kernelHost(): KernelHost {
+        return this._kernelHost;
     }
 
     get transport(): KernelTransport {

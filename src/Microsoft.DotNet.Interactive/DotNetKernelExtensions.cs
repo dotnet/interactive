@@ -2,12 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.ValueSharing;
 
 namespace Microsoft.DotNet.Interactive
 {
     public static class DotNetKernelExtensions
     {
-        public static Task SetVariableAsync<T>(this ISupportSetValue kernel, string name, T value)
+        public static Task SetValueAsync<T>(this ISupportSetClrValue kernel, string name, T value)
         {
             return kernel.SetValueAsync(name, value, typeof(T));
         }

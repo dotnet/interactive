@@ -3,10 +3,14 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Tests.LanguageServices;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Microsoft.DotNet.Interactive.ValueSharing;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests
@@ -205,6 +209,26 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .GetValueInfos()
                 .Should()
                 .NotContain(vi => vi.Name == "hi");
+        }
+
+        [Fact]
+        public async Task Completions_show_value_options()
+        {
+            using var kernel = CreateKernel();
+
+            var markupCode = "#!value [||]".ParseMarkupCode();
+
+            var result = await kernel.SendAsync(new RequestCompletions(markupCode.Code, new LinePosition(0, markupCode.Span.End)));
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should()
+                  .ContainSingle<CompletionsProduced>()
+                  .Which
+                  .Completions
+                  .Select(c => c.InsertText)
+                  .Should()
+                  .Contain("--name", "--from-url", "--from-file", "--mime-type");
         }
 
         private static CompositeKernel CreateKernel() =>

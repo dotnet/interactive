@@ -8,12 +8,13 @@ using Microsoft.DotNet.Interactive.Connection;
 #nullable enable
 namespace Microsoft.DotNet.Interactive.Http
 {
-    public class SignalRKernelConnector : KernelConnector
+    public class SignalRKernelConnector : IKernelConnector
     {
         public string HubUrl { get;  }
 
-        public override async Task<Kernel> ConnectKernelAsync(KernelName kernelName)
+        public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
         {
+            // QUESTION: (ConnectKernelAsync) tests?
             var hubConnection = new HubConnectionBuilder()
                 .WithUrl(HubUrl)
                 .Build();
@@ -24,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.Http
 
             var receiver = new KernelCommandAndEventSignalRHubConnectionReceiver(hubConnection);
             var sender = new KernelCommandAndEventSignalRHubConnectionSender(hubConnection);
-            var proxyKernel = new ProxyKernel(kernelName.Name, receiver, sender);
+            var proxyKernel = new ProxyKernel(kernelInfo.LocalName, receiver, sender);
 
             var _ = proxyKernel.StartAsync();
 

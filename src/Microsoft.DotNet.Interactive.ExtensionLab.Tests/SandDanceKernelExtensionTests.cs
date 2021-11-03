@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Assent;
@@ -11,7 +12,7 @@ using Assent;
 using FluentAssertions;
 
 using Microsoft.DotNet.Interactive.Formatting;
-
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
@@ -28,7 +29,22 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         }
 
         [Fact]
-        public async Task it_registers_formatters()
+        public async Task it_configures_preferred_mimeTypes()
+        {
+            using var kernel = new CompositeKernel();
+
+            var kernelExtension = new SandDanceKernelExtension();
+
+            await kernelExtension.OnLoadAsync(kernel);
+
+            var mimetypes = Formatter.GetPreferredMimeTypesFor(typeof(SandDanceDataExplorer)).Distinct();
+
+            mimetypes
+                .Should().BeEquivalentTo(HtmlFormatter.MimeType, TabularDataResourceFormatter.MimeType);
+        }
+        
+        [Fact]
+        public async Task it_registers_html_formatter()
         {
             using var kernel = new CompositeKernel();
 
@@ -45,7 +61,51 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var formatted = data.ExploreWithSandDance().ToDisplayString(HtmlFormatter.MimeType);
 
-            formatted.Should().Contain("configureRequireFromExtension('SandDance','1.0.0')(['SandDance/sanddanceapi'], (sandDance) => {");
+            formatted.Should().Contain("(['sandDanceUri'], (sandDance) => {");
+        }
+
+        [Fact]
+        public async Task it_registers_TabularDataResourceFormatter()
+        {
+            using var kernel = new CompositeKernel();
+
+            var kernelExtension = new SandDanceKernelExtension();
+
+            await kernelExtension.OnLoadAsync(kernel);
+
+            var data = new[]
+            {
+                new {Type="orange", Price=1.2},
+                new {Type="apple" , Price=1.3},
+                new {Type="grape" , Price=1.4}
+            };
+
+
+            var formattedValue = data.ExploreWithSandDance().ToDisplayString(TabularDataResourceFormatter.MimeType);
+            formattedValue.Should().Contain("\"profile\": \"tabular-data-resource\"");
+        }
+
+        [Fact]
+        public async Task it_is_formatted_as_multiple_mimeTypes()
+        {
+            using var kernel = new CompositeKernel();
+
+            var kernelExtension = new SandDanceKernelExtension();
+
+            await kernelExtension.OnLoadAsync(kernel);
+
+            var data = new[]
+            {
+                new {Type="orange", Price=1.2},
+                new {Type="apple" , Price=1.3},
+                new {Type="grape" , Price=1.4}
+            };
+
+
+            var formattedValues = FormattedValue.FromObject(data.ExploreWithSandDance());
+            formattedValues.Select(fv => fv.MimeType)
+                .Should()
+                .BeEquivalentTo(HtmlFormatter.MimeType, TabularDataResourceFormatter.MimeType);
         }
 
         [Fact]
@@ -53,7 +113,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         {
             using var kernel = new CompositeKernel();
 
-            var kernelExtension = new NteractKernelExtension();
+            var kernelExtension = new SandDanceKernelExtension();
 
             await kernelExtension.OnLoadAsync(kernel);
 
@@ -67,7 +127,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var html = data.ExploreWithSandDance().ToDisplayString(HtmlFormatter.MimeType);
 
-            this.Assent(html.FixedGuid());
+            this.Assent(html.FixedGuid().FixedCacheBuster());
         }
 
         [Fact]
@@ -78,6 +138,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             var kernelExtension = new SandDanceKernelExtension();
 
             await kernelExtension.OnLoadAsync(kernel);
+
+            kernel.UseSandDanceExplorer();
 
             var data = new[]
             {

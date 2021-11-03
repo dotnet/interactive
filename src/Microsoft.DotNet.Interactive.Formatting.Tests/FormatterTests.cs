@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Linq;
 using FluentAssertions;
 using System.Reflection;
 using System.Text.Json;
@@ -163,38 +164,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 Formatter.ResetToDefault();
 
                 widget.ToDisplayString().Should().Be(defaultValue);
-            }
-
-            [Fact]
-            public void Check_default_formatting_of_strings_with_escapes()
-            {
-                var value = "hola! \n \t \" \" ' ' the joy of escapes! and    white  space  ";
-
-                var mimeType = Formatter.GetPreferredMimeTypeFor(typeof(string));
-                var text = value.ToDisplayString(mimeType);
-
-                mimeType.Should().Be("text/plain");
-                text.Should().Be(value);
-            }
-
-            [Fact]
-            public void Check_default_HTML_formatting_of_strings_with_escapes()
-            {
-                var value = "hola! \n \t \" \" ' ' the joy of escapes! ==> &   white  space  ";
-
-                var text = value.ToDisplayString("text/html");
-
-                text.Should().Be("<div class=\"dni-plaintext\">hola! \n \t &quot; &quot; &#39; &#39; the joy of escapes! ==&gt; &amp;   white  space  </div>");
-            }
-
-            [Fact]
-            public void Check_default_HTML_formatting_of_unicode()
-            {
-                var value = "hola! ʰ˽˵ΘϱϪԘÓŴ𝓌🦁♿🌪🍒☝🏿";
-
-                var text = value.ToDisplayString("text/html");
-
-                text.Should().Be($"<div class=\"dni-plaintext\">{value.HtmlEncode()}</div>");
             }
         }
 
@@ -650,9 +619,9 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             {
                 Formatter.DefaultMimeType = mimeType;
 
-                Formatter.GetPreferredMimeTypeFor(typeof(int)).Should().Be(mimeType);
-                Formatter.GetPreferredMimeTypeFor(typeof(object)).Should().Be(mimeType);
-                Formatter.GetPreferredMimeTypeFor(typeof(Type)).Should().Be(mimeType);
+                Formatter.GetPreferredMimeTypesFor(typeof(int)).Should().BeEquivalentTo(mimeType);
+                Formatter.GetPreferredMimeTypesFor(typeof(object)).Should().BeEquivalentTo(mimeType);
+                Formatter.GetPreferredMimeTypesFor(typeof(Type)).Should().BeEquivalentTo(mimeType);
             }
 
             [Theory]
@@ -660,13 +629,13 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [InlineData("text/html")]
             public void Type_specific_mime_type_preference_applies_to_derived_types(string mimeType)
             {
-                Formatter.SetPreferredMimeTypeFor(typeof(object), mimeType);
+                Formatter.SetPreferredMimeTypesFor(typeof(object), mimeType);
 
-                Formatter.GetPreferredMimeTypeFor(typeof(int)).Should().Be(mimeType);
-                Formatter.GetPreferredMimeTypeFor(typeof(object)).Should().Be(mimeType);
-                Formatter.GetPreferredMimeTypeFor(typeof(string)).Should().Be(mimeType);
-                Formatter.GetPreferredMimeTypeFor(typeof(Type)).Should().Be(mimeType);
-                Formatter.GetPreferredMimeTypeFor(typeof(JsonElement)).Should().Be(mimeType);
+                Formatter.GetPreferredMimeTypesFor(typeof(int)).Should().BeEquivalentTo(mimeType);
+                Formatter.GetPreferredMimeTypesFor(typeof(object)).Should().BeEquivalentTo(mimeType);
+                Formatter.GetPreferredMimeTypesFor(typeof(string)).Should().BeEquivalentTo(mimeType);
+                Formatter.GetPreferredMimeTypesFor(typeof(Type)).Should().BeEquivalentTo(mimeType);
+                Formatter.GetPreferredMimeTypesFor(typeof(JsonElement)).Should().BeEquivalentTo(mimeType);
             }
 
             [Theory]
@@ -676,17 +645,17 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             public void Last_specified_type_specific_mime_type_preference_applies_to_non_specified_derived_types(string mimeType)
             {
                 // the last one should win
-                Formatter.SetPreferredMimeTypeFor(typeof(object), mimeType);
-                Formatter.SetPreferredMimeTypeFor(typeof(object), "text/plain");
-                Formatter.SetPreferredMimeTypeFor(typeof(object), mimeType);
-                Formatter.SetPreferredMimeTypeFor(typeof(object), "text/html");
-                Formatter.SetPreferredMimeTypeFor(typeof(object), mimeType);
+                Formatter.SetPreferredMimeTypesFor(typeof(object), mimeType);
+                Formatter.SetPreferredMimeTypesFor(typeof(object), "text/plain");
+                Formatter.SetPreferredMimeTypesFor(typeof(object), mimeType);
+                Formatter.SetPreferredMimeTypesFor(typeof(object), "text/html");
+                Formatter.SetPreferredMimeTypesFor(typeof(object), mimeType);
 
-                Formatter.GetPreferredMimeTypeFor(typeof(int)).Should().Be(mimeType);
-                Formatter.GetPreferredMimeTypeFor(typeof(object)).Should().Be(mimeType);
-                Formatter.GetPreferredMimeTypeFor(typeof(string)).Should().Be(mimeType);
-                Formatter.GetPreferredMimeTypeFor(typeof(Type)).Should().Be(mimeType);
-                Formatter.GetPreferredMimeTypeFor(typeof(JsonElement)).Should().Be(mimeType);
+                Formatter.GetPreferredMimeTypesFor(typeof(int)).Should().BeEquivalentTo(mimeType);
+                Formatter.GetPreferredMimeTypesFor(typeof(object)).Should().BeEquivalentTo(mimeType);
+                Formatter.GetPreferredMimeTypesFor(typeof(string)).Should().BeEquivalentTo(mimeType);
+                Formatter.GetPreferredMimeTypesFor(typeof(Type)).Should().BeEquivalentTo(mimeType);
+                Formatter.GetPreferredMimeTypesFor(typeof(JsonElement)).Should().BeEquivalentTo(mimeType);
             }
 
             [Theory]
@@ -695,10 +664,10 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [InlineData("text/whacky")]
             public void Formatters_can_override_default_preference_for_base_type(string mimeType)
             {
-                Formatter.SetPreferredMimeTypeFor(typeof(object), "text/default");
-                Formatter.SetPreferredMimeTypeFor(typeof(int), mimeType);
+                Formatter.SetPreferredMimeTypesFor(typeof(object), "text/default");
+                Formatter.SetPreferredMimeTypesFor(typeof(int), mimeType);
 
-                Formatter.GetPreferredMimeTypeFor(typeof(int)).Should().Be(mimeType);
+                Formatter.GetPreferredMimeTypesFor(typeof(int)).Should().BeEquivalentTo(mimeType);
             }
 
             [Theory]
@@ -708,9 +677,9 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             public void Formatters_can_override_default_mime_type(string mimeType)
             {
                 Formatter.DefaultMimeType = "text/default";
-                Formatter.SetPreferredMimeTypeFor(typeof(int), mimeType);
+                Formatter.SetPreferredMimeTypesFor(typeof(int), mimeType);
 
-                Formatter.GetPreferredMimeTypeFor(typeof(int)).Should().Be(mimeType);
+                Formatter.GetPreferredMimeTypesFor(typeof(int)).Should().BeEquivalentTo(mimeType);
             }
 
             [Theory]
@@ -719,10 +688,10 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [InlineData("text/whacky")]
             public void Formatters_can_clear_default_preference_for_single_type(string mimeType)
             {
-                Formatter.SetPreferredMimeTypeFor(typeof(int), mimeType);
+                Formatter.SetPreferredMimeTypesFor(typeof(int), mimeType);
                 Formatter.ResetToDefault();
 
-                Formatter.GetPreferredMimeTypeFor(typeof(int)).Should().Be("text/html");
+                Formatter.GetPreferredMimeTypesFor(typeof(int)).Should().BeEquivalentTo("text/html");
             }
         }
     }

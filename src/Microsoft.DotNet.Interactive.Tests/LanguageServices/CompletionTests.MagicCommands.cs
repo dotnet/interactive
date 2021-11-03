@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
 
             [Theory]
             // commands
-            [InlineData("#!sha[||]", "Share a .NET variable")]
+            [InlineData("#!sha[||]", "Share a value")]
             // options
             [InlineData("#!share --fr[||]", "--from*csharp*The name of the kernel")]
             // subcommands

@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.Commands
             Code = languageNode.Text;
             LanguageNode = languageNode;
             LinePosition = linePosition;
-            KernelUri = languageNode.KernelUri;
+            SchedulingScope = languageNode.CommandScope;
         }
 
         public string Code { get; protected set; }

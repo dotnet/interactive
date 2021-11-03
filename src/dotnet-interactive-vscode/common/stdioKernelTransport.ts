@@ -1,7 +1,6 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { AddressInfo, createServer } from "net";
 import * as cp from 'child_process';
 import {
     DisposableSubscription,
@@ -18,7 +17,6 @@ import { ProcessStart } from './interfaces';
 import { ReportChannel, Uri } from './interfaces/vscode-like';
 import { LineReader } from './lineReader';
 import { isNotNull, parse, stringify } from './utilities';
-import fetch from 'node-fetch';
 import { isKernelCommandEnvelope, isKernelEventEnvelope } from "./interfaces/utilities";
 
 export class StdioKernelTransport implements KernelTransport {
@@ -28,8 +26,7 @@ export class StdioKernelTransport implements KernelTransport {
     private readyPromise: Promise<void>;
     private commandHandler: KernelCommandEnvelopeHandler = () => Promise.resolve();
     private eventSubscribers: Array<KernelEventEnvelopeObserver> = [];
-    public httpPort: Number;
-    public externalUri: Uri | null;
+
 
     constructor(
         notebookPath: string,
@@ -42,13 +39,11 @@ export class StdioKernelTransport implements KernelTransport {
         this.lineReader = new LineReader();
         this.lineReader.subscribe(line => this.handleLine(line));
         this.childProcess = null;
-        this.externalUri = null;
-        this.httpPort = 0;
 
         // prepare one-time ready event
         this.readyPromise = new Promise<void>(async (resolve, reject) => {
 
-            let args = await this.configureHttpArgs(processStart.args);
+            let args = processStart.args;
             // launch the process
             this.diagnosticChannel.appendLine(`Starting kernel for '${notebookPath}' using: ${processStart.command} ${args.join(' ')}`);
             let childProcess = cp.spawn(processStart.command, args, { cwd: processStart.workingDirectory });
@@ -84,85 +79,13 @@ export class StdioKernelTransport implements KernelTransport {
         });
     }
 
-    public async setExternalUri(options: { externalUri: Uri, localUri: Uri }): Promise<void> {
-        this.externalUri = options.externalUri;
-        let bootstrapperUri = await this.configureTunnel(options);
-
-        if (bootstrapperUri === null) {
-            let errorMessage = `No valid bootstrapper uri can be found, .NET Interactive http api for Kernel Process ${this.childProcess?.pid} will not work correctly`;
-            this.diagnosticChannel.appendLine(errorMessage);
-            this.notification.displayError(errorMessage);
-        }
-
-    }
-
-    private async configureTunnel(options: { externalUri: Uri, localUri: Uri }): Promise<Uri | null> {
-        try {
-            this.diagnosticChannel.appendLine(`Kernel process ${this.childProcess?.pid} Port ${this.httpPort} is using tunnel uri ${options.externalUri.toString()}`);
-            let apitunnelUri = `${options.localUri.toString()}apitunnel`;
-            let response = await fetch(apitunnelUri, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ tunnelUri: options.externalUri.toString(), frontendType: "vscode" })
-            });
-
-            let reponseObject: any = await response.json();
-            return this.parseUri(reponseObject["bootstrapperUri"]);
-        }
-        catch (error) {
-            this.diagnosticChannel.appendLine(`Failure setting up tunnel confinguration for Kernel process ${this.childProcess?.pid}`);
-            this.diagnosticChannel.appendLine(`Error : ${(<any>error)?.message}`);
-            return null;
-        }
-    }
-
-    private async configureHttpArgs(args: string[]): Promise<string[]> {
-        let newArgs = [...args];
-        let index = newArgs.indexOf("--http-port");
-        if (index < 0) {
-            index = newArgs.indexOf("--http-port-range");
-            this.httpPort = await this.findFreePort();
-
-            //todo: this is a temporary work during transition
-            if (index > 0) {
-                this.diagnosticChannel.appendLine("The --http-port-range option is not supported in the VS Code extension. Please use --http-port instead.");
-                newArgs[index] = "--http-port";
-                newArgs[index + 1] = `${this.httpPort}`;
-            } else {
-                newArgs.push("--http-port");
-                newArgs.push(`${this.httpPort}`);
-            }
-        } else {
-            this.httpPort = parseInt(newArgs[index + 1]);
-        }
-
-        return newArgs;
-    }
-
-    private findFreePort(): Promise<number> {
-        return new Promise<number>((resolve, reject) => {
-            const server = createServer();
-            let port: number;
-            server.once("listening", () => {
-                const address = server.address() as AddressInfo;
-                port = address.port;
-                server.close();
-            });
-            server.once("close", () => {
-                if (typeof port === "undefined") {
-                    reject("Can't get port");
-                    return;
-                }
-                resolve(port);
-            });
-            server.once("error", reject);
-            server.listen(0, "127.0.0.1");
-        });
-    }
-
     private async handleLine(line: string): Promise<void> {
+        try {
+            const garbage = parse(line);
+        }
+        catch (e) {
+            const x = e;
+        }
         const envelope = parse(line);
         if (isKernelEventEnvelope(envelope)) {
             switch (envelope.eventType) {

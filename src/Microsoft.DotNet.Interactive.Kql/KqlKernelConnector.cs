@@ -12,7 +12,7 @@ using Microsoft.DotNet.Interactive.SqlServer;
 
 namespace Microsoft.DotNet.Interactive.Kql
 {
-    public class KqlKernelConnector : KernelConnector
+    public class KqlKernelConnector : IKernelConnector
     {
         public string Cluster { get; }
 
@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.Kql
 
         public string PathToService { get; set; }
 
-        public override async Task<Kernel> ConnectKernelAsync(KernelName kernelName)
+        public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
         {
 
             if (string.IsNullOrWhiteSpace(PathToService))
@@ -33,9 +33,10 @@ namespace Microsoft.DotNet.Interactive.Kql
             var sqlClient = new ToolsServiceClient(PathToService);
 
             var kernel = new MsKqlKernel(
-                $"kql-{kernelName}",
+                $"kql-{kernelInfo}",
                 connectionDetails,
-                sqlClient);
+                sqlClient)
+                .UseValueSharing();
 
             await kernel.ConnectAsync();
 

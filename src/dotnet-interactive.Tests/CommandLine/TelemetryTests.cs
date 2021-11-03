@@ -18,10 +18,10 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
     public class TelemetryTests : IDisposable
     {
         private readonly FakeTelemetry _fakeTelemetry;
-        private readonly TestConsole _console = new TestConsole();
+        private readonly TestConsole _console = new();
         private readonly Parser _parser;
         private readonly FileInfo _connectionFile;
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        private readonly CompositeDisposable _disposables = new();
 
         public TelemetryTests()
         {
@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
                 new ServiceCollection(),
                 startServer: (options, invocationContext) => { },
                 jupyter: (startupOptions, console, startServer, context) => Task.FromResult(1),
-                startStdIO: (startupOptions, kernel, console) => Task.FromResult(1),
+                startKernelHost: (startupOptions, host, console) => Task.FromResult(1),
                 telemetry: _fakeTelemetry,
                 firstTimeUseNoticeSentinel: new NopFirstTimeUseNoticeSentinel());
         }
@@ -44,6 +44,29 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         {
             _disposables.Dispose();
         }
+        [Fact]
+        public async Task vscode_command_sends_telemetry()
+        {
+            await _parser.InvokeAsync("vscode", _console);
+            _fakeTelemetry.LogEntries.Should().Contain(
+                x => x.EventName == "command" &&
+                     x.Properties.Count == 3 &&
+                     x.Properties["verb"] == Sha256Hasher.Hash("VSCODE") &&
+                     x.Properties["default-kernel"] == Sha256Hasher.Hash("CSHARP"));
+        }
+
+        [Fact]
+        public async Task vscode_command_sends_fronted_telemetry()
+        {
+            await _parser.InvokeAsync("vscode", _console);
+            _fakeTelemetry.LogEntries.Should().Contain(
+                x => x.EventName == "command" &&
+                     x.Properties.Count == 3 &&
+                     x.Properties["verb"] == Sha256Hasher.Hash("VSCODE") &&
+                     x.Properties["frontend"] == "vscode" &&
+                     x.Properties["default-kernel"] == Sha256Hasher.Hash("CSHARP"));
+        }
+
 
         [Fact]
         public async Task Jupyter_standalone_command_sends_telemetry()

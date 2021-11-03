@@ -32,7 +32,7 @@ var x = 123;
 
 #!html
 
-<div id="output"></div>
+<div id="output">The value is not yet set.</div>
 
 #!markdown
 
@@ -46,7 +46,7 @@ And the output below the next cell should display the same value.
 
 #!javascript
 
-const x = await interactive.csharp.getVariable("x");
+x = 123;
 document.getElementById("output").innerText = `The value is ${x}.`;
 console.log(`The value is ${x}.`);
 
@@ -73,6 +73,56 @@ input.fsx (1,11)-(1,12) parse error Unexpected token '+' or incomplete expressio
 #!fsharp
 
 let x = 1 +
+
+#!markdown
+
+# Complex console output
+
+#!markdown
+
+The output should look like:
+
+<span style="color:#00FF00">this is green</span>
+
+this is white
+
+<span style="color:#FF0000">this is red</span>
+
+#!csharp
+
+Console.Write("\x1b[38;2;0;255;0m");
+Console.WriteLine("this is green");
+Console.Write("\x1b[0m");
+"this is white".Display();
+Console.Error.Write("\x1b[38;2;255;0;0m");
+Console.Error.WriteLine("this is red");
+Console.Error.Write("\x1b[0m");
+
+#!markdown
+
+# vscode kernel
+This cell should prompt the user for input
+
+#!csharp
+
+var input = await GetInputAsync("give me data");
+input
+
+#!fsharp
+
+let input = GetInputAsync "give me data" false |> Async.RunSynchronously
+input
+
+#!markdown
+
+Test adding cell to notebook (VSCode only)
+
+#!csharp
+
+using Microsoft.DotNet.Interactive;
+using Microsoft.DotNet.Interactive.Commands;
+
+var _ = Kernel.Root.SendAsync(new SendEditableCode("markdown","# this is a markdown cell."));
 
 #!markdown
 
@@ -154,48 +204,3 @@ let x = 1 +
 1. `Ctrl+Shift+P` => ".NET Interactive: Open notebook"
 2. Select the "Untitled-1.dib"/"Untitled-1.ipynb" from before.
 3. Verify that it contains a single F# cell with the contents "1+1" and that it can execute.
-
-#!markdown
-
-# Complex console output
-
-#!markdown
-
-The output shoudl look like:
-
-<span style="color:#00FF00">this should be green</span>
-
-this is white
-
-<span style="color:#FF0000">this should be red</span>
-
-#!csharp
-
-Console.Write("\x1b[38;2;0;255;0m");
-Console.WriteLine("this should be green");
-Console.Write("\x1b[0m");
-"this is white".Display();
-Console.Error.Write("\x1b[38;2;255;0;0m");
-Console.Error.WriteLine("this should be red");
-Console.Error.Write("\x1b[0m");
-
-#!markdown
-
-# vscode kernel
-This cell should prompt the user for input
-
-#!csharp
-
-var input = await InteractiveHost.GetInputAsync("give me data");
-input
-
-#!markdown
-
-Test adding cell to notebook (VSCode only)
-
-#!csharp
-
-using Microsoft.DotNet.Interactive;
-using Microsoft.DotNet.Interactive.Commands;
-
-var _ = Kernel.Root.SendAsync(new SendEditableCode("markdown","# this is a markdown cell."));

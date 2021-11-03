@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 compositeKernel.Add(new MermaidKernel());
             }
 
-            kernel.UseMermaid();
+            kernel.UseMermaid(libraryUri: new Uri(@"https://colombod.github.io/dotnet-interactive-cdn/extensionlab/1.0.252001/mermaid/mermaidapi.js", UriKind.Absolute), libraryVersion: "1.0.252001");
             
             var message = new HtmlString(
                 $@"<details><summary>Explain things visually using the <a href=""https://mermaid-js.github.io/mermaid/"">Mermaid language</a>.</summary>

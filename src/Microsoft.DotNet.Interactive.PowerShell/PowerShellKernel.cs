@@ -16,6 +16,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.PowerShell.Host;
+using Microsoft.DotNet.Interactive.ValueSharing;
 using Microsoft.PowerShell;
 using Microsoft.PowerShell.Commands;
 
@@ -28,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
     public class PowerShellKernel :
         Kernel,
         ISupportGetValue,
-        ISupportSetValue,
+        ISupportSetClrValue,
         IKernelCommandHandler<RequestCompletions>,
         IKernelCommandHandler<RequestDiagnostics>,
         IKernelCommandHandler<SubmitCode>

@@ -42,10 +42,10 @@ stages:
       - job: Windows_NT
         pool:
           ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-            name: NetCore1ESPool-Svc-Public
+            name: NetCore1ESPool-Public
             demands: ImageOverride -equals Build.Windows.10.Amd64.VS2019.Open
           ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-            name: NetCore1ESPool-Svc-Internal
+            name: NetCore1ESPool-Internal
             demands: ImageOverride -equals build.windows.10.amd64.vs2019
         timeoutInMinutes: 90
         variables:
@@ -240,10 +240,10 @@ stages:
       - job: Linux
         pool:
           ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-            name: NetCore1ESPool-Svc-Public
+            name: NetCore1ESPool-Public
             demands: ImageOverride -equals Build.Ubuntu.1604.amd64.Open
           ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-            name: NetCore1ESPool-Svc-Internal
+            name: NetCore1ESPool-Internal
             demands: ImageOverride -equals Build.Ubuntu.1604.amd64
         variables:
         # Enable signing for internal, non-PR builds
@@ -331,10 +331,10 @@ stages:
       - job: Dockerfile_official_image
         pool:
           ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-            name: NetCore1ESPool-Svc-Public
+            name: NetCore1ESPool-Public
             demands: ImageOverride -equals Build.Ubuntu.1604.amd64.Open
           ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-            name: NetCore1ESPool-Svc-Internal
+            name: NetCore1ESPool-Internal
             demands: ImageOverride -equals Build.Ubuntu.1604.amd64
         steps:
         - checkout: self
@@ -352,10 +352,10 @@ stages:
   #     - job: Dockerfile_Main
   #       pool:
   #         ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-  #           name: NetCore1ESPool-Svc-Public
+  #           name: NetCore1ESPool-Public
   #           demands: ImageOverride -equals Build.Ubuntu.1604.amd64.Open
   #         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-  #           name: NetCore1ESPool-Svc-Internal
+  #           name: NetCore1ESPool-Internal
   #           demands: ImageOverride -equals Build.Ubuntu.1604.amd64
   #       steps:
   #       - checkout: self
@@ -373,10 +373,10 @@ stages:
   #     - job: Dockerfile_Binder_Dependency
   #       pool:
   #         ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-  #           name: NetCore1ESPool-Svc-Public
+  #           name: NetCore1ESPool-Public
   #           demands: ImageOverride -equals Build.Ubuntu.1604.amd64.Open
   #         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-  #           name: NetCore1ESPool-Svc-Internal
+  #           name: NetCore1ESPool-Internal
   #           demands: ImageOverride -equals Build.Ubuntu.1604.amd64
   #       steps:
   #       - checkout: self

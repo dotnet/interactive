@@ -16,18 +16,13 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.FSharp;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
 {
     public static class KernelExtensions
     {
-        public static Task UseJupyterHelpersAsync<TKernel>(this TKernel kernel) where TKernel : ISupportSetValue
-        {
-            var interactiveHost = new JupyterInteractiveHost();
-            return kernel.SetValueAsync("InteractiveHost", interactiveHost, typeof(IInteractiveHost));
-        }
-
         public static T UseDefaultMagicCommands<T>(this T kernel)
             where T : Kernel
         {
@@ -44,6 +39,23 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             var command = new SubmitCode($@"
 #r ""{typeof(TopLevelMethods).Assembly.Location.Replace("\\", "/")}""
 using static {typeof(TopLevelMethods).FullName};
+using static {typeof(JupyterInteractiveHost).FullName};
+");
+
+            kernel.DeferCommand(command);
+            return kernel;
+        }
+
+        public static FSharpKernel UseJupyterHelpers(
+            this FSharpKernel kernel)
+        {
+            var command = new SubmitCode($@"
+#r ""{typeof(TopLevelMethods).Assembly.Location.Replace("\\", "/")}""
+
+[<AutoOpen>]
+module JupyterTopLevelModule =
+    let GetInputAsync ( prompt : string ) ( isPassword : bool) = 
+        {typeof(JupyterInteractiveHost).FullName}.{nameof(JupyterInteractiveHost.GetInputAsync)}( prompt, isPassword ) |> Async.AwaitTask
 ");
 
             kernel.DeferCommand(command);

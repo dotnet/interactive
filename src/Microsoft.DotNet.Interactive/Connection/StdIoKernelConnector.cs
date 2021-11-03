@@ -7,7 +7,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,16 +16,17 @@ using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public class StdIoKernelConnector : KernelConnector
+   public class StdIoKernelConnector : IKernelConnector
     {
         public string[] Command { get; }
 
         public DirectoryInfo WorkingDirectory { get; }
 
-        public override async Task<Kernel> ConnectKernelAsync(KernelName kernelName)
+        public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
         {
-            string command = Command[0];
-            string arguments = string.Join(" ", Command.Skip(1));
+            // QUESTION: (ConnectKernelAsync) tests?
+            var command = Command[0];
+            var arguments = string.Join(" ", Command.Skip(1));
             var psi = new ProcessStartInfo
             {
                 FileName = command,
@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.Connection
             process.BeginErrorReadLine();
             var receiver = new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventTextReceiver(process.StandardOutput));
             var sender = new KernelCommandAndEventTextStreamSender(process.StandardInput);
-            var kernel = new ProxyKernel(kernelName.Name, receiver, sender);
+            var kernel = new ProxyKernel(kernelInfo.LocalName, receiver, sender);
             kernel.RegisterForDisposal(() =>
             {
                 process.Kill();
@@ -68,12 +68,11 @@ namespace Microsoft.DotNet.Interactive.Connection
                         return;
                     }
                 }
-                
             });
 
             var checkProcessError = Task.Run(async () =>
             {
-                while (true)
+                while (!checkReady.IsCompleted)
                 {
                     await Task.Delay(200);
                     if (process.HasExited)
@@ -88,9 +87,8 @@ namespace Microsoft.DotNet.Interactive.Connection
             });
 
             await Task.WhenAny(checkProcessError, checkReady);
-
+            
             return kernel;
-
         }
 
         public StdIoKernelConnector(string[] command, DirectoryInfo? workingDirectory = null)

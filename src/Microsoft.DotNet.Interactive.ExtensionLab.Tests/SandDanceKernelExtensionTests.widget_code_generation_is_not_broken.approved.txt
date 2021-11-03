@@ -5,7 +5,7 @@
 
 let renderSandDanceExplorer_00000000000000000000000000000000 = () => {
 
-    configureRequireFromExtension('SandDance','1.0.0')(['SandDance/sanddanceapi'], (sandDance) => {
+    (require.config({ 'paths': { 'context': '1.0.252001', 'sandDanceUri' : 'https://colombod.github.io/dotnet-interactive-cdn/extensionlab/1.0.252001/SandDance/sanddanceapi', 'urlArgs': 'cacheBuster=00000000000000000000000000000000' }}) || require)(['sandDanceUri'], (sandDance) => {
 
         sandDance.createSandDanceExplorer({
             data: {

@@ -15,16 +15,11 @@
 
  <ItemGroup>
    <Compile Remove="bin\**" />
-   <Compile Include="..\Microsoft.DotNet.Interactive.SqlServer\MsSqlRpcObjects.cs">
-     <Link>MsSqlRpcObjects.cs</Link>
-   </Compile>
+   <Compile Include="..\Microsoft.DotNet.Interactive.SqlServer\MsSqlRpcObjects.cs" Link="MsSqlRpcObjects.cs" />
    <Compile Include="..\Microsoft.DotNet.Interactive.SqlServer\SqlToolsServiceDiscovery.cs" Link="SqlToolsServiceDiscovery.cs" />
-   <Compile Include="..\Microsoft.DotNet.Interactive.SqlServer\ToolsServiceClient.cs">
-     <Link>ToolsServiceClient.cs</Link>
-   </Compile>
-   <Compile Include="..\Microsoft.DotNet.Interactive.SqlServer\ToolsServiceKernel.cs">
-     <Link>ToolsServiceKernel.cs</Link>
-   </Compile>
+   <Compile Include="..\Microsoft.DotNet.Interactive.SqlServer\ToolsServiceClient.cs" Link="ToolsServiceClient.cs" />
+   <Compile Include="..\Microsoft.DotNet.Interactive.SqlServer\ToolsServiceKernel.cs" Link="ToolsServiceKernel.cs" />
+   <Compile Include="..\Microsoft.DotNet.Interactive.SqlServer\Utils.cs" Link="Utils.cs" />
    <EmbeddedResource Remove="bin\**" />
    <None Remove="bin\**" />
  </ItemGroup>
@@ -32,12 +27,12 @@
  <ItemGroup>
    <PackageReference Include="Microsoft.Azure.Kusto.Data" Version="9.3.1" />
    <PackageReference Include="Microsoft.SqlToolsService" Version="3.0.0-release.53" />
-   <PackageReference Include="StreamJsonRpc" Version="2.6.121" />
+   <PackageReference Include="StreamJsonRpc" Version="2.8.28" />
  </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.PackageManagement\Microsoft.DotNet.Interactive.PackageManagement.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" PrivateAssets="All" />
-    <ProjectReference Include="..\Microsoft.DotNet.Interactive.ExtensionLab\Microsoft.DotNet.Interactive.ExtensionLab.csproj" />
   </ItemGroup>
 
   <ItemGroup>

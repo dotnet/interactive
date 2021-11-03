@@ -2,14 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.IO;
+using System.IO.Pipes;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
-using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
 using Xunit.Abstractions;
@@ -30,7 +29,8 @@ namespace Microsoft.DotNet.Interactive.Tests
             _disposables.Dispose();
         }
 
-        [FactSkipLinux]
+        [WindowsFact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
         public async Task it_can_reuse_connection_for_multiple_proxy_kernel()
         {
             var pipeName = Guid.NewGuid().ToString();
@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             remoteCompositeKernel.DefaultKernelName = "csharp";
 
-            StartServer(remoteCompositeKernel, pipeName);
+            using var _ = StartServer(remoteCompositeKernel, pipeName);
 
             // setup connection
 
@@ -63,9 +63,9 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             // use same connection to create 2 proxy kernel
 
-            using var localKernel1 =  await connector.ConnectKernelAsync(new KernelName("kernel1"));
-
-            using var localKernel2 = await connector.ConnectKernelAsync(new KernelName("kernel2"));
+            using var localKernel1 =  await connector.ConnectKernelAsync(new KernelInfo("kernel1"));
+           
+            using var localKernel2 = await connector.ConnectKernelAsync(new KernelInfo("kernel2"));
 
             var kernelCommand1 = new SubmitCode("echo1");
 
@@ -90,7 +90,8 @@ namespace Microsoft.DotNet.Interactive.Tests
             kernelEvents2.Should().ContainSingle<DisplayedValueProduced>().Which.FormattedValues.Should().ContainSingle(f => f.Value == kernelCommand2.Code);
         }
 
-        [FactSkipLinux]
+        [WindowsFact]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
         public async Task can_address_remote_composite_kernel_using_named_pipe()
         {
             using var localCompositeKernel = new CompositeKernel
@@ -118,7 +119,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             remoteCompositeKernel.DefaultKernelName = "csharp";
 
-            StartServer(remoteCompositeKernel, pipeName);
+            using var _ = StartServer(remoteCompositeKernel, pipeName);
 
             using var events = localCompositeKernel.KernelEvents.ToSubscribedList();
 
@@ -137,6 +138,24 @@ x");
                                       .BeTrue();
         }
 
-        void StartServer(Kernel remoteKernel, string pipeName) =>  remoteKernel.UseNamedPipeKernelServer(pipeName, new DirectoryInfo(Environment.CurrentDirectory)); 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platform")]
+        KernelHost StartServer(CompositeKernel remoteKernel, string pipeName)
+        {
+            var serverStream = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+            var kernelCommandAndEventPipeStreamReceiver = new KernelCommandAndEventPipeStreamReceiver(serverStream);
+            var kernelCommandAndEventPipeStreamSender = new KernelCommandAndEventPipeStreamSender(serverStream);
+            var host = new KernelHost(remoteKernel,
+                kernelCommandAndEventPipeStreamSender,
+                new MultiplexingKernelCommandAndEventReceiver(kernelCommandAndEventPipeStreamReceiver));
+            remoteKernel.RegisterForDisposal(serverStream);
+
+            Task.Run(() =>
+            {
+                serverStream.WaitForConnection();
+                var _ = host.ConnectAsync();
+            });
+
+            return host;
+        }
     }
 }

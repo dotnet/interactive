@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 #nullable enable
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public abstract class KernelConnector
+    public interface IKernelConnector
     {
-        public abstract Task<Kernel> ConnectKernelAsync(KernelName kernelName);
+        Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo);
     }
 }

@@ -9,7 +9,7 @@ using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public class KernelCommandAndEventPipeStreamReceiver : KernelCommandAndEventReceiverBase
+    public class KernelCommandAndEventPipeStreamReceiver : InteractiveProtocolKernelCommandAndEventReceiverBase
     {
         private readonly PipeStream _reader;
 

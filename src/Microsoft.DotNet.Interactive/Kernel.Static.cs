@@ -20,9 +20,9 @@ namespace Microsoft.DotNet.Interactive
 
         public static DisplayedValue display(
             object value,
-            string mimeType = null)
+            params string[] mimeTypes)
         {
-            return value.Display(mimeType);
+            return value.Display(mimeTypes);
         }
 
         public static IHtmlContent HTML(string content) => content.ToHtmlContent();

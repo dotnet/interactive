@@ -22,8 +22,7 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
-
-
+using Microsoft.DotNet.Interactive.ValueSharing;
 using CompletionItem = Microsoft.DotNet.Interactive.Events.CompletionItem;
 
 namespace Microsoft.DotNet.Interactive.CSharp
@@ -33,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         IExtensibleKernel,
         ISupportNuget,
         ISupportGetValue,
-        ISupportSetValue,
+        ISupportSetClrValue,
         IKernelCommandHandler<RequestCompletions>,
         IKernelCommandHandler<RequestDiagnostics>,
         IKernelCommandHandler<RequestHoverText>,
@@ -60,7 +59,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         private string _workingDirectory;
 
-        public CSharpKernel() : base(DefaultKernelName)
+        public CSharpKernel() : this(DefaultKernelName)
+        {
+
+        }
+        public CSharpKernel(string name) : base(name)
         {
             _workspace = new InteractiveWorkspace();
 
@@ -373,7 +376,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 if (!currentDir.Equals(_workingDirectory, StringComparison.Ordinal))
                 {
                     _workingDirectory = currentDir;
-
+                    
                     ScriptOptions = ScriptOptions
                                     .WithMetadataResolver(CachingMetadataResolver.Default.WithBaseDirectory(_workingDirectory))
                                     .WithSourceResolver(new SourceFileResolver(ImmutableArray<string>.Empty, _workingDirectory));
@@ -501,5 +504,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
         public IEnumerable<string> RestoreSources =>
             PackageRestoreContext.RestoreSources;
 
+        
     }
 }

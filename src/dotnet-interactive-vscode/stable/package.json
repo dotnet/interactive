@@ -12,7 +12,7 @@
   "//version": "The version '42.42.42' is auto-set during CI package creation.",
   "version": "42.42.42",
   "engines": {
-    "vscode": "^1.60.0"
+    "vscode": "^1.61.0"
   },
   "bugs": {
     "url": "https://github.com/dotnet/interactive/issues"
@@ -106,8 +106,7 @@
             "run",
             "dotnet-interactive",
             "--",
-            "[vscode]",
-            "stdio",
+            "vscode",
             "--working-dir",
             "{working_dir}"
           ],
@@ -146,7 +145,7 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.246201",
+          "default": "1.0.250604",
           "description": "The minimum required version of the .NET Interactive tool."
         },
         "dotnet-interactive.logLevel": {
@@ -460,7 +459,7 @@
     "eslint": "6.8.0",
     "eslint-plugin-deprecation": "1.2.0",
     "glob": "7.1.6",
-    "mocha": "9.0.0",
+    "mocha": "9.1.2",
     "mocha-multi-reporters": "1.5.1",
     "mocha-trx-reporter": "3.3.1",
     "tmp": "0.2.1",

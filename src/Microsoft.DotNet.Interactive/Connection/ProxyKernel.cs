@@ -1,16 +1,13 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
-using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Parsing;
-using Microsoft.DotNet.Interactive.Utility;
+using Microsoft.DotNet.Interactive.ValueSharing;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
@@ -20,8 +17,9 @@ namespace Microsoft.DotNet.Interactive.Connection
         private readonly IKernelCommandAndEventSender _sender;
         private readonly CancellationTokenSource _cancellationTokenSource = new();
         private ExecutionContext _executionContext;
-        private readonly Dictionary<string,(KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<KernelEvent> completionSource ,KernelInvocationContext invocationContext)> _inflight = new();
+        private readonly Dictionary<string,(KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<KernelEvent> completionSource, KernelInfo kernelInfo ,KernelInvocationContext invocationContext)> _inflight = new();
         private int _started = 0;
+        private IKernelValueDeclarer _valueDeclarer;
 
         public ProxyKernel(string name, IKernelCommandAndEventReceiver receiver, IKernelCommandAndEventSender sender) : base(name)
         {
@@ -34,7 +32,6 @@ namespace Microsoft.DotNet.Interactive.Connection
                 _cancellationTokenSource.Dispose();
             });
         }
-
 
         public Task StartAsync()
         {
@@ -59,21 +56,6 @@ namespace Microsoft.DotNet.Interactive.Connection
                 {
                     DelegatePublication(d.Event);
                 }
-                else if (d.Command is not null)
-                {
-                    var _ = Task.Run(async () =>
-                    {
-                        var eventSubscription = RootKernel.KernelEvents
-                            .Where(e => e.Command.GetOrCreateToken() == d.Command.GetOrCreateToken() && e.Command.GetType() == d.Command.GetType())
-                            .Subscribe(async e =>
-                            {
-                                await _sender.SendAsync(e, _cancellationTokenSource.Token);
-                            });
-
-                        await RootKernel.SendAsync(d.Command, _cancellationTokenSource.Token);
-                        eventSubscription.Dispose();
-                    }, _cancellationTokenSource.Token);
-                }
             }
         }
 
@@ -83,25 +65,34 @@ namespace Microsoft.DotNet.Interactive.Connection
             {
                 case AnonymousKernelCommand:
                     return base.HandleAsync(command, context);
-                case DirectiveCommand { DirectiveNode: KernelNameDirectiveNode }:
+                case DirectiveCommand:
                     return base.HandleAsync(command, context);
             }
 
             _executionContext = ExecutionContext.Capture();
-            var kernelUri = KernelUri.Parse(command.TargetKernelName);
-            var remoteTargetKernelName = kernelUri.GetRemoteKernelName();
-            var localTargetKernelName = command.TargetKernelName;
-            command.TargetKernelName = remoteTargetKernelName;
             var token = command.GetOrCreateToken();
-          
+            
+            KernelInfo kernelInfo = null;
+            if (command.OriginUri is null || command.DestinationUri is null)
+            {
+                if (ParentKernel?.Host?.TryGetKernelInfo(this, out kernelInfo) == true && kernelInfo is not null)
+                {
+                    command.OriginUri??= kernelInfo.OriginUri;
+                    command.DestinationUri??= kernelInfo.DestinationUri;
+                }
+            }
+
+            var targetKernelName = command.TargetKernelName;
+            command.TargetKernelName = null;
             var completionSource = new TaskCompletionSource<KernelEvent>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            _inflight[token] = (command, _executionContext, completionSource, context);
+            _inflight[token] = (command, _executionContext, completionSource, kernelInfo, context);
 
+            ExecutionContext.SuppressFlow();
             var _ = _sender.SendAsync(command, context.CancellationToken);
             return completionSource.Task.ContinueWith(te =>
             {
-                command.TargetKernelName = localTargetKernelName;
+                command.TargetKernelName = targetKernelName;
                 if (te.Result is CommandFailed cf)
                 {
                     context.Fail(command, cf.Exception, cf.Message);
@@ -115,7 +106,7 @@ namespace Microsoft.DotNet.Interactive.Connection
 
             var hasPending = _inflight.TryGetValue(token, out var pending);
 
-            if (hasPending)
+            if (hasPending && HasSameOrigin(kernelEvent, pending.kernelInfo))
             {
                 switch (kernelEvent)
                 {
@@ -141,5 +132,27 @@ namespace Microsoft.DotNet.Interactive.Connection
                 }
             }
         }
+
+        private bool HasSameOrigin(KernelEvent kernelEvent, KernelInfo kernelInfo)
+        {
+            if (kernelInfo is not null)
+            {
+                var areEqual = kernelEvent.Command.OriginUri.Equals( kernelInfo.OriginUri);
+                return areEqual;
+            }else if(kernelEvent.Command.OriginUri is null)
+
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        internal IKernelValueDeclarer ValueDeclarer
+        {
+            set => _valueDeclarer = value;
+        }
+
+        public override IKernelValueDeclarer GetValueDeclarer(object value) => _valueDeclarer ?? KernelValueDeclarer.Default;
     }
 }

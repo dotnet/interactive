@@ -103,28 +103,20 @@ describe("dotnet-interactive", () => {
                 moreData: "Test 2"
             };
 
+            let events: contracts.KernelEventEnvelope[] = [];
             let handlerInvocations: IKernelCommandInvocation[] = [];
             kernel.registerCommandHandler({ commandType: commandType1, handle: async (a: IKernelCommandInvocation) => { handlerInvocations.push(a); } })
 
+            kernel.subscribeToKernelEvents(e => events.push(e));
             let errorFromSend = null;
             await kernel.send({
                 commandType: commandType2,
                 command: command2In
-            })
-                .catch(e => { errorFromSend = e; });
+            });
 
             expect(handlerInvocations.length).to.be.equal(0);
-            expect(errorFromSend).is.not.null;
-        });
 
-        it("raises suitable kernel event when command type matches no handlers", async () => {
-            // TODO
-            // What's the right event? We probably need to understand this in the broader
-            // context of what sort of error we think this is. Should the dotnet-interactive side
-            // only ever send a command to the client if it's confident the client will handle
-            // it? (In which case, this is a "this should never happen" type error.) Or do we
-            // let user code attempt to send whatever commands they like to the client? (In which
-            // case this is a "we need to tell the user what they did wrong" type error.)
+            expect(events.find(e => e.eventType === contracts.CommandFailedType)).is.not.null;
         });
     });
 });

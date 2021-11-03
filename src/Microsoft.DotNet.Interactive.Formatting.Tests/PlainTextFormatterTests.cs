@@ -551,6 +551,20 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString().Should().Be("[ 1, <null>, 3 ]");
             }
+
+            [Fact]
+            public void Strings_with_escaped_sequences_are_preserved()
+            {
+                var formatter = PlainTextFormatter.GetPreferredFormatterFor(typeof(string));
+                
+                var value = "hola! \n \t \" \" ' ' the joy of escapes! and    white  space  ";
+
+                var writer = new StringWriter();
+
+                formatter.Format(value, writer);
+
+                writer.ToString().Should().Be(value);
+            }
         }
     }
 }

@@ -15,6 +15,7 @@ import * as ipynbUtilities from '../../common/ipynbUtilities';
 import { ReportChannel } from '../interfaces/vscode-like';
 import { jupyterViewType } from '../interactiveNotebook';
 import { NotebookParserServer } from '../notebookParserServer';
+import { PromiseCompletionSource } from '../interactive/genericTransport';
 
 export function registerAcquisitionCommands(context: vscode.ExtensionContext, diagnosticChannel: ReportChannel) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
@@ -38,15 +39,20 @@ export function registerAcquisitionCommands(context: vscode.ExtensionContext, di
             }
 
             if (!acquirePromise) {
+                const installationPromiseCompletionSource = new PromiseCompletionSource<void>();
                 acquirePromise = acquireDotnetInteractive(
                     installArgs,
                     minDotNetInteractiveVersion!,
                     context.globalStorageUri.fsPath,
                     getInteractiveVersion,
                     createToolManifest,
-                    async (version: string) => { await vscode.window.showInformationMessage(`Installing .NET Interactive version ${version}...`); },
+                    (version: string) => {
+                        vscode.window.withProgress(
+                            { location: vscode.ProgressLocation.Notification, title: `Installing .NET Interactive version ${version}...` },
+                            (_progress, _token) => installationPromiseCompletionSource.promise);
+                    },
                     installInteractiveTool,
-                    async () => { await vscode.window.showInformationMessage('.NET Interactive installation complete.'); });
+                    () => { installationPromiseCompletionSource.resolve(); });
             }
             const launchOptions = await acquirePromise;
             return launchOptions;

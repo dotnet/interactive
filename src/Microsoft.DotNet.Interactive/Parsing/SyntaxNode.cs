@@ -11,10 +11,9 @@ using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Parsing
 {
-    public abstract class SyntaxNode : 
-        SyntaxNodeOrToken
+    public abstract class SyntaxNode : SyntaxNodeOrToken
     {
-        private readonly List<SyntaxNodeOrToken> _childNodesAndTokens = new List<SyntaxNodeOrToken>();
+        private readonly List<SyntaxNodeOrToken> _childNodesAndTokens = new();
         private TextSpan _span;
 
         private protected SyntaxNode(

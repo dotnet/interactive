@@ -2,16 +2,19 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
     public static class SandDanceExplorerExtensions
     {
-        public static T UseSandDanceExplorer<T>(this T kernel, string uri = null, string libraryVersion = null, string cacheBuster = null) where T : Kernel
+        public static T UseSandDanceExplorer<T>(this T kernel, Uri libraryUri = null, string libraryVersion = null, string cacheBuster = null) where T : Kernel
         {
             SandDanceDataExplorer.RegisterFormatters();
-            SandDanceDataExplorer.SetDefaultConfiguration(string.IsNullOrWhiteSpace(uri) ? null : new Uri(uri), libraryVersion,
+            SandDanceDataExplorer.SetDefaultConfiguration(libraryUri, libraryVersion,
                 cacheBuster);
+
+            DataExplorer.Register<TabularDataResource, SandDanceDataExplorer>();
             return kernel;
         }
 

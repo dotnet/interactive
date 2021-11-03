@@ -122,28 +122,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
         await transport.waitForReady();
 
-        let localUriString = `http://localhost:${transport.httpPort}`;
-        let externalUriString = localUriString;
-
-        try {
-            let tunnel = await vscode.workspace.openTunnel({ remoteAddress: { host: "localhost", port: <number>transport.httpPort } });
-            externalUriString = typeof tunnel.localAddress === 'string'
-                ? tunnel.localAddress
-                : `http://${tunnel.localAddress.host}:${tunnel.localAddress.port}`;
-        }
-        catch (_) {
-            const x = 12;
-        }
-
-        let localUri = <vscodeLike.Uri>vscode.Uri.parse(localUriString);
-        let externalUri = <vscodeLike.Uri>vscode.Uri.parse(externalUriString);
-        try {
-            await transport.setExternalUri({ externalUri, localUri });
-        }
-        catch (e) {
-            vscode.window.showErrorMessage(`Error configuring http connection with .NET Interactive on ${externalUri.toString()} : ${(<any>e)?.message}`);
-        }
-
         return transport;
     }
 
@@ -206,8 +184,9 @@ export async function activate(context: vscode.ExtensionContext) {
     const preloads = versionSpecificFunctions.getPreloads(context.extensionPath);
 
     ////////////////////////////////////////////////////////////////////////////////
+    const launchOptions = await getInteractiveLaunchOptions();
     const serializerCommand = <string[]>config.get('notebookParserArgs') || []; // TODO: fallback values?
-    const serializerCommandProcessStart = processArguments({ args: serializerCommand, workingDirectory: '.' }, '.', DotNetPathManager.getDotNetPath(), context.globalStorageUri.fsPath);
+    const serializerCommandProcessStart = processArguments({ args: serializerCommand, workingDirectory: launchOptions!.workingDirectory }, '.', DotNetPathManager.getDotNetPath(), context.globalStorageUri.fsPath);
     const serializerLineAdapter = new ChildProcessLineAdapter(serializerCommandProcessStart.command, serializerCommandProcessStart.args, serializerCommandProcessStart.workingDirectory, true, diagnosticsChannel);
     const messageClient = new MessageClient(serializerLineAdapter);
     const parserServer = new NotebookParserServer(messageClient);

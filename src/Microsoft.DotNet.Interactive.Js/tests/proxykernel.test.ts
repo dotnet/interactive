@@ -6,7 +6,7 @@ import * as contracts from "../src/common/interfaces/contracts";
 import { CompositeKernel } from "../src/common/interactive/compositeKernel";
 import { Kernel } from "../src/common/interactive/kernel";
 import { ProxyKernel } from "../src/common/interactive/proxyKernel";
-import { findEventFromKernel } from "./testSupport";
+import { createInMemoryTransport, findEventFromKernel } from "./testSupport";
 import { CommandAndEventReceiver, GenericTransport, PromiseCompletionSource } from "../src/common/interactive/genericTransport";
 import { Logger } from "../src/common/logger";
 
@@ -89,7 +89,7 @@ describe("proxyKernel", () => {
         });
     });
 
-    it("forwards events ofremotely split commands", async () => {
+    it("forwards events of remotely split commands", async () => {
         let inMemory = createInMemoryTransport(ce => {
             return [
                 { eventType: contracts.ValueProducedType, event: <contracts.ValueProduced>{ name: "a", formattedValue: { mimeType: "text/plain", value: "variable a" } }, command: { ...ce, ["command.id"]: "newId" } },
@@ -135,31 +135,3 @@ describe("proxyKernel", () => {
 });
 
 
-function createInMemoryTransport(eventProducer?: (commandEnvelope: contracts.KernelCommandEnvelope) => contracts.KernelEventEnvelope[]): { transport: GenericTransport, sentItems: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] } {
-    let sentItems: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] = [];
-    if (!eventProducer) {
-        eventProducer = (ce) => {
-            return [{ eventType: contracts.CommandSucceededType, event: <contracts.CommandSucceeded>{}, command: ce }];
-        }
-    }
-
-    const receiver = new CommandAndEventReceiver();
-    let sender: (message: contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope) => Promise<void> = (item) => {
-        sentItems.push(item);
-        let events = eventProducer(<contracts.KernelCommandEnvelope>item)
-        for (let event of events) {
-            receiver.delegate(event);
-        }
-        return Promise.resolve();
-    }
-    let transport = new GenericTransport(
-        sender,
-        () => {
-            return receiver.read();
-        }
-    );
-    return {
-        transport,
-        sentItems
-    };
-}

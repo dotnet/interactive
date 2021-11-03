@@ -33,6 +33,17 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _format = format;
         }
 
+        public JsonFormatter(Action<T, FormatContext> format)
+        {
+            _format = FormatInstance;
+
+            bool FormatInstance(T instance, FormatContext context)
+            {
+                format(instance, context);
+                return true;
+            }
+        }
+
         public override string MimeType { get; } = JsonFormatter.MimeType;
     }
 }

@@ -430,7 +430,7 @@ type internal ParseAndCheckResults
 
       let getAllSymbols() =
         getAllSymbols()
-        |> List.filter (fun entity -> entity.FullName.Contains "." && not (PrettyNaming.IsOperatorName entity.Symbol.DisplayName))
+        |> List.filter (fun entity -> entity.FullName.Contains "." && not (PrettyNaming.IsOperatorDisplayName entity.Symbol.DisplayName))
 
       let token = Lexer.getSymbol pos.Line (pos.Column - 1) lineStr SymbolLookupKind.Simple [||]
       let isEmpty = longName.QualifyingIdents.IsEmpty && String.IsNullOrWhiteSpace longName.PartialIdent && longName.LastDotPos.IsNone

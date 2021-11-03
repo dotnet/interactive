@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive
@@ -24,15 +25,20 @@ namespace Microsoft.DotNet.Interactive
 
         public string Value { get; }
 
-        public static IReadOnlyCollection<FormattedValue> FromObject(object value, string mimeType = null)
+        public static IReadOnlyCollection<FormattedValue> FromObject(object value, params  string[] mimeTypes)
         {
-            mimeType ??= Formatter.GetPreferredMimeTypeFor(value?.GetType());
+            if (mimeTypes is null 
+                || mimeTypes.Length == 0 
+                || mimeTypes.Count(mimeType => !string.IsNullOrWhiteSpace(mimeType)) == 0)
+            {
+                mimeTypes =  Formatter.GetPreferredMimeTypesFor(value?.GetType()).ToArray();
+            }
 
-            var formattedValue = new FormattedValue(
+            var formattedValues = mimeTypes.Select( mimeType =>  new FormattedValue(
                 mimeType,
-                value.ToDisplayString(mimeType));
+                value.ToDisplayString(mimeType))).ToArray();
 
-            return new[] { formattedValue };
+            return formattedValues;
         }
     }
 }

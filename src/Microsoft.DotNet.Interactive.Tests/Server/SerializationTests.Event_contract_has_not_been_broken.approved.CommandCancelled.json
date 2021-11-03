@@ -1,0 +1,1 @@
+{"event":{},"eventType":"CommandCancelled","command":{"token":"the-token","id":"command-id","commandType":"Cancel","command":{"targetKernelName":null},"originUri":"","destinationUri":""}}

@@ -127,8 +127,8 @@ type KernelTests() =
                 "let a = int 20.0"
             ]
 
-        // val int : value:'T -> int (requires member op_Explicit)
-        texts.Should().ContainAll("val int:", "^T (requires static member op_Explicit )", "-> int")
+        // val inline int : value:'T -> int (requires member op_Explicit)
+        texts.Should().ContainAll("val inline int:", "^T (requires static member op_Explicit )", "-> int")
 
     [<Fact>]
     member __.``Get completion list for List module then get the 'average' function and verify it has documentation``() =

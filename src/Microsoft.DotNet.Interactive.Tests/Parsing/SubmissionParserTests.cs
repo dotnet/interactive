@@ -4,14 +4,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.PowerShell;
+using Microsoft.DotNet.Interactive.Tests.Server;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -101,6 +104,24 @@ x
                 .Text
                 .Should()
                 .Be("#i \"nuget:/some/path\"");
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, Language.CSharp)]
+        [InlineData(Language.CSharp, Language.FSharp)]
+        [InlineData(Language.FSharp, Language.CSharp)]
+        [InlineData(Language.FSharp, Language.FSharp)]
+        public void Pound_i_is_dispatched_to_the_correct_kernel(Language defaultKernel, Language targetKernel)
+        {
+            var parser = CreateSubmissionParser(defaultKernel.LanguageName());
+
+            var command = new SubmitCode("#i \"nuget: SomeLocation\"", targetKernelName: targetKernel.LanguageName());
+
+            var subCommands = parser.SplitSubmission(command);
+
+            subCommands
+                .Should()
+                .AllSatisfy(c => c.TargetKernelName.Should().Be(targetKernel.LanguageName()));
         }
 
         [Fact]
@@ -319,96 +340,7 @@ let x = 123
                 .Should()
                 .AllSatisfy(child => rootSpan.Contains(child.Span).Should().BeTrue());
         }
-
-        [Fact]
-        public void Submissions_targeting_proxy_kernels_are_not_split_prior_to_sending()
-        {
-
-            var proxyKernel = new ProxyKernel(
-                "proxyKernel", 
-                new NullKernelCommandAndEventReceiver(), 
-                new NullKernelCommandAndEventSender());
-
-            var parser = CreateSubmissionParser(additionalKernels:new Kernel[]{proxyKernel});
-            
-            var code = @"Console.WriteLine(""Hello from Proxy"");
-
-#!time
-var a = 12;
-
-#!time
-var b = 22;";
-
-            var submission = $@"#!{proxyKernel.Name}
-{code}";
-
-            var tree = parser.Parse(submission);
-
-            var nodes = tree.GetRoot()
-                .ChildNodes.ToList();
-
-            nodes
-                .First()
-                .As<ProxyKernelNameDirectiveNode>()
-                .Should()
-                .NotBeNull();
-
-            nodes
-                .Should()
-                .ContainSingle<LanguageNode>(n => n.GetType() == typeof(LanguageNode))
-                .Which
-                .Text
-                .Should()
-                .Be(code);
-        }
-
-        [Fact]
-        public void When_targeting_a_local_kernel_after_targeting_a_proxy_kernel_splitting_resumes()
-        {
-
-            var proxyKernel = new ProxyKernel(
-                "proxyKernel",
-                new NullKernelCommandAndEventReceiver(),
-                new NullKernelCommandAndEventSender());
-
-            var parser = CreateSubmissionParser(additionalKernels: new Kernel[] { proxyKernel });
-
-            var proxyCode = @"Console.WriteLine(""Hello from Proxy"");
-
-#!time
-var a = 12;
-
-#!time
-var b = 22;";
-
-            var submission = $@"#!{proxyKernel.Name}
-{proxyCode}
-#!csharp
-var d = 12;
-#!time
-Console.WriteLine(d);
-";
-
-            var tree = parser.Parse(submission);
-
-            var nodes = tree.GetRoot()
-                .ChildNodes.ToList();
-
-            var codeNodes = nodes.Where(n => n.GetType() == typeof(LanguageNode)).Select(n => n.Text). ToList();
-
-
-            codeNodes.Should().BeEquivalentTo(
-                $@"{proxyCode}
-", 
-                @"var d = 12;
-", 
-                @"Console.WriteLine(d);
-");
-
-            nodes.Should().ContainSingle<DirectiveNode>( n => n.Text.StartsWith("#!time"));
-
-        }
-
+       
         private static SubmissionParser CreateSubmissionParser(
             string defaultLanguage = "csharp", IEnumerable<Kernel> additionalKernels = null)
         {
@@ -442,5 +374,40 @@ Console.WriteLine(d);
 
             return compositeKernel.SubmissionParser;
         }
+
+        [Fact]
+        public async Task ParsedDirectives_With_Args_Consume_Newlines()
+        {
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel().UseValueSharing(),
+                new FSharpKernel().UseValueSharing(),
+            };
+
+            var csharpCode = @"
+int x = 123;
+int y = 456;";
+
+            await kernel.SubmitCodeAsync(csharpCode);
+
+            var fsharpCode = @"
+#!share --from csharp x
+#!share --from csharp y
+Console.WriteLine($""{x} {y}"");";
+            var commands = kernel.SubmissionParser.SplitSubmission(new SubmitCode(fsharpCode));
+
+            commands
+                .Should()
+                .HaveCount(3)
+                .And
+                .ContainSingle<SubmitCode>()
+                .Which
+                .Code
+                .Should()
+                .NotBeEmpty();
+
+        }
     }
+
+    
 }

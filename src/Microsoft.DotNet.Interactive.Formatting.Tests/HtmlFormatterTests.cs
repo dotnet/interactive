@@ -1,4 +1,4 @@
-// Copyright (c) .NET Foundation and contributors. All rights reserved.
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -1270,6 +1270,26 @@ string";
 
                 html.Should().Contain(
                     "<tr><td><span>&quot;apple&quot;</span></td></tr><tr><td><span>&quot;banana&quot;</span></td></tr><tr><td><span>&quot;cherry&quot;</span></td></tr>");
+            }
+
+            [Fact]
+            public void Strings_with_escaped_sequences_are_encoded()
+            {
+                var value = "hola! \n \t \" \" ' ' the joy of escapes! ==> &   white  space  ";
+
+                var text = value.ToDisplayString("text/html");
+
+                text.Should().Be("<div class=\"dni-plaintext\">hola! \n \t &quot; &quot; &#39; &#39; the joy of escapes! ==&gt; &amp;   white  space  </div>");
+            }
+
+            [Fact]
+            public void Strings_with_unicode_sequences_are_encoded()
+            {
+                var value = "hola! ʰ˽˵ΘϱϪԘÓŴ𝓌🦁♿🌪🍒☝🏿";
+
+                var text = value.ToDisplayString("text/html");
+
+                text.Should().Be($"<div class=\"dni-plaintext\">{value.HtmlEncode()}</div>");
             }
         }
     }

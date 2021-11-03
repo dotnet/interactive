@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             using var kernel = new CompositeKernel
             {
                 new CSharpKernel().UseNugetDirective(),
-                new SQLKernel(),
+                new SqlDiscoverabilityKernel(),
                 new KeyValueStoreKernel()
             };
 
@@ -61,7 +61,7 @@ SELECT * FROM fruit
             using var kernel = new CompositeKernel
             {
                 new CSharpKernel().UseNugetDirective(),
-                new SQLKernel(),
+                new SqlDiscoverabilityKernel(),
                 new KeyValueStoreKernel()
             };
 

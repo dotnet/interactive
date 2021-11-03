@@ -11,11 +11,7 @@ namespace Microsoft.DotNet.Interactive.Events
     {
         protected KernelEvent(KernelCommand command)
         {
-            if (command is null)
-            {
-                throw new ArgumentNullException(nameof(command));
-            }
-            Command = command;
+            Command = command ?? throw new ArgumentNullException(nameof(command));
         }
 
 

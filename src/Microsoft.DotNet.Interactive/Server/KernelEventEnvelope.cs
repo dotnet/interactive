@@ -57,6 +57,7 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(CodeSubmissionReceived)] = typeof(KernelEventEnvelope<CodeSubmissionReceived>),
                 [nameof(CommandFailed)] = typeof(KernelEventEnvelope<CommandFailed>),
                 [nameof(CommandSucceeded)] = typeof(KernelEventEnvelope<CommandSucceeded>),
+                [nameof(CommandCancelled)] = typeof(KernelEventEnvelope<CommandCancelled>),
                 [nameof(CompleteCodeSubmissionReceived)] = typeof(KernelEventEnvelope<CompleteCodeSubmissionReceived>),
                 [nameof(CompletionsProduced)] = typeof(KernelEventEnvelope<CompletionsProduced>),
                 [nameof(DiagnosticLogEntryProduced)] = typeof(KernelEventEnvelope<DiagnosticLogEntryProduced>),
@@ -194,7 +195,9 @@ namespace Microsoft.DotNet.Interactive.Server
                     command = commandEnvelope.Command,
                     commandType = commandEnvelope.CommandType,
                     token = eventEnvelope.Event.Command.GetOrCreateToken(),
-                    id = commandEnvelope.CommandId
+                    id = commandEnvelope.CommandId,
+                    originUri = commandEnvelope.OriginUri?.ToString()?? string.Empty,
+                    destinationUri = commandEnvelope.DestinationUri?.ToString() ?? string.Empty
                 };
             }
 

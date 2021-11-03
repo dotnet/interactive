@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using Microsoft.AspNetCore.Html;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
@@ -26,6 +27,20 @@ namespace Microsoft.DotNet.Interactive.Formatting.TabularData
                          .ToArray();
 
                 Html.Table(headers, rows).WriteTo(context);
+            });
+
+            yield return new JsonFormatter<TabularDataResource>((value, context) =>
+            {
+                var json = JsonSerializer.Serialize(value.Data, TabularDataResourceFormatter.JsonSerializerOptions);
+
+                context.Writer.Write(json);
+            });
+
+            yield return new TabularDataResourceFormatter<TabularDataResource>((value, context) =>
+            {
+                var json = JsonSerializer.Serialize(value, TabularDataResourceFormatter.JsonSerializerOptions);
+
+                context.Writer.Write(json);
             });
         }
     }

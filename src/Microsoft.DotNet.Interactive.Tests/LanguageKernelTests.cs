@@ -16,7 +16,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-
+using Microsoft.DotNet.Interactive.ValueSharing;
 using Xunit;
 using Xunit.Abstractions;
 using DiagnosticsProduced = Microsoft.DotNet.Interactive.Events.DiagnosticsProduced;
@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             await SubmitCode(kernel, source);
 
-            var result = await kernel.SendAsync(new RequestValue(valueName, kernel.Name, mimeType));
+            var result = await kernel.SendAsync(new RequestValue(valueName, language.LanguageName(), mimeType));
             var kernelEvents = result.KernelEvents.ToSubscribedList();
 
             kernelEvents
@@ -1292,11 +1292,11 @@ Console.Write(2);
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         [InlineData(Language.PowerShell)]
-        public async Task SetVariableAsync_declares_the_specified_variable(Language language)
+        public async Task SetValueAsync_declares_the_specified_variable(Language language)
         {
             var kernel = CreateKernel(language);
 
-            var languageKernel = kernel.ChildKernels.OfType<ISupportSetValue>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<ISupportSetClrValue>().Single();
 
             await languageKernel.SetValueAsync("x", 123);
 
@@ -1312,11 +1312,11 @@ Console.Write(2);
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         [InlineData(Language.PowerShell)]
-        public async Task SetVariableAsync_overwrites_an_existing_variable_of_the_same_type(Language language)
+        public async Task SetValueAsync_overwrites_an_existing_variable_of_the_same_type(Language language)
         {
             var kernel = CreateKernel(language);
 
-            var languageKernel = kernel.ChildKernels.OfType<ISupportSetValue>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<ISupportSetClrValue>().Single();
 
             await languageKernel.SetValueAsync("x", 123);
             await languageKernel.SetValueAsync("x", 456);
@@ -1333,11 +1333,11 @@ Console.Write(2);
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         [InlineData(Language.PowerShell)]
-        public async Task SetVariableAsync_can_redeclare_an_existing_variable_and_change_its_type(Language language)
+        public async Task SetValueAsync_can_redeclare_an_existing_variable_and_change_its_type(Language language)
         {
             var kernel = CreateKernel(language);
 
-            var languageKernel = kernel.ChildKernels.OfType<ISupportSetValue>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<ISupportSetClrValue>().Single();
 
             await languageKernel.SetValueAsync("x", 123);
             await languageKernel.SetValueAsync("x", "hello");

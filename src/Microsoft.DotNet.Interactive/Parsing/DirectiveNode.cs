@@ -13,7 +13,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
     public abstract class DirectiveNode : LanguageNode
     {
         private ParseResult? _parseResult;
-
        
         internal DirectiveNode(
             DirectiveToken directiveToken,

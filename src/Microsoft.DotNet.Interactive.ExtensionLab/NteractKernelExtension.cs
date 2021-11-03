@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Html;
@@ -11,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
     {
         public Task OnLoadAsync(Kernel kernel)
         {
-            kernel.UseNteractDataExplorer();
+            kernel.UseNteractDataExplorer(libraryUri:new Uri(@"https://colombod.github.io/dotnet-interactive-cdn/extensionlab/1.0.252001/nteract/nteractapi.js", UriKind.Absolute), libraryVersion: "1.0.252001");
             
             KernelInvocationContext.Current?.Display(
                 new HtmlString($@"<details><summary>Explore data visually using the <a href=""https://github.com/nteract/data-explorer"">nteract Data Explorer</a>.</summary>
@@ -25,6 +26,13 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
     var dataFrame = DataFrame.LoadCsv(""./Data.csv"");
 
     dataFrame.ExploreWithNteract().Display();
+    </code>
+</pre>
+
+<p>To set the nteract Data Explorer use the following code</p>
+<pre>
+    <code>
+    DataExplorer.SetDefault<TabularDataResource, NteractDataExplorer>();
     </code>
 </pre>
     <img src=""https://user-images.githubusercontent.com/547415/109559345-621e5880-7a8f-11eb-8b98-d4feeaac116f.png"" width=""75%"">

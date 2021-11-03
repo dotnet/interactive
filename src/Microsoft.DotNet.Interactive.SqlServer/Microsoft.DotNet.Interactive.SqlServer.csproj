@@ -27,12 +27,12 @@
      <PrivateAssets>all</PrivateAssets>
      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
    </PackageReference>
-   <PackageReference Include="StreamJsonRpc" Version="2.6.121" />
+   <PackageReference Include="StreamJsonRpc" Version="2.8.28" />
  </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.CSharp\Microsoft.DotNet.Interactive.CSharp.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" PrivateAssets="All" />
-    <ProjectReference Include="..\Microsoft.DotNet.Interactive.ExtensionLab\Microsoft.DotNet.Interactive.ExtensionLab.csproj" />
   </ItemGroup>
 
   <ItemGroup>
