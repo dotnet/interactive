@@ -221,7 +221,7 @@ async function updateCellOutputs(executionTask: vscode.NotebookCellExecution, ou
             // If current nad previous items are of the same stream type then append currentItem to previousOutput.
             const currentItem = generateVsCodeNotebookCellOutputItem(o.items[0].data, o.items[0].mime, o.items[0].stream);
             const previousOutput = reshapedOutputs.length ? reshapedOutputs[reshapedOutputs.length - 1] : undefined;
-            const previousOutputItem = previousOutput?.items.length == 1 ? previousOutput.items[0] : undefined;
+            const previousOutputItem = previousOutput?.items.length === 1 ? previousOutput.items[0] : undefined;
 
             if (previousOutput && previousOutputItem?.mime && streamMimetypes.includes(previousOutputItem?.mime) && streamMimetypes.includes(currentItem.mime)) {
                 const decoder = new TextDecoder();
