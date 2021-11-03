@@ -213,22 +213,26 @@ export async function updateCellLanguages(document: vscode.NotebookDocument): Pr
 async function updateCellOutputs(executionTask: vscode.NotebookCellExecution, outputs: Array<vscodeLike.NotebookCellOutput>): Promise<void> {
     const reshapedOutputs: vscode.NotebookCellOutput[] = [];
     outputs.forEach(async (o) => {
-        const items = o.items.map(oi => generateVsCodeNotebookCellOutputItem(oi.data, oi.mime, oi.stream));
+        if (o.items.length > 1) {
+            reshapedOutputs.push(new vscode.NotebookCellOutput(o.items));
+        } else {
+            const items = o.items.map(oi => generateVsCodeNotebookCellOutputItem(oi.data, oi.mime, oi.stream));
 
-        // If all of these items are of the same stream type & previous item is the same stream, then append it.
-        const streamMimetypes = ['application/vnd.code.notebook.stderr', 'application/vnd.code.notebook.stdout'];
-        items.forEach(currentItem => {
-            const previousOutput = reshapedOutputs.length ? reshapedOutputs[reshapedOutputs.length - 1] : undefined;
-            const previousOutputItem = previousOutput?.items.length ? previousOutput.items[previousOutput.items.length - 1] : undefined;
-            if (previousOutput && previousOutputItem?.mime && streamMimetypes.includes(previousOutputItem?.mime) && streamMimetypes.includes(currentItem.mime)) {
-                const decoder = new TextDecoder();
-                const newText = `${decoder.decode(previousOutputItem.data)}${decoder.decode(currentItem.data)}`;
-                const newItem = previousOutputItem.mime === 'application/vnd.code.notebook.stderr' ? vscode.NotebookCellOutputItem.stderr(newText) : vscode.NotebookCellOutputItem.stdout(newText);
-                previousOutput.items[previousOutput.items.length - 1] = newItem;
-            } else {
-                reshapedOutputs.push(new vscode.NotebookCellOutput(items));
-            }
-        });
+            // If all of these items are of the same stream type & previous item is the same stream, then append it.
+            const streamMimetypes = ['application/vnd.code.notebook.stderr', 'application/vnd.code.notebook.stdout'];
+            items.forEach(currentItem => {
+                const previousOutput = reshapedOutputs.length ? reshapedOutputs[reshapedOutputs.length - 1] : undefined;
+                const previousOutputItem = previousOutput?.items.length ? previousOutput.items[previousOutput.items.length - 1] : undefined;
+                if (previousOutput && previousOutputItem?.mime && streamMimetypes.includes(previousOutputItem?.mime) && streamMimetypes.includes(currentItem.mime)) {
+                    const decoder = new TextDecoder();
+                    const newText = `${decoder.decode(previousOutputItem.data)}${decoder.decode(currentItem.data)}`;
+                    const newItem = previousOutputItem.mime === 'application/vnd.code.notebook.stderr' ? vscode.NotebookCellOutputItem.stderr(newText) : vscode.NotebookCellOutputItem.stdout(newText);
+                    previousOutput.items[previousOutput.items.length - 1] = newItem;
+                } else {
+                    reshapedOutputs.push(new vscode.NotebookCellOutput(items));
+                }
+            });
+        }
     });
     await executionTask.replaceOutput(reshapedOutputs);
 }
