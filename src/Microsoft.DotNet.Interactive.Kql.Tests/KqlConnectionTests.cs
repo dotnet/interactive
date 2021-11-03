@@ -144,7 +144,7 @@ StormEvents | take 10
                   .NotContainErrors();
 
             result = await kernel.SubmitCodeAsync($@"
-#!kql-KustoHelp --mime-type {TabularDataResourceFormatter.MimeType}
+#!kql-KustoHelp
 StormEvents | take 10
 ");
 
@@ -214,7 +214,7 @@ StormEvents | take 10
                   .NotContainErrors();
 
             result = await kernel.SubmitCodeAsync($@"
-#!kql-KustoHelp --mime-type {TabularDataResourceFormatter.MimeType}
+#!kql-KustoHelp
 StormEvents | take 0
 ");
 

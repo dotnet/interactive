@@ -151,7 +151,7 @@ SELECT TOP 100 * FROM Person.Person
                   .NotContainErrors();
 
             result = await kernel.SubmitCodeAsync($@"
-#!sql-adventureworks --mime-type {TabularDataResourceFormatter.MimeType}
+#!sql-adventureworks
 select * from sys.databases
 ");
 
@@ -182,7 +182,7 @@ select * from sys.databases
                 .NotContainErrors();
 
             result = await kernel.SubmitCodeAsync($@"
-#!sql-adventureworks --mime-type {TabularDataResourceFormatter.MimeType}
+#!sql-adventureworks
 select * from sys.databases
 ");
 
