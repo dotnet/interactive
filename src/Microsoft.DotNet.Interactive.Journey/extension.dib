@@ -1,0 +1,8 @@
+#!csharp
+
+using Microsoft.DotNet.Interactive.Journey;
+using System;
+using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive;
+
+Task.Run(() => Microsoft.DotNet.Interactive.Journey.Main.OnLoadAsync(Kernel.Root)).Wait();
