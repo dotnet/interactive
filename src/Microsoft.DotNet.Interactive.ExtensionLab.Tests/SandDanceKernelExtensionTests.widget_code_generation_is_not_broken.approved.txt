@@ -3,7 +3,7 @@
 </div>
 <script type="text/javascript">
 
-let renderSandDanceExplorer_00000000000000000000000000000000 = () => {
+renderSandDanceExplorer_00000000000000000000000000000000 = () => {
 
     (require.config({ 'paths': { 'context': '1.0.252001', 'sandDanceUri' : 'https://colombod.github.io/dotnet-interactive-cdn/extensionlab/1.0.252001/SandDance/sanddanceapi', 'urlArgs': 'cacheBuster=00000000000000000000000000000000' }}) || require)(['sandDanceUri'], (sandDance) => {
 

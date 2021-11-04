@@ -3,19 +3,19 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Invocation;
+using System.CommandLine.Parsing;
 using System.Data;
 using System.Threading.Tasks;
+
 using Microsoft.Data.SqlClient.Server;
-using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
     internal class MsSqlKernel : ToolsServiceKernel
     {
         private readonly string _connectionString;
+        private ChooseMsSqlKernelDirective _chooseKernelDirective;
 
         internal MsSqlKernel(
             string name,
@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             {
                 throw new ArgumentException("Value cannot be null or whitespace.", nameof(connectionString));
             }
-            
+
             _connectionString = connectionString;
         }
 
@@ -40,35 +40,8 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             }
         }
 
-        protected override ChooseKernelDirective CreateChooseKernelDirective() =>
-            new ChooseMsSqlKernelDirective(this);
+        public override ChooseMsSqlKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= new(this);
 
-        private class ChooseMsSqlKernelDirective : ChooseKernelDirective
-        {
-            public ChooseMsSqlKernelDirective(Kernel kernel) : base(kernel, $"Run a T-SQL query using the \"{kernel.Name}\" connection.")
-            {
-                Add(MimeTypeOption);
-            }
-
-            private Option<string> MimeTypeOption { get; } = new(
-                "--mime-type",
-                description: "Specify the MIME type to use for the data.",
-                getDefaultValue: () => HtmlFormatter.MimeType);
-
-            protected override async Task Handle(KernelInvocationContext kernelInvocationContext, InvocationContext commandLineInvocationContext)
-            {
-                await base.Handle(kernelInvocationContext, commandLineInvocationContext);
-
-                switch (kernelInvocationContext.Command)
-                {
-                    case SubmitCode c:
-                        var mimeType = commandLineInvocationContext.ParseResult.ValueForOption(MimeTypeOption);
-
-                        c.Properties.Add("mime-type", mimeType);
-                        break;
-                }
-            }
-        }
 
         protected override string CreateVariableDeclaration(string name, object value)
         {
@@ -121,6 +94,16 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             }
 
             return true;
+        }
+
+        protected override void StoreQueryResults(IReadOnlyCollection<TabularDataResource> results, ParseResult commandKernelChooserParseResult)
+        {
+            var chooser = (ChooseMsSqlKernelDirective)ChooseKernelDirective;
+            var name = commandKernelChooserParseResult.ValueForOption(chooser.NameOption);
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                QueryResults[name] = results;
+            }
         }
     }
 }

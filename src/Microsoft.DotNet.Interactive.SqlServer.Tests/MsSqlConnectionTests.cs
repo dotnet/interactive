@@ -151,7 +151,7 @@ SELECT TOP 100 * FROM Person.Person
                   .NotContainErrors();
 
             result = await kernel.SubmitCodeAsync($@"
-#!sql-adventureworks --mime-type {TabularDataResourceFormatter.MimeType}
+#!sql-adventureworks
 select * from sys.databases
 ");
 
@@ -182,7 +182,7 @@ select * from sys.databases
                 .NotContainErrors();
 
             result = await kernel.SubmitCodeAsync($@"
-#!sql-adventureworks --mime-type {TabularDataResourceFormatter.MimeType}
+#!sql-adventureworks
 select * from sys.databases
 ");
 
@@ -212,7 +212,7 @@ select * from sys.databases
                   .NotContainErrors();
 
             result = await kernel.SubmitCodeAsync($@"
-#!sql-adventureworks --mime-type {TabularDataResourceFormatter.MimeType}
+#!sql-adventureworks
 use tempdb;
 create table dbo.EmptyTable(column1 int, column2 int, column3 int);
 select * from dbo.EmptyTable;
@@ -229,7 +229,7 @@ drop table dbo.EmptyTable;
         }
 
         [MsSqlFact]
-        public async Task Can_share_last_result_set_with_other_kernels()
+        public async Task It_can_store_result_set_with_a_name()
         {
             var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
             using var kernel = await CreateKernelAsync();
@@ -238,15 +238,15 @@ drop table dbo.EmptyTable;
 
             // Run query with result set
             await kernel.SubmitCodeAsync($@"
-#!sql-adventureworks
+#!sql-adventureworks --name my_data_result
 select * from sys.databases
 ");
 
             // Use share to fetch result set
             var csharpResults = await kernel.SubmitCodeAsync($@"
 #!csharp
-#!share --from sql-adventureworks {ToolsServiceKernel.LastQueryResultsInfoName}
-{ToolsServiceKernel.LastQueryResultsInfoName}");
+#!share --from sql-adventureworks my_data_result
+my_data_result");
 
             // Verify the variable loaded is of the correct type and has the expected number of result sets
             var csharpEvents = csharpResults.KernelEvents.ToSubscribedList();
@@ -262,53 +262,7 @@ select * from sys.databases
                 .Be(1);
         }
 
-        [MsSqlFact]
-        public async Task Last_result_set_reflects_last_query_ran()
-        {
-            var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
-            using var kernel = await CreateKernelAsync();
-            await kernel.SubmitCodeAsync(
-                             $"#!connect --kernel-name adventureworks mssql \"{connectionString}\"");
-
-            // Run first query with 1 result set returned
-            await kernel.SubmitCodeAsync($@"
-#!sql-adventureworks
-select * from sys.databases
-");
-
-            // Load the last
-            await kernel.SubmitCodeAsync($@"
-#!csharp
-#!share --from sql-adventureworks {ToolsServiceKernel.LastQueryResultsInfoName}
-{ToolsServiceKernel.LastQueryResultsInfoName}");
-
-            // Now run another query with 2 result sets
-            await kernel.SubmitCodeAsync($@"
-#!sql-adventureworks
-select * from sys.databases
-select * from sys.tables
-");
-
-            // Refresh lastQueryResults variable
-            var csharpResults = await kernel.SubmitCodeAsync($@"
-#!csharp
-#!share --from sql-adventureworks {ToolsServiceKernel.LastQueryResultsInfoName}
-{ToolsServiceKernel.LastQueryResultsInfoName}");
-
-            // And verify that the lastQueryResults has the expected number of result sets
-            var csharpEvents = csharpResults.KernelEvents.ToSubscribedList();
-            csharpEvents
-                .Should()
-                .ContainSingle<ReturnValueProduced>()
-                .Which
-                .Value
-                .Should()
-                .BeAssignableTo<IEnumerable<TabularDataResource>>()
-                .Which.Count()
-                .Should()
-                .Be(2);
-        }
-
+       
         [MsSqlTheory]
         [InlineData("var testVar = 2;", 2)] // var
         [InlineData("string testVar = \"hi!\";", "hi!")] // string

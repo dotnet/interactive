@@ -1,7 +1,7 @@
 <div style="background-color:white;">
 <script type="text/javascript">
 
-let loadMermaid_00000000000000000000000000000000 = () => {
+loadMermaid_00000000000000000000000000000000 = () => {
  
         (require.config({ 'paths': { 'context': '1.0.252001', 'mermaidUri' : 'https://colombod.github.io/dotnet-interactive-cdn/extensionlab/1.0.252001/mermaid/mermaidapi', 'urlArgs': 'cacheBuster=00000000000000000000000000000000' }}) || require)(['mermaidUri'], (mermaid) => {
 

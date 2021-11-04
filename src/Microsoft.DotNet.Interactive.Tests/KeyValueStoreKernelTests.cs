@@ -191,7 +191,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .Be("The --from-url option cannot be used in combination with a content submission.");
         }
 
-        [Fact(Skip = "https://github.com/dotnet/interactive/issues/1486")]
+        [Fact]
         public async Task when_from_url_is_used_with_content_then_the_response_is_not_stored()
         {
             using var kernel = CreateKernel();
@@ -209,6 +209,34 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .GetValueInfos()
                 .Should()
                 .NotContain(vi => vi.Name == "hi");
+        }
+
+        [Fact]
+        public async Task when_from_url_is_used_with_content_then_the_previous_value_is_retained()
+        {
+            using var kernel = CreateKernel();
+
+            var url = $"http://example.com/{Guid.NewGuid():N}";
+
+            await kernel.SubmitCodeAsync($@"
+#!value --name hi 
+// previous content");
+
+            var result = await kernel.SubmitCodeAsync($@"
+#!value --name hi --from-url {url}
+// some content");
+
+            result.KernelEvents.ToSubscribedList();
+
+            kernel
+                .FindKernel("value")
+                .As<ISupportGetValue>()
+                .TryGetValue("hi", out object previousValue)
+                .Should()
+                .BeTrue();
+
+            previousValue.Should()
+                .Be("// previous content");
         }
 
         [Fact]

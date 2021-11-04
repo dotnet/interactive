@@ -695,12 +695,9 @@ namespace Microsoft.DotNet.Interactive
 
         public void Dispose() => _disposables.Dispose();
 
-        protected virtual ChooseKernelDirective CreateChooseKernelDirective()
-        {
-            return new(this);
-        }
+        public virtual ChooseKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= new(this);
 
-        internal ChooseKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= CreateChooseKernelDirective();
+        protected internal ParseResult SelectorParserResults { protected get; set; }
 
         public bool SupportsCommand<T>() where T : KernelCommand
         {

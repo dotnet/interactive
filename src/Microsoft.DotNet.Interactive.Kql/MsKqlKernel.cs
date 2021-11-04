@@ -2,12 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.CommandLine;
-using System.CommandLine.Invocation;
+using System.Collections.Generic;
+using System.CommandLine.Parsing;
 using System.Threading.Tasks;
+
 using Kusto.Data.Common;
-using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Formatting;
+
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.SqlServer;
 
 namespace Microsoft.DotNet.Interactive.Kql
@@ -15,6 +16,7 @@ namespace Microsoft.DotNet.Interactive.Kql
     internal class MsKqlKernel : ToolsServiceKernel
     {
         private readonly KqlConnectionDetails _connectionDetails;
+        private ChooseMsKqlKernelDirective _chooseKernelDirective;
 
         public MsKqlKernel(
             string name,
@@ -34,8 +36,8 @@ namespace Microsoft.DotNet.Interactive.Kql
             }
         }
 
-        protected override ChooseKernelDirective CreateChooseKernelDirective() =>
-            new ChooseKqlKernelDirective(this);
+
+        public override ChooseMsKqlKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= new(this);
 
         protected override string CreateVariableDeclaration(string name, object value)
         {
@@ -70,30 +72,14 @@ namespace Microsoft.DotNet.Interactive.Kql
             return true;
         }
 
-        private class ChooseKqlKernelDirective : ChooseKernelDirective
+
+        protected override void StoreQueryResults(IReadOnlyCollection<TabularDataResource> results, ParseResult commandKernelChooserParseResult)
         {
-            public ChooseKqlKernelDirective(Kernel kernel) : base(kernel, $"Run a Kusto query using the \"{kernel.Name}\" connection.")
+            var chooser = ChooseKernelDirective;
+            var name = commandKernelChooserParseResult.ValueForOption(chooser.NameOption);
+            if (!string.IsNullOrWhiteSpace(name))
             {
-                Add(MimeTypeOption);
-            }
-
-            private Option<string> MimeTypeOption { get; } = new(
-                "--mime-type",
-                description: "Specify the MIME type to use for the data.",
-                getDefaultValue: () => HtmlFormatter.MimeType);
-
-            protected override async Task Handle(KernelInvocationContext kernelInvocationContext, InvocationContext commandLineInvocationContext)
-            {
-                await base.Handle(kernelInvocationContext, commandLineInvocationContext);
-
-                switch (kernelInvocationContext.Command)
-                {
-                    case SubmitCode c:
-                        var mimeType = commandLineInvocationContext.ParseResult.ValueForOption(MimeTypeOption);
-
-                        c.Properties.Add("mime-type", mimeType);
-                        break;
-                }
+                QueryResults[name] = results;
             }
         }
     }

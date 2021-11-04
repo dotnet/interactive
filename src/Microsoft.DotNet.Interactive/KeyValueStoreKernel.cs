@@ -4,10 +4,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Binding;
-using System.CommandLine.Invocation;
-using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -26,6 +22,8 @@ namespace Microsoft.DotNet.Interactive
         internal const string DefaultKernelName = "value";
 
         private readonly ConcurrentDictionary<string, object> _values = new();
+        private ChooseKeyValueStoreKernelDirective _chooseKernelDirective;
+        private (bool hadValue, object previousValue, object newValue)? _lastOperation;
 
         public KeyValueStoreKernel() : base(DefaultKernelName)
         {
@@ -55,40 +53,107 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
+        // todo: change to ChooseKeyValueStoreKernelDirective after removing NetStandardc2.0 dependency
+        public override ChooseKernelDirective ChooseKernelDirective =>
+            _chooseKernelDirective ??= new (this);
+
         public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
         {
-            var parseResult = command.KernelNameDirectiveNode.GetDirectiveParseResult();
+            var parseResult = command.KernelChooserParseResult;
 
             var value = command.LanguageNode.Text.Trim();
 
-            var options = ValueDirectiveOptions.Create(parseResult);
+            var options = ChooseKeyValueStoreKernelDirective.ValueDirectiveOptions.Create(parseResult);
+            
+            await StoreValueAsync(command, context, options, value);
+        }
 
-            if (options.FromFile is {})
+        internal async Task TryStoreValueFromOptionsAsync(KernelInvocationContext context,
+            ChooseKeyValueStoreKernelDirective.ValueDirectiveOptions options)
+        {
+            string newValue = null;
+            var loadedFromOptions = false;
+            if (options.FromFile is { })
+            {
+                newValue = File.ReadAllText(options.FromFile.FullName);
+                loadedFromOptions = true;
+            }
+            else if (options.FromUrl is { })
+            {
+                var client = new HttpClient();
+                var response = await client.GetAsync(options.FromUrl, context.CancellationToken);
+                newValue = await response.Content.ReadAsStringAsync();
+                loadedFromOptions = true;
+            }
+
+            if (loadedFromOptions)
+            {
+
+                var hadValue = TryGetValue(options.Name, out object previousValue);
+
+                _lastOperation = (hadValue, previousValue, newValue);
+
+                await StoreValueAsync(newValue, options, context);
+            }
+            else
+            {
+                _lastOperation = null;
+            }
+        }
+
+        private async Task StoreValueAsync(KernelCommand command, KernelInvocationContext context, ChooseKeyValueStoreKernelDirective.ValueDirectiveOptions options,
+            string value = null)
+        {
+            if (options.FromFile is { })
             {
                 if (!string.IsNullOrWhiteSpace(value))
                 {
-                    context.Fail(command, message: "The --from-file option cannot be used in combination with a content submission.");
+                    UndoSetValue();
+                    context.Fail(command,
+                        message: "The --from-file option cannot be used in combination with a content submission.");
                 }
-
-                return;
+                
             }
-
-            if (options.FromUrl is {})
+            else if (options.FromUrl is { })
             {
                 if (!string.IsNullOrWhiteSpace(value))
                 {
-                    context.Fail(command, message: "The --from-url option cannot be used in combination with a content submission.");
+                    UndoSetValue();
+                    context.Fail(command,
+                        message: "The --from-url option cannot be used in combination with a content submission.");
                 }
+            }
+            else
+            {
 
-                return;
+                await StoreValueAsync(value, options, context);
             }
 
-            await StoreValueAsync(value, options, context);
+            _lastOperation = default;
+
+            void UndoSetValue()
+            {
+                if (_lastOperation is {})
+                {
+                    if (_lastOperation?.hadValue == true)
+                    {
+                        // restore value
+                        _values[options.Name] = _lastOperation?.previousValue;
+                    }
+                    else
+                    {
+                        // remove entry
+                        _values.TryRemove(options.Name, out _);
+                    }
+
+                    _lastOperation = null;
+                }
+            }
         }
 
         private async Task StoreValueAsync(
             string value,
-            ValueDirectiveOptions options,
+            ChooseKeyValueStoreKernelDirective.ValueDirectiveOptions options,
             KernelInvocationContext context)
         {
             await SetValueAsync(options.Name, value);
@@ -97,109 +162,6 @@ namespace Microsoft.DotNet.Interactive
             {
                 context.DisplayAs(value, mimeType);
             }
-        }
-
-        protected override ChooseKernelDirective CreateChooseKernelDirective()
-        {
-            var nameOption = new Option<string>(
-                "--name",
-                "The name of the value to create. You can use #!share to retrieve this value from another subkernel.")
-            {
-                IsRequired = true
-            };
-
-            var fromUrlOption = new Option<Uri>(
-                "--from-url",
-                description: "Specifies a URL whose content will be stored.");
-
-            var fromFileOption = new Option<FileInfo>(
-                "--from-file",
-                description: "Specifies a file whose contents will be stored.",
-                parseArgument: result =>
-                {
-                    var filePath = result.Tokens.Single().Value;
-
-                    var fromUrlResult = result.FindResultFor(fromUrlOption);
-
-                    if (fromUrlResult is {})
-                    {
-                        result.ErrorMessage = $"The {fromUrlResult.Token.Value} and {((OptionResult) result.Parent).Token.Value} options cannot be used together.";
-                        return null;
-                    }
-                    else if (!File.Exists(filePath))
-                    {
-                        result.ErrorMessage = Resources.Instance.FileDoesNotExist(filePath);
-                        return null;
-                    }
-                    else
-                    {
-                        return new FileInfo(filePath);
-                    }
-                });
-
-            var mimeTypeOption = new Option<string>(
-                    "--mime-type",
-                    "A mime type for the value. If specified, displays the value immediately as an output using the specified mime type.")
-                .AddSuggestions((_,__) => new[]
-                {
-                    "application/json",
-                    "text/html",
-                    "text/plain",
-                    "text/csv"
-                });
-
-            return new ValueDirective(this, "Stores a value that can then be shared with other subkernels.")
-            {
-                nameOption,
-                fromFileOption,
-                fromUrlOption,
-                mimeTypeOption
-            };
-        }
-
-        private class ValueDirective : ChooseKernelDirective
-        {
-            private readonly KeyValueStoreKernel _kernel;
-
-            public ValueDirective(KeyValueStoreKernel kernel, string description = null) : base(kernel, description)
-            {
-                _kernel = kernel;
-            }
-
-            protected override async Task Handle(KernelInvocationContext kernelInvocationContext, InvocationContext commandLineInvocationContext)
-            {
-                var options = ValueDirectiveOptions.Create(commandLineInvocationContext.ParseResult);
-
-                if (options.FromFile is {} fromFile)
-                {
-                    var value = File.ReadAllText(fromFile.FullName);
-                    await _kernel.StoreValueAsync(value, options, kernelInvocationContext);
-                }
-                else if (options.FromUrl is {} fromUrl)
-                {
-                    var client = new HttpClient();
-                    var response = await client.GetAsync(fromUrl, kernelInvocationContext.CancellationToken);
-                    var value = await response.Content.ReadAsStringAsync();
-                    await _kernel.StoreValueAsync(value, options, kernelInvocationContext);
-                }
-
-                await base.Handle(kernelInvocationContext, commandLineInvocationContext);
-            }
-        }
-
-        private class ValueDirectiveOptions
-        {
-            private static readonly ModelBinder<ValueDirectiveOptions> _modelBinder = new();
-
-            public static ValueDirectiveOptions Create(ParseResult parseResult) => _modelBinder.CreateInstance(new BindingContext(parseResult)) as ValueDirectiveOptions;
-
-            public string Name { get; set; }
-
-            public FileInfo FromFile { get; set; }
-
-            public Uri FromUrl { get; set; }
-
-            public string MimeType { get; set; }
         }
     }
 }
