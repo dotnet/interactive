@@ -210,7 +210,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             return false;
         }
 
-        internal static Type? GetElementTypeIfEnumerable(this Type type)
+        internal static Type GetElementTypeIfEnumerable(this Type type)
         {
             if (type.IsArray)
             {
