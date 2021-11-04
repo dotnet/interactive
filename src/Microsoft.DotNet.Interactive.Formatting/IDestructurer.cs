@@ -8,5 +8,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
     public interface IDestructurer
     {
         IDictionary<string, object> Destructure(object instance);
+        
+        ICollection<string> Keys { get; }
     }
 }

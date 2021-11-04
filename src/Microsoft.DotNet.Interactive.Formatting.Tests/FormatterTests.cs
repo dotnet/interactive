@@ -213,7 +213,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Theory]
             [InlineData("text/html", "<div class=\"dni-plaintext\"># { This is the &lt;input&gt; &quot;yes&quot;\t\b\n\r }</div>")]
             [InlineData("text/plain", "# { This is the <input> \"yes\"\t\b\n\r }")]
-            [InlineData("text/markdown", "# { This is the <input> \"yes\"\t\b\n\r }")]
             [InlineData("application/json", "\"# { This is the <input> \\\"yes\\\"\\t\\b\\n\\r }\"")]
             public void When_input_is_a_string_with_unusual_characters_then_it_is_encoded_appropriately(string mimeType, string expected)
             {
@@ -694,36 +693,5 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 Formatter.GetPreferredMimeTypesFor(typeof(int)).Should().BeEquivalentTo("text/html");
             }
         }
-    }
-}
-
-namespace Dummy
-{
-    public class DummyNotInSystemNamespace { }
-    public class DummyWithNoProperties{ }
-
-    public class DummyClassWithManyProperties
-    {
-        public int X1 { get; } = 1;
-        public int X2 { get; } = 2;
-        public int X3 { get; } = 3;
-        public int X4 { get; } = 4;
-        public int X5 { get; } = 5;
-        public int X6 { get; } = 6;
-        public int X7 { get; } = 7;
-        public int X8 { get; } = 8;
-        public int X9 { get; } = 9;
-        public int X10 { get; } = 10;
-        public int X11 { get; } = 11;
-        public int X12 { get; } = 12;
-        public int X13 { get; } = 13;
-        public int X14 { get; } = 14;
-        public int X15 { get; } = 15;
-        public int X16 { get; } = 16;
-        public int X17 { get; } = 17;
-        public int X18 { get; } = 18;
-        public int X19 { get; } = 19;
-        public int X20 { get; } = 20;
-        public int X21 { get; } = 21;
     }
 }

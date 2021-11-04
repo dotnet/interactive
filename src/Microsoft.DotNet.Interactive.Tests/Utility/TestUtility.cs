@@ -318,17 +318,18 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 
     internal static class TestUtility
     {
-        internal static TabularDataResource GetTabularData(SubscribedList<KernelEvent> events)
+        internal static TabularDataResource ShouldDisplayTabularDataResourceWhich(
+            this SubscribedList<KernelEvent> events)
         {
             events.Should().NotContainErrors();
 
-            return ((DataExplorer<TabularDataResource>)events
-                           .Should()
-                           .ContainSingle<DisplayedValueProduced>(e =>
-                                                                      e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
-                           .Which
-                           .Value
-                    ).Data;
+            return events
+                   .Should()
+                   .ContainSingle<DisplayedValueProduced>(e => e.Value is DataExplorer<TabularDataResource>)
+                   .Which
+                   .Value
+                   .As<DataExplorer<TabularDataResource>>()
+                   .Data;
         }
     }
 }

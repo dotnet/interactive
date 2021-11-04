@@ -35,10 +35,6 @@ namespace Microsoft.DotNet.Interactive.Commands
                         var valueType = value.GetType();
                         var mimeType = MimeType ?? JsonFormatter.MimeType;
                         var formatter = Formatter.GetPreferredFormatterFor(valueType, mimeType);
-                        if (formatter.MimeType != mimeType)
-                        {
-                            throw new InvalidOperationException($"MimeType {mimeType} is not supported");
-                        }
 
                         using var writer = new StringWriter(CultureInfo.InvariantCulture);
                         formatter.Format(value, writer);

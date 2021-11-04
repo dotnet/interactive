@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.Interactive.Extensions
                     logOnStart: true,
                     args: new object[] { extensionFile });
 
-                context.Display(logMessage, "text/markdown");
+                context.DisplayAs(logMessage, "text/markdown");
 
                 var scriptContents = File.ReadAllText(extensionFile.FullName, Encoding.UTF8);
                 await kernel.SubmitCodeAsync(scriptContents);

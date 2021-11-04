@@ -120,7 +120,7 @@ namespace Microsoft.DotNet.Interactive.Extensions
 
                 if (extensionTypes.Any())
                 {
-                    context.Display($"Loading extensions from `{assemblyFile.Name}`", "text/markdown");
+                    context.DisplayAs($"Loading extensions from `{assemblyFile.Name}`", "text/markdown");
                 }
 
                 foreach (var extensionType in extensionTypes)

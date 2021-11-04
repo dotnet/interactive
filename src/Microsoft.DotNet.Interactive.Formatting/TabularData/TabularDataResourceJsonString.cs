@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.TabularData
         {
         }
 
-        public static TabularDataResourceJsonString Create(IReadOnlyDictionary<string, Type> fields, IEnumerable<IDictionary<string, object>> data)
+        public static TabularDataResourceJsonString Create(IReadOnlyDictionary<string, Type> fields, IReadOnlyList<IDictionary<string, object>> data)
         {
             var schema = new TableSchema();
 
