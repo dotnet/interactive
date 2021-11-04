@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             Formatter.ResetToDefault();
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             Formatter.ResetToDefault();
 

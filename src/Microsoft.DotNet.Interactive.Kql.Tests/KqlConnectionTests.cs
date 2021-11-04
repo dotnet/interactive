@@ -8,6 +8,7 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.ExtensionLab;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
@@ -24,7 +25,6 @@ namespace Microsoft.DotNet.Interactive.Kql.Tests
 #r ""nuget:microsoft.sqltoolsservice,3.0.0-release.53""
 ");
 
-            // TODO: remove KQLKernel it is used to test current patch
             var kernel = new CompositeKernel
             {
                 new KqlDiscoverabilityKernel(),
@@ -150,24 +150,15 @@ StormEvents | take 10
 
             var events = result.KernelEvents.ToSubscribedList();
 
-            events.Should().NotContainErrors();
-
-            var value = events.Should()
-                    .ContainSingle<DisplayedValueProduced>(e =>
-                        e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
-                              .Which;
-
-            var table = (DataExplorer<TabularDataResource>)value.Value;
-
-            table.Data
-                 .Schema
-                 .Fields
-                 .Should()
-                 .ContainSingle(f => f.Name == "StartTime")
-                 .Which
-                 .Type
-                 .Should()
-                 .Be(TableSchemaFieldType.DateTime);
+            events.ShouldDisplayTabularDataResourceWhich()
+                  .Schema
+                  .Fields
+                  .Should()
+                  .ContainSingle(f => f.Name == "StartTime")
+                  .Which
+                  .Type
+                  .Should()
+                  .Be(TableSchemaFieldType.DateTime);
         }
 
         [KqlFact]
@@ -197,7 +188,7 @@ StormEvents | take 10
                 .Which
                 .FormattedValues.Select(fv => fv.MimeType)
                 .Should()
-                .BeEquivalentTo(HtmlFormatter.MimeType, TabularDataResourceFormatter.MimeType);
+                .BeEquivalentTo(HtmlFormatter.MimeType, CsvFormatter.MimeType);
         }
 
         [KqlFact]
@@ -268,14 +259,10 @@ print testVar";
             result = await kernel.SendAsync(new SubmitCode(code));
 
             var events = result.KernelEvents.ToSubscribedList();
-
+            
             events
-                .Should()
-                .NotContainErrors();
-
-            var data = TestUtility.GetTabularData(events);
-
-            data.Data
+                .ShouldDisplayTabularDataResourceWhich()
+                .Data
                 .Should()
                 .ContainSingle()
                 .Which

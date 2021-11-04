@@ -77,7 +77,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Part of Pattern")]
-        public static PlainTextFormatter<T> CreateForAnyEnumerable(bool _includeInternals)
+        public static PlainTextFormatter<T> CreateForAnyEnumerable(bool includeInternals = false)
         {
             return new((value, context) =>
             {

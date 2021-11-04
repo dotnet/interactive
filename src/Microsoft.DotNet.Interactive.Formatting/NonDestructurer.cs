@@ -2,11 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
     internal class NonDestructurer : IDestructurer
     {
+        private static readonly ICollection<string> _keys = new ReadOnlyCollection<string>(new[] { "value" });
+
         private NonDestructurer()
         {
         }
@@ -20,5 +23,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 ["value"] = instance
             };
         }
+
+        public ICollection<string> Keys => _keys;
     }
 }

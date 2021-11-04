@@ -21,6 +21,8 @@ using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Documents.ParserServer;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.Csv;
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Jupyter;
@@ -700,6 +702,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     Formatter.SetPreferredMimeTypesFor(typeof(MathString), "text/latex");
                     Formatter.SetPreferredMimeTypesFor(typeof(string), PlainTextFormatter.MimeType);
                     Formatter.SetPreferredMimeTypesFor(typeof(ScriptContent), HtmlFormatter.MimeType);
+                    Formatter.SetPreferredMimeTypesFor(typeof(TabularDataResource), HtmlFormatter.MimeType, CsvFormatter.MimeType);
 
                     Formatter.Register<LaTeXString>((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
                     Formatter.Register<MathString>((math, writer) => writer.Write(math.ToString()), "text/latex");
