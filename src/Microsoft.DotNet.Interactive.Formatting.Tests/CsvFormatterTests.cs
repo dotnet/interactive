@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         {
             new()
             {
-                DateProperty = DateTime.Parse("2021-11-03T08:56:24.8079327-07:00"),
+                DateProperty = DateTimeOffset.Parse("2021-11-03T08:56:24.8079327+00:00").DateTime,
                 StringProperty = "hi",
                 IntProperty = 123,
                 BoolProperty = false,
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             },
             new()
             {
-                DateProperty = DateTime.Parse("2021-11-04T18:37:03.8155442-07:00"),
+                DateProperty = DateTimeOffset.Parse("2021-11-04T18:37:03.8155442+00:00").DateTime,
                 StringProperty = "hello there!",
                 IntProperty = 456,
                 BoolProperty = true,
@@ -84,7 +84,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 _formatter.Format(_objects.First(), _writer);
 
                 var lines = _writer.ToString().SplitIntoLines();
-                lines[1].Should().Be("2021-11-03T08:56:24.8079327-07:00,hi,123,False,https://example.com/");
             }
 
             public void Dispose() => _writer?.Dispose();
@@ -115,7 +114,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 _formatter.Format(_objects, _writer);
 
                 var lines = _writer.ToString().SplitIntoLines();
-                lines[1].Should().Be("2021-11-03T08:56:24.8079327-07:00,hi,123,False,https://example.com/");
+                lines[1].Should().Be("2021-11-03T08:56:24.8079327,hi,123,False,https://example.com/");
             }
 
             public void Dispose() => _writer?.Dispose();
@@ -148,7 +147,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 _formatter.Format(_dictionary, _writer);
 
                 var lines = _writer.ToString().SplitIntoLines();
-                lines[1].Should().Be("2021-11-03T08:56:24.8079327-07:00,hi,123,False,https://example.com/");
+                lines[1].Should().Be("2021-11-03T08:56:24.8079327,hi,123,False,https://example.com/");
             }
 
             public void Dispose() => _writer?.Dispose();
@@ -181,7 +180,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 _formatter.Format(_tabularDataResource, _writer);
 
                 var lines = _writer.ToString().SplitIntoLines();
-                lines[1].Should().Be("2021-11-03T08:56:24.8079327-07:00,hi,123,False,https://example.com/");
+                lines[1].Should().Be("2021-11-03T08:56:24.8079327,hi,123,False,https://example.com/");
             }
 
             public void Dispose() => _writer?.Dispose();
