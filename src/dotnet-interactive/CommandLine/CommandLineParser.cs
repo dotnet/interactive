@@ -125,17 +125,31 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 clearTextProperties,
                 (commandResult, directives, entryItems) =>
                 {
+                    
+
                     // add frontend
                     var frontendTelemetryAdded = false;
-                    foreach (var directive in directives)
+
+                    // check if is codespaces
+                    if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CODESPACES")))
                     {
-                        switch (directive.Key)
+                        frontendTelemetryAdded = true;
+                        entryItems.Add(new KeyValuePair<string, string>("frontend", "gitHubCodeSpaces"));
+                    }
+
+                    if (!frontendTelemetryAdded)
+                    {
+                        foreach (var directive in directives)
                         {
-                            case "jupyter":
-                            case "synapse":
-                                frontendTelemetryAdded = true;
-                                entryItems.Add(new KeyValuePair<string, string>("frontend", directive.Key));
-                                break;
+                            switch (directive.Key)
+                            {
+                                case "jupyter":
+                                case "synapse":
+                                case "vscode":
+                                    frontendTelemetryAdded = true;
+                                    entryItems.Add(new KeyValuePair<string, string>("frontend", directive.Key));
+                                    break;
+                            }
                         }
                     }
 

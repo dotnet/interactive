@@ -247,6 +247,28 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
+        public async Task githubCodeSpaces_is_a_valid_fronted()
+        {
+            Environment.SetEnvironmentVariable("CODESPACES", "true");
+            try
+            {
+                await _parser.InvokeAsync("[vscode] vscode", _console);
+
+               
+                _fakeTelemetry.LogEntries.Should().Contain(
+                    x => x.EventName == "command" &&
+                         x.Properties.Count == 3 &&
+                         x.Properties["verb"] == Sha256Hasher.Hash("VSCODE") &&
+                         x.Properties["frontend"] == "gitHubCodeSpaces" &&
+                         x.Properties["default-kernel"] == Sha256Hasher.Hash("CSHARP"));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("CODESPACES", null);
+            }
+        }
+
+        [Fact]
         public async Task stdio_command_sends_default_fronted_telemetry()
         {
             await _parser.InvokeAsync("stdio", _console);
