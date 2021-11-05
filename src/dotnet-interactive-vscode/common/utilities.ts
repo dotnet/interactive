@@ -8,6 +8,7 @@ import { v4 as uuid } from 'uuid';
 import { InstallInteractiveArgs, ProcessStart } from "./interfaces";
 import { NotebookCellOutput, NotebookCellOutputItem, ReportChannel, Uri } from './interfaces/vscode-like';
 import * as contracts from './interfaces/contracts';
+import { OutputChannelAdapter } from './vscode/OutputChannelAdapter';
 
 export function executeSafe(command: string, args: Array<string>, workingDirectory?: string | undefined): Promise<{ code: number, output: string, error: string }> {
     return new Promise<{ code: number, output: string, error: string }>(resolve => {
@@ -74,8 +75,16 @@ export function createOutput(outputItems: Array<NotebookCellOutputItem>, outputI
     return output;
 }
 
-export function isDotNetUpToDate(minVersion: string, commandResult: { code: number, output: string }): boolean {
-    return commandResult.code === 0 && isVersionSufficient(getVersionNumber(commandResult.output), minVersion);
+export async function getDotNetVersionOrThrow(dotnetPath: string, outputChannel: OutputChannelAdapter): Promise<string> {
+    const dotnetVersionResult = await executeSafe(dotnetPath, ['--version']);
+    if (dotnetVersionResult.code !== 0) {
+        const message = `Unable to determine the version of the .NET SDK.\nSTDOUT:\n${dotnetVersionResult.output}\nSTDERR:\n${dotnetVersionResult.error}`;
+        outputChannel.appendLine(message);
+        throw new Error(message);
+    }
+
+    const dotnetVersion = getVersionNumber(dotnetVersionResult.output);
+    return dotnetVersion;
 }
 
 export function processArguments(template: { args: Array<string>, workingDirectory: string }, workingDirectory: string, dotnetPath: string, globalStoragePath: string): ProcessStart {
