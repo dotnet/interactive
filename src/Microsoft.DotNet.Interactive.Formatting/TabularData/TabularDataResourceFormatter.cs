@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.TabularData
         {
             var (schema, data) = Generate(source);
 
-            return new TabularDataResource(schema, data);
+            return new TabularDataResource(schema, data.ToArray());
         }
 
         private static (TableSchema schema, IEnumerable<IDictionary<string, object>> data) Generate<T>(IEnumerable<T> source)

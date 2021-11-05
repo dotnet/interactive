@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using System.Text.Json;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
 namespace Microsoft.DotNet.Interactive
@@ -12,19 +13,33 @@ namespace Microsoft.DotNet.Interactive
     {
         public IEnumerable<ITypeFormatter> CreateTypeFormatters()
         {
-            yield return new JsonFormatter<DataExplorer<TabularDataResource>>((value, context) =>
+            yield return new JsonFormatter<DataExplorer<TabularDataResource>>((dataExplorer, context) =>
             {
-                var json = JsonSerializer.Serialize(value.Data.Data,
-                    TabularDataResourceFormatter.JsonSerializerOptions);
+                var json = JsonSerializer.Serialize(dataExplorer.Data.Data,
+                                                    TabularDataResourceFormatter.JsonSerializerOptions);
 
                 context.Writer.Write(json);
             });
 
-            yield return new TabularDataResourceFormatter<DataExplorer<TabularDataResource>>((value, context) =>
+            yield return new TabularDataResourceFormatter<DataExplorer<TabularDataResource>>((dataExplorer, context) =>
             {
-                var json = JsonSerializer.Serialize(value.Data, TabularDataResourceFormatter.JsonSerializerOptions);
+                var json = JsonSerializer.Serialize(dataExplorer.Data, TabularDataResourceFormatter.JsonSerializerOptions);
 
                 context.Writer.Write(json);
+            });
+
+            yield return new CsvFormatter<DataExplorer<TabularDataResource>>((dataExplorer, context) =>
+            {
+                var data = dataExplorer.Data.Data;
+
+                for (var i = 0; i < data.Count; i++)
+                {
+                    var row = data[i];
+
+                    row.FormatTo(context, CsvFormatter.MimeType);
+                }
+
+                return true;
             });
         }
     }

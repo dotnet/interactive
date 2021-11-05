@@ -21,9 +21,9 @@ namespace System
             return KernelInvocationContext.Current.Display(value, mimeTypes);
         }
 
-        public static DisplayedValue DisplayAs(this string value, string mimeType)
+        public static DisplayedValue DisplayAs(this string value, string mimeType, params string[] additionalMimeTypes)
         {
-             return KernelInvocationContext.Current.DisplayAs(value, mimeType);
+             return KernelInvocationContext.Current.DisplayAs(value, mimeType, additionalMimeTypes);
         }
         
     }

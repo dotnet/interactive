@@ -27,6 +27,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
                        comparer: StringComparer.OrdinalIgnoreCase);
         }
 
+        public ICollection<string> Keys => _instanceGetters.Keys;
+
         private static void EnsureInitialized()
         {
             if (_getters is not null)
@@ -98,5 +100,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             return Destructure((T) instance);
         }
+
+        public static Destructurer<T> GetOrCreate() => (Destructurer<T>)Destructurer.GetOrCreate(typeof(T));
     }
 }

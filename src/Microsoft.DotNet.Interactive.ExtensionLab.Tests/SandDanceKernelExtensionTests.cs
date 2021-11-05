@@ -12,6 +12,7 @@ using Assent;
 using FluentAssertions;
 
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Xunit;
 
@@ -40,7 +41,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             var mimetypes = Formatter.GetPreferredMimeTypesFor(typeof(SandDanceDataExplorer)).Distinct();
 
             mimetypes
-                .Should().BeEquivalentTo(HtmlFormatter.MimeType, TabularDataResourceFormatter.MimeType);
+                .Should().BeEquivalentTo(HtmlFormatter.MimeType, CsvFormatter.MimeType);
         }
         
         [Fact]
@@ -101,11 +102,10 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
                 new {Type="grape" , Price=1.4}
             };
 
-
             var formattedValues = FormattedValue.FromObject(data.ExploreWithSandDance());
             formattedValues.Select(fv => fv.MimeType)
                 .Should()
-                .BeEquivalentTo(HtmlFormatter.MimeType, TabularDataResourceFormatter.MimeType);
+                .BeEquivalentTo(HtmlFormatter.MimeType, CsvFormatter.MimeType);
         }
 
         [Fact]
@@ -297,7 +297,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         public void Dispose()
         {
             Formatter.ResetToDefault();
-            SandDanceDataExplorer.ResetDefaultConfiguration();
+            SandDanceDataExplorer.ConfigureDefaults();
         }
     }
 }

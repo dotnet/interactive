@@ -5,7 +5,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-
+using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
 namespace Microsoft.DotNet.Interactive
@@ -15,16 +16,6 @@ namespace Microsoft.DotNet.Interactive
         private static ConcurrentDictionary<Type, HashSet<Type>> Explorers = new();
 
         private static ConcurrentDictionary<Type, Type> DefaultExplorer = new();
-
-        public static IReadOnlyCollection<Type> GetRegisteredExplorers<TData>()
-        {
-            if (Explorers.TryGetValue(typeof(TData), out var explorers))
-            {
-                return explorers;
-            }
-
-            return Array.Empty<Type>();
-        }
 
         static DataExplorer()
         {

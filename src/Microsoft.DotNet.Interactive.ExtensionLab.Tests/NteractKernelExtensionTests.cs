@@ -12,6 +12,7 @@ using Assent;
 using FluentAssertions;
 
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Xunit;
 
@@ -40,7 +41,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             var mimetypes = Formatter.GetPreferredMimeTypesFor(typeof(NteractDataExplorer));
 
             mimetypes
-                .Should().BeEquivalentTo(HtmlFormatter.MimeType, TabularDataResourceFormatter.MimeType);
+                .Should().BeEquivalentTo(HtmlFormatter.MimeType, CsvFormatter.MimeType);
         }
 
 
@@ -102,11 +103,10 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
                 new {Type="grape" , Price=1.4}
             };
 
-
             var formattedValues = FormattedValue.FromObject( data.ExploreWithNteract());
             formattedValues.Select(fv => fv.MimeType)
                 .Should()
-                .BeEquivalentTo(HtmlFormatter.MimeType, TabularDataResourceFormatter.MimeType);
+                .BeEquivalentTo(HtmlFormatter.MimeType, CsvFormatter.MimeType);
         }
 
         [Fact]

@@ -4,6 +4,7 @@
 using Assent;
 using FluentAssertions;
 using FluentAssertions.Primitives;
+using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
 {

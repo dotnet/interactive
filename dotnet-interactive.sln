@@ -84,9 +84,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactiv
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Documents.Tests", "src\Microsoft.DotNet.Interactive.Documents.Tests\Microsoft.DotNet.Interactive.Documents.Tests.csproj", "{BF607791-F6C2-4E41-B916-DF675FA52D5C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.Interactive.Kql", "src\Microsoft.DotNet.Interactive.Kql\Microsoft.DotNet.Interactive.Kql.csproj", "{E6C6763F-538A-42A1-A010-EBE332CF6B1B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Kql", "src\Microsoft.DotNet.Interactive.Kql\Microsoft.DotNet.Interactive.Kql.csproj", "{E6C6763F-538A-42A1-A010-EBE332CF6B1B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.Interactive.Kql.Tests", "src\Microsoft.DotNet.Interactive.Kql.Tests\Microsoft.DotNet.Interactive.Kql.Tests.csproj", "{4193C3BF-DEE3-492D-980B-911767F00A79}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Kql.Tests", "src\Microsoft.DotNet.Interactive.Kql.Tests\Microsoft.DotNet.Interactive.Kql.Tests.csproj", "{4193C3BF-DEE3-492D-980B-911767F00A79}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Journey", "src\Microsoft.DotNet.Interactive.Journey\Microsoft.DotNet.Interactive.Journey.csproj", "{8EACB344-5497-4236-ADC0-D958EC391FC7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Journey.Tests", "src\Microsoft.DotNet.Interactive.Journey.Tests\Microsoft.DotNet.Interactive.Journey.Tests.csproj", "{10FCEA0D-1396-41C9-B256-DE6D0788D410}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -470,6 +474,30 @@ Global
 		{4193C3BF-DEE3-492D-980B-911767F00A79}.Release|x64.Build.0 = Release|Any CPU
 		{4193C3BF-DEE3-492D-980B-911767F00A79}.Release|x86.ActiveCfg = Release|Any CPU
 		{4193C3BF-DEE3-492D-980B-911767F00A79}.Release|x86.Build.0 = Release|Any CPU
+		{8EACB344-5497-4236-ADC0-D958EC391FC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8EACB344-5497-4236-ADC0-D958EC391FC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8EACB344-5497-4236-ADC0-D958EC391FC7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8EACB344-5497-4236-ADC0-D958EC391FC7}.Debug|x64.Build.0 = Debug|Any CPU
+		{8EACB344-5497-4236-ADC0-D958EC391FC7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8EACB344-5497-4236-ADC0-D958EC391FC7}.Debug|x86.Build.0 = Debug|Any CPU
+		{8EACB344-5497-4236-ADC0-D958EC391FC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8EACB344-5497-4236-ADC0-D958EC391FC7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8EACB344-5497-4236-ADC0-D958EC391FC7}.Release|x64.ActiveCfg = Release|Any CPU
+		{8EACB344-5497-4236-ADC0-D958EC391FC7}.Release|x64.Build.0 = Release|Any CPU
+		{8EACB344-5497-4236-ADC0-D958EC391FC7}.Release|x86.ActiveCfg = Release|Any CPU
+		{8EACB344-5497-4236-ADC0-D958EC391FC7}.Release|x86.Build.0 = Release|Any CPU
+		{10FCEA0D-1396-41C9-B256-DE6D0788D410}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10FCEA0D-1396-41C9-B256-DE6D0788D410}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10FCEA0D-1396-41C9-B256-DE6D0788D410}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{10FCEA0D-1396-41C9-B256-DE6D0788D410}.Debug|x64.Build.0 = Debug|Any CPU
+		{10FCEA0D-1396-41C9-B256-DE6D0788D410}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{10FCEA0D-1396-41C9-B256-DE6D0788D410}.Debug|x86.Build.0 = Debug|Any CPU
+		{10FCEA0D-1396-41C9-B256-DE6D0788D410}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10FCEA0D-1396-41C9-B256-DE6D0788D410}.Release|Any CPU.Build.0 = Release|Any CPU
+		{10FCEA0D-1396-41C9-B256-DE6D0788D410}.Release|x64.ActiveCfg = Release|Any CPU
+		{10FCEA0D-1396-41C9-B256-DE6D0788D410}.Release|x64.Build.0 = Release|Any CPU
+		{10FCEA0D-1396-41C9-B256-DE6D0788D410}.Release|x86.ActiveCfg = Release|Any CPU
+		{10FCEA0D-1396-41C9-B256-DE6D0788D410}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -506,6 +534,8 @@ Global
 		{BF607791-F6C2-4E41-B916-DF675FA52D5C} = {11BA3480-4584-435C-BA9A-8C554DB60E9F}
 		{E6C6763F-538A-42A1-A010-EBE332CF6B1B} = {B95A8485-8C53-4F56-B0CE-19C0726B5805}
 		{4193C3BF-DEE3-492D-980B-911767F00A79} = {11BA3480-4584-435C-BA9A-8C554DB60E9F}
+		{8EACB344-5497-4236-ADC0-D958EC391FC7} = {B95A8485-8C53-4F56-B0CE-19C0726B5805}
+		{10FCEA0D-1396-41C9-B256-DE6D0788D410} = {11BA3480-4584-435C-BA9A-8C554DB60E9F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6D05A9AF-CFFB-4187-8599-574387B76727}

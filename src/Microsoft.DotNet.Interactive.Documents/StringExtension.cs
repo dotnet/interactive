@@ -2,13 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Linq;
 
 namespace Microsoft.DotNet.Interactive.Documents
 {
     internal static class StringExtensions
     {
-        public static string[] SplitAsLines(string s) => 
+        public static string[] SplitIntoLines(this string s) => 
             s.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
 
         public static string TrimNewline(this string s)

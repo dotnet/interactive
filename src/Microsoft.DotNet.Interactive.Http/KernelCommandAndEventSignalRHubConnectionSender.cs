@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Interactive.Http
     public class KernelCommandAndEventSignalRHubConnectionSender : IKernelCommandAndEventSender
     {
         // QUESTION: (KernelCommandAndEventSignalRHubConnectionSender) tests?
-        private readonly HubConnection  _sender;
+        private readonly HubConnection _sender;
 
         public KernelCommandAndEventSignalRHubConnectionSender(HubConnection sender)
         {
@@ -28,13 +28,11 @@ namespace Microsoft.DotNet.Interactive.Http
             await _sender.SendAsync("submitCommand", KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)), cancellationToken: cancellationToken);
 
             await _sender.SendAsync("kernelCommandFromServer", KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)), cancellationToken: cancellationToken);
-
         }
 
         public async Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
         {
             await _sender.SendAsync("kernelEventFromServer", KernelEventEnvelope.Serialize(KernelEventEnvelope.Create(kernelEvent)), cancellationToken: cancellationToken);
-
         }
     }
 }

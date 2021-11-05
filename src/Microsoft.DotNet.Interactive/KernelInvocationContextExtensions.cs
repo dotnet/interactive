@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive
         public static DisplayedValue DisplayAs(
             this KernelInvocationContext context,
             string value,
-            string mimeType)
+            string mimeType, params string[]additionalMimeTypes)
         {
             if (string.IsNullOrWhiteSpace(mimeType))
             {
@@ -45,15 +45,20 @@ namespace Microsoft.DotNet.Interactive
 
             var displayId = Guid.NewGuid().ToString();
 
-            var formattedValue = new FormattedValue(
-                mimeType,
-                value);
+            var mimeTypes = new HashSet<string>(additionalMimeTypes ?? Array.Empty<string>())
+            {
+                mimeType
+            };
+
+            var formattedValues = mimeTypes.Select(mime =>  new FormattedValue(
+                mime,
+                value));
 
             context.Publish(
                 new DisplayedValueProduced(
                     value,
                     context?.Command,
-                    new[] { formattedValue },
+                    formattedValues.ToArray(),
                     displayId));
 
             var displayedValue = new DisplayedValue(displayId, mimeType, context);

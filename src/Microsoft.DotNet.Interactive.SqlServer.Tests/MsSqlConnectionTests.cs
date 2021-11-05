@@ -157,15 +157,15 @@ select * from sys.databases
 
             var events = result.KernelEvents.ToSubscribedList();
 
-            TestUtility.GetTabularData(events)
-                 .Schema
-                 .Fields
-                 .Should()
-                 .ContainSingle(f => f.Name == "database_id")
-                 .Which
-                 .Type
-                 .Should()
-                 .Be(TableSchemaFieldType.Integer);
+            events.ShouldDisplayTabularDataResourceWhich()
+                  .Schema
+                  .Fields
+                  .Should()
+                  .ContainSingle(f => f.Name == "database_id")
+                  .Which
+                  .Type
+                  .Should()
+                  .Be(TableSchemaFieldType.Integer);
         }
 
         [MsSqlFact]
@@ -300,11 +300,7 @@ select @testVar";
 
             var events = result.KernelEvents.ToSubscribedList();
 
-            events
-                .Should()
-                .NotContainErrors();
-
-            var data = TestUtility.GetTabularData(events);
+            var data = events.ShouldDisplayTabularDataResourceWhich();
 
             if (changeType != null)
             {
@@ -347,18 +343,12 @@ select @x, @y";
 
             var events = result.KernelEvents.ToSubscribedList();
 
-            events
-                .Should()
-                .NotContainErrors();
-
-            var data = TestUtility.GetTabularData(events);
-
-            data.Data
-                .Should()
-                .ContainSingle()
-                .Which
-                .Should()
-                .ContainValues(new object[] { "Hello world!", 123 });
+            events.ShouldDisplayTabularDataResourceWhich().Data
+                  .Should()
+                  .ContainSingle()
+                  .Which
+                  .Should()
+                  .ContainValues(new object[] { "Hello world!", 123 });
         }
 
         [MsSqlTheory]

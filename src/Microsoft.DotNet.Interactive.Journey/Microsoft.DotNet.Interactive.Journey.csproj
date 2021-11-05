@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageDescription>Journey is a learning experience where teachers can design a step-by-step path for students.</PackageDescription>
+    <PackageTags>dotnet-interactive interactive journey learning teaching exploring classware</PackageTags>
+    <NoWarn>$(NoWarn);NU5100;VSTHRD002</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);NU5100;VSTHRD002</NoWarn>
+    <GenerateDocumentationFile>False</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(OutputPath)/Microsoft.DotNet.Interactive.Journey.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="extension.dib" Pack="true" PackagePath="interactive-extensions/dotnet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.CSharp\Microsoft.DotNet.Interactive.CSharp.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.Documents\Microsoft.DotNet.Interactive.Documents.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.PackageManagement\Microsoft.DotNet.Interactive.PackageManagement.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
+  </ItemGroup>
+
+</Project>
