@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import { DisplayElement, ErrorElement, TextElement } from '../../interfaces/contracts';
 import { isDisplayOutput, isErrorOutput, isTextOutput, reshapeOutputValueForVsCode } from '../../interfaces/utilities';
 import { isDotNetNotebookMetadata, isIpynbFile } from '../../ipynbUtilities';
-import { createUri, debounce, executeSafe, getWorkingDirectoryForNotebook, isDotNetUpToDate, parse, processArguments, stringify } from '../../utilities';
+import { createUri, debounce, executeSafe, getVersionNumber, getWorkingDirectoryForNotebook, parse, processArguments, stringify } from '../../utilities';
 import { decodeToString } from './utilities';
 
 import * as vscodeLike from '../../interfaces/vscode-like';
@@ -241,63 +241,26 @@ describe('Miscellaneous tests', () => {
         });
     });
 
-    describe('dotnet version sufficiency tests', () => {
-        it('supported version is allowed', () => {
-            const isSupported = isDotNetUpToDate('5.0', { code: 0, output: '5.0.101' });
-            expect(isSupported).to.be.true;
+    describe('dotnet version checking', () => {
+        it('version number can be obtained from simple value', () => {
+            const version = getVersionNumber('5.0');
+            expect(version).to.equal('5.0');
         });
 
-        it(`version number acquisition passes, but version isn't sufficient`, () => {
-            const isSupported = isDotNetUpToDate('5.0', { code: 0, output: '3.1.403' });
-            expect(isSupported).to.be.false;
-        });
-
-        it(`version number looks good, but return code wasn't`, () => {
-            const isSupported = isDotNetUpToDate('5.0', { code: 1, output: '5.0.101' });
-            expect(isSupported).to.be.false;
-        });
-
-        it('version number check crashed', () => {
-            const isSupported = isDotNetUpToDate('5.0', { code: -1, output: '' });
-            expect(isSupported).to.be.false;
-        });
-
-        it('should fail when version number check returned garbage string', () => {
-            const isSupported = isDotNetUpToDate('5.0', { code: 0, output: 'version five point zero point one-oh-one' });
-            expect(isSupported).to.be.false;
+        it(`version number from empty string doesn't throw`, () => {
+            const version = getVersionNumber('');
+            expect(version).to.equal('');
         });
 
         for (const newline of ['\n', '\r\n']) {
-            // These tests mimic running the `--version` command, but when the output contains the first-run text that looks like:
-            //
-            // Welcome to .NET 5.0!
-            // --------------------
-            // ...
-            // --------------------
-            // 1.0.1234
-            it(`supported version number with first-run text is allowed with ${JSON.stringify(newline)} newlines`, () => {
-                const output = `${newline}Welcome to .NET 5.0!${newline}--------${newline}5.0.101`;
-                const isSupported = isDotNetUpToDate('5.0', { code: 0, output });
-                expect(isSupported).to.be.true;
+            it(`version number with leading and trailing newlines returns correct result with ${JSON.stringify(newline)} newlines`, () => {
+                const version = getVersionNumber(`${newline}5.0${newline}`);
+                expect(version).to.equal('5.0');
             });
 
-            it(`version number with first-run text acquisition passes, but version isn't sufficient with ${JSON.stringify(newline)} newlines`, () => {
-                const output = `${newline}Welcome to .NET 3.1!${newline}--------${newline}3.1.403`;
-                const isSupported = isDotNetUpToDate('5.0', { code: 0, output });
-                expect(isSupported).to.be.false;
-            });
-
-            // These tests ensure that a trailing newline doesn't break the version number check.
-            it(`supported version number with trailing newline of ${JSON.stringify(newline)} is allowed`, () => {
-                const output = `5.0.101${newline}`;
-                const isSupported = isDotNetUpToDate('5.0', { code: 0, output });
-                expect(isSupported).to.be.true;
-            });
-
-            it(`version number text acquisition passes, but isn't sufficient with ${JSON.stringify(newline)} newlines`, () => {
-                const output = `3.1.403${newline}`;
-                const isSupported = isDotNetUpToDate('5.0', { code: 0, output });
-                expect(isSupported).to.be.false;
+            it(`version number with first-run text is properly pulled out with ${JSON.stringify(newline)} newlines`, () => {
+                const version = getVersionNumber(`${newline}Welcome to .NET 5.0!${newline}--------${newline}5.0.101`);
+                expect(version).to.equal('5.0.101');
             });
         }
     });
