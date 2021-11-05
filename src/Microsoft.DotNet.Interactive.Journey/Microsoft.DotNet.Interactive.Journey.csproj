@@ -3,14 +3,13 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <OutputType>Library</OutputType>
-    <Version>0.0.1</Version>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageDescription>Journey is a learning experience where teachers can design a step-by-step path for students.</PackageDescription>
-    <PackageTags>interactive journey learning teaching exploring classware</PackageTags>
-    <Authors />
-    <ApplicationIcon />
-    <StartupObject />
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>dotnet-interactive interactive journey learning teaching exploring classware</PackageTags>
+    <NoWarn>$(NoWarn);NU5100;VSTHRD002</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup>
