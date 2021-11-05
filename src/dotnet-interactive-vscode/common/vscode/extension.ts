@@ -17,7 +17,7 @@ import { registerAcquisitionCommands, registerKernelCommands, registerFileComman
 import { getNotebookSpecificLanguage, getSimpleLanguage, isDotnetInteractiveLanguage, isJupyterNotebookViewType, languageToCellKind } from '../interactiveNotebook';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces';
 
-import { createOutput, executeSafe, getDotNetVersionOrThrow, getVersionNumber, getWorkingDirectoryForNotebook, isVersionSufficient, processArguments } from '../utilities';
+import { createOutput, getDotNetVersionOrThrow, getWorkingDirectoryForNotebook, isVersionSufficient, processArguments } from '../utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
 
 import * as notebookControllers from '../../notebookControllers';
