@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public static T UseSandDanceExplorer<T>(this T kernel, Uri libraryUri = null, string libraryVersion = null, string cacheBuster = null) where T : Kernel
         {
             SandDanceDataExplorer.RegisterFormatters();
-            SandDanceDataExplorer.SetDefaultConfiguration(libraryUri, libraryVersion,
+            SandDanceDataExplorer.ConfigureDefaults(libraryUri, libraryVersion,
                 cacheBuster);
 
             DataExplorer.Register<TabularDataResource, SandDanceDataExplorer>();

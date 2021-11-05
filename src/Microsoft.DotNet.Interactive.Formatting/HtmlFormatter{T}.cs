@@ -225,7 +225,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 if (typesAreDifferent)
                 {
                     headers.Insert(1, th(i("type")));
-
                 }
 
                 // Order the columns first by the *first* type to exhibit the

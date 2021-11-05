@@ -5,6 +5,7 @@ using System;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
 namespace Microsoft.DotNet.Interactive
@@ -12,6 +13,11 @@ namespace Microsoft.DotNet.Interactive
     [TypeFormatterSource(typeof(DataExplorerFormatterSource))]
     public abstract class DataExplorer<TData>
     {
+        static DataExplorer()
+        {
+            RegisterFormatters();
+        }
+
         public string Id { get; } = Guid.NewGuid().ToString("N");
 
         public TData Data { get; }
@@ -24,16 +30,15 @@ namespace Microsoft.DotNet.Interactive
         public static void RegisterFormatters()
         {
             Formatter.Register<DataExplorer<TData>>((explorer, writer) =>
-            {        
+            {
                 explorer.ToHtml().WriteTo(writer, HtmlEncoder.Default);
             }, HtmlFormatter.MimeType);
-            
-            Formatter.SetPreferredMimeTypesFor(typeof(DataExplorer<TData>), HtmlFormatter.MimeType, TabularDataResourceFormatter.MimeType);
-        }
 
-        static DataExplorer()
-        {
-            RegisterFormatters();
+            // TODO: (RegisterFormatters) this should go somewhere else
+            Formatter.SetPreferredMimeTypesFor(
+                typeof(DataExplorer<TabularDataResource>),
+                HtmlFormatter.MimeType,
+                CsvFormatter.MimeType);
         }
 
         protected abstract IHtmlContent ToHtml();

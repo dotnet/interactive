@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -21,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             _cache = new ConcurrentDictionary<Type, IDestructurer>();
         }
-
+        
         public static IDestructurer GetOrCreate(Type type)
         {
             if (type is null)

@@ -13,29 +13,28 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
     {
         private static Uri _defaultLibraryUri;
         private static string _defaultLibraryVersion;
+
         private static string _defaultCacheBuster;
 
-        public Uri LibraryUri { get; set; }
-        public string LibraryVersion { get; set; }
-        public string CacheBuster { get; set; }
-
-        public static void SetDefaultConfiguration(Uri libraryUri, string libraryVersion, string cacheBuster)
+        public static void ConfigureDefaults(Uri libraryUri = null, string libraryVersion = null, string cacheBuster = null)
         {
             _defaultLibraryUri = libraryUri;
             _defaultLibraryVersion = libraryVersion;
-            _defaultCacheBuster = string.IsNullOrWhiteSpace(cacheBuster)? Guid.NewGuid().ToString("N"): cacheBuster;
+            _defaultCacheBuster = string.IsNullOrWhiteSpace(cacheBuster) ? Guid.NewGuid().ToString("N"): cacheBuster;
         }
 
-        public static void ResetDefaultConfiguration()
-        {
-            SetDefaultConfiguration(null, null, null);
-        }
         public SandDanceDataExplorer(TabularDataResource data) : base(data)
         {
             LibraryUri = _defaultLibraryUri;
             LibraryVersion = _defaultLibraryVersion;
             CacheBuster = _defaultCacheBuster;
         }
+
+        public Uri LibraryUri { get; set; }
+
+        public string LibraryVersion { get; set; }
+
+        public string CacheBuster { get; set; }
 
         protected override IHtmlContent ToHtml()
         {

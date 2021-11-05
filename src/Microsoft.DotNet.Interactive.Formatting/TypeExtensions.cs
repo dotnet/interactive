@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -207,6 +208,51 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
 
             return false;
+        }
+
+        internal static Type GetElementTypeIfEnumerable(this Type type)
+        {
+            if (type.IsArray)
+            {
+                return type.GetElementType();
+            }
+
+            Type enumerableInterface;
+
+            if (type.IsEnumerable())
+            {
+                enumerableInterface = type;
+            }
+            else
+            {
+                enumerableInterface = type
+                                      .GetInterfaces()
+                                      .FirstOrDefault(IsEnumerable);
+            }
+
+            if (enumerableInterface is null)
+            {
+                return null;
+            }
+
+            return enumerableInterface.GenericTypeArguments switch
+            {
+                { Length: 1 } genericTypeArguments => genericTypeArguments[0],
+                _ => null
+            };
+        }
+
+        internal static bool IsEnumerable(this Type type)
+        {
+            if (type == typeof(string))
+            {
+                return false;
+            }
+
+            return
+                type.IsArray
+                ||
+                typeof(IEnumerable).IsAssignableFrom(type);
         }
     }
 }

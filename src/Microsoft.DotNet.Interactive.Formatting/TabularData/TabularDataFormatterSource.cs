@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using Microsoft.AspNetCore.Html;
+using Microsoft.DotNet.Interactive.Formatting.Csv;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.Formatting.TabularData
@@ -18,12 +19,12 @@ namespace Microsoft.DotNet.Interactive.Formatting.TabularData
                 IReadOnlyList<IHtmlContent> headers =
                     value.Schema
                          .Fields
-                         .Select(f => (IHtmlContent) td(span(f.Name)))
+                         .Select(f => (IHtmlContent)td(span(f.Name)))
                          .ToArray();
 
                 IReadOnlyList<IHtmlContent> rows =
                     value.Data
-                         .Select(d => (IHtmlContent) tr(d.Values.Select(v => td(v))))
+                         .Select(d => (IHtmlContent)tr(d.Values.Select(v => td(v))))
                          .ToArray();
 
                 Html.Table(headers, rows).WriteTo(context);
@@ -41,6 +42,18 @@ namespace Microsoft.DotNet.Interactive.Formatting.TabularData
                 var json = JsonSerializer.Serialize(value, TabularDataResourceFormatter.JsonSerializerOptions);
 
                 context.Writer.Write(json);
+            });
+
+            yield return new CsvFormatter<TabularDataResource>((value, context) =>
+            {
+                for (var i = 0; i < value.Data.Count; i++)
+                {
+                    var row = value.Data[i];
+
+                    row.FormatTo(context, CsvFormatter.MimeType);
+                }
+
+                return true;
             });
         }
     }

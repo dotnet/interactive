@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.Documents
                 throw new ArgumentNullException(nameof(kernelNames));
             }
 
-            var lines = StringExtensions.SplitAsLines(content);
+            var lines = StringExtensions.SplitIntoLines(content);
 
             var elements = new List<InteractiveDocumentElement>();
             var currentLanguage = defaultLanguage;
@@ -131,7 +131,7 @@ namespace Microsoft.DotNet.Interactive.Documents
 
             foreach (var element in interactiveDocument.Elements)
             {
-                var elementLines = StringExtensions.SplitAsLines(element.Contents).SkipWhile(l => l.Length == 0).ToList();
+                var elementLines = StringExtensions.SplitIntoLines(element.Contents).SkipWhile(l => l.Length == 0).ToList();
                 while (elementLines.Count > 0 && elementLines[^1].Length == 0)
                 {
                     elementLines.RemoveAt(elementLines.Count - 1);

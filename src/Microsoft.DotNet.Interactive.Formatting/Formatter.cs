@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
 namespace Microsoft.DotNet.Interactive.Formatting
@@ -111,10 +112,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             // In the lists of default formatters, the highest priority ones come first,
             // so register those last.
+
+            // TODO: (ResetToDefault) remove the need to reverse these
             _defaultTypeFormatters.PushRange(TabularDataResourceFormatter.DefaultFormatters.Reverse().ToArray());
-            _defaultTypeFormatters.PushRange(DefaultHtmlFormatterSet.DefaultFormatters.Reverse().ToArray());
+            _defaultTypeFormatters.PushRange(CsvFormatter.DefaultFormatters.Reverse().ToArray());
+            _defaultTypeFormatters.PushRange(HtmlFormatter.DefaultFormatters.Reverse().ToArray());
             _defaultTypeFormatters.PushRange(JsonFormatter.DefaultFormatters.Reverse().ToArray());
-            _defaultTypeFormatters.PushRange(DefaultPlainTextFormatterSet.DefaultFormatters.Reverse().ToArray());
+            _defaultTypeFormatters.PushRange(PlainTextFormatter.DefaultFormatters.Reverse().ToArray());
 
             // It is unclear if we need this default:
             _defaultPreferredMimeTypes.Push((typeof(string), PlainTextFormatter.MimeType));
@@ -553,10 +557,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
 
             // Last resort use preferred mimeType
+            var preferredMimeType = GetPreferredMimeTypesFor(actualType).FirstOrDefault(m => m == mimeType);
 
-            var preferredMimeType = GetPreferredMimeTypesFor(actualType);
+            if (preferredMimeType != mimeType)
+            {
+                throw new ArgumentException($"No formatter is registered for MIME type {mimeType}.");
+            }
 
-            return GetPreferredFormatterFor(actualType, preferredMimeType.FirstOrDefault());
+            return GetPreferredFormatterFor(actualType, preferredMimeType);
         }
 
         internal static ITypeFormatter TryInferPreferredFormatter(Type actualType, string mimeType, IEnumerable<ITypeFormatter> formatters)

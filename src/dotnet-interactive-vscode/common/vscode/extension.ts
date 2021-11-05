@@ -17,7 +17,7 @@ import { registerAcquisitionCommands, registerKernelCommands, registerFileComman
 import { getNotebookSpecificLanguage, getSimpleLanguage, isDotnetInteractiveLanguage, isJupyterNotebookViewType, languageToCellKind } from '../interactiveNotebook';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces';
 
-import { createOutput, executeSafe, getWorkingDirectoryForNotebook, isDotNetUpToDate, processArguments } from '../utilities';
+import { createOutput, getDotNetVersionOrThrow, getWorkingDirectoryForNotebook, isVersionSufficient, processArguments } from '../utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
 
 import * as notebookControllers from '../../notebookControllers';
@@ -84,13 +84,16 @@ export async function activate(context: vscode.ExtensionContext) {
     // this must happen early, because some following functions use the acquisition command
     registerAcquisitionCommands(context, diagnosticsChannel);
 
-    async function kernelTransportCreator(notebookUri: vscodeLike.Uri): Promise<contracts.KernelTransport> {
-        if (!await checkForDotNetSdk(minDotNetSdkVersion!)) {
-            const message = 'Unable to find appropriate .NET SDK.';
-            vscode.window.showErrorMessage(message);
-            throw new Error(message);
-        }
+    // check sdk version
+    const dotnetVersion = await getDotNetVersionOrThrow(DotNetPathManager.getDotNetPath(), diagnosticsChannel);
+    if (!isVersionSufficient(dotnetVersion, minDotNetSdkVersion)) {
+        const message = `The .NET SDK version ${dotnetVersion} is not sufficient. The minimum required version is ${minDotNetSdkVersion}.`;
+        diagnosticsChannel.appendLine(message);
+        vscode.window.showErrorMessage(message);
+        throw new Error(message);
+    }
 
+    async function kernelTransportCreator(notebookUri: vscodeLike.Uri): Promise<contracts.KernelTransport> {
         const launchOptions = await getInteractiveLaunchOptions();
         if (!launchOptions) {
             throw new Error(`Unable to get interactive launch options.  Please see the '${diagnosticsChannel.getName()}' output window for details.`);
@@ -347,10 +350,4 @@ async function getInteractiveLaunchOptions(): Promise<InteractiveLaunchOptions |
     };
     const launchOptions = await vscode.commands.executeCommand<InteractiveLaunchOptions>('dotnet-interactive.acquire', installArgs);
     return launchOptions;
-}
-
-async function checkForDotNetSdk(minVersion: string): Promise<boolean> {
-    const result = await executeSafe(DotNetPathManager.getDotNetPath(), ['--version']);
-    const checkResult = isDotNetUpToDate(minVersion, result);
-    return checkResult;
 }

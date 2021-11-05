@@ -60,15 +60,16 @@ namespace Microsoft.DotNet.Interactive.Tests
             var kernelEvents = result.KernelEvents.ToSubscribedList();
 
             kernelEvents
-                .Should().ContainSingle<CommandFailed>()
+                .Should()
+                .ContainSingle<CommandFailed>()
                 .Which
                 .Exception
                 .Should()
-                .BeOfType<InvalidOperationException>()
+                .BeOfType<ArgumentException>()
                 .Which
                 .Message
                 .Should()
-                .Be($"MimeType {mimeType} is not supported");
+                .Be($"No formatter is registered for MIME type {mimeType}.");
         }
 
         [Theory]

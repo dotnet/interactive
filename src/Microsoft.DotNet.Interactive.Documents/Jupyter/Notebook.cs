@@ -146,7 +146,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             var textLines = jsonElement?.ValueKind switch
             {
                 JsonValueKind.Array => jsonElement.EnumerateArray().Select(element => element.GetString().TrimNewline()),
-                JsonValueKind.String => StringExtensions.SplitAsLines(jsonElement.GetString()),
+                JsonValueKind.String => StringExtensions.SplitIntoLines(jsonElement.GetString()),
                 _ => Array.Empty<string>()
             };
 
@@ -178,7 +178,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
                         {
                             cell_type = "markdown",
                             metadata = new { },
-                            source = AddTrailingNewlinesToAllButLast(StringExtensions.SplitAsLines(element.Contents))
+                            source = AddTrailingNewlinesToAllButLast(StringExtensions.SplitIntoLines(element.Contents))
                         });
                         break;
                     default:
@@ -217,7 +217,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
                                     language = element.Language
                                 }
                             },
-                            source = AddTrailingNewlinesToAllButLast(StringExtensions.SplitAsLines(element.Contents)),
+                            source = AddTrailingNewlinesToAllButLast(StringExtensions.SplitIntoLines(element.Contents)),
                             outputs
                         });
                         break;
