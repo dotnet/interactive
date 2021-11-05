@@ -1,12 +1,11 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import * as vscode from 'vscode';
-import { ReportChannel } from '../interfaces/vscode-like';
+import { ReportChannel, OutputChannel } from '../interfaces/vscode-like';
 
 export class OutputChannelAdapter implements ReportChannel {
 
-    constructor(private channel: vscode.OutputChannel) {
+    constructor(private channel: OutputChannel) {
     }
 
     getName(): string {
