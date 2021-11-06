@@ -8,6 +8,16 @@ Open the VS Code extension test script in VS Code - Insiders
 vscode-insiders://ms-dotnettools.dotnet-interactive-vscode/openNotebook?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdotnet%2Finteractive%2Fmain%2FNotebookTestScript.dib
 ```
 
+If the URL provided does not end in the notebook file's extension, you can specify the `notebookFormat` query parameter as an override with the supported values of 'dib' and 'ipynb'.
+
+E.g.,
+
+```
+vscode-insiders://ms-dotnettools.dotnet-interactive-vscode/openNotebook?notebookFormat=ipynb&url=https://contoso.com/myNotebook
+```
+
+URL redirects are supported by this scenario and the extension and/or `notebookFormat` parameter will be pulled from the final resolved URL.
+
 ## PR Build Definition
 
 The PR build definition can be found [here](https://dev.azure.com/dnceng/public/_build?definitionId=744&_a=summary) or by nagivating through an existing PR.

@@ -230,12 +230,13 @@ export async function activate(context: vscode.ExtensionContext) {
                     //   vscode://ms-dotnettools.dotnet-interactive-vscode/openNotebook?url=http%3A%2F%2Fexample.com%2Fnotebook.dib
                     const notebookPath = params.get('path');
                     const url = params.get('url');
+                    const notebookFormat = params.get('notebookFormat');
                     if (notebookPath) {
                         vscode.commands.executeCommand('dotnet-interactive.acquire').then(() => {
                             vscode.commands.executeCommand('dotnet-interactive.openNotebook', vscode.Uri.file(notebookPath)).then(() => { });
                         });
                     } else if (url) {
-                        openNotebookFromUrl(url, serializerMap, diagnosticsChannel).then(() => { });
+                        openNotebookFromUrl(url, notebookFormat, serializerMap, diagnosticsChannel).then(() => { });
                     }
                     break;
             }
@@ -263,35 +264,59 @@ function registerWithVsCode(context: vscode.ExtensionContext, clientMapper: Clie
     return notebookSerializers.createAndRegisterNotebookSerializers(context, parserServer);
 }
 
-async function openNotebookFromUrl(notebookUrl: string, serializerMap: Map<string, vscode.NotebookSerializer>, diagnosticsChannel: OutputChannelAdapter): Promise<void> {
+async function openNotebookFromUrl(notebookUrl: string, notebookFormat: string | null, serializerMap: Map<string, vscode.NotebookSerializer>, diagnosticsChannel: OutputChannelAdapter): Promise<void> {
     await vscode.commands.executeCommand('dotnet-interactive.acquire');
-    const extension = path.extname(notebookUrl);
-    const serializer = serializerMap.get(extension);
-    let viewType: string | undefined = undefined;
-    if (serializer) {
-        switch (extension) {
-            case '.dib':
-            case '.dotnet-interactive':
+
+    try {
+        const response = await fetch(notebookUrl);
+        const resolvedUri = vscode.Uri.parse(response.url);
+        if (response.redirected && !notebookFormat) {
+            // if no notebook format was passed in _and_ we redirected, check the final resolved url for a format
+            const searchParams = new URLSearchParams(resolvedUri.query);
+            notebookFormat = searchParams.get('notebookFormat');
+        }
+
+        if (!notebookFormat) {
+            // if no format was specified on either uri, fall back to the extension
+            let extension = path.extname(resolvedUri.path);
+            switch (extension) {
+                case '.dib':
+                case '.dotnet-interactive':
+                    notebookFormat = 'dib';
+                    break;
+                case '.ipynb':
+                    notebookFormat = 'ipynb';
+                    break;
+                default:
+                    throw new Error(`Unsupported notebook extension '${extension}'`);
+            }
+        }
+
+        let viewType: string | undefined = undefined;
+        switch (notebookFormat) {
+            case 'dib':
                 viewType = 'dotnet-interactive';
                 break;
-            case '.ipynb':
+            case 'ipynb':
                 viewType = 'jupyter-notebook';
                 break;
+            default:
+                throw new Error(`Unsupported notebook format: ${notebookFormat}`);
         }
-    }
 
-    if (serializer && viewType) {
-        try {
-            const response = await fetch(notebookUrl);
-            const arrayBuffer = await response.arrayBuffer();
-            const content = new Uint8Array(arrayBuffer);
-            const cancellationTokenSource = new vscode.CancellationTokenSource();
-            const notebookData = await serializer.deserializeNotebook(content, cancellationTokenSource.token);
-            const notebook = await vscode.workspace.openNotebookDocument(viewType, notebookData);
-            const _editor = await vscode.window.showNotebookDocument(notebook);
-        } catch (e) {
-            vscode.window.showWarningMessage(`Unable to read notebook from '${notebookUrl}': ${e}`);
+        const serializer = serializerMap.get(viewType);
+        if (!serializer) {
+            throw new Error(`Unsupported notebook view type: ${viewType}`);
         }
+
+        const arrayBuffer = await response.arrayBuffer();
+        const content = new Uint8Array(arrayBuffer);
+        const cancellationTokenSource = new vscode.CancellationTokenSource();
+        const notebookData = await serializer.deserializeNotebook(content, cancellationTokenSource.token);
+        const notebook = await vscode.workspace.openNotebookDocument(viewType, notebookData);
+        const _editor = await vscode.window.showNotebookDocument(notebook);
+    } catch (e) {
+        vscode.window.showWarningMessage(`Unable to read notebook from '${notebookUrl}': ${e}`);
     }
 }
 
