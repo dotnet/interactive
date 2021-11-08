@@ -27,6 +27,7 @@ JsonElement : +GetProperty(ReadOnlySpan~Byte~ utf8PropertyName) JsonElement
 JsonElement : GetPropertyName() String
 JsonElement : GetPropertyRawText() String
 JsonElement : +GetRawText() String
+JsonElement : GetRawValue() ReadOnlyMemory~Byte~
 JsonElement : +GetSByte() SByte
 JsonElement : +GetSingle() Single
 JsonElement : +GetString() String
