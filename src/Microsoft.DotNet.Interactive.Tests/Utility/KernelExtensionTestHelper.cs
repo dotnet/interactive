@@ -163,7 +163,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 "),
                 ("global.json", @"{
   ""sdk"": {
-    ""version"": ""6.0.100-preview.7.21379.14"",
+    ""version"": ""6.0.100"",
     ""allowPrerelease"": true,
     ""rollForward"": ""latestMinor""
   }
@@ -285,7 +285,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 "),
                 ("global.json", @"{
   ""sdk"": {
-    ""version"": ""6.0.100-preview.7.21379.14"",
+    ""version"": ""6.0.100"",
     ""allowPrerelease"": true,
     ""rollForward"": ""latestMinor""
   }
