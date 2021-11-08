@@ -63,7 +63,7 @@ export class StdioKernelTransport implements KernelTransport {
                 const fullMessage = `${message}${messageCodeSuffix}${messageSignalSuffix}.`;
                 this.diagnosticChannel.appendLine(fullMessage);
                 if (this.notifyOnExit) {
-                    this.processExited(pid, code, signal);
+                    this.processExited(pid!, code, signal);
                 }
             });
 
