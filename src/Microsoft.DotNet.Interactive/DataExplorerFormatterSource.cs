@@ -2,7 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
+
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
@@ -30,14 +32,7 @@ namespace Microsoft.DotNet.Interactive
 
             yield return new CsvFormatter<DataExplorer<TabularDataResource>>((dataExplorer, context) =>
             {
-                var data = dataExplorer.Data.Data;
-
-                for (var i = 0; i < data.Count; i++)
-                {
-                    var row = data[i];
-
-                    row.FormatTo(context, CsvFormatter.MimeType);
-                }
+                dataExplorer.Data.FormatTo(context, CsvFormatter.MimeType);
 
                 return true;
             });
