@@ -12,6 +12,7 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.ExtensionLab;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -195,7 +196,7 @@ select * from sys.databases
                 .Which
                 .FormattedValues.Select(fv => fv.MimeType)
                 .Should()
-                .BeEquivalentTo(HtmlFormatter.MimeType, TabularDataResourceFormatter.MimeType);
+                .BeEquivalentTo(HtmlFormatter.MimeType, CsvFormatter.MimeType);
         }
 
         [MsSqlFact]
@@ -409,8 +410,8 @@ select @testVar";
 
         public void Dispose()
         {
-            Formatter.ResetToDefault();
             DataExplorer.ResetToDefault();
+            Formatter.ResetToDefault();
         }
     }
 }

@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 return;
             }
 
-            context.Display($"Scaffolding a `DbContext` and initializing an instance of it called `{kernelName}` in the C# kernel.", "text/markdown");
+            context.DisplayAs($"Scaffolding a `DbContext` and initializing an instance of it called `{kernelName}` in the C# kernel.", "text/markdown");
 
             var submission1 = @$"
 #r ""nuget:Microsoft.EntityFrameworkCore.Design,3.1.8""
