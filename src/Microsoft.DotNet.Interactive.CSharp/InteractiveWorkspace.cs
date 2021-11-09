@@ -52,15 +52,15 @@ namespace Microsoft.DotNet.Interactive.CSharp
             //   `C:\Program Files\dotnet\shared\Microsoft.NETCore.App\5.0.3`
             // to
             //   `C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\5.0.0\ref\net5.0`
-            if (Version.TryParse(Path.GetFileName(runtimeDir), out var runtimeVersion))
+            if (TryParseVersion(Path.GetFileName(runtimeDir), out var runtimeVersion))
             {
                 var appRefDir = Path.Combine(runtimeDir, "..", "..", "..", "packs", "Microsoft.NETCore.App.Ref");
                 if (Directory.Exists(appRefDir))
                 {
                     var latestRuntimeDirAndVersion =
                         Directory.GetDirectories(appRefDir)
-                        .Select(Path.GetFileName)
-                        .Select(dir => new { Directory = dir, Version = Version.TryParse(dir, out var version) ? version : new Version() })
+                        .Select(dir => Path.GetFileName(dir))
+                        .Select(dir => new { Directory = dir, Version = TryParseVersion(dir, out var version) ? version : new Version() })
                         .Where(dir => dir.Version <= runtimeVersion)
                         .OrderByDescending(dirPair => dirPair.Version)
                         .Select(dirInfo => Path.Combine(appRefDir, dirInfo.Directory, "ref", $"net{dirInfo.Version.Major}.{dirInfo.Version.Minor}"))
@@ -74,6 +74,18 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }
 
             return refAssemblyDir;
+        }
+
+        private static bool TryParseVersion(string versionString, out Version v)
+        {
+            var previewVersionOffset = versionString.IndexOf('-');
+            if (previewVersionOffset >= 0)
+            {
+                // looks like a preview version of the SDK, e.g., 6.0.0-preview.7.21377.19 which `Version.TryParse()` can't handle, so we have to fake it
+                versionString = versionString.Substring(0, previewVersionOffset);
+            }
+
+            return Version.TryParse(versionString, out v);
         }
 
         private static IReadOnlyCollection<MetadataReference> ResolveRefAssemblies()
@@ -163,11 +175,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
         }
 
         private Solution CreateProjectAndAddToSolution(
-            ProjectId projectId, 
-            string assemblyName, 
-            CompilationOptions compilationOptions, 
-            Solution solution, 
-            ProjectId projectReferenceProjectId, 
+            ProjectId projectId,
+            string assemblyName,
+            CompilationOptions compilationOptions,
+            Solution solution,
+            ProjectId projectReferenceProjectId,
             IEnumerable<MetadataReference> metadataReferences = null)
         {
             var projectInfo = ProjectInfo.Create(

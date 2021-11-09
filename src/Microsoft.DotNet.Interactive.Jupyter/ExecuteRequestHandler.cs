@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                 string.Join(Environment.NewLine + Environment.NewLine, diagnosticsProduced.FormattedDiagnostics.Select(v => v.Value)) +
                 Environment.NewLine +
                 Environment.NewLine;
-                var dataMessage = Stream.StdErr(output);
+                var dataMessage = Protocol.Stream.StdErr(output);
                 var isSilent = ((ExecuteRequest)request.Content).Silent;
 
                 if (!isSilent)
@@ -203,12 +203,12 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                     break;
 
                 case StandardOutputValueProduced _:
-                    dataMessage = Stream.StdOut(GetPlainTextValueOrDefault(GetFormattedValuesByMimeType(), value?.ToString() ?? string.Empty));
+                    dataMessage = Protocol.Stream.StdOut(GetPlainTextValueOrDefault(GetFormattedValuesByMimeType(), value?.ToString() ?? string.Empty));
                     break;
 
                 case StandardErrorValueProduced _:
                 case ErrorProduced _:
-                    dataMessage = Stream.StdErr(GetPlainTextValueOrDefault(GetFormattedValuesByMimeType(), value?.ToString() ?? string.Empty));
+                    dataMessage = Protocol.Stream.StdErr(GetPlainTextValueOrDefault(GetFormattedValuesByMimeType(), value?.ToString() ?? string.Empty));
                     break;
 
                 default:
