@@ -1,10 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <Sdk Name="Microsoft.DotNet.PackageValidation" Version="1.0.0-preview.7.21379.12" />
+
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>latest</LangVersion>
     <NoWarn>$(NoWarn);2003;CS8002</NoWarn> <!-- AssemblyInformationalVersionAttribute contains a non-standard value -->
     <Deterministic Condition="'$(NCrunch)' == '1'">false</Deterministic>
+    <PackageValidationBaselineVersion>$(PackageBaselineVersion)</PackageValidationBaselineVersion>
   </PropertyGroup>
 
   <PropertyGroup>

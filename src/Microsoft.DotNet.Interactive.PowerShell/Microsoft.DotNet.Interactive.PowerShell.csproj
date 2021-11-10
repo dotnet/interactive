@@ -1,11 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <Sdk Name="Microsoft.DotNet.PackageValidation" Version="1.0.0-preview.7.21379.12" />
+
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <NoWarn>$(NoWarn);2003;CS8002;NU1608;</NoWarn> <!-- AssemblyInformationalVersionAttribute contains a non-standard value -->
     <NoWarn>$(NoWarn);NU5100</NoWarn><!-- dll outside of lib/ folder; expected since it's under contentFiles/any/any/Modules/ -->
     <Deterministic Condition="'$(NCrunch)' == '1'">false</Deterministic>
+    <PackageValidationBaselineVersion>$(PackageBaselineVersion)</PackageValidationBaselineVersion>
   </PropertyGroup>
 
   <PropertyGroup>

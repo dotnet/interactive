@@ -1,10 +1,12 @@
 <Project>
+  <Sdk Name="Microsoft.DotNet.PackageValidation" Version="1.0.0-preview.7.21379.12" />
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>Microsoft.DotNet.Interactive.Netstandard20</PackageId>
     <PackageDescription>Core types for building applications providing interactive programming for .NET. for the desktop</PackageDescription>
     <PackageTags>interactive desktop</PackageTags>
+    <PackageValidationBaselineVersion>$(PackageBaselineVersion)</PackageValidationBaselineVersion>
   </PropertyGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)../Microsoft.DotNet.Interactive/Microsoft.DotNet.Interactive.csproj" />

@@ -1,9 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <Sdk Name="Microsoft.DotNet.PackageValidation" Version="1.0.0-preview.7.21379.12" />
+
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>preview</LangVersion>
     <PackageId Condition="'$(PackageId)'==''">Microsoft.DotNet.Interactive.Documents</PackageId>
+    <PackageValidationBaselineVersion>$(PackageBaselineVersion)</PackageValidationBaselineVersion>
   </PropertyGroup>
 
   <PropertyGroup>
