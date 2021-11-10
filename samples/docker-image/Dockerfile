@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:5.0-focal
+FROM mcr.microsoft.com/dotnet/sdk:6.0-focal
 
 ARG HTTP_PORT_RANGE=1100-1200
 
@@ -10,7 +10,7 @@ ENV DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT=true
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update \
- && apt-get install -yq --no-install-recommends \
+    && apt-get install -yq --no-install-recommends \
     wget \
     bzip2 \
     ca-certificates \
@@ -20,7 +20,7 @@ RUN apt-get update \
     run-one \
     python3.8 \
     python3-pip \
- && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen
