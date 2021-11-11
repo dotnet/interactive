@@ -1,114 +1,89 @@
-Microsoft.DotNet.Interactive.PowerShell.Commands.EnterAzShellCommand::Void .ctor()
-Microsoft.DotNet.Interactive.PowerShell.Commands.EnterAzShellCommand::System.Guid get_TenantId()
-Microsoft.DotNet.Interactive.PowerShell.Commands.EnterAzShellCommand::Void set_TenantId(System.Guid)
-Microsoft.DotNet.Interactive.PowerShell.Commands.OutDisplayCommand::Void .ctor()
-Microsoft.DotNet.Interactive.PowerShell.Commands.OutDisplayCommand::System.String get_CustomMimeType()
-Microsoft.DotNet.Interactive.PowerShell.Commands.OutDisplayCommand::Void set_CustomMimeType(System.String)
-Microsoft.DotNet.Interactive.PowerShell.Commands.OutDisplayCommand::System.Object get_InputObject()
-Microsoft.DotNet.Interactive.PowerShell.Commands.OutDisplayCommand::Void set_InputObject(System.Object)
-Microsoft.DotNet.Interactive.PowerShell.Commands.OutDisplayCommand::System.String get_MimeType()
-Microsoft.DotNet.Interactive.PowerShell.Commands.OutDisplayCommand::Void set_MimeType(System.String)
-Microsoft.DotNet.Interactive.PowerShell.Commands.OutDisplayCommand::System.Management.Automation.SwitchParameter get_PassThru()
-Microsoft.DotNet.Interactive.PowerShell.Commands.OutDisplayCommand::Void set_PassThru(System.Management.Automation.SwitchParameter)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost::System.Globalization.CultureInfo get_CurrentCulture()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost::System.Globalization.CultureInfo get_CurrentUICulture()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost::System.Guid get_InstanceId()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost::Boolean get_IsRunspacePushed()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost::System.String get_Name()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost::System.Management.Automation.PSObject get_PrivateData()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost::System.Management.Automation.Runspaces.Runspace get_Runspace()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost::System.Management.Automation.Host.PSHostUserInterface get_UI()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost::System.Version get_Version()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost::Void EnterNestedPrompt()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost::Void ExitNestedPrompt()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost::Void NotifyBeginApplication()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost::Void NotifyEndApplication()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost::Void PopRunspace()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost::Void PushRunspace(System.Management.Automation.Runspaces.Runspace)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost::Void SetShouldExit(Int32)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::System.ConsoleColor get_BackgroundColor()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::Void set_BackgroundColor(System.ConsoleColor)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::System.Management.Automation.Host.Size get_BufferSize()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::Void set_BufferSize(System.Management.Automation.Host.Size)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::System.Management.Automation.Host.Coordinates get_CursorPosition()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::Void set_CursorPosition(System.Management.Automation.Host.Coordinates)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::Int32 get_CursorSize()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::Void set_CursorSize(Int32)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::System.ConsoleColor get_ForegroundColor()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::Void set_ForegroundColor(System.ConsoleColor)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::Boolean get_KeyAvailable()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::System.Management.Automation.Host.Size get_MaxPhysicalWindowSize()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::System.Management.Automation.Host.Size get_MaxWindowSize()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::System.Management.Automation.Host.Coordinates get_WindowPosition()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::Void set_WindowPosition(System.Management.Automation.Host.Coordinates)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::System.Management.Automation.Host.Size get_WindowSize()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::Void set_WindowSize(System.Management.Automation.Host.Size)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::System.String get_WindowTitle()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::Void set_WindowTitle(System.String)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::Void FlushInputBuffer()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::System.Management.Automation.Host.BufferCell[,] GetBufferContents(System.Management.Automation.Host.Rectangle)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::Int32 LengthInBufferCells(System.String, Int32)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::Int32 LengthInBufferCells(System.String)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::Int32 LengthInBufferCells(Char)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::System.Management.Automation.Host.KeyInfo ReadKey(System.Management.Automation.Host.ReadKeyOptions)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::Void ScrollBufferContents(System.Management.Automation.Host.Rectangle, System.Management.Automation.Host.Coordinates, System.Management.Automation.Host.Rectangle, System.Management.Automation.Host.BufferCell)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::Void SetBufferContents(System.Management.Automation.Host.Coordinates, System.Management.Automation.Host.BufferCell[,])
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface::Void SetBufferContents(System.Management.Automation.Host.Rectangle, System.Management.Automation.Host.BufferCell)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::System.ConsoleColor get_DebugBackgroundColor()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Void set_DebugBackgroundColor(System.ConsoleColor)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::System.ConsoleColor get_DebugForegroundColor()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Void set_DebugForegroundColor(System.ConsoleColor)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::System.ConsoleColor get_ErrorAccentColor()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Void set_ErrorAccentColor(System.ConsoleColor)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::System.ConsoleColor get_ErrorBackgroundColor()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Void set_ErrorBackgroundColor(System.ConsoleColor)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::System.ConsoleColor get_ErrorForegroundColor()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Void set_ErrorForegroundColor(System.ConsoleColor)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::System.ConsoleColor get_FormatAccentColor()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Void set_FormatAccentColor(System.ConsoleColor)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::System.ConsoleColor get_ProgressBackgroundColor()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Void set_ProgressBackgroundColor(System.ConsoleColor)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::System.ConsoleColor get_ProgressForegroundColor()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Void set_ProgressForegroundColor(System.ConsoleColor)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::System.Management.Automation.Host.PSHostRawUserInterface get_RawUI()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Boolean get_SupportsVirtualTerminal()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::System.ConsoleColor get_VerboseBackgroundColor()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Void set_VerboseBackgroundColor(System.ConsoleColor)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::System.ConsoleColor get_VerboseForegroundColor()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Void set_VerboseForegroundColor(System.ConsoleColor)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::System.ConsoleColor get_WarningBackgroundColor()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Void set_WarningBackgroundColor(System.ConsoleColor)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::System.ConsoleColor get_WarningForegroundColor()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Void set_WarningForegroundColor(System.ConsoleColor)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::System.Collections.Generic.Dictionary`2[System.String,System.Management.Automation.PSObject] Prompt(System.String, System.String, System.Collections.ObjectModel.Collection`1[System.Management.Automation.Host.FieldDescription])
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Int32 PromptForChoice(System.String, System.String, System.Collections.ObjectModel.Collection`1[System.Management.Automation.Host.ChoiceDescription], Int32)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::System.Collections.ObjectModel.Collection`1[System.Int32] PromptForChoice(System.String, System.String, System.Collections.ObjectModel.Collection`1[System.Management.Automation.Host.ChoiceDescription], System.Collections.Generic.IEnumerable`1[System.Int32])
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::System.Management.Automation.PSCredential PromptForCredential(System.String, System.String, System.String, System.String)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::System.Management.Automation.PSCredential PromptForCredential(System.String, System.String, System.String, System.String, System.Management.Automation.PSCredentialTypes, System.Management.Automation.PSCredentialUIOptions)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::System.String ReadLine()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::System.Security.SecureString ReadLineAsSecureString()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Void Write(System.ConsoleColor, System.ConsoleColor, System.String)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Void Write(System.String)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Void WriteDebugLine(System.String)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Void WriteErrorLine(System.String)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Void WriteInformation(System.Management.Automation.InformationRecord)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Void WriteLine()
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Void WriteLine(System.ConsoleColor, System.ConsoleColor, System.String)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Void WriteLine(System.String)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Void WriteProgress(Int64, System.Management.Automation.ProgressRecord)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Void WriteVerboseLine(System.String)
-Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface::Void WriteWarningLine(System.String)
-Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel::Void .ctor()
-Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel::System.Func`2[System.String,System.String] get_ReadInput()
-Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel::Void set_ReadInput(System.Func`2[System.String,System.String])
-Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel::System.Func`2[System.String,Microsoft.DotNet.Interactive.PasswordString] get_ReadPassword()
-Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel::Void set_ReadPassword(System.Func`2[System.String,Microsoft.DotNet.Interactive.PasswordString])
-Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel::Void AddAccelerator(System.String, System.Type)
-Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel::Void AddModulePath(System.String)
-Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel::System.Collections.Generic.IReadOnlyCollection`1[Microsoft.DotNet.Interactive.ValueSharing.KernelValueInfo] GetValueInfos()
-Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel::System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SubmitCode, Microsoft.DotNet.Interactive.KernelInvocationContext)
-Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel::System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.RequestCompletions, Microsoft.DotNet.Interactive.KernelInvocationContext)
-Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel::System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.RequestDiagnostics, Microsoft.DotNet.Interactive.KernelInvocationContext)
-Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel::System.Threading.Tasks.Task SetValueAsync(System.String, System.Object, System.Type)
-Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel::Boolean TryGetValue[T](System.String, T ByRef)
-Microsoft.DotNet.Interactive.PowerShell.PowerShellKernelExtensions::Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel UseProfiles(Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel)
+Microsoft.DotNet.Interactive.PowerShell.Commands.EnterAzShellCommand::.ctor()
+public  System.Guid Microsoft.DotNet.Interactive.PowerShell.Commands.EnterAzShellCommand.TenantId { get; set; }
+protected  void Microsoft.DotNet.Interactive.PowerShell.Commands.EnterAzShellCommand.ProcessRecord(  )
+Microsoft.DotNet.Interactive.PowerShell.Commands.OutDisplayCommand::.ctor()
+public  string Microsoft.DotNet.Interactive.PowerShell.Commands.OutDisplayCommand.CustomMimeType { get; set; }
+public  object Microsoft.DotNet.Interactive.PowerShell.Commands.OutDisplayCommand.InputObject { get; set; }
+public  string Microsoft.DotNet.Interactive.PowerShell.Commands.OutDisplayCommand.MimeType { get; set; }
+public  System.Management.Automation.SwitchParameter Microsoft.DotNet.Interactive.PowerShell.Commands.OutDisplayCommand.PassThru { get; set; }
+protected  void Microsoft.DotNet.Interactive.PowerShell.Commands.OutDisplayCommand.ProcessRecord(  )
+public  System.Globalization.CultureInfo Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost.CurrentCulture { get; }
+public  System.Globalization.CultureInfo Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost.CurrentUICulture { get; }
+public  System.Guid Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost.InstanceId { get; }
+public  bool Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost.IsRunspacePushed { get; }
+public  string Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost.Name { get; }
+public  System.Management.Automation.PSObject Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost.PrivateData { get; }
+public  System.Management.Automation.Runspaces.Runspace Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost.Runspace { get; }
+public  System.Management.Automation.Host.PSHostUserInterface Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost.UI { get; }
+public  System.Version Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost.Version { get; }
+public  void Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost.EnterNestedPrompt(  )
+public  void Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost.ExitNestedPrompt(  )
+public  void Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost.NotifyBeginApplication(  )
+public  void Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost.NotifyEndApplication(  )
+public  void Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost.PopRunspace(  )
+public  void Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost.PushRunspace( System.Management.Automation.Runspaces.Runspace runspace )
+public  void Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHost.SetShouldExit( int exitCode )
+public  System.ConsoleColor Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface.BackgroundColor { get; set; }
+public  System.Management.Automation.Host.Size Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface.BufferSize { get; set; }
+public  System.Management.Automation.Host.Coordinates Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface.CursorPosition { get; set; }
+public  int Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface.CursorSize { get; set; }
+public  System.ConsoleColor Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface.ForegroundColor { get; set; }
+public  bool Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface.KeyAvailable { get; }
+public  System.Management.Automation.Host.Size Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface.MaxPhysicalWindowSize { get; }
+public  System.Management.Automation.Host.Size Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface.MaxWindowSize { get; }
+public  System.Management.Automation.Host.Coordinates Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface.WindowPosition { get; set; }
+public  System.Management.Automation.Host.Size Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface.WindowSize { get; set; }
+public  string Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface.WindowTitle { get; set; }
+public  void Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface.FlushInputBuffer(  )
+public  System.Management.Automation.Host.BufferCell[,] Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface.GetBufferContents( System.Management.Automation.Host.Rectangle rectangle )
+public  int Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface.LengthInBufferCells( string source, int offset )
+public  int Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface.LengthInBufferCells( string source )
+public  int Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface.LengthInBufferCells( System.Char c )
+public  System.Management.Automation.Host.KeyInfo Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface.ReadKey( System.Management.Automation.Host.ReadKeyOptions options )
+public  void Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface.ScrollBufferContents( System.Management.Automation.Host.Rectangle source, System.Management.Automation.Host.Coordinates destination, System.Management.Automation.Host.Rectangle clip, System.Management.Automation.Host.BufferCell fill )
+public  void Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface.SetBufferContents( System.Management.Automation.Host.Coordinates origin, System.Management.Automation.Host.BufferCell[,] contents )
+public  void Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostRawUserInterface.SetBufferContents( System.Management.Automation.Host.Rectangle rectangle, System.Management.Automation.Host.BufferCell fill )
+public  System.ConsoleColor Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.DebugBackgroundColor { get; set; }
+public  System.ConsoleColor Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.DebugForegroundColor { get; set; }
+public  System.ConsoleColor Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.ErrorAccentColor { get; set; }
+public  System.ConsoleColor Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.ErrorBackgroundColor { get; set; }
+public  System.ConsoleColor Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.ErrorForegroundColor { get; set; }
+public  System.ConsoleColor Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.FormatAccentColor { get; set; }
+public  System.ConsoleColor Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.ProgressBackgroundColor { get; set; }
+public  System.ConsoleColor Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.ProgressForegroundColor { get; set; }
+public  System.Management.Automation.Host.PSHostRawUserInterface Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.RawUI { get; }
+public  bool Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.SupportsVirtualTerminal { get; }
+public  System.ConsoleColor Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.VerboseBackgroundColor { get; set; }
+public  System.ConsoleColor Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.VerboseForegroundColor { get; set; }
+public  System.ConsoleColor Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.WarningBackgroundColor { get; set; }
+public  System.ConsoleColor Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.WarningForegroundColor { get; set; }
+public  System.Collections.Generic.Dictionary Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.Prompt( string caption, string message, System.Collections.ObjectModel.Collection<System.Management.Automation.Host.FieldDescription> descriptions )
+public  int Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.PromptForChoice( string caption, string message, System.Collections.ObjectModel.Collection<System.Management.Automation.Host.ChoiceDescription> choices, int defaultChoice )
+public  System.Collections.ObjectModel.Collection Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.PromptForChoice( string caption, string message, System.Collections.ObjectModel.Collection<System.Management.Automation.Host.ChoiceDescription> choices, System.Collections.Generic.IEnumerable<int> defaultChoices )
+public  System.Management.Automation.PSCredential Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.PromptForCredential( string caption, string message, string userName, string targetName )
+public  System.Management.Automation.PSCredential Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.PromptForCredential( string caption, string message, string userName, string targetName, System.Management.Automation.PSCredentialTypes allowedCredentialTypes, System.Management.Automation.PSCredentialUIOptions options )
+public  string Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.ReadLine(  )
+public  System.Security.SecureString Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.ReadLineAsSecureString(  )
+public  void Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.Write( System.ConsoleColor foregroundColor, System.ConsoleColor backgroundColor, string value )
+public  void Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.Write( string value )
+public  void Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.WriteDebugLine( string message )
+public  void Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.WriteErrorLine( string value )
+public  void Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.WriteInformation( System.Management.Automation.InformationRecord record )
+public  void Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.WriteLine(  )
+public  void Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.WriteLine( System.ConsoleColor foregroundColor, System.ConsoleColor backgroundColor, string value )
+public  void Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.WriteLine( string value )
+public  void Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.WriteProgress( System.Int64 sourceId, System.Management.Automation.ProgressRecord record )
+public  void Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.WriteVerboseLine( string message )
+public  void Microsoft.DotNet.Interactive.PowerShell.Host.PSKernelHostUserInterface.WriteWarningLine( string message )
+Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel::.ctor()
+public  System.Func Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel.ReadInput { get; set; }
+public  System.Func Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel.ReadPassword { get; set; }
+public  void Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel.AddAccelerator( string name, System.Type type )
+public  void Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel.AddModulePath( string modulePath )
+public  System.Collections.Generic.IReadOnlyCollection Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel.GetValueInfos(  )
+public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel.HandleAsync( Microsoft.DotNet.Interactive.Commands.SubmitCode submitCode, Microsoft.DotNet.Interactive.KernelInvocationContext context )
+public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel.HandleAsync( Microsoft.DotNet.Interactive.Commands.RequestCompletions requestCompletions, Microsoft.DotNet.Interactive.KernelInvocationContext context )
+public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel.HandleAsync( Microsoft.DotNet.Interactive.Commands.RequestDiagnostics requestDiagnostics, Microsoft.DotNet.Interactive.KernelInvocationContext context )
+public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel.SetValueAsync( string name, object value, System.Type declaredType )
+public  bool Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel.TryGetValue<T>( string name, ref T& value )
+public static  Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel Microsoft.DotNet.Interactive.PowerShell.PowerShellKernelExtensions.UseProfiles(  )
