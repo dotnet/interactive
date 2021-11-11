@@ -1,215 +1,215 @@
 Microsoft.DotNet.Interactive.Kql.ChooseMsKqlKernelDirective::.ctor(Microsoft.DotNet.Interactive.Kernel kernel)
-public  System.CommandLine.Option Microsoft.DotNet.Interactive.Kql.ChooseMsKqlKernelDirective.NameOption { get; }
+public  System.CommandLine.Option<System.String> Microsoft.DotNet.Interactive.Kql.ChooseMsKqlKernelDirective.NameOption { get; }
 Microsoft.DotNet.Interactive.Kql.ConnectKqlCommand::.ctor()
-public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.Kql.ConnectKqlCommand.ConnectKernelAsync( Microsoft.DotNet.Interactive.KernelInfo kernelInfo, Microsoft.DotNet.Interactive.Kql.KqlKernelConnector connector, Microsoft.DotNet.Interactive.KernelInvocationContext context )
+public  System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> Microsoft.DotNet.Interactive.Kql.ConnectKqlCommand.ConnectKernelAsync( Microsoft.DotNet.Interactive.KernelInfo kernelInfo, Microsoft.DotNet.Interactive.Kql.KqlKernelConnector connector, Microsoft.DotNet.Interactive.KernelInvocationContext context )
 Microsoft.DotNet.Interactive.Kql.KqlConnectionDetails::.ctor()
-public  string Microsoft.DotNet.Interactive.Kql.KqlConnectionDetails.AuthenticationType { get; set; }
-public  string Microsoft.DotNet.Interactive.Kql.KqlConnectionDetails.Cluster { get; set; }
-public  string Microsoft.DotNet.Interactive.Kql.KqlConnectionDetails.Database { get; set; }
-public  string Microsoft.DotNet.Interactive.Kql.KqlConnectionDetails.Token { get; set; }
-Microsoft.DotNet.Interactive.Kql.KqlKernelConnector::.ctor(string cluster, string database)
-public  string Microsoft.DotNet.Interactive.Kql.KqlKernelConnector.Cluster { get; }
-public  string Microsoft.DotNet.Interactive.Kql.KqlKernelConnector.Database { get; }
-public  string Microsoft.DotNet.Interactive.Kql.KqlKernelConnector.PathToService { get; set; }
-public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.Kql.KqlKernelConnector.ConnectKernelAsync( Microsoft.DotNet.Interactive.KernelInfo kernelInfo )
+public  System.String Microsoft.DotNet.Interactive.Kql.KqlConnectionDetails.AuthenticationType { get; set; }
+public  System.String Microsoft.DotNet.Interactive.Kql.KqlConnectionDetails.Cluster { get; set; }
+public  System.String Microsoft.DotNet.Interactive.Kql.KqlConnectionDetails.Database { get; set; }
+public  System.String Microsoft.DotNet.Interactive.Kql.KqlConnectionDetails.Token { get; set; }
+Microsoft.DotNet.Interactive.Kql.KqlKernelConnector::.ctor(System.String cluster, System.String database)
+public  System.String Microsoft.DotNet.Interactive.Kql.KqlKernelConnector.Cluster { get; }
+public  System.String Microsoft.DotNet.Interactive.Kql.KqlKernelConnector.Database { get; }
+public  System.String Microsoft.DotNet.Interactive.Kql.KqlKernelConnector.PathToService { get; set; }
+public  System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> Microsoft.DotNet.Interactive.Kql.KqlKernelConnector.ConnectKernelAsync( Microsoft.DotNet.Interactive.KernelInfo kernelInfo )
 Microsoft.DotNet.Interactive.Kql.KqlKernelExtension::.ctor()
 public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.Kql.KqlKernelExtension.OnLoadAsync( Microsoft.DotNet.Interactive.Kernel kernel )
 Microsoft.DotNet.Interactive.SqlServer.BatchSummary::.ctor()
-public  string Microsoft.DotNet.Interactive.SqlServer.BatchSummary.ExecutionElapsed { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.BatchSummary.ExecutionEnd { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.BatchSummary.ExecutionStart { get; set; }
-public  bool Microsoft.DotNet.Interactive.SqlServer.BatchSummary.HasError { get; set; }
-public  int Microsoft.DotNet.Interactive.SqlServer.BatchSummary.Id { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.BatchSummary.ExecutionElapsed { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.BatchSummary.ExecutionEnd { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.BatchSummary.ExecutionStart { get; set; }
+public  System.Boolean Microsoft.DotNet.Interactive.SqlServer.BatchSummary.HasError { get; set; }
+public  System.Int32 Microsoft.DotNet.Interactive.SqlServer.BatchSummary.Id { get; set; }
 public  Microsoft.DotNet.Interactive.SqlServer.ResultSetSummary[] Microsoft.DotNet.Interactive.SqlServer.BatchSummary.ResultSetSummaries { get; set; }
 public  Microsoft.DotNet.Interactive.SqlServer.SelectionData Microsoft.DotNet.Interactive.SqlServer.BatchSummary.Selection { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.CellValue::.ctor()
-public  string Microsoft.DotNet.Interactive.SqlServer.CellValue.DisplayValue { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.CellValue.InvariantCultureDisplayValue { get; set; }
-public  bool Microsoft.DotNet.Interactive.SqlServer.CellValue.IsNull { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.CellValue.DisplayValue { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.CellValue.InvariantCultureDisplayValue { get; set; }
+public  System.Boolean Microsoft.DotNet.Interactive.SqlServer.CellValue.IsNull { get; set; }
 public  System.Int64 Microsoft.DotNet.Interactive.SqlServer.CellValue.RowId { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.ColumnInfo::.ctor()
-public  System.Nullable Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.AllowDBNull { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.BaseCatalogName { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.BaseColumnName { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.BaseSchemaName { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.BaseServerName { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.BaseTableName { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.ColumnName { get; set; }
-public  System.Nullable Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.ColumnOrdinal { get; set; }
-public  System.Nullable Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.ColumnSize { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.DataType { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.DataTypeName { get; set; }
-public  System.Nullable Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsAliased { get; set; }
-public  System.Nullable Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsAutoIncrement { get; set; }
-public  System.Nullable Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsBytes { get; set; }
-public  System.Nullable Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsChars { get; set; }
-public  System.Nullable Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsExpression { get; set; }
-public  System.Nullable Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsHidden { get; set; }
-public  System.Nullable Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsIdentity { get; set; }
-public  System.Nullable Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsJson { get; set; }
-public  System.Nullable Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsKey { get; set; }
-public  System.Nullable Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsLong { get; set; }
-public  System.Nullable Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsReadOnly { get; set; }
-public  System.Nullable Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsSqlVariant { get; set; }
-public  System.Nullable Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsUdt { get; set; }
-public  System.Nullable Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsUnique { get; set; }
-public  System.Nullable Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsXml { get; set; }
-public  System.Nullable Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.NumericPrecision { get; set; }
-public  System.Nullable Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.NumericScale { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.UdtAssemblyQualifiedName { get; set; }
+public  System.Nullable<System.Boolean> Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.AllowDBNull { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.BaseCatalogName { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.BaseColumnName { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.BaseSchemaName { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.BaseServerName { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.BaseTableName { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.ColumnName { get; set; }
+public  System.Nullable<System.Int32> Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.ColumnOrdinal { get; set; }
+public  System.Nullable<System.Int32> Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.ColumnSize { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.DataType { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.DataTypeName { get; set; }
+public  System.Nullable<System.Boolean> Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsAliased { get; set; }
+public  System.Nullable<System.Boolean> Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsAutoIncrement { get; set; }
+public  System.Nullable<System.Boolean> Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsBytes { get; set; }
+public  System.Nullable<System.Boolean> Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsChars { get; set; }
+public  System.Nullable<System.Boolean> Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsExpression { get; set; }
+public  System.Nullable<System.Boolean> Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsHidden { get; set; }
+public  System.Nullable<System.Boolean> Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsIdentity { get; set; }
+public  System.Nullable<System.Boolean> Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsJson { get; set; }
+public  System.Nullable<System.Boolean> Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsKey { get; set; }
+public  System.Nullable<System.Boolean> Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsLong { get; set; }
+public  System.Nullable<System.Boolean> Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsReadOnly { get; set; }
+public  System.Nullable<System.Boolean> Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsSqlVariant { get; set; }
+public  System.Nullable<System.Boolean> Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsUdt { get; set; }
+public  System.Nullable<System.Boolean> Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsUnique { get; set; }
+public  System.Nullable<System.Boolean> Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.IsXml { get; set; }
+public  System.Nullable<System.Int32> Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.NumericPrecision { get; set; }
+public  System.Nullable<System.Int32> Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.NumericScale { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ColumnInfo.UdtAssemblyQualifiedName { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.CompletionCommand::.ctor()
 public  System.Object[] Microsoft.DotNet.Interactive.SqlServer.CompletionCommand.Arguments { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.CompletionCommand.command { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.CompletionCommand.Title { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.CompletionCommand.Tooltip { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.CompletionCommand.command { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.CompletionCommand.Title { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.CompletionCommand.Tooltip { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.CompletionContext::.ctor()
-public  string Microsoft.DotNet.Interactive.SqlServer.CompletionContext.TriggerCharacter { get; set; }
-public  int Microsoft.DotNet.Interactive.SqlServer.CompletionContext.TriggerKind { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.CompletionContext.TriggerCharacter { get; set; }
+public  System.Int32 Microsoft.DotNet.Interactive.SqlServer.CompletionContext.TriggerKind { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.CompletionParams::.ctor()
 public  Microsoft.DotNet.Interactive.SqlServer.CompletionContext Microsoft.DotNet.Interactive.SqlServer.CompletionParams.Context { get; set; }
 public  Microsoft.DotNet.Interactive.SqlServer.Position Microsoft.DotNet.Interactive.SqlServer.CompletionParams.Position { get; set; }
 public  Microsoft.DotNet.Interactive.SqlServer.TextDocumentIdentifier Microsoft.DotNet.Interactive.SqlServer.CompletionParams.TextDocument { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.ConnectionCompleteParams::.ctor()
-public  string Microsoft.DotNet.Interactive.SqlServer.ConnectionCompleteParams.ConnectionId { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ConnectionCompleteParams.ConnectionId { get; set; }
 public  Microsoft.DotNet.Interactive.SqlServer.ConnectionSummary Microsoft.DotNet.Interactive.SqlServer.ConnectionCompleteParams.ConnectionSummary { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.ConnectionCompleteParams.ErrorMessage { get; set; }
-public  int Microsoft.DotNet.Interactive.SqlServer.ConnectionCompleteParams.ErrorNumber { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.ConnectionCompleteParams.Messages { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.ConnectionCompleteParams.OwnerUri { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ConnectionCompleteParams.ErrorMessage { get; set; }
+public  System.Int32 Microsoft.DotNet.Interactive.SqlServer.ConnectionCompleteParams.ErrorNumber { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ConnectionCompleteParams.Messages { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ConnectionCompleteParams.OwnerUri { get; set; }
 public  Microsoft.DotNet.Interactive.SqlServer.ServerInfo Microsoft.DotNet.Interactive.SqlServer.ConnectionCompleteParams.ServerInfo { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.ConnectionCompleteParams.Type { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ConnectionCompleteParams.Type { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.ConnectionDetails::.ctor()
-public  System.Collections.Generic.Dictionary Microsoft.DotNet.Interactive.SqlServer.ConnectionDetails.Options { get; set; }
+public  System.Collections.Generic.Dictionary<System.String,System.String> Microsoft.DotNet.Interactive.SqlServer.ConnectionDetails.Options { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.ConnectionSummary::.ctor()
-public  string Microsoft.DotNet.Interactive.SqlServer.ConnectionSummary.DatabaseName { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.ConnectionSummary.ServerName { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.ConnectionSummary.UserName { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ConnectionSummary.DatabaseName { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ConnectionSummary.ServerName { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ConnectionSummary.UserName { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.ConnectParams::.ctor()
 public  Microsoft.DotNet.Interactive.SqlServer.ConnectionDetails Microsoft.DotNet.Interactive.SqlServer.ConnectParams.Connection { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.ConnectParams.OwnerUri { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ConnectParams.OwnerUri { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.DidChangeTextDocumentParams::.ctor()
 public  Microsoft.DotNet.Interactive.SqlServer.TextDocumentChangeEvent[] Microsoft.DotNet.Interactive.SqlServer.DidChangeTextDocumentParams.ContentChanges { get; set; }
 public  Microsoft.DotNet.Interactive.SqlServer.VersionedTextDocumentIdentifier Microsoft.DotNet.Interactive.SqlServer.DidChangeTextDocumentParams.TextDocument { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.DisconnectParams::.ctor()
-public  string Microsoft.DotNet.Interactive.SqlServer.DisconnectParams.OwnerUri { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.DisconnectParams.OwnerUri { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.IntelliSenseReadyParams::.ctor()
-public  string Microsoft.DotNet.Interactive.SqlServer.IntelliSenseReadyParams.OwnerUri { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.IntelliSenseReadyParams.OwnerUri { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.MessageParams::.ctor()
 public  Microsoft.DotNet.Interactive.SqlServer.ResultMessage Microsoft.DotNet.Interactive.SqlServer.MessageParams.Message { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.MessageParams.OwnerUri { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.MessageParams.OwnerUri { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.Position::.ctor()
-public  int Microsoft.DotNet.Interactive.SqlServer.Position.Character { get; set; }
-public  int Microsoft.DotNet.Interactive.SqlServer.Position.Line { get; set; }
+public  System.Int32 Microsoft.DotNet.Interactive.SqlServer.Position.Character { get; set; }
+public  System.Int32 Microsoft.DotNet.Interactive.SqlServer.Position.Line { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.QueryCancelParams::.ctor()
-public  string Microsoft.DotNet.Interactive.SqlServer.QueryCancelParams.OwnerUri { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.QueryCancelParams.OwnerUri { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.QueryCancelResult::.ctor()
-public  string Microsoft.DotNet.Interactive.SqlServer.QueryCancelResult.Messages { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.QueryCancelResult.Messages { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.QueryCompleteParams::.ctor()
 public  Microsoft.DotNet.Interactive.SqlServer.BatchSummary[] Microsoft.DotNet.Interactive.SqlServer.QueryCompleteParams.BatchSummaries { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.QueryCompleteParams.OwnerUri { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.QueryCompleteParams.OwnerUri { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.QueryExecuteResult::.ctor()
 Microsoft.DotNet.Interactive.SqlServer.QueryExecuteStringParams::.ctor()
-public  string Microsoft.DotNet.Interactive.SqlServer.QueryExecuteStringParams.OwnerUri { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.QueryExecuteStringParams.Query { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.QueryExecuteStringParams.OwnerUri { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.QueryExecuteStringParams.Query { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.QueryExecuteSubsetParams::.ctor()
-public  int Microsoft.DotNet.Interactive.SqlServer.QueryExecuteSubsetParams.BatchIndex { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.QueryExecuteSubsetParams.OwnerUri { get; set; }
-public  int Microsoft.DotNet.Interactive.SqlServer.QueryExecuteSubsetParams.RowsCount { get; set; }
-public  int Microsoft.DotNet.Interactive.SqlServer.QueryExecuteSubsetParams.RowsStartIndex { get; set; }
+public  System.Int32 Microsoft.DotNet.Interactive.SqlServer.QueryExecuteSubsetParams.BatchIndex { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.QueryExecuteSubsetParams.OwnerUri { get; set; }
+public  System.Int32 Microsoft.DotNet.Interactive.SqlServer.QueryExecuteSubsetParams.RowsCount { get; set; }
+public  System.Int32 Microsoft.DotNet.Interactive.SqlServer.QueryExecuteSubsetParams.RowsStartIndex { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.QueryExecuteSubsetResult::.ctor()
 public  Microsoft.DotNet.Interactive.SqlServer.ResultSetSubset Microsoft.DotNet.Interactive.SqlServer.QueryExecuteSubsetResult.ResultSubset { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.Range::.ctor()
 public  Microsoft.DotNet.Interactive.SqlServer.Position Microsoft.DotNet.Interactive.SqlServer.Range.End { get; set; }
 public  Microsoft.DotNet.Interactive.SqlServer.Position Microsoft.DotNet.Interactive.SqlServer.Range.Start { get; set; }
-Microsoft.DotNet.Interactive.SqlServer.ResultMessage::.ctor(string message, bool isError, int? batchId)
+Microsoft.DotNet.Interactive.SqlServer.ResultMessage::.ctor(System.String message, System.Boolean isError, System.Int32? batchId)
 Microsoft.DotNet.Interactive.SqlServer.ResultMessage::.ctor()
-public  System.Nullable Microsoft.DotNet.Interactive.SqlServer.ResultMessage.BatchId { get; set; }
-public  bool Microsoft.DotNet.Interactive.SqlServer.ResultMessage.IsError { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.ResultMessage.Message { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.ResultMessage.Time { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.ResultMessage.ToString(  )
+public  System.Nullable<System.Int32> Microsoft.DotNet.Interactive.SqlServer.ResultMessage.BatchId { get; set; }
+public  System.Boolean Microsoft.DotNet.Interactive.SqlServer.ResultMessage.IsError { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ResultMessage.Message { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ResultMessage.Time { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ResultMessage.ToString(  )
 Microsoft.DotNet.Interactive.SqlServer.ResultSetSubset::.ctor()
-public  int Microsoft.DotNet.Interactive.SqlServer.ResultSetSubset.RowCount { get; set; }
+public  System.Int32 Microsoft.DotNet.Interactive.SqlServer.ResultSetSubset.RowCount { get; set; }
 public  Microsoft.DotNet.Interactive.SqlServer.CellValue[][] Microsoft.DotNet.Interactive.SqlServer.ResultSetSubset.Rows { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.ResultSetSummary::.ctor()
-public  int Microsoft.DotNet.Interactive.SqlServer.ResultSetSummary.BatchId { get; set; }
+public  System.Int32 Microsoft.DotNet.Interactive.SqlServer.ResultSetSummary.BatchId { get; set; }
 public  Microsoft.DotNet.Interactive.SqlServer.ColumnInfo[] Microsoft.DotNet.Interactive.SqlServer.ResultSetSummary.ColumnInfo { get; set; }
-public  bool Microsoft.DotNet.Interactive.SqlServer.ResultSetSummary.Complete { get; set; }
-public  int Microsoft.DotNet.Interactive.SqlServer.ResultSetSummary.Id { get; set; }
+public  System.Boolean Microsoft.DotNet.Interactive.SqlServer.ResultSetSummary.Complete { get; set; }
+public  System.Int32 Microsoft.DotNet.Interactive.SqlServer.ResultSetSummary.Id { get; set; }
 public  System.Int64 Microsoft.DotNet.Interactive.SqlServer.ResultSetSummary.RowCount { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.SelectionData::.ctor()
-public  int Microsoft.DotNet.Interactive.SqlServer.SelectionData.EndColumn { get; set; }
-public  int Microsoft.DotNet.Interactive.SqlServer.SelectionData.EndLine { get; set; }
-public  int Microsoft.DotNet.Interactive.SqlServer.SelectionData.StartColumn { get; set; }
-public  int Microsoft.DotNet.Interactive.SqlServer.SelectionData.StartLine { get; set; }
+public  System.Int32 Microsoft.DotNet.Interactive.SqlServer.SelectionData.EndColumn { get; set; }
+public  System.Int32 Microsoft.DotNet.Interactive.SqlServer.SelectionData.EndLine { get; set; }
+public  System.Int32 Microsoft.DotNet.Interactive.SqlServer.SelectionData.StartColumn { get; set; }
+public  System.Int32 Microsoft.DotNet.Interactive.SqlServer.SelectionData.StartLine { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.ServerInfo::.ctor()
-public  int Microsoft.DotNet.Interactive.SqlServer.ServerInfo.AzureVersion { get; set; }
-public  int Microsoft.DotNet.Interactive.SqlServer.ServerInfo.EngineEditionId { get; set; }
-public  bool Microsoft.DotNet.Interactive.SqlServer.ServerInfo.IsCloud { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.ServerInfo.MachineName { get; set; }
-public  System.Collections.Generic.Dictionary Microsoft.DotNet.Interactive.SqlServer.ServerInfo.Options { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.ServerInfo.OsVersion { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.ServerInfo.ServerEdition { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.ServerInfo.ServerLevel { get; set; }
-public  int Microsoft.DotNet.Interactive.SqlServer.ServerInfo.ServerMajorVersion { get; set; }
-public  int Microsoft.DotNet.Interactive.SqlServer.ServerInfo.ServerMinorVersion { get; set; }
-public  int Microsoft.DotNet.Interactive.SqlServer.ServerInfo.ServerReleaseVersion { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.ServerInfo.ServerVersion { get; set; }
+public  System.Int32 Microsoft.DotNet.Interactive.SqlServer.ServerInfo.AzureVersion { get; set; }
+public  System.Int32 Microsoft.DotNet.Interactive.SqlServer.ServerInfo.EngineEditionId { get; set; }
+public  System.Boolean Microsoft.DotNet.Interactive.SqlServer.ServerInfo.IsCloud { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ServerInfo.MachineName { get; set; }
+public  System.Collections.Generic.Dictionary<System.String,System.Object> Microsoft.DotNet.Interactive.SqlServer.ServerInfo.Options { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ServerInfo.OsVersion { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ServerInfo.ServerEdition { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ServerInfo.ServerLevel { get; set; }
+public  System.Int32 Microsoft.DotNet.Interactive.SqlServer.ServerInfo.ServerMajorVersion { get; set; }
+public  System.Int32 Microsoft.DotNet.Interactive.SqlServer.ServerInfo.ServerMinorVersion { get; set; }
+public  System.Int32 Microsoft.DotNet.Interactive.SqlServer.ServerInfo.ServerReleaseVersion { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.ServerInfo.ServerVersion { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.SqlCompletionItem::.ctor()
 public  Microsoft.DotNet.Interactive.SqlServer.CompletionCommand Microsoft.DotNet.Interactive.SqlServer.SqlCompletionItem.Command { get; set; }
-public  object Microsoft.DotNet.Interactive.SqlServer.SqlCompletionItem.Data { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.SqlCompletionItem.Detail { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.SqlCompletionItem.Documentation { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.SqlCompletionItem.FilterText { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.SqlCompletionItem.InsertText { get; set; }
-public  System.Nullable Microsoft.DotNet.Interactive.SqlServer.SqlCompletionItem.Kind { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.SqlCompletionItem.Label { get; set; }
-public  System.Nullable Microsoft.DotNet.Interactive.SqlServer.SqlCompletionItem.Preselect { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.SqlCompletionItem.SortText { get; set; }
+public  System.Object Microsoft.DotNet.Interactive.SqlServer.SqlCompletionItem.Data { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.SqlCompletionItem.Detail { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.SqlCompletionItem.Documentation { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.SqlCompletionItem.FilterText { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.SqlCompletionItem.InsertText { get; set; }
+public  System.Nullable<Microsoft.DotNet.Interactive.SqlServer.SqlCompletionItemKind> Microsoft.DotNet.Interactive.SqlServer.SqlCompletionItem.Kind { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.SqlCompletionItem.Label { get; set; }
+public  System.Nullable<System.Boolean> Microsoft.DotNet.Interactive.SqlServer.SqlCompletionItem.Preselect { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.SqlCompletionItem.SortText { get; set; }
 public  Microsoft.DotNet.Interactive.SqlServer.TextEdit Microsoft.DotNet.Interactive.SqlServer.SqlCompletionItem.TextEdit { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.TextDocumentChangeEvent::.ctor()
 public  Microsoft.DotNet.Interactive.SqlServer.Range Microsoft.DotNet.Interactive.SqlServer.TextDocumentChangeEvent.Range { get; set; }
-public  System.Nullable Microsoft.DotNet.Interactive.SqlServer.TextDocumentChangeEvent.RangeLength { get; set; }
-public  string Microsoft.DotNet.Interactive.SqlServer.TextDocumentChangeEvent.Text { get; set; }
+public  System.Nullable<System.Int32> Microsoft.DotNet.Interactive.SqlServer.TextDocumentChangeEvent.RangeLength { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.TextDocumentChangeEvent.Text { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.TextDocumentIdentifier::.ctor()
-public  string Microsoft.DotNet.Interactive.SqlServer.TextDocumentIdentifier.Uri { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.TextDocumentIdentifier.Uri { get; set; }
 Microsoft.DotNet.Interactive.SqlServer.TextEdit::.ctor()
-public  string Microsoft.DotNet.Interactive.SqlServer.TextEdit.NewText { get; set; }
+public  System.String Microsoft.DotNet.Interactive.SqlServer.TextEdit.NewText { get; set; }
 public  Microsoft.DotNet.Interactive.SqlServer.Range Microsoft.DotNet.Interactive.SqlServer.TextEdit.Range { get; set; }
-public static  Microsoft.DotNet.Interactive.SqlServer.DidChangeTextDocumentParams Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.GetDocumentChangeForText( System.Uri ownerUri, string newText, string oldText )
-Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient::.ctor(string serviceExePath = , string arguments = )
-public  void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.add_OnConnectionComplete( System.EventHandler<Microsoft.DotNet.Interactive.SqlServer.ConnectionCompleteParams> value )
-public  void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.add_OnIntellisenseReady( System.EventHandler<Microsoft.DotNet.Interactive.SqlServer.IntelliSenseReadyParams> value )
-public  void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.add_OnQueryComplete( System.EventHandler<Microsoft.DotNet.Interactive.SqlServer.QueryCompleteParams> value )
-public  void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.add_OnQueryMessage( System.EventHandler<Microsoft.DotNet.Interactive.SqlServer.MessageParams> value )
-public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.CancelQueryExecutionAsync( System.Uri ownerUri )
-public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.ConnectAsync( Microsoft.DotNet.Interactive.SqlServer.ConnectParams connectParams )
-public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.DisconnectAsync( System.Uri ownerUri )
-public  void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.Dispose(  )
-public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.ExecuteQueryExecuteSubsetAsync( Microsoft.DotNet.Interactive.SqlServer.QueryExecuteSubsetParams subsetParams, System.Threading.CancellationToken cancellationToken )
-public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.ExecuteQueryStringAsync( System.Uri ownerUri, string queryString, System.Threading.CancellationToken contextCancellationToken )
-public  void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.HandleConnectionCompletion( Microsoft.DotNet.Interactive.SqlServer.ConnectionCompleteParams connParams )
-public  void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.HandleIntellisenseReady( Microsoft.DotNet.Interactive.SqlServer.IntelliSenseReadyParams readyParams )
-public  void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.HandleQueryCompletion( Microsoft.DotNet.Interactive.SqlServer.QueryCompleteParams queryParams )
-public  void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.HandleQueryMessage( Microsoft.DotNet.Interactive.SqlServer.MessageParams messageParams )
-public  void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.Initialize(  )
-public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.ProvideCompletionItemsAsync( System.Uri fileUri, Microsoft.DotNet.Interactive.Commands.RequestCompletions command )
-public  void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.remove_OnConnectionComplete( System.EventHandler<Microsoft.DotNet.Interactive.SqlServer.ConnectionCompleteParams> value )
-public  void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.remove_OnIntellisenseReady( System.EventHandler<Microsoft.DotNet.Interactive.SqlServer.IntelliSenseReadyParams> value )
-public  void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.remove_OnQueryComplete( System.EventHandler<Microsoft.DotNet.Interactive.SqlServer.QueryCompleteParams> value )
-public  void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.remove_OnQueryMessage( System.EventHandler<Microsoft.DotNet.Interactive.SqlServer.MessageParams> value )
-public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.SendTextChangeNotificationAsync( System.Uri ownerUri, string newText, string oldText )
-protected  bool Microsoft.DotNet.Interactive.SqlServer.ToolsServiceKernel.CanDeclareVariable( string name, object value, ref System.String& msg )
+public static  Microsoft.DotNet.Interactive.SqlServer.DidChangeTextDocumentParams Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.GetDocumentChangeForText( System.Uri ownerUri, System.String newText, System.String oldText )
+Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient::.ctor(System.String serviceExePath = null, System.String arguments = null)
+public  System.Void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.add_OnConnectionComplete( System.EventHandler<Microsoft.DotNet.Interactive.SqlServer.ConnectionCompleteParams> value )
+public  System.Void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.add_OnIntellisenseReady( System.EventHandler<Microsoft.DotNet.Interactive.SqlServer.IntelliSenseReadyParams> value )
+public  System.Void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.add_OnQueryComplete( System.EventHandler<Microsoft.DotNet.Interactive.SqlServer.QueryCompleteParams> value )
+public  System.Void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.add_OnQueryMessage( System.EventHandler<Microsoft.DotNet.Interactive.SqlServer.MessageParams> value )
+public  System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.SqlServer.QueryCancelResult> Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.CancelQueryExecutionAsync( System.Uri ownerUri )
+public  System.Threading.Tasks.Task<System.Boolean> Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.ConnectAsync( Microsoft.DotNet.Interactive.SqlServer.ConnectParams connectParams )
+public  System.Threading.Tasks.Task<System.Boolean> Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.DisconnectAsync( System.Uri ownerUri )
+public  System.Void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.Dispose(  )
+public  System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.SqlServer.QueryExecuteSubsetResult> Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.ExecuteQueryExecuteSubsetAsync( Microsoft.DotNet.Interactive.SqlServer.QueryExecuteSubsetParams subsetParams, System.Threading.CancellationToken cancellationToken )
+public  System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.SqlServer.QueryExecuteResult> Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.ExecuteQueryStringAsync( System.Uri ownerUri, System.String queryString, System.Threading.CancellationToken contextCancellationToken )
+public  System.Void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.HandleConnectionCompletion( Microsoft.DotNet.Interactive.SqlServer.ConnectionCompleteParams connParams )
+public  System.Void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.HandleIntellisenseReady( Microsoft.DotNet.Interactive.SqlServer.IntelliSenseReadyParams readyParams )
+public  System.Void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.HandleQueryCompletion( Microsoft.DotNet.Interactive.SqlServer.QueryCompleteParams queryParams )
+public  System.Void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.HandleQueryMessage( Microsoft.DotNet.Interactive.SqlServer.MessageParams messageParams )
+public  System.Void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.Initialize(  )
+public  System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Events.CompletionItem>> Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.ProvideCompletionItemsAsync( System.Uri fileUri, Microsoft.DotNet.Interactive.Commands.RequestCompletions command )
+public  System.Void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.remove_OnConnectionComplete( System.EventHandler<Microsoft.DotNet.Interactive.SqlServer.ConnectionCompleteParams> value )
+public  System.Void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.remove_OnIntellisenseReady( System.EventHandler<Microsoft.DotNet.Interactive.SqlServer.IntelliSenseReadyParams> value )
+public  System.Void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.remove_OnQueryComplete( System.EventHandler<Microsoft.DotNet.Interactive.SqlServer.QueryCompleteParams> value )
+public  System.Void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.remove_OnQueryMessage( System.EventHandler<Microsoft.DotNet.Interactive.SqlServer.MessageParams> value )
+public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.SqlServer.ToolsServiceClient.SendTextChangeNotificationAsync( System.Uri ownerUri, System.String newText, System.String oldText )
+protected  System.Boolean Microsoft.DotNet.Interactive.SqlServer.ToolsServiceKernel.CanDeclareVariable( System.String name, System.Object value, ref System.String& msg )
 public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.SqlServer.ToolsServiceKernel.ConnectAsync(  )
-protected  string Microsoft.DotNet.Interactive.SqlServer.ToolsServiceKernel.CreateVariableDeclaration( string name, object value )
-protected  System.Collections.Generic.Dictionary Microsoft.DotNet.Interactive.SqlServer.ToolsServiceKernel.get_QueryResults(  )
-public  System.Collections.Generic.IReadOnlyCollection Microsoft.DotNet.Interactive.SqlServer.ToolsServiceKernel.GetValueInfos(  )
+protected  System.String Microsoft.DotNet.Interactive.SqlServer.ToolsServiceKernel.CreateVariableDeclaration( System.String name, System.Object value )
+protected  System.Collections.Generic.Dictionary<System.String,System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource>> Microsoft.DotNet.Interactive.SqlServer.ToolsServiceKernel.get_QueryResults(  )
+public  System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.ValueSharing.KernelValueInfo> Microsoft.DotNet.Interactive.SqlServer.ToolsServiceKernel.GetValueInfos(  )
 public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.SqlServer.ToolsServiceKernel.HandleAsync( Microsoft.DotNet.Interactive.Commands.SubmitCode command, Microsoft.DotNet.Interactive.KernelInvocationContext context )
 public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.SqlServer.ToolsServiceKernel.HandleAsync( Microsoft.DotNet.Interactive.Commands.RequestCompletions command, Microsoft.DotNet.Interactive.KernelInvocationContext context )
-public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.SqlServer.ToolsServiceKernel.SetValueAsync( string name, object value, System.Type declaredType =  )
-protected  void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceKernel.StoreQueryResults( System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource> results, System.CommandLine.Parsing.ParseResult commandKernelChooserParseResult )
-public  bool Microsoft.DotNet.Interactive.SqlServer.ToolsServiceKernel.TryGetValue<T>( string name, ref T& value )
-public static  string Microsoft.DotNet.Interactive.SqlServer.Utils.AsDoubleQuotedString(  )
-public static  string Microsoft.DotNet.Interactive.SqlServer.Utils.AsSingleQuotedString(  )
+public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.SqlServer.ToolsServiceKernel.SetValueAsync( System.String name, System.Object value, System.Type declaredType = null )
+protected  System.Void Microsoft.DotNet.Interactive.SqlServer.ToolsServiceKernel.StoreQueryResults( System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource> results, System.CommandLine.Parsing.ParseResult commandKernelChooserParseResult )
+public  System.Boolean Microsoft.DotNet.Interactive.SqlServer.ToolsServiceKernel.TryGetValue<T>( System.String name, ref T& value )
+public static  System.String Microsoft.DotNet.Interactive.SqlServer.Utils.AsDoubleQuotedString(  )
+public static  System.String Microsoft.DotNet.Interactive.SqlServer.Utils.AsSingleQuotedString(  )
 Microsoft.DotNet.Interactive.SqlServer.VersionedTextDocumentIdentifier::.ctor()
-public  int Microsoft.DotNet.Interactive.SqlServer.VersionedTextDocumentIdentifier.Version { get; set; }
+public  System.Int32 Microsoft.DotNet.Interactive.SqlServer.VersionedTextDocumentIdentifier.Version { get; set; }

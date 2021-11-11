@@ -1,51 +1,51 @@
 public static  Microsoft.DotNet.Interactive.Formatting.ITypeFormatter Microsoft.DotNet.Interactive.Formatting.Csv.CsvFormatter.GetPreferredFormatterFor( System.Type type )
-public static  ITypeFormatter Microsoft.DotNet.Interactive.Formatting.Csv.CsvFormatter.GetPreferredFormatterFor<T>(  )
+public static  ITypeFormatter<T> Microsoft.DotNet.Interactive.Formatting.Csv.CsvFormatter.GetPreferredFormatterFor<T>(  )
 Microsoft.DotNet.Interactive.Formatting.Csv.CsvFormatter<T>::.ctor(FormatDelegate<T> format)
-public  string Microsoft.DotNet.Interactive.Formatting.Csv.CsvFormatter.MimeType { get; }
-public  bool Microsoft.DotNet.Interactive.Formatting.Csv.CsvFormatter.Format( T value, Microsoft.DotNet.Interactive.Formatting.FormatContext context )
+public  System.String Microsoft.DotNet.Interactive.Formatting.Csv.CsvFormatter<T>.MimeType { get; }
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.Csv.CsvFormatter<T>.Format( T value, Microsoft.DotNet.Interactive.Formatting.FormatContext context )
 Microsoft.DotNet.Interactive.Formatting.DataDictionaryConverter::.ctor()
-public  System.Collections.Generic.IDictionary Microsoft.DotNet.Interactive.Formatting.DataDictionaryConverter.Read( ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options )
+public  System.Collections.Generic.IDictionary<System.String,System.Object> Microsoft.DotNet.Interactive.Formatting.DataDictionaryConverter.Read( ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options )
 public static  Microsoft.DotNet.Interactive.Formatting.IDestructurer Microsoft.DotNet.Interactive.Formatting.Destructurer.GetOrCreate( System.Type type )
-public static  Microsoft.DotNet.Interactive.Formatting.Destructurer Microsoft.DotNet.Interactive.Formatting.Destructurer.GetOrCreate(  )
+public static  Microsoft.DotNet.Interactive.Formatting.Destructurer<T> Microsoft.DotNet.Interactive.Formatting.Destructurer<T>.GetOrCreate(  )
 Microsoft.DotNet.Interactive.Formatting.Destructurer<T>::.ctor()
-public  System.Collections.Generic.ICollection Microsoft.DotNet.Interactive.Formatting.Destructurer.Keys { get; }
-public  System.Collections.Generic.IDictionary Microsoft.DotNet.Interactive.Formatting.Destructurer.Destructure( T instance )
-public  object Microsoft.DotNet.Interactive.Formatting.Destructurer.GetValue( T instance, string propertyName )
+public  System.Collections.Generic.ICollection<System.String> Microsoft.DotNet.Interactive.Formatting.Destructurer<T>.Keys { get; }
+public  System.Collections.Generic.IDictionary<System.String,System.Object> Microsoft.DotNet.Interactive.Formatting.Destructurer<T>.Destructure( T instance )
+public  System.Object Microsoft.DotNet.Interactive.Formatting.Destructurer<T>.GetValue( T instance, System.String propertyName )
 Microsoft.DotNet.Interactive.Formatting.FormatContext::.ctor()
 Microsoft.DotNet.Interactive.Formatting.FormatContext::.ctor(System.IO.TextWriter writer)
-public  int Microsoft.DotNet.Interactive.Formatting.FormatContext.Depth { get; }
+public  System.Int32 Microsoft.DotNet.Interactive.Formatting.FormatContext.Depth { get; }
 public  System.IO.TextWriter Microsoft.DotNet.Interactive.Formatting.FormatContext.Writer { get; }
-public  void Microsoft.DotNet.Interactive.Formatting.FormatContext.Dispose(  )
-Microsoft.DotNet.Interactive.Formatting.FormatDelegate<T>::.ctor(object object, System.IntPtr method)
-public  System.IAsyncResult Microsoft.DotNet.Interactive.Formatting.FormatDelegate.BeginInvoke( T value, Microsoft.DotNet.Interactive.Formatting.FormatContext context, System.AsyncCallback callback, object object )
-public  bool Microsoft.DotNet.Interactive.Formatting.FormatDelegate.EndInvoke( System.IAsyncResult result )
-public  bool Microsoft.DotNet.Interactive.Formatting.FormatDelegate.Invoke( T value, Microsoft.DotNet.Interactive.Formatting.FormatContext context )
-public static  string Microsoft.DotNet.Interactive.Formatting.Formatter.DefaultMimeType { get; set; }
-public static  int Microsoft.DotNet.Interactive.Formatting.Formatter.ListExpansionLimit { get; set; }
-public static  string Microsoft.DotNet.Interactive.Formatting.Formatter.NullString { get; set; }
-public static  int Microsoft.DotNet.Interactive.Formatting.Formatter.RecursionLimit { get; set; }
-public static  void Microsoft.DotNet.Interactive.Formatting.Formatter.Format( object instance, System.IO.TextWriter writer )
-public static  void Microsoft.DotNet.Interactive.Formatting.Formatter.FormatTo<T>( Microsoft.DotNet.Interactive.Formatting.FormatContext context, string mimeType = text/plain )
-public static  Microsoft.DotNet.Interactive.Formatting.ITypeFormatter Microsoft.DotNet.Interactive.Formatting.Formatter.GetPreferredFormatterFor( System.Type actualType, string mimeType )
-public static  System.Collections.Generic.IReadOnlyCollection Microsoft.DotNet.Interactive.Formatting.Formatter.GetPreferredMimeTypesFor( System.Type type )
-public static  System.Collections.Generic.IEnumerable Microsoft.DotNet.Interactive.Formatting.Formatter.GetRegisteredFormattersFor( System.Type actualType )
-public static  void Microsoft.DotNet.Interactive.Formatting.Formatter.Register( Microsoft.DotNet.Interactive.Formatting.ITypeFormatter formatter )
-public static  void Microsoft.DotNet.Interactive.Formatting.Formatter.Register<T>( FormatDelegate<T> formatter, string mimeType = text/plain )
-public static  void Microsoft.DotNet.Interactive.Formatting.Formatter.Register( System.Type type, Microsoft.DotNet.Interactive.Formatting.FormatDelegate<object> formatter, string mimeType = text/plain )
-public static  void Microsoft.DotNet.Interactive.Formatting.Formatter.Register( System.Type type, System.Action<object, System.IO.TextWriter> formatter, string mimeType = text/plain )
-public static  void Microsoft.DotNet.Interactive.Formatting.Formatter.Register<T>( Action<T, System.IO.TextWriter> formatter, string mimeType = text/plain )
-public static  void Microsoft.DotNet.Interactive.Formatting.Formatter.Register<T>( Func<T, string> formatter, string mimeType = text/plain )
-public static  System.Collections.Generic.IEnumerable Microsoft.DotNet.Interactive.Formatting.Formatter.RegisteredFormatters( bool includeDefaults = True )
-public static  void Microsoft.DotNet.Interactive.Formatting.Formatter.ResetToDefault(  )
-public static  void Microsoft.DotNet.Interactive.Formatting.Formatter.SetPreferredMimeTypesFor( System.Type type, System.String[] preferredMimeTypes )
-public static  string Microsoft.DotNet.Interactive.Formatting.Formatter.ToDisplayString( string mimeType = text/plain )
-public static  string Microsoft.DotNet.Interactive.Formatting.Formatter.ToDisplayString( Microsoft.DotNet.Interactive.Formatting.ITypeFormatter formatter )
-public static  int Microsoft.DotNet.Interactive.Formatting.Formatter.ListExpansionLimit { get; set; }
-public static  void Microsoft.DotNet.Interactive.Formatting.Formatter.FormatTo( T obj, Microsoft.DotNet.Interactive.Formatting.FormatContext context, string mimeType = text/plain )
+public  System.Void Microsoft.DotNet.Interactive.Formatting.FormatContext.Dispose(  )
+Microsoft.DotNet.Interactive.Formatting.FormatDelegate<T>::.ctor(System.Object object, System.IntPtr method)
+public  System.IAsyncResult Microsoft.DotNet.Interactive.Formatting.FormatDelegate<T>.BeginInvoke( T value, Microsoft.DotNet.Interactive.Formatting.FormatContext context, System.AsyncCallback callback, System.Object object )
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.FormatDelegate<T>.EndInvoke( System.IAsyncResult result )
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.FormatDelegate<T>.Invoke( T value, Microsoft.DotNet.Interactive.Formatting.FormatContext context )
+public static  System.String Microsoft.DotNet.Interactive.Formatting.Formatter.DefaultMimeType { get; set; }
+public static  System.Int32 Microsoft.DotNet.Interactive.Formatting.Formatter.ListExpansionLimit { get; set; }
+public static  System.String Microsoft.DotNet.Interactive.Formatting.Formatter.NullString { get; set; }
+public static  System.Int32 Microsoft.DotNet.Interactive.Formatting.Formatter.RecursionLimit { get; set; }
+public static  System.Void Microsoft.DotNet.Interactive.Formatting.Formatter.Format( System.Object instance, System.IO.TextWriter writer )
+public static  System.Void Microsoft.DotNet.Interactive.Formatting.Formatter.FormatTo<T>( Microsoft.DotNet.Interactive.Formatting.FormatContext context, System.String mimeType = text/plain )
+public static  Microsoft.DotNet.Interactive.Formatting.ITypeFormatter Microsoft.DotNet.Interactive.Formatting.Formatter.GetPreferredFormatterFor( System.Type actualType, System.String mimeType )
+public static  System.Collections.Generic.IReadOnlyCollection<System.String> Microsoft.DotNet.Interactive.Formatting.Formatter.GetPreferredMimeTypesFor( System.Type type )
+public static  System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Formatting.ITypeFormatter> Microsoft.DotNet.Interactive.Formatting.Formatter.GetRegisteredFormattersFor( System.Type actualType )
+public static  System.Void Microsoft.DotNet.Interactive.Formatting.Formatter.Register( Microsoft.DotNet.Interactive.Formatting.ITypeFormatter formatter )
+public static  System.Void Microsoft.DotNet.Interactive.Formatting.Formatter.Register<T>( FormatDelegate<T> formatter, System.String mimeType = text/plain )
+public static  System.Void Microsoft.DotNet.Interactive.Formatting.Formatter.Register( System.Type type, Microsoft.DotNet.Interactive.Formatting.FormatDelegate<System.Object> formatter, System.String mimeType = text/plain )
+public static  System.Void Microsoft.DotNet.Interactive.Formatting.Formatter.Register( System.Type type, System.Action<System.Object,System.IO.TextWriter> formatter, System.String mimeType = text/plain )
+public static  System.Void Microsoft.DotNet.Interactive.Formatting.Formatter.Register<T>( Action<T,System.IO.TextWriter> formatter, System.String mimeType = text/plain )
+public static  System.Void Microsoft.DotNet.Interactive.Formatting.Formatter.Register<T>( Func<T,System.String> formatter, System.String mimeType = text/plain )
+public static  System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Formatting.ITypeFormatter> Microsoft.DotNet.Interactive.Formatting.Formatter.RegisteredFormatters( System.Boolean includeDefaults = True )
+public static  System.Void Microsoft.DotNet.Interactive.Formatting.Formatter.ResetToDefault(  )
+public static  System.Void Microsoft.DotNet.Interactive.Formatting.Formatter.SetPreferredMimeTypesFor( System.Type type, System.String[] preferredMimeTypes )
+public static  System.String Microsoft.DotNet.Interactive.Formatting.Formatter.ToDisplayString( System.String mimeType = text/plain )
+public static  System.String Microsoft.DotNet.Interactive.Formatting.Formatter.ToDisplayString( Microsoft.DotNet.Interactive.Formatting.ITypeFormatter formatter )
+public static  System.Int32 Microsoft.DotNet.Interactive.Formatting.Formatter<T>.ListExpansionLimit { get; set; }
+public static  System.Void Microsoft.DotNet.Interactive.Formatting.Formatter<T>.FormatTo( T obj, Microsoft.DotNet.Interactive.Formatting.FormatContext context, System.String mimeType = text/plain )
 public static  TTag Microsoft.DotNet.Interactive.Formatting.Html.Append<TTag>( Microsoft.AspNetCore.Html.IHtmlContent content )
 public static  TTag Microsoft.DotNet.Interactive.Formatting.Html.Append<TTag>( Microsoft.AspNetCore.Html.IHtmlContent[] contents )
 public static  TTag Microsoft.DotNet.Interactive.Formatting.Html.AppendTo<TTag>( Microsoft.DotNet.Interactive.Formatting.HtmlTag toTag )
-public static  TTag Microsoft.DotNet.Interactive.Formatting.Html.Containing<TTag>( string text )
+public static  TTag Microsoft.DotNet.Interactive.Formatting.Html.Containing<TTag>( System.String text )
 public static  TTag Microsoft.DotNet.Interactive.Formatting.Html.Containing<TTag>( Microsoft.AspNetCore.Html.IHtmlContent content )
 public static  Microsoft.AspNetCore.Html.IHtmlContent Microsoft.DotNet.Interactive.Formatting.Html.HtmlAttributeEncode(  )
 public static  Microsoft.AspNetCore.Html.IHtmlContent Microsoft.DotNet.Interactive.Formatting.Html.HtmlEncode(  )
@@ -54,230 +54,230 @@ public static  TTag Microsoft.DotNet.Interactive.Formatting.Html.PrependTo<TTag>
 public static  TTag Microsoft.DotNet.Interactive.Formatting.Html.SelfClosing<TTag>(  )
 public static  Microsoft.DotNet.Interactive.Formatting.HtmlTag Microsoft.DotNet.Interactive.Formatting.Html.Tag(  )
 public static  Microsoft.AspNetCore.Html.IHtmlContent Microsoft.DotNet.Interactive.Formatting.Html.ToHtmlContent(  )
-public static  TTag Microsoft.DotNet.Interactive.Formatting.Html.WithAttributes<TTag>( System.Collections.Generic.IDictionary<string, object> htmlAttributes )
-public static  TTag Microsoft.DotNet.Interactive.Formatting.Html.WithAttributes<TTag>( string name, object value )
+public static  TTag Microsoft.DotNet.Interactive.Formatting.Html.WithAttributes<TTag>( System.Collections.Generic.IDictionary<System.String,System.Object> htmlAttributes )
+public static  TTag Microsoft.DotNet.Interactive.Formatting.Html.WithAttributes<TTag>( System.String name, System.Object value )
 public static  TTag Microsoft.DotNet.Interactive.Formatting.Html.WrapInner<TTag>( Microsoft.DotNet.Interactive.Formatting.HtmlTag wrappingTag )
 Microsoft.DotNet.Interactive.Formatting.HtmlAttributes::.ctor()
-Microsoft.DotNet.Interactive.Formatting.HtmlAttributes::.ctor(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, object>> attributes)
-public  int Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.Count { get; }
-public  bool Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.IsReadOnly { get; }
-public  object Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.Item { get; set; }
-public  System.Collections.Generic.ICollection Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.Keys { get; }
-public  System.Collections.Generic.ICollection Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.Values { get; }
-public  void Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.Add( System.Collections.Generic.KeyValuePair<string, object> item )
-public  void Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.Add( string key, object value )
-public  void Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.AddCssClass( string value )
-public  void Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.Clear(  )
-public  bool Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.Contains( System.Collections.Generic.KeyValuePair<string, object> item )
-public  bool Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.ContainsKey( string key )
-public  void Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.CopyTo( System.Collections.Generic.KeyValuePair`2[[System.String, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]][] array, int arrayIndex )
-public  System.Collections.Generic.IEnumerable Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.GetDynamicMemberNames(  )
-public  System.Collections.Generic.IEnumerator Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.GetEnumerator(  )
-public  void Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.MergeWith( System.Collections.Generic.IDictionary<string, object> htmlAttributes, bool replace = False )
-public  bool Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.Remove( System.Collections.Generic.KeyValuePair<string, object> item )
-public  bool Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.Remove( string key )
-public  void Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.RemoveCssClass( string value )
-public  string Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.ToString(  )
-public  bool Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.TryGetMember( System.Dynamic.GetMemberBinder binder, ref System.Object& result )
-public  bool Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.TryGetValue( string key, ref System.Object& value )
-public  bool Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.TryInvokeMember( System.Dynamic.InvokeMemberBinder binder, System.Object[] args, ref System.Object& result )
-public  bool Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.TrySetMember( System.Dynamic.SetMemberBinder binder, object value )
-public  void Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.WriteTo( System.IO.TextWriter writer, System.Text.Encodings.Web.HtmlEncoder encoder )
-public static  Microsoft.DotNet.Interactive.Formatting.HtmlAttributes Microsoft.DotNet.Interactive.Formatting.HtmlAttributesExtensions.Class( string classes )
-public static  Microsoft.DotNet.Interactive.Formatting.HtmlAttributes Microsoft.DotNet.Interactive.Formatting.HtmlAttributesExtensions.Class( string classes, bool include )
-public static  Microsoft.DotNet.Interactive.Formatting.HtmlAttributes Microsoft.DotNet.Interactive.Formatting.HtmlAttributesExtensions.Disabled( bool value = True )
-public static  bool Microsoft.DotNet.Interactive.Formatting.HtmlAttributesExtensions.HasClass( string class )
-public static  Microsoft.DotNet.Interactive.Formatting.HtmlAttributes Microsoft.DotNet.Interactive.Formatting.HtmlAttributesExtensions.Selected( bool value = True )
-public static  int Microsoft.DotNet.Interactive.Formatting.HtmlFormatter.MaxProperties { get; set; }
+Microsoft.DotNet.Interactive.Formatting.HtmlAttributes::.ctor(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<System.String,System.Object>> attributes)
+public  System.Int32 Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.Count { get; }
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.IsReadOnly { get; }
+public  System.Object Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.Item { get; set; }
+public  System.Collections.Generic.ICollection<System.String> Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.Keys { get; }
+public  System.Collections.Generic.ICollection<System.Object> Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.Values { get; }
+public  System.Void Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.Add( System.Collections.Generic.KeyValuePair<System.String,System.Object> item )
+public  System.Void Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.Add( System.String key, System.Object value )
+public  System.Void Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.AddCssClass( System.String value )
+public  System.Void Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.Clear(  )
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.Contains( System.Collections.Generic.KeyValuePair<System.String,System.Object> item )
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.ContainsKey( System.String key )
+public  System.Void Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.CopyTo( System.Collections.Generic.KeyValuePair<System.String,System.Object> array, System.Int32 arrayIndex )
+public  System.Collections.Generic.IEnumerable<System.String> Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.GetDynamicMemberNames(  )
+public  System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<System.String,System.Object>> Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.GetEnumerator(  )
+public  System.Void Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.MergeWith( System.Collections.Generic.IDictionary<System.String,System.Object> htmlAttributes, System.Boolean replace = False )
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.Remove( System.Collections.Generic.KeyValuePair<System.String,System.Object> item )
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.Remove( System.String key )
+public  System.Void Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.RemoveCssClass( System.String value )
+public  System.String Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.ToString(  )
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.TryGetMember( System.Dynamic.GetMemberBinder binder, ref System.Object& result )
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.TryGetValue( System.String key, ref System.Object& value )
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.TryInvokeMember( System.Dynamic.InvokeMemberBinder binder, System.Object[] args, ref System.Object& result )
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.TrySetMember( System.Dynamic.SetMemberBinder binder, System.Object value )
+public  System.Void Microsoft.DotNet.Interactive.Formatting.HtmlAttributes.WriteTo( System.IO.TextWriter writer, System.Text.Encodings.Web.HtmlEncoder encoder )
+public static  Microsoft.DotNet.Interactive.Formatting.HtmlAttributes Microsoft.DotNet.Interactive.Formatting.HtmlAttributesExtensions.Class( System.String classes )
+public static  Microsoft.DotNet.Interactive.Formatting.HtmlAttributes Microsoft.DotNet.Interactive.Formatting.HtmlAttributesExtensions.Class( System.String classes, System.Boolean include )
+public static  Microsoft.DotNet.Interactive.Formatting.HtmlAttributes Microsoft.DotNet.Interactive.Formatting.HtmlAttributesExtensions.Disabled( System.Boolean value = True )
+public static  System.Boolean Microsoft.DotNet.Interactive.Formatting.HtmlAttributesExtensions.HasClass( System.String class )
+public static  Microsoft.DotNet.Interactive.Formatting.HtmlAttributes Microsoft.DotNet.Interactive.Formatting.HtmlAttributesExtensions.Selected( System.Boolean value = True )
+public static  System.Int32 Microsoft.DotNet.Interactive.Formatting.HtmlFormatter.MaxProperties { get; set; }
 public static  Microsoft.DotNet.Interactive.Formatting.ITypeFormatter Microsoft.DotNet.Interactive.Formatting.HtmlFormatter.GetPreferredFormatterFor( System.Type type )
 public static  Microsoft.DotNet.Interactive.Formatting.ITypeFormatter Microsoft.DotNet.Interactive.Formatting.HtmlFormatter.GetPreferredFormatterFor<T>(  )
 Microsoft.DotNet.Interactive.Formatting.HtmlFormatter<T>::.ctor(FormatDelegate<T> format)
-Microsoft.DotNet.Interactive.Formatting.HtmlFormatter<T>::.ctor(Action<T, Microsoft.DotNet.Interactive.Formatting.FormatContext> format)
-Microsoft.DotNet.Interactive.Formatting.HtmlFormatter<T>::.ctor(Func<T, string> format)
-public  string Microsoft.DotNet.Interactive.Formatting.HtmlFormatter.MimeType { get; }
-public  bool Microsoft.DotNet.Interactive.Formatting.HtmlFormatter.Format( T value, Microsoft.DotNet.Interactive.Formatting.FormatContext context )
-Microsoft.DotNet.Interactive.Formatting.HtmlTag::.ctor(string name)
-Microsoft.DotNet.Interactive.Formatting.HtmlTag::.ctor(string name, string text)
-Microsoft.DotNet.Interactive.Formatting.HtmlTag::.ctor(string name, System.Action<Microsoft.DotNet.Interactive.Formatting.FormatContext> content)
-public  System.Action Microsoft.DotNet.Interactive.Formatting.HtmlTag.Content { get; set; }
+Microsoft.DotNet.Interactive.Formatting.HtmlFormatter<T>::.ctor(Action<T,Microsoft.DotNet.Interactive.Formatting.FormatContext> format)
+Microsoft.DotNet.Interactive.Formatting.HtmlFormatter<T>::.ctor(Func<T,System.String> format)
+public  System.String Microsoft.DotNet.Interactive.Formatting.HtmlFormatter<T>.MimeType { get; }
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.HtmlFormatter<T>.Format( T value, Microsoft.DotNet.Interactive.Formatting.FormatContext context )
+Microsoft.DotNet.Interactive.Formatting.HtmlTag::.ctor(System.String name)
+Microsoft.DotNet.Interactive.Formatting.HtmlTag::.ctor(System.String name, System.String text)
+Microsoft.DotNet.Interactive.Formatting.HtmlTag::.ctor(System.String name, System.Action<Microsoft.DotNet.Interactive.Formatting.FormatContext> content)
+public  System.Action<Microsoft.DotNet.Interactive.Formatting.FormatContext> Microsoft.DotNet.Interactive.Formatting.HtmlTag.Content { get; set; }
 public  Microsoft.DotNet.Interactive.Formatting.HtmlAttributes Microsoft.DotNet.Interactive.Formatting.HtmlTag.HtmlAttributes { get; set; }
-public  bool Microsoft.DotNet.Interactive.Formatting.HtmlTag.IsSelfClosing { get; set; }
-public  string Microsoft.DotNet.Interactive.Formatting.HtmlTag.Name { get; set; }
-public  void Microsoft.DotNet.Interactive.Formatting.HtmlTag.MergeAttributes( System.Collections.Generic.IDictionary<string, object> htmlAttributes, bool replace = False )
-public  string Microsoft.DotNet.Interactive.Formatting.HtmlTag.ToString(  )
-protected  void Microsoft.DotNet.Interactive.Formatting.HtmlTag.WriteContentsTo( Microsoft.DotNet.Interactive.Formatting.FormatContext context )
-protected  void Microsoft.DotNet.Interactive.Formatting.HtmlTag.WriteEndTag( System.IO.TextWriter writer )
-protected  void Microsoft.DotNet.Interactive.Formatting.HtmlTag.WriteSelfClosingTag( System.IO.TextWriter writer )
-protected  void Microsoft.DotNet.Interactive.Formatting.HtmlTag.WriteStartTag( System.IO.TextWriter writer )
-public  void Microsoft.DotNet.Interactive.Formatting.HtmlTag.WriteTo( System.IO.TextWriter writer, System.Text.Encodings.Web.HtmlEncoder encoder =  )
-public  void Microsoft.DotNet.Interactive.Formatting.HtmlTag.WriteTo( Microsoft.DotNet.Interactive.Formatting.FormatContext context )
-public  System.Collections.Generic.ICollection Microsoft.DotNet.Interactive.Formatting.IDestructurer.Keys { get; }
-public  System.Collections.Generic.IDictionary Microsoft.DotNet.Interactive.Formatting.IDestructurer.Destructure( object instance )
-public  System.Collections.Generic.IDictionary Microsoft.DotNet.Interactive.Formatting.IDestructurer.Destructure( T instance )
-public  string Microsoft.DotNet.Interactive.Formatting.ITypeFormatter.MimeType { get; }
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.HtmlTag.IsSelfClosing { get; set; }
+public  System.String Microsoft.DotNet.Interactive.Formatting.HtmlTag.Name { get; set; }
+public  System.Void Microsoft.DotNet.Interactive.Formatting.HtmlTag.MergeAttributes( System.Collections.Generic.IDictionary<System.String,System.Object> htmlAttributes, System.Boolean replace = False )
+public  System.String Microsoft.DotNet.Interactive.Formatting.HtmlTag.ToString(  )
+protected  System.Void Microsoft.DotNet.Interactive.Formatting.HtmlTag.WriteContentsTo( Microsoft.DotNet.Interactive.Formatting.FormatContext context )
+protected  System.Void Microsoft.DotNet.Interactive.Formatting.HtmlTag.WriteEndTag( System.IO.TextWriter writer )
+protected  System.Void Microsoft.DotNet.Interactive.Formatting.HtmlTag.WriteSelfClosingTag( System.IO.TextWriter writer )
+protected  System.Void Microsoft.DotNet.Interactive.Formatting.HtmlTag.WriteStartTag( System.IO.TextWriter writer )
+public  System.Void Microsoft.DotNet.Interactive.Formatting.HtmlTag.WriteTo( System.IO.TextWriter writer, System.Text.Encodings.Web.HtmlEncoder encoder = null )
+public  System.Void Microsoft.DotNet.Interactive.Formatting.HtmlTag.WriteTo( Microsoft.DotNet.Interactive.Formatting.FormatContext context )
+public  System.Collections.Generic.ICollection<System.String> Microsoft.DotNet.Interactive.Formatting.IDestructurer.Keys { get; }
+public  System.Collections.Generic.IDictionary<System.String,System.Object> Microsoft.DotNet.Interactive.Formatting.IDestructurer.Destructure( System.Object instance )
+public  System.Collections.Generic.IDictionary<System.String,System.Object> Microsoft.DotNet.Interactive.Formatting.IDestructurer<T>.Destructure( T instance )
+public  System.String Microsoft.DotNet.Interactive.Formatting.ITypeFormatter.MimeType { get; }
 public  System.Type Microsoft.DotNet.Interactive.Formatting.ITypeFormatter.Type { get; }
-public  bool Microsoft.DotNet.Interactive.Formatting.ITypeFormatter.Format( object instance, Microsoft.DotNet.Interactive.Formatting.FormatContext context )
-public  bool Microsoft.DotNet.Interactive.Formatting.ITypeFormatter.Format( T instance, Microsoft.DotNet.Interactive.Formatting.FormatContext context )
-public  System.Collections.Generic.IEnumerable Microsoft.DotNet.Interactive.Formatting.ITypeFormatterSource.CreateTypeFormatters(  )
-protected  void Microsoft.DotNet.Interactive.Formatting.JsonConverter.EnsureStartObject( System.Text.Json.Utf8JsonReader reader, System.Type typeToConvert )
-protected  void Microsoft.DotNet.Interactive.Formatting.JsonConverter.OnWrite( System.Text.Json.Utf8JsonWriter writer, T value, System.Text.Json.JsonSerializerOptions options )
-public  void Microsoft.DotNet.Interactive.Formatting.JsonConverter.Write( System.Text.Json.Utf8JsonWriter writer, T value, System.Text.Json.JsonSerializerOptions options )
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.ITypeFormatter.Format( System.Object instance, Microsoft.DotNet.Interactive.Formatting.FormatContext context )
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.ITypeFormatter<T>.Format( T instance, Microsoft.DotNet.Interactive.Formatting.FormatContext context )
+public  System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Formatting.ITypeFormatter> Microsoft.DotNet.Interactive.Formatting.ITypeFormatterSource.CreateTypeFormatters(  )
+protected  System.Void Microsoft.DotNet.Interactive.Formatting.JsonConverter<T>.EnsureStartObject( System.Text.Json.Utf8JsonReader reader, System.Type typeToConvert )
+protected  System.Void Microsoft.DotNet.Interactive.Formatting.JsonConverter<T>.OnWrite( System.Text.Json.Utf8JsonWriter writer, T value, System.Text.Json.JsonSerializerOptions options )
+public  System.Void Microsoft.DotNet.Interactive.Formatting.JsonConverter<T>.Write( System.Text.Json.Utf8JsonWriter writer, T value, System.Text.Json.JsonSerializerOptions options )
 public static  Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource Microsoft.DotNet.Interactive.Formatting.JsonExtensions.ToTabularDataResource(  )
 public static  Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource Microsoft.DotNet.Interactive.Formatting.JsonExtensions.ToTabularDataResource(  )
 public static  System.Text.Json.JsonSerializerOptions Microsoft.DotNet.Interactive.Formatting.JsonFormatter.SerializerOptions { get; }
 public static  Microsoft.DotNet.Interactive.Formatting.ITypeFormatter Microsoft.DotNet.Interactive.Formatting.JsonFormatter.GetPreferredFormatterFor( System.Type type )
 Microsoft.DotNet.Interactive.Formatting.JsonFormatter<T>::.ctor()
 Microsoft.DotNet.Interactive.Formatting.JsonFormatter<T>::.ctor(FormatDelegate<T> format)
-Microsoft.DotNet.Interactive.Formatting.JsonFormatter<T>::.ctor(Action<T, Microsoft.DotNet.Interactive.Formatting.FormatContext> format)
-public  string Microsoft.DotNet.Interactive.Formatting.JsonFormatter.MimeType { get; }
-public  bool Microsoft.DotNet.Interactive.Formatting.JsonFormatter.Format( T instance, Microsoft.DotNet.Interactive.Formatting.FormatContext context )
-Microsoft.DotNet.Interactive.Formatting.JsonString::.ctor(string json)
-public static  int Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter.MaxProperties { get; set; }
+Microsoft.DotNet.Interactive.Formatting.JsonFormatter<T>::.ctor(Action<T,Microsoft.DotNet.Interactive.Formatting.FormatContext> format)
+public  System.String Microsoft.DotNet.Interactive.Formatting.JsonFormatter<T>.MimeType { get; }
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.JsonFormatter<T>.Format( T instance, Microsoft.DotNet.Interactive.Formatting.FormatContext context )
+Microsoft.DotNet.Interactive.Formatting.JsonString::.ctor(System.String json)
+public static  System.Int32 Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter.MaxProperties { get; set; }
 public static  Microsoft.DotNet.Interactive.Formatting.ITypeFormatter Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter.GetPreferredFormatterFor( System.Type type )
 public static  Microsoft.DotNet.Interactive.Formatting.ITypeFormatter Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter.GetPreferredFormatterFor<T>(  )
-public static  Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter.CreateForAnyEnumerable( bool includeInternals = False )
-public static  Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter.CreateForAnyObject( bool includeInternals = False )
-public static  Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter.CreateForMembers( Expression`1[] members )
+public static  Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter<T> Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter<T>.CreateForAnyEnumerable( System.Boolean includeInternals = False )
+public static  Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter<T> Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter<T>.CreateForAnyObject( System.Boolean includeInternals = False )
+public static  Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter<T> Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter<T>.CreateForMembers( Expression<Func<T,System.Object>> members )
 Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter<T>::.ctor(FormatDelegate<T> format)
-Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter<T>::.ctor(Action<T, Microsoft.DotNet.Interactive.Formatting.FormatContext> format)
-Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter<T>::.ctor(Func<T, string> format)
-public  string Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter.MimeType { get; }
-public  bool Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter.Format( T value, Microsoft.DotNet.Interactive.Formatting.FormatContext context )
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketView.Transform( System.Action<Microsoft.DotNet.Interactive.Formatting.HtmlTag, object> transform )
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketView.Transform( System.Action<Microsoft.DotNet.Interactive.Formatting.HtmlTag, object, Microsoft.DotNet.Interactive.Formatting.FormatContext> transform )
-Microsoft.DotNet.Interactive.Formatting.PocketView::.ctor(Microsoft.DotNet.Interactive.Formatting.PocketView nested = )
-Microsoft.DotNet.Interactive.Formatting.PocketView::.ctor(string tagName, Microsoft.DotNet.Interactive.Formatting.PocketView nested = )
+Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter<T>::.ctor(Action<T,Microsoft.DotNet.Interactive.Formatting.FormatContext> format)
+Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter<T>::.ctor(Func<T,System.String> format)
+public  System.String Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter<T>.MimeType { get; }
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter<T>.Format( T value, Microsoft.DotNet.Interactive.Formatting.FormatContext context )
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketView.Transform( System.Action<Microsoft.DotNet.Interactive.Formatting.HtmlTag,System.Object> transform )
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketView.Transform( System.Action<Microsoft.DotNet.Interactive.Formatting.HtmlTag,System.Object,Microsoft.DotNet.Interactive.Formatting.FormatContext> transform )
+Microsoft.DotNet.Interactive.Formatting.PocketView::.ctor(Microsoft.DotNet.Interactive.Formatting.PocketView nested = null)
+Microsoft.DotNet.Interactive.Formatting.PocketView::.ctor(System.String tagName, Microsoft.DotNet.Interactive.Formatting.PocketView nested = null)
 public  Microsoft.DotNet.Interactive.Formatting.HtmlAttributes Microsoft.DotNet.Interactive.Formatting.PocketView.HtmlAttributes { get; }
 public  Microsoft.DotNet.Interactive.Formatting.HtmlTag Microsoft.DotNet.Interactive.Formatting.PocketView.HtmlTag { get; }
-public  string Microsoft.DotNet.Interactive.Formatting.PocketView.Name { get; }
-public  void Microsoft.DotNet.Interactive.Formatting.PocketView.AddDependency( string id, Microsoft.AspNetCore.Html.IHtmlContent content )
-public  void Microsoft.DotNet.Interactive.Formatting.PocketView.SetContent( System.Object[] args )
-public  string Microsoft.DotNet.Interactive.Formatting.PocketView.ToString(  )
-public  bool Microsoft.DotNet.Interactive.Formatting.PocketView.TryGetIndex( System.Dynamic.GetIndexBinder binder, System.Object[] values, ref System.Object& result )
-public  bool Microsoft.DotNet.Interactive.Formatting.PocketView.TryGetMember( System.Dynamic.GetMemberBinder binder, ref System.Object& result )
-public  bool Microsoft.DotNet.Interactive.Formatting.PocketView.TryInvoke( System.Dynamic.InvokeBinder binder, System.Object[] args, ref System.Object& result )
-public  bool Microsoft.DotNet.Interactive.Formatting.PocketView.TryInvokeMember( System.Dynamic.InvokeMemberBinder binder, System.Object[] args, ref System.Object& result )
-public  bool Microsoft.DotNet.Interactive.Formatting.PocketView.TrySetMember( System.Dynamic.SetMemberBinder binder, object value )
-public  void Microsoft.DotNet.Interactive.Formatting.PocketView.WriteTo( System.IO.TextWriter writer )
-public  void Microsoft.DotNet.Interactive.Formatting.PocketView.WriteTo( System.IO.TextWriter writer, System.Text.Encodings.Web.HtmlEncoder encoder )
-public  void Microsoft.DotNet.Interactive.Formatting.PocketView.WriteTo( Microsoft.DotNet.Interactive.Formatting.FormatContext context )
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags._ { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.a { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.area { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.aside { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.b { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.body { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.br { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.button { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.caption { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.center { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.circle { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.code { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.colgroup { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.dd { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.details { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.div { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.dl { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.dt { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.em { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.figure { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.font { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.form { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.g { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.h1 { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.h2 { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.h3 { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.h4 { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.h5 { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.h6 { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.head { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.header { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.hgroup { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.hr { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.html { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.i { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.iframe { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.img { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.input { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.label { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.li { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.line { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.link { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.main { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.menu { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.menuitem { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.meta { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.meter { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.nav { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.ol { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.optgroup { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.option { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.p { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.pre { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.progress { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.q { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.script { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.section { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.select { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.small { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.source { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.span { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.strike { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.strong { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.style { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.sub { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.summary { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.sup { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.svg { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.table { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.tbody { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.td { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.text { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.textarea { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.tfoot { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.th { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.thead { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.title { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.tr { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.u { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.ul { get; }
-public static  object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.video { get; }
+public  System.String Microsoft.DotNet.Interactive.Formatting.PocketView.Name { get; }
+public  System.Void Microsoft.DotNet.Interactive.Formatting.PocketView.AddDependency( System.String id, Microsoft.AspNetCore.Html.IHtmlContent content )
+public  System.Void Microsoft.DotNet.Interactive.Formatting.PocketView.SetContent( System.Object[] args )
+public  System.String Microsoft.DotNet.Interactive.Formatting.PocketView.ToString(  )
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.PocketView.TryGetIndex( System.Dynamic.GetIndexBinder binder, System.Object[] values, ref System.Object& result )
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.PocketView.TryGetMember( System.Dynamic.GetMemberBinder binder, ref System.Object& result )
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.PocketView.TryInvoke( System.Dynamic.InvokeBinder binder, System.Object[] args, ref System.Object& result )
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.PocketView.TryInvokeMember( System.Dynamic.InvokeMemberBinder binder, System.Object[] args, ref System.Object& result )
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.PocketView.TrySetMember( System.Dynamic.SetMemberBinder binder, System.Object value )
+public  System.Void Microsoft.DotNet.Interactive.Formatting.PocketView.WriteTo( System.IO.TextWriter writer )
+public  System.Void Microsoft.DotNet.Interactive.Formatting.PocketView.WriteTo( System.IO.TextWriter writer, System.Text.Encodings.Web.HtmlEncoder encoder )
+public  System.Void Microsoft.DotNet.Interactive.Formatting.PocketView.WriteTo( Microsoft.DotNet.Interactive.Formatting.FormatContext context )
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags._ { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.a { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.area { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.aside { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.b { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.body { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.br { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.button { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.caption { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.center { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.circle { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.code { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.colgroup { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.dd { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.details { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.div { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.dl { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.dt { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.em { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.figure { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.font { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.form { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.g { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.h1 { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.h2 { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.h3 { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.h4 { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.h5 { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.h6 { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.head { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.header { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.hgroup { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.hr { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.html { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.i { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.iframe { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.img { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.input { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.label { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.li { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.line { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.link { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.main { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.menu { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.menuitem { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.meta { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.meter { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.nav { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.ol { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.optgroup { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.option { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.p { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.pre { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.progress { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.q { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.script { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.section { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.select { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.small { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.source { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.span { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.strike { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.strong { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.style { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.sub { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.summary { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.sup { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.svg { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.table { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.tbody { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.td { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.text { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.textarea { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.tfoot { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.th { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.thead { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.title { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.tr { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.u { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.ul { get; }
+public static  System.Object Microsoft.DotNet.Interactive.Formatting.PocketViewTags.video { get; }
 Microsoft.DotNet.Interactive.Formatting.TabularData.TableDataFieldDescriptors::.ctor()
-public  int Microsoft.DotNet.Interactive.Formatting.TabularData.TableDataFieldDescriptors.Count { get; }
+public  System.Int32 Microsoft.DotNet.Interactive.Formatting.TabularData.TableDataFieldDescriptors.Count { get; }
 public  Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldDescriptor Microsoft.DotNet.Interactive.Formatting.TabularData.TableDataFieldDescriptors.Item { get; }
-public  void Microsoft.DotNet.Interactive.Formatting.TabularData.TableDataFieldDescriptors.Add( Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldDescriptor descriptor )
-public  bool Microsoft.DotNet.Interactive.Formatting.TabularData.TableDataFieldDescriptors.Contains( string name )
-public  System.Collections.Generic.IEnumerator Microsoft.DotNet.Interactive.Formatting.TabularData.TableDataFieldDescriptors.GetEnumerator(  )
+public  System.Void Microsoft.DotNet.Interactive.Formatting.TabularData.TableDataFieldDescriptors.Add( Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldDescriptor descriptor )
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.TabularData.TableDataFieldDescriptors.Contains( System.String name )
+public  System.Collections.Generic.IEnumerator<Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldDescriptor> Microsoft.DotNet.Interactive.Formatting.TabularData.TableDataFieldDescriptors.GetEnumerator(  )
 Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchema::.ctor()
 public  Microsoft.DotNet.Interactive.Formatting.TabularData.TableDataFieldDescriptors Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchema.Fields { get; set; }
-public  System.Collections.Generic.List Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchema.PrimaryKey { get; set; }
-Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldDescriptor::.ctor(string name, Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldType? type = 2, string description = , string format = )
-public  string Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldDescriptor.Description { get; }
-public  string Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldDescriptor.Format { get; }
-public  string Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldDescriptor.Name { get; }
+public  System.Collections.Generic.List<System.String> Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchema.PrimaryKey { get; set; }
+Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldDescriptor::.ctor(System.String name, Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldType? type = 2, System.String description = null, System.String format = null)
+public  System.String Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldDescriptor.Description { get; }
+public  System.String Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldDescriptor.Format { get; }
+public  System.String Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldDescriptor.Name { get; }
 public  Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldType Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldDescriptor.Type { get; }
 Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldTypeConverter::.ctor()
 public  Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldType Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldTypeConverter.Read( ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options )
-public  void Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldTypeConverter.Write( System.Text.Json.Utf8JsonWriter writer, Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldType value, System.Text.Json.JsonSerializerOptions options )
-Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource::.ctor(Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchema schema, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IDictionary<string, object>> data)
-public  System.Collections.Generic.IReadOnlyList Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource.Data { get; }
-public  string Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource.Profile { get; }
+public  System.Void Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldTypeConverter.Write( System.Text.Json.Utf8JsonWriter writer, Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldType value, System.Text.Json.JsonSerializerOptions options )
+Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource::.ctor(Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchema schema, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IDictionary<System.String,System.Object>> data)
+public  System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IDictionary<System.String,System.Object>> Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource.Data { get; }
+public  System.String Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource.Profile { get; }
 public  Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchema Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource.Schema { get; }
 public  Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResourceJsonString Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource.ToJsonString(  )
 Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResourceConverter::.ctor()
 public  Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResourceConverter.Read( ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options )
-public  void Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResourceConverter.Write( System.Text.Json.Utf8JsonWriter writer, Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource value, System.Text.Json.JsonSerializerOptions options )
+public  System.Void Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResourceConverter.Write( System.Text.Json.Utf8JsonWriter writer, Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource value, System.Text.Json.JsonSerializerOptions options )
 public static  System.Text.Json.JsonSerializerOptions Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResourceFormatter.JsonSerializerOptions { get; }
 public static  Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldType Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResourceFormatter.ToTableSchemaFieldType(  )
 public static  Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResourceFormatter.ToTabularDataResource<T>(  )
 Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResourceFormatter<T>::.ctor(FormatDelegate<T> format)
-Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResourceFormatter<T>::.ctor(Action<T, Microsoft.DotNet.Interactive.Formatting.FormatContext> format)
-public  string Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResourceFormatter.MimeType { get; }
-public  bool Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResourceFormatter.Format( T value, Microsoft.DotNet.Interactive.Formatting.FormatContext context )
-public static  Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResourceJsonString Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResourceJsonString.Create( System.Collections.Generic.IReadOnlyDictionary<string, System.Type> fields, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IDictionary<string, object>> data )
-Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResourceJsonString::.ctor(string json)
-public  string Microsoft.DotNet.Interactive.Formatting.TypeFormatter.MimeType { get; }
-public  System.Type Microsoft.DotNet.Interactive.Formatting.TypeFormatter.Type { get; }
-public  bool Microsoft.DotNet.Interactive.Formatting.TypeFormatter.Format( T value, Microsoft.DotNet.Interactive.Formatting.FormatContext context )
+Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResourceFormatter<T>::.ctor(Action<T,Microsoft.DotNet.Interactive.Formatting.FormatContext> format)
+public  System.String Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResourceFormatter<T>.MimeType { get; }
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResourceFormatter<T>.Format( T value, Microsoft.DotNet.Interactive.Formatting.FormatContext context )
+public static  Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResourceJsonString Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResourceJsonString.Create( System.Collections.Generic.IReadOnlyDictionary<System.String,System.Type> fields, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IDictionary<System.String,System.Object>> data )
+Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResourceJsonString::.ctor(System.String json)
+public  System.String Microsoft.DotNet.Interactive.Formatting.TypeFormatter<T>.MimeType { get; }
+public  System.Type Microsoft.DotNet.Interactive.Formatting.TypeFormatter<T>.Type { get; }
+public  System.Boolean Microsoft.DotNet.Interactive.Formatting.TypeFormatter<T>.Format( T value, Microsoft.DotNet.Interactive.Formatting.FormatContext context )
 Microsoft.DotNet.Interactive.Formatting.TypeFormatterSourceAttribute::.ctor(System.Type formatterSourceType)
 public  System.Type Microsoft.DotNet.Interactive.Formatting.TypeFormatterSourceAttribute.FormatterSourceType { get; }
