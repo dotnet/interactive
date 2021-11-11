@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 
 using Assent;
@@ -157,13 +158,11 @@ public class ApiCompatibilityTests
             else if (isExtensionMethod && param.Position == 0)
                 signature = "this ";
 
-
-
             signature += $"{GetTypeName(param.ParameterType)} {param.Name}";
 
             if (param.HasDefaultValue)
             {
-                signature += $" = {param.DefaultValue}";
+                signature += $" = {param.DefaultValue?? "null"}";
             }
 
             return signature;
@@ -212,10 +211,9 @@ public class ApiCompatibilityTests
         var signatureType = isNullableType
             ? underlyingNullableType
             : type;
-
-        var isGenericType = signatureType.IsGenericType;
+        
         var typeName = GetQualifiedTypeName(signatureType);
-        var signature = isGenericType ? $"{typeName}<{string.Join(", ", signatureType.GetGenericArguments().Select(GetTypeName))}>" : typeName;
+        var signature = typeName;
 
         if (isNullableType)
         {
@@ -224,41 +222,42 @@ public class ApiCompatibilityTests
 
         return signature;
     }
+    private static void WriteCSharpDeclarationTo(
+        Type type,
+        TextWriter writer)
+    {
+        var typeName = type.FullName ?? type.Name;
+
+        if (typeName.Contains("`"))
+        {
+            writer.Write(typeName.Remove(typeName.IndexOf('`')));
+            writer.Write("<");
+            var genericArguments = type.GetGenericArguments();
+
+            for (var i = 0; i < genericArguments.Length; i++)
+            {
+               WriteCSharpDeclarationTo(genericArguments[i], writer);
+                if (i < genericArguments.Length - 1)
+                {
+                    writer.Write(",");
+                }
+            }
+
+            writer.Write(">");
+        }
+        else
+        {
+            writer.Write(typeName);
+        }
+    }
 
     public static string GetQualifiedTypeName(Type type)
     {
-        switch (type.Name)
-        {
-            case "String":
-                return "string";
-            case "Int32":
-                return "int";
-            case "Decimal":
-                return "decimal";
-            case "Object":
-                return "object";
-            case "Void":
-                return "void";
-            case "Boolean":
-                return "bool";
-        }
-
-        var signature = string.IsNullOrWhiteSpace(type.FullName)
-            ? type.Name
-            : type.FullName;
-
-        if (type.IsGenericType)
-        {
-            var index = signature.IndexOf('`');
-            if (index >= 0)
-
-            {
-                signature = signature[..index];
-            }
-
-        }
-
-        return signature;
+        var builder = new StringBuilder();
+        using var writer = new StringWriter(builder);
+        WriteCSharpDeclarationTo(type, writer);
+        writer.Flush();
+        return builder.ToString();
     }
 
     private string GenerateContract<T>()

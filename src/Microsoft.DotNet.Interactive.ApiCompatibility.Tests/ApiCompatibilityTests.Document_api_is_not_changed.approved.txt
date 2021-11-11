@@ -1,63 +1,63 @@
 public static  System.Text.Encoding Microsoft.DotNet.Interactive.Documents.CodeSubmission.Encoding { get; }
-public static  Microsoft.DotNet.Interactive.Documents.InteractiveDocument Microsoft.DotNet.Interactive.Documents.CodeSubmission.Parse( string content, string defaultLanguage, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Documents.KernelName> kernelNames )
-public static  Microsoft.DotNet.Interactive.Documents.InteractiveDocument Microsoft.DotNet.Interactive.Documents.CodeSubmission.Read( System.IO.Stream stream, string defaultLanguage, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Documents.KernelName> kernelNames )
-public static  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.Documents.CodeSubmission.ReadAsync( System.IO.Stream stream, string defaultLanguage, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Documents.KernelName> kernelNames )
-public static  string Microsoft.DotNet.Interactive.Documents.CodeSubmission.ToCodeSubmissionContent( string newline = 
+public static  Microsoft.DotNet.Interactive.Documents.InteractiveDocument Microsoft.DotNet.Interactive.Documents.CodeSubmission.Parse( System.String content, System.String defaultLanguage, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Documents.KernelName> kernelNames )
+public static  Microsoft.DotNet.Interactive.Documents.InteractiveDocument Microsoft.DotNet.Interactive.Documents.CodeSubmission.Read( System.IO.Stream stream, System.String defaultLanguage, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Documents.KernelName> kernelNames )
+public static  System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Documents.InteractiveDocument> Microsoft.DotNet.Interactive.Documents.CodeSubmission.ReadAsync( System.IO.Stream stream, System.String defaultLanguage, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Documents.KernelName> kernelNames )
+public static  System.String Microsoft.DotNet.Interactive.Documents.CodeSubmission.ToCodeSubmissionContent( System.String newline = 
  )
-public static  void Microsoft.DotNet.Interactive.Documents.CodeSubmission.Write( Microsoft.DotNet.Interactive.Documents.InteractiveDocument interactiveDocument, string newline, System.IO.Stream stream )
-public static  void Microsoft.DotNet.Interactive.Documents.CodeSubmission.Write( Microsoft.DotNet.Interactive.Documents.InteractiveDocument interactiveDocument, string newline, System.IO.TextWriter writer )
+public static  System.Void Microsoft.DotNet.Interactive.Documents.CodeSubmission.Write( Microsoft.DotNet.Interactive.Documents.InteractiveDocument interactiveDocument, System.String newline, System.IO.Stream stream )
+public static  System.Void Microsoft.DotNet.Interactive.Documents.CodeSubmission.Write( Microsoft.DotNet.Interactive.Documents.InteractiveDocument interactiveDocument, System.String newline, System.IO.TextWriter writer )
 Microsoft.DotNet.Interactive.Documents.DataDictionaryConverter::.ctor()
-public  System.Collections.Generic.IDictionary Microsoft.DotNet.Interactive.Documents.DataDictionaryConverter.Read( ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options )
-Microsoft.DotNet.Interactive.Documents.DisplayElement::.ctor(System.Collections.Generic.IDictionary<string, object> data)
-public  System.Collections.Generic.IDictionary Microsoft.DotNet.Interactive.Documents.DisplayElement.Data { get; }
-Microsoft.DotNet.Interactive.Documents.ErrorElement::.ctor(string errorName, string errorValue, System.String[] stackTrace)
-public  string Microsoft.DotNet.Interactive.Documents.ErrorElement.ErrorName { get; }
-public  string Microsoft.DotNet.Interactive.Documents.ErrorElement.ErrorValue { get; }
+public  System.Collections.Generic.IDictionary<System.String,System.Object> Microsoft.DotNet.Interactive.Documents.DataDictionaryConverter.Read( ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options )
+Microsoft.DotNet.Interactive.Documents.DisplayElement::.ctor(System.Collections.Generic.IDictionary<System.String,System.Object> data)
+public  System.Collections.Generic.IDictionary<System.String,System.Object> Microsoft.DotNet.Interactive.Documents.DisplayElement.Data { get; }
+Microsoft.DotNet.Interactive.Documents.ErrorElement::.ctor(System.String errorName, System.String errorValue, System.String[] stackTrace)
+public  System.String Microsoft.DotNet.Interactive.Documents.ErrorElement.ErrorName { get; }
+public  System.String Microsoft.DotNet.Interactive.Documents.ErrorElement.ErrorValue { get; }
 public  System.String[] Microsoft.DotNet.Interactive.Documents.ErrorElement.StackTrace { get; }
 Microsoft.DotNet.Interactive.Documents.InteractiveDocument::.ctor(System.Collections.Generic.IList<Microsoft.DotNet.Interactive.Documents.InteractiveDocumentElement> elements)
-public  System.Collections.Generic.IList Microsoft.DotNet.Interactive.Documents.InteractiveDocument.Elements { get; }
-Microsoft.DotNet.Interactive.Documents.InteractiveDocumentElement::.ctor(string language, string contents, Microsoft.DotNet.Interactive.Documents.InteractiveDocumentOutputElement[] outputs = )
-public  string Microsoft.DotNet.Interactive.Documents.InteractiveDocumentElement.Contents { get; }
-public  string Microsoft.DotNet.Interactive.Documents.InteractiveDocumentElement.Language { get; }
+public  System.Collections.Generic.IList<Microsoft.DotNet.Interactive.Documents.InteractiveDocumentElement> Microsoft.DotNet.Interactive.Documents.InteractiveDocument.Elements { get; }
+Microsoft.DotNet.Interactive.Documents.InteractiveDocumentElement::.ctor(System.String language, System.String contents, Microsoft.DotNet.Interactive.Documents.InteractiveDocumentOutputElement[] outputs = null)
+public  System.String Microsoft.DotNet.Interactive.Documents.InteractiveDocumentElement.Contents { get; }
+public  System.String Microsoft.DotNet.Interactive.Documents.InteractiveDocumentElement.Language { get; }
 public  Microsoft.DotNet.Interactive.Documents.InteractiveDocumentOutputElement[] Microsoft.DotNet.Interactive.Documents.InteractiveDocumentElement.Outputs { get; }
-protected  void Microsoft.DotNet.Interactive.Documents.JsonConverter.EnsureStartObject( System.Text.Json.Utf8JsonReader reader, System.Type typeToConvert )
-protected  void Microsoft.DotNet.Interactive.Documents.JsonConverter.OnWrite( System.Text.Json.Utf8JsonWriter writer, T value, System.Text.Json.JsonSerializerOptions options )
-public  void Microsoft.DotNet.Interactive.Documents.JsonConverter.Write( System.Text.Json.Utf8JsonWriter writer, T value, System.Text.Json.JsonSerializerOptions options )
-public static  System.Nullable Microsoft.DotNet.Interactive.Documents.JsonElementExtensions.GetPropertyFromPath( System.String[] path )
-Microsoft.DotNet.Interactive.Documents.Jupyter.InputCellMetadata::.ctor(string language = )
-public  string Microsoft.DotNet.Interactive.Documents.Jupyter.InputCellMetadata.Language { get; }
+protected  System.Void Microsoft.DotNet.Interactive.Documents.JsonConverter<T>.EnsureStartObject( System.Text.Json.Utf8JsonReader reader, System.Type typeToConvert )
+protected  System.Void Microsoft.DotNet.Interactive.Documents.JsonConverter<T>.OnWrite( System.Text.Json.Utf8JsonWriter writer, T value, System.Text.Json.JsonSerializerOptions options )
+public  System.Void Microsoft.DotNet.Interactive.Documents.JsonConverter<T>.Write( System.Text.Json.Utf8JsonWriter writer, T value, System.Text.Json.JsonSerializerOptions options )
+public static  System.Nullable<System.Text.Json.JsonElement> Microsoft.DotNet.Interactive.Documents.JsonElementExtensions.GetPropertyFromPath( System.String[] path )
+Microsoft.DotNet.Interactive.Documents.Jupyter.InputCellMetadata::.ctor(System.String language = null)
+public  System.String Microsoft.DotNet.Interactive.Documents.Jupyter.InputCellMetadata.Language { get; }
 public static  System.Text.Encoding Microsoft.DotNet.Interactive.Documents.Jupyter.Notebook.Encoding { get; }
-public static  Microsoft.DotNet.Interactive.Documents.InteractiveDocument Microsoft.DotNet.Interactive.Documents.Jupyter.Notebook.Parse( string content, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Documents.KernelName> kernelNames )
+public static  Microsoft.DotNet.Interactive.Documents.InteractiveDocument Microsoft.DotNet.Interactive.Documents.Jupyter.Notebook.Parse( System.String content, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Documents.KernelName> kernelNames )
 public static  Microsoft.DotNet.Interactive.Documents.InteractiveDocument Microsoft.DotNet.Interactive.Documents.Jupyter.Notebook.Read( System.IO.Stream stream, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Documents.KernelName> kernelNames )
-public static  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.Documents.Jupyter.Notebook.ReadAsync( System.IO.Stream stream, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Documents.KernelName> kernelNames )
-public static  string Microsoft.DotNet.Interactive.Documents.Jupyter.Notebook.ToJupyterNotebookContent( string newline = 
+public static  System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Documents.InteractiveDocument> Microsoft.DotNet.Interactive.Documents.Jupyter.Notebook.ReadAsync( System.IO.Stream stream, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Documents.KernelName> kernelNames )
+public static  System.String Microsoft.DotNet.Interactive.Documents.Jupyter.Notebook.ToJupyterNotebookContent( System.String newline = 
  )
-public static  void Microsoft.DotNet.Interactive.Documents.Jupyter.Notebook.Write( Microsoft.DotNet.Interactive.Documents.InteractiveDocument interactive, string newline, System.IO.Stream stream )
-public static  void Microsoft.DotNet.Interactive.Documents.Jupyter.Notebook.Write( Microsoft.DotNet.Interactive.Documents.InteractiveDocument interactive, string newline, System.IO.TextWriter writer )
+public static  System.Void Microsoft.DotNet.Interactive.Documents.Jupyter.Notebook.Write( Microsoft.DotNet.Interactive.Documents.InteractiveDocument interactive, System.String newline, System.IO.Stream stream )
+public static  System.Void Microsoft.DotNet.Interactive.Documents.Jupyter.Notebook.Write( Microsoft.DotNet.Interactive.Documents.InteractiveDocument interactive, System.String newline, System.IO.TextWriter writer )
 public static  System.Text.Json.JsonSerializerOptions Microsoft.DotNet.Interactive.Documents.Jupyter.NotebookCellOutputConverter.InternalOptions { get; set; }
 Microsoft.DotNet.Interactive.Documents.Jupyter.NotebookCellOutputConverter::.ctor()
 public  Microsoft.DotNet.Interactive.Documents.InteractiveDocumentOutputElement Microsoft.DotNet.Interactive.Documents.Jupyter.NotebookCellOutputConverter.Read( ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options )
-Microsoft.DotNet.Interactive.Documents.KernelName::.ctor(string kernelName)
-Microsoft.DotNet.Interactive.Documents.KernelName::.ctor(string name, System.Collections.Generic.IReadOnlyCollection<string> aliases)
-public  System.Collections.Generic.IReadOnlyCollection Microsoft.DotNet.Interactive.Documents.KernelName.Aliases { get; }
-public  string Microsoft.DotNet.Interactive.Documents.KernelName.Name { get; }
-public  string Microsoft.DotNet.Interactive.Documents.KernelName.ToString(  )
+Microsoft.DotNet.Interactive.Documents.KernelName::.ctor(System.String kernelName)
+Microsoft.DotNet.Interactive.Documents.KernelName::.ctor(System.String name, System.Collections.Generic.IReadOnlyCollection<System.String> aliases)
+public  System.Collections.Generic.IReadOnlyCollection<System.String> Microsoft.DotNet.Interactive.Documents.KernelName.Aliases { get; }
+public  System.String Microsoft.DotNet.Interactive.Documents.KernelName.Name { get; }
+public  System.String Microsoft.DotNet.Interactive.Documents.KernelName.ToString(  )
 Microsoft.DotNet.Interactive.Documents.ParserServer.ByteArrayConverter::.ctor()
 public  System.Byte[] Microsoft.DotNet.Interactive.Documents.ParserServer.ByteArrayConverter.Read( ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options )
-public  void Microsoft.DotNet.Interactive.Documents.ParserServer.ByteArrayConverter.Write( System.Text.Json.Utf8JsonWriter writer, System.Byte[] value, System.Text.Json.JsonSerializerOptions options )
-Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookErrorResponse::.ctor(string id, string errorMessage)
-public  string Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookErrorResponse.ErrorMessage { get; }
-public static  Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParseOrSerializeRequest Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParseOrSerializeRequest.FromJson( string json )
-public  string Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParseOrSerializeRequest.DefaultLanguage { get; }
-public  string Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParseOrSerializeRequest.Id { get; }
+public  System.Void Microsoft.DotNet.Interactive.Documents.ParserServer.ByteArrayConverter.Write( System.Text.Json.Utf8JsonWriter writer, System.Byte[] value, System.Text.Json.JsonSerializerOptions options )
+Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookErrorResponse::.ctor(System.String id, System.String errorMessage)
+public  System.String Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookErrorResponse.ErrorMessage { get; }
+public static  Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParseOrSerializeRequest Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParseOrSerializeRequest.FromJson( System.String json )
+public  System.String Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParseOrSerializeRequest.DefaultLanguage { get; }
+public  System.String Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParseOrSerializeRequest.Id { get; }
 public  Microsoft.DotNet.Interactive.Documents.ParserServer.DocumentSerializationType Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParseOrSerializeRequest.SerializationType { get; }
 public  Microsoft.DotNet.Interactive.Documents.ParserServer.RequestType Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParseOrSerializeRequest.Type { get; }
-Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParseRequest::.ctor(string id, Microsoft.DotNet.Interactive.Documents.ParserServer.DocumentSerializationType serializationType, string defaultLanguage, System.Byte[] rawData)
+Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParseRequest::.ctor(System.String id, Microsoft.DotNet.Interactive.Documents.ParserServer.DocumentSerializationType serializationType, System.String defaultLanguage, System.Byte[] rawData)
 public  System.Byte[] Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParseRequest.RawData { get; }
 public  Microsoft.DotNet.Interactive.Documents.ParserServer.RequestType Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParseRequest.Type { get; }
 Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParseRequestConverter::.ctor()
 public  Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParseOrSerializeRequest Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParseRequestConverter.Read( ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options )
-Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParseResponse::.ctor(string id, Microsoft.DotNet.Interactive.Documents.InteractiveDocument document)
+Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParseResponse::.ctor(System.String id, Microsoft.DotNet.Interactive.Documents.InteractiveDocument document)
 public  Microsoft.DotNet.Interactive.Documents.InteractiveDocument Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParseResponse.Document { get; }
 Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParseResponseConverter::.ctor()
 public  Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParserServerResponse Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParseResponseConverter.Read( ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options )
@@ -66,16 +66,16 @@ Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParserServer::.ctor(
 public  System.IO.TextReader Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParserServer.Input { get; }
 public  System.IO.TextWriter Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParserServer.Output { get; }
 public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParserServer.RunAsync(  )
-public static  string Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParserServerExtensions.ToJson(  )
-public static  string Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParserServerExtensions.ToJson(  )
-public static  Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParserServerResponse Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParserServerResponse.FromJson( string json )
-Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParserServerResponse::.ctor(string id)
-public  string Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParserServerResponse.Id { get; }
-Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookSerializeRequest::.ctor(string id, Microsoft.DotNet.Interactive.Documents.ParserServer.DocumentSerializationType serializationType, string defaultLanguage, string newLine, Microsoft.DotNet.Interactive.Documents.InteractiveDocument document)
+public static  System.String Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParserServerExtensions.ToJson(  )
+public static  System.String Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParserServerExtensions.ToJson(  )
+public static  Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParserServerResponse Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParserServerResponse.FromJson( System.String json )
+Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParserServerResponse::.ctor(System.String id)
+public  System.String Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParserServerResponse.Id { get; }
+Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookSerializeRequest::.ctor(System.String id, Microsoft.DotNet.Interactive.Documents.ParserServer.DocumentSerializationType serializationType, System.String defaultLanguage, System.String newLine, Microsoft.DotNet.Interactive.Documents.InteractiveDocument document)
 public  Microsoft.DotNet.Interactive.Documents.InteractiveDocument Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookSerializeRequest.Document { get; }
-public  string Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookSerializeRequest.NewLine { get; }
+public  System.String Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookSerializeRequest.NewLine { get; }
 public  Microsoft.DotNet.Interactive.Documents.ParserServer.RequestType Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookSerializeRequest.Type { get; }
-Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookSerializeResponse::.ctor(string id, System.Byte[] rawData)
+Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookSerializeResponse::.ctor(System.String id, System.Byte[] rawData)
 public  System.Byte[] Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookSerializeResponse.RawData { get; }
-Microsoft.DotNet.Interactive.Documents.TextElement::.ctor(string text)
-public  string Microsoft.DotNet.Interactive.Documents.TextElement.Text { get; }
+Microsoft.DotNet.Interactive.Documents.TextElement::.ctor(System.String text)
+public  System.String Microsoft.DotNet.Interactive.Documents.TextElement.Text { get; }
