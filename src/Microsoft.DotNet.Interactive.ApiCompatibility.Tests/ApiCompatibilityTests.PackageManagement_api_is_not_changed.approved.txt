@@ -1,25 +1,25 @@
-Microsoft.DotNet.Interactive.AddNugetRestoreSourcesResult::Void .ctor(Boolean, Microsoft.DotNet.Interactive.PackageReference, System.Collections.Generic.IReadOnlyList`1[Microsoft.DotNet.Interactive.ResolvedPackageReference], System.Collections.Generic.IReadOnlyCollection`1[System.String])
-Microsoft.DotNet.Interactive.AddNugetResult::Void .ctor(Boolean, Microsoft.DotNet.Interactive.PackageReference, System.Collections.Generic.IReadOnlyCollection`1[System.String])
-Microsoft.DotNet.Interactive.AddNugetResult::System.Collections.Generic.IReadOnlyCollection`1[System.String] get_Errors()
-Microsoft.DotNet.Interactive.AddNugetResult::Boolean get_Succeeded()
-Microsoft.DotNet.Interactive.ISupportNuget::System.Collections.Generic.IEnumerable`1[Microsoft.DotNet.Interactive.PackageReference] get_RequestedPackageReferences()
-Microsoft.DotNet.Interactive.ISupportNuget::System.Collections.Generic.IEnumerable`1[Microsoft.DotNet.Interactive.ResolvedPackageReference] get_ResolvedPackageReferences()
-Microsoft.DotNet.Interactive.ISupportNuget::System.Collections.Generic.IEnumerable`1[System.String] get_RestoreSources()
-Microsoft.DotNet.Interactive.ISupportNuget::Microsoft.DotNet.Interactive.PackageReference GetOrAddPackageReference(System.String, System.String)
-Microsoft.DotNet.Interactive.ISupportNuget::Void RegisterResolvedPackageReferences(System.Collections.Generic.IReadOnlyList`1[Microsoft.DotNet.Interactive.ResolvedPackageReference])
-Microsoft.DotNet.Interactive.ISupportNuget::System.Threading.Tasks.Task`1[Microsoft.DotNet.Interactive.PackageRestoreResult] RestoreAsync()
-Microsoft.DotNet.Interactive.ISupportNuget::Void TryAddRestoreSource(System.String)
-Microsoft.DotNet.Interactive.KernelSupportsNugetExtensions::T UseNugetDirective[T](T)
-Microsoft.DotNet.Interactive.PackageRestoreContext::Void .ctor()
-Microsoft.DotNet.Interactive.PackageRestoreContext::System.Collections.Generic.IEnumerable`1[Microsoft.DotNet.Interactive.PackageReference] get_RequestedPackageReferences()
-Microsoft.DotNet.Interactive.PackageRestoreContext::System.Collections.Generic.IEnumerable`1[Microsoft.DotNet.Interactive.ResolvedPackageReference] get_ResolvedPackageReferences()
-Microsoft.DotNet.Interactive.PackageRestoreContext::System.Collections.Generic.IEnumerable`1[System.String] get_RestoreSources()
-Microsoft.DotNet.Interactive.PackageRestoreContext::Void Dispose()
-Microsoft.DotNet.Interactive.PackageRestoreContext::Microsoft.DotNet.Interactive.PackageReference GetOrAddPackageReference(System.String, System.String)
-Microsoft.DotNet.Interactive.PackageRestoreContext::Microsoft.DotNet.Interactive.ResolvedPackageReference GetResolvedPackageReference(System.String)
-Microsoft.DotNet.Interactive.PackageRestoreContext::System.Threading.Tasks.Task`1[Microsoft.DotNet.Interactive.PackageRestoreResult] RestoreAsync()
-Microsoft.DotNet.Interactive.PackageRestoreContext::Void TryAddRestoreSource(System.String)
-Microsoft.DotNet.Interactive.PackageRestoreResult::Void .ctor(Boolean, System.Collections.Generic.IEnumerable`1[Microsoft.DotNet.Interactive.PackageReference], System.Collections.Generic.IReadOnlyList`1[Microsoft.DotNet.Interactive.ResolvedPackageReference], System.Collections.Generic.IReadOnlyCollection`1[System.String])
-Microsoft.DotNet.Interactive.PackageRestoreResult::System.Collections.Generic.IReadOnlyCollection`1[System.String] get_Errors()
-Microsoft.DotNet.Interactive.PackageRestoreResult::System.Collections.Generic.IReadOnlyList`1[Microsoft.DotNet.Interactive.ResolvedPackageReference] get_ResolvedReferences()
-Microsoft.DotNet.Interactive.PackageRestoreResult::Boolean get_Succeeded()
+Microsoft.DotNet.Interactive.AddNugetRestoreSourcesResult::.ctor(bool succeeded, Microsoft.DotNet.Interactive.PackageReference requestedPackage, System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.ResolvedPackageReference> addedReferences = , System.Collections.Generic.IReadOnlyCollection<string> errors = )
+Microsoft.DotNet.Interactive.AddNugetResult::.ctor(bool succeeded, Microsoft.DotNet.Interactive.PackageReference requestedPackage, System.Collections.Generic.IReadOnlyCollection<string> errors = )
+public  System.Collections.Generic.IReadOnlyCollection Microsoft.DotNet.Interactive.AddNugetResult.Errors { get; }
+public  bool Microsoft.DotNet.Interactive.AddNugetResult.Succeeded { get; }
+public  System.Collections.Generic.IEnumerable Microsoft.DotNet.Interactive.ISupportNuget.RequestedPackageReferences { get; }
+public  System.Collections.Generic.IEnumerable Microsoft.DotNet.Interactive.ISupportNuget.ResolvedPackageReferences { get; }
+public  System.Collections.Generic.IEnumerable Microsoft.DotNet.Interactive.ISupportNuget.RestoreSources { get; }
+public  Microsoft.DotNet.Interactive.PackageReference Microsoft.DotNet.Interactive.ISupportNuget.GetOrAddPackageReference( string packageName, string packageVersion =  )
+public  void Microsoft.DotNet.Interactive.ISupportNuget.RegisterResolvedPackageReferences( System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.ResolvedPackageReference> packageReferences )
+public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.ISupportNuget.RestoreAsync(  )
+public  void Microsoft.DotNet.Interactive.ISupportNuget.TryAddRestoreSource( string source )
+public static  T Microsoft.DotNet.Interactive.KernelSupportsNugetExtensions.UseNugetDirective<T>(  )
+Microsoft.DotNet.Interactive.PackageRestoreContext::.ctor()
+public  System.Collections.Generic.IEnumerable Microsoft.DotNet.Interactive.PackageRestoreContext.RequestedPackageReferences { get; }
+public  System.Collections.Generic.IEnumerable Microsoft.DotNet.Interactive.PackageRestoreContext.ResolvedPackageReferences { get; }
+public  System.Collections.Generic.IEnumerable Microsoft.DotNet.Interactive.PackageRestoreContext.RestoreSources { get; }
+public  void Microsoft.DotNet.Interactive.PackageRestoreContext.Dispose(  )
+public  Microsoft.DotNet.Interactive.PackageReference Microsoft.DotNet.Interactive.PackageRestoreContext.GetOrAddPackageReference( string packageName, string packageVersion =  )
+public  Microsoft.DotNet.Interactive.ResolvedPackageReference Microsoft.DotNet.Interactive.PackageRestoreContext.GetResolvedPackageReference( string packageName )
+public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.PackageRestoreContext.RestoreAsync(  )
+public  void Microsoft.DotNet.Interactive.PackageRestoreContext.TryAddRestoreSource( string source )
+Microsoft.DotNet.Interactive.PackageRestoreResult::.ctor(bool succeeded, System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.PackageReference> requestedPackages, System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.ResolvedPackageReference> resolvedReferences = , System.Collections.Generic.IReadOnlyCollection<string> errors = )
+public  System.Collections.Generic.IReadOnlyCollection Microsoft.DotNet.Interactive.PackageRestoreResult.Errors { get; }
+public  System.Collections.Generic.IReadOnlyList Microsoft.DotNet.Interactive.PackageRestoreResult.ResolvedReferences { get; }
+public  bool Microsoft.DotNet.Interactive.PackageRestoreResult.Succeeded { get; }

@@ -14,6 +14,10 @@
     <None Remove="TestResults\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\FactSkipLinux.cs" Link="FactSkipLinux.cs" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="5.10.3" />

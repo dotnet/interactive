@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,6 +11,7 @@ using Assent;
 
 using Xunit;
 using System.Reflection;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 
 namespace Microsoft.DotNet.Interactive.ApiCompatibility.Tests;
 
@@ -24,150 +26,309 @@ public class ApiCompatibilityTests
             .UsingExtension("txt");
     }
 
-    [Fact]
+    [FactSkipLinux]
     public void Interactive_api_is_not_changed()
     {
         var contract = GenerateContract<Kernel>();
         this.Assent(contract, _configuration);
     }
 
-    [Fact]
+    [FactSkipLinux]
     public void Formatting_api_is_not_changed()
     {
         var contract = GenerateContract<Formatting.FormatContext>();
         this.Assent(contract, _configuration);
     }
 
-    [Fact]
+    [FactSkipLinux]
     public void Document_api_is_not_changed()
     {
         var contract = GenerateContract<Documents.InteractiveDocument>();
         this.Assent(contract, _configuration);
     }
 
-    [Fact]
+    [FactSkipLinux]
     public void PackageManagement_api_is_not_changed()
     {
         var contract = GenerateContract<PackageRestoreContext>();
         this.Assent(contract, _configuration);
     }
 
-    [Fact]
+    [FactSkipLinux]
     public void Journey_api_is_not_changed()
     {
         var contract = GenerateContract<Journey.Lesson>();
         this.Assent(contract, _configuration);
     }
 
-    [Fact]
+    [FactSkipLinux]
     public void csharp_api_is_not_changed()
     {
         var contract = GenerateContract<CSharp.CSharpKernel>();
         this.Assent(contract, _configuration);
     }
 
-    [Fact]
+    [FactSkipLinux]
     public void fsharp_api_is_not_changed()
     {
         var contract = GenerateContract<FSharp.FSharpKernel>();
         this.Assent(contract, _configuration);
     }
 
-    [Fact]
+    [FactSkipLinux]
     public void powershell_api_is_not_changed()
     {
         var contract = GenerateContract<PowerShell.PowerShellKernel>();
         this.Assent(contract, _configuration);
     }
 
-    [Fact]
+    [FactSkipLinux]
     public void mssql_api_is_not_changed()
     {
         var contract = GenerateContract<SqlServer.MsSqlKernelConnector>();
         this.Assent(contract, _configuration);
     }
 
-    [Fact]
+    [FactSkipLinux]
     public void kql_api_is_not_changed()
     {
         var contract = GenerateContract<Kql.KqlKernelConnector>();
         this.Assent(contract, _configuration);
     }
 
+    private static string GetPropertySignature(PropertyInfo property)
+    {
+        var getter  = property.GetMethod;
+
+        var accessor = GetMethodAccessor(getter);
+
+        var setter = property.GetSetMethod();
+        var setterSignature = string.Empty;
+        if (setter is { })
+        {
+            var setterAccessors = GetMethodAccessor(setter);
+            setterAccessors = setterAccessors == accessor ? string.Empty : $"{setterAccessors} ";
+            setterSignature = $" {setterAccessors}set;";
+        }
+
+        return
+            $"{accessor} {GetQualifiedTypeName(property.PropertyType)} {GetQualifiedTypeName(property.DeclaringType)}.{property.Name} {{ get;{setterSignature} }}";
+
+    }
+
+    private static string GetMethodSignature(MethodInfo method)
+    {
+
+        var accessor = GetMethodAccessor(method);
+
+        var genericArgs = string.Empty;
+
+        if (method.IsGenericMethod)
+        {
+            genericArgs = $"<{string.Join(", ", method.GetGenericArguments().Select(GetTypeName))}>";
+        }
+        
+        var methodParameters = method.GetParameters().AsEnumerable();
+
+        var isExtensionMethod = method.IsDefined(typeof(System.Runtime.CompilerServices.ExtensionAttribute), false);
+
+
+        if (isExtensionMethod)
+        {
+            methodParameters = methodParameters.Skip(1);
+        }
+
+        var parameters = GetParameterSignatures(methodParameters, isExtensionMethod);
+
+        return
+            $"{accessor} {GetQualifiedTypeName(method.ReturnType)} {GetQualifiedTypeName(method.DeclaringType)}.{method.Name}{genericArgs}( {parameters} )";
+    }
+
+    private static string GetParameterSignatures(IEnumerable<ParameterInfo> methodParameters, bool isExtensionMethod)
+    {
+        var signature =  methodParameters.Select(param =>
+        {
+            var signature = string.Empty;
+
+            if (param.ParameterType.IsByRef)
+                signature = "ref ";
+            else if (param.IsOut)
+                signature = "out ";
+            else if (isExtensionMethod && param.Position == 0)
+                signature = "this ";
+
+
+
+            signature += $"{GetTypeName(param.ParameterType)} {param.Name}";
+
+            if (param.HasDefaultValue)
+            {
+                signature += $" = {param.DefaultValue}";
+            }
+
+            return signature;
+        });
+
+        return string.Join(", ", signature);
+    }
+
+    private static string GetMethodAccessor(MethodInfo method)
+    {
+        var accessor = string.Empty;
+
+        if (method.IsAssembly)
+        {
+            accessor = "internal ";
+
+            if (method.IsFamily)
+                accessor += "protected ";
+        }
+        else if (method.IsPublic)
+        {
+            accessor = "public ";
+        }
+        else if (method.IsPrivate)
+        {
+            accessor = "private ";
+        }
+        else if (method.IsFamily)
+        {
+            accessor = "protected ";
+        }
+
+        if (method.IsStatic)
+        {
+            accessor += "static ";
+        }
+
+        return accessor;
+    }
+
+    private static string GetTypeName(Type type)
+    {
+        var underlyingNullableType = Nullable.GetUnderlyingType(type);
+        var isNullableType = underlyingNullableType != null;
+
+        var signatureType = isNullableType
+            ? underlyingNullableType
+            : type;
+
+        var isGenericType = signatureType.IsGenericType;
+        var typeName = GetQualifiedTypeName(signatureType);
+        var signature = isGenericType ? $"{typeName}<{string.Join(", ", signatureType.GetGenericArguments().Select(GetTypeName))}>" : typeName;
+
+        if (isNullableType)
+        {
+            signature += "?";
+        }
+
+        return signature;
+    }
+
+    public static string GetQualifiedTypeName(Type type)
+    {
+        switch (type.Name)
+        {
+            case "String":
+                return "string";
+            case "Int32":
+                return "int";
+            case "Decimal":
+                return "decimal";
+            case "Object":
+                return "object";
+            case "Void":
+                return "void";
+            case "Boolean":
+                return "bool";
+        }
+
+        var signature = string.IsNullOrWhiteSpace(type.FullName)
+            ? type.Name
+            : type.FullName;
+
+        if (type.IsGenericType)
+        {
+            var index = signature.IndexOf('`');
+            if (index >= 0)
+
+            {
+                signature = signature[..index];
+            }
+
+        }
+
+        return signature;
+    }
+
     private string GenerateContract<T>()
     {
         var contract = new StringBuilder();
         var assembly = typeof(T).Assembly;
-        var types = assembly.GetExportedTypes().OrderBy(t => t.FullName).ToArray();
+        var types = assembly.GetExportedTypes().Where(t => t.IsPublic).OrderBy(t => t.FullName).ToArray();
 
         var printedMethods = new HashSet<MethodInfo>();
 
         foreach (var type in types)
         {
             // statics
-            foreach (var prop in type.GetProperties(BindingFlags.Static | BindingFlags.Public | BindingFlags.DeclaredOnly).OrderBy(c => c.Name))
+            foreach (var prop in type.GetProperties(BindingFlags.Static | BindingFlags.Public | BindingFlags.DeclaredOnly).Where(m => m.DeclaringType == type).OrderBy(c => c.Name))
             {
                 if (prop.GetMethod?.IsPublic == true)
                 {
                     var m = prop.GetMethod;
+                    
                     if (m is { } && printedMethods.Add(m))
                     {
-                        contract.AppendLine($"{prop.DeclaringType.FullName}::{m}");
-                    }
-                }
-
-                if (prop.GetSetMethod()?.IsPublic == true)
-                {
-                    var m = prop.GetSetMethod();
-                    if (m is { } && printedMethods.Add(m))
-                    {
-                        contract.AppendLine($"{prop.DeclaringType.FullName}::{m}");
+                        var setter = prop.GetSetMethod();
+                        if (setter is not null)
+                        {
+                            printedMethods.Add(setter);
+                        }
+                        contract.AppendLine($"{GetPropertySignature(prop)}");
                     }
                 }
             }
 
-            foreach (var method in type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.DeclaredOnly).OrderBy(c => c.Name))
+            foreach (var method in type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.DeclaredOnly).Where(m => m.DeclaringType == type).OrderBy(c => c.Name))
             {
-                
+
                 if (printedMethods.Add(method))
                 {
-                    contract.AppendLine($"{method.DeclaringType.FullName}::{method}");
+                    contract.AppendLine($"{GetMethodSignature(method)}");
                 }
-               
+
             }
 
             // instance
-            foreach (var ctor in type.GetConstructors(BindingFlags.Instance | BindingFlags.Public| BindingFlags.DeclaredOnly).OrderBy(c => c.Name))
+            foreach (var ctor in type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly).Where( m => m.DeclaringType == type).OrderBy(c => c.Name))
             {
-                contract.AppendLine($"{ctor.DeclaringType.FullName}::{ctor}");
+                contract.AppendLine($"{GetTypeName(ctor.DeclaringType)}::.ctor({GetParameterSignatures(ctor.GetParameters(), false)})");
             }
 
-            foreach (var prop in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly).OrderBy(c => c.Name))
+            foreach (var prop in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly).Where(m => m.DeclaringType == type).OrderBy(c => c.Name))
             {
                 if (prop.GetMethod?.IsPublic == true)
                 {
                     var m = prop.GetMethod;
-                    if (m is { } && printedMethods.Add(m))
-                    {
-                        contract.AppendLine($"{prop.DeclaringType.FullName}::{m}");
-                    }
-                }
 
-                if (prop.GetSetMethod()?.IsPublic == true)
-                {
-                    var m = prop.GetSetMethod();
                     if (m is { } && printedMethods.Add(m))
                     {
-                        contract.AppendLine($"{prop.DeclaringType.FullName}::{m}");
+                        var setter = prop.GetSetMethod();
+                        if (setter is not null)
+                        {
+                            printedMethods.Add(setter);
+                        }
+                        contract.AppendLine($"{GetPropertySignature(prop)}");
                     }
                 }
             }
 
-            foreach (var method in type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly).OrderBy(c => c.Name))
+            foreach (var method in type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic| BindingFlags.DeclaredOnly).Where(m => m.DeclaringType == type && !m.IsPrivate && !m.IsAssembly ).OrderBy(c => c.Name))
             {
                 if (printedMethods.Add(method))
                 {
-                    contract.AppendLine($"{method.DeclaringType.FullName}::{method}");
+                    contract.AppendLine($"{GetMethodSignature(method)}");
                 }
             }
         }
