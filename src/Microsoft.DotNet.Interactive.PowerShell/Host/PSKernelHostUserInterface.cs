@@ -5,17 +5,19 @@ using System;
 using System.Management.Automation;
 using System.Management.Automation.Host;
 using System.Security;
-using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.PowerShell.Host
 {
     public partial class PSKernelHostUserInterface : PSHostUserInterface, IHostUISupportsMultipleChoiceSelection
     {
+        private readonly PowerShellKernel _powerShellKernel;
         private readonly PSKernelHostRawUserInterface _rawUI;
         private readonly object _instanceLock;
 
-        internal PSKernelHostUserInterface()
+        internal PSKernelHostUserInterface(PowerShellKernel powerShellKernel)
         {
+            _powerShellKernel = powerShellKernel ?? throw new ArgumentNullException(nameof(powerShellKernel));
+
             _rawUI = new PSKernelHostRawUserInterface();
             _instanceLock = new object();
         }
@@ -62,10 +64,9 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
 
         private string ReadInput(string prompt)
         {
-            var context = KernelInvocationContext.Current;
-            if (context?.HandlingKernel is PowerShellKernel psKernel && psKernel.ReadInput is not null)
+            if (_powerShellKernel.ReadInput is not null)
             {
-                return psKernel.ReadInput(prompt);
+                return _powerShellKernel.ReadInput(prompt);
             }
 
             throw new InvalidOperationException($"'{nameof(ReadInput)}' should be called from PowerShell kernel.");
@@ -73,10 +74,9 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
 
         private PasswordString ReadPassword(string prompt)
         {
-            var context = KernelInvocationContext.Current;
-            if (context?.HandlingKernel is PowerShellKernel psKernel && psKernel.ReadPassword is not null)
+            if (_powerShellKernel.ReadPassword is not null)
             {
-                return psKernel.ReadPassword(prompt);
+                return _powerShellKernel.ReadPassword(prompt);
             }
 
             throw new InvalidOperationException($"'{nameof(ReadPassword)}' should be called from PowerShell kernel.");

@@ -11,6 +11,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
 {
     public class PSKernelHost : PSHost, IHostSupportsInteractiveSession
     {
+        private readonly PowerShellKernel _powerShell;
         private const string HostName = ".NET Interactive Host";
 
         private readonly Version _hostVersion;
@@ -18,11 +19,12 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
         private readonly PSKernelHostUserInterface _ui;
         private readonly PSObject _consoleColorProxy;
 
-        internal PSKernelHost()
+        internal PSKernelHost(PowerShellKernel powerShell)
         {
+            _powerShell = powerShell ?? throw new ArgumentNullException(nameof(powerShell));
             _hostVersion = new Version("0.0.1");
             _instanceId = Guid.NewGuid();
-            _ui = new PSKernelHostUserInterface();
+            _ui = new PSKernelHostUserInterface(_powerShell);
             _consoleColorProxy = PSObject.AsPSObject(new ConsoleColorProxy(_ui));
         }
 
