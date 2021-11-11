@@ -69,7 +69,7 @@ public class ApiCompatibilityTests
         this.Assent(contract, _configuration);
     }
 
-    [FactSkipLinux]
+    [Fact(Skip = "need to use signature files")]
     public void fsharp_api_is_not_changed()
     {
         var contract = GenerateContract<FSharp.FSharpKernel>();
