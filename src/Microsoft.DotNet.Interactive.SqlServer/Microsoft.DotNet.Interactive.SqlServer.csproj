@@ -20,10 +20,10 @@
  </ItemGroup>
 
  <ItemGroup>
-   <PackageReference Include="Microsoft.Azure.Kusto.Data" Version="9.3.1" />
+   <PackageReference Include="Humanizer" Version="2.8.26" />
    <PackageReference Include="Microsoft.SqlToolsService" Version="3.0.0-release.53" />
-   <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.8" />
-   <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="3.1.8">
+   <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.0" />
+   <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.0">
      <PrivateAssets>all</PrivateAssets>
      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
    </PackageReference>
