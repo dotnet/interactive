@@ -8,44 +8,43 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 
-namespace Microsoft.DotNet.Interactive.Http
+namespace Microsoft.DotNet.Interactive.Http;
+
+public class DiscoveryRouter : IRouter
 {
-    public class DiscoveryRouter : IRouter
+    private readonly HtmlNotebookFrontendEnvironment _frontendEnvironment;
+
+    public DiscoveryRouter(HtmlNotebookFrontendEnvironment frontendEnvironment)
     {
-        private readonly HtmlNotebookFrontendEnvironment _frontendEnvironment;
+        _frontendEnvironment = frontendEnvironment;
+    }
 
-        public DiscoveryRouter(HtmlNotebookFrontendEnvironment frontendEnvironment)
-        {
-            _frontendEnvironment = frontendEnvironment;
-        }
+    public VirtualPathData GetVirtualPath(VirtualPathContext context)
+    {
+        return null;
+    }
 
-        public VirtualPathData GetVirtualPath(VirtualPathContext context)
+    public async Task RouteAsync(RouteContext context)
+    {
+        if (context.HttpContext.Request.Method == HttpMethods.Post)
         {
-            return null;
-        }
-
-        public async Task RouteAsync(RouteContext context)
-        {
-            if (context.HttpContext.Request.Method == HttpMethods.Post)
+            var segments =
+                context.HttpContext
+                    .Request
+                    .Path
+                    .Value
+                    .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            if (segments[0] == "discovery")
             {
-                var segments =
-                    context.HttpContext
-                        .Request
-                        .Path
-                        .Value
-                        .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-                if (segments[0] == "discovery")
-                {
-                    using var reader = new StreamReader(context.HttpContext.Request.Body);
-                    var source = await reader.ReadToEndAsync();
-                    var apiUri = new Uri(source);
-                    _frontendEnvironment.SetApiUri(apiUri);
+                using var reader = new StreamReader(context.HttpContext.Request.Body);
+                var source = await reader.ReadToEndAsync();
+                var apiUri = new Uri(source);
+                _frontendEnvironment.SetApiUri(apiUri);
 
-                    context.Handler = async httpContext =>
-                    {
-                        await httpContext.Response.CompleteAsync();
-                    };
-                }
+                context.Handler = async httpContext =>
+                {
+                    await httpContext.Response.CompleteAsync();
+                };
             }
         }
     }
