@@ -158,7 +158,7 @@ namespace Microsoft.DotNet.Interactive
 
             return kernel;
         }
-
+        
         public static ProxyKernel UseValueSharing(this ProxyKernel kernel, IKernelValueDeclarer kernelValueDeclarer)
         {
             if (kernelValueDeclarer is null)
@@ -264,6 +264,14 @@ namespace Microsoft.DotNet.Interactive
                         }
                     }
                 }
+            } 
+            else if (fromKernel.SupportsCommand<RequestValue>())
+            {
+                var result = await fromKernel.SendAsync(new RequestValue(valueName));
+
+
+
+
             }
         }
 

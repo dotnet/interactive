@@ -14,6 +14,8 @@ namespace Microsoft.DotNet.Interactive.ValueSharing
             Type = type;
         }
 
+
+
         public string Name { get; }
 
         [JsonIgnore]
