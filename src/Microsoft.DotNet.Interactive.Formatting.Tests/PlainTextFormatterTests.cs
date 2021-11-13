@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
@@ -366,6 +367,27 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         public class Sequences : FormatterTestBase
         {
             [Fact]
+            public void Formatter_truncates_expansion_of_ICollection()
+            {
+                var list = new List<string>();
+                for (var i = 1; i < 11; i++)
+                {
+                    list.Add("number " + i);
+                }
+
+                Formatter.ListExpansionLimit = 4;
+
+                var formatter = PlainTextFormatter.GetPreferredFormatterFor(typeof(ICollection));
+
+                var formatted = list.ToDisplayString(formatter);
+
+                formatted.Contains("number 1").Should().BeTrue();
+                formatted.Contains("number 4").Should().BeTrue();
+                formatted.Should().NotContain("number 5");
+                formatted.Should().Contain("6 more");
+            }
+
+            [Fact]
             public void Formatter_expands_IEnumerable()
             {
                 var list = new List<string> { "this", "that", "the other thing" };
@@ -379,28 +401,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             }
 
             [Fact]
-            public void Formatter_truncates_expansion_of_long_IEnumerable()
-            {
-                var list = new List<string>();
-                for (var i = 1; i < 11; i++)
-                {
-                    list.Add("number " + i);
-                }
-
-                Formatter.ListExpansionLimit = 4;
-
-                var formatter = PlainTextFormatter.GetPreferredFormatterFor(list.GetType());
-
-                var formatted = list.ToDisplayString(formatter);
-
-                formatted.Contains("number 1").Should().BeTrue();
-                formatted.Contains("number 4").Should().BeTrue();
-                formatted.Should().NotContain("number 5");
-                formatted.Contains("6 more").Should().BeTrue();
-            }
-
-            [Fact]
-            public void Formatter_truncates_expansion_of_long_IDictionary()
+            public void Formatter_truncates_expansion_of_IDictionary()
             {
                 var list = new Dictionary<string, int>();
                 for (var i = 1; i < 11; i++)
@@ -414,10 +415,30 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 var formatted = list.ToDisplayString(formatter);
 
-                formatted.Contains("number 1").Should().BeTrue();
-                formatted.Contains("number 4").Should().BeTrue();
+                formatted.Should().Contain("number 1");
+                formatted.Should().Contain("number 4");
                 formatted.Should().NotContain("number 5");
-                formatted.Contains("6 more").Should().BeTrue();
+                formatted.Should().Contain("6 more");
+            }
+
+            [Fact]
+            public void Formatter_truncates_expansion_of_IEnumerable()
+            {
+                Formatter.ListExpansionLimit = 3;
+
+                var formatter = PlainTextFormatter.GetPreferredFormatterFor<IEnumerable<int>>();
+
+                var formatted = InfiniteSequence().ToDisplayString(formatter);
+
+                formatted.Should().Contain("[ number 9, number 9, number 9 ... (more) ]");
+
+                static IEnumerable<string> InfiniteSequence()
+                {
+                    while (true)
+                    {
+                        yield return "number 9";
+                    }
+                }
             }
 
             [Fact]
