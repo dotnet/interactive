@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
         static KernelEventEnvelope()
         {
-            ResetToDefaults();
+            ResetToDefault();
         }
 
         internal static Type EventTypeByName(string name) => _eventTypesByEventTypeName[name];
@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.Interactive.Server
             _eventTypesByEventTypeName[typeof(TEvent).Name] = typeof(TEvent);
         }
 
-        public static void ResetToDefaults()
+        public static void ResetToDefault()
         {
             _envelopeTypesByEventTypeName = new Dictionary<string, Type>
             {

@@ -19,10 +19,9 @@ namespace Microsoft.DotNet.Interactive.Server
 
         private static ConcurrentDictionary<string, Type> _commandTypesByCommandTypeName;
 
-
         static KernelCommandEnvelope()
         {
-            ResetToDefaults();
+            ResetToDefault();
         }
 
         internal static Type CommandTypeByName(string name) => _commandTypesByCommandTypeName[name];
@@ -46,17 +45,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
         KernelCommand IKernelCommandEnvelope.Command => _command;
 
-        internal static void RegisterCommandTypeForSerialization<T>() where T : KernelCommand
-        {
-            var commandEnvelopeType = typeof(KernelCommandEnvelope<T>);
-            var commandType = typeof(T);
-            var commandTypeName = commandType.Name;
-
-            _envelopeTypesByCommandTypeName[commandTypeName] = commandEnvelopeType;
-            _commandTypesByCommandTypeName[commandTypeName] = commandType;
-        }
-
-        public static void ResetToDefaults()
+        public static void ResetToDefault()
         {
             _envelopeTypesByCommandTypeName = new ConcurrentDictionary<string, Type>
             {
@@ -85,15 +74,26 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public static IKernelCommandEnvelope Create(KernelCommand command)
         {
+            var envelopeType = _envelopeTypesByCommandTypeName.GetOrAdd(
+                command.GetType().Name,
+                commandTypeName =>
+                {
+                    var commandType = command.GetType();
+
+                    var commandEnvelopeType = typeof(KernelCommandEnvelope<>).MakeGenericType(commandType);
+
+                    _commandTypesByCommandTypeName[commandTypeName] = commandType;
+
+                    return commandEnvelopeType;
+                });
+
             var factory = _envelopeFactories.GetOrAdd(
                 command.GetType(),
                 commandType =>
                 {
-                    var type = command.GetType();
+                  
 
-                    var genericType = _envelopeTypesByCommandTypeName[type.Name];
-
-                    var constructor = genericType.GetConstructors().Single();
+                    var constructor = envelopeType.GetConstructors().Single();
 
                     var commandParameter = Expression.Parameter(
                         typeof(KernelCommand),

@@ -7,7 +7,7 @@ using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Tests.Server;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Tests.Parsing
+namespace Microsoft.DotNet.Interactive.Tests
 {
     public class ProxyKernelTests
     {

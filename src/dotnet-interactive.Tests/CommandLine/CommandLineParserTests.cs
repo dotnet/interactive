@@ -42,8 +42,8 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
 
         public CommandLineParserTests(ITestOutputHelper output)
         {
-            KernelCommandEnvelope.ResetToDefaults();
-            KernelEventEnvelope.ResetToDefaults();
+            KernelCommandEnvelope.ResetToDefault();
+            KernelEventEnvelope.ResetToDefault();
 
             _output = output;
             _serviceCollection = new ServiceCollection();

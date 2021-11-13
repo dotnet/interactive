@@ -539,7 +539,7 @@ string";
             }
 
             [Fact]
-            public void Formatter_truncates_expansion_of_long_IEnumerable()
+            public void Formatter_truncates_expansion_of_ICollection()
             {
                 var list = new List<string>();
                 for (var i = 1; i < 11; i++)
@@ -549,18 +549,18 @@ string";
 
                 Formatter.ListExpansionLimit = 4;
 
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(list.GetType());
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(ICollection));
 
                 var formatted = list.ToDisplayString(formatter);
 
-                formatted.Contains("number 1").Should().BeTrue();
-                formatted.Contains("number 4").Should().BeTrue();
+                formatted.Should().Contain("number 1");
+                formatted.Should().Contain("number 4");
                 formatted.Should().NotContain("number 5");
-                formatted.Contains("6 more").Should().BeTrue();
+                formatted.Should().Contain("<i>(6 more)</i>");
             }
 
             [Fact]
-            public void Formatter_truncates_expansion_of_long_IDictionary()
+            public void Formatter_truncates_expansion_of_IDictionary()
             {
                 var list = new Dictionary<string, int>();
 
@@ -575,10 +575,31 @@ string";
 
                 var formatted = list.ToDisplayString(formatter);
 
-                formatted.Contains("number 1").Should().BeTrue();
-                formatted.Contains("number 4").Should().BeTrue();
+                formatted.Should().Contain("number 1");
+                formatted.Should().Contain("number 4");
                 formatted.Should().NotContain("number 5");
-                formatted.Contains("6 more").Should().BeTrue();
+                formatted.Should().Contain("6 more");
+            }
+
+            [Fact]
+            public void Formatter_truncates_expansion_of_IEnumerable()
+            {
+                Formatter.ListExpansionLimit = 4;
+
+                var formatter = HtmlFormatter.GetPreferredFormatterFor<IEnumerable<string>>();
+
+                var formatted = InfiniteSequence().ToDisplayString(formatter);
+
+                formatted.Should().Contain("number 9");
+                formatted.Should().Contain("<i>... (more)</i>");
+
+                static IEnumerable<string> InfiniteSequence()
+                {
+                    while(true)
+                    {
+                        yield return "number 9"; 
+                    }
+                }
             }
 
             [Fact]

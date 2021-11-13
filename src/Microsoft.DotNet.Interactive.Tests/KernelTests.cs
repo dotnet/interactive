@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
@@ -15,7 +16,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
-    public class KernelTests
+    public partial class KernelTests
     {
         [Fact]
         public void Deferred_initialization_command_is_not_executed_prior_to_first_submission()
@@ -150,7 +151,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
-        public async Task kernelEvents_sequence_completes_when_kernel_is_disposed ()
+        public async Task kernelEvents_sequence_completes_when_kernel_is_disposed()
         {
             var kernel = new FakeKernel();
             var events = kernel.KernelEvents.Timeout(5.Seconds()).LastOrDefaultAsync();
@@ -159,98 +160,6 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var lastEvent = await events;
             lastEvent.Should().BeNull();
-        }
-
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public void When_command_type_registered_then_kernel_registers_envelope_type_for_serialization(bool withHandler)
-        {
-            Microsoft.DotNet.Interactive.Server.KernelCommandEnvelope.ResetToDefaults();
-
-            using var kernel = new FakeKernel();
-
-            if (withHandler)
-            {
-                kernel.RegisterCommandHandler<CustomCommandTypes.FirstSubmission.MyCommand>(
-                    (_, _) => Task.CompletedTask);
-            }
-            else
-            {
-                kernel.RegisterCommandType<CustomCommandTypes.FirstSubmission.MyCommand>();
-            }
-
-            var originalCommand = new CustomCommandTypes.FirstSubmission.MyCommand("xyzzy");
-            string envelopeJson = Microsoft.DotNet.Interactive.Server.KernelCommandEnvelope.Serialize(originalCommand);
-            var roundTrippedCommandEnvelope = Microsoft.DotNet.Interactive.Server.KernelCommandEnvelope.Deserialize(envelopeJson);
-
-            roundTrippedCommandEnvelope
-                .Command
-                .Should()
-                .BeOfType<CustomCommandTypes.FirstSubmission.MyCommand>()
-                .Which
-                .Info
-                .Should()
-                .Be(originalCommand.Info);
-        }
-
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public void When_command_type_reregistered_with_changed_type_command_then_kernel_registers_updated_envelope_type_for_serialization(bool withHandler)
-        {
-            // Notebook authors should be able to develop their custom commands experimentally and progressively,
-            // so we don't want any "you have to restart your kernel now" situations just because you already
-            // called RegisterCommandHandler once for a particular command type.
-            Microsoft.DotNet.Interactive.Server.KernelCommandEnvelope.ResetToDefaults();
-
-            using var kernel = new FakeKernel();
-
-            if (withHandler)
-            {
-                kernel.RegisterCommandHandler<CustomCommandTypes.FirstSubmission.MyCommand>(
-                    (_, _) => Task.CompletedTask);
-                kernel.RegisterCommandHandler<CustomCommandTypes.SecondSubmission.MyCommand>(
-                    (_, _) => Task.CompletedTask);
-            }
-            else
-            {
-                kernel.RegisterCommandType<CustomCommandTypes.FirstSubmission.MyCommand>();
-                kernel.RegisterCommandType<CustomCommandTypes.SecondSubmission.MyCommand>();
-            }
-
-            var originalCommand = new CustomCommandTypes.SecondSubmission.MyCommand("xyzzy", 42);
-            string envelopeJson = Microsoft.DotNet.Interactive.Server.KernelCommandEnvelope.Serialize(originalCommand);
-            var roundTrippedCommandEnvelope = Microsoft.DotNet.Interactive.Server.KernelCommandEnvelope.Deserialize(envelopeJson);
-
-            roundTrippedCommandEnvelope
-                .Command
-                .Should()
-                .BeOfType<CustomCommandTypes.SecondSubmission.MyCommand>()
-                .Which
-                .Info
-                .Should()
-                .Be(originalCommand.Info);
-            roundTrippedCommandEnvelope
-                .Command
-                .As<CustomCommandTypes.SecondSubmission.MyCommand>()
-                .AdditionalProperty
-                .Should()
-                .Be(originalCommand.AdditionalProperty);
-        }
-
-        [Fact]
-        public void Return_the_list_of_supported_commands()
-        {
-            using var kernel = new FakeKernel();
-            kernel.RegisterCommandType<CustomCommandTypes.FirstSubmission.MyCommand>();
-            kernel.RegisterCommandType<CustomCommandTypes.SecondSubmission.MyCommand>();
-
-            var supportedCommands = kernel.SupportedCommands();
-
-            supportedCommands.Should().ContainInOrder(typeof(SubmitCode),
-                typeof(CustomCommandTypes.FirstSubmission.MyCommand),
-                typeof(CustomCommandTypes.SecondSubmission.MyCommand));
         }
     }
 }
