@@ -53,5 +53,11 @@ namespace Microsoft.DotNet.Interactive
         public Uri? DestinationUri { get; internal set; }
 
         public override string ToString() => LocalName;
+
+        public IReadOnlyCollection<string> CommandNames { get; }
+        
+        public IReadOnlyCollection<string> DirectiveNames { get; }
+
+        public string Language { get; }
     }
 }

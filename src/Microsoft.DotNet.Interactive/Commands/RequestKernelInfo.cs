@@ -1,9 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Commands;
 
@@ -13,8 +11,22 @@ public class RequestKernelInfo : KernelCommand
     {
         var kernel = context.HandlingKernel;
 
-        context.Publish(new KernelInfoProduced(kernel.SupportedCommandTypes().Select(c => c.Name).ToArray(), context.Command as RequestKernelInfo));
+        var host = kernel switch
+        {
+            CompositeKernel c => c.Host,
+            _ => kernel.ParentKernel.Host
+        };
 
-        return Task.CompletedTask;
+        if (host is { })
+        {
+            if (host.TryGetKernelInfo(kernel, out var kernelInfo))
+            {
+
+
+
+
+
+            }
+        }
     }
 }

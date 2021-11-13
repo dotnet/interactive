@@ -240,7 +240,7 @@ module JupyterTopLevelModule =
                     {
                         if (k.Directives.Any(d => d.Name == "#!lsmagic"))
                         {
-                            await k.SendAsync(new SubmitCode(((SubmitCode) context.Command).Code));
+                            await k.SendAsync(new SubmitCode(((SubmitCode)context.Command).Code));
                         }
                     });
                 })

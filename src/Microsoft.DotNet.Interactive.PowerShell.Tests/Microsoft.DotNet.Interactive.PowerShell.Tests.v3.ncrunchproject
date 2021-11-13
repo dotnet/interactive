@@ -1,5 +1,6 @@
-<ProjectConfiguration>
+﻿<ProjectConfiguration>
   <Settings>
+    <DefaultTestTimeout>10000</DefaultTestTimeout>
     <IgnoredTests>
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.PowerShell.Tests.PowerShellKernelTests.PowerShell_progress_sends_updated_display_values</TestName>

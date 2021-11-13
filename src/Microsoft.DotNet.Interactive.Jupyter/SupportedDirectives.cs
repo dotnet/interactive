@@ -10,11 +10,13 @@ namespace Microsoft.DotNet.Interactive.Jupyter
     {
         public string KernelName { get; }
 
-        public SupportedDirectives(string kernelName)
+        public SupportedDirectives(string kernelName, IReadOnlyList<ICommand>  commands)
         {
             KernelName = kernelName;
+            Commands = commands;
         }
 
+        // FIX: what is this and why is it in Jupyter?
         public List<Command> Commands { get; } = new();
     }
 }
