@@ -9,6 +9,7 @@ using System.CommandLine.Invocation;
 using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.IO;
+using System.Net.Http;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
@@ -16,7 +17,6 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Html;
-using Microsoft.DotNet.Interactive.AspNetCore;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Documents.ParserServer;
@@ -654,8 +654,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseKernelHelpers()
                     .UseWho()
                     .UseMathAndLaTeX()
-                    .UseValueSharing()
-                    .UseAspNetCore(),
+                    .UseValueSharing(),
+                    
                 new[] { "c#", "C#" });
 
             compositeKernel.Add(
@@ -732,6 +732,26 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 default:
                     throw new ArgumentOutOfRangeException(nameof(frontendEnvironment));
             }
+
+            Formatter.Register<HttpResponseMessage>((responseMessage, context) =>
+            {
+                // Formatter.Register() doesn't support async formatters yet.
+                // Prevent SynchronizationContext-induced deadlocks given the following sync-over-async code.
+                ExecutionContext.SuppressFlow();
+
+                try
+                {
+                    HttpResponseFormatter.FormatHttpResponseMessage(
+                        responseMessage,
+                        context).Wait();
+                }
+                finally
+                {
+                    ExecutionContext.RestoreFlow();
+                }
+
+                return true;
+            }, HtmlFormatter.MimeType);
         }
     }
 }

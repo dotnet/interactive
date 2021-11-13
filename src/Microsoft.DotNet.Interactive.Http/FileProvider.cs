@@ -10,83 +10,82 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Primitives;
 
-namespace Microsoft.DotNet.Interactive.Http
+namespace Microsoft.DotNet.Interactive.Http;
+
+public class FileProvider : IFileProvider, IDisposable
 {
-    public class FileProvider : IFileProvider, IDisposable
+    private readonly EmbeddedFileProvider _root;
+    private readonly IDisposable _eventSubscription;
+    private readonly ConcurrentDictionary<string, EmbeddedFileProvider> _providers = new ConcurrentDictionary<string, EmbeddedFileProvider>();
+
+    public FileProvider(Kernel kernel, Assembly rootProviderAssembly)
     {
-        private readonly EmbeddedFileProvider _root;
-        private readonly IDisposable _eventSubscription;
-        private readonly ConcurrentDictionary<string, EmbeddedFileProvider> _providers = new ConcurrentDictionary<string, EmbeddedFileProvider>();
+        if (kernel is null) throw new ArgumentNullException(nameof(kernel));
 
-        public FileProvider(Kernel kernel, Assembly rootProviderAssembly)
+        _root = new EmbeddedFileProvider(rootProviderAssembly ?? typeof(FileProvider).Assembly);
+        _eventSubscription = kernel.KernelEvents
+            .OfType<KernelExtensionLoaded>()
+            .Subscribe(@event => RegisterExtension(@event.KernelExtension));
+    }
+
+    private void RegisterExtension(IKernelExtension kernelExtension)
+    {
+        if (kernelExtension is IStaticContentSource source)
         {
-            if (kernel is null) throw new ArgumentNullException(nameof(kernel));
+            var name = source.Name;
+            _providers.GetOrAdd(name, key => new EmbeddedFileProvider(source.GetType().Assembly));
+        }
+    }
 
-            _root = new EmbeddedFileProvider(rootProviderAssembly ?? typeof(FileProvider).Assembly);
-            _eventSubscription = kernel.KernelEvents
-                .OfType<KernelExtensionLoaded>()
-                .Subscribe(@event => RegisterExtension(@event.KernelExtension));
+    public IFileInfo GetFileInfo(string subpath)
+    {
+        var (provider, path) = GetProviderAndPath(subpath);
+        return provider.GetFileInfo(path);
+    }
+
+    private (IFileProvider provider, string path) GetProviderAndPath(string subpath)
+    {
+        IFileProvider provider = _root;
+        var path = subpath;
+        var parts = subpath.Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts[0] == "extensions")
+        {
+            provider = SelectProvider();
+            path = ProcessPath();
         }
 
-        private void RegisterExtension(IKernelExtension kernelExtension)
+        return (provider, path);
+
+        string ProcessPath()
         {
-            if (kernelExtension is IStaticContentSource source)
+
+            return string.Join("/", parts.Skip(2));
+        }
+
+        IFileProvider SelectProvider()
+        {
+            var name = parts[1];
+            if (!_providers.TryGetValue(name, out var embeddedFileProvider))
             {
-                var name = source.Name;
-                _providers.GetOrAdd(name, key => new EmbeddedFileProvider(source.GetType().Assembly));
+                throw new StaticContentSourceNotFoundException(name);
             }
+            return embeddedFileProvider;
         }
+    }
 
-        public IFileInfo GetFileInfo(string subpath)
-        {
-            var (provider, path) = GetProviderAndPath(subpath);
-            return provider.GetFileInfo(path);
-        }
+    public IDirectoryContents GetDirectoryContents(string subpath)
+    {
+        var (provider, path) = GetProviderAndPath(subpath);
+        return provider.GetDirectoryContents(path);
+    }
 
-        private (IFileProvider provider, string path) GetProviderAndPath(string subpath)
-        {
-            IFileProvider provider = _root;
-            var path = subpath;
-            var parts = subpath.Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
-            if (parts[0] == "extensions")
-            {
-                provider = SelectProvider();
-                path = ProcessPath();
-            }
+    public IChangeToken Watch(string filter)
+    {
+        return NullChangeToken.Singleton;
+    }
 
-            return (provider, path);
-
-            string ProcessPath()
-            {
-
-                return string.Join("/", parts.Skip(2));
-            }
-
-            IFileProvider SelectProvider()
-            {
-                var name = parts[1];
-                if (!_providers.TryGetValue(name, out var embeddedFileProvider))
-                {
-                    throw new StaticContentSourceNotFoundException(name);
-                }
-                return embeddedFileProvider;
-            }
-        }
-
-        public IDirectoryContents GetDirectoryContents(string subpath)
-        {
-            var (provider, path) = GetProviderAndPath(subpath);
-            return provider.GetDirectoryContents(path);
-        }
-
-        public IChangeToken Watch(string filter)
-        {
-            return NullChangeToken.Singleton;
-        }
-
-        public void Dispose()
-        {
-            _eventSubscription.Dispose();
-        }
+    public void Dispose()
+    {
+        _eventSubscription.Dispose();
     }
 }

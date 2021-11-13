@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <OutputType>Library</OutputType>
   </PropertyGroup>
 
@@ -20,10 +20,10 @@
  </ItemGroup>
 
  <ItemGroup>
-   <PackageReference Include="Microsoft.Azure.Kusto.Data" Version="9.3.1" />
+   <PackageReference Include="Humanizer" Version="2.8.26" />
    <PackageReference Include="Microsoft.SqlToolsService" Version="3.0.0-release.53" />
-   <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.8" />
-   <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="3.1.8">
+   <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.0" />
+   <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.0">
      <PrivateAssets>all</PrivateAssets>
      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
    </PackageReference>
@@ -40,7 +40,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="bin\Debug\net5.0\/Microsoft.DotNet.Interactive.SqlServer.dll" />
+    <None Remove="bin\Debug\net6.0\/Microsoft.DotNet.Interactive.SqlServer.dll" />
   </ItemGroup>
 
   <ItemGroup>

@@ -27,12 +27,17 @@ JsonElement : +GetProperty(ReadOnlySpan~Byte~ utf8PropertyName) JsonElement
 JsonElement : GetPropertyName() String
 JsonElement : GetPropertyRawText() String
 JsonElement : +GetRawText() String
+JsonElement : GetRawValue() ReadOnlyMemory~Byte~
 JsonElement : +GetSByte() SByte
 JsonElement : +GetSingle() Single
 JsonElement : +GetString() String
 JsonElement : +GetUInt16() UInt16
 JsonElement : +GetUInt32() UInt32
 JsonElement : +GetUInt64() UInt64
+JsonElement : +ParseValue(Utf8JsonReader& reader) JsonElement$
+JsonElement : ParseValue(Stream utf8Json, JsonDocumentOptions options) JsonElement$
+JsonElement : ParseValue(ReadOnlySpan~Byte~ utf8Json, JsonDocumentOptions options) JsonElement$
+JsonElement : ParseValue(String json, JsonDocumentOptions options) JsonElement$
 JsonElement : TextEqualsHelper(ReadOnlySpan~Byte~ utf8Text, Boolean isPropertyName, Boolean shouldUnescape) Boolean
 JsonElement : TextEqualsHelper(ReadOnlySpan~Char~ text, Boolean isPropertyName) Boolean
 JsonElement : +ToString() String
@@ -54,6 +59,7 @@ JsonElement : +TryGetSingle(Single& value) Boolean
 JsonElement : +TryGetUInt16(UInt16& value) Boolean
 JsonElement : +TryGetUInt32(UInt32& value) Boolean
 JsonElement : +TryGetUInt64(UInt64& value) Boolean
+JsonElement : +TryParseValue(Utf8JsonReader& reader, Nullable element) Boolean$
 JsonElement : +ValueEquals(String text) Boolean
 JsonElement : +ValueEquals(ReadOnlySpan~Byte~ utf8Text) Boolean
 JsonElement : +ValueEquals(ReadOnlySpan~Char~ text) Boolean

@@ -22,6 +22,7 @@ namespace Recipes
                     Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
                 };
             SerializerOptions.Converters.Add(new DataDictionaryConverter());
+            SerializerOptions.Converters.Add(new BareObjectConverter());
         }
 
         public static JsonSerializerOptions SerializerOptions { get; }

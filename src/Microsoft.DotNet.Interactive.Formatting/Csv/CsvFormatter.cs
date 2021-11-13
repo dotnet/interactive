@@ -44,6 +44,10 @@ namespace Microsoft.DotNet.Interactive.Formatting.Csv
 
         internal static string EscapeCsvValue(this string value)
         {
+            value = value
+                .Replace("\r", "\\r")
+                .Replace("\n", "\\n");
+
             if (value.Contains(","))
             {
                 return $"\"{value}\"";
@@ -101,73 +105,75 @@ namespace Microsoft.DotNet.Interactive.Formatting.Csv
                 getHeaderValues = _ => destructurer.Keys;
             }
 
-            return new CsvFormatter<T>(BuildTable);
+            return new CsvFormatter<T>( (v,c) => BuildTable(v, getHeaderValues, getRowValues, c));
+        }
 
-            bool BuildTable(T value, FormatContext context)
+        internal static bool BuildTable(T value,  Func<T, IEnumerable> getHeaderValues, Func<T, IEnumerable> getRowValues, FormatContext context)
+        {
+            var keys = getHeaderValues(value);
+
+            if (keys is not ICollection headers)
             {
-                var keys = getHeaderValues(value);
+                // FIX: (CreateForAnyEnumerable) can this happen?
+                return false;
+            }
 
-                if (keys is not ICollection headers)
+            var headerIndex = 0;
+
+            foreach (var header in headers)
+            {
+                context.Writer.Write(header);
+
+                if (++headerIndex < headers.Count)
                 {
-                    // FIX: (CreateForAnyEnumerable) can this happen?
-                    return false;
+                    context.Writer.Write(",");
+                }
+            }
+
+            context.Writer.WriteLine();
+
+            IDestructurer rowDestructurer = null;
+
+            var rows = getRowValues(value);
+
+            foreach (var row in rows)
+            {
+                var rowIndex = 0;
+
+                if (row is not IEnumerable cells)
+                {
+                    rowDestructurer ??= Destructurer.GetOrCreate(row.GetType());
+
+                    cells = rowDestructurer.Destructure(row).Values;
+                }
+                else if (row is IDictionary d)
+                {
+                    cells = d.Values;
                 }
 
-                var headerIndex = 0;
-
-                foreach (var header in headers)
+                foreach (var cell in cells)
                 {
-                    context.Writer.Write(header);
+                    var formatted = cell switch
+                    {
+                        DateTime d => d.ToString("o"),
+                        null => "",
+                        _ => cell.ToString()
+                    };
 
-                    if (++headerIndex < headers.Count)
+                    context.Writer.Write(formatted.EscapeCsvValue());
+
+                    if (++rowIndex < headers.Count)
                     {
                         context.Writer.Write(",");
                     }
                 }
 
                 context.Writer.WriteLine();
-
-                IDestructurer rowDestructurer = null;
-
-                var rows = getRowValues(value);
-
-                foreach (var row in rows)
-                {
-                    var rowIndex = 0;
-
-                    if (row is not IEnumerable cells)
-                    {
-                        rowDestructurer ??= Destructurer.GetOrCreate(row.GetType());
-
-                        cells = rowDestructurer.Destructure(row).Values;
-                    }
-                    else if (row is IDictionary d)
-                    {
-                        cells = d.Values;
-                    }
-
-                    foreach (var cell in cells)
-                    {
-                        var formatted = cell switch
-                        {
-                            DateTime d => d.ToString("o"),
-                            null => "",
-                            _ => cell.ToString() 
-                        };
-
-                        context.Writer.Write(formatted.EscapeCsvValue());
-
-                        if (++rowIndex < headers.Count)
-                        {
-                            context.Writer.Write(",");
-                        }
-                    }
-
-                    context.Writer.WriteLine();
-                }
-
-                return true;
             }
+
+            return true;
         }
+
+       
     }
 }

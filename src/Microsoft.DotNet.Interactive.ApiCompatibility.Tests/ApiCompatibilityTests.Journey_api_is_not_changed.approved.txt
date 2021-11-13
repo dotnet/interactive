@@ -1,0 +1,103 @@
+Microsoft.DotNet.Interactive.Journey.Challenge::.ctor(System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SubmitCode> setup = null, System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SendEditableCode> contents = null, System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SubmitCode> environmentSetup = null, System.String name = null)
+public  System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SendEditableCode> Microsoft.DotNet.Interactive.Journey.Challenge.Contents { get; }
+public  Microsoft.DotNet.Interactive.Journey.ChallengeEvaluation Microsoft.DotNet.Interactive.Journey.Challenge.CurrentEvaluation { get; }
+public  Microsoft.DotNet.Interactive.Journey.ChallengeSubmission Microsoft.DotNet.Interactive.Journey.Challenge.CurrentSubmission { get; }
+public  System.Func<Microsoft.DotNet.Interactive.Journey.ChallengeContext,System.Threading.Tasks.Task> Microsoft.DotNet.Interactive.Journey.Challenge.DefaultProgressionHandler { get; set; }
+public  System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SubmitCode> Microsoft.DotNet.Interactive.Journey.Challenge.EnvironmentSetup { get; }
+public  System.Boolean Microsoft.DotNet.Interactive.Journey.Challenge.IsSetup { get; }
+public  Microsoft.DotNet.Interactive.Journey.Lesson Microsoft.DotNet.Interactive.Journey.Challenge.Lesson { get; }
+public  System.String Microsoft.DotNet.Interactive.Journey.Challenge.Name { get; }
+public  System.Func<Microsoft.DotNet.Interactive.Journey.ChallengeContext,System.Threading.Tasks.Task> Microsoft.DotNet.Interactive.Journey.Challenge.OnCodeSubmittedHandler { get; }
+public  System.Boolean Microsoft.DotNet.Interactive.Journey.Challenge.Revealed { get; }
+public  System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SubmitCode> Microsoft.DotNet.Interactive.Journey.Challenge.Setup { get; }
+public  System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Journey.ChallengeSubmission> Microsoft.DotNet.Interactive.Journey.Challenge.SubmissionHistory { get; }
+public  System.Void Microsoft.DotNet.Interactive.Journey.Challenge.AddRule( System.String name, System.Action<Microsoft.DotNet.Interactive.Journey.RuleContext> action )
+public  System.Void Microsoft.DotNet.Interactive.Journey.Challenge.AddRule( System.Action<Microsoft.DotNet.Interactive.Journey.RuleContext> action )
+public  System.Void Microsoft.DotNet.Interactive.Journey.Challenge.AddRuleAsync( System.String name, System.Func<Microsoft.DotNet.Interactive.Journey.RuleContext,System.Threading.Tasks.Task> action )
+public  System.Void Microsoft.DotNet.Interactive.Journey.Challenge.AddRuleAsync( System.Func<Microsoft.DotNet.Interactive.Journey.RuleContext,System.Threading.Tasks.Task> action )
+public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.Journey.Challenge.Evaluate( System.String submittedCode = null, System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Events.KernelEvent> events = null )
+public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.Journey.Challenge.InvokeOnCodeSubmittedHandler(  )
+public  System.Void Microsoft.DotNet.Interactive.Journey.Challenge.OnCodeSubmitted( System.Action<Microsoft.DotNet.Interactive.Journey.ChallengeContext> action )
+public  System.Void Microsoft.DotNet.Interactive.Journey.Challenge.OnCodeSubmittedAsync( System.Func<Microsoft.DotNet.Interactive.Journey.ChallengeContext,System.Threading.Tasks.Task> action )
+Microsoft.DotNet.Interactive.Journey.ChallengeContext::.ctor(Microsoft.DotNet.Interactive.Journey.Challenge challenge)
+public  Microsoft.DotNet.Interactive.Journey.Challenge Microsoft.DotNet.Interactive.Journey.ChallengeContext.Challenge { get; }
+public  Microsoft.DotNet.Interactive.Journey.ChallengeEvaluation Microsoft.DotNet.Interactive.Journey.ChallengeContext.Evaluation { get; }
+public  Microsoft.DotNet.Interactive.Journey.Lesson Microsoft.DotNet.Interactive.Journey.ChallengeContext.Lesson { get; }
+public  System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Journey.RuleEvaluation> Microsoft.DotNet.Interactive.Journey.ChallengeContext.RuleEvaluations { get; }
+public  System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Journey.ChallengeSubmission> Microsoft.DotNet.Interactive.Journey.ChallengeContext.SubmissionHistory { get; }
+public  System.Void Microsoft.DotNet.Interactive.Journey.ChallengeContext.SetMessage( System.String message, System.Object hint = null )
+public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.Journey.ChallengeContext.StartChallengeAsync( Microsoft.DotNet.Interactive.Journey.Challenge challenge )
+public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.Journey.ChallengeContext.StartChallengeAsync( System.String name )
+public  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.Journey.ChallengeContext.StartNextChallengeAsync(  )
+Microsoft.DotNet.Interactive.Journey.ChallengeDefinition::.ctor(System.String name, System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SubmitCode> setup, System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SendEditableCode> contents, System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SubmitCode> environmentSetup)
+public  System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SendEditableCode> Microsoft.DotNet.Interactive.Journey.ChallengeDefinition.Contents { get; }
+public  System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SubmitCode> Microsoft.DotNet.Interactive.Journey.ChallengeDefinition.EnvironmentSetup { get; }
+public  System.String Microsoft.DotNet.Interactive.Journey.ChallengeDefinition.Name { get; }
+public  System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SubmitCode> Microsoft.DotNet.Interactive.Journey.ChallengeDefinition.Setup { get; }
+public  Microsoft.DotNet.Interactive.Journey.Challenge Microsoft.DotNet.Interactive.Journey.ChallengeDefinition.ToChallenge(  )
+Microsoft.DotNet.Interactive.Journey.ChallengeEvaluation::.ctor(System.String label = null)
+public  System.Object Microsoft.DotNet.Interactive.Journey.ChallengeEvaluation.Hint { get; }
+public  System.String Microsoft.DotNet.Interactive.Journey.ChallengeEvaluation.Message { get; }
+public  System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Journey.RuleEvaluation> Microsoft.DotNet.Interactive.Journey.ChallengeEvaluation.RuleEvaluations { get; }
+public  System.Void Microsoft.DotNet.Interactive.Journey.ChallengeEvaluation.SetMessage( System.String message, System.Object hint = null )
+public  System.Void Microsoft.DotNet.Interactive.Journey.ChallengeEvaluation.SetRuleOutcome( System.String name, Microsoft.DotNet.Interactive.Journey.Outcome outcome, System.String reason = null, System.Object hint = null )
+public static  Microsoft.DotNet.Interactive.Journey.Challenge Microsoft.DotNet.Interactive.Journey.ChallengeExtensions.SetDefaultProgressionHandler( Microsoft.DotNet.Interactive.Journey.Challenge nextChallenge )
+public static  System.Void Microsoft.DotNet.Interactive.Journey.ChallengeExtensions.SetDefaultProgressionHandlers(  )
+Microsoft.DotNet.Interactive.Journey.ChallengeSubmission::.ctor(System.String submittedCode, Microsoft.DotNet.Interactive.Journey.ChallengeEvaluation evaluation, System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Events.KernelEvent> events)
+public  Microsoft.DotNet.Interactive.Journey.ChallengeEvaluation Microsoft.DotNet.Interactive.Journey.ChallengeSubmission.Evaluation { get; }
+public  System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Events.KernelEvent> Microsoft.DotNet.Interactive.Journey.ChallengeSubmission.EventsProduced { get; }
+public  System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Journey.RuleEvaluation> Microsoft.DotNet.Interactive.Journey.ChallengeSubmission.RuleEvaluations { get; }
+public  System.String Microsoft.DotNet.Interactive.Journey.ChallengeSubmission.SubmittedCode { get; }
+public static  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.Journey.KernelExtensions.InitializeChallenge( Microsoft.DotNet.Interactive.Journey.Challenge challengeToInit )
+public static  Microsoft.DotNet.Interactive.CompositeKernel Microsoft.DotNet.Interactive.Journey.KernelExtensions.UseModelAnswerValidation(  )
+public static  Microsoft.DotNet.Interactive.CompositeKernel Microsoft.DotNet.Interactive.Journey.KernelExtensions.UseProgressiveLearning( System.Net.Http.HttpClient httpClient = null )
+public static  Microsoft.DotNet.Interactive.CompositeKernel Microsoft.DotNet.Interactive.Journey.KernelExtensions.UseProgressiveLearningMiddleware(  )
+public static  Microsoft.DotNet.Interactive.Journey.Challenge Microsoft.DotNet.Interactive.Journey.Lesson.CurrentChallenge { get; }
+public static  Microsoft.DotNet.Interactive.Journey.LessonMode Microsoft.DotNet.Interactive.Journey.Lesson.Mode { get; set; }
+public static  System.String Microsoft.DotNet.Interactive.Journey.Lesson.Name { get; }
+public static  System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SubmitCode> Microsoft.DotNet.Interactive.Journey.Lesson.Setup { get; }
+public static  System.Void Microsoft.DotNet.Interactive.Journey.Lesson.Clear(  )
+public static  System.Void Microsoft.DotNet.Interactive.Journey.Lesson.From( Microsoft.DotNet.Interactive.Journey.LessonDefinition definition )
+public static  System.Boolean Microsoft.DotNet.Interactive.Journey.Lesson.IsSetupCommand( Microsoft.DotNet.Interactive.Commands.KernelCommand command )
+public static  System.Void Microsoft.DotNet.Interactive.Journey.Lesson.ResetChallenge(  )
+public static  System.Void Microsoft.DotNet.Interactive.Journey.Lesson.SetChallengeLookup( System.Func<System.String,Microsoft.DotNet.Interactive.Journey.Challenge> handler )
+public static  System.Void Microsoft.DotNet.Interactive.Journey.Lesson.SetChallengeLookup( System.Func<System.String,System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Journey.Challenge>> handler )
+public static  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.Journey.Lesson.StartChallengeAsync( Microsoft.DotNet.Interactive.Journey.Challenge challenge )
+public static  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.Journey.Lesson.StartChallengeAsync( System.String name )
+Microsoft.DotNet.Interactive.Journey.Lesson::.ctor()
+Microsoft.DotNet.Interactive.Journey.LessonDefinition::.ctor(System.String name, System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SubmitCode> setup)
+public  System.String Microsoft.DotNet.Interactive.Journey.LessonDefinition.Name { get; }
+public  System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SubmitCode> Microsoft.DotNet.Interactive.Journey.LessonDefinition.Setup { get; }
+public static  System.Threading.Tasks.Task Microsoft.DotNet.Interactive.Journey.Main.OnLoadAsync( Microsoft.DotNet.Interactive.Kernel kernel, System.Net.Http.HttpClient httpClient = null )
+public static  System.Collections.Generic.List<System.String> Microsoft.DotNet.Interactive.Journey.NotebookLessonParser.AllDirectiveNames { get; }
+public static  System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Documents.InteractiveDocument> Microsoft.DotNet.Interactive.Journey.NotebookLessonParser.LoadNotebookFromUrl( System.Uri uri, System.Net.Http.HttpClient httpClient = null, Microsoft.DotNet.Interactive.CompositeKernel kernel = null )
+public static  System.Void Microsoft.DotNet.Interactive.Journey.NotebookLessonParser.Parse( Microsoft.DotNet.Interactive.Documents.InteractiveDocument document, ref Microsoft.DotNet.Interactive.Journey.LessonDefinition& lesson, ref System.Collections.Generic.List<Microsoft.DotNet.Interactive.Journey.ChallengeDefinition> challenges )
+public static  System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Documents.InteractiveDocument> Microsoft.DotNet.Interactive.Journey.NotebookLessonParser.ReadFileAsInteractiveDocument( System.IO.FileInfo file, Microsoft.DotNet.Interactive.CompositeKernel kernel = null )
+Microsoft.DotNet.Interactive.Journey.NotebookLessonParser::.ctor()
+Microsoft.DotNet.Interactive.Journey.Rule::.ctor(System.Func<Microsoft.DotNet.Interactive.Journey.RuleContext,System.Threading.Tasks.Task> ruleConstraints, System.String name = null)
+public  System.String Microsoft.DotNet.Interactive.Journey.Rule.Name { get; }
+Microsoft.DotNet.Interactive.Journey.RuleContext::.ctor(Microsoft.DotNet.Interactive.Journey.ChallengeContext challengeContext, System.String submittedCode = null, System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Events.KernelEvent> events = null, System.String name = )
+public  Microsoft.DotNet.Interactive.Journey.Challenge Microsoft.DotNet.Interactive.Journey.RuleContext.Challenge { get; }
+public  System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Events.KernelEvent> Microsoft.DotNet.Interactive.Journey.RuleContext.EventsProduced { get; }
+public  System.String Microsoft.DotNet.Interactive.Journey.RuleContext.Name { get; }
+public  System.Boolean Microsoft.DotNet.Interactive.Journey.RuleContext.Passed { get; }
+public  System.String Microsoft.DotNet.Interactive.Journey.RuleContext.SubmittedCode { get; }
+public  System.Void Microsoft.DotNet.Interactive.Journey.RuleContext.Fail( System.String reason = null, System.Object hint = null )
+public  System.Void Microsoft.DotNet.Interactive.Journey.RuleContext.PartialPass( System.String reason = null, System.Object hint = null )
+public  System.Void Microsoft.DotNet.Interactive.Journey.RuleContext.Pass( System.String reason = null, System.Object hint = null )
+Microsoft.DotNet.Interactive.Journey.RuleEvaluation::.ctor(Microsoft.DotNet.Interactive.Journey.Outcome outcome, System.String name = null, System.String reason = null, System.Object hint = null)
+public  System.Object Microsoft.DotNet.Interactive.Journey.RuleEvaluation.Hint { get; }
+public  System.String Microsoft.DotNet.Interactive.Journey.RuleEvaluation.Name { get; }
+public  Microsoft.DotNet.Interactive.Journey.Outcome Microsoft.DotNet.Interactive.Journey.RuleEvaluation.Outcome { get; }
+public  System.Boolean Microsoft.DotNet.Interactive.Journey.RuleEvaluation.Passed { get; }
+public  System.String Microsoft.DotNet.Interactive.Journey.RuleEvaluation.Reason { get; }
+Microsoft.DotNet.Interactive.Journey.Utilities.OrderedTable<T>::.ctor()
+Microsoft.DotNet.Interactive.Journey.Utilities.OrderedTable<T>::.ctor(IEqualityComparer<T> comparer)
+public  System.Int32 Microsoft.DotNet.Interactive.Journey.Utilities.OrderedTable<T>.Count { get; }
+public  System.Boolean Microsoft.DotNet.Interactive.Journey.Utilities.OrderedTable<T>.IsReadOnly { get; }
+public  System.Boolean Microsoft.DotNet.Interactive.Journey.Utilities.OrderedTable<T>.Add( T item )
+public  System.Void Microsoft.DotNet.Interactive.Journey.Utilities.OrderedTable<T>.Clear(  )
+public  System.Boolean Microsoft.DotNet.Interactive.Journey.Utilities.OrderedTable<T>.Contains( T item )
+public  System.Void Microsoft.DotNet.Interactive.Journey.Utilities.OrderedTable<T>.CopyTo( T[] array, System.Int32 arrayIndex )
+public  IEnumerator<T> Microsoft.DotNet.Interactive.Journey.Utilities.OrderedTable<T>.GetEnumerator(  )
+public  System.Boolean Microsoft.DotNet.Interactive.Journey.Utilities.OrderedTable<T>.Remove( T item )

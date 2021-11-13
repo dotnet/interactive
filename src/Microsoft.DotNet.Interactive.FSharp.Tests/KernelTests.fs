@@ -65,7 +65,7 @@ type KernelTests() =
     [<Fact>]
     member __.``HoverText for Values``() =
         let texts =
-            getHoverTexts 0 4[ 
+            getHoverTexts 0 4 [
                 "let a = 10"
             ]
 

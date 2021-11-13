@@ -18,8 +18,6 @@ variables:
     value: true
   - name: _DotNetArtifactsCategory
     value: .NETCore
-  - name: DotNetSdkVersion
-    value: '5.0.400'
   - name: PocketLoggerLogPath
     value: $(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)
   - name: TryDotNetPackagesPath
@@ -101,11 +99,13 @@ stages:
             versionSpec: $(NodeJSVersion)
 
         - task: UseDotNet@2
-          displayName: Use .NET SDK 5.0
+          displayName: Use .NET SDK
           inputs:
             packageType: sdk
-            version: $(DotNetSdkVersion)
-            installationPath: $(Agent.ToolsDirectory)\dotnet
+            useGlobalJson: true
+            includePreviewVersions: true
+            workingDirectory: $(Build.SourcesDirectory)
+            installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - script: |
             robocopy "eng\resources" "$(Build.SourcesDirectory)\artifacts"
@@ -282,7 +282,9 @@ stages:
           displayName: Use .NET SDK
           inputs:
             packageType: sdk
-            version: $(DotNetSdkVersion)
+            useGlobalJson: true
+            includePreviewVersions: true
+            workingDirectory: $(Build.SourcesDirectory)
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - script: |

@@ -11,7 +11,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.DotNet.Interactive.App.CommandLine;
-using Microsoft.DotNet.Interactive.AspNetCore;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,7 +36,6 @@ namespace Microsoft.DotNet.Interactive.App
             typeof(Startup).Assembly, // dotnet-interactive.dll
             typeof(Kernel).Assembly, // Microsoft.DotNet.Interactive.dll
             typeof(Shell).Assembly, // Microsoft.DotNet.Interactive.Jupyter.dll
-            typeof(AspNetCoreCSharpKernelExtensions).Assembly, // Microsoft.DotNet.Interactive.AspNetCore.dll
         };
 
         internal static IDisposable StartToolLogging(StartupOptions options)
