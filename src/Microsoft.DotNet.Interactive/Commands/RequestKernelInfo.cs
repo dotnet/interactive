@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Commands;
 
@@ -21,11 +22,7 @@ public class RequestKernelInfo : KernelCommand
         {
             if (host.TryGetKernelInfo(kernel, out var kernelInfo))
             {
-
-
-
-
-
+                context.Publish(new KernelInfoProduced(kernelInfo, context.Command as RequestKernelInfo));
             }
         }
     }

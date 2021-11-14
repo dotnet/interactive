@@ -8,7 +8,7 @@ namespace Microsoft.DotNet.Interactive.Events;
 public class KernelInfoProduced : KernelEvent
 {
     public KernelInfoProduced(
-        KernelInfo kernelInfo, 
+        KernelInfo kernelInfo,
         RequestKernelInfo command) : base(command)
     {
         KernelInfo = kernelInfo;
