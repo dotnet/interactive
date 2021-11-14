@@ -342,58 +342,53 @@ namespace Microsoft.DotNet.Interactive.Formatting
             TextWriter writer,
             FormatContext context,
             int? listExpansionLimit = null) =>
-            Join(list.Cast<object>(), writer, context, listExpansionLimit);
+            JoinGeneric(list.Cast<object>(), writer, context, listExpansionLimit);
 
-        internal static void Join<T>(
-            IEnumerable<T> list,
+        internal static void JoinGeneric<T>(
+            IEnumerable<T> seq,
             TextWriter writer,
             FormatContext context,
             int? listExpansionLimit = null)
         {
-            if (list is null)
+            if (seq is null)
             {
                 writer.Write(NullString);
                 return;
             }
 
-            var i = 0;
-
             SingleLinePlainTextFormatter.WriteStartSequence(writer);
 
             listExpansionLimit ??= Formatter<T>.ListExpansionLimit;
 
-            using (var enumerator = list.GetEnumerator())
+            var (itemsToWrite, remainingCount) = seq.TakeAndCountRemaining(listExpansionLimit.Value);
+
+            for (var i = 0; i < itemsToWrite.Count; i++)
             {
-                while (enumerator.MoveNext())
+                var item = itemsToWrite[i];
+                if (i < listExpansionLimit)
                 {
-                    if (i < listExpansionLimit)
+                    // write out another item in the list
+                    if (i > 0)
                     {
-                        // write out another item in the list
-                        if (i > 0)
-                        {
-                            SingleLinePlainTextFormatter.WriteSequenceDelimiter(writer);
-                        }
-
-                        i++;
-
-                        SingleLinePlainTextFormatter.WriteStartSequenceItem(writer);
-
-                        enumerator.Current.FormatTo(context);
+                        SingleLinePlainTextFormatter.WriteSequenceDelimiter(writer);
                     }
-                    else
-                    {
-                        // write out just a count of the remaining items in the list
-                        var difference = list.Count() - i;
-                        if (difference > 0)
-                        {
-                            writer.Write(" ... (");
-                            writer.Write(difference);
-                            writer.Write(" more)");
-                        }
 
-                        break;
-                    }
+                    SingleLinePlainTextFormatter.WriteStartSequenceItem(writer);
+
+                    item.FormatTo(context);
                 }
+            }
+
+            if (remainingCount != 0)
+            {
+                writer.Write(" ... (");
+
+                if (remainingCount is { })
+                {
+                    writer.Write($"{remainingCount} ");
+                }
+
+                writer.Write("more)");
             }
 
             SingleLinePlainTextFormatter.WriteEndSequence(writer);
@@ -505,9 +500,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 }
             }
         }
-
-        public static IEnumerable<ITypeFormatter> GetRegisteredFormattersFor(Type actualType) =>
-            RegisteredFormatters().Where(f => f.Type.IsAssignableFrom(actualType));
 
         public static ITypeFormatter GetPreferredFormatterFor(Type actualType, string mimeType) =>
             _typeFormattersTable
