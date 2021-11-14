@@ -28,7 +28,6 @@ public static  System.Void Microsoft.DotNet.Interactive.Formatting.Formatter.For
 public static  System.Void Microsoft.DotNet.Interactive.Formatting.Formatter.FormatTo<T>( Microsoft.DotNet.Interactive.Formatting.FormatContext context, System.String mimeType = text/plain )
 public static  Microsoft.DotNet.Interactive.Formatting.ITypeFormatter Microsoft.DotNet.Interactive.Formatting.Formatter.GetPreferredFormatterFor( System.Type actualType, System.String mimeType )
 public static  System.Collections.Generic.IReadOnlyCollection<System.String> Microsoft.DotNet.Interactive.Formatting.Formatter.GetPreferredMimeTypesFor( System.Type type )
-public static  System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Formatting.ITypeFormatter> Microsoft.DotNet.Interactive.Formatting.Formatter.GetRegisteredFormattersFor( System.Type actualType )
 public static  System.Void Microsoft.DotNet.Interactive.Formatting.Formatter.Register( Microsoft.DotNet.Interactive.Formatting.ITypeFormatter formatter )
 public static  System.Void Microsoft.DotNet.Interactive.Formatting.Formatter.Register<T>( FormatDelegate<T> formatter, System.String mimeType = text/plain )
 public static  System.Void Microsoft.DotNet.Interactive.Formatting.Formatter.Register( System.Type type, Microsoft.DotNet.Interactive.Formatting.FormatDelegate<System.Object> formatter, System.String mimeType = text/plain )
