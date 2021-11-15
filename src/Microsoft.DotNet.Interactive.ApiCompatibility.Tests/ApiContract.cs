@@ -35,7 +35,24 @@ internal static class ApiContract
                                        ? "delegate"
                                        : "class";
 
-                output.AppendLine($"  {type.GetAccessModifiers()} {typeKind} {type.GetReadableTypeName(type.Namespace == ns)}");
+                output.Append($"  {type.GetAccessModifiers()} {typeKind} {type.GetReadableTypeName(ns)}");
+
+                if (type.BaseType is {} baseType && 
+                    baseType != typeof(object))
+                {
+                    output.Append($" : {baseType.GetReadableTypeName(ns)}");
+                }
+
+                if (type.GetInterfaces() is { Length: > 0 } interfaces) 
+                {
+                    foreach (var @interface in interfaces.OrderBy(i => i.FullName))
+                    {
+                        output.Append($", {@interface.GetReadableTypeName(ns)}");
+                    }
+                }
+
+                output.AppendLine();
+
                 if (type.IsEnum)
                 {
                     WriteContractForEnum(type, output);
@@ -84,7 +101,7 @@ internal static class ApiContract
                         printedMethods.Add(setter);
                     }
 
-                    output.AppendLine($"    {GetPropertySignature(prop, type.Namespace == prop.PropertyType.Namespace)}");
+                    output.AppendLine($"    {GetPropertySignature(prop, type.Namespace)}");
                 }
             }
         }
@@ -122,7 +139,7 @@ internal static class ApiContract
                         printedMethods.Add(setter);
                     }
 
-                    output.AppendLine($"    {GetPropertySignature(prop)}");
+                    output.AppendLine($"    {prop.GetPropertySignature(type.Namespace)}");
                 }
             }
         }
@@ -141,7 +158,7 @@ internal static class ApiContract
         }
     }
 
-    public static string GetPropertySignature(this PropertyInfo property, bool omitNamespace = false)
+    public static string GetPropertySignature(this PropertyInfo property, string omitNamespace)
     {
         var getter = property.GetGetMethod();
         var setter = property.GetSetMethod();
@@ -187,7 +204,7 @@ internal static class ApiContract
 
         if (method.IsGenericMethod)
         {
-            genericArgs = $"<{string.Join(", ", method.GetGenericArguments().Select(a => GetReadableTypeName(a)))}>";
+            genericArgs = $"<{string.Join(", ", method.GetGenericArguments().Select(a => GetReadableTypeName(a, omitNamespace)))}>";
         }
 
         var methodParameters = method.GetParameters().AsEnumerable();
@@ -202,7 +219,7 @@ internal static class ApiContract
         var parameters = GetParameterSignatures(methodParameters, isExtensionMethod, omitNamespace);
 
         return
-            $"{accessor} {GetReadableTypeName(method.ReturnType, method.ReturnType.Namespace == omitNamespace)} {method.Name}{genericArgs}({parameters})";
+            $"{accessor} {GetReadableTypeName(method.ReturnType, omitNamespace)} {method.Name}{genericArgs}({parameters})";
     }
 
     public static string GetParameterSignatures(
@@ -221,7 +238,7 @@ internal static class ApiContract
             else if (isExtensionMethod && param.Position == 0)
                 signature = "this ";
 
-            signature += $"{GetReadableTypeName(param.ParameterType, param.ParameterType.Namespace == omitNamespace)} {param.Name}";
+            signature += $"{GetReadableTypeName(param.ParameterType, omitNamespace)} {param.Name}";
 
             if (param.HasDefaultValue)
             {
@@ -300,7 +317,7 @@ internal static class ApiContract
     public static bool IsPropertyAccessor(this MethodInfo methodInfo) =>
         methodInfo.DeclaringType.GetProperties().Any(prop => prop.GetSetMethod() == methodInfo);
 
-    public static string GetReadableTypeName(this Type type, bool omitNamespace = false)
+    public static string GetReadableTypeName(this Type type, string omitNamespace)
     {
         var builder = new StringBuilder();
         using var writer = new StringWriter(builder);
@@ -312,9 +329,9 @@ internal static class ApiContract
     private static void WriteCSharpDeclarationTo(
         this Type type,
         TextWriter writer,
-        bool omitNamespace = false)
+        string omitNamespace)
     {
-        var typeName = omitNamespace
+        var typeName = type.Namespace == omitNamespace
                            ? type.Name
                            : type.FullName ?? type.Name;
 
@@ -326,7 +343,7 @@ internal static class ApiContract
 
             for (var i = 0; i < genericArguments.Length; i++)
             {
-                WriteCSharpDeclarationTo(genericArguments[i], writer);
+                WriteCSharpDeclarationTo(genericArguments[i], writer, omitNamespace);
                 if (i < genericArguments.Length - 1)
                 {
                     writer.Write(",");

@@ -1,22 +1,22 @@
 Microsoft.DotNet.Interactive.Formatting
-  public class DataDictionaryConverter
+  public class DataDictionaryConverter : JsonConverter<System.Collections.Generic.IDictionary<System.String,System.Object>>
     .ctor()
     public System.Collections.Generic.IDictionary<System.String,System.Object> Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
   public static class Destructurer
     public static IDestructurer GetOrCreate(System.Type type)
-  public class Destructurer<T>
+  public class Destructurer<T>, IDestructurer<T>, IDestructurer
     public static Destructurer<T> GetOrCreate()
     .ctor()
     public System.Collections.Generic.ICollection<System.String> Keys { get;}
     public System.Collections.Generic.IDictionary<System.String,System.Object> Destructure(T instance)
     public System.Object GetValue(T instance, System.String propertyName)
-  public class FormatContext
+  public class FormatContext, System.IDisposable
     .ctor()
     .ctor(System.IO.TextWriter writer)
     public System.Int32 Depth { get;}
     public System.IO.TextWriter Writer { get;}
     public System.Void Dispose()
-  public delegate FormatDelegate<T>
+  public delegate FormatDelegate<T> : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable
     .ctor(System.Object object, System.IntPtr method)
     public System.IAsyncResult BeginInvoke(T value, FormatContext context, System.AsyncCallback callback, System.Object object)
     public System.Boolean EndInvoke(System.IAsyncResult result)
@@ -36,7 +36,7 @@ Microsoft.DotNet.Interactive.Formatting
     public static System.Void Register(System.Type type, System.Action<System.Object,System.IO.TextWriter> formatter, System.String mimeType = text/plain)
     public static System.Void Register<T>(Action<T,System.IO.TextWriter> formatter, System.String mimeType = text/plain)
     public static System.Void Register<T>(Func<T,System.String> formatter, System.String mimeType = text/plain)
-    public static System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Formatting.ITypeFormatter> RegisteredFormatters(System.Boolean includeDefaults = True)
+    public static System.Collections.Generic.IEnumerable<ITypeFormatter> RegisteredFormatters(System.Boolean includeDefaults = True)
     public static System.Void ResetToDefault()
     public static System.Void SetPreferredMimeTypesFor(System.Type type, System.String[] preferredMimeTypes)
     public static System.String ToDisplayString(System.String mimeType = text/plain)
@@ -60,7 +60,7 @@ Microsoft.DotNet.Interactive.Formatting
     public static TTag WithAttributes<TTag>(System.Collections.Generic.IDictionary<System.String,System.Object> htmlAttributes)
     public static TTag WithAttributes<TTag>(System.String name, System.Object value)
     public static TTag WrapInner<TTag>(HtmlTag wrappingTag)
-  public class HtmlAttributes
+  public class HtmlAttributes : System.Dynamic.DynamicObject, Microsoft.AspNetCore.Html.IHtmlContent, System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<System.String,System.Object>>, System.Collections.Generic.IDictionary<System.String,System.Object>, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<System.String,System.Object>>, System.Collections.IEnumerable, System.Dynamic.IDynamicMetaObjectProvider
     .ctor()
     .ctor(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<System.String,System.Object>> attributes)
     public System.Int32 Count { get;}
@@ -97,18 +97,18 @@ Microsoft.DotNet.Interactive.Formatting
      System.Int32 MaxProperties { public static get; set;}
     public static ITypeFormatter GetPreferredFormatterFor(System.Type type)
     public static ITypeFormatter GetPreferredFormatterFor<T>()
-  public class HtmlFormatter<T>
+  public class HtmlFormatter<T> : TypeFormatter<T>, ITypeFormatter<T>, ITypeFormatter
     .ctor(FormatDelegate<T> format)
-    .ctor(Action<T,Microsoft.DotNet.Interactive.Formatting.FormatContext> format)
+    .ctor(Action<T,FormatContext> format)
     .ctor(Func<T,System.String> format)
     public System.String MimeType { get;}
     public System.Boolean Format(T value, FormatContext context)
-  public class HtmlTag
+  public class HtmlTag, Microsoft.AspNetCore.Html.IHtmlContent
     .ctor(System.String name)
     .ctor(System.String name, System.String text)
-    .ctor(System.String name, System.Action<Microsoft.DotNet.Interactive.Formatting.FormatContext> content)
-     System.Action<Microsoft.DotNet.Interactive.Formatting.FormatContext> Content { public get; set;}
-     Microsoft.DotNet.Interactive.Formatting.HtmlAttributes HtmlAttributes { public get; set;}
+    .ctor(System.String name, System.Action<FormatContext> content)
+     System.Action<FormatContext> Content { public get; set;}
+     HtmlAttributes HtmlAttributes { public get; set;}
      System.Boolean IsSelfClosing { public get; set;}
      System.String Name { public get; set;}
     public System.Void MergeAttributes(System.Collections.Generic.IDictionary<System.String,System.Object> htmlAttributes, System.Boolean replace = False)
@@ -128,11 +128,11 @@ Microsoft.DotNet.Interactive.Formatting
     public System.String MimeType { get;}
     public System.Type Type { get;}
     public System.Boolean Format(System.Object instance, FormatContext context)
-  public abstract class ITypeFormatter<T>
+  public abstract class ITypeFormatter<T>, ITypeFormatter
     public System.Boolean Format(T instance, FormatContext context)
   public abstract class ITypeFormatterSource
-    public System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Formatting.ITypeFormatter> CreateTypeFormatters()
-  public abstract class JsonConverter<T>
+    public System.Collections.Generic.IEnumerable<ITypeFormatter> CreateTypeFormatters()
+  public abstract class JsonConverter<T> : JsonConverter<T>
     protected System.Void EnsureStartObject(System.Text.Json.Utf8JsonReader reader, System.Type typeToConvert)
     protected System.Void OnWrite(System.Text.Json.Utf8JsonWriter writer, T value, System.Text.Json.JsonSerializerOptions options)
     public System.Void Write(System.Text.Json.Utf8JsonWriter writer, T value, System.Text.Json.JsonSerializerOptions options)
@@ -142,34 +142,34 @@ Microsoft.DotNet.Interactive.Formatting
   public static class JsonFormatter
     public static System.Text.Json.JsonSerializerOptions SerializerOptions { get;}
     public static ITypeFormatter GetPreferredFormatterFor(System.Type type)
-  public class JsonFormatter<T>
+  public class JsonFormatter<T> : TypeFormatter<T>, ITypeFormatter<T>, ITypeFormatter
     .ctor()
     .ctor(FormatDelegate<T> format)
-    .ctor(Action<T,Microsoft.DotNet.Interactive.Formatting.FormatContext> format)
+    .ctor(Action<T,FormatContext> format)
     public System.String MimeType { get;}
     public System.Boolean Format(T instance, FormatContext context)
-  public class JsonString
+  public class JsonString : Microsoft.AspNetCore.Html.HtmlString, Microsoft.AspNetCore.Html.IHtmlContent
     .ctor(System.String json)
   public static class PlainTextFormatter
      System.Int32 MaxProperties { public static get; set;}
     public static ITypeFormatter GetPreferredFormatterFor(System.Type type)
     public static ITypeFormatter GetPreferredFormatterFor<T>()
-  public class PlainTextFormatter<T>
+  public class PlainTextFormatter<T> : TypeFormatter<T>, ITypeFormatter<T>, ITypeFormatter
     public static PlainTextFormatter<T> CreateForAnyEnumerable(System.Boolean includeInternals = False)
     public static PlainTextFormatter<T> CreateForAnyObject(System.Boolean includeInternals = False)
     public static PlainTextFormatter<T> CreateForMembers(Expression<Func<T,System.Object>> members)
     .ctor(FormatDelegate<T> format)
-    .ctor(Action<T,Microsoft.DotNet.Interactive.Formatting.FormatContext> format)
+    .ctor(Action<T,FormatContext> format)
     .ctor(Func<T,System.String> format)
     public System.String MimeType { get;}
     public System.Boolean Format(T value, FormatContext context)
-  public class PocketView
-    public static System.Object Transform(System.Action<Microsoft.DotNet.Interactive.Formatting.HtmlTag,System.Object> transform)
-    public static System.Object Transform(System.Action<Microsoft.DotNet.Interactive.Formatting.HtmlTag,System.Object,Microsoft.DotNet.Interactive.Formatting.FormatContext> transform)
+  public class PocketView : System.Dynamic.DynamicObject, Microsoft.AspNetCore.Html.IHtmlContent, System.Dynamic.IDynamicMetaObjectProvider
+    public static System.Object Transform(System.Action<HtmlTag,System.Object> transform)
+    public static System.Object Transform(System.Action<HtmlTag,System.Object,FormatContext> transform)
     .ctor(PocketView nested = null)
     .ctor(System.String tagName, PocketView nested = null)
-    public Microsoft.DotNet.Interactive.Formatting.HtmlAttributes HtmlAttributes { get;}
-    public Microsoft.DotNet.Interactive.Formatting.HtmlTag HtmlTag { get;}
+    public HtmlAttributes HtmlAttributes { get;}
+    public HtmlTag HtmlTag { get;}
     public System.String Name { get;}
     public System.Void AddDependency(System.String id, Microsoft.AspNetCore.Html.IHtmlContent content)
     public System.Void SetContent(System.Object[] args)
@@ -264,46 +264,46 @@ Microsoft.DotNet.Interactive.Formatting
     public static System.Object u { get;}
     public static System.Object ul { get;}
     public static System.Object video { get;}
-   class Style
+   class Style : PocketView, Microsoft.AspNetCore.Html.IHtmlContent, System.Collections.IEnumerable, System.Dynamic.IDynamicMetaObjectProvider
     .ctor()
     public System.Void Add(System.String selector, System.ValueTuple<System.String,System.String> properties)
     public System.Collections.IEnumerator GetEnumerator()
     public System.Collections.Generic.IDictionary<System.String,System.Object> LinkAndApplyClass(System.String class)
     public System.Void SetContent(System.Object[] args)
-  public abstract class TypeFormatter<T>
+  public abstract class TypeFormatter<T>, ITypeFormatter<T>, ITypeFormatter
     public System.String MimeType { get;}
     public System.Type Type { get;}
     public System.Boolean Format(T value, FormatContext context)
-  public class TypeFormatterSourceAttribute
+  public class TypeFormatterSourceAttribute : System.Attribute
     .ctor(System.Type formatterSourceType)
     public System.Type FormatterSourceType { get;}
 Microsoft.DotNet.Interactive.Formatting.Csv
   public static class CsvFormatter
     public static Microsoft.DotNet.Interactive.Formatting.ITypeFormatter GetPreferredFormatterFor(System.Type type)
     public static ITypeFormatter<T> GetPreferredFormatterFor<T>()
-  public class CsvFormatter<T>
+  public class CsvFormatter<T> : TypeFormatter<T>, ITypeFormatter<T>, Microsoft.DotNet.Interactive.Formatting.ITypeFormatter
     .ctor(FormatDelegate<T> format)
     public System.String MimeType { get;}
     public System.Boolean Format(T value, Microsoft.DotNet.Interactive.Formatting.FormatContext context)
 Microsoft.DotNet.Interactive.Formatting.TabularData
-  public class TableDataFieldDescriptors
+  public class TableDataFieldDescriptors, System.Collections.Generic.IEnumerable<TableSchemaFieldDescriptor>, System.Collections.Generic.IReadOnlyCollection<TableSchemaFieldDescriptor>, System.Collections.IEnumerable
     .ctor()
     public System.Int32 Count { get;}
-    public Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldDescriptor Item { get;}
+    public TableSchemaFieldDescriptor Item { get;}
     public System.Void Add(TableSchemaFieldDescriptor descriptor)
     public System.Boolean Contains(System.String name)
-    public System.Collections.Generic.IEnumerator<Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldDescriptor> GetEnumerator()
+    public System.Collections.Generic.IEnumerator<TableSchemaFieldDescriptor> GetEnumerator()
   public class TableSchema
     .ctor()
-     Microsoft.DotNet.Interactive.Formatting.TabularData.TableDataFieldDescriptors Fields { public get; set;}
+     TableDataFieldDescriptors Fields { public get; set;}
      System.Collections.Generic.List<System.String> PrimaryKey { public get; set;}
   public class TableSchemaFieldDescriptor
-    .ctor(System.String name, System.Nullable<Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldType> type = 2, System.String description = null, System.String format = null)
+    .ctor(System.String name, System.Nullable<TableSchemaFieldType> type = 2, System.String description = null, System.String format = null)
     public System.String Description { get;}
     public System.String Format { get;}
     public System.String Name { get;}
-    public Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchemaFieldType Type { get;}
-  public enum TableSchemaFieldType
+    public TableSchemaFieldType Type { get;}
+  public enum TableSchemaFieldType : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
     Any=0
     Object=1
     Null=2
@@ -315,7 +315,7 @@ Microsoft.DotNet.Interactive.Formatting.TabularData
     DateTime=8
     GeoPoint=9
     GeoJson=10
-  public class TableSchemaFieldTypeConverter
+  public class TableSchemaFieldTypeConverter : Microsoft.DotNet.Interactive.Formatting.JsonConverter<TableSchemaFieldType>
     .ctor()
     public TableSchemaFieldType Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
     public System.Void Write(System.Text.Json.Utf8JsonWriter writer, TableSchemaFieldType value, System.Text.Json.JsonSerializerOptions options)
@@ -323,9 +323,9 @@ Microsoft.DotNet.Interactive.Formatting.TabularData
     .ctor(TableSchema schema, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IDictionary<System.String,System.Object>> data)
     public System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IDictionary<System.String,System.Object>> Data { get;}
     public System.String Profile { get;}
-    public Microsoft.DotNet.Interactive.Formatting.TabularData.TableSchema Schema { get;}
+    public TableSchema Schema { get;}
     public TabularDataResourceJsonString ToJsonString()
-  public class TabularDataResourceConverter
+  public class TabularDataResourceConverter : Microsoft.DotNet.Interactive.Formatting.JsonConverter<TabularDataResource>
     .ctor()
     public TabularDataResource Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
     public System.Void Write(System.Text.Json.Utf8JsonWriter writer, TabularDataResource value, System.Text.Json.JsonSerializerOptions options)
@@ -333,11 +333,11 @@ Microsoft.DotNet.Interactive.Formatting.TabularData
     public static System.Text.Json.JsonSerializerOptions JsonSerializerOptions { get;}
     public static TableSchemaFieldType ToTableSchemaFieldType()
     public static TabularDataResource ToTabularDataResource<T>()
-  public class TabularDataResourceFormatter<T>
+  public class TabularDataResourceFormatter<T> : TypeFormatter<T>, ITypeFormatter<T>, Microsoft.DotNet.Interactive.Formatting.ITypeFormatter
     .ctor(FormatDelegate<T> format)
     .ctor(Action<T,Microsoft.DotNet.Interactive.Formatting.FormatContext> format)
     public System.String MimeType { get;}
     public System.Boolean Format(T value, Microsoft.DotNet.Interactive.Formatting.FormatContext context)
-  public class TabularDataResourceJsonString
+  public class TabularDataResourceJsonString : Microsoft.DotNet.Interactive.Formatting.JsonString, Microsoft.AspNetCore.Html.IHtmlContent
     public static TabularDataResourceJsonString Create(System.Collections.Generic.IReadOnlyDictionary<System.String,System.Type> fields, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IDictionary<System.String,System.Object>> data)
     .ctor(System.String json)

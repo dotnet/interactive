@@ -1,5 +1,5 @@
 Microsoft.DotNet.Interactive.CSharp
-  public class CSharpKernel
+  public class CSharpKernel : Microsoft.DotNet.Interactive.Kernel, Microsoft.DotNet.Interactive.Extensions.IExtensibleKernel, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.ChangeWorkingDirectory>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestCompletions>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestDiagnostics>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestHoverText>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestSignatureHelp>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, Microsoft.DotNet.Interactive.ISupportNuget, Microsoft.DotNet.Interactive.ValueSharing.ISupportGetValue, Microsoft.DotNet.Interactive.ValueSharing.ISupportSetClrValue, System.IDisposable
     .ctor()
     .ctor(System.String name)
     public Microsoft.DotNet.Interactive.PackageRestoreContext PackageRestoreContext { get;}

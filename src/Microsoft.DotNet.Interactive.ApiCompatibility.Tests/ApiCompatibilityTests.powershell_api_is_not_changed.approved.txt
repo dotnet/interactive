@@ -1,5 +1,5 @@
 Microsoft.DotNet.Interactive.PowerShell
-  public class PowerShellKernel
+  public class PowerShellKernel : Microsoft.DotNet.Interactive.Kernel, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestCompletions>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestDiagnostics>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, Microsoft.DotNet.Interactive.ValueSharing.ISupportGetValue, Microsoft.DotNet.Interactive.ValueSharing.ISupportSetClrValue, System.IDisposable
     .ctor()
      System.Func<System.String,System.String> ReadInput { public get; set;}
      System.Func<System.String,Microsoft.DotNet.Interactive.PasswordString> ReadPassword { public get; set;}
@@ -14,11 +14,11 @@ Microsoft.DotNet.Interactive.PowerShell
   public static class PowerShellKernelExtensions
     public static PowerShellKernel UseProfiles()
 Microsoft.DotNet.Interactive.PowerShell.Commands
-  public class EnterAzShellCommand
+  public class EnterAzShellCommand : System.Management.Automation.PSCmdlet
     .ctor()
      System.Guid TenantId { public get; set;}
     protected System.Void ProcessRecord()
-  public class OutDisplayCommand
+  public class OutDisplayCommand : System.Management.Automation.PSCmdlet
     .ctor()
      System.String CustomMimeType { public get; set;}
      System.Object InputObject { public get; set;}
@@ -26,7 +26,7 @@ Microsoft.DotNet.Interactive.PowerShell.Commands
      System.Management.Automation.SwitchParameter PassThru { public get; set;}
     protected System.Void ProcessRecord()
 Microsoft.DotNet.Interactive.PowerShell.Host
-  public class PSKernelHost
+  public class PSKernelHost : System.Management.Automation.Host.PSHost, System.Management.Automation.Host.IHostSupportsInteractiveSession
     public System.Globalization.CultureInfo CurrentCulture { get;}
     public System.Globalization.CultureInfo CurrentUICulture { get;}
     public System.Guid InstanceId { get;}
@@ -43,7 +43,7 @@ Microsoft.DotNet.Interactive.PowerShell.Host
     public System.Void PopRunspace()
     public System.Void PushRunspace(System.Management.Automation.Runspaces.Runspace runspace)
     public System.Void SetShouldExit(System.Int32 exitCode)
-  public class PSKernelHostRawUserInterface
+  public class PSKernelHostRawUserInterface : System.Management.Automation.Host.PSHostRawUserInterface
      System.ConsoleColor BackgroundColor { public get; set;}
      System.Management.Automation.Host.Size BufferSize { public get; set;}
      System.Management.Automation.Host.Coordinates CursorPosition { public get; set;}
@@ -64,7 +64,7 @@ Microsoft.DotNet.Interactive.PowerShell.Host
     public System.Void ScrollBufferContents(System.Management.Automation.Host.Rectangle source, System.Management.Automation.Host.Coordinates destination, System.Management.Automation.Host.Rectangle clip, System.Management.Automation.Host.BufferCell fill)
     public System.Void SetBufferContents(System.Management.Automation.Host.Coordinates origin, System.Management.Automation.Host.BufferCell[,] contents)
     public System.Void SetBufferContents(System.Management.Automation.Host.Rectangle rectangle, System.Management.Automation.Host.BufferCell fill)
-  public class PSKernelHostUserInterface
+  public class PSKernelHostUserInterface : System.Management.Automation.Host.PSHostUserInterface, System.Management.Automation.Host.IHostUISupportsMultipleChoiceSelection
      System.ConsoleColor DebugBackgroundColor { public get; set;}
      System.ConsoleColor DebugForegroundColor { public get; set;}
      System.ConsoleColor ErrorAccentColor { public get; set;}

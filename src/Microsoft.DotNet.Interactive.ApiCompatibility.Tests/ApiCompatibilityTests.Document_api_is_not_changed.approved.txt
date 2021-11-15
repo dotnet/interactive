@@ -1,34 +1,34 @@
 Microsoft.DotNet.Interactive.Documents
   public static class CodeSubmission
     public static System.Text.Encoding Encoding { get;}
-    public static InteractiveDocument Parse(System.String content, System.String defaultLanguage, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Documents.KernelName> kernelNames)
-    public static InteractiveDocument Read(System.IO.Stream stream, System.String defaultLanguage, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Documents.KernelName> kernelNames)
-    public static System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Documents.InteractiveDocument> ReadAsync(System.IO.Stream stream, System.String defaultLanguage, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Documents.KernelName> kernelNames)
+    public static InteractiveDocument Parse(System.String content, System.String defaultLanguage, System.Collections.Generic.IReadOnlyCollection<KernelName> kernelNames)
+    public static InteractiveDocument Read(System.IO.Stream stream, System.String defaultLanguage, System.Collections.Generic.IReadOnlyCollection<KernelName> kernelNames)
+    public static System.Threading.Tasks.Task<InteractiveDocument> ReadAsync(System.IO.Stream stream, System.String defaultLanguage, System.Collections.Generic.IReadOnlyCollection<KernelName> kernelNames)
     public static System.String ToCodeSubmissionContent(System.String newline = 
 )
     public static System.Void Write(InteractiveDocument interactiveDocument, System.String newline, System.IO.Stream stream)
     public static System.Void Write(InteractiveDocument interactiveDocument, System.String newline, System.IO.TextWriter writer)
-  public class DataDictionaryConverter
+  public class DataDictionaryConverter : JsonConverter<System.Collections.Generic.IDictionary<System.String,System.Object>>
     .ctor()
     public System.Collections.Generic.IDictionary<System.String,System.Object> Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
-  public class DisplayElement
+  public class DisplayElement : InteractiveDocumentOutputElement
     .ctor(System.Collections.Generic.IDictionary<System.String,System.Object> data)
     public System.Collections.Generic.IDictionary<System.String,System.Object> Data { get;}
-  public class ErrorElement
+  public class ErrorElement : InteractiveDocumentOutputElement
     .ctor(System.String errorName, System.String errorValue, System.String[] stackTrace)
     public System.String ErrorName { get;}
     public System.String ErrorValue { get;}
     public System.String[] StackTrace { get;}
   public class InteractiveDocument
-    .ctor(System.Collections.Generic.IList<Microsoft.DotNet.Interactive.Documents.InteractiveDocumentElement> elements)
-    public System.Collections.Generic.IList<Microsoft.DotNet.Interactive.Documents.InteractiveDocumentElement> Elements { get;}
+    .ctor(System.Collections.Generic.IList<InteractiveDocumentElement> elements)
+    public System.Collections.Generic.IList<InteractiveDocumentElement> Elements { get;}
   public class InteractiveDocumentElement
     .ctor(System.String language, System.String contents, InteractiveDocumentOutputElement[] outputs = null)
     public System.String Contents { get;}
     public System.String Language { get;}
-    public Microsoft.DotNet.Interactive.Documents.InteractiveDocumentOutputElement[] Outputs { get;}
+    public InteractiveDocumentOutputElement[] Outputs { get;}
   public abstract class InteractiveDocumentOutputElement
-  public abstract class JsonConverter<T>
+  public abstract class JsonConverter<T> : JsonConverter<T>
     protected System.Void EnsureStartObject(System.Text.Json.Utf8JsonReader reader, System.Type typeToConvert)
     protected System.Void OnWrite(System.Text.Json.Utf8JsonWriter writer, T value, System.Text.Json.JsonSerializerOptions options)
     public System.Void Write(System.Text.Json.Utf8JsonWriter writer, T value, System.Text.Json.JsonSerializerOptions options)
@@ -40,7 +40,7 @@ Microsoft.DotNet.Interactive.Documents
     public System.Collections.Generic.IReadOnlyCollection<System.String> Aliases { get;}
     public System.String Name { get;}
     public System.String ToString()
-  public class TextElement
+  public class TextElement : InteractiveDocumentOutputElement
     .ctor(System.String text)
     public System.String Text { get;}
 Microsoft.DotNet.Interactive.Documents.Jupyter
@@ -56,38 +56,38 @@ Microsoft.DotNet.Interactive.Documents.Jupyter
 )
     public static System.Void Write(Microsoft.DotNet.Interactive.Documents.InteractiveDocument interactive, System.String newline, System.IO.Stream stream)
     public static System.Void Write(Microsoft.DotNet.Interactive.Documents.InteractiveDocument interactive, System.String newline, System.IO.TextWriter writer)
-  public class NotebookCellOutputConverter
+  public class NotebookCellOutputConverter : Microsoft.DotNet.Interactive.Documents.JsonConverter<Microsoft.DotNet.Interactive.Documents.InteractiveDocumentOutputElement>
      System.Text.Json.JsonSerializerOptions InternalOptions { public static get; set;}
     .ctor()
     public Microsoft.DotNet.Interactive.Documents.InteractiveDocumentOutputElement Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
 Microsoft.DotNet.Interactive.Documents.ParserServer
-  public class ByteArrayConverter
+  public class ByteArrayConverter : Microsoft.DotNet.Interactive.Documents.JsonConverter<System.Byte[]>
     .ctor()
     public System.Byte[] Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
     public System.Void Write(System.Text.Json.Utf8JsonWriter writer, System.Byte[] value, System.Text.Json.JsonSerializerOptions options)
-  public enum DocumentSerializationType
+  public enum DocumentSerializationType : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
     Dib=0
     Ipynb=1
-  public class NotebookErrorResponse
+  public class NotebookErrorResponse : NotebookParserServerResponse
     .ctor(System.String id, System.String errorMessage)
     public System.String ErrorMessage { get;}
   public abstract class NotebookParseOrSerializeRequest
     public static NotebookParseOrSerializeRequest FromJson(System.String json)
     public System.String DefaultLanguage { get;}
     public System.String Id { get;}
-    public Microsoft.DotNet.Interactive.Documents.ParserServer.DocumentSerializationType SerializationType { get;}
-    public Microsoft.DotNet.Interactive.Documents.ParserServer.RequestType Type { get;}
-  public class NotebookParseRequest
+    public DocumentSerializationType SerializationType { get;}
+    public RequestType Type { get;}
+  public class NotebookParseRequest : NotebookParseOrSerializeRequest
     .ctor(System.String id, DocumentSerializationType serializationType, System.String defaultLanguage, System.Byte[] rawData)
     public System.Byte[] RawData { get;}
-    public Microsoft.DotNet.Interactive.Documents.ParserServer.RequestType Type { get;}
-  public class NotebookParseRequestConverter
+    public RequestType Type { get;}
+  public class NotebookParseRequestConverter : Microsoft.DotNet.Interactive.Documents.JsonConverter<NotebookParseOrSerializeRequest>
     .ctor()
     public NotebookParseOrSerializeRequest Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
-  public class NotebookParseResponse
+  public class NotebookParseResponse : NotebookParserServerResponse
     .ctor(System.String id, Microsoft.DotNet.Interactive.Documents.InteractiveDocument document)
     public Microsoft.DotNet.Interactive.Documents.InteractiveDocument Document { get;}
-  public class NotebookParseResponseConverter
+  public class NotebookParseResponseConverter : Microsoft.DotNet.Interactive.Documents.JsonConverter<NotebookParserServerResponse>
     .ctor()
     public NotebookParserServerResponse Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
   public class NotebookParserServer
@@ -103,14 +103,14 @@ Microsoft.DotNet.Interactive.Documents.ParserServer
     public static NotebookParserServerResponse FromJson(System.String json)
     .ctor(System.String id)
     public System.String Id { get;}
-  public class NotebookSerializeRequest
+  public class NotebookSerializeRequest : NotebookParseOrSerializeRequest
     .ctor(System.String id, DocumentSerializationType serializationType, System.String defaultLanguage, System.String newLine, Microsoft.DotNet.Interactive.Documents.InteractiveDocument document)
     public Microsoft.DotNet.Interactive.Documents.InteractiveDocument Document { get;}
     public System.String NewLine { get;}
-    public Microsoft.DotNet.Interactive.Documents.ParserServer.RequestType Type { get;}
-  public class NotebookSerializeResponse
+    public RequestType Type { get;}
+  public class NotebookSerializeResponse : NotebookParserServerResponse
     .ctor(System.String id, System.Byte[] rawData)
     public System.Byte[] RawData { get;}
-  public enum RequestType
+  public enum RequestType : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
     Parse=0
     Serialize=1

@@ -2,32 +2,32 @@ Microsoft.DotNet.Interactive.Journey
   public class Challenge
     .ctor(System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SubmitCode> setup = null, System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SendEditableCode> contents = null, System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SubmitCode> environmentSetup = null, System.String name = null)
     public System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SendEditableCode> Contents { get;}
-    public Microsoft.DotNet.Interactive.Journey.ChallengeEvaluation CurrentEvaluation { get;}
-    public Microsoft.DotNet.Interactive.Journey.ChallengeSubmission CurrentSubmission { get;}
-     System.Func<Microsoft.DotNet.Interactive.Journey.ChallengeContext,System.Threading.Tasks.Task> DefaultProgressionHandler { public get; set;}
+    public ChallengeEvaluation CurrentEvaluation { get;}
+    public ChallengeSubmission CurrentSubmission { get;}
+     System.Func<ChallengeContext,System.Threading.Tasks.Task> DefaultProgressionHandler { public get; set;}
     public System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SubmitCode> EnvironmentSetup { get;}
     public System.Boolean IsSetup { get;}
-    public Microsoft.DotNet.Interactive.Journey.Lesson Lesson { get;}
+    public Lesson Lesson { get;}
     public System.String Name { get;}
-    public System.Func<Microsoft.DotNet.Interactive.Journey.ChallengeContext,System.Threading.Tasks.Task> OnCodeSubmittedHandler { get;}
+    public System.Func<ChallengeContext,System.Threading.Tasks.Task> OnCodeSubmittedHandler { get;}
     public System.Boolean Revealed { get;}
     public System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SubmitCode> Setup { get;}
-    public System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Journey.ChallengeSubmission> SubmissionHistory { get;}
-    public System.Void AddRule(System.String name, System.Action<Microsoft.DotNet.Interactive.Journey.RuleContext> action)
-    public System.Void AddRule(System.Action<Microsoft.DotNet.Interactive.Journey.RuleContext> action)
-    public System.Void AddRuleAsync(System.String name, System.Func<Microsoft.DotNet.Interactive.Journey.RuleContext,System.Threading.Tasks.Task> action)
-    public System.Void AddRuleAsync(System.Func<Microsoft.DotNet.Interactive.Journey.RuleContext,System.Threading.Tasks.Task> action)
+    public System.Collections.Generic.IEnumerable<ChallengeSubmission> SubmissionHistory { get;}
+    public System.Void AddRule(System.String name, System.Action<RuleContext> action)
+    public System.Void AddRule(System.Action<RuleContext> action)
+    public System.Void AddRuleAsync(System.String name, System.Func<RuleContext,System.Threading.Tasks.Task> action)
+    public System.Void AddRuleAsync(System.Func<RuleContext,System.Threading.Tasks.Task> action)
     public System.Threading.Tasks.Task Evaluate(System.String submittedCode = null, System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Events.KernelEvent> events = null)
     public System.Threading.Tasks.Task InvokeOnCodeSubmittedHandler()
-    public System.Void OnCodeSubmitted(System.Action<Microsoft.DotNet.Interactive.Journey.ChallengeContext> action)
-    public System.Void OnCodeSubmittedAsync(System.Func<Microsoft.DotNet.Interactive.Journey.ChallengeContext,System.Threading.Tasks.Task> action)
+    public System.Void OnCodeSubmitted(System.Action<ChallengeContext> action)
+    public System.Void OnCodeSubmittedAsync(System.Func<ChallengeContext,System.Threading.Tasks.Task> action)
   public class ChallengeContext
     .ctor(Challenge challenge)
-    public Microsoft.DotNet.Interactive.Journey.Challenge Challenge { get;}
-    public Microsoft.DotNet.Interactive.Journey.ChallengeEvaluation Evaluation { get;}
-    public Microsoft.DotNet.Interactive.Journey.Lesson Lesson { get;}
-    public System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Journey.RuleEvaluation> RuleEvaluations { get;}
-    public System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Journey.ChallengeSubmission> SubmissionHistory { get;}
+    public Challenge Challenge { get;}
+    public ChallengeEvaluation Evaluation { get;}
+    public Lesson Lesson { get;}
+    public System.Collections.Generic.IEnumerable<RuleEvaluation> RuleEvaluations { get;}
+    public System.Collections.Generic.IEnumerable<ChallengeSubmission> SubmissionHistory { get;}
     public System.Void SetMessage(System.String message, System.Object hint = null)
     public System.Threading.Tasks.Task StartChallengeAsync(Challenge challenge)
     public System.Threading.Tasks.Task StartChallengeAsync(System.String name)
@@ -39,7 +39,7 @@ Microsoft.DotNet.Interactive.Journey
     public System.String Name { get;}
     public System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SubmitCode> Setup { get;}
     public Challenge ToChallenge()
-  public enum ChallengeDirective
+  public enum ChallengeDirective : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
     ChallengeSetup=0
     Question=1
     Scratchpad=2
@@ -47,7 +47,7 @@ Microsoft.DotNet.Interactive.Journey
     .ctor(System.String label = null)
     public System.Object Hint { get;}
     public System.String Message { get;}
-    public System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Journey.RuleEvaluation> RuleEvaluations { get;}
+    public System.Collections.Generic.IEnumerable<RuleEvaluation> RuleEvaluations { get;}
     public System.Void SetMessage(System.String message, System.Object hint = null)
     public System.Void SetRuleOutcome(System.String name, Outcome outcome, System.String reason = null, System.Object hint = null)
   public static class ChallengeExtensions
@@ -55,9 +55,9 @@ Microsoft.DotNet.Interactive.Journey
     public static System.Void SetDefaultProgressionHandlers()
   public class ChallengeSubmission
     .ctor(System.String submittedCode, ChallengeEvaluation evaluation, System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Events.KernelEvent> events)
-    public Microsoft.DotNet.Interactive.Journey.ChallengeEvaluation Evaluation { get;}
+    public ChallengeEvaluation Evaluation { get;}
     public System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Events.KernelEvent> EventsProduced { get;}
-    public System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Journey.RuleEvaluation> RuleEvaluations { get;}
+    public System.Collections.Generic.IEnumerable<RuleEvaluation> RuleEvaluations { get;}
     public System.String SubmittedCode { get;}
   public static class KernelExtensions
     public static System.Threading.Tasks.Task InitializeChallenge(Challenge challengeToInit)
@@ -73,8 +73,8 @@ Microsoft.DotNet.Interactive.Journey
     public static System.Void From(LessonDefinition definition)
     public static System.Boolean IsSetupCommand(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public static System.Void ResetChallenge()
-    public static System.Void SetChallengeLookup(System.Func<System.String,Microsoft.DotNet.Interactive.Journey.Challenge> handler)
-    public static System.Void SetChallengeLookup(System.Func<System.String,System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Journey.Challenge>> handler)
+    public static System.Void SetChallengeLookup(System.Func<System.String,Challenge> handler)
+    public static System.Void SetChallengeLookup(System.Func<System.String,System.Threading.Tasks.Task<Challenge>> handler)
     public static System.Threading.Tasks.Task StartChallengeAsync(Challenge challenge)
     public static System.Threading.Tasks.Task StartChallengeAsync(System.String name)
     .ctor()
@@ -82,9 +82,9 @@ Microsoft.DotNet.Interactive.Journey
     .ctor(System.String name, System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SubmitCode> setup)
     public System.String Name { get;}
     public System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SubmitCode> Setup { get;}
-  public enum LessonDirective
+  public enum LessonDirective : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
     Challenge=0
-  public enum LessonMode
+  public enum LessonMode : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
     TeacherMode=0
     StudentMode=1
   public static class Main
@@ -92,19 +92,19 @@ Microsoft.DotNet.Interactive.Journey
   public class NotebookLessonParser
     public static System.Collections.Generic.List<System.String> AllDirectiveNames { get;}
     public static System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Documents.InteractiveDocument> LoadNotebookFromUrl(System.Uri uri, System.Net.Http.HttpClient httpClient = null, Microsoft.DotNet.Interactive.CompositeKernel kernel = null)
-    public static System.Void Parse(Microsoft.DotNet.Interactive.Documents.InteractiveDocument document, ref LessonDefinition& lesson, ref System.Collections.Generic.List<Microsoft.DotNet.Interactive.Journey.ChallengeDefinition> challenges)
+    public static System.Void Parse(Microsoft.DotNet.Interactive.Documents.InteractiveDocument document, ref LessonDefinition& lesson, ref System.Collections.Generic.List<ChallengeDefinition> challenges)
     public static System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Documents.InteractiveDocument> ReadFileAsInteractiveDocument(System.IO.FileInfo file, Microsoft.DotNet.Interactive.CompositeKernel kernel = null)
     .ctor()
-  public enum Outcome
+  public enum Outcome : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
     Failure=0
     PartialSuccess=1
     Success=2
   public class Rule
-    .ctor(System.Func<Microsoft.DotNet.Interactive.Journey.RuleContext,System.Threading.Tasks.Task> ruleConstraints, System.String name = null)
+    .ctor(System.Func<RuleContext,System.Threading.Tasks.Task> ruleConstraints, System.String name = null)
     public System.String Name { get;}
   public class RuleContext
     .ctor(ChallengeContext challengeContext, System.String submittedCode = null, System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Events.KernelEvent> events = null, System.String name = )
-    public Microsoft.DotNet.Interactive.Journey.Challenge Challenge { get;}
+    public Challenge Challenge { get;}
     public System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Events.KernelEvent> EventsProduced { get;}
     public System.String Name { get;}
     public System.Boolean Passed { get;}
@@ -116,11 +116,11 @@ Microsoft.DotNet.Interactive.Journey
     .ctor(Outcome outcome, System.String name = null, System.String reason = null, System.Object hint = null)
     public System.Object Hint { get;}
     public System.String Name { get;}
-    public Microsoft.DotNet.Interactive.Journey.Outcome Outcome { get;}
+    public Outcome Outcome { get;}
     public System.Boolean Passed { get;}
     public System.String Reason { get;}
 Microsoft.DotNet.Interactive.Journey.Utilities
-  public class OrderedTable<T>
+  public class OrderedTable<T>, ICollection<T>, IEnumerable<T>, System.Collections.IEnumerable
     .ctor()
     .ctor(IEqualityComparer<T> comparer)
     public System.Int32 Count { get;}
