@@ -16,6 +16,21 @@ export function configure(global?: any) {
     }
 
     global.interactive = {};
+    if ((typeof (require) !== typeof (Function)) || (typeof ((<any>require).config) !== typeof (Function))) {
+        let require_script = document.createElement('script');
+        require_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
+        require_script.setAttribute('type', 'text/javascript');
+        require_script.onload = function () {
+            console.log('require.js loaded');
+            global.interactive.configureRequire = (confing: any) => {
+                return (<any>require).config(confing) || require;
+            };
+
+        };
+        document.getElementsByTagName('head')[0].appendChild(require_script);
+
+    }
+
 
     global.kernel = {
         get root() {
