@@ -39,719 +39,634 @@ using static Pocket.Logger;
 using CommandHandler = System.CommandLine.Invocation.CommandHandler;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
-namespace Microsoft.DotNet.Interactive.App.CommandLine
+namespace Microsoft.DotNet.Interactive.App.CommandLine;
+
+public static class CommandLineParser
 {
-    public static class CommandLineParser
+    public delegate void StartServer(
+        StartupOptions options,
+        InvocationContext context);
+
+    public delegate Task<int> Jupyter(
+        StartupOptions options,
+        IConsole console,
+        StartServer startServer = null,
+        InvocationContext context = null);
+
+    public delegate Task StartKernelHost(
+        StartupOptions startupOptions,
+        KernelHost kernelHost,
+        IConsole console);
+
+    public delegate Task StartNotebookParser(
+        NotebookParserServer notebookParserServer);
+
+    public delegate Task StartHttp(
+        StartupOptions options,
+        IConsole console,
+        StartServer startServer = null,
+        InvocationContext context = null);
+
+    public static Parser Create(
+        IServiceCollection services,
+        StartServer startServer = null,
+        Jupyter jupyter = null,
+        StartKernelHost startKernelHost = null,
+        StartNotebookParser startNotebookParser = null,
+        StartHttp startHttp = null,
+        Action onServerStarted = null,
+        ITelemetry telemetry = null,
+        IFirstTimeUseNoticeSentinel firstTimeUseNoticeSentinel = null)
     {
-        public delegate void StartServer(
-            StartupOptions options,
-            InvocationContext context);
+        var operation = Log.OnEnterAndExit();
 
-        public delegate Task<int> Jupyter(
-            StartupOptions options,
-            IConsole console,
-            StartServer startServer = null,
-            InvocationContext context = null);
-
-        public delegate Task StartKernelHost(
-            StartupOptions startupOptions,
-            KernelHost kernelHost,
-            IConsole console);
-
-        public delegate Task StartNotebookParser(
-            NotebookParserServer notebookParserServer);
-
-        public delegate Task StartHttp(
-            StartupOptions options,
-            IConsole console,
-            StartServer startServer = null,
-            InvocationContext context = null);
-
-        public static Parser Create(
-            IServiceCollection services,
-            StartServer startServer = null,
-            Jupyter jupyter = null,
-            StartKernelHost startKernelHost = null,
-            StartNotebookParser startNotebookParser = null,
-            StartHttp startHttp = null,
-            Action onServerStarted = null,
-            ITelemetry telemetry = null,
-            IFirstTimeUseNoticeSentinel firstTimeUseNoticeSentinel = null)
+        if (services is null)
         {
-            var operation = Log.OnEnterAndExit();
+            throw new ArgumentNullException(nameof(services));
+        }
+        var disposeOnQuit = new CompositeDisposable();
 
-            if (services is null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
-            var disposeOnQuit = new CompositeDisposable();
+        startServer ??= (startupOptions, invocationContext) =>
+        {
+            operation.Info("constructing webhost");
+            var webHost = Program.ConstructWebHost(startupOptions);
+            disposeOnQuit.Add(webHost);
+            operation.Info("starting  kestrel server");
+            webHost.Start();
+            onServerStarted?.Invoke();
+            webHost.WaitForShutdown();
+            operation.Dispose();
+        };
 
-            startServer ??= (startupOptions, invocationContext) =>
-            {
-                operation.Info("constructing webhost");
-                var webHost = Program.ConstructWebHost(startupOptions);
-                disposeOnQuit.Add(webHost);
-                operation.Info("starting  kestrel server");
-                webHost.Start();
-                onServerStarted?.Invoke();
-                webHost.WaitForShutdown();
-                operation.Dispose();
-            };
+        jupyter ??= JupyterCommand.Do;
 
-            jupyter ??= JupyterCommand.Do;
-
-            startKernelHost ??= KernelHostLauncher.Do;
+        startKernelHost ??= KernelHostLauncher.Do;
             
-            startNotebookParser ??= ParseNotebookCommand.Do;
+        startNotebookParser ??= ParseNotebookCommand.Do;
 
-            startHttp ??= HttpCommand.Do;
+        startHttp ??= HttpCommand.Do;
 
-            // Setup first time use notice sentinel.
-            firstTimeUseNoticeSentinel ??= new FirstTimeUseNoticeSentinel(VersionSensor.Version().AssemblyInformationalVersion);
+        var isVSCode = false;
 
-            var clearTextProperties = new[]
+        // Setup first time use notice sentinel.
+        firstTimeUseNoticeSentinel ??= new FirstTimeUseNoticeSentinel(VersionSensor.Version().AssemblyInformationalVersion);
+
+        var clearTextProperties = new[]
+        {
+            "frontend"
+        };
+
+        // Setup telemetry.
+        telemetry ??= new Telemetry.Telemetry(
+            VersionSensor.Version().AssemblyInformationalVersion,
+            firstTimeUseNoticeSentinel,
+            "dotnet/interactive/cli");
+
+        var filter = new TelemetryFilter(
+            Sha256Hasher.HashWithNormalizedCasing,
+            clearTextProperties,
+            (commandResult, directives, entryItems) =>
             {
-                "frontend"
-            };
-
-            // Setup telemetry.
-            telemetry ??= new Telemetry.Telemetry(
-                VersionSensor.Version().AssemblyInformationalVersion,
-                firstTimeUseNoticeSentinel,
-                "dotnet/interactive/cli");
-
-            var filter = new TelemetryFilter(
-                Sha256Hasher.HashWithNormalizedCasing,
-                clearTextProperties,
-                (commandResult, directives, entryItems) =>
-                {
                     
 
-                    // add frontend
-                    var frontendTelemetryAdded = false;
+                // add frontend
+                var frontendTelemetryAdded = false;
 
-                    // check if is codespaces
-                    if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CODESPACES")))
-                    {
-                        frontendTelemetryAdded = true;
-                        entryItems.Add(new KeyValuePair<string, string>("frontend", "gitHubCodeSpaces"));
-                    }
+                // check if is codespaces
+                if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CODESPACES")))
+                {
+                    frontendTelemetryAdded = true;
+                    entryItems.Add(new KeyValuePair<string, string>("frontend", "gitHubCodeSpaces"));
+                }
 
-                    if (!frontendTelemetryAdded)
+                if (!frontendTelemetryAdded)
+                {
+                    foreach (var directive in directives)
                     {
-                        foreach (var directive in directives)
-                        {
-                            switch (directive.Key)
-                            {
-                                case "jupyter":
-                                case "synapse":
-                                case "vscode":
-                                    frontendTelemetryAdded = true;
-                                    entryItems.Add(new KeyValuePair<string, string>("frontend", directive.Key));
-                                    break;
-                            }
-                        }
-                    }
-
-                    if (!frontendTelemetryAdded)
-                    {
-                        switch (commandResult.Command.Name)
+                        switch (directive.Key)
                         {
                             case "jupyter":
+                            case "synapse":
                             case "vscode":
-                                entryItems.Add(new KeyValuePair<string, string>("frontend", commandResult.Command.Name));
-                                break;
-                            default:
-                                entryItems.Add(new KeyValuePair<string, string>("frontend", "unknown"));
+                                frontendTelemetryAdded = true;
+                                isVSCode = directive.Key.ToLowerInvariant() == "vscode";
+                                entryItems.Add(new KeyValuePair<string, string>("frontend", directive.Key));
                                 break;
                         }
                     }
+                }
 
-                });
+                if (!frontendTelemetryAdded)
+                {
+                    switch (commandResult.Command.Name)
+                    {
+                        case "jupyter":
+                            entryItems.Add(new KeyValuePair<string, string>("frontend", commandResult.Command.Name));
+                            break;
+                        default:
+                            entryItems.Add(new KeyValuePair<string, string>("frontend", "unknown"));
+                            break;
+                    }
+                }
 
-            var verboseOption = new Option<bool>(
-                "--verbose",
-                "Enable verbose logging to the console");
+            });
 
-            var logPathOption = new Option<DirectoryInfo>(
-                "--log-path",
-                "Enable file logging to the specified directory");
+        var verboseOption = new Option<bool>(
+            "--verbose",
+            "Enable verbose logging to the console");
 
-            var pathOption = new Option<DirectoryInfo>(
+        var logPathOption = new Option<DirectoryInfo>(
+            "--log-path",
+            "Enable file logging to the specified directory");
+
+        var pathOption = new Option<DirectoryInfo>(
                 "--path",
                 "Installs the kernelspecs to the specified directory")
-                .ExistingOnly();
+            .ExistingOnly();
 
-            var defaultKernelOption = new Option<string>(
-                "--default-kernel",
-                description: "The default language for the kernel",
-                getDefaultValue: () => "csharp").AddSuggestions("fsharp", "csharp", "pwsh");
+        var defaultKernelOption = new Option<string>(
+            "--default-kernel",
+            description: "The default language for the kernel",
+            getDefaultValue: () => "csharp").AddSuggestions("fsharp", "csharp", "pwsh");
 
-            var rootCommand = DotnetInteractive();
+        var rootCommand = DotnetInteractive();
 
-            rootCommand.AddCommand(Jupyter());
-            rootCommand.AddCommand(StdIO());
-            rootCommand.AddCommand(VSCode());
-            rootCommand.AddCommand(NotebookParser());
-            rootCommand.AddCommand(HttpServer());
+        rootCommand.AddCommand(Jupyter());
+        rootCommand.AddCommand(StdIO());
+        rootCommand.AddCommand(NotebookParser());
+        rootCommand.AddCommand(HttpServer());
 
-            return new CommandLineBuilder(rootCommand)
-                   .UseDefaults()
-                   .UseMiddleware(async (context, next) =>
-                   {
-                       if (context.ParseResult.Errors.Count == 0)
-                       {
-                           telemetry.SendFiltered(filter, context.ParseResult);
-                       }
-
-                       // If sentinel does not exist, print the welcome message showing the telemetry notification.
-                       if (!Telemetry.Telemetry.SkipFirstTimeExperience &&
-                           !firstTimeUseNoticeSentinel.Exists())
-                       {
-                           context.Console.Out.WriteLine();
-                           context.Console.Out.WriteLine(Telemetry.Telemetry.WelcomeMessage);
-
-                           firstTimeUseNoticeSentinel.CreateIfNotExists();
-                       }
-
-                       await next(context);
-                   })
-                   .Build();
-
-            RootCommand DotnetInteractive()
+        return new CommandLineBuilder(rootCommand)
+            .UseDefaults()
+            .UseMiddleware(async (context, next) =>
             {
-                var command = new RootCommand
+                if (context.ParseResult.Errors.Count == 0)
                 {
-                    Name = "dotnet-interactive",
-                    Description = "Interactive programming for .NET."
-                };
+                    telemetry.SendFiltered(filter, context.ParseResult);
+                }
 
-                command.AddGlobalOption(logPathOption);
-                command.AddGlobalOption(verboseOption);
+                // If sentinel does not exist, print the welcome message showing the telemetry notification.
+                if (!Telemetry.Telemetry.SkipFirstTimeExperience &&
+                    !firstTimeUseNoticeSentinel.Exists())
+                {
+                    context.Console.Out.WriteLine();
+                    context.Console.Out.WriteLine(Telemetry.Telemetry.WelcomeMessage);
 
-                return command;
+                    firstTimeUseNoticeSentinel.CreateIfNotExists();
+                }
+
+                await next(context);
+            })
+            .Build();
+
+        RootCommand DotnetInteractive()
+        {
+            var command = new RootCommand
+            {
+                Name = "dotnet-interactive",
+                Description = "Interactive programming for .NET."
+            };
+
+            command.AddGlobalOption(logPathOption);
+            command.AddGlobalOption(verboseOption);
+
+            return command;
+        }
+
+        Command Jupyter()
+        {
+            var httpPortRangeOption = new Option<HttpPortRange>(
+                "--http-port-range",
+                parseArgument: result => result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
+                description: "Specifies the range of ports to use to enable HTTP services",
+                isDefault: true);
+
+            var jupyterCommand = new Command("jupyter", "Starts dotnet-interactive as a Jupyter kernel")
+            {
+                defaultKernelOption,
+                httpPortRangeOption,
+                new Argument<FileInfo>
+                {
+                    Name = "connection-file",
+                    Description = "The path to a connection file provided by Jupyter"
+                }.ExistingOnly()
+            };
+
+            jupyterCommand.Handler = CommandHandler.Create<StartupOptions, JupyterOptions, IConsole, InvocationContext, CancellationToken>(JupyterHandler);
+
+            var installCommand = new Command("install", "Install the .NET kernel for Jupyter")
+            {
+                httpPortRangeOption,
+                pathOption
+            };
+
+            installCommand.Handler = CommandHandler.Create<IConsole, InvocationContext, HttpPortRange, DirectoryInfo>(InstallHandler);
+
+            jupyterCommand.AddCommand(installCommand);
+
+            return jupyterCommand;
+
+            async Task<int> JupyterHandler(StartupOptions startupOptions, JupyterOptions options, IConsole console, InvocationContext context, CancellationToken cancellationToken)
+            {
+                var frontendEnvironment = new HtmlNotebookFrontendEnvironment();
+                var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
+
+                kernel.Add(
+                    new JavaScriptKernel(),
+                    new[] { "js" });
+
+                services.AddKernel(kernel);
+
+                kernel.VisitSubkernels(k =>
+                {
+                    switch (k)
+                    {
+                        case CSharpKernel csharpKernel:
+                            csharpKernel.UseJupyterHelpers();
+                            break;
+                        case FSharpKernel fsharpKernel:
+                            fsharpKernel.UseJupyterHelpers();
+                            break;
+                        case PowerShellKernel powerShellKernel:
+                            powerShellKernel.UseJupyterHelpers();
+                            break;
+                    }
+                });
+
+
+                var clientSideKernelClient = new SignalRBackchannelKernelClient();
+
+                services.AddSingleton(c => ConnectionInformation.Load(options.ConnectionFile))
+                    .AddSingleton(clientSideKernelClient)
+                    .AddSingleton(c =>
+                    {
+                        return new JupyterRequestContextScheduler(delivery => c.GetRequiredService<JupyterRequestContextHandler>()
+                            .Handle(delivery));
+                    })
+                    .AddSingleton(c => new JupyterRequestContextHandler(kernel))
+                    .AddSingleton<IHostedService, Shell>()
+                    .AddSingleton<IHostedService, Heartbeat>();
+                var result = await jupyter(startupOptions, console, startServer, context);
+                return result;
             }
 
-            Command Jupyter()
+            Task<int> InstallHandler(IConsole console, InvocationContext context, HttpPortRange httpPortRange, DirectoryInfo path)
             {
-                var httpPortRangeOption = new Option<HttpPortRange>(
-                    "--http-port-range",
-                    parseArgument: result => result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
-                    description: "Specifies the range of ports to use to enable HTTP services",
-                    isDefault: true);
+                var jupyterInstallCommand = new JupyterInstallCommand(console, new JupyterKernelSpecInstaller(console), httpPortRange, path);
+                return jupyterInstallCommand.InvokeAsync();
+            }
+        }
 
-                var jupyterCommand = new Command("jupyter", "Starts dotnet-interactive as a Jupyter kernel")
+        Command HttpServer()
+        {
+            var httpPortOption = new Option<HttpPort>(
+                "--http-port",
+                description: "Specifies the port on which to enable HTTP services",
+                parseArgument: result =>
                 {
-                    defaultKernelOption,
-                    httpPortRangeOption,
-                    new Argument<FileInfo>
+                    if (result.Tokens.Count == 0)
                     {
-                        Name = "connection-file",
-                        Description = "The path to a connection file provided by Jupyter"
-                    }.ExistingOnly()
-                };
+                        return HttpPort.Auto;
+                    }
 
-                jupyterCommand.Handler = CommandHandler.Create<StartupOptions, JupyterOptions, IConsole, InvocationContext, CancellationToken>(JupyterHandler);
+                    var source = result.Tokens[0].Value;
 
-                var installCommand = new Command("install", "Install the .NET kernel for Jupyter")
+                    if (source == "*")
+                    {
+                        return HttpPort.Auto;
+                    }
+
+                    if (!int.TryParse(source, out var portNumber))
+                    {
+                        result.ErrorMessage = "Must specify a port number or *.";
+                        return null;
+                    }
+
+                    return new HttpPort(portNumber);
+                },
+                isDefault: true);
+
+            var httpCommand = new Command("http", "Starts dotnet-interactive with kernel functionality exposed over http")
+            {
+                defaultKernelOption,
+                httpPortOption
+            };
+
+            httpCommand.Handler = CommandHandler.Create<StartupOptions, KernelHttpOptions, IConsole, InvocationContext>(
+                (startupOptions, options, console, context) =>
                 {
-                    httpPortRangeOption,
-                    pathOption
-                };
-
-                installCommand.Handler = CommandHandler.Create<IConsole, InvocationContext, HttpPortRange, DirectoryInfo>(InstallHandler);
-
-                jupyterCommand.AddCommand(installCommand);
-
-                return jupyterCommand;
-
-                async Task<int> JupyterHandler(StartupOptions startupOptions, JupyterOptions options, IConsole console, InvocationContext context, CancellationToken cancellationToken)
-                {
-                    var frontendEnvironment = new HtmlNotebookFrontendEnvironment();
+                    var frontendEnvironment = new BrowserFrontendEnvironment();
                     var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
 
                     kernel.Add(
                         new JavaScriptKernel(),
                         new[] { "js" });
 
-                    services.AddKernel(kernel);
+                    services.AddKernel(kernel)
+                        .AddSingleton(new SignalRBackchannelKernelClient());
 
-                    kernel.VisitSubkernels(k =>
+                    onServerStarted ??= () =>
                     {
-                        switch (k)
-                        {
-                            case CSharpKernel csharpKernel:
-                                csharpKernel.UseJupyterHelpers();
-                                break;
-                            case FSharpKernel fsharpKernel:
-                                fsharpKernel.UseJupyterHelpers();
-                                break;
-                            case PowerShellKernel powerShellKernel:
-                                powerShellKernel.UseJupyterHelpers();
-                                break;
-                        }
-                    });
+                        console.Out.WriteLine("Application started. Press Ctrl+C to shut down.");
+                    };
+                    return startHttp(startupOptions, console, startServer, context);
+                });
 
+            return httpCommand;
+        }
 
-                    var clientSideKernelClient = new SignalRBackchannelKernelClient();
+        Command StdIO()
+        {
+            var httpPortRangeOption = new Option<HttpPortRange>(
+                "--http-port-range",
+                parseArgument: result => result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
+                description: "Specifies the range of ports to use to enable HTTP services");
 
-                    services.AddSingleton(c => ConnectionInformation.Load(options.ConnectionFile))
-                        .AddSingleton(clientSideKernelClient)
-                        .AddSingleton(c =>
-                        {
-                            return new JupyterRequestContextScheduler(delivery => c.GetRequiredService<JupyterRequestContextHandler>()
-                                .Handle(delivery));
-                        })
-                        .AddSingleton(c => new JupyterRequestContextHandler(kernel))
-                        .AddSingleton<IHostedService, Shell>()
-                        .AddSingleton<IHostedService, Heartbeat>();
-                    var result = await jupyter(startupOptions, console, startServer, context);
-                    return result;
-                }
-
-                Task<int> InstallHandler(IConsole console, InvocationContext context, HttpPortRange httpPortRange, DirectoryInfo path)
+            var httpPortOption = new Option<HttpPort>(
+                "--http-port",
+                description: "Specifies the port on which to enable HTTP services",
+                parseArgument: result =>
                 {
-                    var jupyterInstallCommand = new JupyterInstallCommand(console, new JupyterKernelSpecInstaller(console), httpPortRange, path);
-                    return jupyterInstallCommand.InvokeAsync();
-                }
-            }
+                    if (result.FindResultFor(httpPortRangeOption) is { } conflictingOption)
+                    {
+                        var parsed = result.Parent as OptionResult;
+                        result.ErrorMessage = $"Cannot specify both {conflictingOption.Token.Value} and {parsed.Token.Value} together";
+                        return null;
+                    }
 
-            Command HttpServer()
+                    if (result.Tokens.Count == 0)
+                    {
+                        return HttpPort.Auto;
+                    }
+
+                    var source = result.Tokens[0].Value;
+
+                    if (source == "*")
+                    {
+                        return HttpPort.Auto;
+                    }
+
+                    if (!int.TryParse(source, out var portNumber))
+                    {
+                        result.ErrorMessage = "Must specify a port number or *.";
+                        return null;
+                    }
+
+                    return new HttpPort(portNumber);
+                });
+
+            var workingDirOption = new Option<DirectoryInfo>(
+                "--working-dir",
+                () => new DirectoryInfo(Environment.CurrentDirectory),
+                "Working directory to which to change after launching the kernel.");
+
+            var stdIOCommand = new Command(
+                "stdio",
+                "Starts dotnet-interactive with kernel functionality exposed over standard I/O")
             {
-                var httpPortOption = new Option<HttpPort>(
-                    "--http-port",
-                    description: "Specifies the port on which to enable HTTP services",
-                    parseArgument: result =>
-                    {
-                        if (result.Tokens.Count == 0)
-                        {
-                            return HttpPort.Auto;
-                        }
+                defaultKernelOption,
+                httpPortRangeOption,
+                httpPortOption,
+                workingDirOption
+            };
 
-                        var source = result.Tokens[0].Value;
-
-                        if (source == "*")
-                        {
-                            return HttpPort.Auto;
-                        }
-
-                        if (!int.TryParse(source, out var portNumber))
-                        {
-                            result.ErrorMessage = "Must specify a port number or *.";
-                            return null;
-                        }
-
-                        return new HttpPort(portNumber);
-                    },
-                    isDefault: true);
-
-                var httpCommand = new Command("http", "Starts dotnet-interactive with kernel functionality exposed over http")
-                {
-                    defaultKernelOption,
-                    httpPortOption
-                };
-
-                httpCommand.Handler = CommandHandler.Create<StartupOptions, KernelHttpOptions, IConsole, InvocationContext>(
-                    (startupOptions, options, console, context) =>
-                    {
-                        var frontendEnvironment = new BrowserFrontendEnvironment();
-                        var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
-
-                        kernel.Add(
-                            new JavaScriptKernel(),
-                            new[] { "js" });
-
-                        services.AddKernel(kernel)
-                            .AddSingleton(new SignalRBackchannelKernelClient());
-
-                        onServerStarted ??= () =>
-                        {
-                            console.Out.WriteLine("Application started. Press Ctrl+C to shut down.");
-                        };
-                        return startHttp(startupOptions, console, startServer, context);
-                    });
-
-                return httpCommand;
-            }
-
-            Command StdIO()
-            {
-                var httpPortRangeOption = new Option<HttpPortRange>(
-                    "--http-port-range",
-                    parseArgument: result => result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
-                    description: "Specifies the range of ports to use to enable HTTP services");
-
-                var httpPortOption = new Option<HttpPort>(
-                    "--http-port",
-                    description: "Specifies the port on which to enable HTTP services",
-                    parseArgument: result =>
-                    {
-                        if (result.FindResultFor(httpPortRangeOption) is { } conflictingOption)
-                        {
-                            var parsed = result.Parent as OptionResult;
-                            result.ErrorMessage = $"Cannot specify both {conflictingOption.Token.Value} and {parsed.Token.Value} together";
-                            return null;
-                        }
-
-                        if (result.Tokens.Count == 0)
-                        {
-                            return HttpPort.Auto;
-                        }
-
-                        var source = result.Tokens[0].Value;
-
-                        if (source == "*")
-                        {
-                            return HttpPort.Auto;
-                        }
-
-                        if (!int.TryParse(source, out var portNumber))
-                        {
-                            result.ErrorMessage = "Must specify a port number or *.";
-                            return null;
-                        }
-
-                        return new HttpPort(portNumber);
-                    });
-
-                var workingDirOption = new Option<DirectoryInfo>(
-                    "--working-dir",
-                    () => new DirectoryInfo(Environment.CurrentDirectory),
-                    "Working directory to which to change after launching the kernel.");
-
-                var stdIOCommand = new Command(
-                    "stdio",
-                    "Starts dotnet-interactive with kernel functionality exposed over standard I/O")
-                {
-                    defaultKernelOption,
-                    httpPortRangeOption,
-                    httpPortOption,
-                    workingDirOption
-                };
-
-                stdIOCommand.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext>(
-                    async (startupOptions, options, console, context) =>
-                    {
-                        Console.InputEncoding = Encoding.UTF8;
-                        Console.OutputEncoding = Encoding.UTF8;
-                        Environment.CurrentDirectory = startupOptions.WorkingDir.FullName;
-
-                        FrontendEnvironment frontendEnvironment = startupOptions.EnableHttpApi
-                            ? new HtmlNotebookFrontendEnvironment()
-                            : new BrowserFrontendEnvironment();
-
-                        var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
-
-                        services.AddKernel(kernel);
-
-                        kernel.UseQuitCommand();
-
-                        var host = new KernelHost(kernel, new KernelCommandAndEventTextStreamSender(Console.Out),
-                            new MultiplexingKernelCommandAndEventReceiver(
-                                new KernelCommandAndEventTextReceiver(Console.In)));
-                       
-                        if (startupOptions.EnableHttpApi)
-                        {
-                            var clientSideKernelClient = new SignalRBackchannelKernelClient();
-
-                            services.AddSingleton(clientSideKernelClient);
-
-                            kernel.Add(
-                                new JavaScriptKernel(clientSideKernelClient),
-                                new[] { "js" });
-                            
-                            onServerStarted ??= () =>
-                            {
-                                var _ = host.ConnectAsync();
-                            };
-                            await startHttp(startupOptions, console, startServer, context);
-                        }
-                        else
-                        {
-                            await host.CreateProxyKernelOnDefaultConnectorAsync(new KernelInfo("javascript", new[] { "js" }, new Uri("kernel://webview/javascript")));
-
-                            await startKernelHost(startupOptions, host, console);
-                        }
-
-                        return 0;
-                        
-                    });
-
-                return stdIOCommand;
-            }
-
-            Command VSCode()
-            {
-                var httpPortRangeOption = new Option<HttpPortRange>(
-                    "--http-port-range",
-                    parseArgument: result => result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
-                    description: "Specifies the range of ports to use to enable HTTP services");
-
-                var httpPortOption = new Option<HttpPort>(
-                    "--http-port",
-                    description: "Specifies the port on which to enable HTTP services",
-                    parseArgument: result =>
-                    {
-                        if (result.FindResultFor(httpPortRangeOption) is { } conflictingOption)
-                        {
-                            var parsed = result.Parent as OptionResult;
-                            result.ErrorMessage = $"Cannot specify both {conflictingOption.Token.Value} and {parsed.Token.Value} together";
-                            return null;
-                        }
-
-                        if (result.Tokens.Count == 0)
-                        {
-                            return HttpPort.Auto;
-                        }
-
-                        var source = result.Tokens[0].Value;
-
-                        if (source == "*")
-                        {
-                            return HttpPort.Auto;
-                        }
-
-                        if (!int.TryParse(source, out var portNumber))
-                        {
-                            result.ErrorMessage = "Must specify a port number or *.";
-                            return null;
-                        }
-
-                        return new HttpPort(portNumber);
-                    });
-
-                var workingDirOption = new Option<DirectoryInfo>(
-                    "--working-dir",
-                    () => new DirectoryInfo(Environment.CurrentDirectory),
-                    "Working directory to which to change after launching the kernel.");
-
-                var vscodeCommand = new Command(
-                    "vscode",
-                    "Starts dotnet-interactive with kernel functionality exposed over standard I/O for VS Code")
-                {
-                    defaultKernelOption,
-                    httpPortRangeOption,
-                    httpPortOption,
-                    workingDirOption
-                };
-
-                vscodeCommand.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext>(
-                    async (startupOptions, options, console, context) =>
-                    {
-                        Console.InputEncoding = Encoding.UTF8;
-                        Console.OutputEncoding = Encoding.UTF8;
-                        Environment.CurrentDirectory = startupOptions.WorkingDir.FullName;
-
-                        FrontendEnvironment frontendEnvironment = startupOptions.EnableHttpApi
-                            ? new HtmlNotebookFrontendEnvironment()
-                            : new BrowserFrontendEnvironment();
-
-                        var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
-
-                        services.AddKernel(kernel);
-
-                        kernel = kernel
-                            .UseQuitCommand();
-
-                        var host = new KernelHost(kernel, new KernelCommandAndEventTextStreamSender(Console.Out),
-                            new MultiplexingKernelCommandAndEventReceiver(
-                                new KernelCommandAndEventTextReceiver(Console.In)));
-
-                        var vscodeSetup = new VSCodeClientKernelsExtension();
-
-                        await vscodeSetup.OnLoadAsync(kernel);
-
-                        if (startupOptions.EnableHttpApi)
-                        {
-                            var clientSideKernelClient = new SignalRBackchannelKernelClient();
-                            services.AddSingleton(clientSideKernelClient);
-
-                            ((HtmlNotebookFrontendEnvironment)frontendEnvironment).RequiresAutomaticBootstrapping = false;
-
-                            onServerStarted ??= () =>
-                            {
-                                var _ = host.ConnectAsync();
-                            };
-                            await startHttp(startupOptions, console, startServer, context);
-                        }
-                        else
-                        {
-                            await startKernelHost(startupOptions, host, console);
-                        }
-                        return 0;
-                    });
-
-                return vscodeCommand;
-            }
-
-            Command NotebookParser()
-            {
-                var notebookParserCommand = new Command(
-                    "notebook-parser",
-                    "Starts a process to parse and serialize notebooks.");
-                notebookParserCommand.Handler = CommandHandler.Create(async () =>
+            stdIOCommand.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext>(
+                async (startupOptions, options, console, context) =>
                 {
                     Console.InputEncoding = Encoding.UTF8;
                     Console.OutputEncoding = Encoding.UTF8;
-                    var notebookParserServer = new NotebookParserServer(Console.In, Console.Out);
-                    await startNotebookParser(notebookParserServer);
-                });
-                return notebookParserCommand;
-            }
+                    Environment.CurrentDirectory = startupOptions.WorkingDir.FullName;
 
-            static HttpPortRange ParsePortRangeOption(ArgumentResult result)
-            {
-                var source = result.Tokens[0].Value;
+                    FrontendEnvironment frontendEnvironment = startupOptions.EnableHttpApi
+                        ? new HtmlNotebookFrontendEnvironment()
+                        : new BrowserFrontendEnvironment();
 
-                if (string.IsNullOrWhiteSpace(source))
-                {
-                    result.ErrorMessage = "Must specify a port range";
-                    return null;
-                }
+                    var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
 
-                var parts = source.Split(new[] { "-" }, StringSplitOptions.RemoveEmptyEntries);
+                    services.AddKernel(kernel);
 
-                if (parts.Length != 2)
-                {
-                    result.ErrorMessage = "Must specify a port range";
-                    return null;
-                }
+                    kernel = kernel.UseQuitCommand();
 
-                if (!int.TryParse(parts[0], out var start) || !int.TryParse(parts[1], out var end))
-                {
-                    result.ErrorMessage = "Must specify a port range as StartPort-EndPort";
-                    return null;
-                }
+                    var host = new KernelHost(kernel, new KernelCommandAndEventTextStreamSender(Console.Out),
+                        new MultiplexingKernelCommandAndEventReceiver(
+                            new KernelCommandAndEventTextReceiver(Console.In)));
 
-                if (start > end)
-                {
-                    result.ErrorMessage = "Start port must be lower then end port";
-                    return null;
-                }
-
-                var pr = new HttpPortRange(start, end);
-                return pr;
-            }
-        }
-
-        private static CompositeKernel CreateKernel(
-            string defaultKernelName,
-            FrontendEnvironment frontendEnvironment,
-            StartupOptions startupOptions)
-        {
-            using var _ = Log.OnEnterAndExit("Creating Kernels");
-
-            var compositeKernel = new CompositeKernel();
-            compositeKernel.FrontendEnvironment = frontendEnvironment;
-
-            // TODO: temporary measure to support vscode integrations
-            compositeKernel.Add(new SqlDiscoverabilityKernel());
-            compositeKernel.Add(new KqlDiscoverabilityKernel());
-
-            compositeKernel.Add(
-                new CSharpKernel()
-                    .UseNugetDirective()
-                    .UseKernelHelpers()
-                    .UseWho()
-                    .UseMathAndLaTeX()
-                    .UseValueSharing(),
-                    
-                new[] { "c#", "C#" });
-
-            compositeKernel.Add(
-                new FSharpKernel()
-                    .UseDefaultFormatting()
-                    .UseNugetDirective()
-                    .UseKernelHelpers()
-                    .UseWho()
-                    .UseDefaultNamespaces()
-                    .UseMathAndLaTeX()
-                    .UseValueSharing(),
-                new[] { "f#", "F#" });
-
-            compositeKernel.Add(
-                new PowerShellKernel()
-                    .UseProfiles()
-                    .UseValueSharing(),
-                new[] { "powershell" });
-
-
-            compositeKernel.Add(
-                new HtmlKernel());
-
-            compositeKernel.Add(
-                new KeyValueStoreKernel()
-                    .UseWho());
-
-            var kernel = compositeKernel
-                         .UseDefaultMagicCommands()
-                         .UseLogMagicCommand()
-                         .UseAboutMagicCommand()
-                         .UseKernelClientConnection(new ConnectNamedPipeCommand())
-                         .UseKernelClientConnection(new ConnectSignalRCommand())
-                         .UseKernelClientConnection(new ConnectStdIoCommand());
-
-            if (startupOptions.Verbose)
-            {
-                kernel.LogEventsToPocketLogger();
-            }
-
-            SetUpFormatters(frontendEnvironment);
-
-            kernel.DefaultKernelName = defaultKernelName;
-
-            return kernel;
-        }
-
-        public static void SetUpFormatters(FrontendEnvironment frontendEnvironment)
-        {
-            switch (frontendEnvironment)
-            {
-                case AutomationEnvironment automationEnvironment:
-                    break;
-
-                case BrowserFrontendEnvironment browserFrontendEnvironment:
-                    Formatter.DefaultMimeType = HtmlFormatter.MimeType;
-                    Formatter.SetPreferredMimeTypesFor(typeof(LaTeXString), "text/latex");
-                    Formatter.SetPreferredMimeTypesFor(typeof(MathString), "text/latex");
-                    Formatter.SetPreferredMimeTypesFor(typeof(string), PlainTextFormatter.MimeType);
-                    Formatter.SetPreferredMimeTypesFor(typeof(ScriptContent), HtmlFormatter.MimeType);
-                    Formatter.SetPreferredMimeTypesFor(typeof(TabularDataResource), HtmlFormatter.MimeType, CsvFormatter.MimeType);
-
-                    Formatter.Register<LaTeXString>((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
-                    Formatter.Register<MathString>((math, writer) => writer.Write(math.ToString()), "text/latex");
-                    Formatter.Register<ScriptContent>((script, writer) =>
+                    if (isVSCode)
                     {
-                        IHtmlContent content =
-                            PocketViewTags.script[type: "text/javascript"](script.ScriptValue.ToHtmlContent());
-                        content.WriteTo(writer, HtmlEncoder.Default);
-                    }, HtmlFormatter.MimeType);
+                        var vscodeSetup = new VSCodeClientKernelsExtension();
+                        await vscodeSetup.OnLoadAsync(kernel);
+                    }
+                       
+                    if (startupOptions.EnableHttpApi)
+                    {
+                        var clientSideKernelClient = new SignalRBackchannelKernelClient();
 
-                    break;
+                        services.AddSingleton(clientSideKernelClient);
 
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(frontendEnvironment));
+                        if (isVSCode)
+                        {
+                            ((HtmlNotebookFrontendEnvironment)frontendEnvironment).RequiresAutomaticBootstrapping = false;
+                        }
+                        else
+                        {
+                            kernel.Add(
+                                new JavaScriptKernel(clientSideKernelClient),
+                                new[] { "js" });
+
+                        }
+
+
+                        onServerStarted ??= () =>
+                        {
+                            var _ = host.ConnectAsync();
+                        };
+                        await startHttp(startupOptions, console, startServer, context);
+                    }
+                    else
+                    {
+                        if (!isVSCode)
+                        {
+                            await host.CreateProxyKernelOnDefaultConnectorAsync(new KernelInfo("javascript", new[] { "js" }, new Uri("kernel://webview/javascript")));
+
+                        }
+
+                        await startKernelHost(startupOptions, host, console);
+                    }
+
+                    return 0;
+                        
+                });
+
+            return stdIOCommand;
+        }
+            
+        Command NotebookParser()
+        {
+            var notebookParserCommand = new Command(
+                "notebook-parser",
+                "Starts a process to parse and serialize notebooks.");
+            notebookParserCommand.Handler = CommandHandler.Create(async () =>
+            {
+                Console.InputEncoding = Encoding.UTF8;
+                Console.OutputEncoding = Encoding.UTF8;
+                var notebookParserServer = new NotebookParserServer(Console.In, Console.Out);
+                await startNotebookParser(notebookParserServer);
+            });
+            return notebookParserCommand;
+        }
+
+        static HttpPortRange ParsePortRangeOption(ArgumentResult result)
+        {
+            var source = result.Tokens[0].Value;
+
+            if (string.IsNullOrWhiteSpace(source))
+            {
+                result.ErrorMessage = "Must specify a port range";
+                return null;
             }
 
-            Formatter.Register<HttpResponseMessage>((responseMessage, context) =>
+            var parts = source.Split(new[] { "-" }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (parts.Length != 2)
             {
-                // Formatter.Register() doesn't support async formatters yet.
-                // Prevent SynchronizationContext-induced deadlocks given the following sync-over-async code.
-                ExecutionContext.SuppressFlow();
+                result.ErrorMessage = "Must specify a port range";
+                return null;
+            }
 
-                try
-                {
-                    HttpResponseFormatter.FormatHttpResponseMessage(
-                        responseMessage,
-                        context).Wait();
-                }
-                finally
-                {
-                    ExecutionContext.RestoreFlow();
-                }
+            if (!int.TryParse(parts[0], out var start) || !int.TryParse(parts[1], out var end))
+            {
+                result.ErrorMessage = "Must specify a port range as StartPort-EndPort";
+                return null;
+            }
 
-                return true;
-            }, HtmlFormatter.MimeType);
+            if (start > end)
+            {
+                result.ErrorMessage = "Start port must be lower then end port";
+                return null;
+            }
+
+            var pr = new HttpPortRange(start, end);
+            return pr;
         }
+    }
+
+    private static CompositeKernel CreateKernel(
+        string defaultKernelName,
+        FrontendEnvironment frontendEnvironment,
+        StartupOptions startupOptions)
+    {
+        using var _ = Log.OnEnterAndExit("Creating Kernels");
+
+        var compositeKernel = new CompositeKernel();
+        compositeKernel.FrontendEnvironment = frontendEnvironment;
+
+        // TODO: temporary measure to support vscode integrations
+        compositeKernel.Add(new SqlDiscoverabilityKernel());
+        compositeKernel.Add(new KqlDiscoverabilityKernel());
+
+        compositeKernel.Add(
+            new CSharpKernel()
+                .UseNugetDirective()
+                .UseKernelHelpers()
+                .UseWho()
+                .UseMathAndLaTeX()
+                .UseValueSharing(),
+                    
+            new[] { "c#", "C#" });
+
+        compositeKernel.Add(
+            new FSharpKernel()
+                .UseDefaultFormatting()
+                .UseNugetDirective()
+                .UseKernelHelpers()
+                .UseWho()
+                .UseDefaultNamespaces()
+                .UseMathAndLaTeX()
+                .UseValueSharing(),
+            new[] { "f#", "F#" });
+
+        compositeKernel.Add(
+            new PowerShellKernel()
+                .UseProfiles()
+                .UseValueSharing(),
+            new[] { "powershell" });
+
+
+        compositeKernel.Add(
+            new HtmlKernel());
+
+        compositeKernel.Add(
+            new KeyValueStoreKernel()
+                .UseWho());
+
+        var kernel = compositeKernel
+            .UseDefaultMagicCommands()
+            .UseLogMagicCommand()
+            .UseAboutMagicCommand()
+            .UseKernelClientConnection(new ConnectNamedPipeCommand())
+            .UseKernelClientConnection(new ConnectSignalRCommand())
+            .UseKernelClientConnection(new ConnectStdIoCommand());
+
+        if (startupOptions.Verbose)
+        {
+            kernel.LogEventsToPocketLogger();
+        }
+
+        SetUpFormatters(frontendEnvironment);
+
+        kernel.DefaultKernelName = defaultKernelName;
+
+        return kernel;
+    }
+
+    public static void SetUpFormatters(FrontendEnvironment frontendEnvironment)
+    {
+        switch (frontendEnvironment)
+        {
+            case AutomationEnvironment automationEnvironment:
+                break;
+
+            case BrowserFrontendEnvironment browserFrontendEnvironment:
+                Formatter.DefaultMimeType = HtmlFormatter.MimeType;
+                Formatter.SetPreferredMimeTypesFor(typeof(LaTeXString), "text/latex");
+                Formatter.SetPreferredMimeTypesFor(typeof(MathString), "text/latex");
+                Formatter.SetPreferredMimeTypesFor(typeof(string), PlainTextFormatter.MimeType);
+                Formatter.SetPreferredMimeTypesFor(typeof(ScriptContent), HtmlFormatter.MimeType);
+                Formatter.SetPreferredMimeTypesFor(typeof(TabularDataResource), HtmlFormatter.MimeType, CsvFormatter.MimeType);
+
+                Formatter.Register<LaTeXString>((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
+                Formatter.Register<MathString>((math, writer) => writer.Write(math.ToString()), "text/latex");
+                Formatter.Register<ScriptContent>((script, writer) =>
+                {
+                    IHtmlContent content =
+                        PocketViewTags.script[type: "text/javascript"](script.ScriptValue.ToHtmlContent());
+                    content.WriteTo(writer, HtmlEncoder.Default);
+                }, HtmlFormatter.MimeType);
+
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(frontendEnvironment));
+        }
+
+        Formatter.Register<HttpResponseMessage>((responseMessage, context) =>
+        {
+            // Formatter.Register() doesn't support async formatters yet.
+            // Prevent SynchronizationContext-induced deadlocks given the following sync-over-async code.
+            ExecutionContext.SuppressFlow();
+
+            try
+            {
+                HttpResponseFormatter.FormatHttpResponseMessage(
+                    responseMessage,
+                    context).Wait();
+            }
+            finally
+            {
+                ExecutionContext.RestoreFlow();
+            }
+
+            return true;
+        }, HtmlFormatter.MimeType);
     }
 }
