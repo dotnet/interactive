@@ -51,6 +51,7 @@ TestResult.xml
 
 # Assent / ApprovalTests
 *.received.json
+*.received.txt
 
 # Build Results of an ATL Project
 [Dd]ebugPS/
