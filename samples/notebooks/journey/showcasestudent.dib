@@ -1,6 +1,6 @@
 #!csharp
 
-#r "nuget: Microsoft.DotNet.Interactive.Journey"
+#r "nuget: Microsoft.DotNet.Interactive.Journey, *-*"
 
 #!csharp
 
