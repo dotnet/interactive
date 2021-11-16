@@ -1,23 +1,30 @@
 {
   "folders": [
     {
-      "name": "Repo Root",
       "path": ".."
     },
     {
-      "name": "NPM Package",
-      "path": "..\\src\\dotnet-interactive-npm"
+      "path": "../src/dotnet-interactive-npm"
     },
     {
       "name": "VS Code - Stable",
-      "path": "..\\src\\dotnet-interactive-vscode\\stable"
+      "path": "../src/dotnet-interactive-vscode/stable"
     },
     {
       "name": "VS Code - Insiders",
-      "path": "..\\src\\dotnet-interactive-vscode\\insiders"
+      "path": "../src/dotnet-interactive-vscode/insiders"
     },
     {
-      "path": "..\\src\\Microsoft.DotNet.Interactive.Js"
+      "path": "../src/Microsoft.DotNet.Interactive.Js"
+    },
+    {
+      "path": "../src/Microsoft.DotNet.Interactive.Mermaid.js"
+    },
+    {
+      "path": "../src/Microsoft.DotNet.Interactive.nteract.js"
+    },
+    {
+      "path": "../src/Microsoft.DotNet.Interactive.SandDance.js"
     }
   ],
   "settings": {}
