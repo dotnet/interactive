@@ -28,6 +28,10 @@ export function configure(global?: any) {
         };
         document.getElementsByTagName('head')[0].appendChild(require_script);
 
+    } else {
+        global.interactive.configureRequire = (confing: any) => {
+            return (<any>require).config(confing) || require;
+        };
     }
 
 
