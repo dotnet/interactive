@@ -164,7 +164,7 @@ namespace Microsoft.DotNet.Interactive.Journey.Tests
         }
 
         [Fact]
-        public async Task when_student_reaches_the_end_submissions_work_as_normal()
+        public async Task when_student_reaches_the_end_then_submissions_work_as_normal()
         {
             using var kernel = await CreateKernel(LessonMode.StudentMode);
             var challenge = GetChallenge("1");
