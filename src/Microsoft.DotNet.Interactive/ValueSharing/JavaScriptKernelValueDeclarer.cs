@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.ValueSharing
             _serializerOptions = new JsonSerializerOptions
             {
                 WriteIndented = false,
-                IgnoreNullValues = false,
+                DefaultIgnoreCondition = JsonIgnoreCondition.Never,
                 NumberHandling = JsonNumberHandling.AllowReadingFromString |
                                  JsonNumberHandling.AllowNamedFloatingPointLiterals,
                 Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
