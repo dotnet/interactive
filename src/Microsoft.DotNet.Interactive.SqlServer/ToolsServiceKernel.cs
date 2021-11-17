@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         /// </summary>
         private readonly Dictionary<string, object> _variables = new(StringComparer.Ordinal);
 
- 
+
         protected ToolsServiceKernel(string name, ToolsServiceClient client) : base(name)
         {
             var filePath = Path.GetTempFileName();
@@ -116,7 +116,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 return;
             }
 
-           
+
             // If a query handler is already defined, then it means another query is already running in parallel.
             // We only want to run one query at a time, so we display an error here instead.
             if (_queryCompletionHandler is not null)
@@ -132,46 +132,52 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 try
                 {
                     var results = new List<TabularDataResource>();
-                    foreach (var batchSummary in queryParams.BatchSummaries)
+                    try
                     {
-                        foreach (var resultSummary in batchSummary.ResultSetSummaries)
+                        foreach (var batchSummary in queryParams.BatchSummaries)
                         {
-                            if (completion.Task.IsCompleted)
+                            foreach (var resultSummary in batchSummary.ResultSetSummaries)
                             {
-                                return;
-                            }
-
-                            if (resultSummary.RowCount > 0)
-                            {
-                                var subsetParams = new QueryExecuteSubsetParams
+                                if (completion.Task.IsCompleted)
                                 {
-                                    OwnerUri = TempFileUri.AbsolutePath,
-                                    BatchIndex = batchSummary.Id,
-                                    ResultSetIndex = resultSummary.Id,
-                                    RowsStartIndex = 0,
-                                    RowsCount = Convert.ToInt32(resultSummary.RowCount)
-                                };
-                                var subsetResult = await ServiceClient.ExecuteQueryExecuteSubsetAsync(subsetParams, context.CancellationToken);
-                                var tables = GetEnumerableTables(resultSummary.ColumnInfo, subsetResult.ResultSubset.Rows);
-                              
-                                foreach (var table in tables)
-                                {
-                                    var tabularDataResource = table.ToTabularDataResource();
-                                    // Store each result set in the list of result sets being saved
-
-                                    results.Add(tabularDataResource);
-
-                                     var explorer = DataExplorer.CreateDefault(tabularDataResource);
-                                    context.Display(explorer);
+                                    return;
                                 }
 
-                                StoreQueryResults(results, command.KernelChooserParseResult);
-                            }
-                            else
-                            {
-                                context.Display($"Info: No rows were returned for query {resultSummary.Id} in batch {batchSummary.Id}.");
+                                if (resultSummary.RowCount > 0)
+                                {
+                                    var subsetParams = new QueryExecuteSubsetParams
+                                    {
+                                        OwnerUri = TempFileUri.AbsolutePath,
+                                        BatchIndex = batchSummary.Id,
+                                        ResultSetIndex = resultSummary.Id,
+                                        RowsStartIndex = 0,
+                                        RowsCount = Convert.ToInt32(resultSummary.RowCount)
+                                    };
+                                    var subsetResult = await ServiceClient.ExecuteQueryExecuteSubsetAsync(subsetParams, context.CancellationToken);
+                                    var tables = GetEnumerableTables(resultSummary.ColumnInfo, subsetResult.ResultSubset.Rows);
+
+                                    foreach (var table in tables)
+                                    {
+                                        var tabularDataResource = table.ToTabularDataResource();
+                                        // Store each result set in the list of result sets being saved
+
+                                        results.Add(tabularDataResource);
+
+                                        var explorer = DataExplorer.CreateDefault(tabularDataResource);
+                                        context.Display(explorer);
+                                    }
+                                }
+                                else
+                                {
+                                    context.Display($"Info: No rows were returned for query {resultSummary.Id} in batch {batchSummary.Id}.");
+                                }
                             }
                         }
+                    }
+                    finally
+                    {
+                        // Always store the query results - even if an exception occurred - so we don't end up with stale results
+                        StoreQueryResults(results, command.KernelChooserParseResult);
                     }
 
                     completion.SetResult(true);
@@ -236,7 +242,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         protected virtual void StoreQueryResults(IReadOnlyCollection<TabularDataResource> results, ParseResult commandKernelChooserParseResult)
         {
-            
+
         }
 
 
