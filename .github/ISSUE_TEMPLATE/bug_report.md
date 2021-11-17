@@ -19,6 +19,7 @@ Please provide as much information as you can.
 
 - OS
     - [ ] Windows 10
+    - [ ] Windows 10
     - [ ] macOS
     - [ ] Linux (Please specify distro)
     - [ ] iOS
