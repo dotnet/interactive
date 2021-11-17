@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.CommandLine;
 using System.IO;
 using System.IO.Compression;
@@ -19,6 +20,10 @@ namespace Microsoft.DotNet.Interactive.App
         private readonly IJupyterKernelSpecInstaller _jupyterKernelSpecInstaller;
         private readonly HttpPortRange _httpPortRange;
         private readonly DirectoryInfo _path;
+        private static readonly JsonSerializerOptions JsonSerializerOptions = new(JsonSerializerDefaults.Web)
+        {
+            WriteIndented = true
+        };
 
         public JupyterInstallCommand(IConsole console, IJupyterKernelSpecInstaller jupyterKernelSpecInstaller, HttpPortRange httpPortRange = null, DirectoryInfo path = null)
         {
@@ -69,6 +74,8 @@ namespace Microsoft.DotNet.Interactive.App
             return errorCount;
         }
 
+        
+
         private static void ComputeKernelSpecArgs(HttpPortRange httpPortRange, DirectoryInfo directory)
         {
             var kernelSpecs = directory.GetFiles("kernel.json", SearchOption.AllDirectories);
@@ -84,7 +91,7 @@ namespace Microsoft.DotNet.Interactive.App
 
                 newKernelSpec["argv"] = JsonSerializer.SerializeToElement(argv);
 
-                File.WriteAllText(kernelSpec.FullName, JsonSerializer.Serialize(newKernelSpec));
+                File.WriteAllText(kernelSpec.FullName, JsonSerializer.Serialize(newKernelSpec, JsonSerializerOptions));
 
             }
         }
