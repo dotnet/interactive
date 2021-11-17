@@ -131,7 +131,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             {
                 try
                 {
-                   
+                    var results = new List<TabularDataResource>();
                     foreach (var batchSummary in queryParams.BatchSummaries)
                     {
                         foreach (var resultSummary in batchSummary.ResultSetSummaries)
@@ -153,7 +153,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                                 };
                                 var subsetResult = await ServiceClient.ExecuteQueryExecuteSubsetAsync(subsetParams, context.CancellationToken);
                                 var tables = GetEnumerableTables(resultSummary.ColumnInfo, subsetResult.ResultSubset.Rows);
-                                var results = new List<TabularDataResource>();
+                              
                                 foreach (var table in tables)
                                 {
                                     var tabularDataResource = table.ToTabularDataResource();
