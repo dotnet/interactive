@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.Kql.Tests
         {
             var csharpKernel = new CSharpKernel().UseNugetDirective();
             await csharpKernel.SubmitCodeAsync(@$"
-#r ""nuget:microsoft.sqltoolsservice,3.0.0-release.53""
+#r ""nuget:microsoft.sqltoolsservice,3.0.0-release.157""
 ");
 
             var kernel = new CompositeKernel
@@ -259,7 +259,7 @@ print testVar";
             result = await kernel.SendAsync(new SubmitCode(code));
 
             var events = result.KernelEvents.ToSubscribedList();
-            
+
             events
                 .ShouldDisplayTabularDataResourceWhich()
                 .Data
@@ -281,7 +281,7 @@ print testVar";
         {
             var cluster = KqlFactAttribute.GetClusterForTests();
             using var kernel = await CreateKernel();
-            
+
             var result = await kernel.SubmitCodeAsync(
                 $"#!connect kql --kernel-name KustoHelp --cluster \"{cluster}\" --database \"Samples\"");
 
