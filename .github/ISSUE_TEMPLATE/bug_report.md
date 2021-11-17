@@ -18,7 +18,7 @@ Please provide as much information as you can.
 * At the command line, run `dotnet interactive --version`.
 
 - OS
-    - [ ] Windows 10
+    - [ ] Windows 11
     - [ ] Windows 10
     - [ ] macOS
     - [ ] Linux (Please specify distro)
