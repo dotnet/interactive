@@ -12,10 +12,7 @@ Please provide as much information as you can.
 
 ### Please complete the following:
 
-**Which version of .NET Interactive are you using?** There are a few ways to find this out:
-
-* In a notebook, run the `#!about` magic command. 
-* At the command line, run `dotnet interactive --version`.
+**Which version of .NET Interactive are you using?** (In a notebook, run the `#!about` magic command. ):
 
 - OS
     - [ ] Windows 11
@@ -35,6 +32,7 @@ Please provide as much information as you can.
     - [ ] nteract
     - [ ] Visual Studio Code 
     - [ ] Visual Studio Code Insiders
+    - [ ] Visual Studio
     - [ ] Other (please specify)
 
 ### Screenshots
