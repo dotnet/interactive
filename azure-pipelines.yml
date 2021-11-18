@@ -123,6 +123,7 @@ stages:
           env:
             POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
+            DOTNET_INTERACTIVE_FRONTEND_NAME: CI
 
         - script: dotnet test -l trx --no-build --blame-hang-timeout 5m --blame-hang-dump-type full -c $(_BuildConfig) --results-directory $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
           displayName: Test / Blame
@@ -266,6 +267,7 @@ stages:
           env:
             POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
+            DOTNET_INTERACTIVE_FRONTEND_NAME: CI
 
         - script: dotnet test -l trx --no-build --blame-hang-timeout 5m --blame-hang-dump-type full -c $(_BuildConfig) --results-directory $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
           displayName: Test / Blame
