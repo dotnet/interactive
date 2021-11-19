@@ -1069,6 +1069,7 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
                 .Should()
                 .Be("Google.Protobuf version 3.5.0 cannot be added because version 3.5.1 was added previously.");
         }
+
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
@@ -1094,6 +1095,73 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
                 .Message
                 .Should()
                 .Be("Google.Protobuf version 3.5.1 cannot be added because version 3.5.0 was added previously.");
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_r_nuget_should_not_error_when_trying_to_load_again_same_package_with_wildcard(Language defaultLanguageKernel)
+        {
+            var kernel = CreateCompositeKernel(defaultLanguageKernel);
+
+            var codeFirstSubmission = @"
+#r ""nuget:Google.Protobuf, *-*""
+";
+
+
+            await kernel.SendAsync(new SubmitCode(codeFirstSubmission));
+
+
+            var codeSecondSubmission = @"
+#r ""nuget:Google.Protobuf, *-*""
+";
+
+            var result = await kernel.SendAsync(new SubmitCode(codeSecondSubmission));
+            using var events = result.KernelEvents.ToSubscribedList();
+
+            using var _ = new AssertionScope();
+
+            events
+                .Should()
+                .NotContainErrors();
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_r_nuget_should__trying_to_load_again_same_package_with_wildcard_after_loading_a_specific_version_reuses_the_previously_resolved(Language defaultLanguageKernel)
+        {
+            var kernel = CreateCompositeKernel(defaultLanguageKernel);
+
+            var codeFirstSubmission = @"
+#r ""nuget:Google.Protobuf, 3.5.1""
+";
+
+
+            await kernel.SendAsync(new SubmitCode(codeFirstSubmission));
+
+
+            var codeSecondSubmission = @"
+#r ""nuget:Google.Protobuf, *-*""
+";
+
+            var result = await kernel.SendAsync(new SubmitCode(codeSecondSubmission));
+            using var events = result.KernelEvents.ToSubscribedList();
+
+            using var _ = new AssertionScope();
+
+            var expectedDisplayed = new[]
+            {
+                "Google.Protobuf, 3.5.1"
+            };
+
+            events.OfType<DisplayedValueUpdated>()
+                .Where(v => v.Value is InstallPackagesMessage)
+                .Last().Value
+                .As<InstallPackagesMessage>()
+                .InstalledPackages
+                .Should()
+                .BeEquivalentTo(expectedDisplayed);
         }
     }
 }

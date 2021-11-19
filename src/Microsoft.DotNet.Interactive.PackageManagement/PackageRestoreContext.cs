@@ -263,12 +263,12 @@ namespace Microsoft.DotNet.Interactive
 
                 foreach (var r in newlyRequestedPackageReferences)
                 {
-                    _requestedPackageReferences.TryRemove(r.PackageName, out var _);
+                    _requestedPackageReferences.TryRemove(r.PackageName, out _);
                 }
 
                 foreach (var s in newlyRequestedRestoreSources)
                 {
-                    _requestedRestoreSources.TryRemove(s, out var _);
+                    _requestedRestoreSources.TryRemove(s, out _);
                 }
             }
             else
@@ -281,12 +281,12 @@ namespace Microsoft.DotNet.Interactive
                 foreach (var reference in resolved)
                 {
                     _resolvedPackageReferences.TryAdd(reference.PackageName, reference);
-                    _requestedPackageReferences.TryRemove(reference.PackageName, out var _);
+                    _requestedPackageReferences.TryRemove(reference.PackageName, out _);
                 }
 
                 foreach (var s in newlyRequestedRestoreSources)
                 {
-                    _requestedRestoreSources.TryRemove(s, out var _);
+                    _requestedRestoreSources.TryRemove(s, out _);
                     _resolvedRestoreSources.TryAdd(s, s);
                 }
 
