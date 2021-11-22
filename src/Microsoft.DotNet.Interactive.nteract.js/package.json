@@ -10,12 +10,13 @@
     "css/*.css"
   ],
   "scripts": {
-    "build:lib": "tsc",
-    "build:extension": "webpack-cli --mode=production",
-    "build": "npm run build:extension",
+    "compile:lib": "tsc",
+    "compile:extension": "webpack-cli --mode=production",
+    "compile": "npm run compile:extension",
     "clean:lib": "rimraf lib",
-    "prepack": "npm run build:lib",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prepack": "npm run compile:lib",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "ciTest": "echo \"nothing to do\" && exit 0"
   },
   "repository": {
     "type": "git",

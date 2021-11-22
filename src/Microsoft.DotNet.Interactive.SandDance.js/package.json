@@ -10,11 +10,12 @@
     "css/*.css"
   ],
   "scripts": {
-    "build:lib": "tsc",
-    "build:extension": "webpack",
-    "build": "npm run build:extension",
+    "compile:lib": "tsc",
+    "compile:extension": "webpack",
+    "compile": "npm run compile:extension",
     "clean:lib": "rimraf lib",
-    "prepack": "npm run build:lib"
+    "prepack": "npm run compile:lib",
+    "ciTest": "echo \"nothing to do\" && exit 0"
   },
   "repository": {
     "type": "git",

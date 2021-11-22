@@ -6,12 +6,12 @@
     "dist"
   ],
   "scripts": {
-    "build": "npm run rollup-dotnet-interactive && npm run rollup-dotnet-interactive-vscode",
-    "build-ci": "rollup -c rollup.config.js",
+    "compile": "npm run rollup-dotnet-interactive && npm run rollup-dotnet-interactive-vscode",
+    "compile-ci": "rollup -c rollup.config.js",
     "test": "mocha tests/**/*.test.ts",
     "ciTest": "npm test -- --reporter mocha-multi-reporters --reporter-options configFile=testConfig.json",
-    "rollup-dotnet-interactive": "npm run build-ci -- -i src/dotnet-interactive.ts -o dist/dotnet-interactive.js",
-    "rollup-dotnet-interactive-vscode": "npm run build-ci -- -i src/dotnet-interactive-vscode.ts -o dist/dotnet-interactive-vscode.js",
+    "rollup-dotnet-interactive": "npm run compile-ci -- -i src/dotnet-interactive.ts -o dist/dotnet-interactive.js",
+    "rollup-dotnet-interactive-vscode": "npm run compile-ci -- -i src/dotnet-interactive-vscode.ts -o dist/dotnet-interactive-vscode.js",
     "watch": "tsc -watch -p ./"
   },
   "repository": {

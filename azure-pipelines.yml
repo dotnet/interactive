@@ -24,8 +24,6 @@ variables:
     value: $(Build.SourcesDirectory)/artifacts/.trydotnet/packages
   - name: NodeJSVersion
     value: '16.13.0'
-  - name: _TestArgs
-    value: ''
 
 stages:
 - stage: build
@@ -78,10 +76,6 @@ stages:
             value: Test
           - name: _BuildArgs
             value: /p:SignType=$(_SignType)
-        # SkipTests
-        # - ${{ if ne(variables['SkipTests'], 'true') }}:
-        #   - name: _TestArgs
-        #     value: -test
         steps:
         - script: git config --global core.longpaths true
           displayName: Enable `git clean` to handle long paths
@@ -114,12 +108,17 @@ stages:
             exit /b 1
           displayName: Prevent test directory crawling
 
+        - pwsh: |
+            $testArg = if ($env:SKIPTESTS -ne "true") { "-test" } else { "" }
+            Write-Host "##vso[task.setvariable variable=_TestArgs]$testArg"
+          displayName: Promote variables
+
         - script: eng\CIBuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine
             -sign
-            $(_TestArgs)
             $(_BuildArgs)
+            $(_TestArgs)
           displayName: Build
           env:
             POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
@@ -142,40 +141,6 @@ stages:
             artifactName: Windows_test_results_and_dumps
             artifactType: container
           condition: failed()
-
-        - script: npm run ciTest
-          displayName: NPM tests
-          workingDirectory: "$(Build.SourcesDirectory)/src/Microsoft.DotNet.Interactive.Js"
-          condition: ne(variables['SkipTests'], 'true')
-
-        # build and test VS Code extension
-        - script: npm install
-          displayName: npm install (VS Code stable)
-          workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode/stable"
-
-        - script: npm run ciTest
-          displayName: npm test (VS Code stable)
-          workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode/stable"
-          condition: ne(variables['SkipTests'], 'true')
-
-        - script: npm install
-          displayName: npm install (VS Code insiders)
-          workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode/insiders"
-
-        - script: npm run ciTest
-          displayName: npm test (VS Code insiders)
-          workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode/insiders"
-          condition: ne(variables['SkipTests'], 'true')
-
-        # build and test npm package
-        - script: npm install
-          displayName: npm install (npm package)
-          workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-npm"
-
-        - script: npm run ciTest
-          displayName: npm test (npm package)
-          workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-npm"
-          condition: ne(variables['SkipTests'], 'true')
 
         # publish VS Code and npm test results
         - task: PublishTestResults@2
@@ -262,10 +227,6 @@ stages:
             value: Test
           - name: _BuildArgs
             value: /p:SignType=$(_SignType)
-        # SkipTests
-        # - ${{ if ne(variables['SkipTests'], 'true') }}:
-        #   - name: _TestArgs
-        #     value: --test
         steps:
         - script: git config --global core.longpaths true
           displayName: Enable `git clean` to handle long paths
@@ -291,6 +252,11 @@ stages:
             mkdir -p "$(Build.SourcesDirectory)/artifacts"
             cp eng/resources/* "$(Build.SourcesDirectory)/artifacts"
           displayName: Prevent test directory crawling
+
+        - pwsh: |
+            $testArg = if ($env:SKIPTESTS -ne "true") { "--test" } else { "" }
+            Write-Host "##vso[task.setvariable variable=_TestArgs]$testArg"
+          displayName: Promote variables
 
         - script: ./eng/cibuild.sh
             --configuration $(_BuildConfig)
@@ -319,10 +285,14 @@ stages:
             artifactType: container
           condition: failed()
 
-        - script: npm run ciTest
-          displayName: NPM tests
-          workingDirectory: "$(Build.SourcesDirectory)/src/Microsoft.DotNet.Interactive.Js"
-          condition: ne(variables['SkipTests'], 'true')
+        # publish VS Code and npm test results
+        - task: PublishTestResults@2
+          displayName: Publish VS Code extension and npm test results
+          inputs:
+            testResultsFormat: VSTest
+            testResultsFiles: '**/*.trx'
+            searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults'
+          condition: always()
 
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:

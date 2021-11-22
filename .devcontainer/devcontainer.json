@@ -38,6 +38,7 @@
     "ms-toolsai.jupyter",
     "ms-toolsai.jupyter-keymap",
     "ms-toolsai.jupyter-renderers",
+    "ms-vscode.powershell",
     "ionide.ionide-fsharp"
   ],
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
@@ -49,7 +50,7 @@
   //        dotnet dev-certs https --trust; dotnet dev-certs https -ep "$env:USERPROFILE/.aspnet/https/aspnetapp.pfx" -p "SecurePwdGoesHere"
   //    * macOS/Linux terminal:
   //        dotnet dev-certs https --trust; dotnet dev-certs https -ep "${HOME}/.aspnet/https/aspnetapp.pfx" -p "SecurePwdGoesHere"
-  // 
+  //
   // 2. Uncomment these 'remoteEnv' lines:
   //    "remoteEnv": {
   // 	      "ASPNETCORE_Kestrel__Certificates__Default__Password": "SecurePwdGoesHere",
