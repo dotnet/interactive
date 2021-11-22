@@ -109,7 +109,7 @@ Package                                    | Version                            
 `Microsoft.DotNet.Interactive.Formatting`  | [![Nuget](https://img.shields.io/nuget/v/Microsoft.DotNet.Interactive.Formatting.svg)](https://www.nuget.org/packages/Microsoft.DotNet.Interactive.Formatting)  | Convention-based and highly configurable .NET object formatting for interactive programming, including support for mime types suitable for building visualizations for Jupyter Notebooks and web browsers.
 `Microsoft.DotNet.Interactive.FSharp`      | [![Nuget](https://img.shields.io/nuget/v/Microsoft.DotNet.Interactive.FSharp.svg)](https://www.nuget.org/packages/Microsoft.DotNet.Interactive.FSharp)          | Microsoft.DotNet.Interactive.Kernel implementation for F#
 `Microsoft.DotNet.Interactive.CSharp`      | [![Nuget](https://img.shields.io/nuget/v/Microsoft.DotNet.Interactive.CSharp.svg)](https://www.nuget.org/packages/Microsoft.DotNet.Interactive.CSharp)          | Microsoft.DotNet.Interactive.Kernel implementation for C#
-`Microsoft.DotNet.Interactive.PowerShell`      | [![Nuget](https://img.shields.io/nuget/v/Microsoft.DotNet.Interactive.PowerShell.svg)](https://www.nuget.org/packages/Microsoft.DotNet.Interactive.PowerShell)          | Microsoft.DotNet.Interactive.Kernel implementation for PowerShel
+`Microsoft.DotNet.Interactive.PowerShell`      | [![Nuget](https://img.shields.io/nuget/v/Microsoft.DotNet.Interactive.PowerShell.svg)](https://www.nuget.org/packages/Microsoft.DotNet.Interactive.PowerShell)          | Microsoft.DotNet.Interactive.Kernel implementation for PowerShell
 
 ## Contribution Guidelines
 
