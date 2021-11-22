@@ -2,7 +2,8 @@
 param (
     [string]$artifactsPath,
     [string[]]$vscodeTargets,
-    [string]$publishToken
+    [string]$vscodeToken,
+    [string]$nugetToken
 )
 
 Set-StrictMode -version 2.0
@@ -26,8 +27,34 @@ try {
             exit $LASTEXITCODE
         }
 
-        # publish
-        vsce publish --packagePath $extension --pat $publishToken --noVerify
+        # publish nuget
+        if ($vscodeTarget -eq "stable") {
+            $nugetPackages = @(
+                'Microsoft.dotnet-interactive',
+                'Microsoft.DotNet.Interactive',
+                'Microsoft.DotNet.Interactive.CSharp',
+                'Microsoft.DotNet.Interactive.Documents',
+                'Microsoft.DotNet.Interactive.ExtensionLab',
+                'Microsoft.DotNet.Interactive.Formatting',
+                'Microsoft.DotNet.Interactive.FSharp',
+                'Microsoft.DotNet.Interactive.Http',
+                'Microsoft.DotNet.Interactive.Journey',
+                'Microsoft.DotNet.Interactive.Kql',
+                'Microsoft.DotNet.Interactive.PackageManagement',
+                'Microsoft.DotNet.Interactive.PowerShell',
+                'Microsoft.DotNet.Interactive.SqlServer'
+            )
+            $nugetPackages | ForEach-Object {
+                $nugetPackagePath = "$artifactsPath\packages\Shipping\$_.*.nupkg"
+                dotnet nuget push $nugetPackagePath --source https://api.nuget.org/v3/index.json --api-key $nugetToken --no-symbols 1
+                if ($LASTEXITCODE -ne 0) {
+                    exit $LASTEXITCODE
+                }
+            }
+        }
+
+        # publish vs code marketplace
+        vsce publish --packagePath $extension --pat $vscodeToken --noVerify
     }
 }
 catch {
