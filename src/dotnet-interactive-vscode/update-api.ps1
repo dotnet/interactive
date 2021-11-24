@@ -19,6 +19,7 @@ function DownloadVsCodeProposedNotebookApi([string] $branchName, [string] $desti
     Invoke-WebRequest -Uri "https://raw.githubusercontent.com/microsoft/vscode/$branchName/src/vscode-dts/vscode.proposed.notebookLiveShare.d.ts" -OutFile "$PSScriptRoot\$destinationDirectory\vscode.proposed.notebookLiveShare.d.ts"
     Invoke-WebRequest -Uri "https://raw.githubusercontent.com/microsoft/vscode/$branchName/src/vscode-dts/vscode.proposed.notebookMessaging.d.ts" -OutFile "$PSScriptRoot\$destinationDirectory\vscode.proposed.notebookMessaging.d.ts"
     Invoke-WebRequest -Uri "https://raw.githubusercontent.com/microsoft/vscode/$branchName/src/vscode-dts/vscode.proposed.notebookMime.d.ts" -OutFile "$PSScriptRoot\$destinationDirectory\vscode.proposed.notebookMime.d.ts"
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/microsoft/vscode/$branchName/src/vscode-dts/vscode.proposed.textDocumentNotebook.d.ts" -OutFile "$PSScriptRoot\$destinationDirectory\vscode.proposed.textDocumentNotebook.d.ts"
 }
 
 # stable
