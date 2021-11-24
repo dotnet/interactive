@@ -11,7 +11,13 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 {
     internal static class SqlToolsServiceDiscovery
     {
-        public static ResolvedPackageReference FindResolvedPackageReference(this Kernel rootKernel)
+        /// <summary>
+        /// Finds the resolved native package for the Microsoft.SqlToolsService package which contains the SQL Tools Service binaries. This may fail to find
+        /// a resolved package reference if the platform RID isn't supported by SQL Tools Service.
+        /// </summary>
+        /// <param name="rootKernel">The root kernel to look at the package references of</param>
+        /// <returns>The package reference if a matching one exists, null if not</returns>
+        public static ResolvedPackageReference FindResolvedNativeSqlToolsServicePackageReference(this Kernel rootKernel)
         {
             var runtimePackageIdSuffix = "native.Microsoft.SqlToolsService";
             var resolved = rootKernel.SubkernelsAndSelf()
@@ -21,7 +27,13 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             return resolved;
         }
 
-        public static string PathToService(this ResolvedPackageReference resolvedPackageReference, string serviceName)
+        /// <summary>
+        /// Generates the full path to the service of the name specified from within this resolved package reference.
+        /// </summary>
+        /// <param name="resolvedPackageReference">The package containing the Tools Service binaries</param>
+        /// <param name="serviceName">The name of the exe to search for (without the extension)</param>
+        /// <returns></returns>
+        public static string PathToToolsService(this ResolvedPackageReference resolvedPackageReference, string serviceName)
         {
             var pathToService = "";
             if (resolvedPackageReference is not null)
