@@ -34,7 +34,8 @@ namespace Microsoft.DotNet.Interactive.Kql.Tests
 
             kernel.DefaultKernelName = csharpKernel.Name;
 
-            kernel.UseKernelClientConnection(new ConnectKqlCommand());
+            var kqlKernelExtension = new KqlKernelExtension();
+            await kqlKernelExtension.OnLoadAsync(kernel);
             kernel.UseNteractDataExplorer();
             kernel.UseSandDanceExplorer();
 

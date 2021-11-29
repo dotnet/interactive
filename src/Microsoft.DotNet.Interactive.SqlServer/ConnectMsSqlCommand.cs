@@ -10,11 +10,12 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 {
     public class ConnectMsSqlCommand : ConnectKernelCommand<MsSqlKernelConnector>
     {
-        public static string ResolvedToolsServicePath { get; internal set; }
+        internal string ResolvedToolsServicePath { get; set; }
 
-        public ConnectMsSqlCommand()
+        public ConnectMsSqlCommand(string resolvedToolsServicePath)
             : base("mssql", "Connects to a Microsoft SQL Server database")
         {
+            ResolvedToolsServicePath = resolvedToolsServicePath;
             Add(new Argument<string>(
                     "connectionString",
                     "The connection string used to connect to the database"));

@@ -38,7 +38,8 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
 
             kernel.DefaultKernelName = csharpKernel.Name;
 
-            kernel.UseKernelClientConnection(new ConnectMsSqlCommand());
+            var sqlKernelExtension = new MsSqlKernelExtension();
+            await sqlKernelExtension.OnLoadAsync(kernel);
             kernel.UseNteractDataExplorer();
             kernel.UseSandDanceExplorer();
 
