@@ -86,7 +86,7 @@ Microsoft.DotNet.Interactive.SqlServer
      System.String ServerName { public get; set;}
      System.String UserName { public get; set;}
   public class ConnectMsSqlCommand : Microsoft.DotNet.Interactive.Connection.ConnectKernelCommand<MsSqlKernelConnector>, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.ICommand, System.CommandLine.IIdentifierSymbol, System.CommandLine.ISymbol, System.CommandLine.Suggestions.ISuggestionSource
-    .ctor()
+    .ctor(System.String resolvedToolsServicePath)
     public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> ConnectKernelAsync(Microsoft.DotNet.Interactive.KernelInfo kernelInfo, MsSqlKernelConnector connector, Microsoft.DotNet.Interactive.KernelInvocationContext context)
   public class ConnectParams
     .ctor()
