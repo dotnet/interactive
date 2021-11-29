@@ -1,9 +1,9 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.IO;
 using System.Threading.Tasks;
-using System.Runtime;
 using Microsoft.AspNetCore.Html;
 using System.Runtime.InteropServices;
 
@@ -24,9 +24,8 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                     {
                         if (File.Exists(pathToService))
                         {
-                            ConnectMsSqlCommand.ResolvedToolsServicePath = pathToService;
                             compositeKernel
-                            .UseKernelClientConnection(new ConnectMsSqlCommand());
+                            .UseKernelClientConnection(new ConnectMsSqlCommand(pathToService));
 
                             KernelInvocationContext.Current?.Display(
                                 new HtmlString(@"<details><summary>Query Microsoft SQL Server databases.</summary>
@@ -36,18 +35,18 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                         }
                         else
                         {
-                            KernelInvocationContext.Current?.DisplayStandardError($"The SQL Server extension was loaded successfully and resolved the path to the SQL Tools Service but the file {pathToService} does not exist. The connect command will not be available.");
+                            throw new InvalidOperationException($"The SQL Server extension was loaded successfully and resolved the path to the SQL Tools Service but the file {pathToService} does not exist. The #!connect mssql command will not be available.");
                         }
 
                     }
                     else
                     {
-                        KernelInvocationContext.Current?.DisplayStandardError($"The SQL Server extension was loaded successfully but was unable to determine the path to the SQL Tools Service. The connect command will not be available.");
+                        throw new InvalidOperationException($"The SQL Server extension was loaded successfully but was unable to determine the path to the SQL Tools Service. The #!connect mssql command will not be available.");
                     }
                 }
                 else
                 {
-                    KernelInvocationContext.Current?.DisplayStandardError($"The SQL Server extension was loaded successfully but was unable to find the SQL Tools Service package. The connect command will not be available. (RID: {RuntimeInformation.RuntimeIdentifier})");
+                    throw new InvalidOperationException($"The SQL Server extension was loaded successfully but was unable to find the SQL Tools Service package. The #!connect mssql command will not be available. (RID: {RuntimeInformation.RuntimeIdentifier})");
                 }
             }
 

@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             {
                 // Extract the platform 'osx-x64' from the package name 'runtime.osx-x64.native.microsoft.sqltoolsservice'
                 var packageNameSegments = resolvedPackageReference.PackageName.Split(".");
-                if (packageNameSegments.Length > 2)
+                if (packageNameSegments.Length < 2)
                 {
                     var platform = packageNameSegments[1];
 

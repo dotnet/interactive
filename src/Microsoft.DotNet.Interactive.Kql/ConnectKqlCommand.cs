@@ -9,11 +9,12 @@ namespace Microsoft.DotNet.Interactive.Kql
 {
     public class ConnectKqlCommand : ConnectKernelCommand<KqlKernelConnector>
     {
-        public static string ResolvedToolsServicePath { get; internal set; }
+        internal string ResolvedToolsServicePath { get; set; }
 
-        public ConnectKqlCommand()
+        public ConnectKqlCommand(string resolvedToolsServicePath)
             : base("kql", "Connects to a Microsoft Kusto Server database")
         {
+            ResolvedToolsServicePath = resolvedToolsServicePath;
             Add(new Option<string>(
                 "--cluster",
                 "The cluster used to connect") {IsRequired = true});
