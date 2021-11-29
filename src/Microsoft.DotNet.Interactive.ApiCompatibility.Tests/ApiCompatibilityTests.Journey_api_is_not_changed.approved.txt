@@ -4,7 +4,7 @@ Microsoft.DotNet.Interactive.Journey
     public System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SendEditableCode> Contents { get;}
     public ChallengeEvaluation CurrentEvaluation { get;}
     public ChallengeSubmission CurrentSubmission { get;}
-     System.Func<ChallengeContext,System.Threading.Tasks.Task> DefaultProgressionHandler { public get; set;}
+    public System.Func<ChallengeContext,System.Threading.Tasks.Task> DefaultProgressionHandler { get; set;}
     public System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SubmitCode> EnvironmentSetup { get;}
     public System.Boolean IsSetup { get;}
     public Lesson Lesson { get;}
@@ -66,7 +66,7 @@ Microsoft.DotNet.Interactive.Journey
     public static Microsoft.DotNet.Interactive.CompositeKernel UseProgressiveLearningMiddleware()
   public class Lesson
     public static Challenge CurrentChallenge { get;}
-     LessonMode Mode { public static get; set;}
+    public static LessonMode Mode { get; set;}
     public static System.String Name { get;}
     public static System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SubmitCode> Setup { get;}
     public static System.Void Clear()

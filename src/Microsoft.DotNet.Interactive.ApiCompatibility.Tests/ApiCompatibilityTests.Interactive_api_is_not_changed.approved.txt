@@ -17,7 +17,7 @@ Microsoft.DotNet.Interactive
   public class CompositeKernel : Kernel, Microsoft.DotNet.Interactive.Extensions.IExtensibleKernel, System.Collections.Generic.IEnumerable<Kernel>, System.Collections.IEnumerable, System.IDisposable
     .ctor()
     public System.Collections.Generic.IReadOnlyList<Kernel> ChildKernels { get;}
-     System.String DefaultKernelName { public get; set;}
+    public System.String DefaultKernelName { get; set;}
     public KernelHost Host { get;}
     public System.Void Add(Kernel kernel, System.Collections.Generic.IReadOnlyCollection<System.String> aliases = null)
     public System.Void AddKernelConnection<TOptions>(ConnectKernelCommand<TOptions> connectionCommand)
@@ -65,7 +65,7 @@ Microsoft.DotNet.Interactive
     public System.String MimeType { get;}
     public System.String Value { get;}
   public abstract class FrontendEnvironment
-     System.Boolean AllowStandardInput { public get; set;}
+    public System.Boolean AllowStandardInput { get; set;}
     public System.Threading.Tasks.Task ExecuteClientScript(System.String code, KernelInvocationContext context)
   public class HtmlKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
     .ctor()
@@ -80,10 +80,10 @@ Microsoft.DotNet.Interactive
     public Task<TResult> RunAsync(T value, KernelSchedulerDelegate<T,TResult> onExecuteAsync, System.String scope = default, System.Threading.CancellationToken cancellationToken = null)
   public class InstallPackagesMessage
     .ctor(System.Collections.Generic.IReadOnlyList<System.String> restoreSources, System.Collections.Generic.IReadOnlyList<System.String> installingPackages, System.Collections.Generic.IReadOnlyList<System.String> installedPackages, System.Int32 progress)
-     System.Collections.Generic.IReadOnlyList<System.String> InstalledPackages { public get; set;}
-     System.Collections.Generic.IReadOnlyList<System.String> InstallingPackages { public get; set;}
-     System.Int32 Progress { public get; set;}
-     System.Collections.Generic.IReadOnlyList<System.String> RestoreSources { public get; set;}
+    public System.Collections.Generic.IReadOnlyList<System.String> InstalledPackages { get; set;}
+    public System.Collections.Generic.IReadOnlyList<System.String> InstallingPackages { get; set;}
+    public System.Int32 Progress { get; set;}
+    public System.Collections.Generic.IReadOnlyList<System.String> RestoreSources { get; set;}
     public System.String FormatAsHtml()
     public System.String FormatAsPlainText()
     public System.Collections.Generic.IEnumerable<System.String> FormatAsPlainTextLines()
@@ -106,7 +106,7 @@ Microsoft.DotNet.Interactive
     public static System.Void Javascript(System.String scriptContent)
     public ChooseKernelDirective ChooseKernelDirective { get;}
     public System.Collections.Generic.IReadOnlyCollection<System.CommandLine.ICommand> Directives { get;}
-     FrontendEnvironment FrontendEnvironment { public get; set;}
+    public FrontendEnvironment FrontendEnvironment { get; set;}
     public System.IObservable<Microsoft.DotNet.Interactive.Events.KernelEvent> KernelEvents { get;}
     public System.String Name { get;}
     public CompositeKernel ParentKernel { get;}
@@ -338,7 +338,7 @@ Microsoft.DotNet.Interactive.Commands
     public System.String ValueId { get;}
     public System.Threading.Tasks.Task InvokeAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context)
   public abstract class KernelCommand
-     Microsoft.DotNet.Interactive.KernelCommandInvocation Handler { public get; set;}
+    public Microsoft.DotNet.Interactive.KernelCommandInvocation Handler { get; set;}
     public System.CommandLine.Parsing.ParseResult KernelChooserParseResult { get;}
     public KernelCommand Parent { get;}
     public System.Collections.Generic.IDictionary<System.String,System.Object> Properties { get;}
@@ -396,7 +396,7 @@ Microsoft.DotNet.Interactive.Connection
     public Microsoft.DotNet.Interactive.Events.KernelEvent Event { get;}
     public System.Boolean IsParseError { get;}
   public abstract class ConnectKernelCommand<TConnector> : System.CommandLine.Command, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.ICommand, System.CommandLine.IIdentifierSymbol, System.CommandLine.ISymbol, System.CommandLine.Suggestions.ISuggestionSource
-     System.String ConnectedKernelDescription { public get; set;}
+    public System.String ConnectedKernelDescription { get; set;}
     public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> ConnectKernelAsync(Microsoft.DotNet.Interactive.KernelInfo kernelInfo, TConnector connection, Microsoft.DotNet.Interactive.KernelInvocationContext context)
   public class ConnectNamedPipeCommand : ConnectKernelCommand<NamedPipeKernelConnector>, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.ICommand, System.CommandLine.IIdentifierSymbol, System.CommandLine.ISymbol, System.CommandLine.Suggestions.ISuggestionSource
     .ctor()
@@ -474,7 +474,7 @@ Microsoft.DotNet.Interactive.Events
     .ctor(System.Exception exception, Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.String message = null)
     .ctor(System.String message, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public System.Exception Exception { get;}
-     System.String Message { public get; set;}
+    public System.String Message { get; set;}
     public System.String ToString()
   public class CommandSucceeded : KernelEvent
     .ctor(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
@@ -486,7 +486,7 @@ Microsoft.DotNet.Interactive.Events
   public class CompletionItem
     .ctor(System.String displayText, System.String kind, System.String filterText = null, System.String sortText = null, System.String insertText = null, System.String documentation = null)
     public System.String DisplayText { get;}
-     System.String Documentation { public get; set;}
+    public System.String Documentation { get; set;}
     public System.String FilterText { get;}
     public System.String InsertText { get;}
     public System.String Kind { get;}

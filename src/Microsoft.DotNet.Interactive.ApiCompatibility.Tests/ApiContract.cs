@@ -162,43 +162,53 @@ internal static class ApiContract
     {
         var getter = property.GetGetMethod();
         var setter = property.GetSetMethod();
+        
+        var (getterVisibility, getterScope) = GetAccessModifiers(getter);
+        var (setterVisibility, _) = GetAccessModifiers(setter);
 
-        var getterAccessModifier = GetAccessModifiers(getter);
-        var setterAccessModifier = GetAccessModifiers(setter);
-        var defaultAccessModifier = getterAccessModifier;
+        string overallVisibility = null;
 
-        if (setterAccessModifier is null)
+        switch (getterVisibility, setterVisibility)
         {
-            getterAccessModifier = null;
-        }
-        else if (setterAccessModifier == getterAccessModifier)
-        {
-            setterAccessModifier = "";
-            defaultAccessModifier = "";
+            case (string g, string s)  when g==s:
+                overallVisibility = getterVisibility;
+                getterVisibility = null;
+                setterVisibility = null;
+                break;
+
+            case ({ } g, null):
+                overallVisibility = g;
+                getterVisibility = null;
+                break;
+                
+            case (null, { } s):
+                overallVisibility = s;
+                setterVisibility = null;
+                break;
+
         }
 
         var getterSignature = string.Empty;
         var setterSignature = string.Empty;
 
-        if (getter is { })
+        if (getter is { } )
         {
-            getterSignature = $"{getterAccessModifier} get;";
+            getterSignature = $"{getterVisibility} get;";
         }
 
         if (setter is { })
         {
-            setterSignature = $"{setterAccessModifier} set;";
+            setterSignature = $"{setterVisibility} set;";
         }
-
         return
-            $"{defaultAccessModifier} {GetReadableTypeName(property.PropertyType, omitNamespace)} {property.Name} {{ {getterSignature}{setterSignature}}}".Replace("  ", " ");
+            $"{overallVisibility} {getterScope} {GetReadableTypeName(property.PropertyType, omitNamespace)} {property.Name} {{ {getterSignature}{setterSignature}}}".Replace("  ", " ");
     }
 
     public static string GetMethodSignature(
         this MethodInfo method,
         string omitNamespace)
     {
-        var accessor = GetAccessModifiers(method);
+        var (methodVisibility, methodScope) = GetAccessModifiers(method);
 
         var genericArgs = string.Empty;
 
@@ -219,7 +229,7 @@ internal static class ApiContract
         var parameters = GetParameterSignatures(methodParameters, isExtensionMethod, omitNamespace);
 
         return
-            $"{accessor} {GetReadableTypeName(method.ReturnType, omitNamespace)} {method.Name}{genericArgs}({parameters})";
+            $"{methodVisibility} {methodScope} {GetReadableTypeName(method.ReturnType, omitNamespace)} {method.Name}{genericArgs}({parameters})".Replace("  ", " ");
     }
 
     public static string GetParameterSignatures(
@@ -251,43 +261,44 @@ internal static class ApiContract
         return string.Join(", ", signature);
     }
 
-    private static string GetAccessModifiers(this MethodBase method)
+    private static (string visibility, string scope) GetAccessModifiers(this MethodBase method)
     {
-        var modifier = string.Empty;
+        string visibility = null;
+        string scope = null;
 
         if (method is null)
         {
-            return null;
+            return (null, null);
         }
 
         if (method.IsAssembly)
         {
-            modifier = "internal";
+            visibility = "internal";
 
             if (method.IsFamily)
             {
-                modifier += " protected";
+                visibility += " protected";
             }
         }
         else if (method.IsPublic)
         {
-            modifier = "public";
+            visibility = "public";
         }
         else if (method.IsPrivate)
         {
-            modifier = "private";
+            visibility = "private";
         }
         else if (method.IsFamily)
         {
-            modifier = "protected";
+            visibility = "protected";
         }
 
         if (method.IsStatic)
         {
-            modifier += " static";
+           scope = "static";
         }
 
-        return modifier;
+        return (visibility, scope);
     }
 
     private static string GetAccessModifiers(this Type type)
