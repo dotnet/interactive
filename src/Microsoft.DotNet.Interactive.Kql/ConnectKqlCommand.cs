@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive.Kql
 {
     public class ConnectKqlCommand : ConnectKernelCommand<KqlKernelConnector>
     {
-        internal string ResolvedToolsServicePath { get; set; }
+        private readonly string ResolvedToolsServicePath;
 
         public ConnectKqlCommand(string resolvedToolsServicePath)
             : base("kql", "Connects to a Microsoft Kusto Server database")
