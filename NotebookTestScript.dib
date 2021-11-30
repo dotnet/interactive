@@ -66,7 +66,8 @@ change the renderer using the `...` element, choose the json and the output shou
 
 #!csharp
 
-display(new { Name = "Developer", Salary = 42 }, "application/json", "text/html");
+var value = new { Name = "Developer", Salary = 42 };
+value.Display("application/json", "text/html");
 
 #!markdown
 
