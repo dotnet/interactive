@@ -146,7 +146,7 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.255302",
+          "default": "1.0.257903",
           "description": "The minimum required version of the .NET Interactive tool."
         },
         "dotnet-interactive.logLevel": {
@@ -442,6 +442,8 @@
   },
   "mocha": {},
   "devDependencies": {
+    "@rollup/plugin-commonjs": "21.0.1",
+    "@rollup/plugin-node-resolve": "13.0.5",
     "@types/chai": "4.2.11",
     "@types/chai-as-promised": "7.1.3",
     "@types/chai-fs": "2.0.2",
@@ -459,21 +461,19 @@
     "del-cli": "4.0.1",
     "eslint": "7.32.0",
     "eslint-plugin-deprecation": "1.2.1",
-    "glob": "7.1.6",
+    "glob": "7.2.0",
     "mocha": "9.1.3",
     "mocha-multi-reporters": "1.5.1",
     "mocha-trx-reporter": "3.3.1",
+    "rollup": "2.60.1",
+    "rollup-plugin-typescript2": "0.31.1",
+    "source-map-support": "0.5.21",
     "tmp": "0.2.1",
     "typescript": "4.4.4",
-    "vsce": "2.2.0",
-    "vscode-oniguruma": "1.5.1",
+    "vsce": "2.5.0",
+    "vscode-oniguruma": "1.6.1",
     "vscode-test": "1.6.1",
-    "vscode-textmate": "5.4.1",
-    "rollup": "2.58.0",
-    "@rollup/plugin-commonjs": "21.0.0",
-    "@rollup/plugin-node-resolve": "13.0.5",
-    "rollup-plugin-typescript2": "0.30.0",
-    "source-map-support": "0.5.19"
+    "vscode-textmate": "5.5.0"
   },
   "dependencies": {
     "compare-versions": "3.6.0",
