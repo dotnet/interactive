@@ -1,205 +1,205 @@
 Microsoft.DotNet.Interactive.SqlServer
   public class BatchSummary
     .ctor()
-     System.String ExecutionElapsed { public get; set;}
-     System.String ExecutionEnd { public get; set;}
-     System.String ExecutionStart { public get; set;}
-     System.Boolean HasError { public get; set;}
-     System.Int32 Id { public get; set;}
-     ResultSetSummary[] ResultSetSummaries { public get; set;}
-     SelectionData Selection { public get; set;}
+    public System.String ExecutionElapsed { get; set;}
+    public System.String ExecutionEnd { get; set;}
+    public System.String ExecutionStart { get; set;}
+    public System.Boolean HasError { get; set;}
+    public System.Int32 Id { get; set;}
+    public ResultSetSummary[] ResultSetSummaries { get; set;}
+    public SelectionData Selection { get; set;}
   public class CellValue
     .ctor()
-     System.String DisplayValue { public get; set;}
-     System.String InvariantCultureDisplayValue { public get; set;}
-     System.Boolean IsNull { public get; set;}
-     System.Int64 RowId { public get; set;}
+    public System.String DisplayValue { get; set;}
+    public System.String InvariantCultureDisplayValue { get; set;}
+    public System.Boolean IsNull { get; set;}
+    public System.Int64 RowId { get; set;}
   public class ChooseMsSqlKernelDirective : Microsoft.DotNet.Interactive.ChooseKernelDirective, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.ICommand, System.CommandLine.IIdentifierSymbol, System.CommandLine.ISymbol, System.CommandLine.Suggestions.ISuggestionSource
     .ctor(Microsoft.DotNet.Interactive.Kernel kernel)
     public System.CommandLine.Option<System.String> NameOption { get;}
   public class ColumnInfo
     .ctor()
-     System.Nullable<System.Boolean> AllowDBNull { public get; set;}
-     System.String BaseCatalogName { public get; set;}
-     System.String BaseColumnName { public get; set;}
-     System.String BaseSchemaName { public get; set;}
-     System.String BaseServerName { public get; set;}
-     System.String BaseTableName { public get; set;}
-     System.String ColumnName { public get; set;}
-     System.Nullable<System.Int32> ColumnOrdinal { public get; set;}
-     System.Nullable<System.Int32> ColumnSize { public get; set;}
-     System.String DataType { public get; set;}
-     System.String DataTypeName { public get; set;}
-     System.Nullable<System.Boolean> IsAliased { public get; set;}
-     System.Nullable<System.Boolean> IsAutoIncrement { public get; set;}
-     System.Nullable<System.Boolean> IsBytes { public get; set;}
-     System.Nullable<System.Boolean> IsChars { public get; set;}
-     System.Nullable<System.Boolean> IsExpression { public get; set;}
-     System.Nullable<System.Boolean> IsHidden { public get; set;}
-     System.Nullable<System.Boolean> IsIdentity { public get; set;}
-     System.Nullable<System.Boolean> IsJson { public get; set;}
-     System.Nullable<System.Boolean> IsKey { public get; set;}
-     System.Nullable<System.Boolean> IsLong { public get; set;}
-     System.Nullable<System.Boolean> IsReadOnly { public get; set;}
-     System.Nullable<System.Boolean> IsSqlVariant { public get; set;}
-     System.Nullable<System.Boolean> IsUdt { public get; set;}
-     System.Nullable<System.Boolean> IsUnique { public get; set;}
-     System.Nullable<System.Boolean> IsXml { public get; set;}
-     System.Nullable<System.Int32> NumericPrecision { public get; set;}
-     System.Nullable<System.Int32> NumericScale { public get; set;}
-     System.String UdtAssemblyQualifiedName { public get; set;}
+    public System.Nullable<System.Boolean> AllowDBNull { get; set;}
+    public System.String BaseCatalogName { get; set;}
+    public System.String BaseColumnName { get; set;}
+    public System.String BaseSchemaName { get; set;}
+    public System.String BaseServerName { get; set;}
+    public System.String BaseTableName { get; set;}
+    public System.String ColumnName { get; set;}
+    public System.Nullable<System.Int32> ColumnOrdinal { get; set;}
+    public System.Nullable<System.Int32> ColumnSize { get; set;}
+    public System.String DataType { get; set;}
+    public System.String DataTypeName { get; set;}
+    public System.Nullable<System.Boolean> IsAliased { get; set;}
+    public System.Nullable<System.Boolean> IsAutoIncrement { get; set;}
+    public System.Nullable<System.Boolean> IsBytes { get; set;}
+    public System.Nullable<System.Boolean> IsChars { get; set;}
+    public System.Nullable<System.Boolean> IsExpression { get; set;}
+    public System.Nullable<System.Boolean> IsHidden { get; set;}
+    public System.Nullable<System.Boolean> IsIdentity { get; set;}
+    public System.Nullable<System.Boolean> IsJson { get; set;}
+    public System.Nullable<System.Boolean> IsKey { get; set;}
+    public System.Nullable<System.Boolean> IsLong { get; set;}
+    public System.Nullable<System.Boolean> IsReadOnly { get; set;}
+    public System.Nullable<System.Boolean> IsSqlVariant { get; set;}
+    public System.Nullable<System.Boolean> IsUdt { get; set;}
+    public System.Nullable<System.Boolean> IsUnique { get; set;}
+    public System.Nullable<System.Boolean> IsXml { get; set;}
+    public System.Nullable<System.Int32> NumericPrecision { get; set;}
+    public System.Nullable<System.Int32> NumericScale { get; set;}
+    public System.String UdtAssemblyQualifiedName { get; set;}
   public class CompletionCommand
     .ctor()
-     System.Object[] Arguments { public get; set;}
-     System.String command { public get; set;}
-     System.String Title { public get; set;}
-     System.String Tooltip { public get; set;}
+    public System.Object[] Arguments { get; set;}
+    public System.String command { get; set;}
+    public System.String Title { get; set;}
+    public System.String Tooltip { get; set;}
   public class CompletionContext
     .ctor()
-     System.String TriggerCharacter { public get; set;}
-     System.Int32 TriggerKind { public get; set;}
+    public System.String TriggerCharacter { get; set;}
+    public System.Int32 TriggerKind { get; set;}
   public class CompletionParams
     .ctor()
-     CompletionContext Context { public get; set;}
-     Position Position { public get; set;}
-     TextDocumentIdentifier TextDocument { public get; set;}
+    public CompletionContext Context { get; set;}
+    public Position Position { get; set;}
+    public TextDocumentIdentifier TextDocument { get; set;}
   public enum CompletionTriggerKind : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
     Invoked=1
     TriggerCharacter=2
     TriggerForIncompleteCompletions=3
   public class ConnectionCompleteParams
     .ctor()
-     System.String ConnectionId { public get; set;}
-     ConnectionSummary ConnectionSummary { public get; set;}
-     System.String ErrorMessage { public get; set;}
-     System.Int32 ErrorNumber { public get; set;}
-     System.String Messages { public get; set;}
-     System.String OwnerUri { public get; set;}
-     ServerInfo ServerInfo { public get; set;}
-     System.String Type { public get; set;}
+    public System.String ConnectionId { get; set;}
+    public ConnectionSummary ConnectionSummary { get; set;}
+    public System.String ErrorMessage { get; set;}
+    public System.Int32 ErrorNumber { get; set;}
+    public System.String Messages { get; set;}
+    public System.String OwnerUri { get; set;}
+    public ServerInfo ServerInfo { get; set;}
+    public System.String Type { get; set;}
   public class ConnectionDetails
     .ctor()
-     System.Collections.Generic.Dictionary<System.String,System.String> Options { public get; set;}
+    public System.Collections.Generic.Dictionary<System.String,System.String> Options { get; set;}
   public class ConnectionSummary
     .ctor()
-     System.String DatabaseName { public get; set;}
-     System.String ServerName { public get; set;}
-     System.String UserName { public get; set;}
+    public System.String DatabaseName { get; set;}
+    public System.String ServerName { get; set;}
+    public System.String UserName { get; set;}
   public class ConnectMsSqlCommand : Microsoft.DotNet.Interactive.Connection.ConnectKernelCommand<MsSqlKernelConnector>, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.ICommand, System.CommandLine.IIdentifierSymbol, System.CommandLine.ISymbol, System.CommandLine.Suggestions.ISuggestionSource
     .ctor(System.String resolvedToolsServicePath)
     public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> ConnectKernelAsync(Microsoft.DotNet.Interactive.KernelInfo kernelInfo, MsSqlKernelConnector connector, Microsoft.DotNet.Interactive.KernelInvocationContext context)
   public class ConnectParams
     .ctor()
-     ConnectionDetails Connection { public get; set;}
-     System.String OwnerUri { public get; set;}
+    public ConnectionDetails Connection { get; set;}
+    public System.String OwnerUri { get; set;}
   public class DidChangeTextDocumentParams
     .ctor()
-     TextDocumentChangeEvent[] ContentChanges { public get; set;}
-     VersionedTextDocumentIdentifier TextDocument { public get; set;}
+    public TextDocumentChangeEvent[] ContentChanges { get; set;}
+    public VersionedTextDocumentIdentifier TextDocument { get; set;}
   public class DisconnectParams
     .ctor()
-     System.String OwnerUri { public get; set;}
+    public System.String OwnerUri { get; set;}
   public class IntelliSenseReadyParams
     .ctor()
-     System.String OwnerUri { public get; set;}
+    public System.String OwnerUri { get; set;}
   public class MessageParams
     .ctor()
-     ResultMessage Message { public get; set;}
-     System.String OwnerUri { public get; set;}
+    public ResultMessage Message { get; set;}
+    public System.String OwnerUri { get; set;}
   public class MsSqlKernelConnector, Microsoft.DotNet.Interactive.Connection.IKernelConnector
     .ctor(System.Boolean createDbContext, System.String connectionString)
     public System.String ConnectionString { get;}
     public System.Boolean CreateDbContext { get;}
-     System.String PathToService { public get; set;}
+    public System.String PathToService { get; set;}
     public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> ConnectKernelAsync(Microsoft.DotNet.Interactive.KernelInfo kernelInfo)
   public class MsSqlKernelExtension, Microsoft.DotNet.Interactive.IKernelExtension
     .ctor()
     public System.Threading.Tasks.Task OnLoadAsync(Microsoft.DotNet.Interactive.Kernel kernel)
   public class Position
     .ctor()
-     System.Int32 Character { public get; set;}
-     System.Int32 Line { public get; set;}
+    public System.Int32 Character { get; set;}
+    public System.Int32 Line { get; set;}
   public class QueryCancelParams
     .ctor()
-     System.String OwnerUri { public get; set;}
+    public System.String OwnerUri { get; set;}
   public class QueryCancelResult
     .ctor()
-     System.String Messages { public get; set;}
+    public System.String Messages { get; set;}
   public class QueryCompleteParams
     .ctor()
-     BatchSummary[] BatchSummaries { public get; set;}
-     System.String OwnerUri { public get; set;}
+    public BatchSummary[] BatchSummaries { get; set;}
+    public System.String OwnerUri { get; set;}
   public class QueryExecuteResult
     .ctor()
   public class QueryExecuteStringParams
     .ctor()
-     System.String OwnerUri { public get; set;}
-     System.String Query { public get; set;}
+    public System.String OwnerUri { get; set;}
+    public System.String Query { get; set;}
   public class QueryExecuteSubsetParams
     .ctor()
-     System.Int32 BatchIndex { public get; set;}
-     System.String OwnerUri { public get; set;}
-     System.Int32 RowsCount { public get; set;}
-     System.Int32 RowsStartIndex { public get; set;}
+    public System.Int32 BatchIndex { get; set;}
+    public System.String OwnerUri { get; set;}
+    public System.Int32 RowsCount { get; set;}
+    public System.Int32 RowsStartIndex { get; set;}
   public class QueryExecuteSubsetResult
     .ctor()
-     ResultSetSubset ResultSubset { public get; set;}
+    public ResultSetSubset ResultSubset { get; set;}
   public class Range
     .ctor()
-     Position End { public get; set;}
-     Position Start { public get; set;}
+    public Position End { get; set;}
+    public Position Start { get; set;}
   public class ResultMessage
     .ctor(System.String message, System.Boolean isError, System.Nullable<System.Int32> batchId)
     .ctor()
-     System.Nullable<System.Int32> BatchId { public get; set;}
-     System.Boolean IsError { public get; set;}
-     System.String Message { public get; set;}
-     System.String Time { public get; set;}
+    public System.Nullable<System.Int32> BatchId { get; set;}
+    public System.Boolean IsError { get; set;}
+    public System.String Message { get; set;}
+    public System.String Time { get; set;}
     public System.String ToString()
   public class ResultSetSubset
     .ctor()
-     System.Int32 RowCount { public get; set;}
-     CellValue[][] Rows { public get; set;}
+    public System.Int32 RowCount { get; set;}
+    public CellValue[][] Rows { get; set;}
   public class ResultSetSummary
     .ctor()
-     System.Int32 BatchId { public get; set;}
-     ColumnInfo[] ColumnInfo { public get; set;}
-     System.Boolean Complete { public get; set;}
-     System.Int32 Id { public get; set;}
-     System.Int64 RowCount { public get; set;}
+    public System.Int32 BatchId { get; set;}
+    public ColumnInfo[] ColumnInfo { get; set;}
+    public System.Boolean Complete { get; set;}
+    public System.Int32 Id { get; set;}
+    public System.Int64 RowCount { get; set;}
   public class SelectionData
     .ctor()
-     System.Int32 EndColumn { public get; set;}
-     System.Int32 EndLine { public get; set;}
-     System.Int32 StartColumn { public get; set;}
-     System.Int32 StartLine { public get; set;}
+    public System.Int32 EndColumn { get; set;}
+    public System.Int32 EndLine { get; set;}
+    public System.Int32 StartColumn { get; set;}
+    public System.Int32 StartLine { get; set;}
   public class ServerInfo
     .ctor()
-     System.Int32 AzureVersion { public get; set;}
-     System.Int32 EngineEditionId { public get; set;}
-     System.Boolean IsCloud { public get; set;}
-     System.String MachineName { public get; set;}
-     System.Collections.Generic.Dictionary<System.String,System.Object> Options { public get; set;}
-     System.String OsVersion { public get; set;}
-     System.String ServerEdition { public get; set;}
-     System.String ServerLevel { public get; set;}
-     System.Int32 ServerMajorVersion { public get; set;}
-     System.Int32 ServerMinorVersion { public get; set;}
-     System.Int32 ServerReleaseVersion { public get; set;}
-     System.String ServerVersion { public get; set;}
+    public System.Int32 AzureVersion { get; set;}
+    public System.Int32 EngineEditionId { get; set;}
+    public System.Boolean IsCloud { get; set;}
+    public System.String MachineName { get; set;}
+    public System.Collections.Generic.Dictionary<System.String,System.Object> Options { get; set;}
+    public System.String OsVersion { get; set;}
+    public System.String ServerEdition { get; set;}
+    public System.String ServerLevel { get; set;}
+    public System.Int32 ServerMajorVersion { get; set;}
+    public System.Int32 ServerMinorVersion { get; set;}
+    public System.Int32 ServerReleaseVersion { get; set;}
+    public System.String ServerVersion { get; set;}
   public class SqlCompletionItem
     .ctor()
-     CompletionCommand Command { public get; set;}
-     System.Object Data { public get; set;}
-     System.String Detail { public get; set;}
-     System.String Documentation { public get; set;}
-     System.String FilterText { public get; set;}
-     System.String InsertText { public get; set;}
-     System.Nullable<SqlCompletionItemKind> Kind { public get; set;}
-     System.String Label { public get; set;}
-     System.Nullable<System.Boolean> Preselect { public get; set;}
-     System.String SortText { public get; set;}
-     TextEdit TextEdit { public get; set;}
+    public CompletionCommand Command { get; set;}
+    public System.Object Data { get; set;}
+    public System.String Detail { get; set;}
+    public System.String Documentation { get; set;}
+    public System.String FilterText { get; set;}
+    public System.String InsertText { get; set;}
+    public System.Nullable<SqlCompletionItemKind> Kind { get; set;}
+    public System.String Label { get; set;}
+    public System.Nullable<System.Boolean> Preselect { get; set;}
+    public System.String SortText { get; set;}
+    public TextEdit TextEdit { get; set;}
   public enum SqlCompletionItemKind : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
     Text=1
     Method=2
@@ -221,16 +221,16 @@ Microsoft.DotNet.Interactive.SqlServer
     Reference=18
   public class TextDocumentChangeEvent
     .ctor()
-     Range Range { public get; set;}
-     System.Nullable<System.Int32> RangeLength { public get; set;}
-     System.String Text { public get; set;}
+    public Range Range { get; set;}
+    public System.Nullable<System.Int32> RangeLength { get; set;}
+    public System.String Text { get; set;}
   public class TextDocumentIdentifier
     .ctor()
-     System.String Uri { public get; set;}
+    public System.String Uri { get; set;}
   public class TextEdit
     .ctor()
-     System.String NewText { public get; set;}
-     Range Range { public get; set;}
+    public System.String NewText { get; set;}
+    public Range Range { get; set;}
   public class ToolsServiceClient, System.IDisposable
     public static DidChangeTextDocumentParams GetDocumentChangeForText(System.Uri ownerUri, System.String newText, System.String oldText)
     .ctor(System.String serviceExePath = null, System.String arguments = null)
@@ -272,4 +272,4 @@ Microsoft.DotNet.Interactive.SqlServer
     public static System.String AsSingleQuotedString()
   public class VersionedTextDocumentIdentifier : TextDocumentIdentifier
     .ctor()
-     System.Int32 Version { public get; set;}
+    public System.Int32 Version { get; set;}

@@ -57,7 +57,7 @@ Microsoft.DotNet.Interactive.Documents.Jupyter
     public static System.Void Write(Microsoft.DotNet.Interactive.Documents.InteractiveDocument interactive, System.String newline, System.IO.Stream stream)
     public static System.Void Write(Microsoft.DotNet.Interactive.Documents.InteractiveDocument interactive, System.String newline, System.IO.TextWriter writer)
   public class NotebookCellOutputConverter : Microsoft.DotNet.Interactive.Documents.JsonConverter<Microsoft.DotNet.Interactive.Documents.InteractiveDocumentOutputElement>
-     System.Text.Json.JsonSerializerOptions InternalOptions { public static get; set;}
+    public static System.Text.Json.JsonSerializerOptions InternalOptions { get; set;}
     .ctor()
     public Microsoft.DotNet.Interactive.Documents.InteractiveDocumentOutputElement Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
 Microsoft.DotNet.Interactive.Documents.ParserServer

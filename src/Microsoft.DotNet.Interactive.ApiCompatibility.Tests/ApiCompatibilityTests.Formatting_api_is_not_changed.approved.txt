@@ -22,10 +22,10 @@ Microsoft.DotNet.Interactive.Formatting
     public System.Boolean EndInvoke(System.IAsyncResult result)
     public System.Boolean Invoke(T value, FormatContext context)
   public static class Formatter
-     System.String DefaultMimeType { public static get; set;}
-     System.Int32 ListExpansionLimit { public static get; set;}
-     System.String NullString { public static get; set;}
-     System.Int32 RecursionLimit { public static get; set;}
+    public static System.String DefaultMimeType { get; set;}
+    public static System.Int32 ListExpansionLimit { get; set;}
+    public static System.String NullString { get; set;}
+    public static System.Int32 RecursionLimit { get; set;}
     public static System.Void Format(System.Object instance, System.IO.TextWriter writer)
     public static System.Void FormatTo<T>(FormatContext context, System.String mimeType = text/plain)
     public static ITypeFormatter GetPreferredFormatterFor(System.Type actualType, System.String mimeType)
@@ -42,7 +42,7 @@ Microsoft.DotNet.Interactive.Formatting
     public static System.String ToDisplayString(System.String mimeType = text/plain)
     public static System.String ToDisplayString(ITypeFormatter formatter)
   public static class Formatter<T>
-     System.Int32 ListExpansionLimit { public static get; set;}
+    public static System.Int32 ListExpansionLimit { get; set;}
     public static System.Void FormatTo(T obj, FormatContext context, System.String mimeType = text/plain)
   public static class Html
     public static TTag Append<TTag>(Microsoft.AspNetCore.Html.IHtmlContent content)
@@ -65,7 +65,7 @@ Microsoft.DotNet.Interactive.Formatting
     .ctor(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<System.String,System.Object>> attributes)
     public System.Int32 Count { get;}
     public System.Boolean IsReadOnly { get;}
-     System.Object Item { public get; set;}
+    public System.Object Item { get; set;}
     public System.Collections.Generic.ICollection<System.String> Keys { get;}
     public System.Collections.Generic.ICollection<System.Object> Values { get;}
     public System.Void Add(System.Collections.Generic.KeyValuePair<System.String,System.Object> item)
@@ -94,7 +94,7 @@ Microsoft.DotNet.Interactive.Formatting
     public static System.Boolean HasClass(System.String class)
     public static HtmlAttributes Selected(System.Boolean value = True)
   public static class HtmlFormatter
-     System.Int32 MaxProperties { public static get; set;}
+    public static System.Int32 MaxProperties { get; set;}
     public static ITypeFormatter GetPreferredFormatterFor(System.Type type)
     public static ITypeFormatter GetPreferredFormatterFor<T>()
   public class HtmlFormatter<T> : TypeFormatter<T>, ITypeFormatter<T>, ITypeFormatter
@@ -107,10 +107,10 @@ Microsoft.DotNet.Interactive.Formatting
     .ctor(System.String name)
     .ctor(System.String name, System.String text)
     .ctor(System.String name, System.Action<FormatContext> content)
-     System.Action<FormatContext> Content { public get; set;}
-     HtmlAttributes HtmlAttributes { public get; set;}
-     System.Boolean IsSelfClosing { public get; set;}
-     System.String Name { public get; set;}
+    public System.Action<FormatContext> Content { get; set;}
+    public HtmlAttributes HtmlAttributes { get; set;}
+    public System.Boolean IsSelfClosing { get; set;}
+    public System.String Name { get; set;}
     public System.Void MergeAttributes(System.Collections.Generic.IDictionary<System.String,System.Object> htmlAttributes, System.Boolean replace = False)
     public System.String ToString()
     protected System.Void WriteContentsTo(FormatContext context)
@@ -151,7 +151,7 @@ Microsoft.DotNet.Interactive.Formatting
   public class JsonString : Microsoft.AspNetCore.Html.HtmlString, Microsoft.AspNetCore.Html.IHtmlContent
     .ctor(System.String json)
   public static class PlainTextFormatter
-     System.Int32 MaxProperties { public static get; set;}
+    public static System.Int32 MaxProperties { get; set;}
     public static ITypeFormatter GetPreferredFormatterFor(System.Type type)
     public static ITypeFormatter GetPreferredFormatterFor<T>()
   public class PlainTextFormatter<T> : TypeFormatter<T>, ITypeFormatter<T>, ITypeFormatter
@@ -295,8 +295,8 @@ Microsoft.DotNet.Interactive.Formatting.TabularData
     public System.Collections.Generic.IEnumerator<TableSchemaFieldDescriptor> GetEnumerator()
   public class TableSchema
     .ctor()
-     TableDataFieldDescriptors Fields { public get; set;}
-     System.Collections.Generic.List<System.String> PrimaryKey { public get; set;}
+    public TableDataFieldDescriptors Fields { get; set;}
+    public System.Collections.Generic.List<System.String> PrimaryKey { get; set;}
   public class TableSchemaFieldDescriptor
     .ctor(System.String name, System.Nullable<TableSchemaFieldType> type = 2, System.String description = null, System.String format = null)
     public System.String Description { get;}

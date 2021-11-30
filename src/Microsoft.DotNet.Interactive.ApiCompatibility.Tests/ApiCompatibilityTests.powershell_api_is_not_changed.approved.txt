@@ -1,8 +1,8 @@
 Microsoft.DotNet.Interactive.PowerShell
   public class PowerShellKernel : Microsoft.DotNet.Interactive.Kernel, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestCompletions>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestDiagnostics>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, Microsoft.DotNet.Interactive.ValueSharing.ISupportGetValue, Microsoft.DotNet.Interactive.ValueSharing.ISupportSetClrValue, System.IDisposable
     .ctor()
-     System.Func<System.String,System.String> ReadInput { public get; set;}
-     System.Func<System.String,Microsoft.DotNet.Interactive.PasswordString> ReadPassword { public get; set;}
+    public System.Func<System.String,System.String> ReadInput { get; set;}
+    public System.Func<System.String,Microsoft.DotNet.Interactive.PasswordString> ReadPassword { get; set;}
     public System.Void AddAccelerator(System.String name, System.Type type)
     public System.Void AddModulePath(System.String modulePath)
     public System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.ValueSharing.KernelValueInfo> GetValueInfos()
@@ -16,14 +16,14 @@ Microsoft.DotNet.Interactive.PowerShell
 Microsoft.DotNet.Interactive.PowerShell.Commands
   public class EnterAzShellCommand : System.Management.Automation.PSCmdlet
     .ctor()
-     System.Guid TenantId { public get; set;}
+    public System.Guid TenantId { get; set;}
     protected System.Void ProcessRecord()
   public class OutDisplayCommand : System.Management.Automation.PSCmdlet
     .ctor()
-     System.String CustomMimeType { public get; set;}
-     System.Object InputObject { public get; set;}
-     System.String MimeType { public get; set;}
-     System.Management.Automation.SwitchParameter PassThru { public get; set;}
+    public System.String CustomMimeType { get; set;}
+    public System.Object InputObject { get; set;}
+    public System.String MimeType { get; set;}
+    public System.Management.Automation.SwitchParameter PassThru { get; set;}
     protected System.Void ProcessRecord()
 Microsoft.DotNet.Interactive.PowerShell.Host
   public class PSKernelHost : System.Management.Automation.Host.PSHost, System.Management.Automation.Host.IHostSupportsInteractiveSession
@@ -44,17 +44,17 @@ Microsoft.DotNet.Interactive.PowerShell.Host
     public System.Void PushRunspace(System.Management.Automation.Runspaces.Runspace runspace)
     public System.Void SetShouldExit(System.Int32 exitCode)
   public class PSKernelHostRawUserInterface : System.Management.Automation.Host.PSHostRawUserInterface
-     System.ConsoleColor BackgroundColor { public get; set;}
-     System.Management.Automation.Host.Size BufferSize { public get; set;}
-     System.Management.Automation.Host.Coordinates CursorPosition { public get; set;}
-     System.Int32 CursorSize { public get; set;}
-     System.ConsoleColor ForegroundColor { public get; set;}
+    public System.ConsoleColor BackgroundColor { get; set;}
+    public System.Management.Automation.Host.Size BufferSize { get; set;}
+    public System.Management.Automation.Host.Coordinates CursorPosition { get; set;}
+    public System.Int32 CursorSize { get; set;}
+    public System.ConsoleColor ForegroundColor { get; set;}
     public System.Boolean KeyAvailable { get;}
     public System.Management.Automation.Host.Size MaxPhysicalWindowSize { get;}
     public System.Management.Automation.Host.Size MaxWindowSize { get;}
-     System.Management.Automation.Host.Coordinates WindowPosition { public get; set;}
-     System.Management.Automation.Host.Size WindowSize { public get; set;}
-     System.String WindowTitle { public get; set;}
+    public System.Management.Automation.Host.Coordinates WindowPosition { get; set;}
+    public System.Management.Automation.Host.Size WindowSize { get; set;}
+    public System.String WindowTitle { get; set;}
     public System.Void FlushInputBuffer()
     public System.Management.Automation.Host.BufferCell[,] GetBufferContents(System.Management.Automation.Host.Rectangle rectangle)
     public System.Int32 LengthInBufferCells(System.String source, System.Int32 offset)
@@ -65,20 +65,20 @@ Microsoft.DotNet.Interactive.PowerShell.Host
     public System.Void SetBufferContents(System.Management.Automation.Host.Coordinates origin, System.Management.Automation.Host.BufferCell[,] contents)
     public System.Void SetBufferContents(System.Management.Automation.Host.Rectangle rectangle, System.Management.Automation.Host.BufferCell fill)
   public class PSKernelHostUserInterface : System.Management.Automation.Host.PSHostUserInterface, System.Management.Automation.Host.IHostUISupportsMultipleChoiceSelection
-     System.ConsoleColor DebugBackgroundColor { public get; set;}
-     System.ConsoleColor DebugForegroundColor { public get; set;}
-     System.ConsoleColor ErrorAccentColor { public get; set;}
-     System.ConsoleColor ErrorBackgroundColor { public get; set;}
-     System.ConsoleColor ErrorForegroundColor { public get; set;}
-     System.ConsoleColor FormatAccentColor { public get; set;}
-     System.ConsoleColor ProgressBackgroundColor { public get; set;}
-     System.ConsoleColor ProgressForegroundColor { public get; set;}
+    public System.ConsoleColor DebugBackgroundColor { get; set;}
+    public System.ConsoleColor DebugForegroundColor { get; set;}
+    public System.ConsoleColor ErrorAccentColor { get; set;}
+    public System.ConsoleColor ErrorBackgroundColor { get; set;}
+    public System.ConsoleColor ErrorForegroundColor { get; set;}
+    public System.ConsoleColor FormatAccentColor { get; set;}
+    public System.ConsoleColor ProgressBackgroundColor { get; set;}
+    public System.ConsoleColor ProgressForegroundColor { get; set;}
     public System.Management.Automation.Host.PSHostRawUserInterface RawUI { get;}
     public System.Boolean SupportsVirtualTerminal { get;}
-     System.ConsoleColor VerboseBackgroundColor { public get; set;}
-     System.ConsoleColor VerboseForegroundColor { public get; set;}
-     System.ConsoleColor WarningBackgroundColor { public get; set;}
-     System.ConsoleColor WarningForegroundColor { public get; set;}
+    public System.ConsoleColor VerboseBackgroundColor { get; set;}
+    public System.ConsoleColor VerboseForegroundColor { get; set;}
+    public System.ConsoleColor WarningBackgroundColor { get; set;}
+    public System.ConsoleColor WarningForegroundColor { get; set;}
     public System.Collections.Generic.Dictionary<System.String,System.Management.Automation.PSObject> Prompt(System.String caption, System.String message, System.Collections.ObjectModel.Collection<System.Management.Automation.Host.FieldDescription> descriptions)
     public System.Int32 PromptForChoice(System.String caption, System.String message, System.Collections.ObjectModel.Collection<System.Management.Automation.Host.ChoiceDescription> choices, System.Int32 defaultChoice)
     public System.Collections.ObjectModel.Collection<System.Int32> PromptForChoice(System.String caption, System.String message, System.Collections.ObjectModel.Collection<System.Management.Automation.Host.ChoiceDescription> choices, System.Collections.Generic.IEnumerable<System.Int32> defaultChoices)
