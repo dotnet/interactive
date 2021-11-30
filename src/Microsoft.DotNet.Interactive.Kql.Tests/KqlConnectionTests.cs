@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.Kql.Tests
         {
             var csharpKernel = new CSharpKernel().UseNugetDirective();
             await csharpKernel.SubmitCodeAsync(@$"
-#r ""nuget:microsoft.sqltoolsservice,3.0.0-release.157""
+#r ""nuget:microsoft.sqltoolsservice,3.0.0-release.163""
 ");
 
             var kernel = new CompositeKernel
