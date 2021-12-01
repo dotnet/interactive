@@ -199,7 +199,7 @@ public class TelemetryTests : IDisposable
     }
 
     [Fact]
-    public async Task Jupyter_install_command_sends_default_fronted_telemetry()
+    public async Task Jupyter_install_command_sends_default_frontend_telemetry()
     {
         var defaultFrontend = GetDefaultFrontendName();
         await _parser.InvokeAsync("jupyter install", _console);
