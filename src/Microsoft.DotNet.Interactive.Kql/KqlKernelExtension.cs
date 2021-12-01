@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.Kql
         {
             if (kernel is CompositeKernel compositeKernel)
             {
-                var root = Kernel.Root.FindResolvedNativeSqlToolsServicePackageReference();
+                var root = compositeKernel.RootKernel.FindResolvedNativeSqlToolsServicePackageReference();
                 if (root != null)
                 {
                     var pathToService = root.PathToToolsService("MicrosoftKustoServiceLayer");
