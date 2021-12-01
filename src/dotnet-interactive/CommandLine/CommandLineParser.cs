@@ -136,6 +136,7 @@ public static class CommandLineParser
                 if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CODESPACES")))
                 {
                     frontendTelemetryAdded = true;
+                    isVSCode = true;
                     entryItems.Add(new KeyValuePair<string, string>("frontend", "gitHubCodeSpaces"));
                 }
 
