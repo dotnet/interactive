@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
         private async Task<CompositeKernel> CreateKernelAsync()
         {
             var csharpKernel = new CSharpKernel().UseNugetDirective().UseValueSharing();
-            await csharpKernel.SubmitCodeAsync(@$"
+            await csharpKernel.SubmitCodeAsync(@"
 #r ""nuget:microsoft.sqltoolsservice,3.0.0-release.163""
 ");
 
