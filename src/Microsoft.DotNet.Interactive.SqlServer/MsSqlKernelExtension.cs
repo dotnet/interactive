@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         {
             if (kernel is CompositeKernel compositeKernel)
             {
-                var root = compositeKernel.RootKernel.FindResolvedNativeSqlToolsServicePackageReference();
+                var root = Kernel.Root.FindResolvedNativeSqlToolsServicePackageReference();
                 if (root != null)
                 {
                     var pathToService = root.PathToToolsService("MicrosoftSqlToolsServiceLayer");
