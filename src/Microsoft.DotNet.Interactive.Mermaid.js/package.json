@@ -17,6 +17,7 @@
     "webpack-cli": "4.6.0"
   },
   "scripts": {
-    "build": "webpack-cli --mode=production"
+    "compile": "webpack-cli --mode=production",
+    "ciTest": "echo \"nothing to do\" && exit 0"
   }
 }

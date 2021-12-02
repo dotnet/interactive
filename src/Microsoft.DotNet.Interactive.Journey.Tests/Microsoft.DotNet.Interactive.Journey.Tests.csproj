@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <Deterministic Condition="'$(NCrunch)' == '1'">false</Deterministic>
     <NoWarn>$(NoWarn);8002</NoWarn>       <!-- Assent isn't strongly signed -->
     <NoWarn>$(NoWarn);VSTHRD002</NoWarn>  <!-- Ignore: Avoid problematic synchronous waits -->
@@ -15,6 +15,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Humanizer" Version="2.8.26" />
+    <PackageReference Include="Humanizer.Core" Version="2.8.26" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.30" />
     <PackageReference Include="FluentAssertions" Version="5.10.3" />
   </ItemGroup>

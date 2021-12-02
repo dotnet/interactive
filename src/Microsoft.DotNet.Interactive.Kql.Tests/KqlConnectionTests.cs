@@ -21,8 +21,8 @@ namespace Microsoft.DotNet.Interactive.Kql.Tests
         private static async Task<CompositeKernel> CreateKernel()
         {
             var csharpKernel = new CSharpKernel().UseNugetDirective();
-            await csharpKernel.SubmitCodeAsync(@$"
-#r ""nuget:microsoft.sqltoolsservice,3.0.0-release.53""
+            await csharpKernel.SubmitCodeAsync(@"
+#r ""nuget:microsoft.sqltoolsservice,3.0.0-release.163""
 ");
 
             var kernel = new CompositeKernel
@@ -34,7 +34,8 @@ namespace Microsoft.DotNet.Interactive.Kql.Tests
 
             kernel.DefaultKernelName = csharpKernel.Name;
 
-            kernel.UseKernelClientConnection(new ConnectKqlCommand());
+            var kqlKernelExtension = new KqlKernelExtension();
+            await kqlKernelExtension.OnLoadAsync(kernel);
             kernel.UseNteractDataExplorer();
             kernel.UseSandDanceExplorer();
 
@@ -259,7 +260,7 @@ print testVar";
             result = await kernel.SendAsync(new SubmitCode(code));
 
             var events = result.KernelEvents.ToSubscribedList();
-            
+
             events
                 .ShouldDisplayTabularDataResourceWhich()
                 .Data
@@ -281,7 +282,7 @@ print testVar";
         {
             var cluster = KqlFactAttribute.GetClusterForTests();
             using var kernel = await CreateKernel();
-            
+
             var result = await kernel.SubmitCodeAsync(
                 $"#!connect kql --kernel-name KustoHelp --cluster \"{cluster}\" --database \"Samples\"");
 

@@ -7,116 +7,114 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-
-using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 
 
-namespace Microsoft.DotNet.Interactive.Http
+namespace Microsoft.DotNet.Interactive.Http;
+
+public class HttpApiTunnelingRouter : IRouter
 {
-    public class HttpApiTunnelingRouter : IRouter
+    private readonly HtmlNotebookFrontendEnvironment _frontendEnvironment;
+
+    private readonly ConcurrentDictionary<Uri, string> _bootstrapperScripts = new();
+
+    public HttpApiTunnelingRouter(HtmlNotebookFrontendEnvironment frontendEnvironment)
     {
-        private readonly HtmlNotebookFrontendEnvironment _frontendEnvironment;
+        _frontendEnvironment = frontendEnvironment;
+    }
 
-        private readonly ConcurrentDictionary<Uri, string> _bootstrapperScripts = new();
+    public VirtualPathData GetVirtualPath(VirtualPathContext context)
+    {
+        return null;
+    }
 
-        public HttpApiTunnelingRouter(HtmlNotebookFrontendEnvironment frontendEnvironment)
+    public async Task RouteAsync(RouteContext context)
+    {
+        if (context.HttpContext.Request.Method == HttpMethods.Post)
         {
-            _frontendEnvironment = frontendEnvironment;
+            await HandlePostVerb(context);
         }
 
-        public VirtualPathData GetVirtualPath(VirtualPathContext context)
+        if (context.HttpContext.Request.Method == HttpMethods.Get)
         {
-            return null;
+            await HandleGetVerb(context);
         }
+    }
 
-        public async Task RouteAsync(RouteContext context)
+    private Task HandleGetVerb(RouteContext context)
+    {
+        var segments =
+            context.HttpContext
+                .Request
+                .Path
+                .Value
+                .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.ToLower())
+                .ToArray();
+        if (segments.FirstOrDefault() == "apitunnel")
         {
-            if (context.HttpContext.Request.Method == HttpMethods.Post)
+            context.Handler = async httpContext =>
             {
-                await HandlePostVerb(context);
-            }
-
-            if (context.HttpContext.Request.Method == HttpMethods.Get)
-            {
-                await HandleGetVerb(context);
-            }
-        }
-
-        private Task HandleGetVerb(RouteContext context)
-        {
-            var segments =
-                context.HttpContext
-                    .Request
-                    .Path
-                    .Value
-                    .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)
-                    .Select(s => s.ToLower())
-                    .ToArray();
-            if (segments.FirstOrDefault() == "apitunnel")
-            {
-                context.Handler = async httpContext =>
+                httpContext.Response.ContentType = "text/javascript";
+                var key = context.HttpContext.Request.GetUri();
+                if (_bootstrapperScripts.TryGetValue(key, out var scriptCode))
                 {
-                    httpContext.Response.ContentType = "text/javascript";
-                    var key = context.HttpContext.Request.GetUri();
-                    if (_bootstrapperScripts.TryGetValue(key, out var scriptCode))
-                    {
-                        await httpContext.Response.WriteAsync(scriptCode);
-                    }
-                    else
-                    {
-                        httpContext.Response.StatusCode = 404;
-                    }
-
-                    await httpContext.Response.CompleteAsync();
-
-                };
-
-            }
-
-            return Task.CompletedTask;
-        }
-
-        private async Task HandlePostVerb(RouteContext context)
-        {
-            var segments =
-                context.HttpContext
-                    .Request
-                    .Path
-                    .Value
-                    .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-            if (segments.FirstOrDefault() == "apitunnel")
-            {
-                using var reader = new StreamReader(context.HttpContext.Request.Body);
-                var source = await reader.ReadToEndAsync();
-
-                var requestBody = JsonDocument.Parse(source).RootElement;
-
-                var apiUri = new Uri(requestBody.GetProperty("tunnelUri").GetString());
-                var frontendType = requestBody.GetProperty("frontendType").GetString();
-                var hash = $"{Guid.NewGuid():N}";
-                var bootstrapperUri = new Uri(apiUri, $"apitunnel/{frontendType}/{hash}/bootstrapper.js");
-                _frontendEnvironment.SetApiUri(apiUri);
-
-                _bootstrapperScripts.GetOrAdd(bootstrapperUri, key => GenerateBootstrapperCode(apiUri, frontendType, hash));
-
-                context.Handler = async httpContext =>
+                    await httpContext.Response.WriteAsync(scriptCode);
+                }
+                else
                 {
-                    httpContext.Response.ContentType = "text/plain";
-                    var response = new 
-                    {
-                        bootstrapperUri = bootstrapperUri.ToString() 
-                    };
-                    await httpContext.Response.WriteAsync(JsonSerializer.Serialize( response));
-                    await httpContext.Response.CompleteAsync();
-                };
-            }
+                    httpContext.Response.StatusCode = 404;
+                }
+
+                await httpContext.Response.CompleteAsync();
+
+            };
+
         }
 
-        private string GenerateBootstrapperCode(Uri externalUri, string frontendType, string hash)
+        return Task.CompletedTask;
+    }
+
+    private async Task HandlePostVerb(RouteContext context)
+    {
+        var segments =
+            context.HttpContext
+                .Request
+                .Path
+                .Value
+                .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+        if (segments.FirstOrDefault() == "apitunnel")
         {
-            string template = $@"
+            using var reader = new StreamReader(context.HttpContext.Request.Body);
+            var source = await reader.ReadToEndAsync();
+
+            var requestBody = JsonDocument.Parse(source).RootElement;
+
+            var apiUri = new Uri(requestBody.GetProperty("tunnelUri").GetString());
+            var frontendType = requestBody.GetProperty("frontendType").GetString();
+            var hash = $"{Guid.NewGuid():N}";
+            var bootstrapperUri = new Uri(apiUri, $"apitunnel/{frontendType}/{hash}/bootstrapper.js");
+            _frontendEnvironment.SetApiUri(apiUri);
+
+            _bootstrapperScripts.GetOrAdd(bootstrapperUri, key => GenerateBootstrapperCode(apiUri, frontendType, hash));
+
+            context.Handler = async httpContext =>
+            {
+                httpContext.Response.ContentType = "text/plain";
+                var response = new 
+                {
+                    bootstrapperUri = bootstrapperUri.ToString() 
+                };
+                await httpContext.Response.WriteAsync(JsonSerializer.Serialize( response));
+                await httpContext.Response.CompleteAsync();
+            };
+        }
+    }
+
+    private string GenerateBootstrapperCode(Uri externalUri, string frontendType, string hash)
+    {
+        string template = $@"
 // ensure `require` is available globally
 (function (global) {{
     if (!global) {{
@@ -171,10 +169,9 @@ namespace Microsoft.DotNet.Interactive.Http
 }})(window);
 ";
 
-            return template
-                .Replace("$HASH$", hash)
-                .Replace("$EXTERNALURI$", externalUri.AbsoluteUri)
-                .Replace("$FRONTENDTYPE$", frontendType);
-        }
+        return template
+            .Replace("$HASH$", hash)
+            .Replace("$EXTERNALURI$", externalUri.AbsoluteUri)
+            .Replace("$FRONTENDTYPE$", frontendType);
     }
 }

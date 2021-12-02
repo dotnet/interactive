@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection.Metadata.Ecma335;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -151,18 +152,15 @@ namespace Microsoft.DotNet.Interactive.Journey
             List<ChallengeDefinition> challengeDefinitions = new();
             HashSet<string> challengeNamesSet = new();
             var index = 1;
-            foreach (var item in challengeNames.Zip(rawChallenges))
+            foreach (var (name, challengeCells) in challengeNames.Zip(rawChallenges, (name, challengeCells) => (name, challengeCells)))
             {
-                var name = item.Item1;
-                var challengeCells = item.Item2;
-
-                name = string.IsNullOrWhiteSpace(name) ? $"Challenge {index}" : name;
-                if (!challengeNamesSet.Add(name))
+                var challengeName = string.IsNullOrWhiteSpace(name) ? $"Challenge {index}" : name;
+                if (!challengeNamesSet.Add(challengeName))
                 {
-                    throw new ArgumentException($"{name} conflicts with an existing challenge name");
+                    throw new ArgumentException($"{challengeName} conflicts with an existing challenge name");
                 }
 
-                challengeDefinitions.Add(ParseChallenge(challengeCells, name));
+                challengeDefinitions.Add(ParseChallenge(challengeCells, challengeName));
 
                 index++;
             }

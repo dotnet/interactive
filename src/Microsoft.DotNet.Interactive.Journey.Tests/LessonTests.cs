@@ -164,6 +164,32 @@ namespace Microsoft.DotNet.Interactive.Journey.Tests
         }
 
         [Fact]
+        public async Task when_student_reaches_the_end_then_submissions_work_as_normal()
+        {
+            using var kernel = await CreateKernel(LessonMode.StudentMode);
+            var challenge = GetChallenge("1");
+            challenge.OnCodeSubmittedAsync(async context =>
+            {
+                await context.StartNextChallengeAsync();
+            });
+            await Lesson.StartChallengeAsync(challenge);
+
+            await kernel.SubmitCodeAsync("1+1");
+
+            Lesson.CurrentChallenge.Should().Be(null);
+
+            var result = await kernel.SubmitCodeAsync("1+41");
+            var events = result.KernelEvents.ToSubscribedList();
+                events.Should().NotContainErrors();
+
+                events.Should().ContainSingle<ReturnValueProduced>()
+                    .Which
+                    .Value
+                    .Should()
+                    .Be(42);
+        }
+
+        [Fact]
         public async Task when_a_student_submits_code_to_a_challenge_they_move_to_the_next_challenge()
         {
             using var kernel = await CreateKernel(LessonMode.StudentMode);

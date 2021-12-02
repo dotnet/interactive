@@ -1,19 +1,24 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
     internal static class EnumerableExtensions
     {
-        public static (IReadOnlyList<T> items, int remainingCount) TakeAndCountRemaining<T>(
+        public static (IReadOnlyList<T> items, int? remainingCount) TakeAndCountRemaining<T>(
             this IEnumerable<T> source,
-            int count)
+            int count,
+            bool forceCountRemainder = false)
         {
             using var enumerator = source.GetEnumerator();
 
             var items = new List<T>();
+
+            int? remainingCount = null;
 
             while (enumerator.MoveNext())
             {
@@ -21,30 +26,25 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 if (items.Count >= count)
                 {
-                    return (items, CountRemaining());
+                    if (forceCountRemainder)
+                    {
+                        remainingCount = source.Count() - items.Count;
+                    }
+                    else
+                    {
+                        remainingCount = source switch
+                        {
+                            ICollection collection => collection.Count - items.Count,
+                            ICollection<T> collection => collection.Count - items.Count,
+                            _ => null
+                        };
+                    }
+
+                    return (items, remainingCount);
                 }
             }
 
             return (items, 0);
-
-            int CountRemaining()
-            {
-                switch (source)
-                {
-                    case ICollection<T> collection:
-                        return collection.Count - items.Count;
-                    default:
-
-                        var remainingCount = 0;
-
-                        while (enumerator.MoveNext())
-                        {
-                            remainingCount++;
-                        }
-
-                        return remainingCount;
-                }
-            }
         }
     }
 }

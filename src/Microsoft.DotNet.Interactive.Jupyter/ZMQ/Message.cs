@@ -158,9 +158,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
                     encodedTopic = null;
                     break;
 
-                case nameof(Stream):
+                case nameof(Protocol.Stream):
                     {
-                        if (!(content is Stream stream))
+                        if (!(content is Protocol.Stream stream))
                         {
                             throw new ArgumentNullException(nameof(stream));
                         }

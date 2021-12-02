@@ -18,16 +18,12 @@ variables:
     value: true
   - name: _DotNetArtifactsCategory
     value: .NETCore
-  - name: DotNetSdkVersion
-    value: '5.0.400'
   - name: PocketLoggerLogPath
     value: $(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)
   - name: TryDotNetPackagesPath
     value: $(Build.SourcesDirectory)/artifacts/.trydotnet/packages
   - name: NodeJSVersion
-    value: '14.17.5'
-  - name: _TestArgs
-    value: ''
+    value: '16.13.0'
 
 stages:
 - stage: build
@@ -80,10 +76,6 @@ stages:
             value: Test
           - name: _BuildArgs
             value: /p:SignType=$(_SignType)
-        # SkipTests
-        # - ${{ if ne(variables['SkipTests'], 'true') }}:
-        #   - name: _TestArgs
-        #     value: -test
         steps:
         - script: git config --global core.longpaths true
           displayName: Enable `git clean` to handle long paths
@@ -101,11 +93,13 @@ stages:
             versionSpec: $(NodeJSVersion)
 
         - task: UseDotNet@2
-          displayName: Use .NET SDK 5.0
+          displayName: Use .NET SDK
           inputs:
             packageType: sdk
-            version: $(DotNetSdkVersion)
-            installationPath: $(Agent.ToolsDirectory)\dotnet
+            useGlobalJson: true
+            includePreviewVersions: true
+            workingDirectory: $(Build.SourcesDirectory)
+            installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - script: |
             robocopy "eng\resources" "$(Build.SourcesDirectory)\artifacts"
@@ -114,16 +108,22 @@ stages:
             exit /b 1
           displayName: Prevent test directory crawling
 
+        - pwsh: |
+            $testArg = if ($env:SKIPTESTS -ne "true") { "-test" } else { "" }
+            Write-Host "##vso[task.setvariable variable=_TestArgs]$testArg"
+          displayName: Promote variables
+
         - script: eng\CIBuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine
             -sign
-            $(_TestArgs)
             $(_BuildArgs)
+            $(_TestArgs)
           displayName: Build
           env:
             POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
+            DOTNET_INTERACTIVE_FRONTEND_NAME: CI
 
         - script: dotnet test -l trx --no-build --blame-hang-timeout 5m --blame-hang-dump-type full -c $(_BuildConfig) --results-directory $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
           displayName: Test / Blame
@@ -142,40 +142,6 @@ stages:
             artifactName: Windows_test_results_and_dumps
             artifactType: container
           condition: failed()
-
-        - script: npm run ciTest
-          displayName: NPM tests
-          workingDirectory: "$(Build.SourcesDirectory)/src/Microsoft.DotNet.Interactive.Js"
-          condition: ne(variables['SkipTests'], 'true')
-
-        # build and test VS Code extension
-        - script: npm install
-          displayName: npm install (VS Code stable)
-          workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode/stable"
-
-        - script: npm run ciTest
-          displayName: npm test (VS Code stable)
-          workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode/stable"
-          condition: ne(variables['SkipTests'], 'true')
-
-        - script: npm install
-          displayName: npm install (VS Code insiders)
-          workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode/insiders"
-
-        - script: npm run ciTest
-          displayName: npm test (VS Code insiders)
-          workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode/insiders"
-          condition: ne(variables['SkipTests'], 'true')
-
-        # build and test npm package
-        - script: npm install
-          displayName: npm install (npm package)
-          workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-npm"
-
-        - script: npm run ciTest
-          displayName: npm test (npm package)
-          workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-npm"
-          condition: ne(variables['SkipTests'], 'true')
 
         # publish VS Code and npm test results
         - task: PublishTestResults@2
@@ -241,10 +207,10 @@ stages:
         pool:
           ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
             name: NetCore1ESPool-Public
-            demands: ImageOverride -equals Build.Ubuntu.1604.amd64.Open
+            demands: ImageOverride -equals Build.Ubuntu.1804.Amd64.Open
           ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
             name: NetCore1ESPool-Internal
-            demands: ImageOverride -equals Build.Ubuntu.1604.amd64
+            demands: ImageOverride -equals Build.Ubuntu.1804.Amd64
         variables:
         # Enable signing for internal, non-PR builds
         - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
@@ -262,10 +228,6 @@ stages:
             value: Test
           - name: _BuildArgs
             value: /p:SignType=$(_SignType)
-        # SkipTests
-        # - ${{ if ne(variables['SkipTests'], 'true') }}:
-        #   - name: _TestArgs
-        #     value: --test
         steps:
         - script: git config --global core.longpaths true
           displayName: Enable `git clean` to handle long paths
@@ -282,13 +244,20 @@ stages:
           displayName: Use .NET SDK
           inputs:
             packageType: sdk
-            version: $(DotNetSdkVersion)
+            useGlobalJson: true
+            includePreviewVersions: true
+            workingDirectory: $(Build.SourcesDirectory)
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - script: |
             mkdir -p "$(Build.SourcesDirectory)/artifacts"
             cp eng/resources/* "$(Build.SourcesDirectory)/artifacts"
           displayName: Prevent test directory crawling
+
+        - pwsh: |
+            $testArg = if ($env:SKIPTESTS -ne "true") { "--test" } else { "" }
+            Write-Host "##vso[task.setvariable variable=_TestArgs]$testArg"
+          displayName: Promote variables
 
         - script: ./eng/cibuild.sh
             --configuration $(_BuildConfig)
@@ -298,6 +267,7 @@ stages:
           env:
             POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
+            DOTNET_INTERACTIVE_FRONTEND_NAME: CI
 
         - script: dotnet test -l trx --no-build --blame-hang-timeout 5m --blame-hang-dump-type full -c $(_BuildConfig) --results-directory $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
           displayName: Test / Blame
@@ -317,10 +287,14 @@ stages:
             artifactType: container
           condition: failed()
 
-        - script: npm run ciTest
-          displayName: NPM tests
-          workingDirectory: "$(Build.SourcesDirectory)/src/Microsoft.DotNet.Interactive.Js"
-          condition: ne(variables['SkipTests'], 'true')
+        # publish VS Code and npm test results
+        - task: PublishTestResults@2
+          displayName: Publish VS Code extension and npm test results
+          inputs:
+            testResultsFormat: VSTest
+            testResultsFiles: '**/*.trx'
+            searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults'
+          condition: always()
 
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
@@ -330,10 +304,10 @@ stages:
         pool:
           ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
             name: NetCore1ESPool-Public
-            demands: ImageOverride -equals Build.Ubuntu.1604.amd64.Open
+            demands: ImageOverride -equals Build.Ubuntu.1804.Amd64.Open
           ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
             name: NetCore1ESPool-Internal
-            demands: ImageOverride -equals Build.Ubuntu.1604.amd64
+            demands: ImageOverride -equals Build.Ubuntu.1804.Amd64
         steps:
         - checkout: self
           clean: true
@@ -351,10 +325,10 @@ stages:
         pool:
           ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
             name: NetCore1ESPool-Public
-            demands: ImageOverride -equals Build.Ubuntu.1604.amd64.Open
+            demands: ImageOverride -equals Build.Ubuntu.1804.Amd64.Open
           ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
             name: NetCore1ESPool-Internal
-            demands: ImageOverride -equals Build.Ubuntu.1604.amd64
+            demands: ImageOverride -equals Build.Ubuntu.1804.Amd64
         steps:
         - checkout: self
           clean: true
@@ -372,10 +346,10 @@ stages:
         pool:
           ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
             name: NetCore1ESPool-Public
-            demands: ImageOverride -equals Build.Ubuntu.1604.amd64.Open
+            demands: ImageOverride -equals Build.Ubuntu.1804.Amd64.Open
           ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
             name: NetCore1ESPool-Internal
-            demands: ImageOverride -equals Build.Ubuntu.1604.amd64
+            demands: ImageOverride -equals Build.Ubuntu.1804.Amd64
         steps:
         - checkout: self
           clean: true

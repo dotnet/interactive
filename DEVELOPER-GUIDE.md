@@ -8,11 +8,11 @@ If you would like to build `dotnet-interactive` tool and its associated librarie
 
 This repo depends on symbolic links between directories.  By default Windows doesn't support this feature.  To work around this scenario, please run the PowerShell script `<root>/src/ensure-symlinks.ps1` as an administrator.  This usually only needs to be run once.
 
-This project depends on .NET 5.0. Before working on the project, check that the .NET prerequisites have been met:
+This project depends on .NET 6.0. Before working on the project, check that the .NET prerequisites have been met:
 
-   - [Prerequisites for .NET on Windows](https://docs.microsoft.com/en-us/dotnet/core/install/windows?tabs=net50#dependencies)
-   - [Prerequisites for .NET on Linux](https://docs.microsoft.com/en-us/dotnet/core/install/linux?tabs=net50#dependencies)
-   - [Prerequisites for .NET on macOS](https://docs.microsoft.com/en-us/dotnet/core/install/macos?tabs=net50#dependencies)
+   - [Prerequisites for .NET on Windows](https://docs.microsoft.com/en-us/dotnet/core/install/windows?tabs=net60#dependencies)
+   - [Prerequisites for .NET on Linux](https://docs.microsoft.com/en-us/dotnet/core/install/linux?tabs=net60#dependencies)
+   - [Prerequisites for .NET on macOS](https://docs.microsoft.com/en-us/dotnet/core/install/macos?tabs=net60#dependencies)
 
 ## Visual Studio / Visual Studio Code
 
@@ -26,11 +26,11 @@ You can also build this project on the command line by running the following scr
 
 Windows:
 
-    > .\build.cmd -test
+    > .\build.cmd
 
 Linux or macOS:
 
-    $ ./build.sh --test
+    $ ./build.sh
 
 You can both build and run the tests for the project by running the scripts with the following option:
 
@@ -76,13 +76,15 @@ To get started, you'll need:
 
 1. [Visual Studio Code Insiders](https://code.visualstudio.com/insiders/).
 
-2. The LTS version of [nodejs](https://nodejs.org/en/download/).
+2. [.NET 6 SDK](https://dotnet.microsoft.com/download/dotnet/6.0).
+
+3. The LTS version of [nodejs](https://nodejs.org/en/download/).
 
 ## Build and test
 
 1. (*Windows only*) Open a PowerShell terminal as administrator and run `<REPO-ROOT>/src/ensure-symlinks.ps1`.
 
-2. Run `npm i` in the `<REPO-ROOT>/src/dotnet-interactive-vscode/insiders/` directory.
+2. Follow the regular build instructions as given above.
 
 3. Open the `<REPO-ROOT>/src/dotnet-interactive-vscode/insiders` directory in Visual Studio Code Insiders. (From your terminal, you can run `code-insiders <REPO-ROOT>/src/dotnet-interactive-vscode/insiders`.)
 
@@ -107,9 +109,9 @@ If you've made changes to `dotnet-interactive` and want to try them out with Vis
       ```js
         "dotnet-interactive.kernelTransportArgs": [
             "{dotnet_path}",
-            "/PATH/TO/REPO/ROOT/artifacts/bin/dotnet-interactive/Debug/net5.0/Microsoft.DotNet.Interactive.App.dll",
+            "/PATH/TO/REPO/ROOT/artifacts/bin/dotnet-interactive/Debug/$(TargetFramework)/Microsoft.DotNet.Interactive.App.dll",
             "[vscode]",
-            "vscode",
+            "stdio",
             "--log-path",
             "/path/to/a/folder/for/your/logs/",
             "--verbose",
@@ -119,7 +121,7 @@ If you've made changes to `dotnet-interactive` and want to try them out with Vis
 
         "dotnet-interactive.notebookParserArgs": [
             "{dotnet_path}",
-            "/PATH/TO/REPO/ROOT/artifacts/bin/dotnet-interactive/Debug/net5.0/Microsoft.DotNet.Interactive.App.dll",
+            "/PATH/TO/REPO/ROOT/artifacts/bin/dotnet-interactive/Debug/$(TargetFramework)/Microsoft.DotNet.Interactive.App.dll",
             "notebook-parser"
         ]
       ```
@@ -134,7 +136,7 @@ If you've made changes to `dotnet-interactive` and want to try them out with Vis
 
 If you've made changes to one of the `dotnet-interactive` extensions and want to use them locally follow these steps:
 
-1. Run `build.[cmd/sh] --pack` to create the Nuget packages for the extensions
+1. Run `build.cmd -pack`/`./build.sh --pack` to create the Nuget packages for the extensions
 
 2. Ensure that there aren't any kernels running for the extension in question. It's generally best to close all Notebooks opened in VS Code to accomplish this.
 

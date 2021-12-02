@@ -98,8 +98,22 @@ namespace Microsoft.DotNet.Interactive
 
                     if (alreadyGotten is { } && !string.IsNullOrWhiteSpace(pkg.PackageVersion) && pkg.PackageVersion != alreadyGotten.PackageVersion)
                     {
-                        var errorMessage = GenerateErrorMessage(pkg, alreadyGotten).ToString(OutputMode.NonAnsi);
-                        context.Fail(context.Command, message: errorMessage);
+                        if (!pkg.IsPackageVersionSpecified || pkg.PackageVersion is "*-*" or "*")
+                        {
+                            // we will reuse the the already loaded since this is a wildcard
+                            var added = kernel.GetOrAddPackageReference(alreadyGotten.PackageName, alreadyGotten.PackageVersion);
+
+                            if (added is null)
+                            {
+                                var errorMessage = GenerateErrorMessage(pkg).ToString(OutputMode.NonAnsi);
+                                context.Fail(context.Command, message: errorMessage);
+                            }
+                        }
+                        else
+                        {
+                            var errorMessage = GenerateErrorMessage(pkg, alreadyGotten).ToString(OutputMode.NonAnsi);
+                            context.Fail(context.Command, message: errorMessage);
+                        }
                     }
                     else
                     {

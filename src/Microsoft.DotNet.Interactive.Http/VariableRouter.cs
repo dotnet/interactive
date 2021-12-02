@@ -2,20 +2,42 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.ValueSharing;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive.Http
 {
     public class VariableRouter : IRouter
     {
+        private static readonly JsonSerializerOptions SerializerOptions;
+
+        static VariableRouter()
+        {
+            SerializerOptions = new JsonSerializerOptions
+            {
+                WriteIndented = false,
+                NumberHandling = JsonNumberHandling.AllowReadingFromString |
+                                 JsonNumberHandling.AllowNamedFloatingPointLiterals,
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                Converters =
+                {
+                    new TableSchemaFieldTypeConverter(),
+                    new TabularDataResourceConverter(),
+                    new DataDictionaryConverter()
+                }
+            };
+        }
         private readonly Kernel _kernel;
 
         public VariableRouter(Kernel kernel)
@@ -53,12 +75,12 @@ namespace Microsoft.DotNet.Interactive.Http
             {
                 using var reader = new StreamReader(context.HttpContext.Request.Body);
                 var source = await reader.ReadToEndAsync();
-                var query = JObject.Parse(source);
-                var response = new JObject();
-                foreach (var kernelProperty in query.Properties())
+                var query = JsonDocument.Parse(source).RootElement;
+                var response = new Dictionary<string,object>();
+                foreach (var kernelProperty in query.EnumerateObject())
                 {
                     var kernelName = kernelProperty.Name;
-                    var propertyBag = new JObject();
+                    var propertyBag = new Dictionary<string,object>();
                     response[kernelName] = propertyBag;
                     var targetKernel = GetKernel(kernelName);
                     if (targetKernel is null)
@@ -74,13 +96,13 @@ namespace Microsoft.DotNet.Interactive.Http
                     
                     if (targetKernel.SupportsCommand<RequestValue>() || targetKernel is ISupportGetValue)
                     {
-                        foreach (var variableName in kernelProperty.Value.Values<string>())
+                        foreach (var variableName in kernelProperty.Value.EnumerateArray().Select(v => v.GetString()))
                         {
                             var value = TryGetValue(targetKernel, variableName);
 
                             if (value is {} )
                             {
-                                propertyBag[variableName] = JToken.Parse(value.Value);
+                                propertyBag[variableName] = JsonDocument.Parse(value.Value).RootElement;
                             }
                             else
                             {
@@ -112,7 +134,7 @@ namespace Microsoft.DotNet.Interactive.Http
 
                     await using (var writer = new StreamWriter(httpContext.Response.Body))
                     {
-                        await writer.WriteAsync(response.ToString());
+                        await writer.WriteAsync(JsonSerializer.Serialize( response, SerializerOptions));
                     }
 
                     await httpContext.Response.CompleteAsync();

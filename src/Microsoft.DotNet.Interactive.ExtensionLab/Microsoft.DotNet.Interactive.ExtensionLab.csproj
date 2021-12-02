@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <OutputType>Library</OutputType>
   </PropertyGroup>
 
@@ -15,8 +15,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
-
-
   <ItemGroup>
     <Compile Remove="bin\**" />
     <EmbeddedResource Remove="bin\**" />
@@ -28,13 +26,8 @@
   <PropertyGroup>
     <nteractJsApiRoot>$(MSBuildThisFileDirectory)/../Microsoft.DotNet.Interactive.nteract.js/</nteractJsApiRoot>
   </PropertyGroup>
-  
+
   <ItemGroup>
-    <nteractTypescriptInputs Include="$(nteractJsApiRoot)package.json" />
-    <nteractTypescriptInputs Include="$(nteractJsApiRoot)package-lock.json" />
-    <nteractTypescriptInputs Include="$(nteractJsApiRoot)rollup.config.js" />
-    <nteractTypescriptInputs Include="$(nteractJsApiRoot)tsconfig.json" />
-    <nteractTypescriptInputs Include="$(nteractJsApiRoot)src/**/*.ts" />
     <None Include="Inspector\LICENSE.SharpLab" />
     <None Include="Inspector\README.md" />
 
@@ -50,16 +43,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <mermaidJavascriptInputs Include="$(mermaidJsApiRoot)package.json" />
-    <mermaidJavascriptInputs Include="$(mermaidJsApiRoot)package-lock.json" />
-    <mermaidJavascriptInputs Include="$(mermaidJsApiRoot)webpack.config.js" />
-    <mermaidJavascriptInputs Include="$(mermaidJsApiRoot)**/*.js" />
-
-
     <mermaidJavascriptOutputFiles Include="$(mermaidJsApiRoot)dist/mermaidapi.js" />
 
     <EmbeddedResource Include="@(mermaidJavascriptOutputFiles)" LogicalName="$(AssemblyName).resources.%(FileName)%(Extension)" />
-
   </ItemGroup>
 
   <!-- sanddance resources -->
@@ -69,23 +55,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <SandDanceTypescriptInputs Include="$(sanddanceJsApiRoot)package.json" />
-    <SandDanceTypescriptInputs Include="$(sanddanceJsApiRoot)package-lock.json" />
-    <SandDanceTypescriptInputs Include="$(sanddanceJsApiRoot)rollup.config.js" />
-    <SandDanceTypescriptInputs Include="$(sanddanceJsApiRoot)tsconfig.json" />
-    <SandDanceTypescriptInputs Include="$(sanddanceJsApiRoot)src/**/*.ts" />
     <None Include="Inspector\LICENSE.SharpLab" />
     <None Include="Inspector\README.md" />
 
     <SandDanceTypescriptOutputFiles Include="$(sanddanceJsApiRoot)dist/sanddanceapi.js" />
 
     <EmbeddedResource Include="@(SandDanceTypescriptOutputFiles)" LogicalName="$(AssemblyName).resources.%(FileName)%(Extension)" />
-
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Analysis" Version="0.18.0" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="5.0.10" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="6.0.0" />
     <PackageReference Include="Iced" Version="1.8.0" />
     <PackageReference Include="ICSharpCode.Decompiler" Version="7.0.0.6225-preview1" />
     <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
@@ -100,29 +80,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="bin\Debug\net5.0\/Microsoft.DotNet.Interactive.ExtensionLab.dll" />
+    <None Remove="bin\Debug\net6.0\/Microsoft.DotNet.Interactive.ExtensionLab.dll" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="$(OutputPath)/Microsoft.DotNet.Interactive.ExtensionLab.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
   </ItemGroup>
-
-  <Target Name="InstallNodeModules">
-    <Exec Command="npm i" WorkingDirectory="$(nteractJsApiRoot)" />
-    <Exec Command="npm i" WorkingDirectory="$(sanddanceJsApiRoot)" />
-    <Exec Command="npm i" WorkingDirectory="$(mermaidJsApiRoot)" />
-  </Target>
-
-  <Target Name="Compilenteract" Inputs="@(nteractTypescriptInputs)" Outputs="@(nteractTypescriptOutputFiles)" DependsOnTargets="InstallNodeModules" BeforeTargets="BeforeBuild" Condition="'$(NCrunch)' != '1' And '$(BuildingInsideVisualStudio)' != 'true'">
-    <Exec Command="npm run build" WorkingDirectory="$(nteractJsApiRoot)" />
-  </Target>
-
-  <Target Name="CompileSandDance" Inputs="@(SandDanceTypescriptInputs)" Outputs="@(SandDanceTypescriptOutputFiles)" DependsOnTargets="InstallNodeModules" BeforeTargets="BeforeBuild" Condition="'$(NCrunch)' != '1' And '$(BuildingInsideVisualStudio)' != 'true'">
-    <Exec Command="npm run build" WorkingDirectory="$(sanddanceJsApiRoot)" />
-  </Target>
-
-  <Target Name="CompileMermaid" Inputs="@(mermaidJavascriptInputs)" Outputs="@(mermaidJavascriptOutputFiles)" DependsOnTargets="InstallNodeModules" BeforeTargets="BeforeBuild" Condition="'$(NCrunch)' != '1' And '$(BuildingInsideVisualStudio)' != 'true'">
-    <Exec Command="npm run build" WorkingDirectory="$(mermaidJsApiRoot)" />
-  </Target>
 
 </Project>

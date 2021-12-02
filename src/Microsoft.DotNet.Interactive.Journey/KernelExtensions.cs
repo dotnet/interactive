@@ -125,20 +125,23 @@ namespace Microsoft.DotNet.Interactive.Journey
                             await next(command, context);
                         }
 
-                        await Lesson.CurrentChallenge.Evaluate(submitCode.Code, events);
-
-                        context.Display(currentChallenge.CurrentEvaluation);
-
-                        if (Lesson.CurrentChallenge != currentChallenge)
+                        if (Lesson.CurrentChallenge is { })
                         {
-                            switch (Lesson.Mode)
+                            await Lesson.CurrentChallenge.Evaluate(submitCode.Code, events);
+
+                            context.Display(currentChallenge.CurrentEvaluation);
+
+                            if (Lesson.CurrentChallenge != currentChallenge)
                             {
-                                case LessonMode.StudentMode:
-                                    await InitializeChallenge(kernel, Lesson.CurrentChallenge);
-                                    break;
-                                case LessonMode.TeacherMode:
-                                    await Lesson.StartChallengeAsync(currentChallenge);
-                                    break;
+                                switch (Lesson.Mode)
+                                {
+                                    case LessonMode.StudentMode:
+                                        await InitializeChallenge(kernel, Lesson.CurrentChallenge);
+                                        break;
+                                    case LessonMode.TeacherMode:
+                                        await Lesson.StartChallengeAsync(currentChallenge);
+                                        break;
+                                }
                             }
                         }
 

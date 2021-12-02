@@ -77,7 +77,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
         public PowerShellKernel() : base(DefaultKernelName)
         {
-            _psHost = new PSKernelHost();
+            _psHost = new PSKernelHost(this);
             _lazyPwsh = new Lazy<PowerShell>(CreatePowerShell);
         }
 

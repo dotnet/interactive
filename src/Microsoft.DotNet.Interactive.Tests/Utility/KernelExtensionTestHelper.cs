@@ -109,7 +109,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             string code,
             string packageName,
             string packageVersion,
-            IReadOnlyCollection<PackageReference> packageReferences = null, 
+            IReadOnlyCollection<PackageReference> packageReferences = null,
             FileInfo fileToEmbed = null,
             (FileInfo content, string packagePath)[] additionalPackageFiles = null,
             TimeSpan? timeout = null)
@@ -122,8 +122,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             allPackageFiles.Add(($"$(OutputPath)/{packageName}.dll", "interactive-extensions/dotnet"));
             allPackageFiles.AddRange(additionalPackageFiles.Select(item => (item.content.FullName, item.packagePath)));
 
-            var extensionCode = fileToEmbed is null 
-                                    ? ExtensionCs(code) 
+            var extensionCode = fileToEmbed is null
+                                    ? ExtensionCs(code)
                                     : FileProviderExtensionCs(code);
 
             projectDir.Populate(
@@ -132,7 +132,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 <Project Sdk=""Microsoft.NET.Sdk"">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <IsPackable>true</IsPackable>
     <PackageId>{packageName}</PackageId>
     <PackageVersion>{packageVersion}</PackageVersion>
@@ -163,7 +163,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 "),
                 ("global.json", @"{
   ""sdk"": {
-    ""version"": ""5.0.400"",
+    ""version"": ""6.0.100"",
+    ""allowPrerelease"": true,
     ""rollForward"": ""latestMinor""
   }
 }
@@ -175,7 +176,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 
             pack.ThrowOnFailure();
 
-            var packageFile =  projectDir
+            var packageFile = projectDir
                    .GetFiles("*.nupkg", SearchOption.AllDirectories)
                    .Single();
 
@@ -270,7 +271,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 <Project Sdk=""Microsoft.NET.Sdk"">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>{extensionName}</AssemblyName>
   </PropertyGroup>
 
@@ -284,7 +285,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 "),
                 ("global.json", @"{
   ""sdk"": {
-    ""version"": ""5.0.400"",
+    ""version"": ""6.0.100"",
+    ""allowPrerelease"": true,
     ""rollForward"": ""latestMinor""
   }
 }

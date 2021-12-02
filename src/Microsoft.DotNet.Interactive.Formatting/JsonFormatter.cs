@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             SerializerOptions = new JsonSerializerOptions
             {
                 WriteIndented = false,
-                IgnoreNullValues = true,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                 NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
                 Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             };

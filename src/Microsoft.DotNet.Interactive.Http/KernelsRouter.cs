@@ -5,11 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-
-using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Http
 {
@@ -54,7 +51,7 @@ namespace Microsoft.DotNet.Interactive.Http
                     context.Handler = async httpContext =>
                     {
                         httpContext.Response.ContentType = "application/json";
-                        await httpContext.Response.WriteAsync(JsonConvert.SerializeObject(names));
+                        await httpContext.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(names));
                     };
                 }
             }

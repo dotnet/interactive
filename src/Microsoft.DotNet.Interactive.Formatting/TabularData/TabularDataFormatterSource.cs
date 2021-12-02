@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text.Json;
 using Microsoft.AspNetCore.Html;
@@ -46,14 +47,13 @@ namespace Microsoft.DotNet.Interactive.Formatting.TabularData
 
             yield return new CsvFormatter<TabularDataResource>((value, context) =>
             {
-                for (var i = 0; i < value.Data.Count; i++)
-                {
-                    var row = value.Data[i];
+                var columns = value.Schema.Fields.Select(f => f.Name).ToArray();
 
-                    row.FormatTo(context, CsvFormatter.MimeType);
-                }
-
-                return true;
+                return CsvFormatter<IReadOnlyList<IDictionary<string,object>>>.BuildTable(value.Data, _ => columns,
+                    rows =>
+                    {
+                        return rows.Select(row => columns.Select(c => row[c]));
+                    }, context);
             });
         }
     }

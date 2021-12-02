@@ -56,6 +56,23 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 _writer.ToString().SplitIntoLines()[1].Should().Be("no comma here,\"this one, has a comma\",123");
             }
 
+            [Fact]
+            public void Newlines_are_replaced()
+            {
+                var obj = new
+                {
+                    Property1 = "with\r\ntwo\r\nnewlines",
+                    Property2 = "whit one newline at the end\r\n",
+                    Property3 = 123,
+                };
+
+                var formatter = CsvFormatter.GetPreferredFormatterFor(obj.GetType());
+
+                formatter.Format(obj, _writer);
+
+                _writer.ToString().SplitIntoLines()[1].Should().Be("with\\r\\ntwo\\r\\nnewlines,whit one newline at the end\\r\\n,123");
+            }
+
             public void Dispose() => _writer?.Dispose();
         }
 

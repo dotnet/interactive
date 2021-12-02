@@ -8,267 +8,261 @@ using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Linq;
 
-namespace Microsoft.DotNet.Interactive.Telemetry
+namespace Microsoft.DotNet.Interactive.Telemetry;
+
+public sealed class TelemetryFilter : ITelemetryFilter
 {
-    public sealed class TelemetryFilter : ITelemetryFilter
+    private readonly Func<string, string> _hash;
+    private readonly Action<CommandResult, IDirectiveCollection, ImmutableArray<KeyValuePair<string, string>>.Builder> _directiveProcessor;
+    private readonly HashSet<string> _clearTextProperties;
+
+    public TelemetryFilter(Func<string, string> hash, IEnumerable<string> clearTextProperties = null, Action<CommandResult , IDirectiveCollection , ImmutableArray<KeyValuePair<string, string>>.Builder > directiveProcessor = null)
     {
-        private readonly Func<string, string> _hash;
-        private readonly Action<CommandResult, IDirectiveCollection, ImmutableArray<KeyValuePair<string, string>>.Builder> _directiveProcessor;
-        private readonly HashSet<string> _clearTextProperties;
+        _hash = hash ?? throw new ArgumentNullException(nameof(hash));
+        _directiveProcessor = directiveProcessor;
+        _clearTextProperties = new HashSet<string>(clearTextProperties ?? Enumerable.Empty<string>());
+    }
 
-        public TelemetryFilter(Func<string, string> hash, IEnumerable<string> clearTextProperties = null, Action<CommandResult , IDirectiveCollection , ImmutableArray<KeyValuePair<string, string>>.Builder > directiveProcessor = null)
+    public IEnumerable<ApplicationInsightsEntryFormat> Filter(object objectToFilter)
+    {
+        if (objectToFilter is null)
         {
-            _hash = hash ?? throw new ArgumentNullException(nameof(hash));
-            _directiveProcessor = directiveProcessor;
-            _clearTextProperties = new HashSet<string>(clearTextProperties ?? Enumerable.Empty<string>());
+            return new List<ApplicationInsightsEntryFormat>();
         }
 
-        public IEnumerable<ApplicationInsightsEntryFormat> Filter(object objectToFilter)
+        var result = new List<ApplicationInsightsEntryFormat>();
+
+        if (objectToFilter is ParseResult parseResult)
         {
-            if (objectToFilter is null)
+            var mainCommand =
+                // The first command will in the tokens collection will be our main command.
+                parseResult.Tokens?.FirstOrDefault(x => x.Type == TokenType.Command);
+            var mainCommandName = mainCommand?.Value;
+
+            var tokens =
+                parseResult.Tokens
+                    // skip directives as we do not care right now
+                    ?.Where(x => x.Type != TokenType.Directive)
+                    .SkipWhile(x => x != mainCommand)
+                    // We skip one to not include the main command as part of the collection we want to filter.
+                    .Skip(1);
+
+            var entryItems = FilterCommand(mainCommandName, tokens, parseResult.CommandResult, parseResult.Directives);
+
+            if (entryItems is not null)
             {
-                return new List<ApplicationInsightsEntryFormat>();
+                result.Add(CreateEntry(entryItems));
+            }
+        }
+
+        return result.Select(r => r.WithAppliedToPropertiesValue(_hash, name => !_clearTextProperties.Contains(name))).ToList();
+    }
+
+    private ImmutableArray<KeyValuePair<string, string>>? 
+        FilterCommand(string commandName, IEnumerable<Token> tokens, CommandResult commandResult, IDirectiveCollection directives)
+    {
+        if (commandName is null || tokens is null)
+        {
+            return null;
+        }
+
+        return Rules
+            .Select(rule => rule.CommandName == commandName 
+                ? TryMatchRule(rule, tokens, commandResult, directives) 
+                : null)
+            .FirstOrDefault(x => x is not null);
+    }
+
+    /// <summary>
+    /// Tries to see if the tokens follow or match the specified command rule.
+    /// </summary>
+    ImmutableArray<KeyValuePair<string, string>>? 
+        TryMatchRule(CommandRule rule, IEnumerable<Token> tokens, CommandResult commandResult, IDirectiveCollection directives)
+    {
+        var entryItems = ImmutableArray.CreateBuilder<KeyValuePair<string, string>>();
+        entryItems.Add(new KeyValuePair<string, string>("verb", rule.CommandName));
+
+        // Filter out option tokens as we query the command result for them when processing a rule.
+        var tokenQueue = new Queue<Token>(tokens.Where(x => x.Type != TokenType.Option));
+        Token NextToken()
+        {
+            return tokenQueue.TryDequeue(out var firstToken) ? firstToken : null;
+        }
+
+        var currentToken = NextToken();
+
+        // We have a valid rule so far.
+        var passed = true;
+
+        _directiveProcessor?.Invoke(commandResult, directives, entryItems);
+
+        foreach (var item in rule.Items)
+        {
+            // Stop checking items since our rule already failed.
+            if (!passed)
+            {
+                break;
             }
 
-            var result = new List<ApplicationInsightsEntryFormat>();
-
-            if (objectToFilter is ParseResult parseResult)
+            switch (item)
             {
-                var mainCommand =
-                    // The first command will in the tokens collection will be our main command.
-                    parseResult.Tokens?.FirstOrDefault(x => x.Type == TokenType.Command);
-                var mainCommandName = mainCommand?.Value;
-
-                var tokens =
-                    parseResult.Tokens
-                               // skip directives as we do not care right now
-                               ?.Where(x => x.Type != TokenType.Directive)
-                               .SkipWhile(x => x != mainCommand)
-                               // We skip one to not include the main command as part of the collection we want to filter.
-                               .Skip(1);
-
-                var entryItems = FilterCommand(mainCommandName, tokens, parseResult.CommandResult, parseResult.Directives);
-
-                if (entryItems is not null)
+                case OptionItem optItem:
                 {
-                    result.Add(CreateEntry(entryItems));
-                }
-            }
-
-            return result.Select(r => r.WithAppliedToPropertiesValue(_hash, name => !_clearTextProperties.Contains(name))).ToList();
-        }
-
-        private ImmutableArray<KeyValuePair<string, string>>? 
-            FilterCommand(string commandName, IEnumerable<Token> tokens, CommandResult commandResult, IDirectiveCollection directives)
-        {
-            if (commandName is null || tokens is null)
-            {
-                return null;
-            }
-
-            return Rules
-                .Select(rule => rule.CommandName == commandName 
-                    ? TryMatchRule(rule, tokens, commandResult, directives) 
-                    : null)
-                .FirstOrDefault(x => x is not null);
-        }
-
-        /// <summary>
-        /// Tries to see if the tokens follow or match the specified command rule.
-        /// </summary>
-        ImmutableArray<KeyValuePair<string, string>>? 
-            TryMatchRule(CommandRule rule, IEnumerable<Token> tokens, CommandResult commandResult, IDirectiveCollection directives)
-        {
-            var entryItems = ImmutableArray.CreateBuilder<KeyValuePair<string, string>>();
-            entryItems.Add(new KeyValuePair<string, string>("verb", rule.CommandName));
-
-            // Filter out option tokens as we query the command result for them when processing a rule.
-            var tokenQueue = new Queue<Token>(tokens.Where(x => x.Type != TokenType.Option));
-            Token NextToken()
-            {
-                return tokenQueue.TryDequeue(out var firstToken) ? firstToken : null;
-            }
-
-            var currentToken = NextToken();
-
-            // We have a valid rule so far.
-            var passed = true;
-
-            _directiveProcessor?.Invoke(commandResult, directives, entryItems);
-
-            foreach (var item in rule.Items)
-            {
-                // Stop checking items since our rule already failed.
-                if (!passed)
-                {
+                    var optionValue = commandResult.Children.OfType<OptionResult>().FirstOrDefault(o => o.Option.HasAlias(optItem.Option))?.GetValueOrDefault()?.ToString();
+                    if (optionValue is not null && optItem.Values.Contains(optionValue))
+                    {
+                        entryItems.Add(new KeyValuePair<string, string>(optItem.EntryKey, optionValue));
+                    }
+                    else
+                    {
+                        passed = false;
+                    }
                     break;
                 }
-
-                switch (item)
+                case ArgumentItem argItem:
                 {
-                    case OptionItem optItem:
-                        {
-                            var optionValue = commandResult.Children.OfType<OptionResult>().FirstOrDefault(o => o.Option.HasAlias(optItem.Option))?.GetValueOrDefault()?.ToString();
-                            if (optionValue is not null && optItem.Values.Contains(optionValue))
-                            {
-                                entryItems.Add(new KeyValuePair<string, string>(optItem.EntryKey, optionValue));
-                            }
-                            else
-                            {
-                                passed = false;
-                            }
-                            break;
-                        }
-                    case ArgumentItem argItem:
-                        {
-                            if (argItem.TokenType == currentToken?.Type &&
-                                argItem.Value == currentToken?.Value)
-                            {
-                                entryItems.Add(new KeyValuePair<string, string>(argItem.EntryKey, argItem.Value));
-                                currentToken = NextToken();
-                            }
-                            else if (argItem.IsOptional)
-                            {
-                                currentToken = NextToken();
-                            }
-                            else
-                            {
-                                passed = false;
-                            }
-                            break;
-                        }
-                    case IgnoreItem ignoreItem:
-                        {
-                            if (ignoreItem.TokenType == currentToken?.Type)
-                            {
-                                currentToken = NextToken();
-                            }
-                            else if (ignoreItem.IsOptional)
-                            {
-                                currentToken = NextToken();
-                            }
-                            else
-                            {
-                                passed = false;
-                            }
-                            break;
-                        }
-                    default:
+                    if (argItem.TokenType == currentToken?.Type &&
+                        argItem.Value == currentToken?.Value)
+                    {
+                        entryItems.Add(new KeyValuePair<string, string>(argItem.EntryKey, argItem.Value));
+                        currentToken = NextToken();
+                    }
+                    else if (argItem.IsOptional)
+                    {
+                        currentToken = NextToken();
+                    }
+                    else
+                    {
                         passed = false;
-                        break;
+                    }
+                    break;
                 }
+                case IgnoreItem ignoreItem:
+                {
+                    if (ignoreItem.TokenType == currentToken?.Type)
+                    {
+                        currentToken = NextToken();
+                    }
+                    else if (ignoreItem.IsOptional)
+                    {
+                        currentToken = NextToken();
+                    }
+                    else
+                    {
+                        passed = false;
+                    }
+                    break;
+                }
+                default:
+                    passed = false;
+                    break;
             }
-
-            if (passed)
-            {
-                return entryItems.ToImmutable();
-            }
-            else
-            {
-                return null;
-            }
         }
 
-
-        private ApplicationInsightsEntryFormat CreateEntry(IEnumerable<KeyValuePair<string, string>> entryItems)
+        if (passed)
         {
-            return new ApplicationInsightsEntryFormat("command", new Dictionary<string, string>(entryItems));
+            return entryItems.ToImmutable();
         }
-
-        private abstract class CommandRuleItem
+        else
         {
+            return null;
         }
-
-        private class OptionItem : CommandRuleItem
-        {
-            public OptionItem(string option, string[] values, string entryKey)
-            {
-                Option = option;
-                Values = values.ToImmutableArray();
-                EntryKey = entryKey;
-            }
-
-            public string Option { get; }
-            public ImmutableArray<string> Values { get; }
-            public string EntryKey { get; }
-        }
-
-        private class ArgumentItem : CommandRuleItem
-        {
-            public ArgumentItem(string value, TokenType type, string entryKey, bool isOptional)
-            {
-                Value = value;
-                TokenType = type;
-                EntryKey = entryKey;
-                IsOptional = isOptional;
-            }
-
-            public string Value { get; }
-            public TokenType TokenType { get; }
-            public string EntryKey { get; }
-            public bool IsOptional { get; }
-        }
-
-        private class IgnoreItem : CommandRuleItem
-        {
-            public IgnoreItem(TokenType type, bool isOptional)
-            {
-                TokenType = type;
-                IsOptional = isOptional;
-            }
-
-            public TokenType TokenType { get; }
-            public bool IsOptional { get; }
-        }
-
-        private class CommandRule
-        {
-            public CommandRule(string commandName, IEnumerable<CommandRuleItem> items)
-            {
-                CommandName = commandName;
-                Items = ImmutableArray.CreateRange(items);
-            }
-
-            public string CommandName { get; }
-            public ImmutableArray<CommandRuleItem> Items { get; }
-        }
-
-        private static CommandRuleItem Option(string option, string[] values, string entryKey)
-        {
-            return new OptionItem(option, values, entryKey);
-        }
-
-        private static CommandRuleItem Arg(string value, TokenType type, string entryKey, bool isOptional)
-        {
-            return new ArgumentItem(value, type, entryKey, isOptional);
-        }
-
-        private static CommandRuleItem Ignore(TokenType type, bool isOptional)
-        {
-            return new IgnoreItem(type, isOptional);
-        }
-
-        private static CommandRule[] Rules => new[]
-        {
-            new CommandRule("jupyter",
-                new[]{
-                    Arg("install", TokenType.Command, "subcommand", isOptional: false) }),
-
-            new CommandRule("jupyter",
-                new[]{
-                    Option("--default-kernel", new[]{ "csharp", "fsharp", "powershell" }, "default-kernel"),
-                    Ignore(TokenType.Argument, isOptional: true) // connection file
-                }),
-
-            new CommandRule("stdio",
-                new[]{
-                    Option("--default-kernel", new[]{ "csharp", "fsharp", "powershell" }, "default-kernel")
-                }),
-
-            new CommandRule("vscode",
-                new[]{
-                    Option("--default-kernel", new[]{ "csharp", "fsharp", "powershell" }, "default-kernel")
-                })
-        };
     }
+
+
+    private ApplicationInsightsEntryFormat CreateEntry(IEnumerable<KeyValuePair<string, string>> entryItems)
+    {
+        return new ApplicationInsightsEntryFormat("command", new Dictionary<string, string>(entryItems));
+    }
+
+    private abstract class CommandRuleItem
+    {
+    }
+
+    private class OptionItem : CommandRuleItem
+    {
+        public OptionItem(string option, string[] values, string entryKey)
+        {
+            Option = option;
+            Values = values.ToImmutableArray();
+            EntryKey = entryKey;
+        }
+
+        public string Option { get; }
+        public ImmutableArray<string> Values { get; }
+        public string EntryKey { get; }
+    }
+
+    private class ArgumentItem : CommandRuleItem
+    {
+        public ArgumentItem(string value, TokenType type, string entryKey, bool isOptional)
+        {
+            Value = value;
+            TokenType = type;
+            EntryKey = entryKey;
+            IsOptional = isOptional;
+        }
+
+        public string Value { get; }
+        public TokenType TokenType { get; }
+        public string EntryKey { get; }
+        public bool IsOptional { get; }
+    }
+
+    private class IgnoreItem : CommandRuleItem
+    {
+        public IgnoreItem(TokenType type, bool isOptional)
+        {
+            TokenType = type;
+            IsOptional = isOptional;
+        }
+
+        public TokenType TokenType { get; }
+        public bool IsOptional { get; }
+    }
+
+    private class CommandRule
+    {
+        public CommandRule(string commandName, IEnumerable<CommandRuleItem> items)
+        {
+            CommandName = commandName;
+            Items = ImmutableArray.CreateRange(items);
+        }
+
+        public string CommandName { get; }
+        public ImmutableArray<CommandRuleItem> Items { get; }
+    }
+
+    private static CommandRuleItem Option(string option, string[] values, string entryKey)
+    {
+        return new OptionItem(option, values, entryKey);
+    }
+
+    private static CommandRuleItem Arg(string value, TokenType type, string entryKey, bool isOptional)
+    {
+        return new ArgumentItem(value, type, entryKey, isOptional);
+    }
+
+    private static CommandRuleItem Ignore(TokenType type, bool isOptional)
+    {
+        return new IgnoreItem(type, isOptional);
+    }
+
+    private static CommandRule[] Rules => new[]
+    {
+        new CommandRule("jupyter",
+            new[]{
+                Arg("install", TokenType.Command, "subcommand", isOptional: false) }),
+
+        new CommandRule("jupyter",
+            new[]{
+                Option("--default-kernel", new[]{ "csharp", "fsharp", "powershell" }, "default-kernel"),
+                Ignore(TokenType.Argument, isOptional: true) // connection file
+            }),
+
+        new CommandRule("stdio",
+            new[]{
+                Option("--default-kernel", new[]{ "csharp", "fsharp", "powershell" }, "default-kernel")
+            })
+    };
 }

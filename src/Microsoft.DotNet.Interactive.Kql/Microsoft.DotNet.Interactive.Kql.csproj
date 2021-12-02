@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <OutputType>Library</OutputType>
   </PropertyGroup>
 
@@ -26,7 +26,7 @@
 
  <ItemGroup>
    <PackageReference Include="Microsoft.Azure.Kusto.Data" Version="9.3.1" />
-   <PackageReference Include="Microsoft.SqlToolsService" Version="3.0.0-release.53" />
+   <PackageReference Include="Microsoft.SqlToolsService" Version="3.0.0-release.163" />
    <PackageReference Include="StreamJsonRpc" Version="2.8.28" />
  </ItemGroup>
 
@@ -40,7 +40,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="bin\Debug\net5.0\/Microsoft.DotNet.Interactive.Kql.dll" />
+    <None Remove="bin\Debug\$(TargetFramework)\Microsoft.DotNet.Interactive.Kql.dll" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,14 +1,15 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.CommandLine;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Utility;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive.App
 {
@@ -19,6 +20,10 @@ namespace Microsoft.DotNet.Interactive.App
         private readonly IJupyterKernelSpecInstaller _jupyterKernelSpecInstaller;
         private readonly HttpPortRange _httpPortRange;
         private readonly DirectoryInfo _path;
+        private static readonly JsonSerializerOptions JsonSerializerOptions = new(JsonSerializerDefaults.Web)
+        {
+            WriteIndented = true
+        };
 
         public JupyterInstallCommand(IConsole console, IJupyterKernelSpecInstaller jupyterKernelSpecInstaller, HttpPortRange httpPortRange = null, DirectoryInfo path = null)
         {
@@ -69,20 +74,24 @@ namespace Microsoft.DotNet.Interactive.App
             return errorCount;
         }
 
+        
+
         private static void ComputeKernelSpecArgs(HttpPortRange httpPortRange, DirectoryInfo directory)
         {
             var kernelSpecs = directory.GetFiles("kernel.json", SearchOption.AllDirectories);
 
             foreach (var kernelSpec in kernelSpecs)
             {
-                var parsed = JObject.Parse(File.ReadAllText(kernelSpec.FullName));
+                var newKernelSpec = JsonDocument.Parse(File.ReadAllText(kernelSpec.FullName)).RootElement.EnumerateObject().ToDictionary(p => p.Name, p => p.Value);
+                
+                var argv = newKernelSpec["argv"].EnumerateArray().Select(e => e.GetString()).ToList();
 
-                var argv = parsed["argv"].Value<JArray>();
+                argv.Add( "--http-port-range");
+                argv.Add($"{httpPortRange.Start}-{httpPortRange.End}");
 
-                argv.Insert(argv.Count - 1, "--http-port-range");
-                argv.Insert(argv.Count - 1, $"{httpPortRange.Start}-{httpPortRange.End}");
+                newKernelSpec["argv"] = JsonSerializer.SerializeToElement(argv);
 
-                File.WriteAllText(kernelSpec.FullName, parsed.ToString(Newtonsoft.Json.Formatting.Indented));
+                File.WriteAllText(kernelSpec.FullName, JsonSerializer.Serialize(newKernelSpec, JsonSerializerOptions));
 
             }
         }

@@ -2,7 +2,8 @@
 param (
     [string]$artifactsPath,
     [string[]]$vscodeTargets,
-    [string]$publishToken
+    [string]$vscodeToken,
+    [string]$nugetToken
 )
 
 Set-StrictMode -version 2.0
@@ -18,7 +19,7 @@ try {
         $vscodeTarget = $_
 
         # find extension vsix
-        $extension = Get-ChildItem "$artifactsPath\$vscodeTarget\dotnet-interactive-vscode-*.vsix" | Select-Object -First 1
+        $extension = Get-ChildItem "$artifactsPath\vscode\$vscodeTarget\dotnet-interactive-vscode-*.vsix" | Select-Object -First 1
 
         # verify
         . "$PSScriptRoot\VerifyVSCodeExtension.ps1" -extensionPath $extension
@@ -26,8 +27,22 @@ try {
             exit $LASTEXITCODE
         }
 
-        # publish
-        vsce publish --packagePath $extension --pat $publishToken --noVerify
+        # publish nuget
+        if ($vscodeTarget -eq "stable") {
+            Get-ChildItem "$artifactsPath\packages\Shipping\Microsoft.DotNet*.nupkg" | ForEach-Object {
+                $nugetPackagePath = $_.ToString()
+                # don't publish asp or netstandard packages
+                if (-Not ($nugetPackagePath -match "(AspNetCore|Netstandard20)")) {
+                    dotnet nuget push $nugetPackagePath --source https://api.nuget.org/v3/index.json --api-key $nugetToken --no-symbols 1
+                    if ($LASTEXITCODE -ne 0) {
+                        exit $LASTEXITCODE
+                    }
+                }
+            }
+        }
+
+        # publish vs code marketplace
+        vsce publish --packagePath $extension --pat $vscodeToken --noVerify
     }
 }
 catch {

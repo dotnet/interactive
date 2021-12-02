@@ -3,8 +3,12 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -76,17 +80,44 @@ namespace Microsoft.DotNet.Interactive.Formatting
             return new PlainTextFormatter<T>(format);
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Part of Pattern")]
+        [SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Part of Pattern")]
         public static PlainTextFormatter<T> CreateForAnyEnumerable(bool includeInternals = false)
         {
-            return new((value, context) =>
+            if (typeof(T) == typeof(string))
             {
-                if (value is string)
+                return new((value, context) =>
                 {
                     context.Writer.Write(value);
                     return true;
-                }
+                });
+            }
 
+            if (typeof(T).GetInterfaces()
+                         .Where(i => i.IsGenericType)
+                         .Where(i => i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                         .Select(i => i.GenericTypeArguments[0])
+                         .FirstOrDefault() is { } t)
+            {
+                var joinMethod = typeof(Formatter).GetMethod(nameof(Formatter.JoinGeneric), BindingFlags.NonPublic | BindingFlags.Static);
+
+                var genericMethod = joinMethod.MakeGenericMethod(new[] { t });
+
+                var enumerableType = typeof(IEnumerable<>).MakeGenericType(t);
+
+                var delegateType = typeof(Action<,,,>).MakeGenericType(
+                    new[] { enumerableType, typeof(TextWriter), typeof(FormatContext), typeof(int?) });
+
+                var m = genericMethod.CreateDelegate(delegateType);
+
+                return new((value, context) =>
+                {
+                    m.DynamicInvoke(value, context.Writer, context, Formatter<T>.ListExpansionLimit);
+                    return true;
+                });
+            }
+
+            return new((value, context) =>
+            {
                 switch (value)
                 {
                     case IEnumerable enumerable:
@@ -98,6 +129,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         context.Writer.Write(value.ToString());
                         break;
                 }
+
                 return true;
             });
         }
