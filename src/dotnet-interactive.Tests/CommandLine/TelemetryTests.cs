@@ -199,17 +199,13 @@ public class TelemetryTests : IDisposable
     }
 
     [Fact]
-    public async Task Jupyter_install_command_sends_default_frontend_telemetry()
+    public async Task Jupyter_install_command_does_not_send_frontend_telemetry()
     {
-        var defaultFrontend = GetDefaultFrontendName();
-        await _parser.InvokeAsync("jupyter install", _console);
+        await _parser.InvokeAsync($"jupyter install", _console);
         _fakeTelemetry.LogEntries.Should().Contain(
             x => x.EventName == "command" &&
-                 x.Properties.Count == 3 &&
                  x.Properties["verb"] == Sha256Hasher.Hash("JUPYTER") &&
-                 x.Properties["frontend"] == defaultFrontend &&
                  x.Properties["subcommand"] == Sha256Hasher.Hash("INSTALL"));
-
     }
 
     [Fact]
@@ -254,28 +250,6 @@ public class TelemetryTests : IDisposable
     }
 
     [Fact]
-    public async Task frontend_can_be_set_via_environment_variable()
-    {
-        Environment.SetEnvironmentVariable("DOTNET_INTERACTIVE_FRONTEND_NAME", "test_runner");
-        try
-        {
-            await _parser.InvokeAsync("stdio", _console);
-
-
-            _fakeTelemetry.LogEntries.Should().Contain(
-                x => x.EventName == "command" &&
-                     x.Properties.Count == 3 &&
-                     x.Properties["verb"] == Sha256Hasher.Hash("STDIO") &&
-                     x.Properties["frontend"] == "test_runner" &&
-                     x.Properties["default-kernel"] == Sha256Hasher.Hash("CSHARP"));
-        }
-        finally
-        {
-            Environment.SetEnvironmentVariable("DOTNET_INTERACTIVE_FRONTEND_NAME", null);
-        }
-    }
-
-    [Fact]
     public async Task vscode_is_a_valid_fronted_for_stdio()
     {
         await _parser.InvokeAsync("[vscode] stdio", _console);
@@ -293,21 +267,13 @@ public class TelemetryTests : IDisposable
     [Fact]
     public async Task stdio_command_sends_default_fronted_telemetry()
     {
-        var defaultFrontend = GetDefaultFrontendName();
         await _parser.InvokeAsync("stdio", _console);
         _fakeTelemetry.LogEntries.Should().Contain(
             x => x.EventName == "command" &&
                  x.Properties.Count == 3 &&
                  x.Properties["verb"] == Sha256Hasher.Hash("STDIO") &&
-                 x.Properties["frontend"] == defaultFrontend &&
+                 x.Properties["frontend"] == "unknown" &&
                  x.Properties["default-kernel"] == Sha256Hasher.Hash("CSHARP"));
-    }
-
-    private static string GetDefaultFrontendName()
-    {
-        var frontendName =  Environment.GetEnvironmentVariable("DOTNET_INTERACTIVE_FRONTEND_NAME");
-        frontendName = string.IsNullOrWhiteSpace(frontendName) ? "unknown" : frontendName;
-        return frontendName;
     }
 
     [Fact]

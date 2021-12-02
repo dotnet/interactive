@@ -163,18 +163,13 @@ public static class CommandLineParser
                     {
                         case "jupyter":
                             entryItems.Add(new KeyValuePair<string, string>("frontend", commandResult.Command.Name));
-                            frontendTelemetryAdded = true;
+                            break;
+                        default:
+                            entryItems.Add(new KeyValuePair<string, string>("frontend", "unknown"));
                             break;
                     }
                 }
 
-                if(!frontendTelemetryAdded){
-                    var frontendName = Environment.GetEnvironmentVariable("DOTNET_INTERACTIVE_FRONTEND_NAME");
-                    if(string.IsNullOrWhiteSpace(frontendName)){
-                        frontendName = "unknown";
-                    }
-                    entryItems.Add(new KeyValuePair<string, string>("frontend", frontendName));                    
-                }
             });
 
         var verboseOption = new Option<bool>(
