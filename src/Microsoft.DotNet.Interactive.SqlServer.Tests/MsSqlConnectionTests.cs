@@ -24,8 +24,8 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
         private async Task<CompositeKernel> CreateKernelAsync()
         {
             var csharpKernel = new CSharpKernel().UseNugetDirective().UseValueSharing();
-            await csharpKernel.SubmitCodeAsync(@$"
-#r ""nuget:microsoft.sqltoolsservice,3.0.0-release.157""
+            await csharpKernel.SubmitCodeAsync(@"
+#r ""nuget:microsoft.sqltoolsservice,3.0.0-release.163""
 ");
 
             // TODO: remove SQLKernel it is used to test current patch
