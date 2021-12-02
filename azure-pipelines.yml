@@ -207,10 +207,10 @@ stages:
         pool:
           ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
             name: NetCore1ESPool-Public
-            demands: ImageOverride -equals Build.Ubuntu.1604.amd64.Open
+            demands: ImageOverride -equals Build.Ubuntu.1804.Amd64.Open
           ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
             name: NetCore1ESPool-Internal
-            demands: ImageOverride -equals Build.Ubuntu.1604.amd64
+            demands: ImageOverride -equals Build.Ubuntu.1804.Amd64
         variables:
         # Enable signing for internal, non-PR builds
         - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
@@ -304,10 +304,10 @@ stages:
         pool:
           ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
             name: NetCore1ESPool-Public
-            demands: ImageOverride -equals Build.Ubuntu.1604.amd64.Open
+            demands: ImageOverride -equals Build.Ubuntu.1804.Amd64.Open
           ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
             name: NetCore1ESPool-Internal
-            demands: ImageOverride -equals Build.Ubuntu.1604.amd64
+            demands: ImageOverride -equals Build.Ubuntu.1804.Amd64
         steps:
         - checkout: self
           clean: true
@@ -325,10 +325,10 @@ stages:
         pool:
           ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
             name: NetCore1ESPool-Public
-            demands: ImageOverride -equals Build.Ubuntu.1604.amd64.Open
+            demands: ImageOverride -equals Build.Ubuntu.1804.Amd64.Open
           ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
             name: NetCore1ESPool-Internal
-            demands: ImageOverride -equals Build.Ubuntu.1604.amd64
+            demands: ImageOverride -equals Build.Ubuntu.1804.Amd64
         steps:
         - checkout: self
           clean: true
@@ -346,10 +346,10 @@ stages:
         pool:
           ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
             name: NetCore1ESPool-Public
-            demands: ImageOverride -equals Build.Ubuntu.1604.amd64.Open
+            demands: ImageOverride -equals Build.Ubuntu.1804.Amd64.Open
           ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
             name: NetCore1ESPool-Internal
-            demands: ImageOverride -equals Build.Ubuntu.1604.amd64
+            demands: ImageOverride -equals Build.Ubuntu.1804.Amd64
         steps:
         - checkout: self
           clean: true
