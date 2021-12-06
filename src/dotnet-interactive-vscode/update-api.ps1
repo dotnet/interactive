@@ -1,11 +1,6 @@
 $vsCodeStableVersion = (Get-Content "$PSScriptRoot\vscodeStableVersion.txt").Trim()
 
-function DownloadVsCodeApi([string] $branchName, [string] $destinationDirectory) {    
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/microsoft/vscode/$branchName/src/vs/vscode.d.ts" -OutFile "$PSScriptRoot\$destinationDirectory\vscode.d.ts"
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/microsoft/vscode/$branchName/src/vs/vscode.proposed.d.ts" -OutFile "$PSScriptRoot\$destinationDirectory\vscode.proposed.d.ts"
-}
-
-function DownloadVsCodeProposedNotebookApi([string] $branchName, [string] $destinationDirectory){
+function DownloadVsCodeApi([string] $branchName, [string] $destinationDirectory){
     Invoke-WebRequest -Uri "https://raw.githubusercontent.com/microsoft/vscode/$branchName/src/vscode-dts/vscode.d.ts" -OutFile "$PSScriptRoot\$destinationDirectory\vscode.d.ts"
     Invoke-WebRequest -Uri "https://raw.githubusercontent.com/microsoft/vscode/$branchName/src/vscode-dts/vscode.proposed.notebookConcatTextDocument.d.ts" -OutFile "$PSScriptRoot\$destinationDirectory\vscode.proposed.notebookConcatTextDocument.d.ts"
     Invoke-WebRequest -Uri "https://raw.githubusercontent.com/microsoft/vscode/$branchName/src/vscode-dts/vscode.proposed.notebookContentProvider.d.ts" -OutFile "$PSScriptRoot\$destinationDirectory\vscode.proposed.notebookContentProvider.d.ts"
@@ -26,4 +21,4 @@ function DownloadVsCodeProposedNotebookApi([string] $branchName, [string] $desti
 DownloadVsCodeApi -branchName "release/$vsCodeStableVersion" -destinationDirectory "stable\src"
 
 # insiders
-DownloadVsCodeProposedNotebookApi -branchName "main" -destinationDirectory "insiders\src"
+DownloadVsCodeApi -branchName "main" -destinationDirectory "insiders\src"
