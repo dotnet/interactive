@@ -14,29 +14,25 @@ Both of these methods can read and write `.ipynb` files, which are fully portabl
 
 First, make sure you have the following installed:
 
-* The [.NET 5 SDK](https://dotnet.microsoft.com/download/dotnet/5.0).
+* The [.NET 6 SDK](https://dotnet.microsoft.com/download/dotnet/6.0).
 * **Jupyter**. An easy way to install Jupyter is through [Anaconda](https://www.anaconda.com/distribution).
 
-* Open the **Anaconda Prompt** (Windows) or Terminal (macOS) and verify that Jupyter is installed and present on the path:
+* You can verify the installations by opening the **Anaconda Prompt** (Windows) or a terminal (macOS, Linux) and running the following commands to ensure that Jupyter and .NET are installed and present on the path:
 
 ```console
 > jupyter kernelspec list
   python3        ~\jupyter\kernels\python3
+> dotnet --version
+  6.0.100
 ```
+
+(The minor version isn't important.)
 
 * Next, in an **ordinary console**, install the `dotnet interactive` global tool:
 
 ```console
-> dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
+> dotnet tool install -g Microsoft.dotnet-interactive
 ```
-
-*Note: The Azure feed is where the most up-to-date version will be published:*
-
-```
-https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json
-```
-
-Older, more stable versions will be made available on [NuGet.org](https://nuget.org).
 
 * **Switch back to your Anaconda prompt** and install the .NET kernel by running the following:
 
@@ -50,7 +46,7 @@ Installing using jupyter kernelspec module.
 Installed ".NET (PowerShell)" kernel.
 ```
     
-* You can verify the installation by running the following again in the **Anaconda Prompt**:
+* You can verify the installation by running the following again in the **Anaconda Prompt**. You should now see a `kernelspec` entry for each of the default supported .NET languages:
 
 ```console
 > jupyter kernelspec list
