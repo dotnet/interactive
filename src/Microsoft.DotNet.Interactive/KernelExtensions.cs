@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.CommandLine.Parsing;
+using System.CommandLine.NamingConventionBinder;
 using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
@@ -18,6 +18,7 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
 using Pocket;
+using CompletionItem = System.CommandLine.Completions.CompletionItem;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
@@ -101,12 +102,14 @@ namespace Microsoft.DotNet.Interactive
 
             var logStarted = false;
 
-            command.Handler = CommandHandler.Create<KernelInvocationContext>(context =>
+            command.Handler = CommandHandler.Create((InvocationContext cmdLineContext) =>
             {
                 if (logStarted)
                 {
-                    return;
+                    return Task.CompletedTask;
                 }
+
+                var context = cmdLineContext.GetService<KernelInvocationContext>();
 
                 logStarted = true;
 
@@ -146,6 +149,8 @@ namespace Microsoft.DotNet.Interactive
 
                 PublishLogEvent(context, "Logging enabled");
 
+                return Task.CompletedTask;
+
                 static void PublishLogEvent(KernelInvocationContext c, string message) => c.Publish(new DiagnosticLogEntryProduced(message, c.Command));
             });
 
@@ -172,32 +177,34 @@ namespace Microsoft.DotNet.Interactive
                 "name",
                 "The name of the variable to create in the destination kernel");
 
-            variableNameArg.AddSuggestions((_,_) =>
+            variableNameArg.AddCompletions(_ =>
             {
                 if (kernel.ParentKernel is { } composite)
                 {
                     return composite.ChildKernels
                                     .OfType<ISupportGetValue>()
-                                    .SelectMany(k => k.GetValueInfos().Select(vd => vd.Name)).ToArray();
+                                    .SelectMany(k => k.GetValueInfos().Select(vd => vd.Name))
+                                    .Select(n => new CompletionItem(n))
+                                    .ToArray();
                 }
 
-                return Array.Empty<string>();
+                return Array.Empty<CompletionItem>();
             });
 
             var fromKernelOption = new Option<string>(
                 "--from",
                 "The name of the kernel where the variable has been previously declared");
 
-            fromKernelOption.AddSuggestions((_,_) =>
+            fromKernelOption.AddCompletions(_ =>
             {
                 if (kernel.ParentKernel is { } composite)
                 {
                     return composite.ChildKernels
                                     .Where(k => k is ISupportGetValue)
-                                    .Select(k => k.Name);
+                                    .Select(k => new CompletionItem(k.Name));
                 }
 
-                return Array.Empty<string>();
+                return Array.Empty<CompletionItem>();
             });
 
             var share = new Command("#!share", "Share a value between subkernels")
@@ -206,8 +213,12 @@ namespace Microsoft.DotNet.Interactive
                 variableNameArg
             };
 
-            share.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (from, name, context) =>
+            share.Handler = CommandHandler.Create(async (InvocationContext cmdLineContext) =>
             {
+                var from = cmdLineContext.ParseResult.GetValueForOption(fromKernelOption);
+                var name = cmdLineContext.ParseResult.GetValueForArgument(variableNameArg);
+                var context = cmdLineContext.GetService<KernelInvocationContext>();
+
                 if (kernel.FindKernel(from) is { } fromKernel)
                 {
                     await fromKernel.ShareValue(kernel, name);
@@ -269,9 +280,9 @@ namespace Microsoft.DotNet.Interactive
         {
             var command = new Command("#!who", "Display the names of the current top-level variables.")
             {
-                Handler = CommandHandler.Create(async (ParseResult _, KernelInvocationContext context) =>
+                Handler = CommandHandler.Create(async (InvocationContext ctx) =>
                 {
-                    await DisplayValues(context, false);
+                    await DisplayValues(ctx.GetService<KernelInvocationContext>(), false);
                 })
             };
 
@@ -282,9 +293,10 @@ namespace Microsoft.DotNet.Interactive
         {
             var command = new Command("#!whos", "Display the names of the current top-level variables and their values.")
             {
-                Handler = CommandHandler.Create(async (ParseResult parseResult, KernelInvocationContext context) =>
+                Handler = CommandHandler.Create(async (InvocationContext ctx) =>
                 {
-                    await  DisplayValues(context, true);
+                    await DisplayValues(
+                        ctx.GetService<KernelInvocationContext>(), true);
                 })
             };
 

@@ -7,6 +7,7 @@ using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
 using System.CommandLine.IO;
+using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Net.Http;
@@ -36,7 +37,6 @@ using Pocket;
 using Recipes;
 using static Pocket.Logger;
 
-using CommandHandler = System.CommandLine.Invocation.CommandHandler;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive.App.CommandLine;
@@ -193,7 +193,7 @@ public static class CommandLineParser
         var defaultKernelOption = new Option<string>(
             "--default-kernel",
             description: "The default language for the kernel",
-            getDefaultValue: () => "csharp").AddSuggestions("fsharp", "csharp", "pwsh");
+            getDefaultValue: () => "csharp").AddCompletions("fsharp", "csharp", "pwsh");
 
         var rootCommand = DotnetInteractive();
 
@@ -204,7 +204,7 @@ public static class CommandLineParser
 
         return new CommandLineBuilder(rootCommand)
             .UseDefaults()
-            .UseMiddleware(async (context, next) =>
+            .AddMiddleware(async (context, next) =>
             {
                 if (context.ParseResult.Errors.Count == 0)
                 {
@@ -221,13 +221,20 @@ public static class CommandLineParser
                     firstTimeUseNoticeSentinel.CreateIfNotExists();
                 }
 
-                var installCommand = new Command("install", "Install the .NET kernel for Jupyter")
-                {
-                    httpPortRangeOption,
-                    pathOption
-                };
-             
-                installCommand.SetHandler<Func<IConsole, InvocationContext, HttpPortRange, DirectoryInfo, Task>>(InstallHandler, httpPortRangeOption, pathOption);
+                await next(context);
+            })
+            .Build();
+
+        RootCommand DotnetInteractive()
+        {
+            var command = new RootCommand
+            {
+                Name = "dotnet-interactive",
+                Description = "Interactive programming for .NET."
+            };
+
+            command.AddGlobalOption(logPathOption);
+            command.AddGlobalOption(verboseOption);
 
             return command;
         }

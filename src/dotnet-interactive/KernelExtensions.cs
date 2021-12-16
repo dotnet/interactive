@@ -4,9 +4,10 @@
 using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-
+using System.CommandLine.NamingConventionBinder;
+using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Formatting;
-
+using Microsoft.DotNet.Interactive.Utility;
 using Recipes;
 
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
@@ -20,8 +21,11 @@ namespace Microsoft.DotNet.Interactive.App
         {
             var about = new Command("#!about", "Show version and build information")
             {
-                Handler = CommandHandler.Create<KernelInvocationContext>(
-                    context => context.Display(VersionSensor.Version()))
+                Handler = CommandHandler.Create((InvocationContext ctx) =>
+                {
+                    ctx.GetService<KernelInvocationContext>().Display(VersionSensor.Version());
+                    return Task.CompletedTask;
+                })
             };
 
             kernel.AddDirective(about);

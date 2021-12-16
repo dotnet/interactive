@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.CommandLine.NamingConventionBinder;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -17,6 +18,7 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
+using Microsoft.DotNet.Interactive.Utility;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
@@ -80,8 +82,10 @@ module JupyterTopLevelModule =
 
             kernel.AddDirective(new Command("#!markdown", "Convert the code that follows from Markdown into HTML")
             {
-                Handler = CommandHandler.Create((KernelInvocationContext context) =>
+                Handler = CommandHandler.Create((InvocationContext cmdLineContext) =>
                 {
+                    var context = cmdLineContext.GetService<KernelInvocationContext>();
+
                     if (context.Command is SubmitCode submitCode)
                     {
                         var markdown = submitCode.Code
@@ -112,7 +116,10 @@ module JupyterTopLevelModule =
                                 }));
 
                         context.Complete(submitCode);
+
                     }
+                    
+                    return Task.CompletedTask;
                 })
             });
 
@@ -130,8 +137,10 @@ module JupyterTopLevelModule =
             {
                 return new Command("#!time", "Time the execution of the following code in the submission.")
                 {
-                    Handler = CommandHandler.Create((KernelInvocationContext context) =>
+                    Handler = CommandHandler.Create((InvocationContext cmdLineContext) =>
                     {
+                        var context = cmdLineContext.GetService<KernelInvocationContext>();
+
                         var timer = new Stopwatch();
                         timer.Start();
 
@@ -217,8 +226,10 @@ module JupyterTopLevelModule =
         {
             return new Command("#!lsmagic", "List the available magic commands / directives")
             {
-                Handler = CommandHandler.Create(async (KernelInvocationContext context) =>
+                Handler = CommandHandler.Create(async (InvocationContext cmdLineContext) =>
                 {
+                    var context = cmdLineContext.GetService<KernelInvocationContext>();
+
                     var supportedDirectives = new SupportedDirectives(kernel.Name);
 
                     supportedDirectives.Commands.AddRange(
