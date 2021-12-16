@@ -18,13 +18,14 @@
     <SystemRuntimeLoaderVersion>4.3.0</SystemRuntimeLoaderVersion>	
     <SystemCollectionsImmutableVersion>5.0.0</SystemCollectionsImmutableVersion>	
     <SystemReflectionMetadataVersion>5.0.0</SystemReflectionMetadataVersion>	
-    <SystemCommandLineVersion>2.0.0-beta1.21308.1</SystemCommandLineVersion>	
+    <SystemCommandLineVersion>2.0.0-beta2.21615.1</SystemCommandLineVersion>	
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Runtime.Loader" Version="$(SystemRuntimeLoaderVersion)" />
     <PackageReference Include="System.Reactive" Version="$(SystemReactiveVersion)" />
     <PackageReference Include="System.CommandLine" Version="$(SystemCommandLineVersion)" />
+    <PackageReference Include="System.CommandLine.NamingConventionBinder" Version="$(SystemCommandLineVersion)" />
     <PackageReference Include="System.Collections.Immutable" Version="6.0.0" />
     <PackageReference Include="System.Reflection.Metadata" Version="6.0.0" />
     <PackageReference Include="Microsoft.CodeAnalysis" Version="$(MicrosoftCodeAnalysisCommonVersion)" />

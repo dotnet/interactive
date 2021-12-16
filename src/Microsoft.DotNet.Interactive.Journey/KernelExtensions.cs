@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
@@ -15,6 +16,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Journey
 {
@@ -54,7 +56,7 @@ namespace Microsoft.DotNet.Interactive.Journey
 
                     if (!File.Exists(filePath))
                     {
-                        result.ErrorMessage = Resources.Instance.FileDoesNotExist(filePath);
+                        result.ErrorMessage = LocalizationResources.Instance.FileDoesNotExist(filePath);
                         return null;
                     }
 
@@ -67,14 +69,17 @@ namespace Microsoft.DotNet.Interactive.Journey
                 fromUrlOption
             };
 
-            startCommand.Handler = CommandHandler.Create<Uri, FileInfo, KernelInvocationContext>(StartCommandHandler);
+            startCommand.Handler = CommandHandler.Create(StartCommandHandler);
 
             kernel.AddDirective(startCommand);
 
             return kernel;
 
-            async Task StartCommandHandler(Uri fromUrl, FileInfo fromFile, KernelInvocationContext context)
+            async Task StartCommandHandler(InvocationContext cmdlLineContext)
             {
+                var fromFile = cmdlLineContext.ParseResult.GetValueForOption(fromFileOption);
+                var fromUrl = cmdlLineContext.ParseResult.GetValueForOption(fromUrlOption);
+                
                 InteractiveDocument document = fromFile switch
                 {
                     { } => await NotebookLessonParser.ReadFileAsInteractiveDocument(fromFile, kernel),
@@ -86,7 +91,7 @@ namespace Microsoft.DotNet.Interactive.Journey
                 var challenges = challengeDefinitions.Select(b => b.ToChallenge()).ToList();
                 challenges.SetDefaultProgressionHandlers();
                 Lesson.From(lessonDefinition);
-                Lesson.SetChallengeLookup(queryName => { return challenges.FirstOrDefault(c => c.Name == queryName); });
+                Lesson.SetChallengeLookup(queryName => challenges.FirstOrDefault(c => c.Name == queryName));
 
                 await kernel.StartLesson();
 

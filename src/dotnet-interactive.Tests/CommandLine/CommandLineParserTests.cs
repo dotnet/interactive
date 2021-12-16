@@ -4,6 +4,7 @@
 using System;
 using System.CommandLine.Binding;
 using System.CommandLine.IO;
+using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;

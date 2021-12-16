@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.CommandLine.NamingConventionBinder;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
@@ -16,23 +17,27 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         {
             if (kernel is CompositeKernel compositeKernel)
             {
+                var outputOption = new Option<FileInfo>(
+                    new [] {"-o", "--output"},
+                    description: "The name of the file to write the transcript to");
+
                 var record = new Command(
                     "#!record",
                     "Records a replayable transcript of code submissions.")
                 {
-                    new Option<FileInfo>(
-                        new [] {"-o", "--output"},
-                        description: "The name of the file to write the transcript to")
+                    outputOption
                 };
 
-                record.Handler = CommandHandler.Create<FileInfo>(output =>
+                record.Handler = CommandHandler.Create((InvocationContext ctx) =>
                 {
+                    var outputFile = ctx.ParseResult.GetValueForOption(outputOption);
+
                     compositeKernel.AddMiddleware(async (command, context, next) =>
                     {
                         var json = KernelCommandEnvelope.Serialize(command);
 
                         await File.AppendAllLinesAsync(
-                            output.FullName,
+                            outputFile.FullName,
                             new[]
                             {
                                 json

@@ -207,33 +207,6 @@ x")]
                   .Be("2");
         }
 
-        [Fact(Skip = "not implemented")]
-        public async Task Directives_can_access_local_kernel_variables()
-        {
-            using var kernel = CreateKernel();
-            kernel.DefaultKernelName = "csharp";
-            var csharpKernel = (CSharpKernel) kernel.FindKernel("csharp");
-
-            using var events = kernel.KernelEvents.ToSubscribedList();
-            var receivedValue = 0;
-
-            var directive = new Command("#!grab")
-            {
-                new Argument<int>("x")
-            };
-            directive.Handler = CommandHandler.Create<KernelInvocationContext, int>((context, x) =>
-            {
-                return receivedValue = x;
-            });
-
-            csharpKernel.AddDirective(directive);
-
-            await kernel.SubmitCodeAsync("var x = 123;");
-            await kernel.SubmitCodeAsync("#!grab $x");
-
-            receivedValue.Should().Be(123);
-        }
-
         [Fact]
         public async Task javascript_ProxyKernel_can_share_a_value_from_csharp()
         {

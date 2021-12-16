@@ -4,6 +4,10 @@
     <TargetFramework>net6.0</TargetFramework>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\InvocationContextExtensions.cs" Link="Utility\InvocationContextExtensions.cs" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Markdig.Signed" Version="0.23.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.8" />
@@ -21,5 +25,8 @@
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.FSharp\Microsoft.DotNet.Interactive.FSharp.fsproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.PowerShell\Microsoft.DotNet.Interactive.PowerShell.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Utility\" />
   </ItemGroup>
 </Project>

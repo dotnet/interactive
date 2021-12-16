@@ -66,14 +66,13 @@ namespace Microsoft.DotNet.Interactive
 
         private void RegisterCommandHandlers()
         {
-            if (this is ISupportGetValue supportGetValuesKernel)
+            if (this is ISupportGetValue)
             {
                 RegisterCommandHandler<RequestValueInfos>((command, context) => command.InvokeAsync(context));
 
                 RegisterCommandHandler<RequestValue>((command, context) => command.InvokeAsync(context));
             }
         }
-
       
         internal KernelCommandPipeline Pipeline { get; }
 
@@ -591,8 +590,8 @@ namespace Microsoft.DotNet.Interactive
             var result = directiveNode.GetDirectiveParseResult();
             if (result.CommandResult.Command == ChooseKernelDirective)
             {
-                return result.GetSuggestions()
-                             .Select(s => SubmissionParser.CompletionItemFor(s, result));
+                return result.GetCompletions()
+                             .Select(s => SubmissionParser.CompletionItemFor(s.Label, result));
             }
 
             var allCompletions = new List<CompletionItem>();
@@ -606,10 +605,10 @@ namespace Microsoft.DotNet.Interactive
 
                 var parseResult = parser.Parse(effectiveText);
 
-                var suggestions = parseResult.GetSuggestions(requestPosition);
+                var suggestions = parseResult.GetCompletions(requestPosition);
 
                 var completions = suggestions
-                                  .Select(s => SubmissionParser.CompletionItemFor(s, parseResult))
+                                  .Select(s => SubmissionParser.CompletionItemFor(s.Label, parseResult))
                                   .ToArray();
 
                 allCompletions.AddRange(completions);

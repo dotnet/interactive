@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.CommandLine.NamingConventionBinder;
 using FluentAssertions;
 using System.Linq;
 using System.Reactive.Linq;

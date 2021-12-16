@@ -3,7 +3,9 @@
 
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.CommandLine.NamingConventionBinder;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Utility;
 
 #nullable enable
 
@@ -16,7 +18,7 @@ namespace Microsoft.DotNet.Interactive
                  description ?? $"Run the code that follows using the {kernel.Name} kernel.")
         {
             Kernel = kernel;
-            Handler = CommandHandler.Create<KernelInvocationContext, InvocationContext>(Handle);
+            Handler = CommandHandler.Create((InvocationContext ctx) => Handle(ctx.GetService<KernelInvocationContext>(), ctx));
         }
 
         public Kernel Kernel { get; }

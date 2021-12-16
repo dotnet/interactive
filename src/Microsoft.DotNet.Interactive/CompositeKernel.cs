@@ -6,7 +6,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.CommandLine;
-using System.CommandLine.Invocation;
+using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
@@ -330,7 +330,6 @@ namespace Microsoft.DotNet.Interactive
                 async (kernelName, options, context) =>
                 {
                     var connectedKernel = await connectionCommand.ConnectKernelAsync(new KernelInfo(kernelName), options, context);
-
                  
                     Add(connectedKernel);
 

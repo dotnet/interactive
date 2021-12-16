@@ -41,7 +41,7 @@
     <SystemRuntimeLoaderVersion>4.3.0</SystemRuntimeLoaderVersion>
     <SystemCollectionsImmutableVersion>5.0.0</SystemCollectionsImmutableVersion>
     <SystemReflectionMetadataVersion>5.0.0</SystemReflectionMetadataVersion>
-    <SystemCommandLineVersion>2.0.0-beta1.21308.1</SystemCommandLineVersion>
+    <SystemCommandLineVersion>2.0.0-beta2.21615.1</SystemCommandLineVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -70,11 +70,11 @@
     </PackageReference>
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.19.0" />
     <PackageReference Include="System.Reactive" Version="$(SystemReactiveVersion)" />
-    <PackageReference Include="System.CommandLine.Generator" Version="0.1.247001" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="ContentFiles\" />
+    <Folder Include="Utility\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -122,6 +122,7 @@
   <ItemGroup>
     <None Remove="resources\logo-456x456.png" />
     <None Remove="resources\logo-64x64.png" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\InvocationContextExtensions.cs" Link="Utility\InvocationContextExtensions.cs" />
 
     <TypescriptOutputFiles Include="$(JsApiRoot)dist/dotnet-interactive.js" />
 

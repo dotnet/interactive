@@ -283,9 +283,9 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     new CommandLineBuilder(_rootCommand)
                         .ParseResponseFileAs(ResponseFileHandling.Disabled)
                         .UseTypoCorrections()
-                        .UseHelpBuilder(bc => new DirectiveHelpBuilder(_rootCommand.Name))
+                        .UseHelpBuilder(_ => new DirectiveHelpBuilder(_rootCommand.Name))
                         .UseHelp()
-                        .UseMiddleware(
+                        .AddMiddleware(
                             context =>
                             {
                                 context.BindingContext

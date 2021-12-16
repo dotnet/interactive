@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.CommandLine.NamingConventionBinder;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -438,7 +439,7 @@ new [] {1,2,3}");
             };
             var customDirective = new Command("#!customDirective")
             {
-                Handler = CommandHandler.Create(() => { deferredCommandExecuted = true; })
+                Handler = CommandHandler.Create(() => deferredCommandExecuted = true)
 
             };
             compositeKernel.AddDirective(customDirective);
