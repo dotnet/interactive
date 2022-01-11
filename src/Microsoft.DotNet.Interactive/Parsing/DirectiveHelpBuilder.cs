@@ -24,7 +24,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
         {
             using var writer = new StringWriter();
             new HelpBuilder(LocalizationResources.Instance).Write(context.Command, writer);
-            context.Output.Write(CleanUp(writer.ToString()));
+            var cleanedUp = CleanUp(writer.ToString());
+            context.Output.Write(cleanedUp);
         }
 
         public string GetHelpForSymbol(ISymbol symbol)
