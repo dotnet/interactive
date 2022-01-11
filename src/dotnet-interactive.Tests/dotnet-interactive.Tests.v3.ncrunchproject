@@ -41,6 +41,9 @@
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.App.Tests.AspNetCoreTests.can_define_aspnet_endpoint_with_MapGet</TestName>
       </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.StdIOConnectionTests.it_can_reuse_connection_for_multiple_proxy_kernel</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

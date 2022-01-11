@@ -16,85 +16,105 @@ using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-   public class StdIoKernelConnector : IKernelConnector
+    public class StdIoKernelConnector : IKernelConnector, IDisposable
     {
+        private MultiplexingKernelCommandAndEventReceiver? _receiver;
+        private KernelCommandAndEventTextStreamSender? _sender;
+        private Process? _process;
+
         public string[] Command { get; }
 
         public DirectoryInfo WorkingDirectory { get; }
 
         public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
         {
-            // QUESTION: (ConnectKernelAsync) tests?
-            var command = Command[0];
-            var arguments = string.Join(" ", Command.Skip(1));
-            var psi = new ProcessStartInfo
+            if (_receiver is not null)
             {
-                FileName = command,
-                Arguments = arguments,
-                WorkingDirectory = WorkingDirectory.FullName,
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-            };
-            var process = new Process { StartInfo = psi };
-            process.EnableRaisingEvents = true;
-            var stdErr = new StringBuilder();
-            process.ErrorDataReceived += (o, args) =>
+                var kernel = new ProxyKernel(kernelInfo.LocalName, _receiver.CreateChildReceiver(), _sender);
+                var _ = kernel.StartAsync();
+                return kernel;
+            }
+            else
             {
-                stdErr.Append(args.Data);
-            };
-            await Task.Yield();
-            process.Start();
-            process.BeginErrorReadLine();
-            var receiver = new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventTextReceiver(process.StandardOutput));
-            var sender = new KernelCommandAndEventTextStreamSender(process.StandardInput);
-            var kernel = new ProxyKernel(kernelInfo.LocalName, receiver, sender);
-            kernel.RegisterForDisposal(() =>
-            {
-                process.Kill();
-                process.Dispose();
-            });
-
-            var r = receiver.CreateChildReceiver();
-            var _ = kernel.StartAsync();
-
-            var checkReady = Task.Run(async () =>
-            {
-                await foreach (var eoc in r.CommandsAndEventsAsync(CancellationToken.None))
+                // QUESTION: (ConnectKernelAsync) tests?
+                var command = Command[0];
+                var arguments = string.Join(" ", Command.Skip(1));
+                var psi = new ProcessStartInfo
                 {
-                    if (eoc.Event is KernelReady)
-                    {
-                        return;
-                    }
-                }
-            });
+                    FileName = command,
+                    Arguments = arguments,
+                    WorkingDirectory = WorkingDirectory.FullName,
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                };
+                _process = new Process { StartInfo = psi };
+                _process.EnableRaisingEvents = true;
+                var stdErr = new StringBuilder();
+                _process.ErrorDataReceived += (o, args) => { stdErr.Append(args.Data); };
+                await Task.Yield();
+                _process.Start();
+                _process.BeginErrorReadLine();
+                _receiver = new MultiplexingKernelCommandAndEventReceiver(
+                    new KernelCommandAndEventTextReceiver(_process.StandardOutput));
+                _sender = new KernelCommandAndEventTextStreamSender(_process.StandardInput);
+                var kernel = new ProxyKernel(kernelInfo.LocalName, _receiver, _sender);
+                kernel.RegisterForDisposal(this);
 
-            var checkProcessError = Task.Run(async () =>
-            {
-                while (!checkReady.IsCompleted)
+                var r = _receiver.CreateChildReceiver();
+                var _ = kernel.StartAsync();
+
+                var checkReady = Task.Run(async () =>
                 {
-                    await Task.Delay(200);
-                    if (process.HasExited)
+                    await foreach (var eoc in r.CommandsAndEventsAsync(CancellationToken.None))
                     {
-                        if (process.ExitCode != 0)
+                        if (eoc.Event is KernelReady)
                         {
-                            throw new CommandLineInvocationException(
-                                new CommandLineResult(process.ExitCode, error: stdErr.ToString().Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)));
+                            return;
                         }
                     }
-                }
-            });
+                });
 
-            await Task.WhenAny(checkProcessError, checkReady);
-            
-            return kernel;
+                var checkProcessError = Task.Run(async () =>
+                {
+                    while (!checkReady.IsCompleted)
+                    {
+                        await Task.Delay(200);
+                        if (_process.HasExited)
+                        {
+                            if (_process.ExitCode != 0)
+                            {
+                                throw new CommandLineInvocationException(
+                                    new CommandLineResult(_process.ExitCode,
+                                        error: stdErr.ToString().Split(new[] { '\r', '\n' },
+                                            StringSplitOptions.RemoveEmptyEntries)));
+                            }
+                        }
+                    }
+                });
+
+                await Task.WhenAny(checkProcessError, checkReady);
+                return kernel;
+            }
+
+
         }
 
         public StdIoKernelConnector(string[] command, DirectoryInfo? workingDirectory = null)
         {
             Command = command;
             WorkingDirectory = workingDirectory ?? new DirectoryInfo(Environment.CurrentDirectory);
+        }
+
+        public void Dispose()
+        {
+            if (_process is not null && _process.HasExited == false)
+            {
+                _process?.Kill();
+                _process?.Dispose();
+                _process = null;
+            }
         }
     }
 }
