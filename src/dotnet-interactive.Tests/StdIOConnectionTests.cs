@@ -110,9 +110,9 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             using var localKernel2 = await connector.ConnectKernelAsync(new KernelInfo("kernel2"));
 
-            var kernelCommand1 = new SubmitCode("\"echo1\"");
+            var kernelCommand1 = new SubmitCode("(1+1).Display(\"text/plain\")");
 
-            var kernelCommand2 = new SubmitCode("\"echo2\"");
+            var kernelCommand2 = new SubmitCode("(3+3).Display(\"text/plain\")");
 
             var res1 = await localKernel1.SendAsync(kernelCommand1);
 
@@ -125,12 +125,12 @@ namespace Microsoft.DotNet.Interactive.Tests
             kernelEvents1.Should().ContainSingle<CommandSucceeded>().Which.Command.As<SubmitCode>().Code.Should()
                 .Be(kernelCommand1.Code);
 
-            kernelEvents1.Should().ContainSingle<ReturnValueProduced>().Which.FormattedValues.Should().ContainSingle(f => f.Value == "echo1");
+            kernelEvents1.Should().ContainSingle<DisplayedValueProduced>().Which.FormattedValues.Should().ContainSingle(f => f.Value == "2");
 
             kernelEvents2.Should().ContainSingle<CommandSucceeded>().Which.Command.As<SubmitCode>().Code.Should()
                 .Be(kernelCommand2.Code);
 
-            kernelEvents2.Should().ContainSingle<ReturnValueProduced>().Which.FormattedValues.Should().ContainSingle(f => f.Value == "echo2");
+            kernelEvents2.Should().ContainSingle<DisplayedValueProduced>().Which.FormattedValues.Should().ContainSingle(f => f.Value == "6");
         }
     }
 }
