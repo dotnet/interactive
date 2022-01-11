@@ -253,7 +253,13 @@ namespace Microsoft.DotNet.Interactive
 
         public async Task<ProxyKernel> CreateProxyKernelOnDefaultConnectorAsync(KernelInfo kernelInfo)
         {
-            var childKernel = await _defaultConnector.ConnectKernelAsync(kernelInfo) as ProxyKernel;
+            var childKernel = await CreateProxyKernelOnConnectorAsync(kernelInfo,_defaultConnector);
+            return childKernel;
+        }
+
+        public async Task<ProxyKernel> CreateProxyKernelOnConnectorAsync(KernelInfo kernelInfo, IKernelConnector kernelConnector )
+        {
+            var childKernel = await kernelConnector.ConnectKernelAsync(kernelInfo) as ProxyKernel;
             _kernel.Add(childKernel, kernelInfo.Aliases);
             RegisterDestinationUriForProxy(kernelInfo.LocalName, kernelInfo.DestinationUri);
             return childKernel;
