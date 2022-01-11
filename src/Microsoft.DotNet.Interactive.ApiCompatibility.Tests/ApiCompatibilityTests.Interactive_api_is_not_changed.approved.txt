@@ -184,6 +184,7 @@ Microsoft.DotNet.Interactive
     public System.Uri Uri { get;}
     public System.Threading.Tasks.Task ConnectAndWaitAsync()
     public System.Threading.Tasks.Task ConnectAsync()
+    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Connection.ProxyKernel> CreateProxyKernelOnConnectorAsync(KernelInfo kernelInfo, Microsoft.DotNet.Interactive.Connection.IKernelConnector kernelConnector)
     public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Connection.ProxyKernel> CreateProxyKernelOnDefaultConnectorAsync(KernelInfo kernelInfo)
     public System.Void Dispose()
     public System.Boolean TryGetKernelByDestinationUri(System.Uri destinationUri, ref Kernel& kernel)
@@ -456,11 +457,12 @@ Microsoft.DotNet.Interactive.Connection
      System.Void DelegatePublication(Microsoft.DotNet.Interactive.Events.KernelEvent kernelEvent)
     public Microsoft.DotNet.Interactive.ValueSharing.IKernelValueDeclarer GetValueDeclarer(System.Object value)
     public System.Threading.Tasks.Task StartAsync()
-  public class StdIoKernelConnector, IKernelConnector
+  public class StdIoKernelConnector, IKernelConnector, System.IDisposable
     .ctor(System.String[] command, System.IO.DirectoryInfo workingDirectory = null)
     public System.String[] Command { get;}
     public System.IO.DirectoryInfo WorkingDirectory { get;}
     public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> ConnectKernelAsync(Microsoft.DotNet.Interactive.KernelInfo kernelInfo)
+    public System.Void Dispose()
 Microsoft.DotNet.Interactive.Events
   public class CodeSubmissionReceived : KernelEvent
     .ctor(Microsoft.DotNet.Interactive.Commands.SubmitCode command)
