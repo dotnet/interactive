@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             };
         }
 
-        public IReadOnlyList<ICommand> Directives => _rootCommand?.Children.OfType<ICommand>().ToArray() ?? Array.Empty<ICommand>();
+        public IReadOnlyList<Command> Directives => _rootCommand?.Children.OfType<Command>().ToArray() ?? Array.Empty<Command>();
 
         public string KernelLanguage { get; internal set; }
 
@@ -133,7 +133,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                         if (parseResult.CommandResult.Command.Name == "#r")
                         {
-                            var value = parseResult.ValueForArgument<PackageReferenceOrFileInfo>("package");
+                            var value = parseResult.GetValueForArgument(parseResult.Parser.FindPackageArgument());
 
                             if (value?.Value is FileInfo)
                             {
@@ -338,8 +338,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             var kind = symbol switch
             {
-                IOption _ => "Property",
-                ICommand _ => "Method",
+                Option _ => "Property",
+                Command _ => "Method",
                 _ => "Value"
             };
 

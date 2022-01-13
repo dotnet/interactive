@@ -206,7 +206,7 @@ namespace Microsoft.DotNet.Interactive
 
         public string Name { get; }
 
-        public IReadOnlyCollection<ICommand> Directives => SubmissionParser.Directives;
+        public IReadOnlyCollection<Command> Directives => SubmissionParser.Directives;
 
         public void AddDirective(Command command) => SubmissionParser.AddDirective(command);
 

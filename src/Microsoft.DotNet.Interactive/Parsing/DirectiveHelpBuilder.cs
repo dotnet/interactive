@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
     public class DirectiveHelpBuilder : HelpBuilder
     {
         private readonly string _rootCommandName;
-        private readonly Dictionary<ISymbol, string> _directiveHelp = new();
+        private readonly Dictionary<Symbol, string> _directiveHelp = new();
 
         public DirectiveHelpBuilder(string rootCommandName) : base(LocalizationResources.Instance)
         {
@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             context.Output.Write(cleanedUp);
         }
 
-        public string GetHelpForSymbol(ISymbol symbol)
+        public string GetHelpForSymbol(Symbol symbol)
         {
             if (_directiveHelp.TryGetValue(symbol, out var help))
             {
@@ -39,14 +39,14 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             switch (symbol)
             {
-                case ICommand command:
+                case Command command:
                     var context = new HelpContext(this, command, writer);
 
                     Write(context);
                     break;
 
-                case IOption option:
-                    var parentCommand = option.Parents.OfType<ICommand>().FirstOrDefault();
+                case Option option:
+                    var parentCommand = option.Parents.OfType<Command>().FirstOrDefault();
 
                     if (parentCommand is not null)
                     {

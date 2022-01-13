@@ -187,7 +187,7 @@ module JupyterTopLevelModule =
 
                 t.WriteTo(context);
 
-                IEnumerable<IHtmlContent> Summary(ICommand command, double offset)
+                IEnumerable<IHtmlContent> Summary(Command command, double offset)
                 {
                     yield return new HtmlString("<pre>");
 
@@ -209,7 +209,7 @@ module JupyterTopLevelModule =
 
                     yield return div[style: $"text-indent:{nextLevel:##.#}em"](command.Description);
 
-                    foreach (var subCommand in command.Children.OfType<ICommand>())
+                    foreach (var subCommand in command.Children.OfType<Command>())
                     {
                         yield return div[style: $"text-indent:{nextLevel:##.#}em"](Summary(subCommand, nextLevel));
                     }

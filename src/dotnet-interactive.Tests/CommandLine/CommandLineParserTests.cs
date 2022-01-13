@@ -3,6 +3,7 @@
 
 using System;
 using System.CommandLine.Binding;
+using System.CommandLine.Invocation;
 using System.CommandLine.IO;
 using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
@@ -152,7 +153,7 @@ public class CommandLineParserTests : IDisposable
 
         var binder = new ModelBinder<StartupOptions>();
 
-        var options = (StartupOptions)binder.CreateInstance(new BindingContext(result));
+        var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
 
         options
             .HttpPortRange
@@ -191,7 +192,7 @@ public class CommandLineParserTests : IDisposable
         result.Errors
             .Select(e => e.Message)
             .Should()
-            .Contain(errorMessage => errorMessage == "Unrecognized command or argument '--http-port'");
+            .Contain(errorMessage => errorMessage == "Unrecognized command or argument '--http-port'.");
     }
 
     [Fact]
@@ -201,7 +202,7 @@ public class CommandLineParserTests : IDisposable
 
         var binder = new ModelBinder<StartupOptions>();
 
-        var options = (StartupOptions)binder.CreateInstance(new BindingContext(result));
+        var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
 
         options
             .HttpPortRange
@@ -237,7 +238,7 @@ public class CommandLineParserTests : IDisposable
         result.Errors
             .Select(e => e.Message)
             .Should()
-            .Contain(errorMessage => errorMessage == "Unrecognized command or argument '--http-port-range'");
+            .Contain(errorMessage => errorMessage == "Unrecognized command or argument '--http-port-range'.");
     }
 
     [Fact]
@@ -247,7 +248,7 @@ public class CommandLineParserTests : IDisposable
 
         await _parser.InvokeAsync("jupyter", testConsole);
 
-        testConsole.Error.ToString().Should().Contain("Required argument missing for command: jupyter");
+        testConsole.Error.ToString().Should().Contain("Required argument missing for command: 'jupyter'.");
     }
 
     [Fact]
@@ -258,7 +259,7 @@ public class CommandLineParserTests : IDisposable
         result.Errors
             .Select(e => e.Message)
             .Should()
-            .Contain(errorMessage => errorMessage == "Unrecognized command or argument '--http-port'");
+            .Contain(errorMessage => errorMessage == "Unrecognized command or argument '--http-port'.");
     }
 
     [Fact]
@@ -276,7 +277,7 @@ public class CommandLineParserTests : IDisposable
 
         var binder = new ModelBinder<JupyterOptions>();
 
-        var options = (JupyterOptions)binder.CreateInstance(new BindingContext(result));
+        var options = (JupyterOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
 
         options
             .ConnectionFile
@@ -309,7 +310,7 @@ public class CommandLineParserTests : IDisposable
     {
         var result = _parser.Parse($"jupyter {Path.GetTempFileName()}");
         var binder = new ModelBinder<JupyterOptions>();
-        var options = (JupyterOptions)binder.CreateInstance(new BindingContext(result));
+        var options = (JupyterOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
 
         options.DefaultKernel.Should().Be("csharp");
     }
@@ -319,7 +320,7 @@ public class CommandLineParserTests : IDisposable
     {
         var result = _parser.Parse($"jupyter --default-kernel bsharp {Path.GetTempFileName()}");
         var binder = new ModelBinder<JupyterOptions>();
-        var options = (JupyterOptions)binder.CreateInstance(new BindingContext(result));
+        var options = (JupyterOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
 
         options.DefaultKernel.Should().Be("bsharp");
     }
@@ -332,7 +333,7 @@ public class CommandLineParserTests : IDisposable
         var testConsole = new TestConsole();
         await _parser.InvokeAsync($"jupyter {expected}", testConsole);
 
-        testConsole.Error.ToString().Should().Contain("File does not exist: not_exist.json");
+        testConsole.Error.ToString().Should().ContainAll("File does not exist", "not_exist.json");
     }
 
     [Fact]
@@ -342,7 +343,7 @@ public class CommandLineParserTests : IDisposable
 
         var binder = new ModelBinder<StartupOptions>();
 
-        var options = (StartupOptions)binder.CreateInstance(new BindingContext(result));
+        var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
 
         options.WorkingDir.FullName
             .Should()
@@ -364,7 +365,7 @@ public class CommandLineParserTests : IDisposable
 
         var binder = new ModelBinder<StartupOptions>();
 
-        var options = (StartupOptions)binder.CreateInstance(new BindingContext(result));
+        var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
 
         options.WorkingDir.FullName
             .Should()
@@ -390,7 +391,7 @@ public class CommandLineParserTests : IDisposable
 
         var binder = new ModelBinder<StartupOptions>();
 
-        var options = (StartupOptions)binder.CreateInstance(new BindingContext(result));
+        var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
 
         options.HttpPort.PortNumber.Should().Be(8000);
     }
@@ -424,7 +425,7 @@ public class CommandLineParserTests : IDisposable
     {
         var result = _parser.Parse("stdio");
         var binder = new ModelBinder<StdIOOptions>();
-        var options = (StdIOOptions)binder.CreateInstance(new BindingContext(result));
+        var options = (StdIOOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
 
         options.DefaultKernel.Should().Be("csharp");
     }
@@ -444,7 +445,7 @@ public class CommandLineParserTests : IDisposable
     {
         var result = _parser.Parse("stdio --default-kernel bsharp");
         var binder = new ModelBinder<StdIOOptions>();
-        var options = (StdIOOptions)binder.CreateInstance(new BindingContext(result));
+        var options = (StdIOOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
 
         options.DefaultKernel.Should().Be("bsharp");
     }
