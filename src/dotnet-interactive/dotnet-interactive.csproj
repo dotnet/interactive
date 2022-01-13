@@ -115,7 +115,7 @@
   </Target>
 
   <PropertyGroup>
-    <JsApiRoot>$(MSBuildThisFileDirectory)/../Microsoft.DotNet.Interactive.Js/</JsApiRoot>
+    <JsApiRoot>$(MSBuildThisFileDirectory)/../microsoft-dotnet-interactive-browser/</JsApiRoot>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,0 +1,120 @@
+import { InspectOptions } from "util";
+import * as contracts from "./contracts";
+import { KernelInvocationContext } from "./kernelInvocationContext";
+
+export class ConsoleCapture implements contracts.Disposable {
+    private originalConsole: Console;
+    constructor(private kernelInvocationContext: KernelInvocationContext) {
+        this.originalConsole = console;
+        console = <Console><any>this;
+    }
+
+    assert(value: any, message?: string, ...optionalParams: any[]): void {
+        this.originalConsole.assert(value, message, optionalParams);
+    }
+    clear(): void {
+        this.originalConsole.clear();
+    }
+    count(label?: any): void {
+        this.originalConsole.count(label);
+    }
+    countReset(label?: string): void {
+        this.originalConsole.countReset(label);
+    }
+    debug(message?: any, ...optionalParams: any[]): void {
+        this.originalConsole.debug(message, optionalParams);
+    }
+    dir(obj: any, options?: InspectOptions): void {
+        this.originalConsole.dir(obj, options);
+    }
+    dirxml(...data: any[]): void {
+        this.originalConsole.dirxml(data);
+    }
+    error(message?: any, ...optionalParams: any[]): void {
+        this.redirectAndPublish(this.originalConsole.error, ...[message, ...optionalParams]);
+    }
+
+    group(...label: any[]): void {
+        this.originalConsole.group(label);
+    }
+    groupCollapsed(...label: any[]): void {
+        this.originalConsole.groupCollapsed(label);
+    }
+    groupEnd(): void {
+        this.originalConsole.groupEnd();
+    }
+    info(message?: any, ...optionalParams: any[]): void {
+        this.redirectAndPublish(this.originalConsole.info, ...[message, ...optionalParams]);
+    }
+    log(message?: any, ...optionalParams: any[]): void {
+        this.redirectAndPublish(this.originalConsole.log, ...[message, ...optionalParams]);
+    }
+
+    table(tabularData: any, properties?: string[]): void {
+        this.originalConsole.table(tabularData, properties);
+    }
+    time(label?: string): void {
+        this.originalConsole.time(label);
+    }
+    timeEnd(label?: string): void {
+        this.originalConsole.timeEnd(label);
+    }
+    timeLog(label?: string, ...data: any[]): void {
+        this.originalConsole.timeLog(label, data);
+    }
+    timeStamp(label?: string): void {
+        this.originalConsole.timeStamp(label);
+    }
+    trace(message?: any, ...optionalParams: any[]): void {
+        this.redirectAndPublish(this.originalConsole.trace, ...[message, ...optionalParams]);
+    }
+    warn(message?: any, ...optionalParams: any[]): void {
+        this.originalConsole.warn(message, optionalParams);
+    }
+
+    profile(label?: string): void {
+        this.originalConsole.profile(label);
+    }
+    profileEnd(label?: string): void {
+        this.originalConsole.profileEnd(label);
+    }
+
+    dispose(): void {
+        console = this.originalConsole;
+    }
+
+    private redirectAndPublish(target: (...args: any[]) => void, ...args: any[]) {
+        target(...args);
+        this.publishArgsAsEvents(...args);
+    }
+
+    private publishArgsAsEvents(...args: any[]) {
+        for (const arg of args) {
+            let mimeType: string;
+            let value: string;
+            if (typeof arg !== 'object' && !Array.isArray(arg)) {
+                mimeType = 'text/plain';
+                value = arg?.toString();
+            } else {
+                mimeType = 'application/json';
+                value = JSON.stringify(arg);
+            }
+
+            const displayedValue: contracts.DisplayedValueProduced = {
+                formattedValues: [
+                    {
+                        mimeType,
+                        value,
+                    }
+                ]
+            };
+            const eventEnvelope: contracts.KernelEventEnvelope = {
+                eventType: contracts.DisplayedValueProducedType,
+                event: displayedValue,
+                command: this.kernelInvocationContext.commandEnvelope
+            };
+
+            this.kernelInvocationContext.publish(eventEnvelope);
+        }
+    }
+}

@@ -86,7 +86,7 @@ To get started, you'll need:
 
 2. Follow the regular build instructions as given above.
 
-3. Open the `<REPO-ROOT>/src/dotnet-interactive-vscode/insiders` directory in Visual Studio Code Insiders. (From your terminal, you can run `code-insiders <REPO-ROOT>/src/dotnet-interactive-vscode/insiders`.)
+3. Open the `<REPO-ROOT>/src/dotnet-interactive-vscode-insiders` directory in Visual Studio Code Insiders. (From your terminal, you can run `code-insiders <REPO-ROOT>/src/dotnet-interactive-vscode-insiders`.)
 
 4. Make the desired source code changes.
 
@@ -109,7 +109,7 @@ If you've made changes to `dotnet-interactive` and want to try them out with Vis
       ```js
         "dotnet-interactive.kernelTransportArgs": [
             "{dotnet_path}",
-            "/PATH/TO/REPO/ROOT/artifacts/bin/dotnet-interactive/Debug/$(TargetFramework)/Microsoft.DotNet.Interactive.App.dll",
+            "/PATH/TO/REPO/ROOT/artifacts/bin/dotnet-interactive/Debug/net6.0/Microsoft.DotNet.Interactive.App.dll",
             "[vscode]",
             "stdio",
             "--log-path",
@@ -121,7 +121,7 @@ If you've made changes to `dotnet-interactive` and want to try them out with Vis
 
         "dotnet-interactive.notebookParserArgs": [
             "{dotnet_path}",
-            "/PATH/TO/REPO/ROOT/artifacts/bin/dotnet-interactive/Debug/$(TargetFramework)/Microsoft.DotNet.Interactive.App.dll",
+            "/PATH/TO/REPO/ROOT/artifacts/bin/dotnet-interactive/Debug/net6.0/Microsoft.DotNet.Interactive.App.dll",
             "notebook-parser"
         ]
       ```

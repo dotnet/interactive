@@ -50,8 +50,8 @@ try {
     $vsCodeVersionParts = $vsCodeStableVersion -split "\."
     $vsCodeInsidersVersion = $vsCodeVersionParts[0] + "." + ([int]$vsCodeVersionParts[1] + 1)
 
-    Update-VersionNumbers -packageJsonPath "$PSScriptRoot\stable\package.json" -vscodeEngine "^$vsCodeStableVersion.0" -updateToolVersion $updateAll
-    Update-VersionNumbers -packageJsonPath "$PSScriptRoot\insiders\package.json" -vscodeEngine "$vsCodeInsidersVersion.0-insider" -updateToolVersion $true
+    Update-VersionNumbers -packageJsonPath "$PSScriptRoot\package.json" -vscodeEngine "^$vsCodeStableVersion.0" -updateToolVersion $updateAll
+    Update-VersionNumbers -packageJsonPath "$PSScriptRoot\..\dotnet-interactive-vscode-insiders\package.json" -vscodeEngine "$vsCodeInsidersVersion.0-insider" -updateToolVersion $true
 }
 catch {
     Write-Host $_

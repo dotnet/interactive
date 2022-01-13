@@ -158,7 +158,7 @@ stages:
           inputs:
             filePath: $(Build.SourcesDirectory)/eng/package/PackVSCodeExtension.ps1
             arguments: -stableToolVersionNumber $(StableToolVersionNumber) -gitSha $(Build.SourceVersion) -outDir "$(Build.ArtifactStagingDirectory)\vscode"
-            workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode"
+            workingDirectory: "$(Build.SourcesDirectory)/src"
             pwsh: true
 
         - task: PublishBuildArtifacts@1
@@ -173,7 +173,7 @@ stages:
           inputs:
             filePath: $(Build.SourcesDirectory)/eng/package/PackNpmPackage.ps1
             arguments: -packageVersionNumber $(StableToolVersionNumber) -gitSha $(Build.SourceVersion) -outDir "$(Build.ArtifactStagingDirectory)\npm"
-            workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-npm"
+            workingDirectory: "$(Build.SourcesDirectory)/src/microsoft-dotnet-interactive"
             pwsh: true
 
         - task: PublishBuildArtifacts@1

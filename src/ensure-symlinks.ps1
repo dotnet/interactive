@@ -16,15 +16,12 @@ function EnsureSymlink([string]$sourceDirectory, [string] $linkName, [string] $d
     }
 }
 
+EnsureSymlink -sourceDirectory "$PSScriptRoot\microsoft-dotnet-interactive-browser\src" -linkName "dotnet-interactive" -destinationLocation "..\..\microsoft-dotnet-interactive\src"
 
-EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode\stable\src" -linkName "common" -destinationLocation "..\..\common"
-EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode\stable" -linkName ".vscode" -destinationLocation "..\.vscode"
+EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode-common\src" -linkName "dotnet-interactive" -destinationLocation "..\..\microsoft-dotnet-interactive\src"
 
-EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode\insiders\src" -linkName "common" -destinationLocation "..\..\common"
-EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode\insiders" -linkName ".vscode" -destinationLocation "..\.vscode"
+EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode\src" -linkName "vscode-common" -destinationLocation "..\..\dotnet-interactive-vscode-common\src"
+EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode\tests" -linkName "vscode-common-tests" -destinationLocation "..\..\dotnet-interactive-vscode-common\tests"
 
-EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-npm\src" -linkName "common" -destinationLocation "..\..\dotnet-interactive-vscode\common"
-EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-npm" -linkName ".vscode" -destinationLocation "..\dotnet-interactive-vscode\.vscode"
-
-EnsureSymlink -sourceDirectory "$PSScriptRoot\Microsoft.DotNet.Interactive.Js\src" -linkName "common" -destinationLocation "..\..\dotnet-interactive-vscode\common"
-EnsureSymlink -sourceDirectory "$PSScriptRoot\Microsoft.DotNet.Interactive.Js" -linkName ".vscode" -destinationLocation "..\dotnet-interactive-vscode\.vscode"
+EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode-insiders\src" -linkName "vscode-common" -destinationLocation "..\..\dotnet-interactive-vscode-common\src"
+EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode-insiders\tests" -linkName "vscode-common-tests" -destinationLocation "..\..\dotnet-interactive-vscode-common\tests"
