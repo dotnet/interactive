@@ -1,0 +1,30 @@
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+{
+  "compilerOptions": {
+    "lib": [
+      "es2015",
+      "dom",
+      "ScriptHost"
+    ],
+    "declaration": false,
+    "noImplicitAny": true,
+    "module": "commonJs",
+    "target": "es6",
+    "allowJs": false,
+    "experimentalDecorators": true,
+    "outDir": "./dist",
+    "types": [
+      "node",
+      "mocha",
+      "node-fetch",
+    ]
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

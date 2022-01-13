@@ -8,7 +8,7 @@ param (
 Set-StrictMode -version 2.0
 $ErrorActionPreference = "Stop"
 
-function Build-VsCodeExtension([string] $packageDirectory, [string] $outputSubDirectory = "", [string] $packageVersionNumber, [string] $kernelVersionNumber = "") {
+function Build-VsCodeExtension([string] $packageDirectory, [string] $outputSubDirectory, [string] $packageVersionNumber, [string] $kernelVersionNumber = "") {
     Push-Location $packageDirectory
 
     $packageJsonPath = Join-Path (Get-Location) "package.json"
@@ -46,9 +46,9 @@ try {
 
     $stablePackageVersion = "${stableToolVersionNumber}0"
     $insidersPackageVersion = "${stableToolVersionNumber}1"
-    Build-VsCodeExtension -packageDirectory "stable" -outputSubDirectory "stable-locked" -packageVersionNumber $stablePackageVersion
-    Build-VsCodeExtension -packageDirectory "stable" -packageVersionNumber $stablePackageVersion -kernelVersionNumber $stableToolVersionNumber
-    Build-VsCodeExtension -packageDirectory "insiders" -packageVersionNumber $insidersPackageVersion -kernelVersionNumber $stableToolVersionNumber
+    Build-VsCodeExtension -packageDirectory "dotnet-interactive-vscode" -outputSubDirectory "stable-locked" -packageVersionNumber $stablePackageVersion
+    Build-VsCodeExtension -packageDirectory "dotnet-interactive-vscode" -outputSubDirectory "stable" -packageVersionNumber $stablePackageVersion -kernelVersionNumber $stableToolVersionNumber
+    Build-VsCodeExtension -packageDirectory "dotnet-interactive-vscode-insiders" -outputSubDirectory "insiders" -packageVersionNumber $insidersPackageVersion -kernelVersionNumber $stableToolVersionNumber
 }
 catch {
     Write-Host $_

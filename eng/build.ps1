@@ -12,14 +12,12 @@ $ErrorActionPreference = "Stop"
 try {
     $repoRoot = Resolve-Path "$PSScriptRoot\.."
     $symlinkDirectories = @(
-        "$repoRoot\src\dotnet-interactive-vscode\stable\src\common",
-        "$repoRoot\src\dotnet-interactive-vscode\stable\.vscode",
-        "$repoRoot\src\dotnet-interactive-vscode\insiders\src\common",
-        "$repoRoot\src\dotnet-interactive-vscode\insiders\.vscode",
-        "$repoRoot\src\dotnet-interactive-npm\src\common",
-        "$repoRoot\src\dotnet-interactive-npm\.vscode",
-        "$repoRoot\src\Microsoft.DotNet.Interactive.Js\src\common",
-        "$repoRoot\src\Microsoft.DotNet.Interactive.Js\.vscode"
+        "$repoRoot\src\microsoft-dotnet-interactive-browser\src\dotnet-interactive",
+        "$repoRoot\src\dotnet-interactive-vscode-common\src\dotnet-interactive",
+        "$repoRoot\src\dotnet-interactive-vscode\src\vscode-common",
+        "$repoRoot\src\dotnet-interactive-vscode\tests\vscode-common-tests",
+        "$repoRoot\src\dotnet-interactive-vscode-insiders\src\vscode-common",
+        "$repoRoot\src\dotnet-interactive-vscode-insiders\tests\vscode-common-tests"
     )
 
     foreach ($symlinkDir in $symlinkDirectories) {
@@ -31,10 +29,10 @@ try {
 
     # build and test NPM
     $npmDirs = @(
-        "src\dotnet-interactive-npm",
-        "src\dotnet-interactive-vscode\stable",
-        "src\dotnet-interactive-vscode\insiders",
-        "src\Microsoft.DotNet.Interactive.Js",
+        "src\microsoft-dotnet-interactive",
+        "src\microsoft-dotnet-interactive-browser",
+        "src\dotnet-interactive-vscode",
+        "src\dotnet-interactive-vscode-insiders",
         "src\Microsoft.DotNet.Interactive.Mermaid.js",
         "src\Microsoft.DotNet.Interactive.nteract.js",
         "src\Microsoft.DotNet.Interactive.SandDance.js"

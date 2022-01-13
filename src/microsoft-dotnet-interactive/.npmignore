@@ -1,0 +1,5 @@
+.eslintignore
+.eslintrc.json
+testConfig.json
+tsconfig.json
+wallaby.js
