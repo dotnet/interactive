@@ -165,12 +165,12 @@ new [] {1,2,3}");
             };
 
             kernel.Invoking(k => k.Add(new CSharpKernel()))
-                .Should()
-                .Throw<ArgumentException>()
-                .Which
-                .Message
-                .Should()
-                .Be("Alias '#!csharp' is already in use.");
+                  .Should()
+                  .Throw<ArgumentException>()
+                  .Which
+                  .Message
+                  .Should()
+                  .Be("Alias '#!csharp' is already in use.");
         }
 
         [Fact]
