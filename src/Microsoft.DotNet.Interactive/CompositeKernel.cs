@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive
 
             _kernelToNameOrAlias = new Dictionary<Kernel, HashSet<string>>
             {
-                [this] = new HashSet<string> { Name }
+                [this] = new() { Name }
             };
         }
 
@@ -87,6 +87,12 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentException($"{nameof(CompositeKernel)} cannot be added as a child kernel.", nameof(kernel));
             }
 
+            if ((aliases ?? Array.Empty<string>()).Append(kernel.Name).FirstOrDefault(a => _kernelsByNameOrAlias.ContainsKey(a)) is { } collidingAlias)
+            {
+                throw new ArgumentException($"Alias '#!{collidingAlias}' is already in use.");
+            }
+
+
             kernel.ParentKernel = this;
             kernel.RootKernel = RootKernel;
 
@@ -100,7 +106,9 @@ namespace Microsoft.DotNet.Interactive
             Host?.AddKernelInfo(kernel, new KernelInfo(kernel.Name, aliases));
 
             _kernelToNameOrAlias.Add(kernel, new HashSet<string>{kernel.Name});
+
             _kernelsByNameOrAlias.Add(kernel.Name, kernel);
+
             if (aliases is { })
             {
                 foreach (var alias in aliases)
