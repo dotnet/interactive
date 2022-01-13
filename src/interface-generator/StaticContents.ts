@@ -28,11 +28,7 @@ export interface Disposable {
 export interface DisposableSubscription extends Disposable {
 }
 
-export interface KernelTransport extends Transport {
-    waitForReady(): Promise<void>;
-}
-
-export interface Transport extends Disposable {
+export interface Connector extends Disposable {
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;
     setCommandHandler(handler: KernelCommandEnvelopeHandler): void;
     submitCommand(commandEnvelope: KernelCommandEnvelope): Promise<void>;

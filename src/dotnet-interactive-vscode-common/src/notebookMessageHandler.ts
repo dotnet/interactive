@@ -61,6 +61,7 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, messageHandlerMap: M
         });
 
         client.transport.subscribeToKernelEvents(eventEnvelope => {
+            Logger.default.info(`forwarding event to webview ${eventEnvelope.toString()}`);
             return documentWebViewTrasport.publishKernelEvent(eventEnvelope);
         });
 

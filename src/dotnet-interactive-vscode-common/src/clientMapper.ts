@@ -1,13 +1,13 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelTransport } from './dotnet-interactive/contracts';
+import { Connector } from './dotnet-interactive/contracts';
 import { ErrorOutputCreator, InteractiveClient } from "./interactiveClient";
 import { ReportChannel, Uri } from "./interfaces/vscode-like";
 import { CompositeKernel } from './dotnet-interactive/compositeKernel';
 
 export interface ClientMapperConfiguration {
-    kernelTransportCreator: (notebookUri: Uri) => Promise<KernelTransport>,
+    kernelTransportCreator: (notebookUri: Uri) => Promise<Connector>,
     createErrorOutput: ErrorOutputCreator,
     diagnosticChannel?: ReportChannel,
     configureKernel: (compositeKernel: CompositeKernel, notebookUri: Uri) => void,
