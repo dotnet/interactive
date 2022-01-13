@@ -93,7 +93,7 @@ export async function activate(context: vscode.ExtensionContext) {
         throw new Error(message);
     }
 
-    async function kernelTransportCreator(notebookUri: vscodeLike.Uri): Promise<contracts.KernelTransport> {
+    async function kernelTransportCreator(notebookUri: vscodeLike.Uri): Promise<contracts.Connector> {
         const launchOptions = await getInteractiveLaunchOptions();
         if (!launchOptions) {
             throw new Error(`Unable to get interactive launch options.  Please see the '${diagnosticsChannel.getName()}' output window for details.`);

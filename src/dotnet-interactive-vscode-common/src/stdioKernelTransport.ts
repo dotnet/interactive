@@ -6,7 +6,6 @@ import {
     DisposableSubscription,
     KernelEventEnvelope,
     KernelEventEnvelopeObserver,
-    KernelTransport,
     DiagnosticLogEntryProducedType,
     DiagnosticLogEntryProduced,
     KernelReadyType,
@@ -18,8 +17,9 @@ import { ReportChannel, Uri } from './interfaces/vscode-like';
 import { LineReader } from './lineReader';
 import { isNotNull, parse, stringify } from './utilities';
 import { isKernelCommandEnvelope, isKernelEventEnvelope } from "./dotnet-interactive/utilities";
+import { KernelConnector } from './KernelConnector';
 
-export class StdioKernelTransport implements KernelTransport {
+export class StdioKernelTransport implements KernelConnector {
     private childProcess: cp.ChildProcessWithoutNullStreams | null;
     private lineReader: LineReader;
     private notifyOnExit: boolean = true;

@@ -32,7 +32,7 @@ export class PromiseCompletionSource<T> {
     }
 }
 
-export class GenericTransport implements contracts.Transport {
+export class GenericTransport implements contracts.Connector {
 
     private stillRunning: PromiseCompletionSource<number>;
     private commandHandler: contracts.KernelCommandEnvelopeHandler = () => Promise.resolve();

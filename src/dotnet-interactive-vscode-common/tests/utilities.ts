@@ -29,8 +29,8 @@ export function withFakeGlobalStorageLocation(createLocation: boolean, callback:
     });
 }
 
-export function createKernelTransportConfig(kernelTransportCreator: (notebookUri: vscodeLike.Uri) => Promise<contracts.KernelTransport>) {
-    function defaultKernelTransportCreator(notebookUri: vscodeLike.Uri): Promise<contracts.KernelTransport> {
+export function createKernelTransportConfig(kernelTransportCreator: (notebookUri: vscodeLike.Uri) => Promise<contracts.Connector>) {
+    function defaultKernelTransportCreator(notebookUri: vscodeLike.Uri): Promise<contracts.Connector> {
         throw new Error('Each test needs to override this.');
     }
 

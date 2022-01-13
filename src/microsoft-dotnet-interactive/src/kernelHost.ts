@@ -16,7 +16,7 @@ export class KernelHost {
     private readonly _uri: string;
     private readonly _scheduler: KernelCommandScheduler;
 
-    constructor(private readonly _kernel: CompositeKernel, private readonly _transport: contracts.Transport, hostUri: string) {
+    constructor(private readonly _kernel: CompositeKernel, private readonly _transport: contracts.Connector, hostUri: string) {
         this._uri = hostUri || "kernel://vscode";
         this._kernel.host = this;
         this._scheduler = new KernelCommandScheduler(commandEnvelope => {

@@ -23,7 +23,7 @@ export const SubmitCodeType = "SubmitCode";
 export const UpdateDisplayedValueType = "UpdateDisplayedValue";
 
 export type KernelCommandType =
-      typeof AddPackageType
+    typeof AddPackageType
     | typeof CancelType
     | typeof ChangeWorkingDirectoryType
     | typeof DisplayErrorType
@@ -195,7 +195,7 @@ export const ValueProducedType = "ValueProduced";
 export const WorkingDirectoryChangedType = "WorkingDirectoryChanged";
 
 export type KernelEventType =
-      typeof CodeSubmissionReceivedType
+    typeof CodeSubmissionReceivedType
     | typeof CommandCancelledType
     | typeof CommandFailedType
     | typeof CommandSucceededType
@@ -442,11 +442,7 @@ export interface Disposable {
 export interface DisposableSubscription extends Disposable {
 }
 
-export interface KernelTransport extends Transport {
-    waitForReady(): Promise<void>;
-}
-
-export interface Transport extends Disposable {
+export interface Connector extends Disposable {
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;
     setCommandHandler(handler: KernelCommandEnvelopeHandler): void;
     submitCommand(commandEnvelope: KernelCommandEnvelope): Promise<void>;

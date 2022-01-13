@@ -22,7 +22,7 @@ import {
     KernelEventEnvelope,
     KernelEventEnvelopeObserver,
     KernelEventType,
-    KernelTransport,
+    Connector,
     RequestCompletions,
     RequestCompletionsType,
     RequestDiagnostics,
@@ -54,7 +54,7 @@ export interface ErrorOutputCreator {
 }
 
 export interface InteractiveClientConfiguration {
-    readonly transport: KernelTransport,
+    readonly transport: Connector,
     readonly createErrorOutput: ErrorOutputCreator,
 }
 
@@ -86,7 +86,7 @@ export class InteractiveClient {
         return this._kernelHost;
     }
 
-    get transport(): KernelTransport {
+    get transport(): Connector {
         return this.config.transport;
     }
 
