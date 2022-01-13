@@ -69,9 +69,9 @@ namespace Microsoft.DotNet.Interactive.Journey
             return CodeSubmission.Parse(content, "csharp", GetKernelNames(kernel));
         }
 
-        private static List<Documents.KernelName> GetKernelNames(CompositeKernel? kernel)
+        private static List<KernelName> GetKernelNames(CompositeKernel? kernel)
         {
-            List<Documents.KernelName> kernelNames = new();
+            List<KernelName> kernelNames = new();
 
             if (kernel is { })
             {
@@ -81,17 +81,17 @@ namespace Microsoft.DotNet.Interactive.Journey
                 {
                     var kernelAliases = kernelChooser.Aliases.Select(alias => alias[2..]).ToList();
 
-                    kernelNames.Add(new Documents.KernelName(kernelChooser.Name[2..], kernelAliases));
+                    kernelNames.Add(new KernelName(kernelChooser.Name[2..], kernelAliases));
                 }
 
                 if (kernelNames.All(n => n.Name != "markdown"))
                 {
-                    kernelNames.Add(new Documents.KernelName("markdown", new[] { "md" }));
+                    kernelNames.Add(new KernelName("markdown", new[] { "md" }));
                 }
             }
             else
             {
-                kernelNames = new List<Documents.KernelName>
+                kernelNames = new List<KernelName>
                 {
                     new("csharp", new[] { "cs", "C#", "c#" }),
                     new("fsharp", new[] { "fs", "F#", "f#" }),

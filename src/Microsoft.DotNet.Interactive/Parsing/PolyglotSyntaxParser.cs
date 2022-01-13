@@ -9,6 +9,7 @@ using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.DotNet.Interactive.Utility;
 
 #nullable enable
 
@@ -24,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         internal PolyglotSyntaxParser(
             SourceText sourceText,
-            string defaultLanguage,
+            string? defaultLanguage,
             Parser rootKernelDirectiveParser,
             IDictionary<string, (SchedulingScope commandScope, Func<Parser> getParser)>? subkernelInfoByKernelName = null)
         {
@@ -123,7 +124,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                             if (parseResult.Errors.Count == 0)
                             {
-                                var value = parseResult.ValueForArgument<PackageReferenceOrFileInfo>("package");
+                                var value = parseResult.GetValueForArgument(parseResult.Parser.FindPackageArgument());
 
                                 if (value?.Value is FileInfo)
                                 {
@@ -202,7 +203,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                    .Configuration
                    .RootCommand
                    .Children
-                   .OfType<IIdentifierSymbol>()
+                   .OfType<IdentifierSymbol>()
                    .Any(c => c.HasAlias(directiveName));
         }
 

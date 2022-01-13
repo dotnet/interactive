@@ -143,7 +143,7 @@ i");
                   .Which
                   .Message
                   .Should()
-                  .Be("Required argument missing for command: #!oops");
+                  .Be("Required argument missing for command: '#!oops'.");
         }
 
         [Fact]
