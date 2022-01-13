@@ -5,66 +5,6 @@ import * as contracts from "../src/contracts";
 import { TokenGenerator } from "../src/tokenGenerator";
 import { CommandAndEventReceiver, GenericTransport } from "../src/genericTransport";
 
-export class MockKernelTransport implements contracts.KernelTransport {
-
-    public codeSubmissions: Array<contracts.KernelCommandEnvelope>;
-    public publishedEvents: Array<contracts.KernelEventEnvelope>;
-    private tokenGenerator = new TokenGenerator();
-    private eventObservers: { [key: string]: contracts.KernelEventEnvelopeObserver } = {};
-    private commandHandlers: { [key: string]: contracts.KernelCommandEnvelopeHandler } = {};
-
-    constructor() {
-
-        this.codeSubmissions = new Array<contracts.KernelCommandEnvelope>();
-        this.publishedEvents = new Array<contracts.KernelEventEnvelope>();
-    }
-
-    public subscribeToKernelEvents(observer: contracts.KernelEventEnvelopeObserver) {
-        let key = this.tokenGenerator.GetNewToken();
-        this.eventObservers[key] = observer;
-
-        return {
-            dispose: () => {
-                delete this.eventObservers[key];
-            }
-        };
-    }
-
-    public setCommandHandler(handler: contracts.KernelCommandEnvelopeHandler) {
-        let key = this.tokenGenerator.GetNewToken();
-        this.commandHandlers[key] = handler;
-    }
-
-    public fakeIncomingSubmitCommand(envelope: contracts.KernelCommandEnvelope) {
-        for (let key of Object.keys(this.commandHandlers)) {
-            let observer = this.commandHandlers[key];
-            observer(envelope);
-        }
-    }
-
-    publishKernelEvent(eventEnvelope: contracts.KernelEventEnvelope): Promise<void> {
-        this.publishedEvents.push(eventEnvelope);
-        return Promise.resolve();
-    }
-
-    public submitCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
-
-        this.codeSubmissions.push(commandEnvelope);
-        return Promise.resolve();
-    }
-
-    public waitForReady(): Promise<void> {
-        return Promise.resolve();
-    }
-
-    public dispose() {
-    }
-}
-
-export function createMockKernelTransport(rootUrl: string): Promise<contracts.KernelTransport> {
-    return Promise.resolve(new MockKernelTransport());
-}
-
 export function findEvent<T>(kernelEventEnvelopes: contracts.KernelEventEnvelope[], eventType: contracts.KernelEventType): T | undefined {
     return findEventEnvelope(kernelEventEnvelopes, eventType)?.event as T;
 }
