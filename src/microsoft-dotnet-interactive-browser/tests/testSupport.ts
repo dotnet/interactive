@@ -16,7 +16,7 @@ export function configureFetchForKernelDiscovery(rootUrl: string) {
     fetchMock.get(`${rootUrl}/kernels`, require("./Responses/kernels-get-response.json"));
 }
 
-export class MockKernelTransport implements contracts.KernelTransport {
+export class MockKernelConnector implements contracts.Connector {
 
     public codeSubmissions: Array<contracts.KernelCommandEnvelope>;
     public publishedEvents: Array<contracts.KernelEventEnvelope>;
@@ -72,8 +72,8 @@ export class MockKernelTransport implements contracts.KernelTransport {
     }
 }
 
-export function createMockKernelTransport(rootUrl: string): Promise<contracts.KernelTransport> {
-    return Promise.resolve(new MockKernelTransport());
+export function createMockConnector(rootUrl: string): Promise<contracts.Connector> {
+    return Promise.resolve(new MockKernelConnector());
 }
 
 export function findEvent<T>(kernelEventEnvelopes: contracts.KernelEventEnvelope[], eventType: contracts.KernelEventType): T | undefined {
@@ -92,7 +92,7 @@ export function findEventEnvelopeFromKernel(kernelEventEnvelopes: contracts.Kern
     return kernelEventEnvelopes.find(eventEnvelope => eventEnvelope.eventType === eventType && eventEnvelope.command!.command.targetKernelName === kernelName);
 }
 
-export function createInMemoryTransport(eventProducer?: (commandEnvelope: contracts.KernelCommandEnvelope) => contracts.KernelEventEnvelope[]): { transport: GenericTransport, sentItems: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[], writeToTransport: (data: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)) => void } {
+export function createInMemoryConnector(eventProducer?: (commandEnvelope: contracts.KernelCommandEnvelope) => contracts.KernelEventEnvelope[]): { transport: GenericTransport, sentItems: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[], writeToTransport: (data: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)) => void } {
     let sentItems: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] = [];
     let ep = eventProducer;
     if (!eventProducer) {

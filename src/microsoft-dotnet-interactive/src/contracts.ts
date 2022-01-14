@@ -23,7 +23,7 @@ export const SubmitCodeType = "SubmitCode";
 export const UpdateDisplayedValueType = "UpdateDisplayedValue";
 
 export type KernelCommandType =
-    typeof AddPackageType
+      typeof AddPackageType
     | typeof CancelType
     | typeof ChangeWorkingDirectoryType
     | typeof DisplayErrorType
@@ -195,7 +195,7 @@ export const ValueProducedType = "ValueProduced";
 export const WorkingDirectoryChangedType = "WorkingDirectoryChanged";
 
 export type KernelEventType =
-    typeof CodeSubmissionReceivedType
+      typeof CodeSubmissionReceivedType
     | typeof CommandCancelledType
     | typeof CommandFailedType
     | typeof CommandSucceededType
