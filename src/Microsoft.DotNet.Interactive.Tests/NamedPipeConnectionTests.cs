@@ -20,9 +20,10 @@ public class NamedPipeConnectionTests : KernelConnectionTestsBase<string>
     {
     }
 
-    protected override Task<IKernelConnector> CreateConnectorAsync(string pipeName)
+    protected override async Task<IKernelConnector> CreateConnectorAsync(string pipeName)
     {
-        return Task.FromResult<IKernelConnector>(new NamedPipeKernelConnector(pipeName));
+        await CreateRemoteKernelTopologyAsync(pipeName);
+        return new NamedPipeKernelConnector(pipeName);
     }
 
     protected override string CreateConnectionConfiguration()
@@ -40,7 +41,7 @@ public class NamedPipeConnectionTests : KernelConnectionTestsBase<string>
         compositeKernel.UseKernelClientConnection(new ConnectNamedPipeCommand());
     }
 
-    protected override Task<KernelHost> CreateRemoteKernelTopologyAsync(string pipeName)
+    protected override Task<IDisposable> CreateRemoteKernelTopologyAsync(string pipeName)
     {
         var remoteCompositeKernel = new CompositeKernel
             {
@@ -56,7 +57,7 @@ public class NamedPipeConnectionTests : KernelConnectionTestsBase<string>
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility",
         Justification = "Test only enabled on windows platform")]
-    protected override Task<KernelHost> ConnectHostAsync(CompositeKernel remoteKernel, string pipeName)
+    protected override Task<IDisposable> ConnectHostAsync(CompositeKernel remoteKernel, string pipeName)
     {
         var serverStream = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
         var kernelCommandAndEventPipeStreamReceiver = new KernelCommandAndEventPipeStreamReceiver(serverStream);
@@ -73,7 +74,7 @@ public class NamedPipeConnectionTests : KernelConnectionTestsBase<string>
             serverStream.WaitForConnection();
             var _ = host.ConnectAsync();
         });
-
-        return Task.FromResult(host);
+        RegisterForDisposal(host);
+        return Task.FromResult<IDisposable>(host);
     }
 }
