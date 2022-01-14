@@ -76,7 +76,6 @@ public abstract class KernelConnectionTestsBase<T>: IDisposable
         kernelEvents2.Should().ContainSingle<ReturnValueProduced>().Which.FormattedValues.Should().ContainSingle(f => f.Value == "echo2");
     }
 
-
     [WindowsFact]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
     public async Task can_connect_to_remote_using_connect_command()
@@ -117,7 +116,8 @@ x.Display(""text/plain"");");
             .Be("2");
     }
 
-    [Fact]
+    [WindowsFact]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
     public async Task fast_path_commands_over_proxy_can_be_handled()
     {
         var connector = await CreateConnectorAsync(CreateConnectionConfiguration());
