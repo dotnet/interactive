@@ -11,8 +11,9 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-
+using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests;
@@ -41,7 +42,7 @@ public abstract class KernelConnectionTestsBase<T>: IDisposable
     public async Task it_can_reuse_connection_for_multiple_proxy_kernel()
     {
         var configuration = CreateConnectionConfiguration();
-        using var _ = await CreateRemoteKernelTopologyAsync(configuration);
+       
         var connector = await CreateConnectorAsync(configuration);
 
         // use same connection to create 2 proxy kernel
@@ -75,7 +76,6 @@ public abstract class KernelConnectionTestsBase<T>: IDisposable
         kernelEvents2.Should().ContainSingle<ReturnValueProduced>().Which.FormattedValues.Should().ContainSingle(f => f.Value == "echo2");
     }
 
-    protected abstract Task<IKernelConnector> CreateConnectorAsync(T configuration);
 
     [WindowsFact]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
@@ -83,7 +83,7 @@ public abstract class KernelConnectionTestsBase<T>: IDisposable
     {
         var configuration = CreateConnectionConfiguration();
 
-        using var _ = await CreateRemoteKernelTopologyAsync(configuration);
+        await CreateRemoteKernelTopologyAsync(configuration);
 
         using var localCompositeKernel = new CompositeKernel
         {
@@ -117,6 +117,30 @@ x.Display(""text/plain"");");
             .Be("2");
     }
 
+    [Fact]
+    public async Task fast_path_commands_over_proxy_can_be_handled()
+    {
+        var connector = await CreateConnectorAsync(CreateConnectionConfiguration());
+
+        using var kernel = await connector.ConnectKernelAsync(new KernelInfo("newKernelName"));
+
+        var markedCode = "var x = 12$$34;";
+
+        MarkupTestFile.GetLineAndColumn(markedCode, out var code, out var line, out var column);
+
+        var result = await kernel.SendAsync(new RequestHoverText(code, new LinePosition(line, column)));
+
+        var events = result.KernelEvents.ToSubscribedList();
+
+        events
+            .Should()
+            .EventuallyContainSingle<HoverTextProduced>();
+    }
+
+
+
+    protected abstract Task<IKernelConnector> CreateConnectorAsync(T configuration);
+
     protected abstract T CreateConnectionConfiguration();
 
     protected abstract SubmitCode CreateConnectionCommand(T configuration);
@@ -124,8 +148,8 @@ x.Display(""text/plain"");");
     protected abstract void ConfigureConnectCommand(CompositeKernel compositeKernel);
 
 
-    protected abstract Task<KernelHost> CreateRemoteKernelTopologyAsync(T configuration);
+    protected abstract Task<IDisposable> CreateRemoteKernelTopologyAsync(T configuration);
 
-    protected abstract Task<KernelHost> ConnectHostAsync(CompositeKernel remoteKernel, T configuration);
+    protected abstract Task<IDisposable> ConnectHostAsync(CompositeKernel remoteKernel, T configuration);
 
 }
