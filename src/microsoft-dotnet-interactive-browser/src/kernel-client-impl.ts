@@ -12,7 +12,7 @@ import { clientSideKernelFactory } from "./kernel-factory";
 export interface KernelClientImplParameteres {
     clientFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
     rootUrl: string;
-    kernelTransport: contracts.KernelTransport,
+    connector: contracts.Connector,
     clientSideKernel: Kernel,
     configureRequire: (config: any) => any
 }
@@ -107,7 +107,7 @@ export class KernelClientImpl implements dotnetInteractiveInterfaces.DotnetInter
 
     private _clientFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
     private _rootUrl: string;
-    private _kernelTransport: contracts.KernelTransport;
+    private _kernelTransport: contracts.Connector;
     private _clientSideKernel: Kernel;
     private _tokenGenerator: TokenGenerator;
     private _configureRequire: (confing: any) => any;
@@ -115,7 +115,7 @@ export class KernelClientImpl implements dotnetInteractiveInterfaces.DotnetInter
     constructor(parameters: KernelClientImplParameteres) {
         this._clientFetch = parameters.clientFetch;
         this._rootUrl = parameters.rootUrl;
-        this._kernelTransport = parameters.kernelTransport;
+        this._kernelTransport = parameters.connector;
         this._tokenGenerator = new TokenGenerator();
         this._configureRequire = parameters.configureRequire;
         this._clientSideKernel = parameters.clientSideKernel;
@@ -270,8 +270,8 @@ export class KernelClientImpl implements dotnetInteractiveInterfaces.DotnetInter
 export type DotnetInteractiveClientConfiguration = {
     address: string,
     clientFetch?: dotnetInteractiveInterfaces.ClientFetch,
-    kernelTransportFactory?: (rootUrl: string) => Promise<contracts.KernelTransport>,
-    clientSideKernelFactory?: (kernelTransport: contracts.KernelTransport) => Promise<Kernel>
+    connectorFactory?: (rootUrl: string) => Promise<contracts.Connector>,
+    clientSideKernelFactory?: (kernelTransport: contracts.Connector) => Promise<Kernel>
 };
 
 function isConfiguration(config: any): config is DotnetInteractiveClientConfiguration {
@@ -281,13 +281,13 @@ function isConfiguration(config: any): config is DotnetInteractiveClientConfigur
 export async function createDotnetInteractiveClient(configuration: string | DotnetInteractiveClientConfiguration): Promise<dotnetInteractiveInterfaces.DotnetInteractiveClient> {
     let rootUrl = "";
     let clientFetch: dotnetInteractiveInterfaces.ClientFetch | undefined;
-    let kernelTransportFactory: ((rootUrl: string) => Promise<contracts.KernelTransport>) | undefined;
-    let kernelFactory: ((kernelTransport: contracts.KernelTransport) => Promise<Kernel>) | undefined;
+    let connectorFactory: (rootUrl: string) => Promise<contracts.Connector> | undefined;
+    let kernelFactory: (kernelTransport: contracts.Connector) => Promise<Kernel> | undefined;
 
     if (isConfiguration(configuration)) {
         rootUrl = configuration.address;
         clientFetch = configuration.clientFetch;
-        kernelTransportFactory = configuration.kernelTransportFactory;
+        connectorFactory = configuration.connectorFactory;
         kernelFactory = configuration.clientSideKernelFactory;
     } else {
         rootUrl = configuration;
@@ -301,20 +301,20 @@ export async function createDotnetInteractiveClient(configuration: string | Dotn
         clientFetch = createDefaultClientFetch(rootUrl);
     }
 
-    if (!kernelTransportFactory) {
-        kernelTransportFactory = signalTransportFactory;
+    if (!connectorFactory) {
+        connectorFactory = signalTransportFactory;
     }
 
     if (!kernelFactory) {
         kernelFactory = clientSideKernelFactory;
     }
 
-    let transport = await kernelTransportFactory(rootUrl);
+    let transport = await connectorFactory(rootUrl);
     let clientSideKernel = await kernelFactory(transport);
     let client = new KernelClientImpl({
         clientFetch: clientFetch,
         rootUrl,
-        kernelTransport: transport,
+        connector: transport,
         clientSideKernel,
         configureRequire: (config: any) => {
             return (<any>require).config(config) || require;

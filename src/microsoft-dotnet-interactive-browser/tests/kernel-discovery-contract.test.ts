@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import { createDotnetInteractiveClient } from "../src/kernel-client-impl";
 import * as fetchMock from "fetch-mock";
-import { asKernelClientContainer, createMockKernelTransport } from "./testSupport";
+import { asKernelClientContainer, createMockConnector } from "./testSupport";
 
 describe("dotnet-interactive", () => {
     describe("kernel discovery contract", () => {
@@ -17,7 +17,7 @@ describe("dotnet-interactive", () => {
             fetchMock.get(`${rootUrl}/kernels`, require("./Responses/kernels-get-response.json"));
             let client = asKernelClientContainer(await createDotnetInteractiveClient({
                 address: rootUrl,
-                kernelTransportFactory: createMockKernelTransport
+                connectorFactory: createMockConnector
             }));
 
             for (let kernelName of expectedKernels) {

@@ -5,7 +5,7 @@ import { expect } from "chai";
 import { createDotnetInteractiveClient } from "../src/kernel-client-impl";
 import * as fetchMock from "fetch-mock";
 import { VariableResponse, VariableRequest } from "../src/dotnet-interactive-interfaces";
-import { asKernelClientContainer, configureFetchForKernelDiscovery, createMockKernelTransport } from "./testSupport";
+import { asKernelClientContainer, configureFetchForKernelDiscovery, createMockConnector } from "./testSupport";
 
 describe("dotnet-interactive", () => {
     describe("variable api contract", () => {
@@ -43,7 +43,7 @@ describe("dotnet-interactive", () => {
 
             let client = await createDotnetInteractiveClient({
                 address: rootUrl,
-                kernelTransportFactory: createMockKernelTransport
+                connectorFactory: createMockConnector
             });
 
             let variables = await client.getVariables(varaibleRequest);
@@ -64,7 +64,7 @@ describe("dotnet-interactive", () => {
 
             let client = asKernelClientContainer(await createDotnetInteractiveClient({
                 address: rootUrl,
-                kernelTransportFactory: createMockKernelTransport
+                connectorFactory: createMockConnector
             }));
 
             let csharpClient = client[kernelName];
