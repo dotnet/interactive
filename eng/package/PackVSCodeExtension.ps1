@@ -49,6 +49,7 @@ try {
     Build-VsCodeExtension -packageDirectory "dotnet-interactive-vscode" -outputSubDirectory "stable-locked" -packageVersionNumber $stablePackageVersion
     Build-VsCodeExtension -packageDirectory "dotnet-interactive-vscode" -outputSubDirectory "stable" -packageVersionNumber $stablePackageVersion -kernelVersionNumber $stableToolVersionNumber
     Build-VsCodeExtension -packageDirectory "dotnet-interactive-vscode-insiders" -outputSubDirectory "insiders" -packageVersionNumber $insidersPackageVersion -kernelVersionNumber $stableToolVersionNumber
+    Build-VsCodeExtension -packageDirectory "dotnet-interactive-vscode-ads" -outputSubDirectory "ads-stable" -packageVersionNumber $stablePackageVersion -kernelVersionNumber $stableToolVersionNumber
 }
 catch {
     Write-Host $_

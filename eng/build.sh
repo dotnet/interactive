@@ -45,7 +45,8 @@ done
 npmDirs='src/microsoft-dotnet-interactive
          src/microsoft-dotnet-interactive-browser
          src/dotnet-interactive-vscode
-         src/dotnet-interactive-vscode-insiders'
+         src/dotnet-interactive-vscode-insiders
+         src/dotnet-interactive-vscode-ads'
 for npmDir in $npmDirs;
 do
   echo "Building NPM in directory $npmDir"

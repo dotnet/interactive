@@ -17,8 +17,16 @@ function DownloadVsCodeApi([string] $branchName, [string] $destinationDirectory)
     Invoke-WebRequest -Uri "https://raw.githubusercontent.com/microsoft/vscode/$branchName/src/vscode-dts/vscode.proposed.textDocumentNotebook.d.ts" -OutFile "$PSScriptRoot\$destinationDirectory\vscode.proposed.textDocumentNotebook.d.ts"
 }
 
+function DownloadLegacyVsCodeApi([string] $branchName, [string] $destinationDirectory) {    
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/microsoft/vscode/$branchName/src/vs/vscode.d.ts" -OutFile "$PSScriptRoot\$destinationDirectory\vscode.d.ts"
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/microsoft/vscode/$branchName/src/vs/vscode.proposed.d.ts" -OutFile "$PSScriptRoot\$destinationDirectory\vscode.proposed.d.ts"
+}
+
 # stable
 DownloadVsCodeApi -branchName "release/$vsCodeStableVersion" -destinationDirectory "src"
 
 # insiders
 DownloadVsCodeApi -branchName "main" -destinationDirectory "..\dotnet-interactive-vscode-insiders\src"
+
+# azure data studio
+DownloadLegacyVsCodeApi -branchName "release/1.59" -destinationDirectory "..\dotnet-interactive-vscode-ads\src"
