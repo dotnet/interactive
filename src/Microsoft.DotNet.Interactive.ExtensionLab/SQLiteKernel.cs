@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         IKernelCommandHandler<SubmitCode>
     {
         private readonly string _connectionString;
-        private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> tables;
+        private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> _tables;
 
         public SQLiteKernel(string name, string connectionString) : base(name)
         {
@@ -45,9 +45,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             dbCommand.CommandText = submitCode.Code;
 
-            tables = Execute(dbCommand);
+            _tables = Execute(dbCommand);
 
-            foreach (var table in tables)
+            foreach (var table in _tables)
             {
                 var tabularDataResource = table.ToTabularDataResource();
 

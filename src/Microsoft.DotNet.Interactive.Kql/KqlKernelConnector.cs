@@ -72,5 +72,9 @@ namespace Microsoft.DotNet.Interactive.Kql
             Cluster = cluster;
             Database = database;
         }
+
+        public void Dispose()
+        {
+        }
     }
 }

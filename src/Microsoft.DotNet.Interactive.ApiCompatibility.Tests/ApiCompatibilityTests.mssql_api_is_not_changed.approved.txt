@@ -106,12 +106,13 @@ Microsoft.DotNet.Interactive.SqlServer
     .ctor()
     public ResultMessage Message { get; set;}
     public System.String OwnerUri { get; set;}
-  public class MsSqlKernelConnector, Microsoft.DotNet.Interactive.Connection.IKernelConnector
+  public class MsSqlKernelConnector, Microsoft.DotNet.Interactive.Connection.IKernelConnector, System.IDisposable
     .ctor(System.Boolean createDbContext, System.String connectionString)
     public System.String ConnectionString { get;}
     public System.Boolean CreateDbContext { get;}
     public System.String PathToService { get; set;}
     public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> ConnectKernelAsync(Microsoft.DotNet.Interactive.KernelInfo kernelInfo)
+    public System.Void Dispose()
   public class MsSqlKernelExtension, Microsoft.DotNet.Interactive.IKernelExtension
     .ctor()
     public System.Threading.Tasks.Task OnLoadAsync(Microsoft.DotNet.Interactive.Kernel kernel)

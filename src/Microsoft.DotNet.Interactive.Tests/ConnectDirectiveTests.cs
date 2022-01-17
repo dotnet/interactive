@@ -215,5 +215,10 @@ hello!
         {
             return CreateKernel(kernelInfo);
         }
+
+        public void Dispose()
+        {
+            
+        }
     }
 }

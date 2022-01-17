@@ -11,9 +11,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests;
@@ -43,7 +41,7 @@ public abstract class KernelConnectionTestsBase<T>: IDisposable
     {
         var configuration = CreateConnectionConfiguration();
        
-        var connector = await CreateConnectorAsync(configuration);
+        using var connector = await CreateConnectorAsync(configuration);
 
         // use same connection to create 2 proxy kernel
 

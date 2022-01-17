@@ -11,76 +11,75 @@ using Kusto.Data.Common;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.SqlServer;
 
-namespace Microsoft.DotNet.Interactive.Kql
+namespace Microsoft.DotNet.Interactive.Kql;
+
+internal class MsKqlKernel : ToolsServiceKernel
 {
-    internal class MsKqlKernel : ToolsServiceKernel
+    private readonly KqlConnectionDetails _connectionDetails;
+    private ChooseMsKqlKernelDirective _chooseKernelDirective;
+
+    public MsKqlKernel(
+        string name,
+        KqlConnectionDetails connectionDetails,
+        ToolsServiceClient client) : base(name, client)
     {
-        private readonly KqlConnectionDetails _connectionDetails;
-        private ChooseMsKqlKernelDirective _chooseKernelDirective;
+        _connectionDetails = connectionDetails ?? throw new ArgumentException("Value cannot be null or whitespace.", nameof(connectionDetails));
+    }
 
-        public MsKqlKernel(
-            string name,
-            KqlConnectionDetails connectionDetails,
-            ToolsServiceClient client) : base(name, client)
+    public override async Task ConnectAsync()
+    {
+        if (!Connected)
         {
-            _connectionDetails = connectionDetails ?? throw new ArgumentException("Value cannot be null or whitespace.", nameof(connectionDetails));
+            await ServiceClient.ConnectAsync(TempFileUri, _connectionDetails);
+            await ConnectionCompleted.Task;
+            Connected = true;
         }
+    }
 
-        public override async Task ConnectAsync()
+
+    public override ChooseMsKqlKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= new(this);
+
+    protected override string CreateVariableDeclaration(string name, object value)
+    {
+        return $"let {name} = {MapToKqlValueDeclaration(value)};";
+
+        static string MapToKqlValueDeclaration(object value) =>
+            value switch
+            {
+                string s => s.AsDoubleQuotedString(),
+                char c => c.ToString().AsDoubleQuotedString(),
+                _ => value.ToString()
+            };
+    }
+
+    protected override bool CanDeclareVariable(string name, object value, out string msg)
+    {
+        msg = default;
+        if (value is char)
         {
-            if (!Connected)
-            {
-                await ServiceClient.ConnectAsync(TempFileUri, _connectionDetails);
-                await ConnectionCompleted.Task;
-                Connected = true;
-            }
-        }
-
-
-        public override ChooseMsKqlKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= new(this);
-
-        protected override string CreateVariableDeclaration(string name, object value)
-        {
-            return $"let {name} = {MapToKqlValueDeclaration(value)};";
-
-            static string MapToKqlValueDeclaration(object value) =>
-                value switch
-                {
-                    string s => s.AsDoubleQuotedString(),
-                    char c => c.ToString().AsDoubleQuotedString(),
-                    _ => value.ToString()
-                };
-        }
-
-        protected override bool CanDeclareVariable(string name, object value, out string msg)
-        {
-            msg = default;
-            if (value is char)
-            {
-                // CslType doesn't support char but we just convert it to a string for our use here
-                return true;
-            }
-            try
-            {
-                var _ = CslType.FromClrType(value.GetType());
-            }
-            catch (Exception e)
-            {
-                msg = e.Message;
-                return false;
-            }
+            // CslType doesn't support char but we just convert it to a string for our use here
             return true;
         }
-
-
-        protected override void StoreQueryResults(IReadOnlyCollection<TabularDataResource> results, ParseResult commandKernelChooserParseResult)
+        try
         {
-            var chooser = ChooseKernelDirective;
-            var name = commandKernelChooserParseResult.ValueForOption(chooser.NameOption);
-            if (!string.IsNullOrWhiteSpace(name))
-            {
-                QueryResults[name] = results;
-            }
+            var _ = CslType.FromClrType(value.GetType());
+        }
+        catch (Exception e)
+        {
+            msg = e.Message;
+            return false;
+        }
+        return true;
+    }
+
+
+    protected override void StoreQueryResults(IReadOnlyCollection<TabularDataResource> results, ParseResult commandKernelChooserParseResult)
+    {
+        var chooser = ChooseKernelDirective;
+        var name = commandKernelChooserParseResult.ValueForOption(chooser.NameOption);
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            QueryResults[name] = results;
         }
     }
 }

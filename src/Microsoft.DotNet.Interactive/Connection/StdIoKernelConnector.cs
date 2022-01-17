@@ -16,7 +16,7 @@ using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Connection;
 
-public class StdIoKernelConnector : IKernelConnector, IDisposable
+public class StdIoKernelConnector : IKernelConnector
 {
     private MultiplexingKernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventTextStreamSender? _sender;
@@ -60,8 +60,7 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
                 new KernelCommandAndEventTextReceiver(_process.StandardOutput));
             _sender = new KernelCommandAndEventTextStreamSender(_process.StandardInput);
             var kernel = new ProxyKernel(kernelInfo.LocalName, _receiver, _sender);
-            kernel.RegisterForDisposal(this);
-
+        
             var r = _receiver.CreateChildReceiver();
             var _ = kernel.StartAsync();
 
@@ -109,6 +108,8 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
 
     public void Dispose()
     {
+        _receiver?.Dispose();
+
         if (_process is not null && _process.HasExited == false)
         {
             _process?.Kill();
