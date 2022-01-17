@@ -4,13 +4,13 @@
 import { expect } from 'chai';
 
 import { ClientMapper } from '../../src/vscode-common/clientMapper';
-import { TestKernelTransport } from './testKernelTransport';
+import { TestDotnetInteractiveChannel } from './testDotnetInteractiveChannel';
 import { provideCompletion } from './../../src/vscode-common/languageServices/completion';
 import { provideHover } from './../../src/vscode-common/languageServices/hover';
 import { provideSignatureHelp } from '../../src/vscode-common/languageServices/signatureHelp';
 import { CommandSucceededType, CompletionsProducedType, HoverTextProducedType, SignatureHelpProducedType } from '../../src/vscode-common/dotnet-interactive/contracts';
 import { createUri } from '../../src/vscode-common/utilities';
-import { createKernelTransportConfig } from './utilities';
+import { createChannelConfig } from './utilities';
 import { Logger } from '../../src/vscode-common/dotnet-interactive/logger';
 
 describe('LanguageProvider tests', () => {
@@ -20,7 +20,7 @@ describe('LanguageProvider tests', () => {
 
     it('CompletionProvider', async () => {
         const token = '123';
-        const config = createKernelTransportConfig(async (_notebookPath) => new TestKernelTransport({
+        const config = createChannelConfig(async (_notebookPath) => new TestDotnetInteractiveChannel({
             'RequestCompletions': [
                 {
                     eventType: CompletionsProducedType,
@@ -78,7 +78,7 @@ describe('LanguageProvider tests', () => {
 
     it('HoverProvider', async () => {
         const token = '123';
-        const config = createKernelTransportConfig(async (_notebookPath) => new TestKernelTransport({
+        const config = createChannelConfig(async (_notebookPath) => new TestDotnetInteractiveChannel({
             'RequestHoverText': [
                 {
                     eventType: HoverTextProducedType,
@@ -143,7 +143,7 @@ describe('LanguageProvider tests', () => {
 
     it('SignatureHelpProvider', async () => {
         const token = '123';
-        const config = createKernelTransportConfig(async (_notebookPath) => new TestKernelTransport({
+        const config = createChannelConfig(async (_notebookPath) => new TestDotnetInteractiveChannel({
             'RequestSignatureHelp': [
                 {
                     eventType: SignatureHelpProducedType,

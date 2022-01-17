@@ -12,7 +12,7 @@ import { clientSideKernelFactory } from "./kernel-factory";
 export interface KernelClientImplParameteres {
     clientFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
     rootUrl: string;
-    connector: contracts.Connector,
+    channel: contracts.KernelCommandAndEventChannel,
     clientSideKernel: Kernel,
     configureRequire: (config: any) => any
 }
@@ -107,7 +107,7 @@ export class KernelClientImpl implements dotnetInteractiveInterfaces.DotnetInter
 
     private _clientFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
     private _rootUrl: string;
-    private _kernelTransport: contracts.Connector;
+    private _kernelChannel: contracts.KernelCommandAndEventChannel;
     private _clientSideKernel: Kernel;
     private _tokenGenerator: TokenGenerator;
     private _configureRequire: (confing: any) => any;
@@ -115,7 +115,7 @@ export class KernelClientImpl implements dotnetInteractiveInterfaces.DotnetInter
     constructor(parameters: KernelClientImplParameteres) {
         this._clientFetch = parameters.clientFetch;
         this._rootUrl = parameters.rootUrl;
-        this._kernelTransport = parameters.connector;
+        this._kernelChannel = parameters.channel;
         this._tokenGenerator = new TokenGenerator();
         this._configureRequire = parameters.configureRequire;
         this._clientSideKernel = parameters.clientSideKernel;
@@ -126,7 +126,7 @@ export class KernelClientImpl implements dotnetInteractiveInterfaces.DotnetInter
     }
 
     public subscribeToKernelEvents(observer: contracts.KernelEventEnvelopeObserver): contracts.DisposableSubscription {
-        let subscription = this._kernelTransport.subscribeToKernelEvents(observer);
+        let subscription = this._kernelChannel.subscribeToKernelEvents(observer);
         return subscription;
     }
 
@@ -215,7 +215,7 @@ export class KernelClientImpl implements dotnetInteractiveInterfaces.DotnetInter
             targetKernelName: targetKernelName
         }
 
-        await this._kernelTransport.submitCommand({ command, commandType: contracts.SubmitCodeType, token });
+        await this._kernelChannel.submitCommand({ command, commandType: contracts.SubmitCodeType, token });
         return token;
     }
 
@@ -230,7 +230,7 @@ export class KernelClientImpl implements dotnetInteractiveInterfaces.DotnetInter
             command.targetKernelName = targetKernelName;
         }
 
-        await this._kernelTransport.submitCommand({ command, commandType: <any>commandType, token });
+        await this._kernelChannel.submitCommand({ command, commandType: <any>commandType, token });
         return token;
     }
 
@@ -270,8 +270,8 @@ export class KernelClientImpl implements dotnetInteractiveInterfaces.DotnetInter
 export type DotnetInteractiveClientConfiguration = {
     address: string,
     clientFetch?: dotnetInteractiveInterfaces.ClientFetch,
-    connectorFactory?: (rootUrl: string) => Promise<contracts.Connector>,
-    clientSideKernelFactory?: (kernelTransport: contracts.Connector) => Promise<Kernel>
+    channelFactory?: (rootUrl: string) => Promise<contracts.KernelCommandAndEventChannel>,
+    clientSideKernelFactory?: (kernelTransport: contracts.KernelCommandAndEventChannel) => Promise<Kernel>
 };
 
 function isConfiguration(config: any): config is DotnetInteractiveClientConfiguration {
@@ -281,13 +281,13 @@ function isConfiguration(config: any): config is DotnetInteractiveClientConfigur
 export async function createDotnetInteractiveClient(configuration: string | DotnetInteractiveClientConfiguration): Promise<dotnetInteractiveInterfaces.DotnetInteractiveClient> {
     let rootUrl = "";
     let clientFetch: dotnetInteractiveInterfaces.ClientFetch | undefined;
-    let connectorFactory: (rootUrl: string) => Promise<contracts.Connector> | undefined;
-    let kernelFactory: (kernelTransport: contracts.Connector) => Promise<Kernel> | undefined;
+    let channelFactory: (rootUrl: string) => Promise<contracts.KernelCommandAndEventChannel> | undefined;
+    let kernelFactory: (kernelTransport: contracts.KernelCommandAndEventChannel) => Promise<Kernel> | undefined;
 
     if (isConfiguration(configuration)) {
         rootUrl = configuration.address;
         clientFetch = configuration.clientFetch;
-        connectorFactory = configuration.connectorFactory;
+        channelFactory = configuration.channelFactory;
         kernelFactory = configuration.clientSideKernelFactory;
     } else {
         rootUrl = configuration;
@@ -301,20 +301,20 @@ export async function createDotnetInteractiveClient(configuration: string | Dotn
         clientFetch = createDefaultClientFetch(rootUrl);
     }
 
-    if (!connectorFactory) {
-        connectorFactory = signalTransportFactory;
+    if (!channelFactory) {
+        channelFactory = signalTransportFactory;
     }
 
     if (!kernelFactory) {
         kernelFactory = clientSideKernelFactory;
     }
 
-    let transport = await connectorFactory(rootUrl);
+    let transport = await channelFactory(rootUrl);
     let clientSideKernel = await kernelFactory(transport);
     let client = new KernelClientImpl({
         clientFetch: clientFetch,
         rootUrl,
-        connector: transport,
+        channel: transport,
         clientSideKernel,
         configureRequire: (config: any) => {
             return (<any>require).config(config) || require;

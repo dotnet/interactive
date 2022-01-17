@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { CompositeKernel } from "./vscode-common/dotnet-interactive/compositeKernel";
-import * as genericTransport from "./vscode-common/dotnet-interactive/genericTransport";
+import * as genericChannel from "./vscode-common/dotnet-interactive/genericChannel";
 import { JavascriptKernel } from "./vscode-common/dotnet-interactive/javascriptKernel";
 import { Kernel } from "./vscode-common/dotnet-interactive/kernel";
 import * as contracts from "./vscode-common/dotnet-interactive/contracts";
@@ -41,7 +41,7 @@ export function configure(global?: any) {
         }
     };
 
-    const receiver = new genericTransport.CommandAndEventReceiver();
+    const receiver = new genericChannel.CommandAndEventReceiver();
 
     Logger.configure('webview', entry => {
         // @ts-ignore
@@ -49,7 +49,7 @@ export function configure(global?: any) {
     });
 
 
-    const transport = new genericTransport.GenericTransport(
+    const channel = new genericChannel.GenericChannel(
         (envelope) => {
             // @ts-ignore
             postKernelMessage({ envelope });
@@ -61,14 +61,14 @@ export function configure(global?: any) {
     );
 
     const compositeKernel = new CompositeKernel("webview");
-    const kernelHost = new KernelHost(compositeKernel, transport, "kernel://webview");
+    const kernelHost = new KernelHost(compositeKernel, channel, "kernel://webview");
 
     // @ts-ignore
     onDidReceiveKernelMessage(event => {
         if (event.envelope) {
             const envelope = <contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope><any>(event.envelope);
             if (isKernelEventEnvelope(envelope)) {
-                Logger.default.info(`transport got ${envelope.eventType} with token ${envelope.command?.token} and id ${envelope.command?.id}`);
+                Logger.default.info(`channel got ${envelope.eventType} with token ${envelope.command?.token} and id ${envelope.command?.id}`);
             }
             receiver.delegate(envelope);
         }
@@ -83,7 +83,7 @@ export function configure(global?: any) {
     kernelHost.createProxyKernelOnDefaultConnector({ localName: 'vscode', destinationUri: "kernel://vscode/vscode" });
 
     kernelHost.connect();
-    transport.run();
+    channel.run();
 }
 
 // @ts-ignore

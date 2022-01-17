@@ -17,9 +17,9 @@ import { ReportChannel, Uri } from './interfaces/vscode-like';
 import { LineReader } from './lineReader';
 import { isNotNull, parse, stringify } from './utilities';
 import { isKernelCommandEnvelope, isKernelEventEnvelope } from "./dotnet-interactive/utilities";
-import { KernelConnector } from './KernelConnector';
+import { DotnetInteractiveChannel } from './DotnetInteractiveChannel';
 
-export class StdioKernelTransport implements KernelConnector {
+export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
     private childProcess: cp.ChildProcessWithoutNullStreams | null;
     private lineReader: LineReader;
     private notifyOnExit: boolean = true;

@@ -7,12 +7,12 @@ chai.use(chai_as_promised);
 const expect = chai.expect;
 
 import { ClientMapper } from '../../src/vscode-common/clientMapper';
-import { TestKernelTransport } from './testKernelTransport';
-import { CallbackTestKernelTransport } from './callbackTestKernelTransport';
+import { TestDotnetInteractiveChannel } from './testDotnetInteractiveChannel';
+import { CallbackTestTestDotnetInteractiveChannel } from './callbackTestTestDotnetInteractiveChannel';
 import { CodeSubmissionReceivedType, CompleteCodeSubmissionReceivedType, CommandSucceededType, DisplayedValueProducedType, ReturnValueProducedType, DisplayedValueUpdatedType, CommandFailedType } from '../../src/vscode-common/dotnet-interactive/contracts';
 import { createUri, debounce, wait } from '../../src/vscode-common/utilities';
 import * as vscodeLike from '../../src/vscode-common/interfaces/vscode-like';
-import { createKernelTransportConfig, decodeNotebookCellOutputs } from './utilities';
+import { createChannelConfig, decodeNotebookCellOutputs } from './utilities';
 import { Logger } from '../../src/vscode-common/dotnet-interactive/logger';
 
 describe('InteractiveClient tests', () => {
@@ -23,7 +23,7 @@ describe('InteractiveClient tests', () => {
     it('command execution returns deferred events', async () => {
         const token = 'test-token';
         const code = '1 + 1';
-        const config = createKernelTransportConfig(async (notebookPath) => new TestKernelTransport({
+        const config = createChannelConfig(async (notebookPath) => new TestDotnetInteractiveChannel({
             'SubmitCode': [
                 {
                     // deferred event; unassociated with the original submission; has its own token
@@ -105,7 +105,7 @@ describe('InteractiveClient tests', () => {
     it('deferred events do not interfere with display update events', async () => {
         const token = 'test-token';
         const code = '1 + 1';
-        const config = createKernelTransportConfig(async (notebookPath) => new TestKernelTransport({
+        const config = createChannelConfig(async (notebookPath) => new TestDotnetInteractiveChannel({
             'SubmitCode': [
                 {
                     // deferred event; unassociated with the original submission; has its own token
@@ -187,7 +187,7 @@ describe('InteractiveClient tests', () => {
     it('interleaved deferred events do not interfere with display update events', async () => {
         const token = 'test-token';
         const code = '1 + 1';
-        const config = createKernelTransportConfig(async (notebookPath) => new TestKernelTransport({
+        const config = createChannelConfig(async (notebookPath) => new TestDotnetInteractiveChannel({
             'SubmitCode': [
                 {
                     // deferred event; unassociated with the original submission; has its own token
@@ -292,7 +292,7 @@ describe('InteractiveClient tests', () => {
 
     it('display update events from separate submissions trigger the correct observer', async () => {
         const code = '1 + 1';
-        const config = createKernelTransportConfig(async (notebookPath) => new TestKernelTransport({
+        const config = createChannelConfig(async (notebookPath) => new TestDotnetInteractiveChannel({
             'SubmitCode#1': [
                 {
                     eventType: DisplayedValueProducedType,
@@ -377,7 +377,7 @@ describe('InteractiveClient tests', () => {
 
     it('display events with multiple mimeTyoes', async () => {
         const code = '1 + 1';
-        const config = createKernelTransportConfig(async (notebookPath) => new TestKernelTransport({
+        const config = createChannelConfig(async (notebookPath) => new TestDotnetInteractiveChannel({
             'SubmitCode#1': [
                 {
                     eventType: DisplayedValueProducedType,
@@ -429,7 +429,7 @@ describe('InteractiveClient tests', () => {
 
     it('CommandFailedEvent rejects the execution promise', (done) => {
         const token = 'token';
-        const config = createKernelTransportConfig(async (notebookPath) => new TestKernelTransport({
+        const config = createChannelConfig(async (notebookPath) => new TestDotnetInteractiveChannel({
             'SubmitCode': [
                 {
                     eventType: CommandFailedType,
@@ -449,14 +449,14 @@ describe('InteractiveClient tests', () => {
     });
 
     it('clientMapper can reassociate clients', (done) => {
-        let transportCreated = false;
-        const config = createKernelTransportConfig(async (_notebookPath) => {
-            if (transportCreated) {
-                done('transport already created; this function should not have been called again');
+        let channelCreated = false;
+        const config = createChannelConfig(async (_notebookPath) => {
+            if (channelCreated) {
+                done('channel already created; this function should not have been called again');
             }
 
-            transportCreated = true;
-            return new TestKernelTransport({});
+            channelCreated = true;
+            return new TestDotnetInteractiveChannel({});
         });
         const clientMapper = new ClientMapper(config);
         clientMapper.getOrAddClient(createUri('test-path.dib')).then(_client => {
@@ -468,14 +468,14 @@ describe('InteractiveClient tests', () => {
     });
 
     it('clientMapper reassociate does nothing for an untracked file', async () => {
-        let transportCreated = false;
-        const config = createKernelTransportConfig(async (_notebookPath) => {
-            if (transportCreated) {
-                throw new Error('transport already created; this function should not have been called again');
+        let channelCreated = false;
+        const config = createChannelConfig(async (_notebookPath) => {
+            if (channelCreated) {
+                throw new Error('channel already created; this function should not have been called again');
             }
 
-            transportCreated = true;
-            return new TestKernelTransport({});
+            channelCreated = true;
+            return new TestDotnetInteractiveChannel({});
         });
         const clientMapper = new ClientMapper(config);
         await clientMapper.getOrAddClient(createUri('test-path.dib'));
@@ -487,7 +487,7 @@ describe('InteractiveClient tests', () => {
 
     it('execution prevents diagnostics request forwarding', async () => {
         const token = 'test-token';
-        const config = createKernelTransportConfig(async (notebookPath) => new TestKernelTransport({
+        const config = createChannelConfig(async (notebookPath) => new TestDotnetInteractiveChannel({
             'SubmitCode': [
 
                 {
@@ -511,7 +511,7 @@ describe('InteractiveClient tests', () => {
 
     it('exception in submit code properly rejects all promises', done => {
         const token = 'test-token';
-        const config = createKernelTransportConfig(async (_notebookPath) => new CallbackTestKernelTransport({
+        const config = createChannelConfig(async (_notebookPath) => new CallbackTestTestDotnetInteractiveChannel({
             'SubmitCode': () => {
                 throw new Error('expected exception during submit');
             },
@@ -524,7 +524,7 @@ describe('InteractiveClient tests', () => {
 
     it('exception in submit code properly generates error outputs', done => {
         const token = 'test-token';
-        const config = createKernelTransportConfig(async (_notebookPath) => new CallbackTestKernelTransport({
+        const config = createChannelConfig(async (_notebookPath) => new CallbackTestTestDotnetInteractiveChannel({
             'SubmitCode': () => {
                 throw new Error('expected exception during submit');
             },
@@ -553,12 +553,12 @@ describe('InteractiveClient tests', () => {
         });
     });
 
-    it('exception creating kernel transport gracefully fails', done => {
-        const config = createKernelTransportConfig(async (_notebookPath) => {
-            throw new Error('simulated error during transport creation');
+    it('exception creating kernel channel gracefully fails', done => {
+        const config = createChannelConfig(async (_notebookPath) => {
+            throw new Error('simulated error during channel creation');
         });
         const clientMapper = new ClientMapper(config);
-        expect(clientMapper.getOrAddClient(createUri('fake-notebook'))).eventually.rejectedWith('simulated error during transport creation').notify(done);
+        expect(clientMapper.getOrAddClient(createUri('fake-notebook'))).eventually.rejectedWith('simulated error during channel creation').notify(done);
     });
 
 });

@@ -5,7 +5,7 @@ import * as fetchMock from "fetch-mock";
 import { DotnetInteractiveClient, KernelClientContainer } from "../src/dotnet-interactive-interfaces";
 import * as contracts from "../src/dotnet-interactive/contracts";
 import { TokenGenerator } from "../src/dotnet-interactive/tokenGenerator";
-import { CommandAndEventReceiver, GenericTransport } from "../src/dotnet-interactive/genericTransport";
+import { CommandAndEventReceiver, GenericChannel } from "../src/dotnet-interactive/genericChannel";
 
 
 export function asKernelClientContainer(client: DotnetInteractiveClient): KernelClientContainer {
@@ -16,7 +16,7 @@ export function configureFetchForKernelDiscovery(rootUrl: string) {
     fetchMock.get(`${rootUrl}/kernels`, require("./Responses/kernels-get-response.json"));
 }
 
-export class MockKernelConnector implements contracts.Connector {
+export class MockKernelCommandAndEventChannel implements contracts.KernelCommandAndEventChannel {
 
     public codeSubmissions: Array<contracts.KernelCommandEnvelope>;
     public publishedEvents: Array<contracts.KernelEventEnvelope>;
@@ -72,8 +72,8 @@ export class MockKernelConnector implements contracts.Connector {
     }
 }
 
-export function createMockConnector(rootUrl: string): Promise<contracts.Connector> {
-    return Promise.resolve(new MockKernelConnector());
+export function createMockChannel(rootUrl: string): Promise<contracts.KernelCommandAndEventChannel> {
+    return Promise.resolve(new MockKernelCommandAndEventChannel());
 }
 
 export function findEvent<T>(kernelEventEnvelopes: contracts.KernelEventEnvelope[], eventType: contracts.KernelEventType): T | undefined {
@@ -92,7 +92,7 @@ export function findEventEnvelopeFromKernel(kernelEventEnvelopes: contracts.Kern
     return kernelEventEnvelopes.find(eventEnvelope => eventEnvelope.eventType === eventType && eventEnvelope.command!.command.targetKernelName === kernelName);
 }
 
-export function createInMemoryConnector(eventProducer?: (commandEnvelope: contracts.KernelCommandEnvelope) => contracts.KernelEventEnvelope[]): { transport: GenericTransport, sentItems: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[], writeToTransport: (data: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)) => void } {
+export function createInMemoryChannel(eventProducer?: (commandEnvelope: contracts.KernelCommandEnvelope) => contracts.KernelEventEnvelope[]): { channel: GenericChannel, sentItems: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[], writeToTransport: (data: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)) => void } {
     let sentItems: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] = [];
     let ep = eventProducer;
     if (!eventProducer) {
@@ -112,14 +112,14 @@ export function createInMemoryConnector(eventProducer?: (commandEnvelope: contra
         }
         return Promise.resolve();
     }
-    let transport = new GenericTransport(
+    let channel = new GenericChannel(
         sender,
         () => {
             return receiver.read();
         }
     );
     return {
-        transport,
+        channel: channel,
         sentItems,
         writeToTransport: (data) => {
             receiver.delegate(data);
@@ -127,7 +127,7 @@ export function createInMemoryConnector(eventProducer?: (commandEnvelope: contra
     };
 }
 
-export function createInMemoryChannel(): { channels: { transport: GenericTransport, sentItems: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] }[] } {
+export function createInMemoryChannels(): { channels: { transport: GenericChannel, sentItems: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] }[] } {
     const sentItems1: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] = [];
     const sentItems2: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] = [];
     const receiver1 = new CommandAndEventReceiver();
@@ -145,14 +145,14 @@ export function createInMemoryChannel(): { channels: { transport: GenericTranspo
         return Promise.resolve();
     }
 
-    const transport1 = new GenericTransport(
+    const channel1 = new GenericChannel(
         sender1,
         () => {
             return receiver1.read();
         }
     );
 
-    const transport2 = new GenericTransport(
+    const channel2 = new GenericChannel(
         sender2,
         () => {
             return receiver2.read();
@@ -162,11 +162,11 @@ export function createInMemoryChannel(): { channels: { transport: GenericTranspo
     return {
         channels: [
             {
-                transport: transport1,
+                transport: channel1,
                 sentItems: sentItems1,
             },
             {
-                transport: transport2,
+                transport: channel2,
                 sentItems: sentItems2,
             }
         ]

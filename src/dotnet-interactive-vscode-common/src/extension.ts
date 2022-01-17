@@ -10,7 +10,7 @@ import * as vscodeLike from './interfaces/vscode-like';
 import { ClientMapper } from './clientMapper';
 import { MessageClient } from './messageClient';
 
-import { StdioKernelTransport } from './stdioKernelTransport';
+import { StdioDotnetInteractiveChannel } from './stdioDotnetInteractiveChannel';
 import { registerLanguageProviders } from './languageProvider';
 import { registerAcquisitionCommands, registerKernelCommands, registerFileCommands } from './commands';
 
@@ -93,7 +93,7 @@ export async function activate(context: vscode.ExtensionContext) {
         throw new Error(message);
     }
 
-    async function kernelTransportCreator(notebookUri: vscodeLike.Uri): Promise<contracts.Connector> {
+    async function kernelChannelCreator(notebookUri: vscodeLike.Uri): Promise<contracts.KernelCommandAndEventChannel> {
         const launchOptions = await getInteractiveLaunchOptions();
         if (!launchOptions) {
             throw new Error(`Unable to get interactive launch options.  Please see the '${diagnosticsChannel.getName()}' output window for details.`);
@@ -119,13 +119,13 @@ export async function activate(context: vscode.ExtensionContext) {
             displayError: async (message: string) => { await vscode.window.showErrorMessage(message, { modal: false }); },
             displayInfo: async (message: string) => { await vscode.window.showInformationMessage(message, { modal: false }); },
         };
-        const transport = new StdioKernelTransport(notebookUri.toString(), processStart, diagnosticsChannel, vscode.Uri.parse, notification, (pid, code, signal) => {
+        const channel = new StdioDotnetInteractiveChannel(notebookUri.toString(), processStart, diagnosticsChannel, vscode.Uri.parse, notification, (pid, code, signal) => {
             clientMapper.closeClient(notebookUri, false);
         });
 
-        await transport.waitForReady();
+        await channel.waitForReady();
 
-        return transport;
+        return channel;
     }
 
     function configureKernel(compositeKernel: CompositeKernel, notebookUri: vscodeLike.Uri) {
@@ -171,7 +171,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // register with VS Code
     const clientMapperConfig = {
-        kernelTransportCreator,
+        channelCreator: kernelChannelCreator,
         createErrorOutput,
         diagnosticsChannel,
         configureKernel,

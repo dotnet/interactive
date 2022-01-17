@@ -4,10 +4,10 @@
 import { expect } from "chai";
 import { createDotnetInteractiveClient } from "../src/kernel-client-impl";
 import * as fetchMock from "fetch-mock";
-import { configureFetchForKernelDiscovery, createMockConnector, MockKernelConnector, asKernelClientContainer } from "./testSupport";
+import { configureFetchForKernelDiscovery, createMockChannel, MockKernelCommandAndEventChannel, asKernelClientContainer } from "./testSupport";
 import * as contracts from "../src/dotnet-interactive/contracts";
 import { IKernelCommandInvocation, Kernel } from "../src/dotnet-interactive/kernel";
-import { attachKernelToConnector } from "../src/kernel-factory";
+import { attachKernelToChannel } from "../src/kernel-factory";
 import { KernelInvocationContext } from "../src/dotnet-interactive/kernelInvocationContext";
 import { Logger } from "../src/dotnet-interactive/logger";
 
@@ -33,13 +33,13 @@ describe("dotnet-interactive", () => {
             const rootUrl = "https://dotnet.interactive.com:999";
             configureFetchForKernelDiscovery(rootUrl);
 
-            let transport: MockKernelConnector | undefined;
+            let transport: MockKernelCommandAndEventChannel | undefined;
 
             let client = await createDotnetInteractiveClient({
                 address: rootUrl,
-                connectorFactory: async (url: string) => {
-                    let mock = await createMockConnector(url);
-                    transport = <MockKernelConnector>mock;
+                channelFactory: async (url: string) => {
+                    let mock = await createMockChannel(url);
+                    transport = <MockKernelCommandAndEventChannel>mock;
                     return mock;
                 }
             });
@@ -64,7 +64,7 @@ describe("dotnet-interactive", () => {
 
                 let client = await createDotnetInteractiveClient({
                     address: rootUrl,
-                    connectorFactory: createMockConnector
+                    channelFactory: createMockChannel
                 });
                 let resource = client.getResourceUrl("image.png");
                 expect(resource).to.be.equal("https://dotnet.interactive.com:999/resources/image.png");
@@ -77,7 +77,7 @@ describe("dotnet-interactive", () => {
 
                 let client = await createDotnetInteractiveClient({
                     address: rootUrl,
-                    connectorFactory: createMockConnector
+                    channelFactory: createMockChannel
                 });
                 let resource = client.getExtensionResourceUrl("customExtension", "image.png");
                 expect(resource).to.be.equal("https://dotnet.interactive.com:999/extensions/customExtension/resources/image.png");
@@ -88,13 +88,13 @@ describe("dotnet-interactive", () => {
                 configureFetchForKernelDiscovery(rootUrl);
 
 
-                let transport: MockKernelConnector | undefined;
+                let transport: MockKernelCommandAndEventChannel | undefined;
 
                 let client = await createDotnetInteractiveClient({
                     address: rootUrl,
-                    connectorFactory: async (url: string) => {
-                        let mock = await createMockConnector(url);
-                        transport = <MockKernelConnector>mock;
+                    channelFactory: async (url: string) => {
+                        let mock = await createMockChannel(url);
+                        transport = <MockKernelCommandAndEventChannel>mock;
                         return mock;
                     }
                 });
@@ -107,13 +107,13 @@ describe("dotnet-interactive", () => {
                 configureFetchForKernelDiscovery(rootUrl);
 
 
-                let transport: MockKernelConnector | undefined;
+                let transport: MockKernelCommandAndEventChannel | undefined;
 
                 let client = await createDotnetInteractiveClient({
                     address: rootUrl,
-                    connectorFactory: async (url: string) => {
-                        let mock = await createMockConnector(url);
-                        transport = <MockKernelConnector>mock;
+                    channelFactory: async (url: string) => {
+                        let mock = await createMockChannel(url);
+                        transport = <MockKernelCommandAndEventChannel>mock;
                         return mock;
                     }
                 });
@@ -129,7 +129,7 @@ describe("dotnet-interactive", () => {
 
         // Set up with fake client-side kernel
         const rootUrl = "https://dotnet.interactive.com:999";
-        let transport: MockKernelConnector | undefined;
+        let transport: MockKernelCommandAndEventChannel | undefined;
         let kernel: Kernel | undefined;
         let commandsSentToKernel: contracts.KernelCommandEnvelope[] | undefined;
         let kernelEventHandlers: contracts.KernelEventEnvelopeObserver[] | undefined;
@@ -139,9 +139,9 @@ describe("dotnet-interactive", () => {
             configureFetchForKernelDiscovery(rootUrl);
             return createDotnetInteractiveClient({
                 address: rootUrl,
-                connectorFactory: async (url: string) => {
-                    let mock = await createMockConnector(url);
-                    transport = <MockKernelConnector>mock;
+                channelFactory: async (url: string) => {
+                    let mock = await createMockChannel(url);
+                    transport = <MockKernelCommandAndEventChannel>mock;
                     return mock;
                 },
                 clientSideKernelFactory: async (kernelTransport) => {
@@ -172,7 +172,7 @@ describe("dotnet-interactive", () => {
                             return Promise.resolve();
                         }
                     });
-                    attachKernelToConnector(kernel, kernelTransport);
+                    attachKernelToChannel(kernel, kernelTransport);
 
                     return kernel;
                 }

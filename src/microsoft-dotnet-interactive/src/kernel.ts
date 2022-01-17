@@ -62,8 +62,8 @@ export class Kernel {
     }
 
     // Is it worth us going to efforts to ensure that the Promise returned here accurately reflects
-    // the command's progress? The only thing that actually calls this is the kernel transport, through
-    // the callback set up by attachKernelToTransport, and the callback is expected to return void, so
+    // the command's progress? The only thing that actually calls this is the kernel channel, through
+    // the callback set up by attachKernelToChannel, and the callback is expected to return void, so
     // nothing is ever going to look at the promise we return here.
     async send(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         this.ensureCommandTokenAndId(commandEnvelope);
