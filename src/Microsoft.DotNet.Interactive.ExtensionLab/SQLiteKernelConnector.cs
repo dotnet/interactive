@@ -22,5 +22,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         {
             ConnectionString = connectionString;
         }
+
+        public void Dispose()
+        {
+        }
     }
 }

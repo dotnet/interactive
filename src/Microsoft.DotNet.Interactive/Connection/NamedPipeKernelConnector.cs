@@ -7,47 +7,51 @@ using System.Threading.Tasks;
 
 #nullable enable
 
-namespace Microsoft.DotNet.Interactive.Connection
+namespace Microsoft.DotNet.Interactive.Connection;
+
+public class NamedPipeKernelConnector : IKernelConnector
 {
-    public class NamedPipeKernelConnector : IKernelConnector
+    private MultiplexingKernelCommandAndEventReceiver? _receiver;
+    private KernelCommandAndEventPipeStreamSender? _sender;
+
+    public string PipeName { get; }
+    public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
     {
-        private MultiplexingKernelCommandAndEventReceiver? _receiver;
-        private KernelCommandAndEventPipeStreamSender? _sender;
+        ProxyKernel? proxyKernel;
 
-        public string PipeName { get; }
-        public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
+        if (_receiver is not null)
         {
-            ProxyKernel? proxyKernel;
+            proxyKernel = new ProxyKernel(kernelInfo.LocalName,_receiver.CreateChildReceiver(), _sender);
+        }
+        else
+        {
+            var clientStream = new NamedPipeClientStream(
+                ".",
+                PipeName,
+                PipeDirection.InOut,
+                PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
 
-            if (_receiver is not null)
-            {
-                proxyKernel = new ProxyKernel(kernelInfo.LocalName,_receiver.CreateChildReceiver(), _sender);
-            }
-            else
-            {
-                var clientStream = new NamedPipeClientStream(
-                    ".",
-                    PipeName,
-                    PipeDirection.InOut,
-                    PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
+            await clientStream.ConnectAsync();
+            clientStream.ReadMode = PipeTransmissionMode.Message;
 
-                await clientStream.ConnectAsync();
-                clientStream.ReadMode = PipeTransmissionMode.Message;
-
-                _receiver = new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventPipeStreamReceiver(clientStream));
-                _sender = new KernelCommandAndEventPipeStreamSender(clientStream);
+            _receiver = new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventPipeStreamReceiver(clientStream));
+            _sender = new KernelCommandAndEventPipeStreamSender(clientStream);
 
         
-                proxyKernel = new ProxyKernel(kernelInfo.LocalName, _receiver, _sender);
-            }
+            proxyKernel = new ProxyKernel(kernelInfo.LocalName, _receiver, _sender);
+        }
 
-            var _ = proxyKernel.StartAsync();
-            return proxyKernel; ;
-        }
+        var _ = proxyKernel.StartAsync();
+        return proxyKernel; ;
+    }
         
-        public NamedPipeKernelConnector(string pipeName)
-        {
-            PipeName = pipeName;
-        }
+    public NamedPipeKernelConnector(string pipeName)
+    {
+        PipeName = pipeName;
+    }
+
+    public void Dispose()
+    {
+        _receiver?.Dispose();
     }
 }

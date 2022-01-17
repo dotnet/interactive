@@ -67,6 +67,11 @@ namespace Microsoft.DotNet.Interactive
                 var _ = proxy.StartAsync();
                 return Task.FromResult((Kernel)proxy);
             }
+
+            public void Dispose()
+            {
+                _defaultReceiver.Dispose();
+            }
         }
 
         public async Task ConnectAsync()

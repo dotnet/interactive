@@ -306,9 +306,9 @@ namespace Microsoft.DotNet.Interactive
                 context);
         }
 
-        public void AddKernelConnection<TOptions>(
-            ConnectKernelCommand<TOptions> connectionCommand)
-            where TOptions : IKernelConnector
+        public void AddKernelConnection<TKernelConnector>(
+            ConnectKernelCommand<TKernelConnector> connectionCommand)
+            where TKernelConnector : IKernelConnector
         {
             var kernelNameOption = new Option<string>(
                 "--kernel-name",
@@ -326,12 +326,13 @@ namespace Microsoft.DotNet.Interactive
             }
 
             connectionCommand.Handler = CommandHandler.Create<
-                string, TOptions, KernelInvocationContext>(
-                async (kernelName, options, context) =>
+                string, TKernelConnector, KernelInvocationContext>(
+                async (kernelName, kernelConnector, context) =>
                 {
-                    var connectedKernel = await connectionCommand.ConnectKernelAsync(new KernelInfo(kernelName), options, context);
+                    var connectedKernel = await connectionCommand.ConnectKernelAsync(new KernelInfo(kernelName), kernelConnector, context);
 
                  
+                    RegisterForDisposal(kernelConnector);
                     Add(connectedKernel);
 
                     var chooseKernelDirective =

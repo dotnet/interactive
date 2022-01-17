@@ -5,42 +5,45 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 
-namespace Microsoft.DotNet.Interactive.SqlServer
+namespace Microsoft.DotNet.Interactive.SqlServer;
+
+public class MsSqlKernelConnector : IKernelConnector
 {
-    public class MsSqlKernelConnector : IKernelConnector
+    public bool CreateDbContext { get; }
+
+    public string ConnectionString { get; }
+
+    public string PathToService { get; set; }
+
+    public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
     {
-        public bool CreateDbContext { get; }
-
-        public string ConnectionString { get; }
-
-        public string PathToService { get; set; }
-
-        public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
+        if (string.IsNullOrWhiteSpace(PathToService))
         {
-            if (string.IsNullOrWhiteSpace(PathToService))
-            {
-                throw new InvalidOperationException($"{nameof(PathToService)} cannot be null or whitespace.");
-            }
+            throw new InvalidOperationException($"{nameof(PathToService)} cannot be null or whitespace.");
+        }
 
-            var sqlClient = new ToolsServiceClient(PathToService, $"--parent-pid {Environment.ProcessId}");
+        var sqlClient = new ToolsServiceClient(PathToService, $"--parent-pid {Environment.ProcessId}");
 
-            var kernel = new MsSqlKernel(
+        var kernel = new MsSqlKernel(
                 $"sql-{kernelInfo}",
                 ConnectionString,
                 sqlClient)
             .UseValueSharing();
 
-            kernel.RegisterForDisposal(sqlClient);
+        kernel.RegisterForDisposal(sqlClient);
 
-            await kernel.ConnectAsync();
+        await kernel.ConnectAsync();
 
-            return kernel;
-        }
+        return kernel;
+    }
 
-        public MsSqlKernelConnector(bool createDbContext, string connectionString)
-        {
-            CreateDbContext = createDbContext;
-            ConnectionString = connectionString;
-        }
+    public MsSqlKernelConnector(bool createDbContext, string connectionString)
+    {
+        CreateDbContext = createDbContext;
+        ConnectionString = connectionString;
+    }
+
+    public void Dispose()
+    {
     }
 }

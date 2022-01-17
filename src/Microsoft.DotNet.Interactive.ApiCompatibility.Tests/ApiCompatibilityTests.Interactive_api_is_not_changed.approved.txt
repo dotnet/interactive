@@ -20,7 +20,7 @@ Microsoft.DotNet.Interactive
     public System.String DefaultKernelName { get; set;}
     public KernelHost Host { get;}
     public System.Void Add(Kernel kernel, System.Collections.Generic.IReadOnlyCollection<System.String> aliases = null)
-    public System.Void AddKernelConnection<TOptions>(ConnectKernelCommand<TOptions> connectionCommand)
+    public System.Void AddKernelConnection<TKernelConnector>(ConnectKernelCommand<TKernelConnector> connectionCommand)
      System.Collections.Generic.IEnumerable<System.CommandLine.Parsing.Parser> GetDirectiveParsersForCompletion(Microsoft.DotNet.Interactive.Parsing.DirectiveNode directiveNode, System.Int32 requestPosition)
     public System.Collections.Generic.IEnumerator<Kernel> GetEnumerator()
      SchedulingScope GetHandlingKernelCommandScope(Microsoft.DotNet.Interactive.Commands.KernelCommand command, KernelInvocationContext context)
@@ -410,7 +410,7 @@ Microsoft.DotNet.Interactive.Connection
   public abstract class IKernelCommandAndEventSender
     public System.Threading.Tasks.Task SendAsync(Microsoft.DotNet.Interactive.Commands.KernelCommand kernelCommand, System.Threading.CancellationToken cancellationToken)
     public System.Threading.Tasks.Task SendAsync(Microsoft.DotNet.Interactive.Events.KernelEvent kernelEvent, System.Threading.CancellationToken cancellationToken)
-  public abstract class IKernelConnector
+  public abstract class IKernelConnector, System.IDisposable
     public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> ConnectKernelAsync(Microsoft.DotNet.Interactive.KernelInfo kernelInfo)
   public abstract class InteractiveProtocolKernelCommandAndEventReceiverBase : KernelCommandAndEventReceiverBase, IKernelCommandAndEventReceiver
     protected System.Threading.Tasks.Task<CommandOrEvent> ReadCommandOrEventAsync(System.Threading.CancellationToken cancellationToken)
@@ -448,10 +448,11 @@ Microsoft.DotNet.Interactive.Connection
     public System.Collections.Generic.IAsyncEnumerable<CommandOrEvent> CommandsAndEventsAsync(System.Threading.CancellationToken cancellationToken)
     public IKernelCommandAndEventReceiver CreateChildReceiver()
     public System.Void Dispose()
-  public class NamedPipeKernelConnector, IKernelConnector
+  public class NamedPipeKernelConnector, IKernelConnector, System.IDisposable
     .ctor(System.String pipeName)
     public System.String PipeName { get;}
     public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> ConnectKernelAsync(Microsoft.DotNet.Interactive.KernelInfo kernelInfo)
+    public System.Void Dispose()
   public class ProxyKernel : Microsoft.DotNet.Interactive.Kernel, System.IDisposable
     .ctor(System.String name, IKernelCommandAndEventReceiver receiver, IKernelCommandAndEventSender sender)
      System.Void DelegatePublication(Microsoft.DotNet.Interactive.Events.KernelEvent kernelEvent)
