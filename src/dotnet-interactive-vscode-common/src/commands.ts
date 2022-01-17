@@ -15,7 +15,7 @@ import * as ipynbUtilities from './ipynbUtilities';
 import { ReportChannel } from './interfaces/vscode-like';
 import { jupyterViewType } from './interactiveNotebook';
 import { NotebookParserServer } from './notebookParserServer';
-import { PromiseCompletionSource } from './dotnet-interactive/genericTransport';
+import { PromiseCompletionSource } from './dotnet-interactive/genericChannel';
 
 export function registerAcquisitionCommands(context: vscode.ExtensionContext, diagnosticChannel: ReportChannel) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');

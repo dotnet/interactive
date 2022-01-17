@@ -8,7 +8,7 @@ import * as path from 'path';
 use(require('chai-fs'));
 
 import { ClientMapper } from './../../src/vscode-common/clientMapper';
-import { TestKernelTransport } from './testKernelTransport';
+import { TestDotnetInteractiveChannel } from './testDotnetInteractiveChannel';
 import {
     CodeSubmissionReceivedType,
     CommandFailedType,
@@ -22,7 +22,7 @@ import {
     ReturnValueProducedType,
     StandardOutputValueProducedType,
 } from '../../src/vscode-common/dotnet-interactive/contracts';
-import { createKernelTransportConfig, decodeNotebookCellOutputs, withFakeGlobalStorageLocation } from './utilities';
+import { createChannelConfig, decodeNotebookCellOutputs, withFakeGlobalStorageLocation } from './utilities';
 import { createUri } from '../../src/vscode-common/utilities';
 import { backupNotebook, languageToCellKind } from '../../src/vscode-common/interactiveNotebook';
 import * as vscodeLike from '../../src/vscode-common/interfaces/vscode-like';
@@ -38,7 +38,7 @@ describe('Notebook tests', () => {
         it(`executes and returns expected value: ${language}`, async () => {
             const token = '123';
             const code = '1+1';
-            const config = createKernelTransportConfig(async (_notebookPath) => new TestKernelTransport({
+            const config = createChannelConfig(async (_notebookPath) => new TestDotnetInteractiveChannel({
                 'SubmitCode': [
                     {
                         eventType: CodeSubmissionReceivedType,
@@ -101,7 +101,7 @@ Console.WriteLine(2);
 Guid.NewGuid().Display();
 Console.WriteLine(3);
 `;
-        const config = createKernelTransportConfig(async (_notebookPath) => new TestKernelTransport({
+        const config = createChannelConfig(async (_notebookPath) => new TestDotnetInteractiveChannel({
             'SubmitCode': [
                 {
                     eventType: CodeSubmissionReceivedType,
@@ -227,7 +227,7 @@ Console.WriteLine(3);
     it('updated values are replaced instead of added', async () => {
         const token = '123';
         const code = '#r nuget:Newtonsoft.Json';
-        const config = createKernelTransportConfig(async (_notebookPath) => new TestKernelTransport({
+        const config = createChannelConfig(async (_notebookPath) => new TestDotnetInteractiveChannel({
             'SubmitCode': [
                 {
                     eventType: CodeSubmissionReceivedType,
@@ -314,7 +314,7 @@ Console.WriteLine(3);
     it('returned json is properly parsed', async () => {
         const token = '123';
         const code = 'JObject.FromObject(new { a = 1, b = false })';
-        const config = createKernelTransportConfig(async (_notebookPath) => new TestKernelTransport({
+        const config = createChannelConfig(async (_notebookPath) => new TestDotnetInteractiveChannel({
             'SubmitCode': [
                 {
                     eventType: CodeSubmissionReceivedType,
@@ -374,7 +374,7 @@ Console.WriteLine(3);
     it('diagnostics are reported on CommandFailed', (done) => {
         const token = '123';
         const code = 'Console.WriteLin();';
-        const config = createKernelTransportConfig(async (_notebookPath) => new TestKernelTransport({
+        const config = createChannelConfig(async (_notebookPath) => new TestDotnetInteractiveChannel({
             'SubmitCode': [
                 {
                     eventType: CodeSubmissionReceivedType,
@@ -453,7 +453,7 @@ Console.WriteLine(3);
     it('diagnostics are reported on CommandSucceeded', async () => {
         const token = '123';
         const code = 'Console.WriteLine();';
-        const config = createKernelTransportConfig(async (_notebookPath) => new TestKernelTransport({
+        const config = createChannelConfig(async (_notebookPath) => new TestDotnetInteractiveChannel({
             'SubmitCode': [
                 {
                     eventType: CodeSubmissionReceivedType,
@@ -525,7 +525,7 @@ Console.WriteLine(3);
     it('diagnostics are reported when directly requested', async () => {
         const token = '123';
         const code = 'Console.WriteLine();';
-        const config = createKernelTransportConfig(async (_notebookPath) => new TestKernelTransport({
+        const config = createChannelConfig(async (_notebookPath) => new TestDotnetInteractiveChannel({
             'RequestDiagnostics': [
                 {
                     eventType: DiagnosticsProducedType,

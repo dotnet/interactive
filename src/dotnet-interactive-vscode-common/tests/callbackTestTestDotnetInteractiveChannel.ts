@@ -2,9 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { KernelEventEnvelopeObserver, DisposableSubscription, KernelEventEnvelope, KernelCommandEnvelopeHandler, KernelCommandEnvelope } from '../../src/vscode-common/dotnet-interactive/contracts';
-import { KernelConnector } from '../../src/vscode-common/KernelConnector';
+import { DotnetInteractiveChannel } from '../../src/vscode-common/DotnetInteractiveChannel';
 // executes the given callback for the specified commands
-export class CallbackTestKernelTransport implements KernelConnector {
+export class CallbackTestTestDotnetInteractiveChannel implements DotnetInteractiveChannel {
     private theObserver: KernelEventEnvelopeObserver | undefined;
 
     constructor(readonly fakedCommandCallbacks: { [key: string]: () => KernelEventEnvelope }) {

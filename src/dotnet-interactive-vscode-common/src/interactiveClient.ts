@@ -22,7 +22,7 @@ import {
     KernelEventEnvelope,
     KernelEventEnvelopeObserver,
     KernelEventType,
-    Connector,
+    KernelCommandAndEventChannel,
     RequestCompletions,
     RequestCompletionsType,
     RequestDiagnostics,
@@ -54,7 +54,7 @@ export interface ErrorOutputCreator {
 }
 
 export interface InteractiveClientConfiguration {
-    readonly transport: Connector,
+    readonly channel: KernelCommandAndEventChannel,
     readonly createErrorOutput: ErrorOutputCreator,
 }
 
@@ -67,10 +67,10 @@ export class InteractiveClient {
     private _kernel: CompositeKernel;
     private _kernelHost: KernelHost;
     constructor(readonly config: InteractiveClientConfiguration) {
-        config.transport.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
+        config.channel.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
 
         this._kernel = new CompositeKernel("vscode");
-        this._kernelHost = new KernelHost(this._kernel, config.transport, "kernel://vscode");
+        this._kernelHost = new KernelHost(this._kernel, config.channel, "kernel://vscode");
 
         this._kernelHost.createProxyKernelOnDefaultConnector({ localName: 'csharp', aliases: ['c#', 'C#'] });
         this._kernelHost.createProxyKernelOnDefaultConnector({ localName: 'fsharp', aliases: ['fs', 'F#'] });
@@ -86,13 +86,13 @@ export class InteractiveClient {
         return this._kernelHost;
     }
 
-    get transport(): Connector {
-        return this.config.transport;
+    get channel(): KernelCommandAndEventChannel {
+        return this.config.channel;
     }
 
     public tryGetProperty<T>(propertyName: string): T | null {
         try {
-            return <T>((<any>this.config.transport)[propertyName]);
+            return <T>((<any>this.config.channel)[propertyName]);
         }
         catch {
             return null;
@@ -283,7 +283,7 @@ export class InteractiveClient {
     }
 
     dispose() {
-        this.config.transport.dispose();
+        this.config.channel.dispose();
     }
 
     private submitCommandAndGetResult<TEvent extends KernelEvent>(command: KernelCommand, commandType: KernelCommandType, expectedEventType: KernelEventType, token: string | undefined): Promise<TEvent> {
@@ -320,7 +320,7 @@ export class InteractiveClient {
                     }
                 }
             });
-            await this.config.transport.submitCommand({ command, commandType, token, id });
+            await this.config.channel.submitCommand({ command, commandType, token, id });
         });
     }
 
@@ -349,7 +349,7 @@ export class InteractiveClient {
                         break;
                 }
             });
-            this.config.transport.submitCommand({ command, commandType, token, id }).catch(e => {
+            this.config.channel.submitCommand({ command, commandType, token, id }).catch(e => {
                 // only report a failure if it's not a `CommandFailed` event from above (which has already called `reject()`)
                 if (!failureReported) {
                     reject(e);

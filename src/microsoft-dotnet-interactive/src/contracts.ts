@@ -442,10 +442,16 @@ export interface Disposable {
 export interface DisposableSubscription extends Disposable {
 }
 
-export interface Connector extends Disposable {
-    subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;
-    setCommandHandler(handler: KernelCommandEnvelopeHandler): void;
+export interface KernelCommandAndEventSender {
     submitCommand(commandEnvelope: KernelCommandEnvelope): Promise<void>;
     publishKernelEvent(eventEnvelope: KernelEventEnvelope): Promise<void>;
+}
+
+export interface KernelCommandAndEventReceiver {
+    subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;
+    setCommandHandler(handler: KernelCommandEnvelopeHandler): void;
+}
+
+export interface KernelCommandAndEventChannel extends KernelCommandAndEventSender, KernelCommandAndEventReceiver, Disposable {
 }
 

@@ -3,12 +3,12 @@
 
 import * as contracts from "./contracts";
 import { Logger } from "./logger";
-import { PromiseCompletionSource } from "./genericTransport";
+import { PromiseCompletionSource } from "./genericChannel";
 import { IKernelCommandHandler, IKernelCommandInvocation, Kernel } from "./kernel";
 
 export class ProxyKernel extends Kernel {
 
-    constructor(readonly name: string, private readonly transport: contracts.Connector) {
+    constructor(readonly name: string, private readonly channel: contracts.KernelCommandAndEventChannel) {
         super(name);
     }
     getCommandHandler(commandType: contracts.KernelCommandType): IKernelCommandHandler | undefined {
@@ -23,7 +23,7 @@ export class ProxyKernel extends Kernel {
     private async _commandHandler(commandInvocation: IKernelCommandInvocation): Promise<void> {
         const token = commandInvocation.commandEnvelope.token;
         const completionSource = new PromiseCompletionSource<contracts.KernelEventEnvelope>();
-        let sub = this.transport.subscribeToKernelEvents((envelope: contracts.KernelEventEnvelope) => {
+        let sub = this.channel.subscribeToKernelEvents((envelope: contracts.KernelEventEnvelope) => {
             Logger.default.info(`proxy ${this.name} got event ${envelope.eventType} from ${envelope.command?.command?.targetKernelName} with token ${envelope.command?.token}`);
             if (envelope.command!.token === token) {
                 switch (envelope.eventType) {
@@ -51,7 +51,7 @@ export class ProxyKernel extends Kernel {
                 }
             }
 
-            this.transport.submitCommand(commandInvocation.commandEnvelope);
+            this.channel.submitCommand(commandInvocation.commandEnvelope);
             Logger.default.info(`proxy ${this.name} about to await with token ${token}`);
             const enventEnvelope = await completionSource.promise;
             if (enventEnvelope.eventType === contracts.CommandFailedType) {

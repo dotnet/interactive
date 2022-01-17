@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as contracts from "./contracts";
-import { PromiseCompletionSource } from "./genericTransport";
+import { PromiseCompletionSource } from "./genericChannel";
 
 interface SchedulerOperation {
     commandEnvelope: contracts.KernelCommandEnvelope;

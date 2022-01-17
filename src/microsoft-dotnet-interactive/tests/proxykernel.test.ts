@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import * as contracts from "../src/contracts";
 import { ProxyKernel } from "../src/proxyKernel";
-import { createInMemoryTransport } from "./testSupport";
+import { createInMemoryChannel } from "./testSupport";
 import { Logger } from "../src/logger";
 
 describe("proxyKernel", () => {
@@ -13,10 +13,10 @@ describe("proxyKernel", () => {
     });
 
     it("forwards commands over the transport", async () => {
-        let inMemory = createInMemoryTransport();
-        let kernel = new ProxyKernel("proxy", inMemory.transport);
+        let inMemory = createInMemoryChannel();
+        let kernel = new ProxyKernel("proxy", inMemory.channel);
         let events: contracts.KernelEventEnvelope[] = [];
-        inMemory.transport.run();
+        inMemory.channel.run();
         kernel.subscribeToKernelEvents((e) => events.push(e));
         await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "1+2" } });
 
@@ -28,12 +28,12 @@ describe("proxyKernel", () => {
     });
 
     it("procudes commandFailed", async () => {
-        let inMemory = createInMemoryTransport(ce => {
+        let inMemory = createInMemoryChannel(ce => {
             return [{ eventType: contracts.CommandFailedType, event: <contracts.CommandFailed>{ message: "something is wrong" }, command: ce }];
         });
-        let kernel = new ProxyKernel("proxy", inMemory.transport);
+        let kernel = new ProxyKernel("proxy", inMemory.channel);
         let events: contracts.KernelEventEnvelope[] = [];
-        inMemory.transport.run();
+        inMemory.channel.run();
         kernel.subscribeToKernelEvents((e) => events.push(e));
         await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "1+2" } });
 
@@ -44,15 +44,15 @@ describe("proxyKernel", () => {
     });
 
     it("forwards events", async () => {
-        let inMemory = createInMemoryTransport(ce => {
+        let inMemory = createInMemoryChannel(ce => {
             return [
                 { eventType: contracts.ValueProducedType, event: <contracts.ValueProduced>{ name: "a", formattedValue: { mimeType: "text/plain", value: "variable a" } }, command: ce },
                 { eventType: contracts.ValueProducedType, event: <contracts.ValueProduced>{ name: "b", formattedValue: { mimeType: "text/plain", value: "variable b" } }, command: ce },
                 { eventType: contracts.CommandSucceededType, event: <contracts.CommandSucceeded>{}, command: ce }];
         });
-        let kernel = new ProxyKernel("proxy", inMemory.transport);
+        let kernel = new ProxyKernel("proxy", inMemory.channel);
         let events: contracts.KernelEventEnvelope[] = [];
-        inMemory.transport.run();
+        inMemory.channel.run();
         kernel.subscribeToKernelEvents((e) => events.push(e));
         await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "1+2" } });
 
@@ -87,15 +87,15 @@ describe("proxyKernel", () => {
     });
 
     it("forwards events of remotely split commands", async () => {
-        let inMemory = createInMemoryTransport(ce => {
+        let inMemory = createInMemoryChannel(ce => {
             return [
                 { eventType: contracts.ValueProducedType, event: <contracts.ValueProduced>{ name: "a", formattedValue: { mimeType: "text/plain", value: "variable a" } }, command: { ...ce, ["command.id"]: "newId" } },
                 { eventType: contracts.ValueProducedType, event: <contracts.ValueProduced>{ name: "b", formattedValue: { mimeType: "text/plain", value: "variable b" } }, command: { ...ce, ["command.id"]: "newId" } },
                 { eventType: contracts.CommandSucceededType, event: <contracts.CommandSucceeded>{}, command: ce }];
         });
-        let kernel = new ProxyKernel("proxy", inMemory.transport);
+        let kernel = new ProxyKernel("proxy", inMemory.channel);
         let events: contracts.KernelEventEnvelope[] = [];
-        inMemory.transport.run();
+        inMemory.channel.run();
         kernel.subscribeToKernelEvents((e) => events.push(e));
 
         await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "1+2" } });

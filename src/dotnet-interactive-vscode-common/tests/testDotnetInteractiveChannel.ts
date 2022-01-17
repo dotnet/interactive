@@ -2,10 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as contracts from '../../src/vscode-common/dotnet-interactive/contracts';
-import { KernelConnector } from '../../src/vscode-common/KernelConnector';
+import { DotnetInteractiveChannel } from '../../src/vscode-common/DotnetInteractiveChannel';
 
 // Replays all events given to it
-export class TestKernelTransport implements KernelConnector {
+export class TestDotnetInteractiveChannel implements DotnetInteractiveChannel {
     private theObserver: contracts.KernelEventEnvelopeObserver | undefined;
     private fakedCommandCounter: Map<string, number> = new Map<string, number>();
 

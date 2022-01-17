@@ -29,8 +29,8 @@ export function withFakeGlobalStorageLocation(createLocation: boolean, callback:
     });
 }
 
-export function createKernelTransportConfig(kernelTransportCreator: (notebookUri: vscodeLike.Uri) => Promise<contracts.Connector>) {
-    function defaultKernelTransportCreator(notebookUri: vscodeLike.Uri): Promise<contracts.Connector> {
+export function createChannelConfig(channelCreator: (notebookUri: vscodeLike.Uri) => Promise<contracts.KernelCommandAndEventChannel>) {
+    function defaultChannelCreator(notebookUri: vscodeLike.Uri): Promise<contracts.KernelCommandAndEventChannel> {
         throw new Error('Each test needs to override this.');
     }
 
@@ -41,7 +41,7 @@ export function createKernelTransportConfig(kernelTransportCreator: (notebookUri
     }
 
     const defaultClientMapperConfig = {
-        kernelTransportCreator: defaultKernelTransportCreator,
+        channelCreator: defaultChannelCreator,
         createErrorOutput: (message: string, outputId?: string) => {
             const errorItem: vscodeLike.NotebookCellOutputItem = {
                 mime: 'application/vnd.code.notebook.error',
@@ -59,7 +59,7 @@ export function createKernelTransportConfig(kernelTransportCreator: (notebookUri
 
     return {
         ...defaultClientMapperConfig,
-        kernelTransportCreator,
+        channelCreator: channelCreator,
     };
 }
 

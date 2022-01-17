@@ -2,14 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as contracts from './dotnet-interactive/contracts';
-import * as genericTransport from './dotnet-interactive/genericTransport';
+import * as genericChannel from './dotnet-interactive/genericChannel';
 import * as vscodeLike from './interfaces/vscode-like';
 import { ClientMapper } from './clientMapper';
 import { ProxyKernel } from './dotnet-interactive/proxyKernel';
 import { Logger } from './dotnet-interactive/logger';
 
 export type MessageHandler = {
-    waitingOnMessages: genericTransport.PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope> | null;
+    waitingOnMessages: genericChannel.PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope> | null;
     envelopeQueue: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[];
 };
 
@@ -34,7 +34,7 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, messageHandlerMap: M
         messageHandlerMap.set(documentUriString, messageHandler);
     }
 
-    const documentWebViewTrasport = new genericTransport.GenericTransport(envelope => {
+    const documentWebViewTrasport = new genericChannel.GenericChannel(envelope => {
         controllerPostMessage({ envelope });
         return Promise.resolve();
     }, () => {
@@ -43,7 +43,7 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, messageHandlerMap: M
             return Promise.resolve<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>(envelope);
         }
         else {
-            messageHandler!.waitingOnMessages = new genericTransport.PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>();
+            messageHandler!.waitingOnMessages = new genericChannel.PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>();
             return messageHandler!.waitingOnMessages.promise;
         }
     });
@@ -60,7 +60,7 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, messageHandlerMap: M
             return Promise.resolve();
         });
 
-        client.transport.subscribeToKernelEvents(eventEnvelope => {
+        client.channel.subscribeToKernelEvents(eventEnvelope => {
             Logger.default.info(`forwarding event to webview ${eventEnvelope.toString()}`);
             return documentWebViewTrasport.publishKernelEvent(eventEnvelope);
         });

@@ -32,7 +32,7 @@ export class PromiseCompletionSource<T> {
     }
 }
 
-export class GenericTransport implements contracts.Connector {
+export class GenericChannel implements contracts.KernelCommandAndEventChannel {
 
     private stillRunning: PromiseCompletionSource<number>;
     private commandHandler: contracts.KernelCommandEnvelopeHandler = () => Promise.resolve();
@@ -115,7 +115,7 @@ export class CommandAndEventReceiver {
             return Promise.resolve<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>(envelope);
         }
         else {
-            Logger.default.info(`transport building promise awaiter`);
+            Logger.default.info(`channel building promise awaiter`);
             this._waitingOnMessages = new PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>();
             return this._waitingOnMessages.promise;
         }

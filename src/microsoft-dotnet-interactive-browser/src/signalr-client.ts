@@ -3,11 +3,11 @@
 
 import * as signalR from "@microsoft/signalr";
 
-import { Connector, KernelEventEnvelope, KernelEventEnvelopeObserver, DisposableSubscription, KernelCommandEnvelope, KernelCommandEnvelopeHandler } from "./dotnet-interactive/contracts";
+import { KernelCommandAndEventChannel, KernelEventEnvelope, KernelEventEnvelopeObserver, DisposableSubscription, KernelCommandEnvelope, KernelCommandEnvelopeHandler } from "./dotnet-interactive/contracts";
 import { TokenGenerator } from "./dotnet-interactive/tokenGenerator";
 
 
-export async function signalTransportFactory(rootUrl: string): Promise<Connector> {
+export async function signalTransportFactory(rootUrl: string): Promise<KernelCommandAndEventChannel> {
 
     let hubUrl = rootUrl;
     if (hubUrl.endsWith("/")) {
@@ -68,7 +68,7 @@ export async function signalTransportFactory(rootUrl: string): Promise<Connector
         .start()
         .catch(err => console.log(err));
 
-    let eventStream: Connector = {
+    let eventStream: KernelCommandAndEventChannel = {
 
         subscribeToKernelEvents: (observer: KernelEventEnvelopeObserver): DisposableSubscription => {
             let key = tokenGenerator.GetNewToken();

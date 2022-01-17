@@ -2,8 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as contracts from "../src/contracts";
-import { TokenGenerator } from "../src/tokenGenerator";
-import { CommandAndEventReceiver, GenericTransport } from "../src/genericTransport";
+import { CommandAndEventReceiver, GenericChannel } from "../src/genericChannel";
 
 export function findEvent<T>(kernelEventEnvelopes: contracts.KernelEventEnvelope[], eventType: contracts.KernelEventType): T | undefined {
     return findEventEnvelope(kernelEventEnvelopes, eventType)?.event as T;
@@ -21,7 +20,7 @@ export function findEventEnvelopeFromKernel(kernelEventEnvelopes: contracts.Kern
     return kernelEventEnvelopes.find(eventEnvelope => eventEnvelope.eventType === eventType && eventEnvelope.command!.command.targetKernelName === kernelName);
 }
 
-export function createInMemoryTransport(eventProducer?: (commandEnvelope: contracts.KernelCommandEnvelope) => contracts.KernelEventEnvelope[]): { transport: GenericTransport, sentItems: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[], writeToTransport: (data: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)) => void } {
+export function createInMemoryChannel(eventProducer?: (commandEnvelope: contracts.KernelCommandEnvelope) => contracts.KernelEventEnvelope[]): { channel: GenericChannel, sentItems: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[], writeToTransport: (data: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)) => void } {
     let sentItems: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] = [];
     if (!eventProducer) {
         eventProducer = (ce) => {
@@ -38,14 +37,14 @@ export function createInMemoryTransport(eventProducer?: (commandEnvelope: contra
         }
         return Promise.resolve();
     };
-    let transport = new GenericTransport(
+    let channel = new GenericChannel(
         sender,
         () => {
             return receiver.read();
         }
     );
     return {
-        transport,
+        channel: channel,
         sentItems,
         writeToTransport: (data) => {
             receiver.delegate(data);
@@ -53,7 +52,7 @@ export function createInMemoryTransport(eventProducer?: (commandEnvelope: contra
     };
 }
 
-export function createInMemoryChannel(): { channels: { transport: GenericTransport, sentItems: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] }[] } {
+export function createInMemoryChannels(): { channels: { channel: GenericChannel, sentItems: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] }[] } {
     const sentItems1: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] = [];
     const sentItems2: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] = [];
     const receiver1 = new CommandAndEventReceiver();
@@ -71,14 +70,14 @@ export function createInMemoryChannel(): { channels: { transport: GenericTranspo
         return Promise.resolve();
     };
 
-    const transport1 = new GenericTransport(
+    const channel1 = new GenericChannel(
         sender1,
         () => {
             return receiver1.read();
         }
     );
 
-    const transport2 = new GenericTransport(
+    const channel2 = new GenericChannel(
         sender2,
         () => {
             return receiver2.read();
@@ -88,11 +87,11 @@ export function createInMemoryChannel(): { channels: { transport: GenericTranspo
     return {
         channels: [
             {
-                transport: transport1,
+                channel: channel1,
                 sentItems: sentItems1,
             },
             {
-                transport: transport2,
+                channel: channel2,
                 sentItems: sentItems2,
             }
         ]

@@ -16,7 +16,7 @@ export class KernelHost {
     private readonly _uri: string;
     private readonly _scheduler: KernelCommandScheduler;
 
-    constructor(private readonly _kernel: CompositeKernel, private readonly _transport: contracts.Connector, hostUri: string) {
+    constructor(private readonly _kernel: CompositeKernel, private readonly _channel: contracts.KernelCommandAndEventChannel, hostUri: string) {
         this._uri = hostUri || "kernel://vscode";
         this._kernel.host = this;
         this._scheduler = new KernelCommandScheduler(commandEnvelope => {
@@ -96,7 +96,7 @@ export class KernelHost {
     }
 
     public createProxyKernelOnDefaultConnector(kernelInfo: KernelInfo): ProxyKernel {
-        const proxyKernel = new ProxyKernel(kernelInfo.localName, this._transport);
+        const proxyKernel = new ProxyKernel(kernelInfo.localName, this._channel);
         this._kernel.add(proxyKernel, kernelInfo.aliases);
         if (kernelInfo.destinationUri) {
             this.registerDestinationUriForProxy(proxyKernel.name, kernelInfo.destinationUri);
@@ -105,14 +105,14 @@ export class KernelHost {
     }
 
     public connect() {
-        this._transport.setCommandHandler((kernelCommandEnvelope: contracts.KernelCommandEnvelope) => {
+        this._channel.setCommandHandler((kernelCommandEnvelope: contracts.KernelCommandEnvelope) => {
             // fire and forget this one
             this._scheduler.schedule(kernelCommandEnvelope);
             return Promise.resolve();
         });
 
         this._kernel.subscribeToKernelEvents(e => {
-            this._transport.publishKernelEvent(e);
+            this._channel.publishKernelEvent(e);
         });
     }
 }
