@@ -65,34 +65,11 @@ public class StdioConnectionTests : KernelConnectionTestsBase<StdioConnectionTes
         var toolFileInfo = new FileInfo(assemblyLocation);
 
         var srcDir = toolFileInfo.Directory;
-        var dst = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-        var dstDir = new DirectoryInfo(dst);
-        CopyAll(srcDir, dstDir);
+        var temporaryDirectory = TemporaryDirectory.CreateFromDeepCopy(srcDir);
+        
+        RegisterForDisposal(temporaryDirectory);
 
-        static void CopyAll(DirectoryInfo source, DirectoryInfo target)
-        {
-            target.Create();
-
-            // Copy each file into the new directory.
-            foreach (FileInfo fi in source.GetFiles())
-            {
-                Console.WriteLine(@"Copying {0}\{1}", target.FullName, fi.Name);
-                fi.CopyTo(Path.Combine(target.FullName, fi.Name), true);
-            }
-
-            // Copy each subdirectory using recursion.
-            foreach (DirectoryInfo diSourceSubDir in source.GetDirectories())
-            {
-                DirectoryInfo nextTargetSubDir =
-                    target.CreateSubdirectory(diSourceSubDir.Name);
-                CopyAll(diSourceSubDir, nextTargetSubDir);
-            }
-        }
-        RegisterForDisposal(Disposable.Create(() =>
-        {
-            dstDir.Delete(true);
-        }));
-        return new FileInfo(Path.Combine(dstDir.FullName, toolFileInfo.Name));
+        return new FileInfo(Path.Combine(temporaryDirectory.Directory.FullName, toolFileInfo.Name));
     }
 
     [Fact]
