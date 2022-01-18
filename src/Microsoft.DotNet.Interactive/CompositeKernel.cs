@@ -92,7 +92,6 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentException($"Alias '#!{collidingAlias}' is already in use.");
             }
 
-
             kernel.ParentKernel = this;
             kernel.RootKernel = RootKernel;
 

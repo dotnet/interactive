@@ -172,8 +172,7 @@ i");
 
             kernel.AddDirective(new Command("#dupe"));
 
-            kernel.Invoking(k => 
-                                k.AddDirective(new Command("#dupe")))
+            kernel.Invoking(k => k.AddDirective(new Command("#dupe")))
                   .Should()
                   .Throw<ArgumentException>()
                   .Which

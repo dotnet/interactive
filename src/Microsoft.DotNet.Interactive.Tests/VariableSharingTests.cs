@@ -14,6 +14,7 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
 using Xunit;
 
@@ -102,6 +103,8 @@ x")]
             string codeToWrite,
             string codeToRead)
         {
+            using var _ = await ConsoleLock.AcquireAsync();
+
             using var kernel = CreateKernel();
             
             await kernel.SubmitCodeAsync($"{from}\n{codeToWrite}");
@@ -186,6 +189,8 @@ x")]
             "#!share --from fsharp x")]
         public async Task pwsh_kernel_variables_shared_from_other_kernels_resolve_to_the_correct_runtime_type(string from, string codeToWrite, string codeToRead)
         {
+            using var _ = await ConsoleLock.AcquireAsync();
+
             using var kernel = CreateKernel();
 
             using var events = kernel.KernelEvents.ToSubscribedList();
