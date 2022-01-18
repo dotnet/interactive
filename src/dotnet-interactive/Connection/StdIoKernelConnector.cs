@@ -39,6 +39,7 @@ public class StdIoKernelConnector : IKernelConnector
             // QUESTION: (ConnectKernelAsync) tests?
             var command = Command[0];
             var arguments = string.Join(" ", Command.Skip(1));
+            
             var psi = new ProcessStartInfo
             {
                 FileName = command,
@@ -47,15 +48,17 @@ public class StdIoKernelConnector : IKernelConnector
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                UseShellExecute = false,
+                StandardOutputEncoding = Encoding.UTF8
             };
             _process = new Process { StartInfo = psi };
             _process.EnableRaisingEvents = true;
             var stdErr = new StringBuilder();
             _process.ErrorDataReceived += (o, args) => { stdErr.Append(args.Data); };
             await Task.Yield();
+
             _process.Start();
             _process.BeginErrorReadLine();
+
             _receiver = new MultiplexingKernelCommandAndEventReceiver(
                 new KernelCommandAndEventTextReceiver(_process.StandardOutput));
             _sender = new KernelCommandAndEventTextStreamSender(_process.StandardInput);
@@ -112,7 +115,8 @@ public class StdIoKernelConnector : IKernelConnector
 
         if (_process is not null && _process.HasExited == false)
         {
-            _process?.Kill();
+            // todo: ensure killing process tree
+            _process?.Kill(true);
             _process?.Dispose();
             _process = null;
         }

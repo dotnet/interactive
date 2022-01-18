@@ -76,7 +76,7 @@ public abstract class KernelConnectionTestsBase<T>: IDisposable
 
     [WindowsFact]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
-    public async Task can_connect_to_remote_using_connect_command()
+    public async Task can_connect_to_remote_using_connect_magic_command()
     {
         var configuration = CreateConnectionConfiguration();
 

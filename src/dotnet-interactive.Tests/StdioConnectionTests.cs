@@ -12,12 +12,13 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Microsoft.DotNet.Interactive.Tests;
+namespace Microsoft.DotNet.Interactive.App.Tests;
 
 public class StdioConnectionTests : KernelConnectionTestsBase<StdioConnectionTestConfiguration>
 {
@@ -43,8 +44,8 @@ public class StdioConnectionTests : KernelConnectionTestsBase<StdioConnectionTes
 
     protected override StdioConnectionTestConfiguration CreateConnectionConfiguration()
     {
-        var toolPath = CopyToTemp(typeof(App.Program).Assembly.Location);
-        
+        var toolPath = new FileInfo(typeof(App.Program).Assembly.Location);
+
         return new StdioConnectionTestConfiguration
         {
             Command = Dotnet.Path.FullName,
@@ -57,18 +58,6 @@ public class StdioConnectionTests : KernelConnectionTestsBase<StdioConnectionTes
             },
             WorkingDirectory = toolPath.Directory
         };
-    }
-
-    private FileInfo CopyToTemp(string assemblyLocation)
-    {
-        var toolFileInfo = new FileInfo(assemblyLocation);
-
-        var srcDir = toolFileInfo.Directory;
-        var temporaryDirectory = TemporaryDirectory.CreateFromDeepCopy(srcDir);
-        
-        RegisterForDisposal(temporaryDirectory);
-
-        return new FileInfo(Path.Combine(temporaryDirectory.Directory.FullName, toolFileInfo.Name));
     }
 
     [Fact]
@@ -99,7 +88,7 @@ public class StdioConnectionTests : KernelConnectionTestsBase<StdioConnectionTes
         events
             .Should()
             .EventuallyContainSingle<DisplayEvent>(
-                where: d => d.FormattedValues.Any(FormattedValue => FormattedValue.Value == expected),
+                @where: d => d.FormattedValues.Any(FormattedValue => FormattedValue.Value == expected),
                 timeout: 10_000);
     }
 
