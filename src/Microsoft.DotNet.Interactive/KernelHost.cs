@@ -220,35 +220,40 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private void RegisterDestinationUriForProxy(string proxyLocalKernelName, Uri destinationUri)
+        internal void RegisterDestinationUriForProxy(ProxyKernel proxyKernel, Uri destinationUri)
+        {
+            if (proxyKernel == null)
+            {
+                throw new ArgumentNullException(nameof(proxyKernel));
+            }
+
+            if (destinationUri == null)
+            {
+                throw new ArgumentNullException(nameof(destinationUri));
+            }
+
+            if (TryGetKernelInfo(proxyKernel, out var kernelInfo))
+            {
+                if (kernelInfo.DestinationUri is { })
+                {
+                    _destinationUriToKernel.Remove(kernelInfo.DestinationUri);
+                }
+
+                kernelInfo.DestinationUri = destinationUri;
+                _destinationUriToKernel[kernelInfo.DestinationUri] = proxyKernel;
+            }
+            else
+            {
+                throw new ArgumentException($"Unknown kernel name : {proxyKernel.Name}");
+            }
+        }
+
+        internal void RegisterDestinationUriForProxy(string proxyLocalKernelName, Uri destinationUri)
         {
             var childKernel = _kernel.FindKernel(proxyLocalKernelName);
             if (childKernel is ProxyKernel proxyKernel)
             {
-                if (proxyKernel == null)
-                {
-                    throw new ArgumentNullException(nameof(proxyKernel));
-                }
-
-                if (destinationUri == null)
-                {
-                    throw new ArgumentNullException(nameof(destinationUri));
-                }
-            
-                if (TryGetKernelInfo(proxyKernel, out var kernelInfo))
-                {
-                    if (kernelInfo.DestinationUri is { })
-                    {
-                        _destinationUriToKernel.Remove(kernelInfo.DestinationUri);
-                    }
-
-                    kernelInfo.DestinationUri = destinationUri;
-                    _destinationUriToKernel[kernelInfo.DestinationUri] = proxyKernel;
-                }
-                else
-                {
-                    throw new ArgumentException($"Unknown kernel name : {proxyKernel.Name}");
-                }
+                RegisterDestinationUriForProxy(proxyKernel, destinationUri);
             }
             else
             {

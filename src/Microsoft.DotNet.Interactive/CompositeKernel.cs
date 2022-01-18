@@ -331,9 +331,10 @@ namespace Microsoft.DotNet.Interactive
                 {
                     var connectedKernel = await connectionCommand.ConnectKernelAsync(new KernelInfo(kernelName), kernelConnector, context);
 
-                 
                     RegisterForDisposal(kernelConnector);
                     Add(connectedKernel);
+
+                    // todo : here the connector should be used to patch the kernelInfo with the right destination uri for the proxy
 
                     var chooseKernelDirective =
                         Directives.OfType<ChooseKernelDirective>()
