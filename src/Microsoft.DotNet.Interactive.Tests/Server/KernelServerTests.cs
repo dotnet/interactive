@@ -230,6 +230,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         [Fact]
         public async Task it_produces_values_when_executing_Console_output()
         {
+            using var _ = await ConsoleLock.AcquireAsync();
+
             var guid = Guid.NewGuid().ToString();
 
             var command = new SubmitCode($"Console.Write(\"{guid}\");");

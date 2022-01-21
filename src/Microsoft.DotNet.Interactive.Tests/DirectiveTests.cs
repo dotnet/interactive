@@ -170,15 +170,15 @@ i");
         {
             using var kernel = new CompositeKernel();
 
-            kernel.AddDirective(new Command("#dupe"));
+            kernel.AddDirective(new Command("#!dupe"));
 
-            kernel.Invoking(k => k.AddDirective(new Command("#dupe")))
+            kernel.Invoking(k => k.AddDirective(new Command("#!dupe")))
                   .Should()
                   .Throw<ArgumentException>()
                   .Which
                   .Message
                   .Should()
-                  .Be("Alias \'#dupe\' is already in use.");
+                  .Be("Alias \'#!dupe\' is already in use.");
         }
 
         [Fact]
