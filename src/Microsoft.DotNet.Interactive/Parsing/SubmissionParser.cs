@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Parsing
 {
@@ -326,11 +325,11 @@ namespace Microsoft.DotNet.Interactive.Parsing
                                   .SelectMany(c => c.Aliases)
                                   .ToArray();
 
-            foreach (var @alias in command.Aliases)
+            foreach (var alias in command.Aliases)
             {
-                if (existingAliases.Contains(@alias))
+                if (existingAliases.Contains(alias))
                 {
-                    throw new ArgumentException($"Alias '{@alias}' is already in use.");
+                    throw new ArgumentException($"Alias '{alias}' is already in use.");
                 }
             }
 
