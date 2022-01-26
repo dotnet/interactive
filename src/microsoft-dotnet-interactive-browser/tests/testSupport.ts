@@ -89,21 +89,24 @@ export function findEventEnvelope(kernelEventEnvelopes: contracts.KernelEventEnv
 }
 
 export function findEventEnvelopeFromKernel(kernelEventEnvelopes: contracts.KernelEventEnvelope[], eventType: contracts.KernelEventType, kernelName: string): contracts.KernelEventEnvelope | undefined {
-    return kernelEventEnvelopes.find(eventEnvelope => eventEnvelope.eventType === eventType && eventEnvelope.command.command.targetKernelName === kernelName);
+    return kernelEventEnvelopes.find(eventEnvelope => eventEnvelope.eventType === eventType && eventEnvelope.command!.command.targetKernelName === kernelName);
 }
 
 export function createInMemoryTransport(eventProducer?: (commandEnvelope: contracts.KernelCommandEnvelope) => contracts.KernelEventEnvelope[]): { transport: GenericTransport, sentItems: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[], writeToTransport: (data: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)) => void } {
     let sentItems: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] = [];
+    let ep = eventProducer;
     if (!eventProducer) {
-        eventProducer = (ce) => {
+        ep = (ce) => {
             return [{ eventType: contracts.CommandSucceededType, event: <contracts.CommandSucceeded>{}, command: ce }];
         }
+    } else {
+        ep = eventProducer;
     }
 
     const receiver = new CommandAndEventReceiver();
     let sender: (message: contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope) => Promise<void> = (item) => {
         sentItems.push(item);
-        let events = eventProducer(<contracts.KernelCommandEnvelope>item)
+        let events = ep!(<contracts.KernelCommandEnvelope>item)
         for (let event of events) {
             receiver.delegate(event);
         }

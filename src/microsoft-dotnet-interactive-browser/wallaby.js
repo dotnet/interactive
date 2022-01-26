@@ -8,13 +8,13 @@ module.exports = function (wallaby) {
         },
         files: [
             "src/**/*.ts",
-            { pattern: "tests/**/*.ts", instrument: false },            
-            { pattern: "tests/Responses/**/*.json", instrument: false },     
+            { pattern: "tests/**/*.test.ts", instrument: false },
+            { pattern: "tests/Responses/**/*.json", instrument: false },
             "!tests/**/*.test.ts*",
         ],
         tests: ["tests/**/*.test.ts"],
         compilers: {
-            '**/*.ts?(x)': wallaby.compilers.typeScript({ })
+            '**/*.ts?(x)': wallaby.compilers.typeScript({})
         },
         testFramework: 'mocha',
         debug: true,

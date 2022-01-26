@@ -9,7 +9,7 @@ export function attachKernelToTransport(kernel: Kernel, kernelTransport: KernelT
     kernel.subscribeToKernelEvents(env => kernelTransport.publishKernelEvent(env))
 }
 
-let kernel: Kernel = null
+let kernel: Kernel | undefined;
 
 export async function clientSideKernelFactory(kernelTransport: KernelTransport): Promise<Kernel> {
     if (!kernel) {

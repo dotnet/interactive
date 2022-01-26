@@ -3,11 +3,9 @@
 
 import { expect } from "chai";
 import * as interactive from "../src/index";
-import * as fetchMock from "fetch-mock";
 
 describe("dotnet-interactive", () => {
 
-    afterEach(() => fetchMock.restore());
     describe("initialisation", () => {
         it("injects function to create scope for dotnet interactive", () => {
             let global: any = {};

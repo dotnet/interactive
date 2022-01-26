@@ -33,7 +33,7 @@ describe("dotnet-interactive", () => {
             const rootUrl = "https://dotnet.interactive.com:999";
             configureFetchForKernelDiscovery(rootUrl);
 
-            let transport: MockKernelTransport = null;
+            let transport: MockKernelTransport | undefined;
 
             let client = await createDotnetInteractiveClient({
                 address: rootUrl,
@@ -47,7 +47,7 @@ describe("dotnet-interactive", () => {
             let csharpKernel = asKernelClientContainer(client).csharp;
 
             await csharpKernel.submitCode("var a = 12");
-            expect(transport.codeSubmissions[0].command.targetKernelName).to.be.equal("csharp");
+            expect(transport!.codeSubmissions[0].command.targetKernelName).to.be.equal("csharp");
         });
 
 
@@ -88,7 +88,7 @@ describe("dotnet-interactive", () => {
                 configureFetchForKernelDiscovery(rootUrl);
 
 
-                let transport: MockKernelTransport = null;
+                let transport: MockKernelTransport | undefined;
 
                 let client = await createDotnetInteractiveClient({
                     address: rootUrl,
@@ -99,7 +99,7 @@ describe("dotnet-interactive", () => {
                     }
                 });
                 let token = await client.submitCode("var a = 12");
-                expect(token).to.be.equal(transport.codeSubmissions[0].token);
+                expect(token).to.be.equal(transport!.codeSubmissions[0].token);
             });
 
             it("sends SubmitCode command", async () => {
@@ -107,7 +107,7 @@ describe("dotnet-interactive", () => {
                 configureFetchForKernelDiscovery(rootUrl);
 
 
-                let transport: MockKernelTransport = null;
+                let transport: MockKernelTransport | undefined;
 
                 let client = await createDotnetInteractiveClient({
                     address: rootUrl,
@@ -119,7 +119,7 @@ describe("dotnet-interactive", () => {
                 });
 
                 await client.submitCode("var a = 12");
-                expect(transport.codeSubmissions[0].commandType).to.be.equal(contracts.SubmitCodeType);
+                expect(transport!.codeSubmissions[0].commandType).to.be.equal(contracts.SubmitCodeType);
             });
         });
     });
@@ -129,11 +129,11 @@ describe("dotnet-interactive", () => {
 
         // Set up with fake client-side kernel
         const rootUrl = "https://dotnet.interactive.com:999";
-        let transport: MockKernelTransport = null;
-        let kernel: Kernel = null;
-        let commandsSentToKernel: contracts.KernelCommandEnvelope[] = null;
-        let kernelEventHandlers: contracts.KernelEventEnvelopeObserver[] = null
-        let registeredCommandHandlers: { [commandType: string]: ((kernelCommandInvocation: { command: contracts.KernelCommand, context: KernelInvocationContext }) => Promise<void>) } = null;
+        let transport: MockKernelTransport | undefined;
+        let kernel: Kernel | undefined;
+        let commandsSentToKernel: contracts.KernelCommandEnvelope[] | undefined;
+        let kernelEventHandlers: contracts.KernelEventEnvelopeObserver[] | undefined
+        let registeredCommandHandlers: ({ [commandType: string]: ((kernelCommandInvocation: { command: contracts.KernelCommand, context: KernelInvocationContext }) => Promise<void>) }) | undefined;
 
         let makeClient = () => {
             configureFetchForKernelDiscovery(rootUrl);
@@ -152,7 +152,7 @@ describe("dotnet-interactive", () => {
                     kernel.registerCommandHandler({
                         commandType: "CustomCommand",
                         handle: (commandInvocation: IKernelCommandInvocation) => {
-                            commandsSentToKernel.push(commandInvocation.commandEnvelope);
+                            commandsSentToKernel!.push(commandInvocation.commandEnvelope);
                             return Promise.resolve();
                         }
                     });
@@ -160,7 +160,7 @@ describe("dotnet-interactive", () => {
                     kernel.registerCommandHandler({
                         commandType: "CustomCommand1",
                         handle: (commandInvocation: IKernelCommandInvocation) => {
-                            commandsSentToKernel.push(commandInvocation.commandEnvelope);
+                            commandsSentToKernel!.push(commandInvocation.commandEnvelope);
                             return Promise.resolve();
                         }
                     });
@@ -168,7 +168,7 @@ describe("dotnet-interactive", () => {
                     kernel.registerCommandHandler({
                         commandType: "CustomCommand2",
                         handle: (commandInvocation: IKernelCommandInvocation) => {
-                            commandsSentToKernel.push(commandInvocation.commandEnvelope);
+                            commandsSentToKernel!.push(commandInvocation.commandEnvelope);
                             return Promise.resolve();
                         }
                     });
@@ -190,11 +190,11 @@ describe("dotnet-interactive", () => {
                 commandType,
                 command: commandIn
             };
-            transport.fakeIncomingSubmitCommand(commandEnvelopeIn);
+            transport!.fakeIncomingSubmitCommand(commandEnvelopeIn);
 
-            expect(commandsSentToKernel.length).to.equal(1);
-            expect(commandsSentToKernel[0].commandType).to.equal("CustomCommand");
-            let commandReceived = <CustomCommand>commandsSentToKernel[0].command;
+            expect(commandsSentToKernel!.length).to.equal(1);
+            expect(commandsSentToKernel![0].commandType).to.equal("CustomCommand");
+            let commandReceived = <CustomCommand>commandsSentToKernel![0].command;
             expect(commandReceived.data).to.equal(commandIn.data);
 
             // TODO: what are the semantics around completion? With client-to-server submitCommand, at
@@ -226,7 +226,7 @@ describe("dotnet-interactive", () => {
             });
 
 
-            transport.fakeIncomingSubmitCommand({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "39 + 3" } });
+            transport!.fakeIncomingSubmitCommand({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "39 + 3" } });
 
             let eventIn: contracts.CodeSubmissionReceived = {
                 code: "39 + 3"
@@ -237,9 +237,9 @@ describe("dotnet-interactive", () => {
                 event: eventIn
             };
 
-            expect(transport.publishedEvents.length).to.be.equal(1);
-            expect(transport.publishedEvents[0].eventType).to.be.equal(eventEnvelopeIn.eventType);
-            let eventPublished = <contracts.CodeSubmissionReceived>transport.publishedEvents[0].event;
+            expect(transport!.publishedEvents.length).to.be.equal(1);
+            expect(transport!.publishedEvents[0].eventType).to.be.equal(eventEnvelopeIn.eventType);
+            let eventPublished = <contracts.CodeSubmissionReceived>transport!.publishedEvents[0].event;
             expect(eventPublished.code).to.be.equal(eventIn.code);
         });
 
