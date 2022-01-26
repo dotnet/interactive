@@ -60,7 +60,7 @@ Installed ".NET (PowerShell)" kernel.
 
 To update to the latest version of .NET Interactive run the following code: 
 
-```
+```console
 > dotnet tool update -g Microsoft.dotnet-interactive
 ```
 
