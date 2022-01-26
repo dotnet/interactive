@@ -33,7 +33,7 @@
     "@msrvida/sanddance-explorer": "3.2.0",
     "@luma.gl/core": "8.3.1",
     "@fluentui/react": "7.150.0",
-    "vega": "5.17.0",
+    "vega": "5.17.3",
     "react": "16.13.1",
     "react-dom": "16.13.1"
   },
