@@ -56,6 +56,14 @@ Installed ".NET (PowerShell)" kernel.
   python3            ~\jupyter\kernels\python3
 ```
 
+## Updating .NET Interactive
+
+To update to the latest version of .NET Interactive open an **ordinary console** and run the following code: 
+
+```console
+> dotnet tool update -g Microsoft.dotnet-interactive
+```
+
 ## Running the .NET Interactive Jupyter kernel
 
 To launch Jupyter, you can run either `jupyter lab` or `jupyter notebook` from your **Anaconda Prompt**, or you can launch Jupyter using the Anaconda Navigator.
