@@ -10,7 +10,7 @@ import { createDefaultClientFetch } from "./clientFetch";
 import { clientSideKernelFactory } from "./kernel-factory";
 
 export interface KernelClientImplParameteres {
-    clientFetch: (input: RequestInfo, init: RequestInit) => Promise<Response>;
+    clientFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
     rootUrl: string;
     kernelTransport: contracts.KernelTransport,
     clientSideKernel: Kernel,
@@ -208,7 +208,7 @@ export class KernelClientImpl implements dotnetInteractiveInterfaces.DotnetInter
         }
     }
 
-    public async submitCode(code: string, targetKernelName: string = null): Promise<string> {
+    public async submitCode(code: string, targetKernelName?: string): Promise<string> {
         let token: string = this._tokenGenerator.GetNewToken();
         let command: contracts.SubmitCode = {
             code: code,
@@ -280,9 +280,9 @@ function isConfiguration(config: any): config is DotnetInteractiveClientConfigur
 
 export async function createDotnetInteractiveClient(configuration: string | DotnetInteractiveClientConfiguration): Promise<dotnetInteractiveInterfaces.DotnetInteractiveClient> {
     let rootUrl = "";
-    let clientFetch: dotnetInteractiveInterfaces.ClientFetch = null;
-    let kernelTransportFactory: (rootUrl: string) => Promise<contracts.KernelTransport> = null;
-    let kernelFactory: (kernelTransport: contracts.KernelTransport) => Promise<Kernel> = null;
+    let clientFetch: dotnetInteractiveInterfaces.ClientFetch | undefined;
+    let kernelTransportFactory: ((rootUrl: string) => Promise<contracts.KernelTransport>) | undefined;
+    let kernelFactory: ((kernelTransport: contracts.KernelTransport) => Promise<Kernel>) | undefined;
 
     if (isConfiguration(configuration)) {
         rootUrl = configuration.address;

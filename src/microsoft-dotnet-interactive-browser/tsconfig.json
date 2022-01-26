@@ -7,12 +7,10 @@
       "dom",
       "ScriptHost"
     ],
-    "declaration": false,
-    "noImplicitAny": true,
     "module": "commonJs",
     "target": "es6",
-    "allowJs": false,
-    "experimentalDecorators": true,
+    "sourceMap": true,
+    "strict": true,
     "outDir": "./dist",
     "types": [
       "node",

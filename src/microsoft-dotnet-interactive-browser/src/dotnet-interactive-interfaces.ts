@@ -59,5 +59,5 @@ export class DotnetInteractiveScope {
 }
 
 export interface ClientFetch {
-    (input: RequestInfo, init?: RequestInit): Promise<Response>
+    (input: RequestInfo, init?: RequestInit | undefined): Promise<Response>
 }
