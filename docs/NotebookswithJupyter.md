@@ -58,7 +58,7 @@ Installed ".NET (PowerShell)" kernel.
 
 ## Updating .NET Interactive
 
-To update to the latest version of .NET Interactive run the following code: 
+To update to the latest version of .NET Interactive open an **Anaconda Prompt** and run the following code: 
 
 ```console
 > dotnet tool update -g Microsoft.dotnet-interactive
