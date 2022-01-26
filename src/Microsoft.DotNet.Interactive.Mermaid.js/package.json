@@ -9,7 +9,7 @@
     "@babel/core": "7.4.0",
     "babel-loader": "8.0.5",
     "css-loader": "5.2.0",
-    "mermaid": "8.9.0",
+    "mermaid": "8.13.8",
     "mini-css-extract-plugin": "1.4.0",
     "style-loader": "2.0.0",
     "terser-webpack-plugin": "5.1.1",
