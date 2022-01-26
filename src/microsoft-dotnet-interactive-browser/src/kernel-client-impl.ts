@@ -281,8 +281,8 @@ function isConfiguration(config: any): config is DotnetInteractiveClientConfigur
 export async function createDotnetInteractiveClient(configuration: string | DotnetInteractiveClientConfiguration): Promise<dotnetInteractiveInterfaces.DotnetInteractiveClient> {
     let rootUrl = "";
     let clientFetch: dotnetInteractiveInterfaces.ClientFetch | undefined;
-    let channelFactory: (rootUrl: string) => Promise<contracts.KernelCommandAndEventChannel> | undefined;
-    let kernelFactory: (kernelTransport: contracts.KernelCommandAndEventChannel) => Promise<Kernel> | undefined;
+    let channelFactory: ((rootUrl: string) => Promise<contracts.KernelCommandAndEventChannel>) | undefined;
+    let kernelFactory: ((kernelTransport: contracts.KernelCommandAndEventChannel) => Promise<Kernel>) | undefined;
 
     if (isConfiguration(configuration)) {
         rootUrl = configuration.address;
