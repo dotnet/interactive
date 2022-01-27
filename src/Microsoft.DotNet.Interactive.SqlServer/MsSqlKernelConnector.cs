@@ -7,7 +7,7 @@ using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.SqlServer;
 
-public class MsSqlKernelConnector : IKernelConnector
+public class MsSqlKernelConnector : KernelConnectorBase
 {
     public bool CreateDbContext { get; }
 

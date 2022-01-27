@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.Interactive
                 _defaultReceiver = defaultReceiver;
             }
 
-            public Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
+            public override Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
             {
                 var proxy = new ProxyKernel(kernelInfo.LocalName, _defaultReceiver.CreateChildReceiver(), _defaultSender);
                 var _ = proxy.StartAsync();
