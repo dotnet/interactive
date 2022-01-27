@@ -13,8 +13,10 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         {
             if (kernel is CompositeKernel compositeKernel)
             {
-                kernel.UseNteractDataExplorer(libraryUri: new Uri(@"https://colombod.github.io/dotnet-interactive-cdn/extensionlab/1.0.252001/nteract/nteractapi.js", UriKind.Absolute), libraryVersion: "1.0.252001");
-                kernel.UseSandDanceExplorer(libraryUri: new Uri(@"https://colombod.github.io/dotnet-interactive-cdn/extensionlab/1.0.252001/SandDance/sanddanceapi.js", UriKind.Absolute), libraryVersion: "1.0.252001");
+                kernel.UseNteractDataExplorer(
+                    libraryUri: new Uri(
+                        @"https://colombod.github.io/dotnet-interactive-cdn/extensionlab/1.0.252001/nteract/nteractapi.js",
+                        UriKind.Absolute), libraryVersion: "1.0.252001");
 
                 compositeKernel
                     .UseKernelClientConnection(new ConnectSQLiteCommand());
