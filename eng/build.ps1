@@ -32,8 +32,7 @@ try {
         "src\microsoft-dotnet-interactive",
         "src\microsoft-dotnet-interactive-browser",
         "src\dotnet-interactive-vscode",
-        "src\dotnet-interactive-vscode-insiders",
-        "src\Microsoft.DotNet.Interactive.nteract.js"
+        "src\dotnet-interactive-vscode-insiders"
     )
     foreach ($npmDir in $npmDirs) {
         Push-Location "$repoRoot\$npmDir"

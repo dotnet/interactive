@@ -16,9 +16,6 @@
     },
     {
       "path": "../src/Microsoft.DotNet.Interactive.Js"
-    },
-    {
-      "path": "../src/Microsoft.DotNet.Interactive.nteract.js"
     }
   ],
   "settings": {}
