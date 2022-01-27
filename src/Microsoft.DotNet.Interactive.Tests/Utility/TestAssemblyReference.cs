@@ -12,22 +12,23 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
     {
         public string ProjectName { get; }
         public string TargetFramework { get; }
-        public TemporaryDirectory Directory { get; }
+        public DisposableDirectory Directory { get; }
 
         public TestAssemblyReference(string projectName, string targetFramework, string sourceFileName, string sourceFileContents)
         {
             ProjectName = projectName;
             TargetFramework = targetFramework;
-            Directory = new TemporaryDirectory(
-                ($"{ProjectName}.csproj", $@"
+
+            Directory = DisposableDirectory.Create();
+            Directory.Directory.Populate(($"{ProjectName}.csproj", $@"
 <Project Sdk=""Microsoft.NET.Sdk"">
   <PropertyGroup>
     <TargetFramework>{TargetFramework}</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 </Project>"),
-                (sourceFileName, sourceFileContents)
-            );
+                (sourceFileName, sourceFileContents));
+
         }
 
         public async Task<string> BuildAndGetPathToAssembly()
