@@ -334,16 +334,6 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public static CompositeKernel UseKernelClientConnection<TConnector>(
-            this CompositeKernel kernel,
-            ConnectKernelCommand<TConnector> command)
-            where TConnector : IKernelConnector
-        {
-            kernel.AddKernelConnection(command);
-
-            return kernel;
-        }
-
         [DebuggerStepThrough]
         public static T LogCommandsToPocketLogger<T>(this T kernel)
             where T : Kernel

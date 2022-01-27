@@ -108,8 +108,10 @@ public class CommandLineParserTests : IDisposable
 
         var waitTime = TimeSpan.FromSeconds(10);
 
-        using (var kernel = new CompositeKernel().UseKernelClientConnection(new ConnectStdIoCommand()))
+        using (var kernel = new CompositeKernel())
         {
+            kernel.AddKernelConnector(new ConnectStdIoCommand());
+
             await kernel.SendAsync(new SubmitCode($"#!connect stdio --kernel-name proxy --command \"{Dotnet.Path}\" \"{typeof(Program).Assembly.Location}\" stdio --log-path \"{logPath.Directory.FullName}\" --verbose"));
 
             await kernel.SendAsync(new SubmitCode("1+1", "proxy"));
