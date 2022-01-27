@@ -330,7 +330,12 @@ namespace Microsoft.DotNet.Interactive
                 async (kernelName, kernelConnector, context) =>
                 {
                     var connectedKernel = await connectionCommand.ConnectKernelAsync(new KernelInfo(kernelName), kernelConnector, context);
-                    
+
+                    // todo: hack to ensure disposal, this should be handled as tear down when client are disposed
+                    if (kernelConnector is IDisposable disposableKernelConnector)
+                    {
+                        RegisterForDisposal(disposableKernelConnector);
+                    }
                     Add(connectedKernel);
 
                     // todo : here the connector should be used to patch the kernelInfo with the right destination uri for the proxy
