@@ -43,6 +43,12 @@ public abstract class KernelConnectionTestsBase<T>: IDisposable
        
         var connector = await CreateConnectorAsync(configuration);
 
+        // todo: hack to ensure disposal, this should be handled as tear down when client are disposed
+        if (connector is IDisposable disposableConnector)
+        {
+            _disposables.Add(disposableConnector);
+        }
+
         // use same connection to create 2 proxy kernel
 
         using var proxyKernel1 = await connector.ConnectKernelAsync(new KernelInfo("kernel1"));
@@ -72,6 +78,8 @@ public abstract class KernelConnectionTestsBase<T>: IDisposable
             .Be(kernelCommand2.Code);
 
         kernelEvents2.Should().ContainSingle<ReturnValueProduced>().Which.FormattedValues.Should().ContainSingle(f => f.Value == "echo2");
+
+        
     }
 
     [WindowsFact]
