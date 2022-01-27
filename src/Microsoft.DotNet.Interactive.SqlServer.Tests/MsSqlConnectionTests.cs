@@ -41,7 +41,6 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
             var sqlKernelExtension = new MsSqlKernelExtension();
             await sqlKernelExtension.OnLoadAsync(kernel);
             kernel.UseNteractDataExplorer();
-            kernel.UseSandDanceExplorer();
 
             return kernel;
         }

@@ -169,10 +169,7 @@ namespace Microsoft.ML
 
     public static class DataViewExtensions
     {
-        public static SandDanceDataExplorer ExploreWithSandDance(this IDataView source)
-        {
-            return source.ToTabularDataResource().ExploreWithSandDance();
-        }
+      
 
         public static NteractDataExplorer ExploreWithNteract(this IDataView source)
         {

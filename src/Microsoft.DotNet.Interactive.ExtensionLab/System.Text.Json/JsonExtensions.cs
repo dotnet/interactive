@@ -8,19 +8,10 @@ namespace System.Text.Json
 {
     public static class JsonExtensions
     {
-        public static SandDanceDataExplorer ExploreWithSandDance(this JsonDocument source)
-        {
-            return source.ToTabularDataResource().ExploreWithSandDance();
-        }
 
         public static NteractDataExplorer ExploreWithNteract(this JsonDocument source)
         {
             return source.ToTabularDataResource().ExploreWithNteract();
-        }
-        
-        public static SandDanceDataExplorer ExploreWithSandDance(this JsonElement source)
-        {
-            return source.ToTabularDataResource().ExploreWithSandDance();
         }
 
         public static NteractDataExplorer ExploreWithNteract(this JsonElement source)

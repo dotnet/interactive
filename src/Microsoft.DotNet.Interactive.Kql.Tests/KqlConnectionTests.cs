@@ -37,7 +37,6 @@ namespace Microsoft.DotNet.Interactive.Kql.Tests
             var kqlKernelExtension = new KqlKernelExtension();
             await kqlKernelExtension.OnLoadAsync(kernel);
             kernel.UseNteractDataExplorer();
-            kernel.UseSandDanceExplorer();
 
             return kernel;
         }

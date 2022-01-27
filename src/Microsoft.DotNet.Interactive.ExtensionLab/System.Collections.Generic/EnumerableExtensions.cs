@@ -10,10 +10,6 @@ namespace System.Collections.Generic
 {
     public static class EnumerableExtensions
     {
-        public static SandDanceDataExplorer ExploreWithSandDance<T>(this IEnumerable<T> source)
-        {
-            return source.ToTabularDataResource().ExploreWithSandDance();
-        }
 
         public static NteractDataExplorer ExploreWithNteract<T>(this IEnumerable<T> source)
         {

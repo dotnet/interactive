@@ -19,9 +19,6 @@
     },
     {
       "path": "../src/Microsoft.DotNet.Interactive.nteract.js"
-    },
-    {
-      "path": "../src/Microsoft.DotNet.Interactive.SandDance.js"
     }
   ],
   "settings": {}

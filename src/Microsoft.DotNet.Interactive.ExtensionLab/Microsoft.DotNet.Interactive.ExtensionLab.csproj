@@ -36,21 +36,6 @@
     <EmbeddedResource Include="@(nteractTypescriptOutputFiles)" LogicalName="$(AssemblyName).resources.%(FileName)%(Extension)" />
   </ItemGroup>
 
-  <!-- sanddance resources -->
-
-  <PropertyGroup>
-    <sanddanceJsApiRoot>$(MSBuildThisFileDirectory)/../Microsoft.DotNet.Interactive.SandDance.js/</sanddanceJsApiRoot>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <None Include="Inspector\LICENSE.SharpLab" />
-    <None Include="Inspector\README.md" />
-
-    <SandDanceTypescriptOutputFiles Include="$(sanddanceJsApiRoot)dist/sanddanceapi.js" />
-
-    <EmbeddedResource Include="@(SandDanceTypescriptOutputFiles)" LogicalName="$(AssemblyName).resources.%(FileName)%(Extension)" />
-  </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Analysis" Version="0.18.0" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="6.0.0" />

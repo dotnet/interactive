@@ -33,8 +33,7 @@ try {
         "src\microsoft-dotnet-interactive-browser",
         "src\dotnet-interactive-vscode",
         "src\dotnet-interactive-vscode-insiders",
-        "src\Microsoft.DotNet.Interactive.nteract.js",
-        "src\Microsoft.DotNet.Interactive.SandDance.js"
+        "src\Microsoft.DotNet.Interactive.nteract.js"
     )
     foreach ($npmDir in $npmDirs) {
         Push-Location "$repoRoot\$npmDir"
