@@ -36,18 +36,6 @@
     <EmbeddedResource Include="@(nteractTypescriptOutputFiles)" LogicalName="$(AssemblyName).resources.%(FileName)%(Extension)" />
   </ItemGroup>
 
-  <!-- mermaid resources -->
-
-  <PropertyGroup>
-    <mermaidJsApiRoot>$(MSBuildThisFileDirectory)/../Microsoft.DotNet.Interactive.Mermaid.js/</mermaidJsApiRoot>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <mermaidJavascriptOutputFiles Include="$(mermaidJsApiRoot)dist/mermaidapi.js" />
-
-    <EmbeddedResource Include="@(mermaidJavascriptOutputFiles)" LogicalName="$(AssemblyName).resources.%(FileName)%(Extension)" />
-  </ItemGroup>
-
   <!-- sanddance resources -->
 
   <PropertyGroup>

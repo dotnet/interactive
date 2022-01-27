@@ -18,9 +18,6 @@
       "path": "../src/Microsoft.DotNet.Interactive.Js"
     },
     {
-      "path": "../src/Microsoft.DotNet.Interactive.Mermaid.js"
-    },
-    {
       "path": "../src/Microsoft.DotNet.Interactive.nteract.js"
     },
     {

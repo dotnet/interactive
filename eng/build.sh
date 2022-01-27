@@ -46,7 +46,6 @@ npmDirs='src/microsoft-dotnet-interactive
          src/microsoft-dotnet-interactive-browser
          src/dotnet-interactive-vscode
          src/dotnet-interactive-vscode-insiders
-         src/Microsoft.DotNet.Interactive.Mermaid.js
          src/Microsoft.DotNet.Interactive.nteract.js
          src/Microsoft.DotNet.Interactive.SandDance.js'
 for npmDir in $npmDirs;
