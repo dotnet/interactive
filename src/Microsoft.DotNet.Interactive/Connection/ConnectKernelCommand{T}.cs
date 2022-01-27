@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Connection;
 /// <typeparam name="TConnector">The type bound to which custom command line options passed with the connect command will be bound.</typeparam>
 public abstract class ConnectKernelCommand<TConnector> :
     Command
-    where TConnector : IKernelConnector
+    where TConnector : KernelConnectorBase
 {
     protected ConnectKernelCommand(
         string name, 

@@ -20,7 +20,7 @@ public class NamedPipeConnectionTests : KernelConnectionTestsBase<string>
     {
     }
 
-    protected override async Task<IKernelConnector> CreateConnectorAsync(string pipeName)
+    protected override async Task<KernelConnectorBase> CreateConnectorAsync(string pipeName)
     {
         await CreateRemoteKernelTopologyAsync(pipeName);
         return new NamedPipeKernelConnector(pipeName);
@@ -38,7 +38,7 @@ public class NamedPipeConnectionTests : KernelConnectionTestsBase<string>
 
     protected override void ConfigureConnectCommand(CompositeKernel compositeKernel)
     {
-        compositeKernel.UseKernelClientConnection(new ConnectNamedPipeCommand());
+        compositeKernel.AddKernelConnector(new ConnectNamedPipeCommand());
     }
 
     protected override Task<IDisposable> CreateRemoteKernelTopologyAsync(string pipeName)

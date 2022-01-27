@@ -4,27 +4,22 @@
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 
-namespace Microsoft.DotNet.Interactive.ExtensionLab
+namespace Microsoft.DotNet.Interactive.ExtensionLab;
+
+public class SQLiteKernelConnector : KernelConnectorBase
 {
-    public class SQLiteKernelConnector : IKernelConnector
+    public string ConnectionString { get; }
+    public override Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
     {
-        public string ConnectionString { get; }
-        public Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
-        {
-            var kernel = new SQLiteKernel(
-                $"sql-{kernelInfo}",
-                ConnectionString);
+        var kernel = new SQLiteKernel(
+            $"sql-{kernelInfo}",
+            ConnectionString);
 
-            return Task.FromResult<Kernel>(kernel);
-        }
+        return Task.FromResult<Kernel>(kernel);
+    }
 
-        public SQLiteKernelConnector(string connectionString)
-        {
-            ConnectionString = connectionString;
-        }
-
-        public void Dispose()
-        {
-        }
+    public SQLiteKernelConnector(string connectionString)
+    {
+        ConnectionString = connectionString;
     }
 }

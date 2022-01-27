@@ -15,7 +15,7 @@ public class MsSqlKernelConnector : IKernelConnector
 
     public string PathToService { get; set; }
 
-    public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
+    public override async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
     {
         if (string.IsNullOrWhiteSpace(PathToService))
         {
@@ -41,9 +41,5 @@ public class MsSqlKernelConnector : IKernelConnector
     {
         CreateDbContext = createDbContext;
         ConnectionString = connectionString;
-    }
-
-    public void Dispose()
-    {
     }
 }

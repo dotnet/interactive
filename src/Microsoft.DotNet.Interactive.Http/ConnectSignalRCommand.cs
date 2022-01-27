@@ -14,10 +14,10 @@ namespace Microsoft.DotNet.Interactive.Http
             AddOption(new Option<string>("--hub-url", "The URL of the SignalR hub"));
         }
 
-        public override Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo, SignalRKernelConnector kernelConnector,
+        public override Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo, SignalRKernelConnector kernelConnectorBase,
             KernelInvocationContext context)
         {
-            return kernelConnector.ConnectKernelAsync(kernelInfo);
+            return kernelConnectorBase.ConnectKernelAsync(kernelInfo);
         }
     }
 }

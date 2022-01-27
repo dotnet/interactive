@@ -306,9 +306,9 @@ namespace Microsoft.DotNet.Interactive
                 context);
         }
 
-        public void AddKernelConnection<TKernelConnector>(
+        public void AddKernelConnector<TKernelConnector>(
             ConnectKernelCommand<TKernelConnector> connectionCommand)
-            where TKernelConnector : IKernelConnector
+            where TKernelConnector : KernelConnectorBase
         {
             var kernelNameOption = new Option<string>(
                 "--kernel-name",
@@ -330,8 +330,7 @@ namespace Microsoft.DotNet.Interactive
                 async (kernelName, kernelConnector, context) =>
                 {
                     var connectedKernel = await connectionCommand.ConnectKernelAsync(new KernelInfo(kernelName), kernelConnector, context);
-
-                    RegisterForDisposal(kernelConnector);
+                    
                     Add(connectedKernel);
 
                     // todo : here the connector should be used to patch the kernelInfo with the right destination uri for the proxy
