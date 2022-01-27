@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
                 new KeyValueStoreKernel()
             };
 
-            kernel.UseKernelClientConnection(new ConnectSQLiteCommand());
+            kernel.AddKernelConnector(new ConnectSQLiteCommand());
 
             using var _ = CreateInMemorySQLiteDb(out var connectionString);
 
@@ -65,7 +65,7 @@ SELECT * FROM fruit
                 new KeyValueStoreKernel()
             };
 
-            kernel.UseKernelClientConnection(new ConnectSQLiteCommand());
+            kernel.AddKernelConnector(new ConnectSQLiteCommand());
 
             using var _ = CreateInMemorySQLiteDb(out var connectionString);
 

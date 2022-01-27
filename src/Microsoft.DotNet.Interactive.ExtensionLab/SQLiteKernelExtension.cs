@@ -13,8 +13,8 @@ public class SQLiteKernelExtension : IKernelExtension
         if (kernel is CompositeKernel compositeKernel)
         {
 
-            compositeKernel
-                .UseKernelClientConnection(new ConnectSQLiteCommand());
+                compositeKernel
+                    .AddKernelConnector(new ConnectSQLiteCommand());
 
             KernelInvocationContext.Current?.Display(
                 new HtmlString(@"<details><summary>Query SQLite databases.</summary>

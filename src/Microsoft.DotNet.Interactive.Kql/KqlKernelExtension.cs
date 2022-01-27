@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.Kql
                         if (File.Exists(pathToService))
                         {
                             compositeKernel
-                                .UseKernelClientConnection(new ConnectKqlCommand(pathToService));
+                                .AddKernelConnector(new ConnectKqlCommand(pathToService));
 
                             KernelInvocationContext.Current?.Display(
                                 new HtmlString(@"<details><summary>Query Microsoft Kusto Server databases.</summary>

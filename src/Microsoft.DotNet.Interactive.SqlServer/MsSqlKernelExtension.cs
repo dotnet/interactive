@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                         if (File.Exists(pathToService))
                         {
                             compositeKernel
-                            .UseKernelClientConnection(new ConnectMsSqlCommand(pathToService));
+                            .AddKernelConnector(new ConnectMsSqlCommand(pathToService));
 
                             KernelInvocationContext.Current?.Display(
                                 new HtmlString(@"<details><summary>Query Microsoft SQL Server databases.</summary>

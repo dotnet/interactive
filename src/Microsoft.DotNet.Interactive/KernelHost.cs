@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive
         private IDisposable _kernelEventSubscription;
         private readonly Dictionary<Kernel, KernelInfo> _kernelInfos = new();
         private readonly Dictionary<Uri,Kernel> _destinationUriToKernel = new ();
-        private readonly IKernelConnector _defaultConnector;
+        private readonly KernelConnectorBase _defaultConnector;
         private readonly Dictionary<Uri, Kernel> _originUriToKernel = new();
 
         public KernelHost(CompositeKernel kernel, IKernelCommandAndEventSender defaultSender, MultiplexingKernelCommandAndEventReceiver defaultReceiver, Uri hostUri)
@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.Interactive
             return new KernelHost(kernel, sender, receiver);
         }
 
-        private class DefaultKernelConnector : IKernelConnector
+        private class DefaultKernelConnector : KernelConnectorBase
         {
             private readonly IKernelCommandAndEventSender _defaultSender;
             private readonly MultiplexingKernelCommandAndEventReceiver _defaultReceiver;
@@ -267,9 +267,9 @@ namespace Microsoft.DotNet.Interactive
             return childKernel;
         }
 
-        public async Task<ProxyKernel> CreateProxyKernelOnConnectorAsync(KernelInfo kernelInfo, IKernelConnector kernelConnector )
+        public async Task<ProxyKernel> CreateProxyKernelOnConnectorAsync(KernelInfo kernelInfo, KernelConnectorBase kernelConnectorBase )
         {
-            var childKernel = await kernelConnector.ConnectKernelAsync(kernelInfo) as ProxyKernel;
+            var childKernel = await kernelConnectorBase.ConnectKernelAsync(kernelInfo) as ProxyKernel;
             _kernel.Add(childKernel, kernelInfo.Aliases);
             RegisterDestinationUriForProxy(kernelInfo.LocalName, kernelInfo.DestinationUri);
             return childKernel;

@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             using var compositeKernel = new CompositeKernel();
 
-            compositeKernel.UseKernelClientConnection(new ConnectNamedPipeCommand());
+            compositeKernel.AddKernelConnector(new ConnectNamedPipeCommand());
 
             compositeKernel.Directives
                            .Should()
@@ -119,7 +119,7 @@ hello!
         {
             using var compositeKernel = new CompositeKernel();
 
-            compositeKernel.UseKernelClientConnection(
+            compositeKernel.AddKernelConnector(
                 new ConnectFakeKernelCommand("fake", "Connects the fake kernel")
                 {
                     CreateKernel = (name, options, context) => Task.FromResult<Kernel>(new FakeKernel(name.LocalName))
@@ -148,7 +148,7 @@ hello!
         {
             using var compositeKernel = new CompositeKernel();
 
-            compositeKernel.UseKernelClientConnection(
+            compositeKernel.AddKernelConnector(
                 new ConnectFakeKernelCommand("fake", "Connects the fake kernel")
                 {
                     CreateKernel = (name, options, context) => Task.FromResult<Kernel>(new FakeKernel(name.LocalName))
@@ -171,7 +171,7 @@ hello!
                 new FakeKernel("x")
             };
 
-            compositeKernel.UseKernelClientConnection(
+            compositeKernel.AddKernelConnector(
                 new ConnectFakeKernelCommand("fake", "Connects the fake kernel")
                 {
                     CreateKernel = (name, options, context) =>
@@ -205,13 +205,13 @@ hello!
         }
     }
 
-    public class FakeKernelConnector : IKernelConnector
+    public class FakeKernelConnector : KernelConnectorBase
     {
         public int FakenessLevel { get; set; }
 
         public Func<KernelInfo,Task<Kernel>> CreateKernel { get; set; }
 
-        public Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
+        public override Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
         {
             return CreateKernel(kernelInfo);
         }

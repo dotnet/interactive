@@ -27,7 +27,7 @@ public class StdioConnectionTests : KernelConnectionTestsBase<StdioConnectionTes
     }
 
 
-    protected override Task<IKernelConnector> CreateConnectorAsync(StdioConnectionTestConfiguration configuration)
+    protected override Task<KernelConnectorBase> CreateConnectorAsync(StdioConnectionTestConfiguration configuration)
     {
         var command = new List<string>{configuration.Command};
         if (configuration.Args?.Length > 0)
@@ -37,9 +37,9 @@ public class StdioConnectionTests : KernelConnectionTestsBase<StdioConnectionTes
 
         var connector = new StdIoKernelConnector(command.ToArray(), configuration.WorkingDirectory);
 
-        RegisterForDisposal(connector);
+     
 
-        return Task.FromResult<IKernelConnector>(connector);
+        return Task.FromResult<KernelConnectorBase>(connector);
     }
 
     protected override StdioConnectionTestConfiguration CreateConnectionConfiguration()
@@ -100,7 +100,7 @@ public class StdioConnectionTests : KernelConnectionTestsBase<StdioConnectionTes
 
     protected override void ConfigureConnectCommand(CompositeKernel compositeKernel)
     {
-        compositeKernel.UseKernelClientConnection(new ConnectStdIoCommand());
+        compositeKernel.AddKernelConnector(new ConnectStdIoCommand());
     }
 
     protected override Task<IDisposable> CreateRemoteKernelTopologyAsync(StdioConnectionTestConfiguration configuration)

@@ -608,10 +608,11 @@ public static class CommandLineParser
         var kernel = compositeKernel
             .UseDefaultMagicCommands()
             .UseLogMagicCommand()
-            .UseAboutMagicCommand()
-            .UseKernelClientConnection(new ConnectNamedPipeCommand())
-            .UseKernelClientConnection(new ConnectSignalRCommand())
-            .UseKernelClientConnection(new ConnectStdIoCommand());
+            .UseAboutMagicCommand();
+
+        kernel.AddKernelConnector(new ConnectNamedPipeCommand());
+        kernel.AddKernelConnector(new ConnectSignalRCommand());
+        kernel.AddKernelConnector(new ConnectStdIoCommand());
 
         if (startupOptions.Verbose)
         {

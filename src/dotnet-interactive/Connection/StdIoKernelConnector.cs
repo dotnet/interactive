@@ -16,7 +16,7 @@ using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Connection;
 
-public class StdIoKernelConnector : IKernelConnector
+public class StdIoKernelConnector : KernelConnectorBase
 {
     private MultiplexingKernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventTextStreamSender? _sender;
@@ -26,7 +26,7 @@ public class StdIoKernelConnector : IKernelConnector
 
     public DirectoryInfo WorkingDirectory { get; }
 
-    public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
+    public override async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
     {
         if (_receiver is not null)
         {

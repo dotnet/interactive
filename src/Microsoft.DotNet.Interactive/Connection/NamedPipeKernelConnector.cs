@@ -9,14 +9,14 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Connection;
 
-public class NamedPipeKernelConnector : IKernelConnector
+public class NamedPipeKernelConnector : KernelConnectorBase
 {
     private MultiplexingKernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventPipeStreamSender? _sender;
     private NamedPipeClientStream? _clientStream;
 
     public string PipeName { get; }
-    public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
+    public override async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
     {
         ProxyKernel? proxyKernel;
 

@@ -41,7 +41,7 @@ public abstract class KernelConnectionTestsBase<T>: IDisposable
     {
         var configuration = CreateConnectionConfiguration();
        
-        using var connector = await CreateConnectorAsync(configuration);
+        var connector = await CreateConnectorAsync(configuration);
 
         // use same connection to create 2 proxy kernel
 
@@ -137,7 +137,7 @@ x.Display(""text/plain"");");
 
 
 
-    protected abstract Task<IKernelConnector> CreateConnectorAsync(T configuration);
+    protected abstract Task<KernelConnectorBase> CreateConnectorAsync(T configuration);
 
     protected abstract T CreateConnectionConfiguration();
 
