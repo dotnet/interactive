@@ -13,6 +13,7 @@ public class NamedPipeKernelConnector : IKernelConnector
 {
     private MultiplexingKernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventPipeStreamSender? _sender;
+    private NamedPipeClientStream? _clientStream;
 
     public string PipeName { get; }
     public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
@@ -25,17 +26,17 @@ public class NamedPipeKernelConnector : IKernelConnector
         }
         else
         {
-            var clientStream = new NamedPipeClientStream(
+            _clientStream = new NamedPipeClientStream(
                 ".",
                 PipeName,
                 PipeDirection.InOut,
                 PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
 
-            await clientStream.ConnectAsync();
-            clientStream.ReadMode = PipeTransmissionMode.Message;
+            await _clientStream.ConnectAsync();
+            _clientStream.ReadMode = PipeTransmissionMode.Message;
 
-            _receiver = new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventPipeStreamReceiver(clientStream));
-            _sender = new KernelCommandAndEventPipeStreamSender(clientStream);
+            _receiver = new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventPipeStreamReceiver(_clientStream));
+            _sender = new KernelCommandAndEventPipeStreamSender(_clientStream);
 
         
             proxyKernel = new ProxyKernel(kernelInfo.LocalName, _receiver, _sender);
@@ -53,5 +54,6 @@ public class NamedPipeKernelConnector : IKernelConnector
     public void Dispose()
     {
         _receiver?.Dispose();
+        _clientStream?.Dispose();
     }
 }
