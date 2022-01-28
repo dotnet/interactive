@@ -98,6 +98,7 @@ SELECT 1 AS Apples, 2 AS Bananas, 3 AS Apples, 4 AS BANANAS, 5 AS Apples, 6 AS B
         public void Dispose()
         {
             Formatter.ResetToDefault();
+            DataExplorer.ResetToDefault();
         }
     }
 }
