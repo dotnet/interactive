@@ -169,13 +169,6 @@ namespace Microsoft.ML
 
     public static class DataViewExtensions
     {
-      
-
-        public static NteractDataExplorer ExploreWithNteract(this IDataView source)
-        {
-            return source.ToTabularDataResource().ExploreWithNteract();
-        }
-
         private static T GetValue<T>(ValueGetter<T> valueGetter)
         {
             T value = default;

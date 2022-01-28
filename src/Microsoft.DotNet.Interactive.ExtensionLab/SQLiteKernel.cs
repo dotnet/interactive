@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Enumerable = System.Linq.Enumerable;
+using System.CommandLine.Parsing;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
@@ -35,7 +36,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             KernelInvocationContext context)
         {
             await using var connection = OpenConnection();
-
             if (connection.State != ConnectionState.Open)
             {
                 await connection.OpenAsync();
@@ -49,11 +49,15 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             foreach (var table in tables)
             {
-                var explorer = new NteractDataExplorer(table.ToTabularDataResource());
+                var tabularDataResource = table.ToTabularDataResource();
+
+                var explorer = DataExplorer.CreateDefault(tabularDataResource);
                 context.Display(explorer);
             }
         }
 
+      
+        
         private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> Execute(IDbCommand command)
         {
             using var reader = command.ExecuteReader();
