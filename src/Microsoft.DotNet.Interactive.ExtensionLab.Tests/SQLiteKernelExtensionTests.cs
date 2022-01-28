@@ -57,7 +57,7 @@ SELECT * FROM fruit
                 .Value;
 
            
-            this.Assent(formattedData.FixedGuid().FixedCacheBuster(), _configuration);
+            this.Assent(formattedData, _configuration);
         }
 
         [Fact]
@@ -92,7 +92,7 @@ SELECT 1 AS Apples, 2 AS Bananas, 3 AS Apples, 4 AS BANANAS, 5 AS Apples, 6 AS B
                                 .Single(fm => fm.MimeType == HtmlFormatter.MimeType)
                                 .Value;
 
-            this.Assent(formattedData.FixedGuid().FixedCacheBuster(), _configuration);
+            this.Assent(formattedData, _configuration);
         }
 
         public void Dispose()
