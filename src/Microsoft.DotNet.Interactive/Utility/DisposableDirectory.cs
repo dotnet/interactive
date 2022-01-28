@@ -4,26 +4,32 @@
 using System;
 using System.IO;
 
-namespace Microsoft.DotNet.Interactive.Utility
+namespace Microsoft.DotNet.Interactive.Utility;
+
+public class DisposableDirectory : IDisposable
 {
-    public class DisposableDirectory : IDisposable
+    public DisposableDirectory(DirectoryInfo directory)
     {
-        public DisposableDirectory(DirectoryInfo directory)
-        {
-            Directory = directory;
-        }
+        Directory = directory;
+    }
 
-        public static DisposableDirectory Create()
-        {
-            var tempDir = System.IO.Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()));
-            return new DisposableDirectory(tempDir);
-        }
+    public static DisposableDirectory Create()
+    {
+        var tempDir = System.IO.Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()));
+        return new DisposableDirectory(tempDir);
+    }
 
-        public DirectoryInfo Directory { get; }
+    public DirectoryInfo Directory { get; }
 
-        public void Dispose()
+    public void Dispose()
+    {
+        try
         {
             Directory.Delete(recursive: true);
+        }
+        catch
+        {
+
         }
     }
 }
