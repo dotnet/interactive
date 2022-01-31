@@ -483,7 +483,6 @@
     "source-map-support": "0.5.21",
     "tmp": "0.2.1",
     "typescript": "4.4.4",
-    "vsce": "2.6.5",
     "vscode-oniguruma": "1.6.1",
     "vscode-test": "1.6.1",
     "vscode-textmate": "6.0.0"
