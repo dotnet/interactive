@@ -660,37 +660,6 @@ $${languageSpecificCode}
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
-        [InlineData(Language.PowerShell)]
-        public async Task when_a_sequence_of_diagnostics_requests_is_fired_diagnostics_are_produced_only_for_the_latest_request(Language language)
-        {
-            var kernel = CreateKernel(language);
-           
-            var results = await Task.WhenAll(
-                kernel.SendAsync(new RequestDiagnostics("C")),
-                kernel.SendAsync(new RequestDiagnostics("Co")),
-                kernel.SendAsync(new RequestDiagnostics("Con")),
-                kernel.SendAsync(new RequestDiagnostics("Cons")), 
-                kernel.SendAsync(new RequestDiagnostics("Conso"))
-            );
-
-           var events = results.SelectMany(r => r.KernelEvents.ToSubscribedList()).ToList();
-
-           events.Select(e => e.GetType())
-               .Where(t => t == typeof(CommandSucceeded)).Should()
-               .HaveCount(5);
-
-           events.Should().ContainSingle<DiagnosticsProduced>()
-                .Which
-                .Command
-                .As<RequestDiagnostics>()
-                .Code
-                .Should()
-                .Be("Conso");
-        }
-
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
         public async Task RequestCompletions_prevents_RequestDiagnostics_from_producing_events(Language language)
         {
             var kernel = CreateKernel(language);
