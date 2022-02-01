@@ -341,7 +341,7 @@ async function waitForSdkInstall(requiredSdkVersion: string): Promise<void> {
 
 // keep the cell's language in metadata in sync with what VS Code thinks it is
 async function updateNotebookCellLanguageInMetadata(candidateNotebookCellDocument: vscode.TextDocument) {
-    const notebook = candidateNotebookCellDocument.notebook;
+    const notebook = vscode.workspace.notebookDocuments.find(notebook => notebook.getCells().some(cell => cell.document === candidateNotebookCellDocument));
     if (notebook &&
         isJupyterNotebookViewType(notebook.notebookType) &&
         isDotnetInteractiveLanguage(candidateNotebookCellDocument.languageId)) {

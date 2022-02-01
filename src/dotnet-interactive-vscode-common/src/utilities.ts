@@ -9,6 +9,7 @@ import { InstallInteractiveArgs, ProcessStart } from "./interfaces";
 import { NotebookCellOutput, NotebookCellOutputItem, ReportChannel, Uri } from './interfaces/vscode-like';
 import * as contracts from './dotnet-interactive/contracts';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
+import { Logger } from './dotnet-interactive';
 
 export function executeSafe(command: string, args: Array<string>, workingDirectory?: string | undefined): Promise<{ code: number, output: string, error: string }> {
     return new Promise<{ code: number, output: string, error: string }>(resolve => {
@@ -77,6 +78,7 @@ export function createOutput(outputItems: Array<NotebookCellOutputItem>, outputI
 
 export async function getDotNetVersionOrThrow(dotnetPath: string, outputChannel: OutputChannelAdapter): Promise<string> {
     const dotnetVersionResult = await executeSafe(dotnetPath, ['--version']);
+    Logger.default.info(`Output of "dotnet --version":\n${dotnetVersionResult.output}`);
     if (dotnetVersionResult.code !== 0) {
         const message = `Unable to determine the version of the .NET SDK.\nSTDOUT:\n${dotnetVersionResult.output}\nSTDERR:\n${dotnetVersionResult.error}`;
         outputChannel.appendLine(message);
