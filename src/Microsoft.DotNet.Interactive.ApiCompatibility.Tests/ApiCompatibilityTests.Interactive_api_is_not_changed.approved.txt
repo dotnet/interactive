@@ -444,7 +444,7 @@ Microsoft.DotNet.Interactive.Connection
     public System.Collections.Generic.IAsyncEnumerable<CommandOrEvent> CommandsAndEventsAsync(System.Threading.CancellationToken cancellationToken)
     public IKernelCommandAndEventReceiver CreateChildReceiver()
     public System.Void Dispose()
-  public class NamedPipeKernelConnector : KernelConnectorBase
+  public class NamedPipeKernelConnector : KernelConnectorBase, System.IDisposable
     .ctor(System.String pipeName)
     public System.String PipeName { get;}
     public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> ConnectKernelAsync(Microsoft.DotNet.Interactive.KernelInfo kernelInfo)

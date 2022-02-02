@@ -16,7 +16,7 @@ using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Connection;
 
-public class StdIoKernelConnector : KernelConnectorBase
+public class StdIoKernelConnector : KernelConnectorBase, IDisposable
 {
     private MultiplexingKernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventTextStreamSender? _sender;
