@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.IO.Pipes;
 using System.Security.Principal;
 using System.Threading.Tasks;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Connection;
 
-public class NamedPipeKernelConnector : KernelConnectorBase
+public class NamedPipeKernelConnector : KernelConnectorBase, IDisposable
 {
     private MultiplexingKernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventPipeStreamSender? _sender;
