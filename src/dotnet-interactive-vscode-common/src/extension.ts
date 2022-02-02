@@ -78,8 +78,7 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    // pause if an sdk installation is currently running
-    await waitForSdkInstall(minDotNetSdkVersion);
+    await waitForSdkPackExtension();
 
     // this must happen early, because some following functions use the acquisition command
     registerAcquisitionCommands(context, diagnosticsChannel);
@@ -324,18 +323,10 @@ interface DotnetPackExtensionExports {
     getDotnetPath(version?: string): Promise<string | undefined>;
 }
 
-async function waitForSdkInstall(requiredSdkVersion: string): Promise<void> {
+async function waitForSdkPackExtension(): Promise<void> {
     const sdkExtension = vscode.extensions.getExtension<DotnetPackExtensionExports | undefined>("ms-dotnettools.vscode-dotnet-pack");
-    if (sdkExtension) {
-        const sdkExports = sdkExtension.isActive
-            ? sdkExtension.exports
-            : await sdkExtension.activate();
-        if (sdkExports) {
-            const dotnetPath = await sdkExports.getDotnetPath(requiredSdkVersion);
-            if (dotnetPath) {
-                DotNetPathManager.setDotNetPath(dotnetPath);
-            }
-        }
+    if (sdkExtension && !sdkExtension.isActive) {
+        await sdkExtension.activate();
     }
 }
 
