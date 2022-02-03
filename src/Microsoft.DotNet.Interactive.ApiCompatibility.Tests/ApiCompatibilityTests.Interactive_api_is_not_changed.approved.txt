@@ -1,11 +1,11 @@
 Microsoft.DotNet.Interactive
   public class AutomationEnvironment : FrontendEnvironment
     .ctor()
-  public class ChooseKernelDirective : System.CommandLine.Command, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.ICommand, System.CommandLine.IIdentifierSymbol, System.CommandLine.ISymbol, System.CommandLine.Suggestions.ISuggestionSource
+  public class ChooseKernelDirective : System.CommandLine.Command, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
     .ctor(Kernel kernel, System.String description = null)
     public Kernel Kernel { get;}
     protected System.Threading.Tasks.Task Handle(KernelInvocationContext kernelInvocationContext, System.CommandLine.Invocation.InvocationContext commandLineInvocationContext)
-  public class ChooseKeyValueStoreKernelDirective : ChooseKernelDirective, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.ICommand, System.CommandLine.IIdentifierSymbol, System.CommandLine.ISymbol, System.CommandLine.Suggestions.ISuggestionSource
+  public class ChooseKeyValueStoreKernelDirective : ChooseKernelDirective, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
     .ctor(Kernel kernel)
     public System.CommandLine.Option<System.IO.FileInfo> FromFileOption { get;}
     public System.CommandLine.Option<System.Uri> FromUrlOption { get;}
@@ -105,7 +105,7 @@ Microsoft.DotNet.Interactive
     public static Microsoft.AspNetCore.Html.IHtmlContent HTML(System.String content)
     public static System.Void Javascript(System.String scriptContent)
     public ChooseKernelDirective ChooseKernelDirective { get;}
-    public System.Collections.Generic.IReadOnlyCollection<System.CommandLine.ICommand> Directives { get;}
+    public System.Collections.Generic.IReadOnlyCollection<System.CommandLine.Command> Directives { get;}
     public FrontendEnvironment FrontendEnvironment { get; set;}
     public System.IObservable<Microsoft.DotNet.Interactive.Events.KernelEvent> KernelEvents { get;}
     public System.String Name { get;}
@@ -395,10 +395,10 @@ Microsoft.DotNet.Interactive.Connection
     public Microsoft.DotNet.Interactive.Commands.KernelCommand Command { get;}
     public Microsoft.DotNet.Interactive.Events.KernelEvent Event { get;}
     public System.Boolean IsParseError { get;}
-  public abstract class ConnectKernelCommand<TConnector> : System.CommandLine.Command, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.ICommand, System.CommandLine.IIdentifierSymbol, System.CommandLine.ISymbol, System.CommandLine.Suggestions.ISuggestionSource
+  public abstract class ConnectKernelCommand<TConnector> : System.CommandLine.Command, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
     public System.String ConnectedKernelDescription { get; set;}
     public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> ConnectKernelAsync(Microsoft.DotNet.Interactive.KernelInfo kernelInfo, TConnector connection, Microsoft.DotNet.Interactive.KernelInvocationContext context)
-  public class ConnectNamedPipeCommand : ConnectKernelCommand<NamedPipeKernelConnector>, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.ICommand, System.CommandLine.IIdentifierSymbol, System.CommandLine.ISymbol, System.CommandLine.Suggestions.ISuggestionSource
+  public class ConnectNamedPipeCommand : ConnectKernelCommand<NamedPipeKernelConnector>, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
     .ctor()
     public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> ConnectKernelAsync(Microsoft.DotNet.Interactive.KernelInfo kernelInfo, NamedPipeKernelConnector connector, Microsoft.DotNet.Interactive.KernelInvocationContext context)
   public abstract class IKernelCommandAndEventReceiver
@@ -579,10 +579,10 @@ Microsoft.DotNet.Interactive.Parsing
     Warning=2
     Error=3
   public class DirectiveArgsToken : SyntaxToken
-  public class DirectiveHelpBuilder : System.CommandLine.Help.HelpBuilder, System.CommandLine.Help.IHelpBuilder
+  public class DirectiveHelpBuilder : System.CommandLine.Help.HelpBuilder
     .ctor(System.String rootCommandName)
-    public System.String GetHelpForSymbol(System.CommandLine.ISymbol symbol)
-    public System.Void Write(System.CommandLine.ICommand command)
+    public System.String GetHelpForSymbol(System.CommandLine.Symbol symbol)
+    public System.Void Write(System.CommandLine.Help.HelpContext context)
   public abstract class DirectiveNode : LanguageNode
     public System.Collections.Generic.IEnumerable<Diagnostic> GetDiagnostics()
     public System.CommandLine.Parsing.ParseResult GetDirectiveParseResult()
@@ -611,7 +611,7 @@ Microsoft.DotNet.Interactive.Parsing
   public class SubmissionParser
     public static Microsoft.DotNet.Interactive.Events.CompletionItem CompletionItemFor(System.String name, System.CommandLine.Parsing.ParseResult parseResult)
     .ctor(Microsoft.DotNet.Interactive.Kernel kernel)
-    public System.Collections.Generic.IReadOnlyList<System.CommandLine.ICommand> Directives { get;}
+    public System.Collections.Generic.IReadOnlyList<System.CommandLine.Command> Directives { get;}
     public System.String KernelLanguage { get;}
     public System.Void AddDirective(System.CommandLine.Command command)
     public PolyglotSyntaxTree Parse(System.String code, System.String language = null)
@@ -661,7 +661,7 @@ Microsoft.DotNet.Interactive.Server
     public static IKernelCommandEnvelope Create(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public static IKernelCommandEnvelope Deserialize(System.String json)
     public static IKernelCommandEnvelope Deserialize(System.Text.Json.JsonElement json)
-    public static System.Void ResetToDefaults()
+    public static System.Void RegisterDefaults()
     public static System.String Serialize(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public static System.String Serialize(IKernelCommandEnvelope envelope)
     public System.String CommandId { get;}
@@ -679,8 +679,8 @@ Microsoft.DotNet.Interactive.Server
     public static IKernelEventEnvelope Deserialize(System.Text.Json.JsonElement jsonObject)
     public static IKernelEventEnvelope DeserializeWithCommand(System.String json, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public static IKernelEventEnvelope DeserializeWithCommand(System.Text.Json.JsonElement jsonObject, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
+    public static System.Void RegisterDefaults()
     public static System.Void RegisterEvent<TEvent>()
-    public static System.Void ResetToDefaults()
     public static System.String Serialize(Microsoft.DotNet.Interactive.Events.KernelEvent event)
     public static System.String Serialize(IKernelEventEnvelope eventEnvelope)
     public System.String CommandType { get;}
