@@ -25,5 +25,7 @@ public class RequestKernelInfo : KernelCommand
                 context.Publish(new KernelInfoProduced(kernelInfo, context.Command as RequestKernelInfo));
             }
         }
+
+        return Task.CompletedTask;
     }
 }
