@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.ValueSharing;
+using static Microsoft.DotNet.Interactive.ChooseKeyValueStoreKernelDirective;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -63,13 +64,13 @@ namespace Microsoft.DotNet.Interactive
 
             var value = command.LanguageNode.Text.Trim();
 
-            var options = ChooseKeyValueStoreKernelDirective.ValueDirectiveOptions.Create(parseResult);
+            var options = ValueDirectiveOptions.Create(parseResult, _chooseKernelDirective);
             
             await StoreValueAsync(command, context, options, value);
         }
 
         internal async Task TryStoreValueFromOptionsAsync(KernelInvocationContext context,
-            ChooseKeyValueStoreKernelDirective.ValueDirectiveOptions options)
+            ValueDirectiveOptions options)
         {
             string newValue = null;
             var loadedFromOptions = false;
@@ -101,7 +102,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private async Task StoreValueAsync(KernelCommand command, KernelInvocationContext context, ChooseKeyValueStoreKernelDirective.ValueDirectiveOptions options,
+        private async Task StoreValueAsync(KernelCommand command, KernelInvocationContext context, ValueDirectiveOptions options,
             string value = null)
         {
             if (options.FromFile is { })
@@ -153,7 +154,7 @@ namespace Microsoft.DotNet.Interactive
 
         private async Task StoreValueAsync(
             string value,
-            ChooseKeyValueStoreKernelDirective.ValueDirectiveOptions options,
+            ValueDirectiveOptions options,
             KernelInvocationContext context)
         {
             await SetValueAsync(options.Name, value);

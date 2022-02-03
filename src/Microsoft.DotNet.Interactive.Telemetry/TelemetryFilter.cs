@@ -13,10 +13,10 @@ namespace Microsoft.DotNet.Interactive.Telemetry;
 public sealed class TelemetryFilter : ITelemetryFilter
 {
     private readonly Func<string, string> _hash;
-    private readonly Action<CommandResult, IDirectiveCollection, ImmutableArray<KeyValuePair<string, string>>.Builder> _directiveProcessor;
+    private readonly Action<CommandResult, DirectiveCollection, ImmutableArray<KeyValuePair<string, string>>.Builder> _directiveProcessor;
     private readonly HashSet<string> _clearTextProperties;
 
-    public TelemetryFilter(Func<string, string> hash, IEnumerable<string> clearTextProperties = null, Action<CommandResult , IDirectiveCollection , ImmutableArray<KeyValuePair<string, string>>.Builder > directiveProcessor = null)
+    public TelemetryFilter(Func<string, string> hash, IEnumerable<string> clearTextProperties = null, Action<CommandResult , DirectiveCollection , ImmutableArray<KeyValuePair<string, string>>.Builder > directiveProcessor = null)
     {
         _hash = hash ?? throw new ArgumentNullException(nameof(hash));
         _directiveProcessor = directiveProcessor;
@@ -59,7 +59,7 @@ public sealed class TelemetryFilter : ITelemetryFilter
     }
 
     private ImmutableArray<KeyValuePair<string, string>>? 
-        FilterCommand(string commandName, IEnumerable<Token> tokens, CommandResult commandResult, IDirectiveCollection directives)
+        FilterCommand(string commandName, IEnumerable<Token> tokens, CommandResult commandResult, DirectiveCollection directives)
     {
         if (commandName is null || tokens is null)
         {
@@ -77,7 +77,7 @@ public sealed class TelemetryFilter : ITelemetryFilter
     /// Tries to see if the tokens follow or match the specified command rule.
     /// </summary>
     ImmutableArray<KeyValuePair<string, string>>? 
-        TryMatchRule(CommandRule rule, IEnumerable<Token> tokens, CommandResult commandResult, IDirectiveCollection directives)
+        TryMatchRule(CommandRule rule, IEnumerable<Token> tokens, CommandResult commandResult, DirectiveCollection directives)
     {
         var entryItems = ImmutableArray.CreateBuilder<KeyValuePair<string, string>>();
         entryItems.Add(new KeyValuePair<string, string>("verb", rule.CommandName));
@@ -86,7 +86,7 @@ public sealed class TelemetryFilter : ITelemetryFilter
         var tokenQueue = new Queue<Token>(tokens.Where(x => x.Type != TokenType.Option));
         Token NextToken()
         {
-            return tokenQueue.TryDequeue(out var firstToken) ? firstToken : null;
+            return tokenQueue.TryDequeue(out var firstToken) ? firstToken : default;
         }
 
         var currentToken = NextToken();
@@ -121,8 +121,8 @@ public sealed class TelemetryFilter : ITelemetryFilter
                 }
                 case ArgumentItem argItem:
                 {
-                    if (argItem.TokenType == currentToken?.Type &&
-                        argItem.Value == currentToken?.Value)
+                    if (argItem.TokenType == currentToken.Type &&
+                        argItem.Value == currentToken.Value)
                     {
                         entryItems.Add(new KeyValuePair<string, string>(argItem.EntryKey, argItem.Value));
                         currentToken = NextToken();
@@ -139,7 +139,7 @@ public sealed class TelemetryFilter : ITelemetryFilter
                 }
                 case IgnoreItem ignoreItem:
                 {
-                    if (ignoreItem.TokenType == currentToken?.Type)
+                    if (ignoreItem.TokenType == currentToken.Type)
                     {
                         currentToken = NextToken();
                     }

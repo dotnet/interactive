@@ -4,6 +4,7 @@
 using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.CommandLine.NamingConventionBinder;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -14,6 +15,7 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
 using Pocket.For.Xunit;
 using Xunit;
@@ -99,8 +101,9 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             kernel.AddDirective(new Command("#!increment")
             {
-                Handler = CommandHandler.Create(async (KernelInvocationContext context) =>
+                Handler = CommandHandler.Create(async (InvocationContext ctx) =>
                 {
+                    var context = ctx.GetService<KernelInvocationContext>();
                     await context.HandlingKernel.SubmitCodeAsync("i++;");
                 })
             });
@@ -140,7 +143,7 @@ i");
                   .Which
                   .Message
                   .Should()
-                  .Be("Required argument missing for command: #!oops");
+                  .Be("Required argument missing for command: '#!oops'.");
         }
 
         [Fact]
@@ -167,16 +170,15 @@ i");
         {
             using var kernel = new CompositeKernel();
 
-            kernel.AddDirective(new Command("#dupe"));
+            kernel.AddDirective(new Command("#!dupe"));
 
-            kernel.Invoking(k => 
-                                k.AddDirective(new Command("#dupe")))
+            kernel.Invoking(k => k.AddDirective(new Command("#!dupe")))
                   .Should()
                   .Throw<ArgumentException>()
                   .Which
                   .Message
                   .Should()
-                  .Be("Alias \'#dupe\' is already in use.");
+                  .Be("Alias \'#!dupe\' is already in use.");
         }
 
         [Fact]
@@ -188,8 +190,9 @@ i");
 
             kernel.AddDirective(new Command("#!wrap")
             {
-                Handler = CommandHandler.Create((KernelInvocationContext c) =>
-                { 
+                Handler = CommandHandler.Create((InvocationContext ctx) =>
+                {
+                    var c = ctx.GetService<KernelInvocationContext>();
                     c.Display("hello!");
 
                     c.OnComplete(context =>
@@ -198,6 +201,8 @@ i");
 
                         return Task.CompletedTask;
                     });
+
+                    return Task.CompletedTask;
                 })
             });
 
@@ -240,6 +245,8 @@ i");
         [InlineData(".NET")]
         public async Task Directives_can_display_help(string kernelName)
         {
+            using var _ = await ConsoleLock.AcquireAsync();
+
             var cSharpKernel = new CSharpKernel().UseDefaultMagicCommands();
             using var compositeKernel = new CompositeKernel
             {

@@ -14,6 +14,7 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
 using Xunit;
 
@@ -102,6 +103,8 @@ x")]
             string codeToWrite,
             string codeToRead)
         {
+            using var _ = await ConsoleLock.AcquireAsync();
+
             using var kernel = CreateKernel();
             
             await kernel.SubmitCodeAsync($"{from}\n{codeToWrite}");
@@ -186,6 +189,8 @@ x")]
             "#!share --from fsharp x")]
         public async Task pwsh_kernel_variables_shared_from_other_kernels_resolve_to_the_correct_runtime_type(string from, string codeToWrite, string codeToRead)
         {
+            using var _ = await ConsoleLock.AcquireAsync();
+
             using var kernel = CreateKernel();
 
             using var events = kernel.KernelEvents.ToSubscribedList();
@@ -205,33 +210,6 @@ x")]
                   .Trim()
                   .Should()
                   .Be("2");
-        }
-
-        [Fact(Skip = "not implemented")]
-        public async Task Directives_can_access_local_kernel_variables()
-        {
-            using var kernel = CreateKernel();
-            kernel.DefaultKernelName = "csharp";
-            var csharpKernel = (CSharpKernel) kernel.FindKernel("csharp");
-
-            using var events = kernel.KernelEvents.ToSubscribedList();
-            var receivedValue = 0;
-
-            var directive = new Command("#!grab")
-            {
-                new Argument<int>("x")
-            };
-            directive.Handler = CommandHandler.Create<KernelInvocationContext, int>((context, x) =>
-            {
-                return receivedValue = x;
-            });
-
-            csharpKernel.AddDirective(directive);
-
-            await kernel.SubmitCodeAsync("var x = 123;");
-            await kernel.SubmitCodeAsync("#!grab $x");
-
-            receivedValue.Should().Be(123);
         }
 
         [Fact]

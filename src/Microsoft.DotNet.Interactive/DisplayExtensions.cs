@@ -25,6 +25,5 @@ namespace System
         {
              return KernelInvocationContext.Current.DisplayAs(value, mimeType, additionalMimeTypes);
         }
-        
     }
 }

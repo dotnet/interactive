@@ -4,7 +4,10 @@
 using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.CommandLine.NamingConventionBinder;
+using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Http
 {
@@ -17,20 +20,24 @@ namespace Microsoft.DotNet.Interactive.Http
             var initApiCommand = new Command("#!enable-http")
             {
                 IsHidden = true,
-                Handler = CommandHandler.Create((KernelInvocationContext context) =>
+                Handler = CommandHandler.Create((InvocationContext cmdLineContext) =>
                 {
-                    if (context.Command is SubmitCode submitCode)
+                    var context = cmdLineContext.GetService<KernelInvocationContext>();
+
+                    if (context.Command is SubmitCode)
                     {
                         var probingUrls = httpProbingSettings is not null
-                            ? httpProbingSettings.AddressList
-                            : new[]
-                            {
-                                new Uri($"http://localhost:{httpPort}")
-                            };
+                                              ? httpProbingSettings.AddressList
+                                              : new[]
+                                              {
+                                                  new Uri($"http://localhost:{httpPort}")
+                                              };
                         var html =
                             HttpApiBootstrapper.GetHtmlInjection(probingUrls, httpPort?.ToString() ?? Guid.NewGuid().ToString("N"));
                         context.Display(html, "text/html");
                     }
+
+                    return Task.CompletedTask;
                 })
             };
 

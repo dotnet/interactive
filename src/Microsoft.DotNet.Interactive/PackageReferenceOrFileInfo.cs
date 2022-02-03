@@ -34,10 +34,8 @@ namespace Microsoft.DotNet.Interactive
                 _ => throw new InvalidOperationException()
             };
 
-        public static implicit operator PackageReferenceOrFileInfo(FileInfo source) =>
-            new PackageReferenceOrFileInfo(source);
+        public static implicit operator PackageReferenceOrFileInfo(FileInfo source) => new(source);
 
-        public static implicit operator PackageReferenceOrFileInfo(PackageReference source) =>
-            new PackageReferenceOrFileInfo(source);
+        public static implicit operator PackageReferenceOrFileInfo(PackageReference source) => new(source);
     }
 }

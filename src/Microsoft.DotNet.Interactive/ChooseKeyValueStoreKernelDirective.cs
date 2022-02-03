@@ -3,7 +3,6 @@
 
 using System;
 using System.CommandLine;
-using System.CommandLine.Binding;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 using System.IO;
@@ -12,13 +11,11 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive
 {
-
     public class ChooseKeyValueStoreKernelDirective : ChooseKernelDirective
     {
         public ChooseKeyValueStoreKernelDirective(Kernel kernel) : base(kernel,
             "Stores a value that can then be shared with other subkernels.")
         {
-
             NameOption = new Option<string>(
                 "--name",
                 "The name of the value to create. You can use #!share to retrieve this value from another subkernel.")
@@ -47,7 +44,7 @@ namespace Microsoft.DotNet.Interactive
                     }
                     else if (!File.Exists(filePath))
                     {
-                        result.ErrorMessage = Resources.Instance.FileDoesNotExist(filePath);
+                        result.ErrorMessage = LocalizationResources.Instance.FileDoesNotExist(filePath);
                         return null;
                     }
                     else
@@ -59,7 +56,7 @@ namespace Microsoft.DotNet.Interactive
             MimeTypeOption = new Option<string>(
                     "--mime-type",
                     "A mime type for the value. If specified, displays the value immediately as an output using the specified mime type.")
-                .AddSuggestions((_, __) => new[]
+                .AddCompletions(new[]
                 {
                     "application/json",
                     "text/html",
@@ -76,13 +73,10 @@ namespace Microsoft.DotNet.Interactive
         protected override async Task Handle(KernelInvocationContext kernelInvocationContext,
             InvocationContext commandLineInvocationContext)
         {
-            var options = ValueDirectiveOptions.Create(commandLineInvocationContext.ParseResult);
+            var options = ValueDirectiveOptions.Create(commandLineInvocationContext.ParseResult, this);
             var kernel = Kernel as KeyValueStoreKernel;
 
-
-            {
-                await kernel.TryStoreValueFromOptionsAsync(kernelInvocationContext, options);
-            }
+            await kernel.TryStoreValueFromOptionsAsync(kernelInvocationContext, options);
 
             await base.Handle(kernelInvocationContext, commandLineInvocationContext);
         }
@@ -97,18 +91,22 @@ namespace Microsoft.DotNet.Interactive
 
         internal class ValueDirectiveOptions
         {
-            private static readonly ModelBinder<ValueDirectiveOptions> _modelBinder = new();
+            public static ValueDirectiveOptions Create(ParseResult parseResult, ChooseKeyValueStoreKernelDirective directive) =>
+                new()
+                {
+                    Name = parseResult.GetValueForOption(directive.NameOption),
+                    FromFile = parseResult.GetValueForOption(directive.FromFileOption),
+                    FromUrl = parseResult.GetValueForOption(directive.FromUrlOption),
+                    MimeType = parseResult.GetValueForOption(directive.MimeTypeOption),
+                };
 
-            public static ValueDirectiveOptions Create(ParseResult parseResult) =>
-                _modelBinder.CreateInstance(new BindingContext(parseResult)) as ValueDirectiveOptions;
+            public string Name { get; init; }
 
-            public string Name { get; set; }
+            public FileInfo FromFile { get; init; }
 
-            public FileInfo FromFile { get; set; }
+            public Uri FromUrl { get; init; }
 
-            public Uri FromUrl { get; set; }
-
-            public string MimeType { get; set; }
+            public string MimeType { get; init; }
         }
     }
 }

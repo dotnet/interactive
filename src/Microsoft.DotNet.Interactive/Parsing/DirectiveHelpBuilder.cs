@@ -5,61 +5,67 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Help;
 using System.CommandLine.IO;
+using System.IO;
+using System.Linq;
 
 namespace Microsoft.DotNet.Interactive.Parsing
 {
     public class DirectiveHelpBuilder : HelpBuilder
     {
         private readonly string _rootCommandName;
-        private readonly Dictionary<ISymbol, string> _directiveHelp = new();
+        private readonly Dictionary<Symbol, string> _directiveHelp = new();
 
-        public DirectiveHelpBuilder(string rootCommandName) : base(new SystemConsole())
+        public DirectiveHelpBuilder(string rootCommandName) : base(LocalizationResources.Instance)
         {
             _rootCommandName = rootCommandName;
         }
 
-        public override void Write(ICommand command)
+        public override void Write(HelpContext context)
         {
-            var capturingConsole = new TestConsole();
-            new HelpBuilder(capturingConsole).Write(command);
-            Console.Out.Write(
-                CleanUp(capturingConsole));
+            using var writer = new StringWriter();
+            new HelpBuilder(LocalizationResources.Instance).Write(context.Command, writer);
+            var cleanedUp = CleanUp(writer.ToString());
+            context.Output.Write(cleanedUp);
         }
 
-        public string GetHelpForSymbol(ISymbol symbol)
+        public string GetHelpForSymbol(Symbol symbol)
         {
             if (_directiveHelp.TryGetValue(symbol, out var help))
             {
                 return help;
             }
 
-            var console = new TestConsole();
-            var helpBuilder = new HelpBuilder(console);
+            using var writer = new StringWriter();
 
             switch (symbol)
             {
-                case ICommand command:
-                    helpBuilder.Write(command);
+                case Command command:
+                    var context = new HelpContext(this, command, writer);
+
+                    Write(context);
                     break;
-                case IOption option:
-                    var helpItem = GetHelpItem(option);
 
-                    console.Out.WriteLine($"{helpItem.Descriptor} {helpItem.Description}");
+                case Option option:
+                    var parentCommand = option.Parents.OfType<Command>().FirstOrDefault();
 
+                    if (parentCommand is not null)
+                    {
+                        var ctx = new HelpContext(this, parentCommand, writer);
+                        var helpRow = GetTwoColumnRow(option, ctx);
+                        writer.WriteLine($"{helpRow.FirstColumnText} {helpRow.SecondColumnText}");
+                    }
                     break;
             }
 
-            help = CleanUp(console);
+            help = CleanUp(writer.ToString());
 
             _directiveHelp[symbol] = help;
 
             return help;
         }
 
-        private string CleanUp(TestConsole capturingConsole) =>
-            capturingConsole.Out
-                            .ToString()
-                            .Replace(_rootCommandName + " ", "");
+        private string CleanUp(string value) =>
+          value.Replace(_rootCommandName + " ", "");
 
         private class SystemConsole : IConsole
         {

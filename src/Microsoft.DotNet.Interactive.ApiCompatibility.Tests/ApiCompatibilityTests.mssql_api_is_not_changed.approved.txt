@@ -14,7 +14,7 @@ Microsoft.DotNet.Interactive.SqlServer
     public System.String InvariantCultureDisplayValue { get; set;}
     public System.Boolean IsNull { get; set;}
     public System.Int64 RowId { get; set;}
-  public class ChooseMsSqlKernelDirective : Microsoft.DotNet.Interactive.ChooseKernelDirective, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.ICommand, System.CommandLine.IIdentifierSymbol, System.CommandLine.ISymbol, System.CommandLine.Suggestions.ISuggestionSource
+  public class ChooseMsSqlKernelDirective : Microsoft.DotNet.Interactive.ChooseKernelDirective, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
     .ctor(Microsoft.DotNet.Interactive.Kernel kernel)
     public System.CommandLine.Option<System.String> NameOption { get;}
   public class ColumnInfo
@@ -85,7 +85,7 @@ Microsoft.DotNet.Interactive.SqlServer
     public System.String DatabaseName { get; set;}
     public System.String ServerName { get; set;}
     public System.String UserName { get; set;}
-  public class ConnectMsSqlCommand : Microsoft.DotNet.Interactive.Connection.ConnectKernelCommand<MsSqlKernelConnector>, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.ICommand, System.CommandLine.IIdentifierSymbol, System.CommandLine.ISymbol, System.CommandLine.Suggestions.ISuggestionSource
+  public class ConnectMsSqlCommand : Microsoft.DotNet.Interactive.Connection.ConnectKernelCommand<MsSqlKernelConnector>, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
     .ctor(System.String resolvedToolsServicePath)
     public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> ConnectKernelAsync(Microsoft.DotNet.Interactive.KernelInfo kernelInfo, MsSqlKernelConnector connector, Microsoft.DotNet.Interactive.KernelInvocationContext context)
   public class ConnectParams

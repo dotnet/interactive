@@ -117,6 +117,8 @@ hello!
         [Fact]
         public async Task Connected_kernel_help_description_provides_context_about_the_connection()
         {
+            using var _ = await ConsoleLock.AcquireAsync();
+
             using var compositeKernel = new CompositeKernel();
 
             compositeKernel.AddKernelConnector(

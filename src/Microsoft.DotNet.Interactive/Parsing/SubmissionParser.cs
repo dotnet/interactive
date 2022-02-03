@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             };
         }
 
-        public IReadOnlyList<ICommand> Directives => _rootCommand?.Children.OfType<ICommand>().ToArray() ?? Array.Empty<ICommand>();
+        public IReadOnlyList<Command> Directives => _rootCommand?.Subcommands ?? Array.Empty<Command>();
 
         public string KernelLanguage { get; internal set; }
 
@@ -133,7 +133,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                         if (parseResult.CommandResult.Command.Name == "#r")
                         {
-                            var value = parseResult.ValueForArgument<PackageReferenceOrFileInfo>("package");
+                            var value = parseResult.GetValueForArgument(parseResult.Parser.FindPackageArgument());
 
                             if (value?.Value is FileInfo)
                             {
@@ -283,9 +283,9 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     new CommandLineBuilder(_rootCommand)
                         .ParseResponseFileAs(ResponseFileHandling.Disabled)
                         .UseTypoCorrections()
-                        .UseHelpBuilder(bc => new DirectiveHelpBuilder(_rootCommand.Name))
+                        .UseHelpBuilder(_ => new DirectiveHelpBuilder(_rootCommand.Name))
                         .UseHelp()
-                        .UseMiddleware(
+                        .AddMiddleware(
                             context =>
                             {
                                 context.BindingContext
@@ -319,6 +319,20 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             EnsureRootCommandIsInitialized();
 
+            var existingAliases = _rootCommand
+                                  .Children
+                                  .OfType<Command>()
+                                  .SelectMany(c => c.Aliases)
+                                  .ToArray();
+
+            foreach (var alias in command.Aliases)
+            {
+                if (existingAliases.Contains(alias))
+                {
+                    throw new ArgumentException($"Alias '{alias}' is already in use.");
+                }
+            }
+
             _rootCommand.Add(command);
 
             ResetParser();
@@ -338,8 +352,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             var kind = symbol switch
             {
-                IOption _ => "Property",
-                ICommand _ => "Method",
+                Option _ => "Property",
+                Command _ => "Method",
                 _ => "Value"
             };
 

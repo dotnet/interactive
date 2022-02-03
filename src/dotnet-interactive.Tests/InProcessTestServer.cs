@@ -53,8 +53,8 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
         public void Dispose()
         {
-            KernelCommandEnvelope.ResetToDefaults();
-            KernelEventEnvelope.ResetToDefaults();
+            KernelCommandEnvelope.RegisterDefaults();
+            KernelEventEnvelope.RegisterDefaults();
             Kernel?.Dispose();
             _host.Value.Dispose();
             _host = null;

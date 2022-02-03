@@ -15,6 +15,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             KernelName = kernelName;
         }
 
-        public List<ICommand> Commands { get; } = new List<ICommand>();
+        public List<Command> Commands { get; } = new();
     }
 }
