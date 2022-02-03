@@ -19,10 +19,9 @@ namespace Microsoft.DotNet.Interactive.Server
 
         private static ConcurrentDictionary<string, Type> _commandTypesByCommandTypeName;
 
-
         static KernelCommandEnvelope()
         {
-            ResetToDefaults();
+            RegisterDefaults();
         }
 
         internal static Type CommandTypeByName(string name) => _commandTypesByCommandTypeName[name];
@@ -56,7 +55,7 @@ namespace Microsoft.DotNet.Interactive.Server
             _commandTypesByCommandTypeName[commandTypeName] = commandType;
         }
 
-        public static void ResetToDefaults()
+        public static void RegisterDefaults()
         {
             _envelopeTypesByCommandTypeName = new ConcurrentDictionary<string, Type>
             {

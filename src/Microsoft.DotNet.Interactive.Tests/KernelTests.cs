@@ -3,7 +3,6 @@
 
 using System.Collections.Generic;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.CommandLine.NamingConventionBinder;
 using FluentAssertions;
 using System.Linq;
@@ -11,6 +10,7 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -167,7 +167,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [InlineData(false)]
         public void When_command_type_registered_then_kernel_registers_envelope_type_for_serialization(bool withHandler)
         {
-            Microsoft.DotNet.Interactive.Server.KernelCommandEnvelope.ResetToDefaults();
+            Microsoft.DotNet.Interactive.Server.KernelCommandEnvelope.RegisterDefaults();
 
             using var kernel = new FakeKernel();
 
@@ -203,7 +203,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             // Notebook authors should be able to develop their custom commands experimentally and progressively,
             // so we don't want any "you have to restart your kernel now" situations just because you already
             // called RegisterCommandHandler once for a particular command type.
-            Microsoft.DotNet.Interactive.Server.KernelCommandEnvelope.ResetToDefaults();
+            KernelCommandEnvelope.RegisterDefaults();
 
             using var kernel = new FakeKernel();
 
