@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             };
         }
 
-        public IReadOnlyList<Command> Directives => _rootCommand?.Children.OfType<Command>().ToArray() ?? Array.Empty<Command>();
+        public IReadOnlyList<Command> Directives => _rootCommand?.Subcommands ?? Array.Empty<Command>();
 
         public string KernelLanguage { get; internal set; }
 

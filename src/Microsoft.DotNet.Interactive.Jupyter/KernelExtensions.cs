@@ -213,7 +213,6 @@ module JupyterTopLevelModule =
                     {
                         yield return div[style: $"text-indent:{nextLevel:##.#}em"](Summary(subCommand, nextLevel));
                     }
-
                 }
 
                 return true;
