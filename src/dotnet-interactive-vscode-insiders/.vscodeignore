@@ -1,6 +1,6 @@
 .vscode/**
 .vscode-test/**
-out/tests/**
+out/src/common/tests/**
 src/**
 .gitignore
 mocha.opts

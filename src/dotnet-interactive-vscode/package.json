@@ -450,7 +450,7 @@
     "test": "mocha out/tests/**/*.test.js",
     "ciTest": "npm test -- --reporter mocha-multi-reporters --reporter-options configFile=testConfig.json",
     "tdd": "npm test -- --watch",
-    "package": "npx vsce package",
+    "package": "npx vsce@2.6.7 package",
     "clearUserData": "del-cli \"./userData/**/*\" \"!.gitignore\""
   },
   "mocha": {},
