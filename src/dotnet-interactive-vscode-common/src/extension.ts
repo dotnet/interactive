@@ -267,7 +267,17 @@ async function openNotebookFromUrl(notebookUrl: string, notebookFormat: string |
     await vscode.commands.executeCommand('dotnet-interactive.acquire');
 
     try {
+        Logger.default.info(`Opening notebook from URL: ${notebookUrl}`);
         const response = await fetch(notebookUrl);
+        if (response.redirected) {
+            Logger.default.info(`Redirected to: ${response.url}`);
+        }
+        if (response.status >= 400) {
+            const errorText = await response.text();
+            Logger.default.error(`Failed to open notebook from URL: ${notebookUrl}.  ${errorText}`);
+            vscode.window.showErrorMessage(`Failed to open notebook from URL: ${notebookUrl}.  ${errorText}`);
+            return;
+        }
         const resolvedUri = vscode.Uri.parse(response.url);
         if (response.redirected && !notebookFormat) {
             // if no notebook format was passed in _and_ we redirected, check the final resolved url for a format
