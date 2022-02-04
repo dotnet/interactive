@@ -84,12 +84,17 @@ export async function activate(context: vscode.ExtensionContext) {
     registerAcquisitionCommands(context, diagnosticsChannel);
 
     // check sdk version
-    const dotnetVersion = await getDotNetVersionOrThrow(DotNetPathManager.getDotNetPath(), diagnosticsChannel);
-    if (!isVersionSufficient(dotnetVersion, minDotNetSdkVersion)) {
-        const message = `The .NET SDK version ${dotnetVersion} is not sufficient. The minimum required version is ${minDotNetSdkVersion}.`;
-        diagnosticsChannel.appendLine(message);
-        vscode.window.showErrorMessage(message);
-        throw new Error(message);
+    try {
+        const dotnetVersion = await getDotNetVersionOrThrow(DotNetPathManager.getDotNetPath(), diagnosticsChannel);
+        if (!isVersionSufficient(dotnetVersion, minDotNetSdkVersion)) {
+            const message = `The .NET SDK version ${dotnetVersion} is not sufficient. The minimum required version is ${minDotNetSdkVersion}.`;
+            diagnosticsChannel.appendLine(message);
+            vscode.window.showErrorMessage(message);
+            throw new Error(message);
+        }
+    } catch (e) {
+        vscode.window.showErrorMessage(`Unable to determine the .NET SDK version.  Please download the ${minDotNetSdkVersion} SDK from https://dotnet.microsoft.com/en-us/download`);
+        throw e;
     }
 
     async function kernelChannelCreator(notebookUri: vscodeLike.Uri): Promise<contracts.KernelCommandAndEventChannel> {
