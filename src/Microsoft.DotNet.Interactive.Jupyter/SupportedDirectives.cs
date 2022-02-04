@@ -8,15 +8,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 {
     public class SupportedDirectives
     {
-        public string KernelName { get; }
-
-        public SupportedDirectives(string kernelName, IReadOnlyList<ICommand>  commands)
+        public SupportedDirectives(string kernelName, IReadOnlyList<Command> commands)
         {
             KernelName = kernelName;
             Commands = commands;
         }
 
-        // FIX: what is this and why is it in Jupyter?
-        public List<Command> Commands { get; } = new();
+        public string KernelName { get; }
+
+        public IReadOnlyList<Command> Commands { get; } = new List<Command>();
     }
 }

@@ -229,10 +229,9 @@ module JupyterTopLevelModule =
                 {
                     var context = cmdLineContext.GetService<KernelInvocationContext>();
 
-                    var supportedDirectives = new SupportedDirectives(kernel.Name);
+                    var commands =  kernel.Directives.Where(d => !d.IsHidden).ToArray();
 
-                    supportedDirectives.Commands.AddRange(
-                        kernel.Directives.Where(d => !d.IsHidden));
+                    var supportedDirectives = new SupportedDirectives(kernel.Name, commands);
 
                     context.Display(supportedDirectives);
 

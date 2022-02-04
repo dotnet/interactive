@@ -22,7 +22,7 @@ public partial class KernelTests
         [InlineData(false)]
         public void When_command_type_registered_then_kernel_registers_envelope_type_for_serialization(bool withHandler)
         {
-            KernelCommandEnvelope.ResetToDefault();
+            KernelCommandEnvelope.RegisterDefaults();
 
             using var kernel = new FakeKernel();
 
@@ -58,7 +58,7 @@ public partial class KernelTests
             // Notebook authors should be able to develop their custom commands experimentally and progressively,
             // so we don't want any "you have to restart your kernel now" situations just because you already
             // called RegisterCommandHandler once for a particular command type.
-            KernelCommandEnvelope.ResetToDefault();
+            KernelCommandEnvelope.RegisterDefaults();
 
             using var kernel = new FakeKernel();
 
