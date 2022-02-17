@@ -116,12 +116,6 @@ namespace Microsoft.DotNet.Interactive
                 }
             }
 
-            // FIX: (Add) 
-            if (_childKernels.Count == 1)
-            {
-                DefaultKernelName = kernel.Name;
-            }
-
             RegisterForDisposal(kernel.KernelEvents.Subscribe(PublishEvent));
             RegisterForDisposal(kernel);
         }

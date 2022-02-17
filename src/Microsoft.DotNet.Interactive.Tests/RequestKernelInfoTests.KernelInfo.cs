@@ -33,9 +33,6 @@ public class RequestKernelInfoTests
 
             events.Should().ContainSingle<KernelInfoProduced>(e => e.KernelInfo.LocalName == "csharp");
             events.Should().ContainSingle<KernelInfoProduced>(e => e.KernelInfo.LocalName == "fsharp");
-
-            // TODO (It_returns_kernel_info_for_all_children) write test
-            throw new NotImplementedException();
         }
     }
 

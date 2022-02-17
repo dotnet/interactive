@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.Commands
 
             if (languageNode is ActionDirectiveNode actionDirectiveNode)
             {
-                // FIX: (SubmitCode) why?
+                // FIX: (SubmitCode) needed?
                 TargetKernelName = actionDirectiveNode.ParentKernelName;
             }
         }

@@ -341,9 +341,7 @@ let x = 123
                 .AllSatisfy(child => rootSpan.Contains(child.Span).Should().BeTrue());
         }
        
-        private static SubmissionParser CreateSubmissionParser(
-            string defaultLanguage = "csharp", 
-            IEnumerable<Kernel> additionalKernels = null)
+        private static SubmissionParser CreateSubmissionParser(string defaultLanguage = "csharp")
         {
             using var compositeKernel = new CompositeKernel
             {
@@ -365,14 +363,6 @@ let x = 123
                 new PowerShellKernel(),
                 new[] { "powershell" });
 
-            if (additionalKernels is not null)
-            {
-                foreach (var additionalKernel in additionalKernels)
-                {
-                    compositeKernel.Add(additionalKernel);
-                }
-            }
-
             compositeKernel.UseDefaultMagicCommands();
 
             return compositeKernel.SubmissionParser;
@@ -386,6 +376,7 @@ let x = 123
                 new CSharpKernel().UseValueSharing(),
                 new FSharpKernel().UseValueSharing(),
             };
+            kernel.DefaultKernelName = "csharp";
 
             var csharpCode = @"
 int x = 123;
