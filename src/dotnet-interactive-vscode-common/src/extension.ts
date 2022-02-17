@@ -93,7 +93,7 @@ export async function activate(context: vscode.ExtensionContext) {
             throw new Error(message);
         }
     } catch (e) {
-        vscode.window.showErrorMessage(`Unable to determine the .NET SDK version.  Please download the ${minDotNetSdkVersion} SDK from https://dotnet.microsoft.com/en-us/download`);
+        vscode.window.showErrorMessage(`Please install the .NET SDK version ${minDotNetSdkVersion} from https://dotnet.microsoft.com/en-us/download`);
         throw e;
     }
 
