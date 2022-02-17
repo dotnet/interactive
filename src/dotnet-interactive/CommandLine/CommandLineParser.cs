@@ -492,8 +492,11 @@ public static class CommandLineParser
                     {
                         if (!isVSCode)
                         {
-                            await host.CreateProxyKernelOnDefaultConnectorAsync(new KernelInfo("javascript", new[] { "js" }, new Uri("kernel://webview/javascript")));
-
+                            await host.CreateProxyKernelOnDefaultConnectorAsync(new KernelInfo("javascript", "javascript")
+                            {
+                                Aliases = new[] { "js" },
+                                DestinationUri = new Uri("kernel://webview/javascript")
+                            });
                         }
 
                         await startKernelHost(startupOptions, host, console);

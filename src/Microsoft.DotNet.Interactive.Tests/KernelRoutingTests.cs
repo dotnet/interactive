@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             host.TryGetKernelInfo(child, out var kernelInfo);
             kernelInfo.OriginUri.Should().NotBeNull();
-            host.Uri.IsBaseOf(kernelInfo.OriginUri).Should().Be(true);
+            host.Uri.IsBaseOf(kernelInfo.OriginUri).Should().BeTrue();
         }
 
         [Fact]

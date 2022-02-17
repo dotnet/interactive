@@ -10,7 +10,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility;
 
 public static class ConsoleLock
 {
-    // FIX: (ConsoleLock) clean up
     private static readonly AsyncLock _lock = new();
 
     public static async Task<IDisposable> AcquireAsync()

@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
-using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -111,29 +110,6 @@ public partial class KernelTests
                     .Be($"Command {typeof(SubmitCode)} is already directly implemented and registration of an alternative handler is not supported.");
         }
 
-        [Fact]
-        public async Task Kernel_info_returns_the_list_of_supported_kernel_commands()
-        {
-            using var kernel = new FakeKernel();
-            kernel.RegisterCommandHandler<RequestHoverText>((_, _) => Task.CompletedTask);
-            kernel.RegisterCommandHandler<RequestDiagnostics>((_, _) => Task.CompletedTask);
-            kernel.RegisterCommandHandler<CustomCommandTypes.FirstSubmission.MyCommand>((_, _) => Task.CompletedTask);
-
-            var result = await kernel.SendAsync(new RequestKernelInfo());
-
-            var events = result.KernelEvents.ToSubscribedList();
-
-            events.Should()
-                  .ContainSingle<KernelInfoProduced>()
-                  .Which
-                  .KernelInfo
-                  .CommandNames
-                  .Should()
-                  .BeEquivalentTo(
-                      nameof(RequestHoverText),
-                      nameof(RequestDiagnostics),
-                      nameof(SubmitCode),
-                      nameof(CustomCommandTypes.FirstSubmission.MyCommand));
-        }
+     
     }
 }

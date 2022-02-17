@@ -235,7 +235,7 @@ x")]
         }
 
         [Fact]
-        public async Task CSharpKernel_can_share_variable_from_JavaScript_ProxyKernel()
+        public async Task CSharpKernel_can_share_variable_from_JavaScript_via_a_ProxyKernel()
         {
             var (compositeKernel, remoteKernel) = await CreateCompositeKernelWithJavaScriptProxyKernel();
             
@@ -269,12 +269,14 @@ x")]
 
             var _ = host.ConnectAsync();
 
-            var kernelInfo = new KernelInfo("javascript", null, new Uri("kernel://remote/js"));
+            var kernelInfo = new KernelInfo("javascript")
+            {
+                DestinationUri = new("kernel://remote/js")
+            };
 
             var javascriptKernel = await host.CreateProxyKernelOnDefaultConnectorAsync(kernelInfo);
 
             javascriptKernel.UseValueSharing(new JavaScriptKernelValueDeclarer());
-
 
             compositeKernel.RegisterForDisposal(remoteKernel);
             compositeKernel.RegisterForDisposal(host);

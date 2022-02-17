@@ -34,6 +34,7 @@ namespace Microsoft.DotNet.Interactive
         private KernelInvocationContext(KernelCommand command)
         {
             var operation = new OperationLogger(
+                operationName: command.ToString(),
                 args: new object[] { ("KernelCommand", command) },
                 exitArgs: () => new[] { ("KernelCommand", (object)command) },
                 category: nameof(KernelInvocationContext),
@@ -127,9 +128,8 @@ namespace Microsoft.DotNet.Interactive
                 return;
             }
 
-            if (command is { } &&
-                !CommandEqualityComparer.Instance.Equals(command, Command) &&
-                command.ShouldPublishCompletionEvent == true)
+            if (command is { ShouldPublishCompletionEvent: true } && 
+                !CommandEqualityComparer.Instance.Equals(command, Command))
             {
                 Publish(new CommandFailed(exception, command, message));
 

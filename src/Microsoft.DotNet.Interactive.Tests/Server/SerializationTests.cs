@@ -286,9 +286,20 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     new LinePositionSpan(new LinePosition(1, 2), new LinePosition(3, 4)));
 
                 yield return new KernelInfoProduced(
-                    new KernelInfo("javascript",
-                                   new[] { "js" },
-                                   new Uri("kernel://vscode/javascript")), new RequestKernelInfo());
+                    new KernelInfo("javascript", "javascript")
+                    {
+                        Aliases = new[] { "js" },
+                        DestinationUri = new Uri("kernel://vscode/javascript"),
+                        SupportedDirectives = new[]
+                        {
+                            new DirectiveInfo("#r")
+                        },
+                        SupportedKernelCommands = new[]
+                        {
+                            new KernelCommandInfo(nameof(SubmitCode))
+                        }
+                    },
+                    new RequestKernelInfo());
 
                 yield return new KernelReady();
 

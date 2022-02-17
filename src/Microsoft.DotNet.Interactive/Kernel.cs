@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -21,7 +21,9 @@ using Microsoft.DotNet.Interactive.ValueSharing;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public abstract partial class Kernel : IDisposable
+    public abstract partial class Kernel : 
+        IKernelCommandHandler<RequestKernelInfo>, 
+        IDisposable
     {
         private  readonly ConcurrentDictionary<Type, HashSet<Type>> _handledCommandTypes = new();
         private readonly Subject<KernelEvent> _kernelEvents = new();
@@ -65,9 +67,9 @@ namespace Microsoft.DotNet.Interactive
             HashSet<Type> InitializeSupportedCommandTypes(Type kernelType)
             {
                 var types = kernelType.GetInterfaces()
-                                     .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IKernelCommandHandler<>))
-                                     .SelectMany(i => i.GenericTypeArguments)
-                                     .ToArray();
+                                      .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IKernelCommandHandler<>))
+                                      .SelectMany(i => i.GenericTypeArguments)
+                                      .ToArray();
 
                 return new HashSet<Type>(types);
             }
@@ -469,7 +471,6 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-
         protected internal KernelScheduler<KernelCommand, KernelCommandResult> Scheduler
         {
             get
@@ -513,6 +514,19 @@ namespace Microsoft.DotNet.Interactive
             }
 
             return splitCommands;
+        }
+
+        public virtual Task HandleAsync(RequestKernelInfo command, KernelInvocationContext context)
+        {
+            var kernelInfo = new KernelInfo(Name)
+            {
+                SupportedKernelCommands = _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)).ToArray(),
+                SupportedDirectives = Directives.Select(d => new DirectiveInfo(d.Name)).ToArray()
+            };
+
+            context.Publish(new KernelInfoProduced(kernelInfo, command));
+
+            return Task.CompletedTask;
         }
 
         private protected virtual SchedulingScope GetHandlingKernelCommandScope(KernelCommand command, KernelInvocationContext invocationContext)
@@ -638,7 +652,7 @@ namespace Microsoft.DotNet.Interactive
                 switch (command, this)
                 {
                     case (SubmitCode submitCode, IKernelCommandHandler<SubmitCode> submitCodeHandler):
-                        SetHandler(submitCodeHandler, submitCode);
+                        SetHandler(submitCode, submitCodeHandler);
                         break;
 
                     case (RequestCompletions {LanguageNode: DirectiveNode} rq, _):
@@ -647,26 +661,30 @@ namespace Microsoft.DotNet.Interactive
 
                     case (RequestCompletions requestCompletion, IKernelCommandHandler<RequestCompletions>
                         requestCompletionHandler):
-                        SetHandler(requestCompletionHandler, requestCompletion);
+                        SetHandler(requestCompletion, requestCompletionHandler);
                         break;
 
                     case (RequestDiagnostics requestDiagnostics, IKernelCommandHandler<RequestDiagnostics>
                         requestDiagnosticsHandler):
-                        SetHandler(requestDiagnosticsHandler, requestDiagnostics);
+                        SetHandler(requestDiagnostics, requestDiagnosticsHandler);
                         break;
 
                     case (RequestHoverText hoverCommand, IKernelCommandHandler<RequestHoverText> requestHoverTextHandler
                         ):
-                        SetHandler(requestHoverTextHandler, hoverCommand);
+                        SetHandler(hoverCommand, requestHoverTextHandler);
                         break;
 
                     case (RequestSignatureHelp requestSignatureHelp, IKernelCommandHandler<RequestSignatureHelp>
                         requestSignatureHelpHandler):
-                        SetHandler(requestSignatureHelpHandler, requestSignatureHelp);
+                        SetHandler(requestSignatureHelp, requestSignatureHelpHandler);
                         break;
 
                     case (ChangeWorkingDirectory changeWorkingDirectory, IKernelCommandHandler<ChangeWorkingDirectory> changeWorkingDirectoryHandler):
-                        SetHandler(changeWorkingDirectoryHandler, changeWorkingDirectory);
+                        SetHandler(changeWorkingDirectory, changeWorkingDirectoryHandler);
+                        break;
+
+                    case (RequestKernelInfo requestKernelInfo, IKernelCommandHandler<RequestKernelInfo> requestKernelInfoHandler):
+                        SetHandler(requestKernelInfo, requestKernelInfoHandler);
                         break;
 
                     default:
@@ -684,9 +702,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private static void SetHandler<T>(
-            IKernelCommandHandler<T> handler,
-            T command)
+        private static void SetHandler<T>(T command, IKernelCommandHandler<T> handler)
             where T : KernelCommand =>
             command.Handler = (_, context) =>
                 handler.HandleAsync(command, context);

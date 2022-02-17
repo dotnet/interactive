@@ -11,7 +11,6 @@ using FluentAssertions.Execution;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
-using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Parsing;
@@ -343,10 +342,13 @@ let x = 123
         }
        
         private static SubmissionParser CreateSubmissionParser(
-            string defaultLanguage = "csharp", IEnumerable<Kernel> additionalKernels = null)
+            string defaultLanguage = "csharp", 
+            IEnumerable<Kernel> additionalKernels = null)
         {
-            using var compositeKernel = new CompositeKernel {DefaultKernelName = defaultLanguage};
-
+            using var compositeKernel = new CompositeKernel
+            {
+                DefaultKernelName = defaultLanguage
+            };
 
             compositeKernel.Add(
                 new CSharpKernel()

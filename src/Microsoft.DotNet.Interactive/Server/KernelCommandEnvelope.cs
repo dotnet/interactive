@@ -101,8 +101,6 @@ namespace Microsoft.DotNet.Interactive.Server
                 command.GetType(),
                 commandType =>
                 {
-                  
-
                     var constructor = envelopeType.GetConstructors().Single();
 
                     var commandParameter = Expression.Parameter(

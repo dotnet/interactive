@@ -175,8 +175,16 @@ test for remote kernel");
             {
                 var root = (CompositeKernel)kernel.RootKernel;
 
-                var vscodeKernelInfo = new KernelInfo("vscode", new[] { "frontend" }, new Uri("kernel://vscode/vscode", UriKind.Absolute));
-                var javascriptKernelInfo = new KernelInfo("javascript", new[] { "js" }, new Uri("kernel://webview/javascript", UriKind.Absolute));
+                var vscodeKernelInfo = new KernelInfo("vscode")
+                {
+                    Aliases = new[] { "frontend" },
+                    DestinationUri = new("kernel://vscode/vscode", UriKind.Absolute)
+                };
+                var javascriptKernelInfo = new KernelInfo("javascript", "javascript")
+                {
+                    Aliases = new[] { "js" },
+                    DestinationUri = new("kernel://webview/javascript", UriKind.Absolute)
+                };
 
                 await root.Host.CreateProxyKernelOnDefaultConnectorAsync(vscodeKernelInfo);
                 await root.Host.CreateProxyKernelOnDefaultConnectorAsync(javascriptKernelInfo);
