@@ -62,12 +62,11 @@ namespace Microsoft.DotNet.Interactive
 
         public string DefaultKernelName
         {
-            get => _defaultKernelName;
-            set
-            {
-                _defaultKernelName = value;
-                SubmissionParser.KernelLanguage = value;
-            }
+            get => _defaultKernelName ??
+                   (ChildKernels.Count == 1
+                        ? ChildKernels[0].Name
+                        : null);
+            set => _defaultKernelName = value;
         }
 
         public void Add(Kernel kernel, IReadOnlyCollection<string> aliases = null)
@@ -117,6 +116,7 @@ namespace Microsoft.DotNet.Interactive
                 }
             }
 
+            // FIX: (Add) 
             if (_childKernels.Count == 1)
             {
                 DefaultKernelName = kernel.Name;
