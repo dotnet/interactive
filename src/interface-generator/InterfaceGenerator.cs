@@ -215,12 +215,13 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
         {
             var nullabilityContext = new NullabilityInfoContext().Create(propertyInfo);
 
-            var isOptional = nullabilityContext.ReadState == NullabilityState.Nullable;
+            var isOptional = nullabilityContext.ReadState == NullabilityState.Nullable ||
+                             OptionalFields.Contains($"{type.Name}.{propertyInfo.Name}");
 
             var propertyName = propertyInfo.Name.CamelCase();
             return isOptional
-                ? propertyName + "?"
-                : propertyName;
+                       ? propertyName + "?"
+                       : propertyName;
         }
 
         private static void GenerateEnum(StringBuilder builder, Type type)

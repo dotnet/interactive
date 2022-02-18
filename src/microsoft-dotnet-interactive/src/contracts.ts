@@ -47,7 +47,7 @@ export interface AddPackage extends KernelCommand {
 }
 
 export interface KernelCommand {
-    targetKernelName: string;
+    targetKernelName?: string;
 }
 
 export interface Cancel extends KernelCommand {
@@ -110,7 +110,7 @@ export interface SendEditableCode extends KernelCommand {
 
 export interface SubmitCode extends KernelCommand {
     code: string;
-    submissionType: SubmissionType;
+    submissionType?: SubmissionType;
 }
 
 export interface UpdateDisplayedValue extends KernelCommand {
@@ -246,7 +246,7 @@ export interface CompleteCodeSubmissionReceived extends KernelEvent {
 }
 
 export interface CompletionsProduced extends KernelEvent {
-    linePositionSpan: LinePositionSpan;
+    linePositionSpan?: LinePositionSpan;
     completions: Array<CompletionItem>;
 }
 
@@ -267,7 +267,7 @@ export interface DisplayedValueProduced extends DisplayEvent {
 
 export interface DisplayEvent extends KernelEvent {
     formattedValues: Array<FormattedValue>;
-    valueId: string;
+    valueId?: string;
 }
 
 export interface DisplayedValueUpdated extends DisplayEvent {
@@ -279,7 +279,7 @@ export interface ErrorProduced extends DisplayEvent {
 
 export interface HoverTextProduced extends KernelEvent {
     content: Array<FormattedValue>;
-    linePositionSpan: LinePositionSpan;
+    linePositionSpan?: LinePositionSpan;
 }
 
 export interface IncompleteCodeSubmissionReceived extends KernelEvent {
