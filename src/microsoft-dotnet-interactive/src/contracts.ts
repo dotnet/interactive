@@ -47,7 +47,7 @@ export interface AddPackage extends KernelCommand {
 }
 
 export interface KernelCommand {
-    targetKernelName?: string;
+    targetKernelName: string;
 }
 
 export interface Cancel extends KernelCommand {
@@ -110,7 +110,7 @@ export interface SendEditableCode extends KernelCommand {
 
 export interface SubmitCode extends KernelCommand {
     code: string;
-    submissionType?: SubmissionType;
+    submissionType: SubmissionType;
 }
 
 export interface UpdateDisplayedValue extends KernelCommand {
@@ -246,7 +246,7 @@ export interface CompleteCodeSubmissionReceived extends KernelEvent {
 }
 
 export interface CompletionsProduced extends KernelEvent {
-    linePositionSpan?: LinePositionSpan;
+    linePositionSpan: LinePositionSpan;
     completions: Array<CompletionItem>;
 }
 
@@ -267,7 +267,7 @@ export interface DisplayedValueProduced extends DisplayEvent {
 
 export interface DisplayEvent extends KernelEvent {
     formattedValues: Array<FormattedValue>;
-    valueId?: string;
+    valueId: string;
 }
 
 export interface DisplayedValueUpdated extends DisplayEvent {
@@ -279,7 +279,7 @@ export interface ErrorProduced extends DisplayEvent {
 
 export interface HoverTextProduced extends KernelEvent {
     content: Array<FormattedValue>;
-    linePositionSpan?: LinePositionSpan;
+    linePositionSpan: LinePositionSpan;
 }
 
 export interface IncompleteCodeSubmissionReceived extends KernelEvent {
@@ -388,10 +388,10 @@ export interface InteractiveDocumentElement {
 
 export interface KernelInfo {
     aliases: Array<string>;
-    language: string;
+    language?: string;
     localName: string;
-    originUri: Uri;
-    destinationUri: Uri;
+    originUri?: string;
+    destinationUri?: string;
     supportedKernelCommands: Array<KernelCommandInfo>;
     supportedDirectives: Array<DirectiveInfo>;
 }
@@ -402,39 +402,6 @@ export interface DirectiveInfo {
 
 export interface KernelCommandInfo {
     name: string;
-}
-
-export interface Uri {
-    absolutePath: string;
-    absoluteUri: string;
-    localPath: string;
-    authority: string;
-    hostNameType: UriHostNameType;
-    isDefaultPort: boolean;
-    isFile: boolean;
-    isLoopback: boolean;
-    pathAndQuery: string;
-    segments: Array<string>;
-    isUnc: boolean;
-    host: string;
-    port: number;
-    query: string;
-    fragment: string;
-    scheme: string;
-    originalString: string;
-    dnsSafeHost: string;
-    idnHost: string;
-    isAbsoluteUri: boolean;
-    userEscaped: boolean;
-    userInfo: string;
-}
-
-export enum UriHostNameType {
-    Unknown = "unknown",
-    Basic = "basic",
-    Dns = "dns",
-    IPv4 = "ipv4",
-    IPv6 = "ipv6",
 }
 
 export interface KernelValueInfo {

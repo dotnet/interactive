@@ -25,7 +25,6 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests.Server
 {
-
     public class KernelHostTests : IDisposable
     {
         private readonly CompositeDisposable _disposables = new();

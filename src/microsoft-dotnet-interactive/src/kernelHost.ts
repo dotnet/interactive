@@ -4,7 +4,6 @@
 import { CompositeKernel } from './compositeKernel';
 import * as contracts from './contracts';
 import { Kernel } from './kernel';
-import { KernelInfo } from './kernelInfo';
 import { ProxyKernel } from './proxyKernel';
 import { Logger } from './logger';
 import { KernelCommandScheduler } from './kernelCommandScheduler';
@@ -12,7 +11,7 @@ import { KernelCommandScheduler } from './kernelCommandScheduler';
 export class KernelHost {
     private readonly _destinationUriToKernel = new Map<string, Kernel>();
     private readonly _originUriToKernel = new Map<string, Kernel>();
-    private readonly _kernelToKernelInfo = new Map<Kernel, KernelInfo>();
+    private readonly _kernelToKernelInfo = new Map<Kernel, contracts.KernelInfo>();
     private readonly _uri: string;
     private readonly _scheduler: KernelCommandScheduler;
 
@@ -33,11 +32,11 @@ export class KernelHost {
         return this._originUriToKernel.get(originUri);
     }
 
-    public tryGetKernelInfo(kernel: Kernel): KernelInfo | undefined {
+    public tryGetKernelInfo(kernel: Kernel): contracts.KernelInfo | undefined {
         return this._kernelToKernelInfo.get(kernel);
     }
 
-    public addKernelInfo(kernel: Kernel, kernelInfo: KernelInfo) {
+    public addKernelInfo(kernel: Kernel, kernelInfo: contracts.KernelInfo) {
 
         kernelInfo.originUri = `${this._uri}/${kernel.name}`;
         this._kernelToKernelInfo.set(kernel, kernelInfo);
@@ -95,7 +94,7 @@ export class KernelHost {
         }
     }
 
-    public createProxyKernelOnDefaultConnector(kernelInfo: KernelInfo): ProxyKernel {
+    public createProxyKernelOnDefaultConnector(kernelInfo: contracts.KernelInfo): ProxyKernel {
         const proxyKernel = new ProxyKernel(kernelInfo.localName, this._channel);
         this._kernel.add(proxyKernel, kernelInfo.aliases);
         if (kernelInfo.destinationUri) {

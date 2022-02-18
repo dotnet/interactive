@@ -9,7 +9,6 @@ export * from './javascriptKernel';
 export * from './kernel';
 export * from './kernelCommandScheduler';
 export * from './kernelHost';
-export * from './kernelInfo';
 export * from './kernelInvocationContext';
 export * from './logger';
 export * from './proxyKernel';
