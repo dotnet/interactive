@@ -128,7 +128,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 .Should()
                 .BeEquivalentTo(commandTypes);
         }
-
+        
         [Fact]
         public void All_event_types_are_tested_for_round_trip_serialization()
         {
@@ -188,10 +188,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new Cancel("csharp");
 
+                yield return new RequestKernelInfo();
+
                 yield return new RequestValueInfos("csharp");
 
                 yield return new RequestValue("a", "csharp", HtmlFormatter.MimeType);
-
             }
         }
 
@@ -283,6 +284,22 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     requestHoverTextCommand,
                     new[] { new FormattedValue("text/markdown", "markdown") },
                     new LinePositionSpan(new LinePosition(1, 2), new LinePosition(3, 4)));
+
+                yield return new KernelInfoProduced(
+                    new KernelInfo("javascript", "javascript")
+                    {
+                        Aliases = new[] { "js" },
+                        DestinationUri = new Uri("kernel://vscode/javascript"),
+                        SupportedDirectives = new[]
+                        {
+                            new DirectiveInfo("#r")
+                        },
+                        SupportedKernelCommands = new[]
+                        {
+                            new KernelCommandInfo(nameof(SubmitCode))
+                        }
+                    },
+                    new RequestKernelInfo());
 
                 yield return new KernelReady();
 

@@ -100,34 +100,13 @@ namespace Microsoft.DotNet.Interactive
                     }
                     else if (commandOrEvent.Command is { })
                     {
-                        var kernel = GetKernel(commandOrEvent.Command);
-                        var _ = kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
+                        var _ = _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
                     }
                 }
-            }, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            }, _cancellationTokenSource.Token, 
+                                                 TaskCreationOptions.LongRunning, TaskScheduler.Default);
 
             await _defaultSender.NotifyIsReadyAsync(_cancellationTokenSource.Token);
-        }
-
-        private Kernel GetKernel(KernelCommand command)
-        {
-            // QUESTION: (GetKernel) coverage indicates we can delete some of this?
-            if (command.DestinationUri is { } && TryGetKernelByOriginUri(command.DestinationUri, out var kernel))
-            {
-                return kernel;
-            }
-
-            if (command.DestinationUri is { } && TryGetKernelByDestinationUri(command.DestinationUri, out  kernel))
-            {
-                return kernel;
-            }
-
-            if (command.OriginUri is { } && TryGetKernelByOriginUri(command.DestinationUri, out kernel))
-            {
-                return kernel;
-            }
-
-            return _kernel;
         }
 
         public async Task ConnectAndWaitAsync()

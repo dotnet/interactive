@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -17,17 +17,19 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Parsing;
-using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.ValueSharing;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public abstract partial class Kernel : IDisposable
+    public abstract partial class Kernel : 
+        IKernelCommandHandler<RequestKernelInfo>, 
+        IDisposable
     {
+        private  readonly ConcurrentDictionary<Type, HashSet<Type>> _handledCommandTypes = new();
         private readonly Subject<KernelEvent> _kernelEvents = new();
         private readonly CompositeDisposable _disposables;
         private readonly Dictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
-        private readonly HashSet<Type> _registeredCommandTypes;
+        private readonly HashSet<Type> _supportedCommandTypes;
         private IKernelScheduler<KernelCommand, KernelCommandResult> _fastPathScheduler;
         private FrontendEnvironment _frontendEnvironment;
         private ChooseKernelDirective _chooseKernelDirective;
@@ -36,7 +38,6 @@ namespace Microsoft.DotNet.Interactive
         private readonly SemaphoreSlim _fastPathSchedulerLock = new(1);
         private KernelInvocationContext _inFlightContext;
         private int _countOfLanguageServiceCommandsInFlight = 0;
-   
 
         protected Kernel(string name)
         {
@@ -54,14 +55,24 @@ namespace Microsoft.DotNet.Interactive
             _disposables = new CompositeDisposable();
 
             Pipeline = new KernelCommandPipeline(this);
-            
-            _registeredCommandTypes = new HashSet<Type>(GetSupportedCommandTypesFromInterfaceImplementation());
 
-            _disposables.Add(Disposable.Create(
-                () => _kernelEvents.OnCompleted()
-                ));
+            _supportedCommandTypes = _handledCommandTypes.GetOrAdd(
+                GetType(), 
+                InitializeSupportedCommandTypes);
+
+            _disposables.Add(Disposable.Create(() => _kernelEvents.OnCompleted()));
 
             RegisterCommandHandlers();
+
+            HashSet<Type> InitializeSupportedCommandTypes(Type kernelType)
+            {
+                var types = kernelType.GetInterfaces()
+                                      .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IKernelCommandHandler<>))
+                                      .SelectMany(i => i.GenericTypeArguments)
+                                      .ToArray();
+
+                return new HashSet<Type>(types);
+            }
         }
 
         private void RegisterCommandHandlers()
@@ -137,7 +148,6 @@ namespace Microsoft.DotNet.Interactive
             return true;
         }
 
-      
         private bool TryPreprocessLanguageServiceCommand(LanguageServiceCommand command, KernelInvocationContext context, out IReadOnlyList<KernelCommand> commands)
         {
             var postProcessCommands = new List<KernelCommand>();
@@ -213,6 +223,10 @@ namespace Microsoft.DotNet.Interactive
         public void RegisterCommandHandler<TCommand>(Func<TCommand, KernelInvocationContext, Task> handler)
             where TCommand : KernelCommand
         {
+            if (this is IKernelCommandHandler<TCommand>)
+            {
+                throw new InvalidOperationException($"Command {typeof(TCommand)} is already directly implemented and registration of an alternative handler is not supported.");
+            }
             RegisterCommandType<TCommand>();
             _dynamicHandlers[typeof(TCommand)] = (command, context) => handler((TCommand)command, context);
         }
@@ -220,9 +234,8 @@ namespace Microsoft.DotNet.Interactive
         public void RegisterCommandType<TCommand>()
             where TCommand : KernelCommand
         {
-            if (_registeredCommandTypes.Add(typeof(TCommand)))
+            if (_supportedCommandTypes.Add(typeof(TCommand)))
             {
-                KernelCommandEnvelope.RegisterCommandTypeForSerialization<TCommand>();
                 var defaultHandler = CreateDefaultHandlerForCommandType<TCommand>() ?? throw new InvalidOperationException("CreateDefaultHandlerForCommandType should not return null");
                 
                 _dynamicHandlers[typeof(TCommand)] = (command, context) => defaultHandler((TCommand)command, context);
@@ -234,17 +247,9 @@ namespace Microsoft.DotNet.Interactive
             return (_,_) => Task.CompletedTask;
         }
 
-        public virtual IEnumerable<Type> SupportedCommands()
+        public virtual IEnumerable<Type> SupportedCommandTypes()
         {
-            return  _registeredCommandTypes;
-        }
-
-        private IEnumerable<Type> GetSupportedCommandTypesFromInterfaceImplementation()
-        {
-            var interfaces = GetType().GetInterfaces();
-            var types = interfaces.Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IKernelCommandHandler<>))
-                .SelectMany(i => i.GenericTypeArguments);
-            return types;
+            return  _supportedCommandTypes;
         }
 
         internal virtual async Task HandleAsync(
@@ -466,7 +471,6 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-
         protected internal KernelScheduler<KernelCommand, KernelCommandResult> Scheduler
         {
             get
@@ -510,6 +514,19 @@ namespace Microsoft.DotNet.Interactive
             }
 
             return splitCommands;
+        }
+
+        public virtual Task HandleAsync(RequestKernelInfo command, KernelInvocationContext context)
+        {
+            var kernelInfo = new KernelInfo(Name)
+            {
+                SupportedKernelCommands = _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)).ToArray(),
+                SupportedDirectives = Directives.Select(d => new DirectiveInfo(d.Name)).ToArray()
+            };
+
+            context.Publish(new KernelInfoProduced(kernelInfo, command));
+
+            return Task.CompletedTask;
         }
 
         private protected virtual SchedulingScope GetHandlingKernelCommandScope(KernelCommand command, KernelInvocationContext invocationContext)
@@ -635,7 +652,7 @@ namespace Microsoft.DotNet.Interactive
                 switch (command, this)
                 {
                     case (SubmitCode submitCode, IKernelCommandHandler<SubmitCode> submitCodeHandler):
-                        SetHandler(submitCodeHandler, submitCode);
+                        SetHandler(submitCode, submitCodeHandler);
                         break;
 
                     case (RequestCompletions {LanguageNode: DirectiveNode} rq, _):
@@ -644,26 +661,30 @@ namespace Microsoft.DotNet.Interactive
 
                     case (RequestCompletions requestCompletion, IKernelCommandHandler<RequestCompletions>
                         requestCompletionHandler):
-                        SetHandler(requestCompletionHandler, requestCompletion);
+                        SetHandler(requestCompletion, requestCompletionHandler);
                         break;
 
                     case (RequestDiagnostics requestDiagnostics, IKernelCommandHandler<RequestDiagnostics>
                         requestDiagnosticsHandler):
-                        SetHandler(requestDiagnosticsHandler, requestDiagnostics);
+                        SetHandler(requestDiagnostics, requestDiagnosticsHandler);
                         break;
 
                     case (RequestHoverText hoverCommand, IKernelCommandHandler<RequestHoverText> requestHoverTextHandler
                         ):
-                        SetHandler(requestHoverTextHandler, hoverCommand);
+                        SetHandler(hoverCommand, requestHoverTextHandler);
                         break;
 
                     case (RequestSignatureHelp requestSignatureHelp, IKernelCommandHandler<RequestSignatureHelp>
                         requestSignatureHelpHandler):
-                        SetHandler(requestSignatureHelpHandler, requestSignatureHelp);
+                        SetHandler(requestSignatureHelp, requestSignatureHelpHandler);
                         break;
 
                     case (ChangeWorkingDirectory changeWorkingDirectory, IKernelCommandHandler<ChangeWorkingDirectory> changeWorkingDirectoryHandler):
-                        SetHandler(changeWorkingDirectoryHandler, changeWorkingDirectory);
+                        SetHandler(changeWorkingDirectory, changeWorkingDirectoryHandler);
+                        break;
+
+                    case (RequestKernelInfo requestKernelInfo, IKernelCommandHandler<RequestKernelInfo> requestKernelInfoHandler):
+                        SetHandler(requestKernelInfo, requestKernelInfoHandler);
                         break;
 
                     default:
@@ -681,9 +702,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private static void SetHandler<T>(
-            IKernelCommandHandler<T> handler,
-            T command)
+        private static void SetHandler<T>(T command, IKernelCommandHandler<T> handler)
             where T : KernelCommand =>
             command.Handler = (_, context) =>
                 handler.HandleAsync(command, context);
@@ -695,8 +714,6 @@ namespace Microsoft.DotNet.Interactive
         public void Dispose() => _disposables.Dispose();
 
         public virtual ChooseKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= new(this);
-
-        protected internal ParseResult SelectorParserResults { protected get; set; }
 
         public bool SupportsCommand<T>() where T : KernelCommand
         {

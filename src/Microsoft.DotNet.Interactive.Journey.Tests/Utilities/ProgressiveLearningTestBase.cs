@@ -30,6 +30,8 @@ namespace Microsoft.DotNet.Interactive.Journey.Tests.Utilities
                 vscodeKernel
             };
 
+            kernel.DefaultKernelName = "csharp";
+
             Lesson.Mode = mode;
 
             await Main.OnLoadAsync(kernel, httpClient);
@@ -41,7 +43,6 @@ namespace Microsoft.DotNet.Interactive.Journey.Tests.Utilities
         {
             return $"#!model-answer\r\n{answer}";
         }
-
 
         protected string GetPatchedNotebookPath(string notebookName, [CallerMemberName]string? testName = null)
         {

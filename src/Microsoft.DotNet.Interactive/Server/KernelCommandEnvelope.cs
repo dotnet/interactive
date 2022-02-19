@@ -84,15 +84,24 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public static IKernelCommandEnvelope Create(KernelCommand command)
         {
+            var envelopeType = _envelopeTypesByCommandTypeName.GetOrAdd(
+                command.GetType().Name,
+                commandTypeName =>
+                {
+                    var commandType = command.GetType();
+
+                    var commandEnvelopeType = typeof(KernelCommandEnvelope<>).MakeGenericType(commandType);
+
+                    _commandTypesByCommandTypeName[commandTypeName] = commandType;
+
+                    return commandEnvelopeType;
+                });
+
             var factory = _envelopeFactories.GetOrAdd(
                 command.GetType(),
                 commandType =>
                 {
-                    var type = command.GetType();
-
-                    var genericType = _envelopeTypesByCommandTypeName[type.Name];
-
-                    var constructor = genericType.GetConstructors().Single();
+                    var constructor = envelopeType.GetConstructors().Single();
 
                     var commandParameter = Expression.Parameter(
                         typeof(KernelCommand),

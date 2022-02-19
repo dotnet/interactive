@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -349,7 +349,7 @@ public class CommandLineParserTests : IDisposable
             .Should()
             .Be(Environment.CurrentDirectory);
     }
-        
+
     [Fact]
     public void stdio_command_working_dir_can_be_specified()
     {

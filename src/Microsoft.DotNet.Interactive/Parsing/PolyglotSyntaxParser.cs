@@ -9,7 +9,6 @@ using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.DotNet.Interactive.Utility;
 
 #nullable enable
 

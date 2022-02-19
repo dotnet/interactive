@@ -8,13 +8,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 {
     public class SupportedDirectives
     {
-        public string KernelName { get; }
-
-        public SupportedDirectives(string kernelName)
+        public SupportedDirectives(string kernelName, IReadOnlyList<Command> commands)
         {
             KernelName = kernelName;
+            Commands = commands;
         }
 
-        public List<Command> Commands { get; } = new();
+        public string KernelName { get; }
+
+        public IReadOnlyList<Command> Commands { get; } = new List<Command>();
     }
 }

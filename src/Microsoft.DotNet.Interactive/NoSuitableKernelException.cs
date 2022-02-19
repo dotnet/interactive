@@ -8,12 +8,11 @@ namespace Microsoft.DotNet.Interactive
 {
     public class NoSuitableKernelException : Exception
     {
-        public KernelCommand Command { get; }
-
-        public NoSuitableKernelException(KernelCommand command) : 
-            base($"No kernel found for {command}")
+        public NoSuitableKernelException(KernelCommand command) : base($"No kernel found for {command} with target kernel '{command.TargetKernelName}'")
         {
             Command = command;
         }
+
+        public KernelCommand Command { get; }
     }
 }

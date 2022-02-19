@@ -15,6 +15,7 @@ export const QuitType = "Quit";
 export const RequestCompletionsType = "RequestCompletions";
 export const RequestDiagnosticsType = "RequestDiagnostics";
 export const RequestHoverTextType = "RequestHoverText";
+export const RequestKernelInfoType = "RequestKernelInfo";
 export const RequestSignatureHelpType = "RequestSignatureHelp";
 export const RequestValueType = "RequestValue";
 export const RequestValueInfosType = "RequestValueInfos";
@@ -33,6 +34,7 @@ export type KernelCommandType =
     | typeof RequestCompletionsType
     | typeof RequestDiagnosticsType
     | typeof RequestHoverTextType
+    | typeof RequestKernelInfoType
     | typeof RequestSignatureHelpType
     | typeof RequestValueType
     | typeof RequestValueInfosType
@@ -85,6 +87,9 @@ export interface RequestDiagnostics extends KernelCommand {
 }
 
 export interface RequestHoverText extends LanguageServiceCommand {
+}
+
+export interface RequestKernelInfo extends KernelCommand {
 }
 
 export interface RequestSignatureHelp extends LanguageServiceCommand {
@@ -184,6 +189,7 @@ export const HoverTextProducedType = "HoverTextProduced";
 export const IncompleteCodeSubmissionReceivedType = "IncompleteCodeSubmissionReceived";
 export const InputProducedType = "InputProduced";
 export const KernelExtensionLoadedType = "KernelExtensionLoaded";
+export const KernelInfoProducedType = "KernelInfoProduced";
 export const KernelReadyType = "KernelReady";
 export const PackageAddedType = "PackageAdded";
 export const ReturnValueProducedType = "ReturnValueProduced";
@@ -210,6 +216,7 @@ export type KernelEventType =
     | typeof IncompleteCodeSubmissionReceivedType
     | typeof InputProducedType
     | typeof KernelExtensionLoadedType
+    | typeof KernelInfoProducedType
     | typeof KernelReadyType
     | typeof PackageAddedType
     | typeof ReturnValueProducedType
@@ -283,6 +290,10 @@ export interface InputProduced extends KernelEvent {
 }
 
 export interface KernelExtensionLoaded extends KernelEvent {
+}
+
+export interface KernelInfoProduced extends KernelEvent {
+    kernelInfo: KernelInfo;
 }
 
 export interface KernelReady extends KernelEvent {
@@ -373,6 +384,24 @@ export interface InteractiveDocumentElement {
     language: string;
     contents: string;
     outputs: Array<InteractiveDocumentOutputElement>;
+}
+
+export interface KernelInfo {
+    aliases: Array<string>;
+    language?: string;
+    localName: string;
+    originUri?: string;
+    destinationUri?: string;
+    supportedKernelCommands: Array<KernelCommandInfo>;
+    supportedDirectives: Array<DirectiveInfo>;
+}
+
+export interface DirectiveInfo {
+    name: string;
+}
+
+export interface KernelCommandInfo {
+    name: string;
 }
 
 export interface KernelValueInfo {

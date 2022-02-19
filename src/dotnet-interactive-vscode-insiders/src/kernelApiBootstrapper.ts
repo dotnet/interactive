@@ -77,10 +77,10 @@ export function configure(global?: any) {
     const jsKernel = new JavascriptKernel();
     compositeKernel.add(jsKernel, ["js"]);
 
-    kernelHost.createProxyKernelOnDefaultConnector({ localName: 'csharp', aliases: ['c#', 'C#'] });
-    kernelHost.createProxyKernelOnDefaultConnector({ localName: 'fsharp', aliases: ['fs', 'F#'] });
-    kernelHost.createProxyKernelOnDefaultConnector({ localName: 'pwsh', aliases: ['powershell'] });
-    kernelHost.createProxyKernelOnDefaultConnector({ localName: 'vscode', destinationUri: "kernel://vscode/vscode" });
+    kernelHost.createProxyKernelOnDefaultConnector({ localName: 'csharp', aliases: ['c#', 'C#'], supportedDirectives: [], supportedKernelCommands: [] });
+    kernelHost.createProxyKernelOnDefaultConnector({ localName: 'fsharp', aliases: ['fs', 'F#'], supportedDirectives: [], supportedKernelCommands: [] });
+    kernelHost.createProxyKernelOnDefaultConnector({ localName: 'pwsh', aliases: ['powershell'], supportedDirectives: [], supportedKernelCommands: [] });
+    kernelHost.createProxyKernelOnDefaultConnector({ localName: 'vscode', aliases: [], destinationUri: "kernel://vscode/vscode", supportedDirectives: [], supportedKernelCommands: []});
 
     kernelHost.connect();
     channel.run();

@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -62,12 +62,11 @@ namespace Microsoft.DotNet.Interactive
 
         public string DefaultKernelName
         {
-            get => _defaultKernelName;
-            set
-            {
-                _defaultKernelName = value;
-                SubmissionParser.KernelLanguage = value;
-            }
+            get => _defaultKernelName ??
+                   (ChildKernels.Count == 1
+                        ? ChildKernels[0].Name
+                        : null);
+            set => _defaultKernelName = value;
         }
 
         public void Add(Kernel kernel, IReadOnlyCollection<string> aliases = null)
@@ -102,7 +101,7 @@ namespace Microsoft.DotNet.Interactive
 
             _childKernels.Add(kernel);
             
-            Host?.AddKernelInfo(kernel, new KernelInfo(kernel.Name, aliases));
+            Host?.AddKernelInfo(kernel, KernelInfo.Create(kernel));
 
             _kernelToNameOrAlias.Add(kernel, new HashSet<string>{kernel.Name});
 
@@ -115,11 +114,6 @@ namespace Microsoft.DotNet.Interactive
                     _kernelsByNameOrAlias.Add(alias, kernel);
                     _kernelToNameOrAlias[kernel].Add(alias);
                 }
-            }
-
-            if (_childKernels.Count == 1)
-            {
-                DefaultKernelName = kernel.Name;
             }
 
             RegisterForDisposal(kernel.KernelEvents.Subscribe(PublishEvent));
@@ -238,6 +232,17 @@ namespace Microsoft.DotNet.Interactive
             else
             {
                 await base.HandleAsync(command, context);
+            }
+        }
+
+        public override async Task HandleAsync(RequestKernelInfo command, KernelInvocationContext context)
+        {
+            foreach (var childKernel in ChildKernels)
+            {
+                if (childKernel.SupportsCommand<RequestKernelInfo>())
+                {
+                    await childKernel.HandleAsync(command, context);
+                }
             }
         }
 
@@ -380,14 +385,7 @@ namespace Microsoft.DotNet.Interactive
 
             var kernelsToRegister = _kernelsByNameOrAlias
                                     .GroupBy(e => e.Value)
-                                    .Select(g =>
-                                    {
-                                        var localName = g.Key.Name;
-                                        var aliases = new HashSet<string>(g.Select(v => v.Key));
-                                        aliases.Remove(localName);
-
-                                        return (g.Key, new KernelInfo(localName, aliases.ToArray()));
-                                    });
+                                    .Select(g => (g.Key, KernelInfo.Create(g.Key, g.Select(v => v.Key).ToArray())));
 
             foreach (var (kernel, kernelInfo) in kernelsToRegister)
             {

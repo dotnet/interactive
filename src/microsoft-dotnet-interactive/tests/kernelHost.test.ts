@@ -59,8 +59,8 @@ describe("kernelHost",
 
             const vscodeHost = new KernelHost(vscodeKernel, inMemory.channels[0].channel, "kernel://vscode");
 
-            vscodeHost.createProxyKernelOnDefaultConnector({ localName: "python", destinationUri: "kernel://remote/python" });
-            vscodeHost.createProxyKernelOnDefaultConnector({ localName: "go", destinationUri: "kernel://remote/go" });
+            vscodeHost.createProxyKernelOnDefaultConnector({ localName: "python", destinationUri: "kernel://remote/python", aliases: [], supportedDirectives: [], supportedKernelCommands: []});
+            vscodeHost.createProxyKernelOnDefaultConnector({ localName: "go", destinationUri: "kernel://remote/go", aliases: [], supportedDirectives: [], supportedKernelCommands: []});
             vscodeHost.connect();
 
             vscodeKernel.subscribeToKernelEvents(e => {

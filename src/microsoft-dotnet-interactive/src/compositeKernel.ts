@@ -4,7 +4,7 @@
 import * as contracts from "./contracts";
 import { Kernel } from "./kernel";
 import { KernelHost } from "./kernelHost";
-import { KernelInfo } from "./kernelInfo";
+import { KernelInfo } from "./contracts";
 
 export class CompositeKernel extends Kernel {
 
@@ -30,7 +30,7 @@ export class CompositeKernel extends Kernel {
     set host(host: KernelHost | null) {
         this._host = host;
         if (this._host) {
-            this._host.addKernelInfo(this, { localName: this.name.toLowerCase(), aliases: [] });
+            this._host.addKernelInfo(this, { localName: this.name.toLowerCase(), aliases: [], supportedDirectives: [], supportedKernelCommands: [] });
 
             for (let kernel of this._kernelToNamesMap.keys()) {
                 let aliases = [];
@@ -39,7 +39,7 @@ export class CompositeKernel extends Kernel {
                         aliases.push(name.toLowerCase());
                     }
                 }
-                this._host.addKernelInfo(kernel, { localName: kernel.name.toLowerCase(), aliases: [...aliases] });
+                this._host.addKernelInfo(kernel, { localName: kernel.name.toLowerCase(), aliases: [...aliases], supportedDirectives: [], supportedKernelCommands: [] });
             }
         }
     }
@@ -70,6 +70,9 @@ export class CompositeKernel extends Kernel {
         let kernelInfo: KernelInfo = {
             localName: kernel.name,
             aliases: aliases === undefined ? [] : [...aliases],
+            language: "",
+            supportedKernelCommands: [],
+            supportedDirectives: []
         };
 
         this.host?.addKernelInfo(kernel, kernelInfo);

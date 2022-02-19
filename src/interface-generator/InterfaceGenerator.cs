@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 {
     public class InterfaceGenerator
     {
-        private static readonly Dictionary<Type, string> WellKnownTypes = new Dictionary<Type, string>
+        private static readonly Dictionary<Type, string> WellKnownTypes = new()
         {
             { typeof(bool), "boolean" },
             { typeof(byte), "number" },
@@ -29,6 +29,7 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 
             { typeof(DirectoryInfo), "string" },
             { typeof(FileInfo), "string" },
+            { typeof(Uri), "string" },
         };
 
         private static readonly HashSet<Type> AlwaysEmitTypes = new()
@@ -212,13 +213,15 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 
         private static string PropertyName(Type type, PropertyInfo propertyInfo)
         {
-            var isOptional = OptionalFields.Contains($"{type.Name}.{propertyInfo.Name}") 
-                             || propertyInfo.PropertyType.IsNullable();
+            var nullabilityContext = new NullabilityInfoContext().Create(propertyInfo);
+
+            var isOptional = nullabilityContext.ReadState == NullabilityState.Nullable ||
+                             OptionalFields.Contains($"{type.Name}.{propertyInfo.Name}");
 
             var propertyName = propertyInfo.Name.CamelCase();
             return isOptional
-                ? propertyName + "?"
-                : propertyName;
+                       ? propertyName + "?"
+                       : propertyName;
         }
 
         private static void GenerateEnum(StringBuilder builder, Type type)

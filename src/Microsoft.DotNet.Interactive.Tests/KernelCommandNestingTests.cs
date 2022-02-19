@@ -80,6 +80,7 @@ await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
                 new CSharpKernel(),
                 new FSharpKernel()
             };
+            kernel.DefaultKernelName = "csharp";
 
             var result = await kernel.SubmitCodeAsync(
                              @"

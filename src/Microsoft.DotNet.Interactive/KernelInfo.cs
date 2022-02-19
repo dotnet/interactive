@@ -4,15 +4,15 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.DotNet.Interactive
 {
     public class KernelInfo
     {
-        public KernelInfo(
-            string localName,
-            IReadOnlyCollection<string>? aliases = null,
-            Uri? destinationUri = null)
+        private readonly IReadOnlyCollection<string> _aliases = Array.Empty<string>();
+
+        public KernelInfo(string localName, string? language = null)
         {
             if (string.IsNullOrWhiteSpace(localName))
             {
@@ -25,33 +25,35 @@ namespace Microsoft.DotNet.Interactive
             }
 
             LocalName = localName;
-            aliases ??= Array.Empty<string>();
-            foreach (var alias in aliases)
-            {
-                if (string.IsNullOrWhiteSpace(alias))
-                {
-                    throw new ArgumentException("Value cannot be null or consist entirely of whitespace.");
-                }
-
-                if (alias.StartsWith("#"))
-                {
-                    throw new ArgumentException("Kernel names or aliases cannot begin with \"#\"");
-                }
-            }
-
-            var distinctAliases = new HashSet<string>(aliases);
-            Aliases = distinctAliases;
-            DestinationUri = destinationUri;
+            Language = language;
         }
 
-        public IReadOnlyCollection<string> Aliases { get; }
+        public IReadOnlyCollection<string> Aliases
+        {
+            get => _aliases;
+            init => _aliases = value.Except(new[] { LocalName }).ToArray();
+        }
+
+        public string? Language { get; } 
 
         public string LocalName { get; }
 
-        public Uri? OriginUri { get; internal set; }
+        public Uri? OriginUri { get; set; }
 
-        public Uri? DestinationUri { get; internal set; }
+        public Uri? DestinationUri { get; set; }
+
+        public IReadOnlyCollection<KernelCommandInfo> SupportedKernelCommands { get; init; } = Array.Empty<KernelCommandInfo>();
+
+        public IReadOnlyCollection<DirectiveInfo> SupportedDirectives { get; init; } = Array.Empty<DirectiveInfo>();
 
         public override string ToString() => LocalName;
+
+        public static KernelInfo Create(Kernel kernel, IReadOnlyCollection<string>? aliases = null) =>
+            new(kernel.Name)
+            {
+                Aliases = aliases ?? Array.Empty<string>(),
+                SupportedDirectives = kernel.Directives.Select(d => new DirectiveInfo(d.Name)).ToArray(),
+                SupportedKernelCommands = kernel.SupportedCommandTypes().Select(c => new KernelCommandInfo(c.Name)).ToArray()
+            };
     }
 }

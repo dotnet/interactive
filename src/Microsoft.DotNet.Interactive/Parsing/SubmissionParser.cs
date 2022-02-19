@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -9,7 +9,6 @@ using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
@@ -25,16 +24,9 @@ namespace Microsoft.DotNet.Interactive.Parsing
         public SubmissionParser(Kernel kernel)
         {
             _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
-            KernelLanguage = kernel switch
-            {
-                CompositeKernel c => c.DefaultKernelName,
-                _ => kernel.Name
-            };
         }
 
         public IReadOnlyList<Command> Directives => _rootCommand?.Subcommands ?? Array.Empty<Command>();
-
-        public string KernelLanguage { get; internal set; }
 
         public PolyglotSyntaxTree Parse(string code, string language = null)
         {
@@ -42,7 +34,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             var parser = new PolyglotSyntaxParser(
                 sourceText,
-                language ?? KernelLanguage,
+                language ?? DefaultKernelName(),
                 GetDirectiveParser(),
                 GetSubkernelDirectiveParsers());
 
@@ -81,7 +73,9 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             var tree = Parse(code, originalCommand.TargetKernelName);
             var nodes = tree.GetRoot().ChildNodes.ToArray();
-            var targetKernelName = originalCommand.TargetKernelName ?? KernelLanguage;
+
+            var targetKernelName = originalCommand.TargetKernelName ?? DefaultKernelName();
+            
             var lastCommandScope = originalCommand.SchedulingScope;
             KernelNameDirectiveNode lastKernelNameNode = null;
 
@@ -233,17 +227,26 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     }
                 }
 
-                if (commands.All(c => c.GetType() == 
-                                      originalCommand.GetType() 
-                                      && (
-                                          c.TargetKernelName == originalCommand.TargetKernelName||c.TargetKernelName == commands[0].TargetKernelName)))
+                if (commands.All(c => c.GetType() == originalCommand.GetType() && 
+                                      (c.TargetKernelName == originalCommand.TargetKernelName 
+                                       || c.TargetKernelName == commands[0].TargetKernelName)))
                 {
-                    
                     return true;
                 }
-                
+
                 return false;
             }
+        }
+
+        private string DefaultKernelName()
+        {
+            var kernelName = _kernel switch
+            {
+                CompositeKernel c => c.DefaultKernelName,
+                _ => _kernel.Name
+            };
+            
+            return kernelName;
         }
 
         internal IDictionary<string, (SchedulingScope commandScope, Func<Parser> getParser)> GetSubkernelDirectiveParsers()

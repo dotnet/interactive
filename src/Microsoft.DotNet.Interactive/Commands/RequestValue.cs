@@ -4,7 +4,6 @@
 using System;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -18,10 +17,10 @@ namespace Microsoft.DotNet.Interactive.Commands
 
         public string MimeType { get;  }
 
-        public RequestValue(string name, string targetKernelName, string mimeType = null ) : base(targetKernelName)
+        public RequestValue(string name, string targetKernelName = null, string mimeType = null ) : base(targetKernelName)
         {
             Name = name;
-            MimeType = mimeType;
+            MimeType = mimeType ?? JsonFormatter.MimeType;
         }
 
         public override Task InvokeAsync(KernelInvocationContext context)
@@ -33,18 +32,16 @@ namespace Microsoft.DotNet.Interactive.Commands
                     if (value is { })
                     {
                         var valueType = value.GetType();
-                        var mimeType = MimeType ?? JsonFormatter.MimeType;
-                        var formatter = Formatter.GetPreferredFormatterFor(valueType, mimeType);
+                        var formatter = Formatter.GetPreferredFormatterFor(valueType, MimeType);
 
                         using var writer = new StringWriter(CultureInfo.InvariantCulture);
                         formatter.Format(value, writer);
-                        var formatted = new FormattedValue(mimeType, writer.ToString());
+                        var formatted = new FormattedValue(MimeType, writer.ToString());
                         context.Publish(new ValueProduced(value, Name, formatted, this));
                     }
                     else
                     {
-                        var mimeType = MimeType ?? JsonFormatter.MimeType;
-                        var formatted = new FormattedValue(mimeType, "null");
+                        var formatted = new FormattedValue(MimeType, "null");
 
                         context.Publish(new ValueProduced(value, Name, formatted, this));
                     }
