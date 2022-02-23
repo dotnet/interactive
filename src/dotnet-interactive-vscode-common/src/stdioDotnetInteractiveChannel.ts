@@ -3,17 +3,20 @@
 
 import * as cp from 'child_process';
 import {
+    CommandFailedType,
+    CommandSucceededType,
     DisposableSubscription,
-    KernelEventEnvelope,
-    KernelEventEnvelopeObserver,
     DiagnosticLogEntryProducedType,
     DiagnosticLogEntryProduced,
-    KernelReadyType,
     KernelCommandEnvelopeHandler,
-    KernelCommandEnvelope
+    KernelCommandEnvelope,
+    KernelEventEnvelope,
+    KernelEventEnvelopeObserver,
+    KernelReadyType,
+    SubmitCodeType
 } from './dotnet-interactive/contracts';
 import { ProcessStart } from './interfaces';
-import { ReportChannel, Uri } from './interfaces/vscode-like';
+import { ReportChannel } from './interfaces/vscode-like';
 import { LineReader } from './lineReader';
 import { isNotNull, parse, stringify } from './utilities';
 import { isKernelCommandEnvelope, isKernelEventEnvelope } from "./dotnet-interactive/utilities";
@@ -26,14 +29,12 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
     private readyPromise: Promise<void>;
     private commandHandler: KernelCommandEnvelopeHandler = () => Promise.resolve();
     private eventSubscribers: Array<KernelEventEnvelopeObserver> = [];
-
+    private pingTimer: NodeJS.Timer | null = null;
 
     constructor(
         notebookPath: string,
         processStart: ProcessStart,
         private diagnosticChannel: ReportChannel,
-        private parseUri: (uri: string) => Uri,
-        private notification: { displayError: (message: string) => Promise<void>, displayInfo: (message: string) => Promise<void> },
         private processExited: (pid: number, code: number | undefined, signal: string | undefined) => void) {
         // prepare root event handler
         this.lineReader = new LineReader();
@@ -92,6 +93,13 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
                 case DiagnosticLogEntryProducedType:
                     this.diagnosticChannel.appendLine((<DiagnosticLogEntryProduced>envelope.event).message);
                     break;
+                case CommandFailedType:
+                case CommandSucceededType:
+                    if (this.pingTimer) {
+                        clearInterval(this.pingTimer);
+                        this.pingTimer = null;
+                    }
+                    break;
             }
 
             for (let i = this.eventSubscribers.length - 1; i >= 0; i--) {
@@ -135,8 +143,39 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
             let str = stringify(content);
             if (isNotNull(this.childProcess)) {
                 try {
+                    // send the command
                     this.childProcess.stdin.write(str);
                     this.childProcess.stdin.write('\n');
+
+                    // Start ping the timer
+                    // ====================
+                    // On Windows in some cases the STDIN reader on the server side will appear to "hang" when trying
+                    // to call `TextReader.ReadLineAsync()` on some long-running commands and this is ultimately by
+                    // design.
+                    //
+                    // https://docs.microsoft.com/en-us/dotnet/api/system.console.in?view=net-6.0#remarks
+                    //
+                    // > Read operations on the standard input stream execute synchronously. That is, they block until
+                    // > the specified read operation has completed. This is true even if an asynchronous method, such
+                    // > as ReadLineAsync, is called on the TextReader object returned by the In property.
+                    //
+                    // This behavior is also present in the native `PeekConsoleInput` and `PeekConsoleInputW` functions
+                    // so we can't solve this by using pinvoke.
+                    //
+                    // To work around this, only when starting a submission command and only on Windows we periodically
+                    // ping the server with a single newline character.  This is enough to break the read hang, but
+                    // doesn't negatively impact the command parsing or execution.  To prevent spamming the server,
+                    // this timer is only active until the command succeeds or fails.
+                    if (process.platform === 'win32' && this.pingTimer === null && isKernelCommandEnvelope(content)) {
+                        if (content.commandType === SubmitCodeType) {
+                            this.pingTimer = setInterval(() => {
+                                if (this.childProcess) {
+                                    this.childProcess.stdin.write('\n');
+                                }
+                            }, 500);
+                        }
+                    }
+
                     resolve();
                 } catch (e) {
                     reject(e);
@@ -154,6 +193,10 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
 
     dispose() {
         this.notifyOnExit = false;
+        if (this.pingTimer) {
+            clearInterval(this.pingTimer);
+            this.pingTimer = null;
+        }
         if (this.childProcess) {
             this.childProcess.kill();
         }
