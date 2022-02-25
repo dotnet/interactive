@@ -26,6 +26,8 @@ internal class MsKqlKernel : ToolsServiceKernel
         _connectionDetails = connectionDetails ?? throw new ArgumentException("Value cannot be null or whitespace.", nameof(connectionDetails));
     }
 
+    public override string LanguageName => "KQL";
+
     public override async Task ConnectAsync()
     {
         if (!Connected)
@@ -35,7 +37,6 @@ internal class MsKqlKernel : ToolsServiceKernel
             Connected = true;
         }
     }
-
 
     public override ChooseMsKqlKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= new(this);
 

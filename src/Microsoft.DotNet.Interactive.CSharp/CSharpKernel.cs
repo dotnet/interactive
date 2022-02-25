@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             .GetMethod("HasReturnValue", BindingFlags.Instance | BindingFlags.NonPublic);
 
         protected CSharpParseOptions _csharpParseOptions =
-            new(LanguageVersion.Latest, kind: SourceCodeKind.Script);
+            new(CodeAnalysis.CSharp.LanguageVersion.Latest, kind: SourceCodeKind.Script);
 
         private InteractiveWorkspace _workspace;
 
@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             //...so we wait for RunAsync to read Directory.GetCurrentDirectory() the first time.
 
             ScriptOptions = ScriptOptions.Default
-                         .WithLanguageVersion(LanguageVersion.Latest)
+                         .WithLanguageVersion(CodeAnalysis.CSharp.LanguageVersion.Latest)
                          .AddImports(
                              "System",
                              "System.Text",
@@ -106,6 +106,10 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 ScriptOptions = null;
             });
         }
+
+        public override string LanguageName => "C#";
+
+        public override string LanguageVersion => "10.0";
 
         public ScriptState ScriptState { get; private set; }
 

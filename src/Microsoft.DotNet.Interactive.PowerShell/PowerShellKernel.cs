@@ -112,6 +112,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             return pwsh;
         }
 
+        public override string LanguageName => "PowerShell";
+
         public void AddModulePath(string modulePath)
         {
             if (string.IsNullOrWhiteSpace(modulePath))

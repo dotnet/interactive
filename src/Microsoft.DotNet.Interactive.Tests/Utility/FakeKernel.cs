@@ -18,6 +18,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 
         public KernelCommandInvocation Handle { get; set; }
 
+        public override string LanguageName => Name;
+
         public Task HandleAsync(SubmitCode command, KernelInvocationContext context)
         {
             Handle?.Invoke(command, context);

@@ -403,6 +403,10 @@ type FSharpKernel () as this =
         script.Value.Fsi.AddBoundValue(name, value) |> ignore
         Task.CompletedTask
 
+    override _.LanguageName = "F#"
+
+    override _.LanguageVersion = "6.0"
+
     member _.RestoreSources = _packageRestoreContext.Value.RestoreSources;
 
     member _.RequestedPackageReferences = _packageRestoreContext.Value.RequestedPackageReferences;

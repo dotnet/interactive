@@ -18,6 +18,8 @@ namespace Microsoft.DotNet.Interactive
         {
         }
 
+        public override string LanguageName => "HTML";
+
         public Task HandleAsync(SubmitCode command, KernelInvocationContext context)
         {
             context.Display(

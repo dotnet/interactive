@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Enumerable = System.Linq.Enumerable;
-using System.CommandLine.Parsing;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
@@ -25,6 +24,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         {
             _connectionString = connectionString;
         }
+
+        public override string LanguageName => "SQLite";
 
         private DbConnection OpenConnection()
         {

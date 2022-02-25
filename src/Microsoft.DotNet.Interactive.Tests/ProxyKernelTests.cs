@@ -17,9 +17,9 @@ namespace Microsoft.DotNet.Interactive.Tests
             using var kernel = new ProxyKernel("proxy", new BlockingCommandAndEventReceiver(),
                 new RecordingKernelCommandAndEventSender());
 
-            kernel.StartAsync();
+            kernel.Start();
 
-            var restart = new Action(() => kernel.StartAsync());
+            var restart = new Action(() => kernel.Start());
 
             restart.Should().Throw<InvalidOperationException>()
                 .Which

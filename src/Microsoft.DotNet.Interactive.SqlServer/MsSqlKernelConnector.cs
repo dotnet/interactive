@@ -7,15 +7,21 @@ using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.SqlServer;
 
-public class MsSqlKernelConnector : KernelConnectorBase
+public class MsSqlKernelConnector : IKernelConnector
 {
+    public MsSqlKernelConnector(bool createDbContext, string connectionString)
+    {
+        CreateDbContext = createDbContext;
+        ConnectionString = connectionString;
+    }
+
     public bool CreateDbContext { get; }
 
     public string ConnectionString { get; }
 
     public string PathToService { get; set; }
 
-    public override async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
+    public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
     {
         if (string.IsNullOrWhiteSpace(PathToService))
         {
@@ -35,11 +41,5 @@ public class MsSqlKernelConnector : KernelConnectorBase
         await kernel.ConnectAsync();
 
         return kernel;
-    }
-
-    public MsSqlKernelConnector(bool createDbContext, string connectionString)
-    {
-        CreateDbContext = createDbContext;
-        ConnectionString = connectionString;
     }
 }

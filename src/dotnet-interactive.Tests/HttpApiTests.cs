@@ -11,9 +11,8 @@ using System.Threading.Tasks;
 
 using FluentAssertions;
 using FluentAssertions.Execution;
-
+using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Http;

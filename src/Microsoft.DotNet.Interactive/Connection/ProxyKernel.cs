@@ -17,9 +17,14 @@ namespace Microsoft.DotNet.Interactive.Connection
         private readonly IKernelCommandAndEventSender _sender;
         private readonly CancellationTokenSource _cancellationTokenSource = new();
         private ExecutionContext _executionContext;
-        private readonly Dictionary<string,(KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<KernelEvent> completionSource, KernelInfo kernelInfo ,KernelInvocationContext invocationContext)> _inflight = new();
+
+        private readonly Dictionary<string, (KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<KernelEvent> completionSource, KernelInfo kernelInfo,
+            KernelInvocationContext invocationContext)> _inflight = new();
+
         private int _started = 0;
         private IKernelValueDeclarer _valueDeclarer;
+        private string _languageName;
+        private string _languageVersion;
 
         public ProxyKernel(string name, IKernelCommandAndEventReceiver receiver, IKernelCommandAndEventSender sender) : base(name)
         {
@@ -28,19 +33,26 @@ namespace Microsoft.DotNet.Interactive.Connection
 
             RegisterForDisposal(() =>
             {
-                _cancellationTokenSource.Cancel();
-                _cancellationTokenSource.Dispose();
+                if (_cancellationTokenSource.Token.CanBeCanceled)
+                {
+                    _cancellationTokenSource.Cancel();
+                    _cancellationTokenSource.Dispose();
+                }
             });
         }
 
-        public Task StartAsync()
+        public override string LanguageName => _languageName;
+
+        public override string LanguageVersion => _languageVersion;
+
+        public void Start()
         {
             if (Interlocked.CompareExchange(ref _started, 1, 0) == 1)
             {
                 throw new InvalidOperationException($"ProxyKernel {Name} is already started.");
             }
             
-            return Task.Run(async () => { await ReceiveAndDispatchCommandsAndEvents(); }, _cancellationTokenSource.Token);
+            Task.Run(ReceiveAndDispatchCommandsAndEvents);
         }
 
         private async Task ReceiveAndDispatchCommandsAndEvents()
@@ -121,7 +133,7 @@ namespace Microsoft.DotNet.Interactive.Connection
                     default:
                         if (pending.executionContext is { } ec)
                         {
-                            ExecutionContext.Run(ec, _ => { pending.invocationContext.Publish(kernelEvent); },
+                            ExecutionContext.Run(ec, _ => pending.invocationContext.Publish(kernelEvent),
                                 null);
                         }
                         else
@@ -137,15 +149,10 @@ namespace Microsoft.DotNet.Interactive.Connection
         {
             if (kernelInfo is not null)
             {
-                var areEqual = kernelEvent.Command.OriginUri.Equals( kernelInfo.OriginUri);
-                return areEqual;
-            }else if(kernelEvent.Command.OriginUri is null)
-
-            {
-                return true;
+                return kernelEvent.Command.OriginUri.Equals(kernelInfo.OriginUri);
             }
-
-            return false;
+            
+            return kernelEvent.Command.OriginUri is null;
         }
 
         internal IKernelValueDeclarer ValueDeclarer

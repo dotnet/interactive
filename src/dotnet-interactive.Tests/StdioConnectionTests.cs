@@ -1,14 +1,13 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reactive.Disposables;
 using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
@@ -20,31 +19,32 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
 
-public class StdioConnectionTests : KernelConnectionTestsBase<StdioConnectionTestConfiguration>
+public class StdioConnectionTests : KernelConnectionTestsBase
 {
+    private readonly StdioConnectionTestConfiguration _configuration;
+
     public StdioConnectionTests(ITestOutputHelper output) : base(output)
     {
+        _configuration = CreateConnectionConfiguration();
     }
 
-
-    protected override Task<KernelConnectorBase> CreateConnectorAsync(StdioConnectionTestConfiguration configuration)
+    protected override Task<IKernelConnector> CreateConnectorAsync()
     {
-        var command = new List<string>{configuration.Command};
-        if (configuration.Args?.Length > 0)
+        var command = new List<string> { _configuration.Command };
+
+        if (_configuration.Args?.Length > 0)
         {
-            command.AddRange(configuration.Args);
+            command.AddRange(_configuration.Args);
         }
 
-        var connector = new StdIoKernelConnector(command.ToArray(), configuration.WorkingDirectory);
+        var connector = new StdIoKernelConnector(command.ToArray(), _configuration.WorkingDirectory);
 
-     
-
-        return Task.FromResult<KernelConnectorBase>(connector);
+        return Task.FromResult<IKernelConnector>(connector);
     }
 
-    protected override StdioConnectionTestConfiguration CreateConnectionConfiguration()
+    protected StdioConnectionTestConfiguration CreateConnectionConfiguration()
     {
-        var toolPath = new FileInfo(typeof(App.Program).Assembly.Location);
+        var toolPath = new FileInfo(typeof(Program).Assembly.Location);
 
         return new StdioConnectionTestConfiguration
         {
@@ -63,24 +63,21 @@ public class StdioConnectionTests : KernelConnectionTestsBase<StdioConnectionTes
     [Fact]
     public async Task stdio_server_encoding_is_utf_8()
     {
-        var configuration = CreateConnectionConfiguration();
-
-        await CreateRemoteKernelTopologyAsync(configuration);
-
         using var localCompositeKernel = new CompositeKernel
         {
             new FakeKernel("fsharp")
         };
 
-        ConfigureConnectCommand(localCompositeKernel);
+        AddKernelConnector(localCompositeKernel);
 
         localCompositeKernel.DefaultKernelName = "fsharp";
 
-        var connectToRemoteKernel = CreateConnectionCommand(configuration);
+        var connectToRemoteKernel = CreateConnectCommand();
 
         await localCompositeKernel.SendAsync(connectToRemoteKernel);
 
         var res = await localCompositeKernel.SendAsync(new SubmitCode("System.Console.InputEncoding.EncodingName + \"/\" + System.Console.OutputEncoding.EncodingName", "newKernelName"));
+        
         var expected = Encoding.UTF8.EncodingName + "/" + Encoding.UTF8.EncodingName;
 
         var events = res.KernelEvents.ToSubscribedList();
@@ -92,31 +89,22 @@ public class StdioConnectionTests : KernelConnectionTestsBase<StdioConnectionTes
                 timeout: 10_000);
     }
 
-    protected override SubmitCode CreateConnectionCommand(StdioConnectionTestConfiguration configuration)
+    protected override SubmitCode CreateConnectCommand()
     {
         return new SubmitCode(
-            $"#!connect stdio --kernel-name newKernelName --command \"{configuration.Command}\" {string.Join(" ", configuration.Args)}");
+            $"#!connect stdio --kernel-name newKernelName --command \"{_configuration.Command}\" {string.Join(" ", _configuration.Args)}");
     }
 
-    protected override void ConfigureConnectCommand(CompositeKernel compositeKernel)
+    protected override void AddKernelConnector(CompositeKernel compositeKernel)
     {
         compositeKernel.AddKernelConnector(new ConnectStdIoCommand());
-    }
-
-    protected override Task<IDisposable> CreateRemoteKernelTopologyAsync(StdioConnectionTestConfiguration configuration)
-    {
-        return Task.FromResult( Disposable.Empty);
-    }
-
-    protected override Task<IDisposable> ConnectHostAsync(CompositeKernel remoteKernel, StdioConnectionTestConfiguration configuration)
-    {
-        return Task.FromResult(Disposable.Empty);
     }
 }
 
 public class StdioConnectionTestConfiguration
 {
     public string Command { get; set; }
+
     public string[] Args { get; set; }
     
     public DirectoryInfo WorkingDirectory { get; set; }

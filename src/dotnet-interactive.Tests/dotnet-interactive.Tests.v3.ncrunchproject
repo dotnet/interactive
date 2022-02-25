@@ -1,4 +1,4 @@
-﻿<ProjectConfiguration>
+<ProjectConfiguration>
   <Settings>
     <AdditionalFilesToIncludeForProject>
       <Value>..\microsoft-dotnet-interactive\src\contracts.ts</Value>

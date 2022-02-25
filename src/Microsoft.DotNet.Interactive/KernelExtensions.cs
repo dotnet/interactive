@@ -221,7 +221,7 @@ namespace Microsoft.DotNet.Interactive
 
                 if (kernel.FindKernel(from) is { } fromKernel)
                 {
-                    await fromKernel.ShareValue(kernel, name);
+                    await fromKernel.ImportValue(kernel, name);
                 }
                 else
                 {
@@ -234,7 +234,7 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
-        public static async Task ShareValue(this Kernel fromKernel, Kernel toKernel, string valueName)
+        public static async Task ImportValue(this Kernel fromKernel, Kernel toKernel, string valueName)
         {
             if (fromKernel is ISupportGetValue fromInProcessKernel)
             {
@@ -267,6 +267,7 @@ namespace Microsoft.DotNet.Interactive
             } 
             else if (fromKernel.SupportsCommand<RequestValue>())
             {
+                // FIX: (ImportValue) share some variables
                 var result = await fromKernel.SendAsync(new RequestValue(valueName));
 
 

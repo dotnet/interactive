@@ -143,7 +143,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var receiver = new MultiplexingKernelCommandAndEventReceiver(remoteKernel.Receiver);
 
-            using var host = new KernelHost(kernel, remoteKernel.Sender, receiver);
+            using var host = kernel.UseHost(remoteKernel.Sender, receiver);
 
             var _ = host.ConnectAsync();
 

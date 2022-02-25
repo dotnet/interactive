@@ -69,6 +69,8 @@ namespace Microsoft.DotNet.Interactive
             set => _defaultKernelName = value;
         }
 
+        public override string LanguageName => null;
+
         public void Add(Kernel kernel, IReadOnlyCollection<string> aliases = null)
         {
             if (kernel is null)
@@ -320,7 +322,7 @@ namespace Microsoft.DotNet.Interactive
 
         public void AddKernelConnector<TKernelConnector>(
             ConnectKernelCommand<TKernelConnector> connectionCommand)
-            where TKernelConnector : KernelConnectorBase
+            where TKernelConnector : IKernelConnector
         {
             var kernelNameOption = new Option<string>(
                 "--kernel-name",

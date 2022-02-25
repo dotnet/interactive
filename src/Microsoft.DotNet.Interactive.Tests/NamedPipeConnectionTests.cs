@@ -14,59 +14,58 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
-public class NamedPipeConnectionTests : KernelConnectionTestsBase<string>
+public class NamedPipeConnectionTests : KernelConnectionTestsBase
 {
+    private readonly string _pipeName = Guid.NewGuid().ToString();
+
     public NamedPipeConnectionTests(ITestOutputHelper output) : base(output)
     {
     }
 
-    protected override async Task<KernelConnectorBase> CreateConnectorAsync(string pipeName)
+    protected override async Task<IKernelConnector> CreateConnectorAsync()
     {
-        await CreateRemoteKernelTopologyAsync(pipeName);
-        return new NamedPipeKernelConnector(pipeName);
+        await CreateRemoteKernelTopologyAsync(_pipeName);
+
+        return new NamedPipeKernelConnector(_pipeName);
+    }
+    
+    protected override SubmitCode CreateConnectCommand()
+    {
+        return new SubmitCode($"#!connect named-pipe --kernel-name newKernelName --pipe-name {_pipeName}");
     }
 
-    protected override string CreateConnectionConfiguration()
-    {
-        return Guid.NewGuid().ToString();
-    }
-
-    protected override SubmitCode CreateConnectionCommand(string pipeName)
-    {
-        return new SubmitCode($"#!connect named-pipe --kernel-name newKernelName --pipe-name {pipeName}");
-    }
-
-    protected override void ConfigureConnectCommand(CompositeKernel compositeKernel)
+    protected override void AddKernelConnector(CompositeKernel compositeKernel)
     {
         compositeKernel.AddKernelConnector(new ConnectNamedPipeCommand());
     }
 
-    protected override Task<IDisposable> CreateRemoteKernelTopologyAsync(string pipeName)
+    private Task<IDisposable> CreateRemoteKernelTopologyAsync(string pipeName)
     {
         var remoteCompositeKernel = new CompositeKernel
-            {
-                new CSharpKernel(),
-                new FSharpKernel()
-            };
+        {
+            new CSharpKernel(),
+            new FSharpKernel()
+        };
 
         remoteCompositeKernel.DefaultKernelName = "csharp";
+
         RegisterForDisposal(remoteCompositeKernel);
-        return ConnectHostAsync(remoteCompositeKernel, pipeName);
-    }
 
+        var serverStream = new NamedPipeServerStream(
+            pipeName,
+            PipeDirection.InOut,
+            1,
+            PipeTransmissionMode.Message,
+            PipeOptions.Asynchronous);
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility",
-        Justification = "Test only enabled on windows platform")]
-    protected override Task<IDisposable> ConnectHostAsync(CompositeKernel remoteKernel, string pipeName)
-    {
-        var serverStream = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
         var kernelCommandAndEventPipeStreamReceiver = new KernelCommandAndEventPipeStreamReceiver(serverStream);
-        var kernelCommandAndEventPipeStreamSender = new KernelCommandAndEventPipeStreamSender(serverStream);
-        var host = new KernelHost(remoteKernel,
-            kernelCommandAndEventPipeStreamSender,
-            new MultiplexingKernelCommandAndEventReceiver(kernelCommandAndEventPipeStreamReceiver));
 
+        var sender = new KernelCommandAndEventPipeStreamSender(serverStream);
 
+        var receiver = new MultiplexingKernelCommandAndEventReceiver
+(kernelCommandAndEventPipeStreamReceiver);
+
+        var host = remoteCompositeKernel.UseHost(sender, receiver);
 
         Task.Run(() =>
         {
@@ -74,7 +73,10 @@ public class NamedPipeConnectionTests : KernelConnectionTestsBase<string>
             serverStream.WaitForConnection();
             var _ = host.ConnectAsync();
         });
+
         RegisterForDisposal(host);
+        RegisterForDisposal(serverStream);
+
         return Task.FromResult<IDisposable>(host);
     }
 }

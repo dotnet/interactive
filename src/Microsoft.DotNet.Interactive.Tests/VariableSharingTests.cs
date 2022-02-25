@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
@@ -14,14 +12,16 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
+using Pocket;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
-    public class VariableSharingTests
+    public class VariableSharingTests : IDisposable
     {
+        private readonly CompositeDisposable _disposables = new CompositeDisposable();
+
         [Theory]
         [InlineData(
             "#!fsharp",
@@ -234,7 +234,7 @@ x")]
                           .Be("csharpVariable = 123;");
         }
 
-        [Fact(Skip = "Requires kernel language")]
+        [Fact]
         public async Task CSharpKernel_can_share_variable_from_JavaScript_via_a_ProxyKernel()
         {
             var (compositeKernel, remoteKernel) = await CreateCompositeKernelWithJavaScriptProxyKernel();
@@ -245,27 +245,42 @@ x")]
                 return Task.CompletedTask;
             });
 
-            var submitCode = new SubmitCode(@"
+            var jsVariableName = @"jsVariable";
+
+            var submitCode = new SubmitCode($@"
 #!csharp
-#!share --from javascript jsVariable");
+#!share --from javascript {jsVariableName}");
             await compositeKernel.SendAsync(submitCode);
+
+            var csharpKernel = (CSharpKernel) compositeKernel.FindKernel("csharp");
+
+            csharpKernel.GetValueInfos()
+                        .Should()
+                        .ContainSingle(v => v.Name == jsVariableName);
+
+            csharpKernel.TryGetValue<int[]>(jsVariableName, out var jsVariable);
+
+
+
+
 
             // TODO (CSharpKernel_can_share_variable_fro_JavaScript_ProxyKernel) write test
             throw new NotImplementedException();
         }
 
-        private static async Task<(CompositeKernel, FakeRemoteKernel)> CreateCompositeKernelWithJavaScriptProxyKernel()
+        private async Task<(CompositeKernel, FakeRemoteKernel)> CreateCompositeKernelWithJavaScriptProxyKernel()
         {
             var compositeKernel = new CompositeKernel
             {
                 new CSharpKernel().UseValueSharing()
             };
             compositeKernel.DefaultKernelName = "csharp";
+
             var remoteKernel = new FakeRemoteKernel();
 
             var receiver = new MultiplexingKernelCommandAndEventReceiver(remoteKernel.Receiver);
 
-            var host = new KernelHost(compositeKernel, remoteKernel.Sender, receiver);
+            var host = compositeKernel.UseHost(remoteKernel.Sender, receiver);
 
             var _ = host.ConnectAsync();
 
@@ -278,8 +293,8 @@ x")]
 
             javascriptKernel.UseValueSharing(new JavaScriptKernelValueDeclarer());
 
-            compositeKernel.RegisterForDisposal(remoteKernel);
-            compositeKernel.RegisterForDisposal(host);
+            _disposables.Add(remoteKernel);
+            _disposables.Add(host);
 
             return (compositeKernel, remoteKernel);
         }
@@ -307,5 +322,7 @@ x")]
         {
             throw new NotImplementedException("test not written");
         }
+
+        public void Dispose() => _disposables.Dispose();
     }
 }

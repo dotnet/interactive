@@ -3,18 +3,25 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Pocket;
 
 namespace Microsoft.DotNet.Interactive.Tests.Utility;
 
 public static class ConsoleLock
 {
     private static readonly AsyncLock _lock = new();
+    private static readonly Logger _log = new(nameof(ConsoleLock));
 
-    public static async Task<IDisposable> AcquireAsync()
+    public static async Task<IDisposable> AcquireAsync([CallerMemberName] string caller = null)
     {
-        return await _lock.LockAsync();
+        using var _ = _log.OnEnterAndExit();
+
+        var @lock = await _lock.LockAsync();
+
+        return @lock;
     }
 }
 

@@ -13,27 +13,27 @@ namespace Microsoft.DotNet.Interactive.Connection
 {
     public class KernelCommandAndEventPipeStreamSender : IKernelCommandAndEventSender
     {
-        private readonly PipeStream _sender;
+        private readonly PipeStream _stream;
 
         public KernelCommandAndEventPipeStreamSender(PipeStream sender)
         {
-            _sender = sender ?? throw new ArgumentNullException(nameof(sender));
+            _stream = sender ?? throw new ArgumentNullException(nameof(sender));
         }
 
         public async Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            _sender.WriteMessage(KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)));
+            _stream.WriteMessage(KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)));
 
-            await _sender.FlushAsync(cancellationToken);
+            await _stream.FlushAsync(cancellationToken);
         }
 
         public async Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            _sender.WriteMessage(KernelEventEnvelope.Serialize(KernelEventEnvelope.Create(kernelEvent)));
+            _stream.WriteMessage(KernelEventEnvelope.Serialize(KernelEventEnvelope.Create(kernelEvent)));
 
-            await _sender.FlushAsync(cancellationToken);
+            await _stream.FlushAsync(cancellationToken);
         }
     }
 }

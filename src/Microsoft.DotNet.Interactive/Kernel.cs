@@ -213,9 +213,13 @@ namespace Microsoft.DotNet.Interactive
         protected bool IsDisposed => _disposables.IsDisposed;
 
         public IObservable<KernelEvent> KernelEvents => _kernelEvents;
-
+        
+        public abstract string LanguageName { get; }
+        
+        public virtual string LanguageVersion { get; }
+                
         public string Name { get; }
-
+        
         public IReadOnlyCollection<Command> Directives => SubmissionParser.Directives;
 
         public void AddDirective(Command command) => SubmissionParser.AddDirective(command);
@@ -518,10 +522,10 @@ namespace Microsoft.DotNet.Interactive
 
         public virtual Task HandleAsync(RequestKernelInfo command, KernelInvocationContext context)
         {
-            var kernelInfo = new KernelInfo(Name)
+            var kernelInfo = new KernelInfo(Name, LanguageName, LanguageVersion)
             {
                 SupportedKernelCommands = _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)).ToArray(),
-                SupportedDirectives = Directives.Select(d => new DirectiveInfo(d.Name)).ToArray()
+                SupportedDirectives = Directives.Select(d => new DirectiveInfo(d.Name)).ToArray(),
             };
 
             context.Publish(new KernelInfoProduced(kernelInfo, command));

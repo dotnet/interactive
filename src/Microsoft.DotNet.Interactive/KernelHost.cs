@@ -22,27 +22,27 @@ namespace Microsoft.DotNet.Interactive
         private Task<Task> _runningLoop;
         private IDisposable _kernelEventSubscription;
         private readonly Dictionary<Kernel, KernelInfo> _kernelInfos = new();
-        private readonly Dictionary<Uri,Kernel> _destinationUriToKernel = new ();
-        private readonly KernelConnectorBase _defaultConnector;
+        private readonly Dictionary<Uri, Kernel> _destinationUriToKernel = new();
+        private readonly IKernelConnector _defaultConnector;
         private readonly Dictionary<Uri, Kernel> _originUriToKernel = new();
 
-        public KernelHost(CompositeKernel kernel, IKernelCommandAndEventSender defaultSender, MultiplexingKernelCommandAndEventReceiver defaultReceiver, Uri hostUri)
+        internal KernelHost(
+            CompositeKernel kernel,
+            IKernelCommandAndEventSender defaultSender,
+            MultiplexingKernelCommandAndEventReceiver defaultReceiver,
+            Uri hostUri = null)
         {
+            Uri = hostUri ?? new Uri("kernel://dotnet", UriKind.Absolute);
             _kernel = kernel;
             _defaultSender = defaultSender;
             _defaultReceiver = defaultReceiver;
             _defaultConnector = new DefaultKernelConnector(_defaultSender, _defaultReceiver);
-            Uri = hostUri;
             _kernel.SetHost(this);
-        }
-
-        public KernelHost(CompositeKernel kernel,IKernelCommandAndEventSender defaultSender, MultiplexingKernelCommandAndEventReceiver defaultReceiver) : this(kernel, defaultSender, defaultReceiver, new Uri("kernel://dotnet", UriKind.Absolute))
-        {
         }
 
         public static KernelHost InProcess(CompositeKernel kernel)
         {
-            // QUESTION: (InProcess) does this need to be here? the implementation looks incomplete.
+            // FIX: (InProcess) does this need to be here? the implementation looks incomplete.
             var receiver = new MultiplexingKernelCommandAndEventReceiver(new InProcessCommandAndEventReceiver());
 
             var sender = new InProcessCommandAndEventSender();
@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.Interactive
             return new KernelHost(kernel, sender, receiver);
         }
 
-        private class DefaultKernelConnector : KernelConnectorBase
+        private class DefaultKernelConnector : IKernelConnector
         {
             private readonly IKernelCommandAndEventSender _defaultSender;
             private readonly MultiplexingKernelCommandAndEventReceiver _defaultReceiver;
@@ -61,16 +61,16 @@ namespace Microsoft.DotNet.Interactive
                 _defaultReceiver = defaultReceiver;
             }
 
-            public override Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
+            public Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
             {
-                var proxy = new ProxyKernel(kernelInfo.LocalName, _defaultReceiver.CreateChildReceiver(), _defaultSender);
-                var _ = proxy.StartAsync();
-                return Task.FromResult((Kernel)proxy);
-            }
-
-            public void Dispose()
-            {
-                _defaultReceiver.Dispose();
+                var proxy = new ProxyKernel(
+                    kernelInfo.LocalName, 
+                    _defaultReceiver.CreateChildReceiver(), 
+                    _defaultSender);
+                
+                proxy.Start();
+                
+                return Task.FromResult<Kernel>(proxy);
             }
         }
 
@@ -118,8 +118,12 @@ namespace Microsoft.DotNet.Interactive
         public void Dispose()
         {
             _kernelEventSubscription?.Dispose();
-            _cancellationTokenSource.Cancel();
-            _cancellationTokenSource.Dispose();
+
+            if (_cancellationTokenSource.Token.CanBeCanceled)
+            {
+                _cancellationTokenSource.Cancel();
+                _cancellationTokenSource.Dispose();
+            }
         }
 
         public bool TryGetKernelInfo(Kernel kernel, out KernelInfo kernelInfo)
@@ -246,9 +250,9 @@ namespace Microsoft.DotNet.Interactive
             return childKernel;
         }
 
-        public async Task<ProxyKernel> CreateProxyKernelOnConnectorAsync(KernelInfo kernelInfo, KernelConnectorBase kernelConnectorBase )
+        public async Task<ProxyKernel> CreateProxyKernelOnConnectorAsync(KernelInfo kernelInfo, IKernelConnector kernelConnector )
         {
-            var childKernel = await kernelConnectorBase.ConnectKernelAsync(kernelInfo) as ProxyKernel;
+            var childKernel = await kernelConnector.ConnectKernelAsync(kernelInfo) as ProxyKernel;
             _kernel.Add(childKernel, kernelInfo.Aliases);
             RegisterDestinationUriForProxy(kernelInfo.LocalName, kernelInfo.DestinationUri);
             return childKernel;

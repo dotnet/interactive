@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public class MultiplexingKernelCommandAndEventReceiver : IKernelCommandAndEventReceiver, IDisposable
+    public sealed class MultiplexingKernelCommandAndEventReceiver : IKernelCommandAndEventReceiver, IDisposable
     {
         private readonly IKernelCommandAndEventReceiver _source;
         private readonly CompositeDisposable _disposables = new();

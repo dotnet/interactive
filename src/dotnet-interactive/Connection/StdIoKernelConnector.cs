@@ -10,33 +10,43 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Utility;
 
-namespace Microsoft.DotNet.Interactive.Connection;
+namespace Microsoft.DotNet.Interactive.App.Connection;
 
-public class StdIoKernelConnector : KernelConnectorBase, IDisposable
+public class StdIoKernelConnector : IKernelConnector, IDisposable
 {
     private MultiplexingKernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventTextStreamSender? _sender;
     private Process? _process;
 
+    public StdIoKernelConnector(string[] command, DirectoryInfo? workingDirectory = null)
+    {
+        Command = command;
+        WorkingDirectory = workingDirectory ?? new DirectoryInfo(Environment.CurrentDirectory);
+    }
+
     public string[] Command { get; }
 
     public DirectoryInfo WorkingDirectory { get; }
 
-    public override async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
+    public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
     {
         if (_receiver is not null)
         {
-            var kernel = new ProxyKernel(kernelInfo.LocalName, _receiver.CreateChildReceiver(), _sender);
-            var _ = kernel.StartAsync();
+            var kernel = new ProxyKernel(
+                kernelInfo.LocalName, 
+                _receiver.CreateChildReceiver(), 
+                _sender);
+            
+            kernel.Start();
+            
             return kernel;
         }
         else
         {
-            // QUESTION: (ConnectKernelAsync) tests?
             var command = Command[0];
             var arguments = string.Join(" ", Command.Skip(1));
             
@@ -65,7 +75,8 @@ public class StdIoKernelConnector : KernelConnectorBase, IDisposable
             var kernel = new ProxyKernel(kernelInfo.LocalName, _receiver, _sender);
         
             var r = _receiver.CreateChildReceiver();
-            var _ = kernel.StartAsync();
+            
+            kernel.Start();
 
             var checkReady = Task.Run(async () =>
             {
@@ -101,12 +112,6 @@ public class StdIoKernelConnector : KernelConnectorBase, IDisposable
         }
 
 
-    }
-
-    public StdIoKernelConnector(string[] command, DirectoryInfo? workingDirectory = null)
-    {
-        Command = command;
-        WorkingDirectory = workingDirectory ?? new DirectoryInfo(Environment.CurrentDirectory);
     }
 
     public void Dispose()

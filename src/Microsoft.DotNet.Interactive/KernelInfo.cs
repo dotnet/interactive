@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive
     {
         private readonly IReadOnlyCollection<string> _aliases = Array.Empty<string>();
 
-        public KernelInfo(string localName, string? language = null)
+        public KernelInfo(string localName, string? languageName = null, string? languageVersion = null)
         {
             if (string.IsNullOrWhiteSpace(localName))
             {
@@ -25,7 +25,8 @@ namespace Microsoft.DotNet.Interactive
             }
 
             LocalName = localName;
-            Language = language;
+            LanguageName = languageName;
+            LanguageVersion = languageVersion;
         }
 
         public IReadOnlyCollection<string> Aliases
@@ -34,7 +35,9 @@ namespace Microsoft.DotNet.Interactive
             init => _aliases = value.Except(new[] { LocalName }).ToArray();
         }
 
-        public string? Language { get; } 
+        public string? LanguageName { get; } 
+
+        public string? LanguageVersion { get; } 
 
         public string LocalName { get; }
 

@@ -10,14 +10,14 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Connection;
 
-public class NamedPipeKernelConnector : KernelConnectorBase, IDisposable
+public class NamedPipeKernelConnector : IKernelConnector, IDisposable
 {
     private MultiplexingKernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventPipeStreamSender? _sender;
     private NamedPipeClientStream? _clientStream;
 
     public string PipeName { get; }
-    public override async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
+    public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
     {
         ProxyKernel? proxyKernel;
 
@@ -34,17 +34,18 @@ public class NamedPipeKernelConnector : KernelConnectorBase, IDisposable
                 PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
 
             await _clientStream.ConnectAsync();
+
             _clientStream.ReadMode = PipeTransmissionMode.Message;
 
             _receiver = new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventPipeStreamReceiver(_clientStream));
             _sender = new KernelCommandAndEventPipeStreamSender(_clientStream);
-
         
             proxyKernel = new ProxyKernel(kernelInfo.LocalName, _receiver, _sender);
         }
 
-        var _ = proxyKernel.StartAsync();
-        return proxyKernel; ;
+        proxyKernel.Start();
+
+        return proxyKernel;
     }
         
     public NamedPipeKernelConnector(string pipeName)

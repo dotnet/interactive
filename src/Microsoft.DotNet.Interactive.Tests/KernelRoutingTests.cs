@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO.Pipes;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -158,16 +159,24 @@ Console.WriteLine(1);";
             handledCommands.Should().ContainSingle<SubmitCode>();
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
+        [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
         KernelHost StartServer(CompositeKernel remoteKernel, string pipeName)
         {
-           
-            var serverStream = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+            var serverStream = new NamedPipeServerStream(
+                pipeName, 
+                PipeDirection.InOut, 
+                1, 
+                PipeTransmissionMode.Message, 
+                PipeOptions.Asynchronous);
+            
             var kernelCommandAndEventPipeStreamReceiver = new KernelCommandAndEventPipeStreamReceiver(serverStream);
+            
             var kernelCommandAndEventPipeStreamSender = new KernelCommandAndEventPipeStreamSender(serverStream);
-            var host = new KernelHost(remoteKernel,
+            
+            var host = remoteKernel.UseHost(
                 kernelCommandAndEventPipeStreamSender,
                 new MultiplexingKernelCommandAndEventReceiver(kernelCommandAndEventPipeStreamReceiver));
+            
             remoteKernel.RegisterForDisposal(serverStream);
 
             Task.Run(() =>

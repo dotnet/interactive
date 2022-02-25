@@ -4,8 +4,9 @@
 using System.CommandLine;
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Connection;
 
-namespace Microsoft.DotNet.Interactive.Connection
+namespace Microsoft.DotNet.Interactive.App.Connection
 {
     public class ConnectStdIoCommand : ConnectKernelCommand<StdIoKernelConnector>
     {

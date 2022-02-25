@@ -9,6 +9,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
+using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -33,6 +34,20 @@ public class RequestKernelInfoTests
 
             events.Should().ContainSingle<KernelInfoProduced>(e => e.KernelInfo.LocalName == "csharp");
             events.Should().ContainSingle<KernelInfoProduced>(e => e.KernelInfo.LocalName == "fsharp");
+        }
+
+        [Fact]
+        public async Task It_returns_the_list_of_proxied_kernel_commands()
+        {
+            using var kernel = new FakeKernel();
+            kernel.RegisterCommandHandler<RequestHoverText>((_, _) => Task.CompletedTask);
+
+            using var compositeKernel = new CompositeKernel();
+            
+            // compositeKernel.UseHost();
+            
+
+            throw new NotImplementedException();
         }
     }
 
@@ -59,7 +74,61 @@ public class RequestKernelInfoTests
         }
 
         [Fact]
-        public async Task It_returns_the_list_of_directives_commands()
+        public async Task It_returns_language_info_for_csharp_kernel()
+        {
+            using var kernel = new CSharpKernel();
+
+            var result = await kernel.SendAsync(new RequestKernelInfo());
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should()
+                  .ContainSingle<KernelInfoProduced>()
+                  .Which
+                  .KernelInfo
+                  .LanguageName
+                  .Should()
+                  .Be("C#");
+        }
+
+        [Fact]
+        public async Task It_returns_language_info_for_fsharp_kernel()
+        {
+            using var kernel = new FSharpKernel();
+
+            var result = await kernel.SendAsync(new RequestKernelInfo());
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should()
+                  .ContainSingle<KernelInfoProduced>()
+                  .Which
+                  .KernelInfo
+                  .LanguageName
+                  .Should()
+                  .Be("F#");
+        }
+
+        [Fact]
+        public async Task It_returns_language_info_for_PowerShell_kernel()
+        {
+            using var kernel = new PowerShellKernel();
+
+            var result = await kernel.SendAsync(new RequestKernelInfo());
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should()
+                  .ContainSingle<KernelInfoProduced>()
+                  .Which
+                  .KernelInfo
+                  .LanguageName
+                  .Should()
+                  .Be("PowerShell");
+        }
+
+        [Fact]
+        public async Task It_returns_the_list_of_directive_commands()
         {
             using var kernel = new CSharpKernel()
                                .UseNugetDirective()
@@ -80,7 +149,7 @@ public class RequestKernelInfoTests
         }
 
         [Fact]
-        public async Task Kernel_info_returns_the_list_of_dynamic_kernel_commands()
+        public async Task It_returns_the_list_of_dynamic_kernel_commands()
         {
             using var kernel = new FakeKernel();
             kernel.RegisterCommandHandler<RequestHoverText>((_, _) => Task.CompletedTask);

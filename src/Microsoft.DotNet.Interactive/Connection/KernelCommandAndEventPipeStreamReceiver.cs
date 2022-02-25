@@ -11,16 +11,16 @@ namespace Microsoft.DotNet.Interactive.Connection
 {
     public class KernelCommandAndEventPipeStreamReceiver : InteractiveProtocolKernelCommandAndEventReceiverBase
     {
-        private readonly PipeStream _reader;
+        private readonly PipeStream _stream;
 
-        public KernelCommandAndEventPipeStreamReceiver(PipeStream reader)
+        public KernelCommandAndEventPipeStreamReceiver(PipeStream stream)
         {
-            _reader = reader ?? throw new ArgumentNullException(nameof(reader));
+            _stream = stream ?? throw new ArgumentNullException(nameof(stream));
         }
 
         protected override Task<string> ReadMessageAsync(CancellationToken cancellationToken)
         {
-            return _reader.ReadMessageAsync(cancellationToken);
+            return _stream.ReadMessageAsync(cancellationToken);
         }
     }
 }

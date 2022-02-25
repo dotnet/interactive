@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Connection;
 /// <typeparam name="TConnector">The type bound to which custom command line options passed with the connect command will be bound.</typeparam>
 public abstract class ConnectKernelCommand<TConnector> :
     Command
-    where TConnector : KernelConnectorBase
+    where TConnector : IKernelConnector
 {
     protected ConnectKernelCommand(
         string name, 
@@ -34,7 +34,8 @@ public abstract class ConnectKernelCommand<TConnector> :
     /// <param name="connection">The connection to establish.</param>
     /// <param name="context">The <see cref="KernelInvocationContext"/> for the current command.</param>
     /// <returns>A new <see cref="Kernel"/> instance to be added to the <see cref="CompositeKernel"/>.</returns>
-    public abstract Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo,
+    public abstract Task<Kernel> ConnectKernelAsync(
+        KernelInfo kernelInfo,
         TConnector connection,
         KernelInvocationContext context);
 }

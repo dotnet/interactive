@@ -28,11 +28,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
     public class KernelHostTests : IDisposable
     {
         private readonly CompositeDisposable _disposables = new();
-        private readonly RecordingKernelCommandAndEventSender _serverOutputChannel;
-        private readonly RecordingKernelCommandAndEventReceiver _serverInputChannel;
+        private readonly RecordingKernelCommandAndEventSender _commandAndEventReceiver;
+        private readonly RecordingKernelCommandAndEventReceiver _commandAndEventSender;
         private readonly CompositeKernel _kernel;
 
-        private IReadOnlyList<IKernelEventEnvelope> KernelEvents => _serverOutputChannel.KernelEventEventEnvelopes.ToList();
+        private IReadOnlyList<IKernelEventEnvelope> KernelEvents => _commandAndEventReceiver.KernelEventEventEnvelopes.ToList();
 
         public KernelHostTests(ITestOutputHelper output)
         {
@@ -44,12 +44,16 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     .UseDefaultMagicCommands()
             };
 
-            _serverOutputChannel = new RecordingKernelCommandAndEventSender();
-            _serverInputChannel = new RecordingKernelCommandAndEventReceiver();
-            var host = new KernelHost(_kernel, _serverOutputChannel,
-                new MultiplexingKernelCommandAndEventReceiver(_serverInputChannel));
-          
-            _kernel.RegisterForDisposal(_serverInputChannel);
+            _commandAndEventReceiver = new RecordingKernelCommandAndEventSender();
+            _commandAndEventSender = new RecordingKernelCommandAndEventReceiver();
+
+            var receiver = new MultiplexingKernelCommandAndEventReceiver(_commandAndEventSender);
+
+            var host = _kernel.UseHost(
+                _commandAndEventReceiver,
+                receiver);
+
+            _kernel.RegisterForDisposal(_commandAndEventSender);
             var _ = host.ConnectAsync();
 
             _disposables.Add(host);
@@ -64,7 +68,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             var command = new SubmitCode("#!time\ndisplay(1543); display(4567);");
             command.SetToken("abc");
 
-            _serverInputChannel.Send(command);
+            _commandAndEventSender.Send(command);
 
             await WaitForCompletion();
 
@@ -83,7 +87,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         [Fact]
         public async Task It_does_not_publish_ReturnValueProduced_events_if_the_value_is_DisplayedValue()
         {
-            _serverInputChannel.Send(new SubmitCode("display(1543)"));
+            _commandAndEventSender.Send(new SubmitCode("display(1543)"));
 
             await WaitForCompletion();
 
@@ -97,9 +101,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         {
             var invalidJson = "{ hello";
 
-            _serverInputChannel.Send(invalidJson);
+            _commandAndEventSender.Send(invalidJson);
 
-            await WaitForEvent<DiagnosticLogEntryProduced>(_serverOutputChannel.EventStream);
+            await WaitForEvent<DiagnosticLogEntryProduced>(_commandAndEventReceiver.EventStream);
 
             KernelEvents
                 .Should()
@@ -117,7 +121,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             var command = new SubmitCode(@"var a = 12");
             command.SetToken("abc");
 
-            _serverInputChannel.Send(command);
+            _commandAndEventSender.Send(command);
 
             await WaitForCompletion();
 
@@ -132,7 +136,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             var command = new SubmitCode("DOES NOT COMPILE");
             command.SetToken("abc");
 
-            _serverInputChannel.Send(command);
+            _commandAndEventSender.Send(command);
 
             await WaitForCompletion();
 
@@ -150,14 +154,14 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         [Fact]
         public async Task It_can_eval_function_instances()
         {
-            _serverInputChannel.Send(new SubmitCode(@"Func<int> func = () => 1;"));
+            _commandAndEventSender.Send(new SubmitCode(@"Func<int> func = () => 1;"));
 
             await WaitForCompletion();
 
-            _serverInputChannel.Send(new SubmitCode(@"func()"));
+            _commandAndEventSender.Send(new SubmitCode(@"func()"));
             var kernelCommand = new SubmitCode(@"func");
             kernelCommand.SetToken("finalCommand");
-            _serverInputChannel.Send(kernelCommand);
+            _commandAndEventSender.Send(kernelCommand);
 
             await WaitForCompletion("finalCommand");
 
@@ -215,7 +219,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             var command = new SubmitCode(@"#r ""nuget:Microsoft.Spark, 0.4.0""");
             command.SetToken("abc");
 
-            _serverInputChannel.Send(command);
+            _commandAndEventSender.Send(command);
 
             await WaitForCompletion();
 
@@ -235,7 +239,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
             var command = new SubmitCode($"Console.Write(\"{guid}\");");
 
-            _serverInputChannel.Send(command);
+            _commandAndEventSender.Send(command);
 
             await WaitForCompletion();
 
