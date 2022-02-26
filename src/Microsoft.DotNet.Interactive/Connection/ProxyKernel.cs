@@ -23,8 +23,6 @@ namespace Microsoft.DotNet.Interactive.Connection
 
         private int _started = 0;
         private IKernelValueDeclarer _valueDeclarer;
-        private string _languageName;
-        private string _languageVersion;
 
         public ProxyKernel(string name, IKernelCommandAndEventReceiver receiver, IKernelCommandAndEventSender sender) : base(name)
         {
@@ -41,9 +39,9 @@ namespace Microsoft.DotNet.Interactive.Connection
             });
         }
 
-        public override string LanguageName => _languageName;
+        public override string LanguageName => null;
 
-        public override string LanguageVersion => _languageVersion;
+        public override string LanguageVersion => null;
 
         public void Start()
         {
