@@ -37,15 +37,16 @@ public class RequestKernelInfoTests
         }
 
         [Fact]
-        public async Task It_returns_the_list_of_proxied_kernel_commands()
+        public void It_returns_the_list_of_proxied_kernel_commands()
         {
             using var kernel = new FakeKernel();
             kernel.RegisterCommandHandler<RequestHoverText>((_, _) => Task.CompletedTask);
 
             using var compositeKernel = new CompositeKernel();
             
-            // compositeKernel.UseHost();
-            
+
+
+
 
             throw new NotImplementedException();
         }
