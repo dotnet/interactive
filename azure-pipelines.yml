@@ -299,6 +299,7 @@ stages:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       enableMicrobuild: true
+      enableSbom: false
       jobs:
       - job: Dockerfile_official_image
         pool:
@@ -320,6 +321,7 @@ stages:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       enableMicrobuild: true
+      enableSbom: false
       jobs:
       - job: Dockerfile_Main
         pool:
@@ -341,6 +343,7 @@ stages:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       enableMicrobuild: true
+      enableSbom: false
       jobs:
       - job: Dockerfile_Binder_Dependency
         pool:
