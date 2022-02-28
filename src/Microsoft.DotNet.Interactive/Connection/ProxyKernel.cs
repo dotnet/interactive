@@ -28,15 +28,6 @@ namespace Microsoft.DotNet.Interactive.Connection
         {
             _receiver = receiver ?? throw new ArgumentNullException(nameof(receiver));
             _sender = sender ?? throw new ArgumentNullException(nameof(sender));
-
-            RegisterForDisposal(() =>
-            {
-                if (_cancellationTokenSource.Token.CanBeCanceled)
-                {
-                    _cancellationTokenSource.Cancel();
-                    _cancellationTokenSource.Dispose();
-                }
-            });
         }
 
         public override string LanguageName => null;

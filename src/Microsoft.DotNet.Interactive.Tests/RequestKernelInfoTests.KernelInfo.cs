@@ -43,8 +43,6 @@ public class RequestKernelInfoTests
             kernel.RegisterCommandHandler<RequestHoverText>((_, _) => Task.CompletedTask);
 
             using var compositeKernel = new CompositeKernel();
-            
-
 
 
 
