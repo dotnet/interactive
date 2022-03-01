@@ -33,39 +33,36 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public void the_host_provides_uri_for_kernels()
         {
-            using var composite = new CompositeKernel();
-            using var host = KernelHost.InProcess(composite);
+            using var composite = new CompositeKernel().UseInProcessHost();
 
             var child = new FakeKernel("localName");
             composite.Add(child);
 
-            host.TryGetKernelInfo(child, out var kernelInfo);
+            composite.Host.TryGetKernelInfo(child, out var kernelInfo);
             kernelInfo.OriginUri.Should().NotBeNull();
-            host.Uri.IsBaseOf(kernelInfo.OriginUri).Should().BeTrue();
+            composite.Host.Uri.IsBaseOf(kernelInfo.OriginUri).Should().BeTrue();
         }
 
         [Fact]
         public void when_attaching_host_to_composite_kernels_subkernels_are_provided_with_uri()
         {
-            using var composite = new CompositeKernel();
+            using var composite = new CompositeKernel().UseInProcessHost();
             var child = new FakeKernel("localName");
             composite.Add(child);
 
-            using var host = KernelHost.InProcess(composite);
-
-            host.TryGetKernelInfo(child, out var kernelInfo);
+            composite.Host.TryGetKernelInfo(child, out var kernelInfo);
             kernelInfo.OriginUri.Should().NotBeNull();
-            host.Uri.IsBaseOf(kernelInfo.OriginUri).Should().Be(true);
+            composite.Host.Uri.IsBaseOf(kernelInfo.OriginUri).Should().Be(true);
         }
 
         [Fact]
         public void detached_kernels_do_not_have_uri()
         {
-            using var composite = new CompositeKernel();
-            using var host = KernelHost.InProcess(composite);
+            using var composite = new CompositeKernel().UseInProcessHost();
+
             var child = new FakeKernel("localName");
 
-            var found = host.TryGetKernelInfo(child, out _);
+            var found = composite.Host.TryGetKernelInfo(child, out _);
             found.Should().Be(false);
         }
 

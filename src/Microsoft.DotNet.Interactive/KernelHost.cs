@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,16 +37,6 @@ namespace Microsoft.DotNet.Interactive
             _defaultReceiver = defaultReceiver;
             _defaultConnector = new DefaultKernelConnector(_defaultSender, _defaultReceiver);
             _kernel.SetHost(this);
-        }
-
-        public static KernelHost InProcess(CompositeKernel kernel)
-        {
-            // FIX: (InProcess) does this need to be here? the implementation looks incomplete.
-            var receiver = new MultiplexingKernelCommandAndEventReceiver(new InProcessCommandAndEventReceiver());
-
-            var sender = new InProcessCommandAndEventSender();
-          
-            return new KernelHost(kernel, sender, receiver);
         }
 
         private class DefaultKernelConnector : IKernelConnector
@@ -140,68 +129,6 @@ namespace Microsoft.DotNet.Interactive
 
         public Uri Uri { get;  }
 
-        private class InProcessCommandAndEventSender : IKernelCommandAndEventSender
-        {
-            // QUESTION: (InProcessCommandAndEventSender) does this need to be tested for compliance with other implementations?
-            private Func<CommandOrEvent, Task> _onSendAsync;
-
-            public Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
-            {
-                _onSendAsync?.Invoke(new CommandOrEvent(KernelCommandEnvelope.Deserialize(KernelCommandEnvelope.Serialize(kernelCommand)).Command));
-                return Task.CompletedTask;
-            }
-
-            public Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
-            {
-                _onSendAsync?.Invoke(new CommandOrEvent(KernelEventEnvelope.Deserialize(KernelEventEnvelope.Serialize(kernelEvent)).Event));
-                return Task.CompletedTask;
-            }
-
-            public void OnSend(Action<CommandOrEvent> onSend)
-            {
-                _onSendAsync = commandOrEvent =>
-                {
-
-                    onSend(commandOrEvent);
-                    return Task.CompletedTask;
-                };
-            }
-
-            public void OnSend(Func<CommandOrEvent, Task> onSendAsync)
-            {
-                _onSendAsync = onSendAsync;
-            }
-        }
-
-        private class InProcessCommandAndEventReceiver : KernelCommandAndEventReceiverBase
-        {
-            // QUESTION: (InProcessCommandAndEventReceiver) does this need to be tested for compliance with other implementations?
-            private readonly BlockingCollection<CommandOrEvent> _commandsOrEvents;
-
-            public InProcessCommandAndEventReceiver()
-            {
-                _commandsOrEvents = new BlockingCollection<CommandOrEvent>();
-            }
-
-            public void Write(CommandOrEvent commandOrEvent)
-            {
-                if (commandOrEvent.Command is { })
-                {
-                    _commandsOrEvents.Add(new CommandOrEvent(KernelCommandEnvelope
-                        .Deserialize(KernelCommandEnvelope.Serialize(commandOrEvent.Command)).Command));
-                }
-                else if (commandOrEvent.Event is { })
-                {
-                    _commandsOrEvents.Add(new CommandOrEvent(KernelEventEnvelope
-                        .Deserialize(KernelEventEnvelope.Serialize(commandOrEvent.Event)).Event));
-                }
-            }
-
-            protected override Task<CommandOrEvent> ReadCommandOrEventAsync(CancellationToken cancellationToken)
-            {
-                return Task.FromResult(_commandsOrEvents.Take(cancellationToken));
-            }
-        }
 
         internal void RegisterDestinationUriForProxy(ProxyKernel proxyKernel, Uri destinationUri)
         {
@@ -269,3 +196,4 @@ namespace Microsoft.DotNet.Interactive
         }
     }
 }
+

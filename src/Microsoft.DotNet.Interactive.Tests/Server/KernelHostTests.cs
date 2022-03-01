@@ -290,11 +290,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         class RecordingKernelCommandAndEventReceiver : IKernelCommandAndEventReceiver,IDisposable
         {
             private readonly Subject<string> _queue = new();
-            private readonly KernelCommandAndEventObservableReceiver _internalReceiver;
+            private readonly SerializedCommandAndEventReceiver _internalReceiver;
 
             public RecordingKernelCommandAndEventReceiver()
             {
-                _internalReceiver = new KernelCommandAndEventObservableReceiver(_queue);
+                _internalReceiver = new SerializedCommandAndEventReceiver(_queue);
 
             }
 

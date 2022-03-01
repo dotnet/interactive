@@ -14,23 +14,25 @@ namespace Microsoft.DotNet.Interactive.Http
     public class KernelCommandAndEventSignalRHubConnectionReceiver : IKernelCommandAndEventReceiver, IDisposable
     {
         private readonly CompositeDisposable _disposables;
-        private readonly Subject<string> _channel = new();
-        private readonly KernelCommandAndEventObservableReceiver _internalReceiver;
+        private readonly Subject<string> _serializedCommandAndEventSubject = new();
+        private readonly SerializedCommandAndEventReceiver _internalReceiver;
 
-        public KernelCommandAndEventSignalRHubConnectionReceiver(HubConnection receiver)
+        public KernelCommandAndEventSignalRHubConnectionReceiver(HubConnection hubConnection)
         {
-            if (receiver == null) throw new ArgumentNullException(nameof(receiver));
+            if (hubConnection == null)
             {
-                _internalReceiver = new KernelCommandAndEventObservableReceiver(_channel);
+                throw new ArgumentNullException(nameof(hubConnection));
             }
+
+            _internalReceiver = new SerializedCommandAndEventReceiver(_serializedCommandAndEventSubject);
 
             _disposables = new CompositeDisposable
             {   
-                receiver.On<string>("kernelCommandFromRemote", e => _channel.OnNext(e)),
-                receiver.On<string>("kernelEventFromRemote", e => _channel.OnNext(e)),
+                hubConnection.On<string>("kernelCommandFromRemote", e => _serializedCommandAndEventSubject.OnNext(e)),
+                hubConnection.On<string>("kernelEventFromRemote", e => _serializedCommandAndEventSubject.OnNext(e)),
                 _internalReceiver,
                 //fix: remove this one as this is for backward compatibility
-                receiver.On<string>("kernelEvent", e => _channel.OnNext(e)),
+                hubConnection.On<string>("kernelEvent", e => _serializedCommandAndEventSubject.OnNext(e)),
             };
         }
         public IAsyncEnumerable<CommandOrEvent> CommandsAndEventsAsync(CancellationToken cancellationToken)
@@ -38,9 +40,6 @@ namespace Microsoft.DotNet.Interactive.Http
             return _internalReceiver.CommandsAndEventsAsync(cancellationToken);
         }
 
-        public void Dispose()
-        {
-            _disposables.Dispose();
-        }
+        public void Dispose() => _disposables.Dispose();
     }
 }

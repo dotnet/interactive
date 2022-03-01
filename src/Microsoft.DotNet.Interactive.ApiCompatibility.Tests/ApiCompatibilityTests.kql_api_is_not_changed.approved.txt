@@ -11,7 +11,7 @@ Microsoft.DotNet.Interactive.Kql
     public System.String Cluster { get; set;}
     public System.String Database { get; set;}
     public System.String Token { get; set;}
-  public class KqlKernelConnector : Microsoft.DotNet.Interactive.Connection.KernelConnectorBase
+  public class KqlKernelConnector, Microsoft.DotNet.Interactive.Connection.IKernelConnector
     .ctor(System.String cluster, System.String database)
     public System.String Cluster { get;}
     public System.String Database { get;}

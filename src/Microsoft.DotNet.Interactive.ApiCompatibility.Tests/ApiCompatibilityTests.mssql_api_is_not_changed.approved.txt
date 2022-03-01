@@ -106,7 +106,7 @@ Microsoft.DotNet.Interactive.SqlServer
     .ctor()
     public ResultMessage Message { get; set;}
     public System.String OwnerUri { get; set;}
-  public class MsSqlKernelConnector : Microsoft.DotNet.Interactive.Connection.KernelConnectorBase
+  public class MsSqlKernelConnector, Microsoft.DotNet.Interactive.Connection.IKernelConnector
     .ctor(System.Boolean createDbContext, System.String connectionString)
     public System.String ConnectionString { get;}
     public System.Boolean CreateDbContext { get;}

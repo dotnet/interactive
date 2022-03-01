@@ -2,10 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
@@ -37,14 +39,24 @@ public class RequestKernelInfoTests
         }
 
         [Fact]
-        public void It_returns_the_list_of_proxied_kernel_commands()
+        public async Task It_returns_the_list_of_proxied_kernel_commands()
         {
-            using var kernel = new FakeKernel();
-            kernel.RegisterCommandHandler<RequestHoverText>((_, _) => Task.CompletedTask);
-
             using var compositeKernel = new CompositeKernel();
 
+            compositeKernel.UseInProcessHost();
 
+            using var proxiedCsharpKernel = new CSharpKernel();
+
+            var kernelInfo = await proxiedCsharpKernel.GetKernelInfoAsync();
+            kernelInfo.DestinationUri = new Uri("kernel://local/csharp");
+
+            await compositeKernel
+                  .Host
+                  .CreateProxyKernelOnDefaultConnectorAsync(kernelInfo);
+
+            var result = await compositeKernel.SendAsync(new RequestKernelInfo());
+
+            var events = result.KernelEvents.ToSubscribedList();
 
             throw new NotImplementedException();
         }

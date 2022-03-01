@@ -9,31 +9,30 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Server;
 
-namespace Microsoft.DotNet.Interactive.Connection
+namespace Microsoft.DotNet.Interactive.Connection;
+
+public class KernelCommandAndEventPipeStreamSender : IKernelCommandAndEventSender
 {
-    public class KernelCommandAndEventPipeStreamSender : IKernelCommandAndEventSender
+    private readonly PipeStream _pipeStream;
+
+    public KernelCommandAndEventPipeStreamSender(PipeStream pipeStream)
     {
-        private readonly PipeStream _stream;
+        _pipeStream = pipeStream ?? throw new ArgumentNullException(nameof(pipeStream));
+    }
 
-        public KernelCommandAndEventPipeStreamSender(PipeStream sender)
-        {
-            _stream = sender ?? throw new ArgumentNullException(nameof(sender));
-        }
+    public async Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        _pipeStream.WriteMessage(KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)));
 
-        public async Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            _stream.WriteMessage(KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)));
+        await _pipeStream.FlushAsync(cancellationToken);
+    }
 
-            await _stream.FlushAsync(cancellationToken);
-        }
+    public async Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        _pipeStream.WriteMessage(KernelEventEnvelope.Serialize(KernelEventEnvelope.Create(kernelEvent)));
 
-        public async Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            _stream.WriteMessage(KernelEventEnvelope.Serialize(KernelEventEnvelope.Create(kernelEvent)));
-
-            await _stream.FlushAsync(cancellationToken);
-        }
+        await _pipeStream.FlushAsync(cancellationToken);
     }
 }

@@ -31,7 +31,8 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
                 ".",
                 PipeName,
                 PipeDirection.InOut,
-                PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
+                PipeOptions.Asynchronous, 
+                TokenImpersonationLevel.Impersonation);
 
             await _clientStream.ConnectAsync();
 
