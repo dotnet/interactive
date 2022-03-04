@@ -1,1 +1,0 @@
-{"token":"the-token","id":"command-id","commandType":"GetInput","command":{"prompt":"provide answer","isPassword":true,"targetKernelName":"vscode"},"originUri":"","destinationUri":""}

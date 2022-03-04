@@ -5,4 +5,7 @@ namespace Microsoft.DotNet.Interactive.Commands;
 
 public class RequestKernelInfo : KernelCommand
 {
+    public RequestKernelInfo(string targetKernelName = null) : base(targetKernelName)
+    {
+    }
 }

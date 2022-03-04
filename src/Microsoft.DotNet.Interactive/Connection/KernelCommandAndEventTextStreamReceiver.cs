@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public class KernelCommandAndEventTextReceiver : InteractiveProtocolKernelCommandAndEventReceiverBase
+    public class KernelCommandAndEventTextReaderReceiver : KernelCommandAndEventDeserializingReceiverBase
     {
         private readonly TextReader _reader;
 
-        public KernelCommandAndEventTextReceiver(TextReader reader)
+        public KernelCommandAndEventTextReaderReceiver(TextReader reader)
         {
             _reader = reader ?? throw new ArgumentNullException(nameof(reader));
         }

@@ -9,15 +9,15 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public class SerializedCommandAndEventReceiver :
-        InteractiveProtocolKernelCommandAndEventReceiverBase,
+    public class CommandAndEventObservableReceiver :
+        KernelCommandAndEventDeserializingReceiverBase,
         IDisposable
     {
         private readonly ConcurrentQueue<string> _queue;
         private readonly SemaphoreSlim _semaphore = new(0, 1);
         private readonly CompositeDisposable _disposables = new();
 
-        public SerializedCommandAndEventReceiver(IObservable<string> serializedCommandAndEventEnvelopes)
+        public CommandAndEventObservableReceiver(IObservable<string> serializedCommandAndEventEnvelopes)
         {
             if (serializedCommandAndEventEnvelopes == null)
             {

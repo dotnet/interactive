@@ -14,6 +14,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
         string Token { get; }
 
+        // TODO: (CommandId) rename this 
         string CommandId { get; }
 
         Uri OriginUri { get; }

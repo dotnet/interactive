@@ -9,21 +9,37 @@ namespace Microsoft.DotNet.Interactive.Connection
 {
     public class CommandOrEvent
     {
-        public KernelCommand Command { get; }
-        public KernelEvent Event { get; }
-        public bool IsParseError { get; }
-
         public CommandOrEvent(KernelCommand kernelCommand)
         {
             Command = kernelCommand ?? throw new ArgumentNullException(nameof(kernelCommand));
             Event = null;
         }
 
-        public CommandOrEvent(KernelEvent kernelEvent, bool isParseError = false)
+        public CommandOrEvent(
+            KernelEvent kernelEvent, 
+            bool isParseError = false)
         {
             Command = null;
             Event = kernelEvent ?? throw new ArgumentNullException(nameof(kernelEvent));
             IsParseError = isParseError;
         }
-    };
+
+        public KernelCommand Command { get; }
+
+        public KernelEvent Event { get; }
+
+        public bool IsParseError { get; }
+
+        public override string ToString()
+        {
+            if (Command is { })
+            {
+                return Command.ToString();
+            }
+            else
+            {
+                return Event.ToString();
+            }
+        }
+    }
 }

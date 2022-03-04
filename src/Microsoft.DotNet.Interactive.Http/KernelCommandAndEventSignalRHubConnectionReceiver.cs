@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Interactive.Http
     {
         private readonly CompositeDisposable _disposables;
         private readonly Subject<string> _serializedCommandAndEventSubject = new();
-        private readonly SerializedCommandAndEventReceiver _internalReceiver;
+        private readonly CommandAndEventObservableReceiver _internalReceiver;
 
         public KernelCommandAndEventSignalRHubConnectionReceiver(HubConnection hubConnection)
         {
@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.Http
                 throw new ArgumentNullException(nameof(hubConnection));
             }
 
-            _internalReceiver = new SerializedCommandAndEventReceiver(_serializedCommandAndEventSubject);
+            _internalReceiver = new CommandAndEventObservableReceiver(_serializedCommandAndEventSubject);
 
             _disposables = new CompositeDisposable
             {   

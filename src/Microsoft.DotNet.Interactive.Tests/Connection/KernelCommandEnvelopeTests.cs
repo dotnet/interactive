@@ -6,7 +6,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Server;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Tests.Server
+namespace Microsoft.DotNet.Interactive.Tests.Connection
 {
     public class KernelCommandEnvelopeTests
     {

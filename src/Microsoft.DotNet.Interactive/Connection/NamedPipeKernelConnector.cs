@@ -23,7 +23,10 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
 
         if (_receiver is not null)
         {
-            proxyKernel = new ProxyKernel(kernelInfo.LocalName,_receiver.CreateChildReceiver(), _sender);
+            proxyKernel = new ProxyKernel(
+                kernelInfo.LocalName,
+                _receiver.CreateChildReceiver(), 
+                _sender);
         }
         else
         {
@@ -44,7 +47,7 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
             proxyKernel = new ProxyKernel(kernelInfo.LocalName, _receiver, _sender);
         }
 
-        proxyKernel.Start();
+        proxyKernel.EnsureStarted();
 
         return proxyKernel;
     }

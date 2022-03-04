@@ -33,7 +33,7 @@ public class SignalRKernelConnector : IKernelConnector
         var sender = new KernelCommandAndEventSignalRHubConnectionSender(hubConnection);
         var proxyKernel = new ProxyKernel(kernelInfo.LocalName, receiver, sender);
 
-        proxyKernel.Start();
+        proxyKernel.EnsureStarted();
 
         proxyKernel.RegisterForDisposal(receiver);
         proxyKernel.RegisterForDisposal(Disposable.Create(async () => await hubConnection.DisposeAsync()));

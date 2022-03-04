@@ -7,7 +7,7 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Tests.Server
+namespace Microsoft.DotNet.Interactive.Tests.Connection
 {
     public class TokenTests
     {

@@ -41,7 +41,7 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
                 _receiver.CreateChildReceiver(), 
                 _sender);
             
-            kernel.Start();
+            kernel.EnsureStarted();
             
             return kernel;
         }
@@ -70,19 +70,19 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
             _process.BeginErrorReadLine();
 
             _receiver = new MultiplexingKernelCommandAndEventReceiver(
-                new KernelCommandAndEventTextReceiver(_process.StandardOutput));
+                new KernelCommandAndEventTextReaderReceiver(_process.StandardOutput));
             _sender = new KernelCommandAndEventTextStreamSender(_process.StandardInput);
             var kernel = new ProxyKernel(kernelInfo.LocalName, _receiver, _sender);
         
             var r = _receiver.CreateChildReceiver();
             
-            kernel.Start();
+            kernel.EnsureStarted();
 
             var checkReady = Task.Run(async () =>
             {
-                await foreach (var eoc in r.CommandsAndEventsAsync(CancellationToken.None))
+                await foreach (var commandOrEvent in r.CommandsAndEventsAsync(CancellationToken.None))
                 {
-                    if (eoc.Event is KernelReady)
+                    if (commandOrEvent.Event is KernelReady)
                     {
                         return;
                     }

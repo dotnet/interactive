@@ -7,7 +7,7 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Server;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Tests.Server
+namespace Microsoft.DotNet.Interactive.Tests.Connection
 {
     public class KernelEventEnvelopeTests
     {

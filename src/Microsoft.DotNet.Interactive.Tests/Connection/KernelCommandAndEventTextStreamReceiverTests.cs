@@ -1,21 +1,19 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.IO;
-using System.Threading.Tasks;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Server;
-
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Tests.Server
+namespace Microsoft.DotNet.Interactive.Tests.Connection
 {
     public class KernelCommandAndEventTextStreamReceiverTests
     {
@@ -26,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             var message = KernelEventEnvelope.Serialize( KernelEventEnvelope.Create(kernelEvent));
 
             using var stringReader = new StringReader(message);
-            var receiver = new KernelCommandAndEventTextReceiver(stringReader);
+            var receiver = new KernelCommandAndEventTextReaderReceiver(stringReader);
 
             var d = await receiver.CommandsAndEventsAsync(CancellationToken.None).FirstAsync();
 
@@ -40,7 +38,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             var message = KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand));
 
             using var stringReader = new StringReader(message);
-            var receiver = new KernelCommandAndEventTextReceiver(stringReader);
+            var receiver = new KernelCommandAndEventTextReaderReceiver(stringReader);
 
             var d = await receiver.CommandsAndEventsAsync(CancellationToken.None).FirstAsync();
 
@@ -52,7 +50,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         {
             var invalidJson = " { hello";
             using var stringReader = new StringReader(invalidJson);
-            var receiver = new KernelCommandAndEventTextReceiver(stringReader);
+            var receiver = new KernelCommandAndEventTextReaderReceiver(stringReader);
 
             var d = await receiver.CommandsAndEventsAsync(CancellationToken.None).FirstAsync();
 

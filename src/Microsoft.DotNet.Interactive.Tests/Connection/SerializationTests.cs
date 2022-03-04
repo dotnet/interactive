@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Assent;
-
 using FluentAssertions;
 using Microsoft.AspNetCore.Html;
 using Microsoft.CodeAnalysis;
@@ -22,12 +21,11 @@ using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
 using Microsoft.DotNet.Interactive.VSCode;
 using Pocket;
-
 using Xunit;
 using Xunit.Abstractions;
 using Project = Microsoft.DotNet.Interactive.CSharpProject.Project;
 
-namespace Microsoft.DotNet.Interactive.Tests.Server
+namespace Microsoft.DotNet.Interactive.Tests.Connection
 {
     public class SerializationTests
     {
@@ -352,7 +350,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     new KernelInfo("javascript", "javascript")
                     {
                         Aliases = new[] { "js" },
-                        DestinationUri = new Uri("kernel://vscode/javascript"),
+                        Uri = new Uri("kernel://vscode/javascript"),
                         SupportedDirectives = new[]
                         {
                             new DirectiveInfo("#r")
