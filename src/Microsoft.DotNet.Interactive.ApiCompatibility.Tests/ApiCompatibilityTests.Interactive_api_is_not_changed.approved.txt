@@ -307,6 +307,13 @@ Microsoft.DotNet.Interactive
   public class PasswordString
     .ctor(System.String clearTextPassword)
     public System.String GetClearTextPassword()
+  public class Project
+    .ctor(System.Collections.Generic.IEnumerable<ProjectFile> files)
+    public System.Collections.Generic.IReadOnlyCollection<ProjectFile> Files { get;}
+  public class ProjectFile
+    .ctor(System.String path, System.String content)
+    public System.String Content { get;}
+    public System.String Path { get;}
   public class ResolvedPackageReference : PackageReference
     .ctor(System.String packageName, System.String packageVersion, System.Collections.Generic.IReadOnlyList<System.String> assemblyPaths, System.String packageRoot = null, System.Collections.Generic.IReadOnlyList<System.String> probingPaths = null)
     public System.Collections.Generic.IReadOnlyList<System.String> AssemblyPaths { get;}
@@ -750,7 +757,10 @@ Microsoft.DotNet.Interactive.Utility
     public System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<System.String>> ToolList(System.IO.DirectoryInfo directory)
     public System.Threading.Tasks.Task<CommandLineResult> VSTest(System.String args)
   public static class FileNameUtilities
+    public static System.String ChangeExtension(System.String path, System.String extension)
     public static System.String ExecutableName()
+    public static System.String GetExtension(System.String path)
+    public static System.String GetFileName(System.String path, System.Boolean includeExtension = True)
   public class GCPressure, System.IDisposable
     .ctor(System.Int64 bytesAllocated)
     public System.Void Dispose()

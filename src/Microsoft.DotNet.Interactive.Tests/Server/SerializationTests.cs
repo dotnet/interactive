@@ -5,12 +5,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using Assent;
 
 using FluentAssertions;
 using Microsoft.AspNetCore.Html;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.CSharpProject;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Server;
@@ -162,11 +164,17 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new ChangeWorkingDirectory("/path/to/somewhere");
 
+                yield return new CompileProject("123");
+
                 yield return new DisplayError("oops!");
 
                 yield return new DisplayValue(
                     new FormattedValue("text/html", "<b>hi!</b>")
                 );
+
+                yield return new OpenDocument("path");
+
+                yield return new OpenProject(new Project(new[] { new ProjectFile("Program.cs", "// file contents") }));
 
                 yield return new RequestCompletions("Cons", new LinePosition(0, 4), "csharp");
 
@@ -224,6 +232,10 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                    "oops");
 
                 yield return new CommandSucceeded(submitCode);
+
+                var compileProject = new CompileProject("123");
+
+                yield return new AssemblyProduced(compileProject, new Base64EncodedAssembly("01020304"));
 
                 yield return new CompleteCodeSubmissionReceived(submitCode);
 

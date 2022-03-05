@@ -9,6 +9,8 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.CSharpProject;
+using Microsoft.DotNet.Interactive.CSharpProject.Events;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Documents.ParserServer;
 using Microsoft.DotNet.Interactive.Events;
@@ -57,15 +59,18 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
         {
             $"{nameof(CompletionsProduced)}.{nameof(CompletionsProduced.LinePositionSpan)}",
             $"{nameof(DisplayEvent)}.{nameof(DisplayEvent.ValueId)}",
+            $"{nameof(DocumentOpened)}.{nameof(DocumentOpened.RegionName)}",
             $"{nameof(HoverTextProduced)}.{nameof(HoverTextProduced.LinePositionSpan)}",
             $"{nameof(KernelCommand)}.{nameof(KernelCommand.TargetKernelName)}",
+            $"{nameof(OpenDocument)}.{nameof(OpenDocument.RegionName)}",
             $"{nameof(SubmitCode)}.{nameof(SubmitCode.SubmissionType)}"
         };
 
         private static IEnumerable<Type> CoreAssemblyTypes = typeof(KernelCommand).Assembly.ExportedTypes;
+        private static IEnumerable<Type> DotNetTryAssemblyTypes = typeof(CSharpProjectKernel).Assembly.ExportedTypes;
         private static IEnumerable<Type> VSCodeAssemblyTypes = typeof(VSCodeInteractiveHost).Assembly.ExportedTypes;
 
-        private static IEnumerable<Type> AllAssemblyTypes = CoreAssemblyTypes.Concat(VSCodeAssemblyTypes);
+        private static IEnumerable<Type> AllAssemblyTypes = CoreAssemblyTypes.Concat(DotNetTryAssemblyTypes).Concat(VSCodeAssemblyTypes);
 
         public static string Generate()
         {
