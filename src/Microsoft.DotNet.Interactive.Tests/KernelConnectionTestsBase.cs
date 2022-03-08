@@ -49,9 +49,9 @@ public abstract class KernelConnectionTestsBase : IDisposable
 
         // use same connection to create 2 proxy kernel
 
-        using var proxyKernel1 = await connector.ConnectKernelAsync(new KernelInfo("kernel1"));
+        using var proxyKernel1 = await connector.ConnectKernelAsync("kernel1");
 
-        using var proxyKernel2 = await connector.ConnectKernelAsync(new KernelInfo("kernel2"));
+        using var proxyKernel2 = await connector.ConnectKernelAsync("kernel2");
 
         var kernelCommand1 = new SubmitCode("\"echo1\"");
 
@@ -126,7 +126,7 @@ x.Display(""text/plain"");");
     {
         var connector = await CreateConnectorAsync();
 
-        using var kernel = await connector.ConnectKernelAsync(new KernelInfo("newKernelName"));
+        using var kernel = await connector.ConnectKernelAsync("newKernelName");
 
         var markedCode = "var x = 12$$34;";
 

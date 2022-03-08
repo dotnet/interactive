@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
@@ -217,14 +218,20 @@ x")]
         {
             var (compositeKernel, remoteKernel) = await CreateCompositeKernelWithJavaScriptProxyKernel();
 
+            var remoteCommands = new List<KernelCommand>();
+
+            remoteKernel.AddMiddleware(async (command, context, next) =>
+            {
+                remoteCommands.Add(command);
+                await next(command, context);
+            });
+
             await compositeKernel.SubmitCodeAsync("var csharpVariable = 123;");
 
             var submitCode = new SubmitCode(@"
 #!javascript
 #!share --from csharp csharpVariable");
             await compositeKernel.SendAsync(submitCode);
-
-            var remoteCommands = remoteKernel.Sender.Commands;
 
             remoteCommands.Should()
                           .ContainSingle<SubmitCode>()
@@ -263,40 +270,40 @@ x")]
 
 
 
-
             // TODO (CSharpKernel_can_share_variable_fro_JavaScript_ProxyKernel) write test
             throw new NotImplementedException();
         }
 
-        private async Task<(CompositeKernel, FakeRemoteKernel)> CreateCompositeKernelWithJavaScriptProxyKernel()
+        private async Task<(CompositeKernel, FakeKernel)> CreateCompositeKernelWithJavaScriptProxyKernel()
         {
-            var compositeKernel = new CompositeKernel
+            var localCompositeKernel = new CompositeKernel
             {
                 new CSharpKernel().UseValueSharing()
             };
-            compositeKernel.DefaultKernelName = "csharp";
+            localCompositeKernel.DefaultKernelName = "csharp";
 
-            var remoteKernel = new FakeRemoteKernel();
+            var remoteCompositeKernel = new CompositeKernel();
+            var remoteKernel = new FakeKernel();
+            remoteCompositeKernel.Add(remoteKernel);
 
-            var receiver = new MultiplexingKernelCommandAndEventReceiver(remoteKernel.Receiver);
-
-            var host = compositeKernel.UseHost(remoteKernel.Sender, receiver);
-
-            var _ = host.ConnectAsync();
+            ConnectHost.ConnectInProcessHost(
+                localCompositeKernel,
+                new Uri("kernel://local"),
+                remoteCompositeKernel,
+                new Uri("kernel://remote"));
 
             var kernelInfo = new KernelInfo("javascript")
             {
-                DestinationUri = new("kernel://remote/js")
+                Uri = new("kernel://remote/js")
             };
 
-            var javascriptKernel = await host.CreateProxyKernelOnDefaultConnectorAsync(kernelInfo);
+            var javascriptKernel = await localCompositeKernel.Host.CreateProxyKernelOnDefaultConnectorAsync(kernelInfo);
 
             javascriptKernel.UseValueSharing(new JavaScriptKernelValueDeclarer());
 
-            _disposables.Add(remoteKernel);
-            _disposables.Add(host);
+            _disposables.Add(remoteCompositeKernel);
 
-            return (compositeKernel, remoteKernel);
+            return (localCompositeKernel, remoteKernel);
         }
 
         private static CompositeKernel CreateKernel()

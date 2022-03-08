@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Interactive.Kql
         {
             connector.PathToService = ResolvedToolsServicePath;
 
-            var kernel = await connector.ConnectKernelAsync(kernelInfo);
+            var kernel = await connector.ConnectKernelAsync(kernelInfo.LocalName);
 
             return kernel;
         }

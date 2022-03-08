@@ -2,25 +2,34 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Pocket;
+using Pocket.For.Xunit;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
 public class RequestKernelInfoTests
 {
+    [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
     public class ForCompositeKernel
     {
+        private readonly CompositeDisposable _disposables = new();
+
+        public ForCompositeKernel(ITestOutputHelper output)
+        {
+            _disposables.Add(output.SubscribeToPocketLogger());
+        }
+
         [Fact]
         public async Task It_returns_kernel_info_for_all_children()
         {
@@ -39,25 +48,118 @@ public class RequestKernelInfoTests
         }
 
         [Fact]
-        public async Task It_returns_the_list_of_proxied_kernel_commands()
+        public async Task It_returns_the_list_of_proxied_kernel_commands_for_a_specified_subkernel()
         {
-            using var compositeKernel = new CompositeKernel();
+            using var localCompositeKernel = new CompositeKernel
+            {
+                new FakeKernel("fsharp")
+            };
+            var proxiedCsharpKernel = new CSharpKernel();
+            using var remoteCompositeKernel = new CompositeKernel
+            {
+                proxiedCsharpKernel,
+                new FakeKernel("fsharp")
+            };
 
-            compositeKernel.UseInProcessHost();
+            ConnectHost.ConnectInProcessHost(
+                localCompositeKernel,
+                new Uri("kernel://local"),
+                remoteCompositeKernel,
+                new Uri("kernel://remote"));
 
-            using var proxiedCsharpKernel = new CSharpKernel();
+            var kernelInfo = new KernelInfo("remote-fsharp", "F#", "6.0")
+            {
+                Uri = new Uri("kernel://remote/fsharp")
+            };
 
-            var kernelInfo = await proxiedCsharpKernel.GetKernelInfoAsync();
-            kernelInfo.DestinationUri = new Uri("kernel://local/csharp");
-
-            await compositeKernel
+            await localCompositeKernel
                   .Host
                   .CreateProxyKernelOnDefaultConnectorAsync(kernelInfo);
+            
+            // var command = new SubmitCode("123", targetKernelName: "fsharp");
+            // var command = new SubmitCode("123", targetKernelUri: "kernel://remote/fsharp");
 
-            var result = await compositeKernel.SendAsync(new RequestKernelInfo());
+            var result = await localCompositeKernel.SendAsync(new RequestKernelInfo("remote-fsharp"));
 
             var events = result.KernelEvents.ToSubscribedList();
 
+            events.Should()
+                  .ContainSingle<KernelInfoProduced>();
+
+            throw new NotImplementedException();
+        }
+
+        [Fact]
+        public void It_returns_the_list_of_subkernels_of_remote_composite()
+        {
+            // TODO (It_returns_the_list_of_subkernels_of_remote_composite) write test
+            throw new NotImplementedException();
+        }
+
+        [Fact]
+        public async Task When_a_remote_subkernel_is_connected_then_kernel_info_is_updated()
+        {
+            using var localCompositeKernel = new CompositeKernel
+            {
+                new FakeKernel("fake")
+            };
+            using var remoteCompositeKernel = new CompositeKernel
+            {
+                new CSharpKernel()
+            };
+
+            ConnectHost.ConnectInProcessHost(
+                localCompositeKernel,
+                new Uri("kernel://local"),
+                remoteCompositeKernel,
+                new Uri("kernel://remote"));
+
+            var kernelInfo = new KernelInfo("remote-fsharp")
+            {
+                Uri = new Uri("kernel://remote/fsharp")
+            };
+
+            await localCompositeKernel
+                  .Host
+                  .CreateProxyKernelOnDefaultConnectorAsync(kernelInfo);
+
+            var result = await localCompositeKernel.SendAsync(
+                             new SubmitCode(@"Kernel.Root.Add(new Microsoft.DotNet.Interactive.FSharp.FSharpKernel());",
+                                            targetKernelName: "csharp"));
+
+            // TODO (When_a_remote_kernel_is_added_via_an_extension_then_kernel_info_is_updated) write test
+            throw new NotImplementedException();
+        }
+
+        [Fact]
+        public async Task Unproxied_kernels_have_a_URI()
+        {
+            using var localCompositeKernel = new CompositeKernel
+            {
+                new CSharpKernel()
+            };
+
+            localCompositeKernel.ConnectInProcessHost(new Uri("kernel://somewhere/"));
+
+            var result = await localCompositeKernel.SendAsync(new RequestKernelInfo());
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should()
+                  .ContainSingle<KernelInfoProduced>()
+                  .Which
+                  .KernelInfo
+                  .Uri // 
+                  .Should()
+                  .Be(new Uri("kernel://somewhere/csharp"));
+        }
+
+        [Fact]
+        public void A_proxy_to_a_local_kernel_cannot_be_created()
+        {
+            
+
+            // TODO (A_proxy_to_a_local_kernel_cannot_be_created) write test
             throw new NotImplementedException();
         }
     }

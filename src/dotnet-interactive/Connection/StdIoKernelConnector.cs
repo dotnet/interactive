@@ -32,12 +32,12 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
 
     public DirectoryInfo WorkingDirectory { get; }
 
-    public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
+    public async Task<Kernel> ConnectKernelAsync(string kernelName)
     {
         if (_receiver is not null)
         {
             var kernel = new ProxyKernel(
-                kernelInfo.LocalName, 
+                kernelName, 
                 _receiver.CreateChildReceiver(), 
                 _sender);
             
@@ -72,7 +72,7 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
             _receiver = new MultiplexingKernelCommandAndEventReceiver(
                 new KernelCommandAndEventTextReaderReceiver(_process.StandardOutput));
             _sender = new KernelCommandAndEventTextStreamSender(_process.StandardInput);
-            var kernel = new ProxyKernel(kernelInfo.LocalName, _receiver, _sender);
+            var kernel = new ProxyKernel(kernelName, _receiver, _sender);
         
             var r = _receiver.CreateChildReceiver();
             

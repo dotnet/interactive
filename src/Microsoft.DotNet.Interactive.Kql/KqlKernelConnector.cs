@@ -26,7 +26,7 @@ public class KqlKernelConnector : IKernelConnector
 
     public string PathToService { get; set; }
 
-    public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
+    public async Task<Kernel> ConnectKernelAsync(string kernelName)
     {
         if (string.IsNullOrWhiteSpace(PathToService))
         {
@@ -38,7 +38,7 @@ public class KqlKernelConnector : IKernelConnector
         var sqlClient = new ToolsServiceClient(PathToService);
 
         var kernel = new MsKqlKernel(
-                $"kql-{kernelInfo}",
+                $"kql-{kernelName}",
                 connectionDetails,
                 sqlClient)
             .UseValueSharing();

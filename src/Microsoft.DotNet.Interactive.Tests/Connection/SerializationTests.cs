@@ -347,9 +347,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
                     new LinePositionSpan(new LinePosition(1, 2), new LinePosition(3, 4)));
 
                 yield return new KernelInfoProduced(
-                    new KernelInfo("javascript", "javascript")
+                    new KernelInfo("javascript", "JavaScript", aliases: new[] { "js" })
                     {
-                        Aliases = new[] { "js" },
                         Uri = new Uri("kernel://vscode/javascript"),
                         SupportedDirectives = new[]
                         {

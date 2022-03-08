@@ -11,7 +11,6 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests
@@ -25,50 +24,10 @@ namespace Microsoft.DotNet.Interactive.Tests
             _disposables.Add(output.SubscribeToPocketLogger());
         }
 
-        public void Dispose()
-        {
-            _disposables.Dispose();
-        }
-        
-        [Fact]
-        public void the_host_provides_uri_for_kernels()
-        {
-            using var composite = new CompositeKernel().UseInProcessHost();
-
-            var child = new FakeKernel("localName");
-            composite.Add(child);
-
-            composite.Host.TryGetKernelInfo(child, out var kernelInfo);
-            kernelInfo.OriginUri.Should().NotBeNull();
-            composite.Host.Uri.IsBaseOf(kernelInfo.OriginUri).Should().BeTrue();
-        }
-
-        [Fact]
-        public void when_attaching_host_to_composite_kernels_subkernels_are_provided_with_uri()
-        {
-            using var composite = new CompositeKernel().UseInProcessHost();
-            var child = new FakeKernel("localName");
-            composite.Add(child);
-
-            composite.Host.TryGetKernelInfo(child, out var kernelInfo);
-            kernelInfo.OriginUri.Should().NotBeNull();
-            composite.Host.Uri.IsBaseOf(kernelInfo.OriginUri).Should().Be(true);
-        }
-
-        [Fact]
-        public void detached_kernels_do_not_have_uri()
-        {
-            using var composite = new CompositeKernel().UseInProcessHost();
-
-            var child = new FakeKernel("localName");
-
-            var found = composite.Host.TryGetKernelInfo(child, out _);
-            found.Should().Be(false);
-        }
-
+        public void Dispose() => _disposables.Dispose();
 
         [WindowsFact]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
+        [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
         public async Task proxyKernel_does_not_perform_split_if_all_parts_go_to_same_targetKernel_as_the_original_command()
         {
             var handledCommands = new List<KernelCommand>();
@@ -96,7 +55,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var connection = new NamedPipeKernelConnector(pipeName);
 
-            var proxyKernel = await connection.ConnectKernelAsync(new KernelInfo("proxyKernel"));
+            var proxyKernel = await connection.ConnectKernelAsync("proxyKernel");
             
             var code = @"#i ""nuget:source1""
 #i ""nuget:source2""
@@ -113,10 +72,9 @@ Console.WriteLine(1);";
 
 
         [WindowsFact]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
+        [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
         public async Task proxyKernel_does_not_perform_split_if_all_parts_go_to_same_targetKernel_original_command_has_not_target_kernel()
         {
-
             var handledCommands = new List<KernelCommand>();
             using var remoteCompositeKernel = new CompositeKernel
             {
@@ -141,7 +99,7 @@ Console.WriteLine(1);";
 
             var connection = new NamedPipeKernelConnector(pipeName);
 
-            var proxyKernel = await connection.ConnectKernelAsync(new KernelInfo("proxyKernel"));
+            var proxyKernel = await connection.ConnectKernelAsync("proxyKernel");
 
             var code = @"#i ""nuget:source1""
 #i ""nuget:source2""

@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Interactive.Commands
         internal Uri DestinationUri { get; set; }
 
         [JsonIgnore]
-        internal SchedulingScope SchedulingScope { get; set; }
+        internal SchedulingScope SchedulingScope { get; set; } // FIX (SchedulingScope) can this be removed and we just use OriginUri?
 
         [JsonIgnore]
         public ParseResult KernelChooserParseResult { get; internal set; }

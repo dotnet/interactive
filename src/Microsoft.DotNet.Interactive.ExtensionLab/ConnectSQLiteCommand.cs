@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public override Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo, SQLiteKernelConnector kernelConnectorBase,
             KernelInvocationContext context)
         {
-            return kernelConnectorBase.ConnectKernelAsync(kernelInfo);
+            return kernelConnectorBase.ConnectKernelAsync(kernelInfo.LocalName);
         }
     }
 }

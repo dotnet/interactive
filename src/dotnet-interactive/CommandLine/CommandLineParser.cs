@@ -456,7 +456,7 @@ public static class CommandLineParser
 
                     var host = kernel.UseHost(
                         new KernelCommandAndEventTextStreamSender(Console.Out),
-                        new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventTextReceiver(Console.In)));
+                        new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventTextReaderReceiver(Console.In)));
 
                     if (isVSCode)
                     {
@@ -492,10 +492,9 @@ public static class CommandLineParser
                     {
                         if (!isVSCode)
                         {
-                            await host.CreateProxyKernelOnDefaultConnectorAsync(new KernelInfo("javascript", "javascript")
+                            await host.CreateProxyKernelOnDefaultConnectorAsync(new KernelInfo("javascript", "javascript", aliases: new[] { "js" })
                             {
-                                Aliases = new[] { "js" },
-                                DestinationUri = new Uri("kernel://webview/javascript")
+                                Uri = new Uri("kernel://webview/javascript")
                             });
                         }
 

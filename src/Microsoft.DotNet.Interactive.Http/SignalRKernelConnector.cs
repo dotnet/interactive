@@ -18,7 +18,7 @@ public class SignalRKernelConnector : IKernelConnector
 
     public string HubUrl { get; }
 
-    public async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
+    public async Task<Kernel> ConnectKernelAsync(string kernelName)
     {
         // QUESTION: (ConnectKernelAsync) tests?
         var hubConnection = new HubConnectionBuilder()
@@ -31,7 +31,7 @@ public class SignalRKernelConnector : IKernelConnector
 
         var receiver = new KernelCommandAndEventSignalRHubConnectionReceiver(hubConnection);
         var sender = new KernelCommandAndEventSignalRHubConnectionSender(hubConnection);
-        var proxyKernel = new ProxyKernel(kernelInfo.LocalName, receiver, sender);
+        var proxyKernel = new ProxyKernel(kernelName, receiver, sender);
 
         proxyKernel.EnsureStarted();
 

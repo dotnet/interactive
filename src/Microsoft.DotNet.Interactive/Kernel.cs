@@ -38,6 +38,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly SemaphoreSlim _fastPathSchedulerLock = new(1);
         private KernelInvocationContext _inFlightContext;
         private int _countOfLanguageServiceCommandsInFlight = 0;
+        private KernelInfo _kernelInfo;
 
         protected Kernel(string name)
         {
@@ -217,9 +218,21 @@ namespace Microsoft.DotNet.Interactive
         public abstract string LanguageName { get; }
         
         public virtual string LanguageVersion { get; }
-                
+
         public string Name { get; }
-        
+
+        public KernelInfo KernelInfo
+        {
+            get
+            {
+                return _kernelInfo ??= new(Name, LanguageName, LanguageVersion)
+                {
+                    SupportedKernelCommands = _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)).ToArray(),
+                    SupportedDirectives = Directives.Select(d => new DirectiveInfo(d.Name)).ToArray(),
+                };
+            }
+        }
+
         public IReadOnlyCollection<Command> Directives => SubmissionParser.Directives;
 
         public void AddDirective(Command command) => SubmissionParser.AddDirective(command);
@@ -251,11 +264,6 @@ namespace Microsoft.DotNet.Interactive
             return (_,_) => Task.CompletedTask;
         }
 
-        public virtual IEnumerable<Type> SupportedCommandTypes()
-        {
-            return  _supportedCommandTypes;
-        }
-
         internal virtual async Task HandleAsync(
             KernelCommand command,
             KernelInvocationContext context)
@@ -266,6 +274,7 @@ namespace Microsoft.DotNet.Interactive
 
         protected internal virtual void DelegatePublication(KernelEvent kernelEvent)
         {
+            // FIX: (DelegatePublication) only overrides are used... does this need to be here?
             if (kernelEvent is null)
             {
                 throw new ArgumentNullException(nameof(kernelEvent));
@@ -400,7 +409,6 @@ namespace Microsoft.DotNet.Interactive
             return context.ResultFor(command);
         }
 
-       
         internal SchedulingScope SchedulingScope =>
             ParentKernel is null
                 ? SchedulingScope.Parse(Name)
@@ -520,15 +528,11 @@ namespace Microsoft.DotNet.Interactive
             return splitCommands;
         }
 
-        public virtual Task HandleAsync(RequestKernelInfo command, KernelInvocationContext context)
+        public virtual Task HandleAsync(
+            RequestKernelInfo command, 
+            KernelInvocationContext context)
         {
-            var kernelInfo = new KernelInfo(Name, LanguageName, LanguageVersion)
-            {
-                SupportedKernelCommands = _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)).ToArray(),
-                SupportedDirectives = Directives.Select(d => new DirectiveInfo(d.Name)).ToArray(),
-            };
-
-            context.Publish(new KernelInfoProduced(kernelInfo, command));
+            context.Publish(new KernelInfoProduced(KernelInfo, command));
 
             return Task.CompletedTask;
         }

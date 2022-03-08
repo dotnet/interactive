@@ -17,14 +17,17 @@ namespace Microsoft.DotNet.Interactive.Connection
         private readonly IKernelCommandAndEventSender _sender;
         private readonly CancellationTokenSource _cancellationTokenSource = new();
         private ExecutionContext _executionContext;
-
+        
         private readonly Dictionary<string, (KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<KernelEvent> completionSource, KernelInfo kernelInfo,
             KernelInvocationContext invocationContext)> _inflight = new();
 
         private int _started = 0;
         private IKernelValueDeclarer _valueDeclarer;
 
-        public ProxyKernel(string name, IKernelCommandAndEventReceiver receiver, IKernelCommandAndEventSender sender) : base(name)
+        public ProxyKernel(
+            string name, 
+            IKernelCommandAndEventReceiver receiver, 
+            IKernelCommandAndEventSender sender) : base(name)
         {
             _receiver = receiver ?? throw new ArgumentNullException(nameof(receiver));
             _sender = sender ?? throw new ArgumentNullException(nameof(sender));
@@ -34,17 +37,19 @@ namespace Microsoft.DotNet.Interactive.Connection
 
         public override string LanguageVersion => null;
 
-        public void Start()
+        internal Uri DestinationUri { get; set; }
+
+        public void EnsureStarted()
         {
             if (Interlocked.CompareExchange(ref _started, 1, 0) == 1)
             {
-                throw new InvalidOperationException($"ProxyKernel {Name} is already started.");
+                return;
             }
             
-            Task.Run(ReceiveAndDispatchCommandsAndEvents);
+            Task.Run(ReceiveAndPublishCommandsAndEvents);
         }
 
-        private async Task ReceiveAndDispatchCommandsAndEvents()
+        private async Task ReceiveAndPublishCommandsAndEvents()
         {
             await foreach (var d in _receiver.CommandsAndEventsAsync(_cancellationTokenSource.Token))
             {
@@ -72,22 +77,15 @@ namespace Microsoft.DotNet.Interactive.Connection
 
             _executionContext = ExecutionContext.Capture();
             var token = command.GetOrCreateToken();
-            
-            KernelInfo kernelInfo = null;
-            if (command.OriginUri is null || command.DestinationUri is null)
-            {
-                if (ParentKernel?.Host?.TryGetKernelInfo(this, out kernelInfo) == true && kernelInfo is not null)
-                {
-                    command.OriginUri??= kernelInfo.OriginUri;
-                    command.DestinationUri??= kernelInfo.DestinationUri;
-                }
-            }
+
+            command.OriginUri ??= KernelInfo.Uri;
+            command.DestinationUri ??= KernelInfo.Uri;
 
             var targetKernelName = command.TargetKernelName;
             command.TargetKernelName = null;
             var completionSource = new TaskCompletionSource<KernelEvent>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            _inflight[token] = (command, _executionContext, completionSource, kernelInfo, context);
+            _inflight[token] = (command, _executionContext, completionSource, kernelInfo: KernelInfo, context);
 
             ExecutionContext.SuppressFlow();
             var _ = _sender.SendAsync(command, context.CancellationToken);
@@ -138,7 +136,8 @@ namespace Microsoft.DotNet.Interactive.Connection
         {
             if (kernelInfo is not null)
             {
-                return kernelEvent.Command.OriginUri.Equals(kernelInfo.OriginUri);
+                // FIX: (HasSameOrigin) NRE on OriginUri
+                return kernelEvent.Command.OriginUri.Equals(kernelInfo.Uri);
             }
             
             return kernelEvent.Command.OriginUri is null;

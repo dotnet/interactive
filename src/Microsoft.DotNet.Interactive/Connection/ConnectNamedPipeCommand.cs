@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Connection
         public override Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo, NamedPipeKernelConnector connector,
             KernelInvocationContext context)
         {
-            return connector.ConnectKernelAsync(kernelInfo);
+            return connector.ConnectKernelAsync(kernelInfo.LocalName);
         }
     }
 }

@@ -10,9 +10,11 @@ namespace Microsoft.DotNet.Interactive
 {
     public class KernelInfo
     {
-        private readonly IReadOnlyCollection<string> _aliases = Array.Empty<string>();
-
-        public KernelInfo(string localName, string? languageName = null, string? languageVersion = null)
+        public KernelInfo(
+            string localName,
+            string? languageName = null,
+            string? languageVersion = null,
+            IReadOnlyCollection<string>? aliases = null)
         {
             if (string.IsNullOrWhiteSpace(localName))
             {
@@ -27,23 +29,27 @@ namespace Microsoft.DotNet.Interactive
             LocalName = localName;
             LanguageName = languageName;
             LanguageVersion = languageVersion;
+            NameAndAliases = new HashSet<string> { LocalName };
+
+            if (aliases is not null)
+            {
+                NameAndAliases.UnionWith(aliases);
+            }
         }
 
         public IReadOnlyCollection<string> Aliases
         {
-            get => _aliases;
-            init => _aliases = value.Except(new[] { LocalName }).ToArray();
+            get => NameAndAliases.Where(n => n != LocalName).ToArray();
+            init => NameAndAliases.UnionWith(value);
         }
 
-        public string? LanguageName { get; } 
+        public string? LanguageName { get; }
 
-        public string? LanguageVersion { get; } 
+        public string? LanguageVersion { get; }
 
         public string LocalName { get; }
 
-        public Uri? OriginUri { get; set; }
-
-        public Uri? DestinationUri { get; set; }
+        public Uri? Uri { get; set; }
 
         public IReadOnlyCollection<KernelCommandInfo> SupportedKernelCommands { get; init; } = Array.Empty<KernelCommandInfo>();
 
@@ -51,12 +57,6 @@ namespace Microsoft.DotNet.Interactive
 
         public override string ToString() => LocalName;
 
-        public static KernelInfo Create(Kernel kernel, IReadOnlyCollection<string>? aliases = null) =>
-            new(kernel.Name)
-            {
-                Aliases = aliases ?? Array.Empty<string>(),
-                SupportedDirectives = kernel.Directives.Select(d => new DirectiveInfo(d.Name)).ToArray(),
-                SupportedKernelCommands = kernel.SupportedCommandTypes().Select(c => new KernelCommandInfo(c.Name)).ToArray()
-            };
+        internal HashSet<string> NameAndAliases { get; }
     }
 }

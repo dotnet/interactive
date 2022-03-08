@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         {
             connector.PathToService = ResolvedToolsServicePath;
 
-            var kernel = await connector.ConnectKernelAsync(kernelInfo);
+            var kernel = await connector.ConnectKernelAsync(kernelInfo.LocalName);
 
             if (connector.CreateDbContext)
             {

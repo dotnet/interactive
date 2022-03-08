@@ -121,7 +121,7 @@ hello!
             using var compositeKernel = new CompositeKernel();
 
             compositeKernel.AddKernelConnector(
-                new ConnectFakeKernelCommand("fake", "Connects the fake kernel", info => Task.FromResult<Kernel>(new FakeKernel(info.LocalName))));
+                new ConnectFakeKernelCommand("fake", "Connects the fake kernel", name => Task.FromResult<Kernel>(new FakeKernel(name))));
 
             await compositeKernel.SubmitCodeAsync("#!connect fake --kernel-name fake-kernel");
 
@@ -147,7 +147,7 @@ hello!
             using var compositeKernel = new CompositeKernel();
 
             compositeKernel.AddKernelConnector(
-                new ConnectFakeKernelCommand("fake", "Connects the fake kernel", info => Task.FromResult<Kernel>(new FakeKernel(info.LocalName))));
+                new ConnectFakeKernelCommand("fake", "Connects the fake kernel", name => Task.FromResult<Kernel>(new FakeKernel(name))));
 
             await compositeKernel.SubmitCodeAsync("#!connect fake --kernel-name fake1");
             await compositeKernel.SubmitCodeAsync("#!connect fake --kernel-name fake2");
@@ -171,9 +171,12 @@ hello!
 
         public class ConnectFakeKernelCommand : ConnectKernelCommand<FakeKernelConnector>
         {
-            private readonly Func<KernelInfo, Task<Kernel>> _createKernel;
+            private readonly Func<string, Task<Kernel>> _createKernel;
 
-            public ConnectFakeKernelCommand(string name, string description, Func<KernelInfo, Task<Kernel>> createKernel) : base(name, description)
+            public ConnectFakeKernelCommand(
+                string name, 
+                string description, 
+                Func<string, Task<Kernel>> createKernel) : base(name, description)
 
             {
                 AddOption(new Option<int>("--fakeness-level"));
@@ -189,7 +192,7 @@ hello!
                 KernelInvocationContext context)
             {
                 connector.CreateKernel = _createKernel;
-                return connector.ConnectKernelAsync(kernelInfo);
+                return connector.ConnectKernelAsync(kernelInfo.LocalName);
             }
         }
     }
@@ -198,11 +201,8 @@ hello!
     {
         public int FakenessLevel { get; set; }
 
-        public Func<KernelInfo,Task<Kernel>> CreateKernel { get; set; }
+        public Func<string, Task<Kernel>> CreateKernel { get; set; }
 
-        public Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
-        {
-            return CreateKernel(kernelInfo);
-        }
+        public Task<Kernel> ConnectKernelAsync(string kernelName) => CreateKernel(kernelName);
     }
 }

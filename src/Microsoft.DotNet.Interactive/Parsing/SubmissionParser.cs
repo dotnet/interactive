@@ -258,10 +258,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             var dict = new Dictionary<string, (SchedulingScope , Func<Parser>)>();
 
-            for (var i = 0; i < compositeKernel.ChildKernels.Count; i++)
+            foreach (var childKernel in compositeKernel.ChildKernels)
             {
-                var childKernel = compositeKernel.ChildKernels[i];
-
                 if (childKernel.ChooseKernelDirective is { } chooseKernelDirective)
                 {
                     foreach (var alias in chooseKernelDirective.Aliases)

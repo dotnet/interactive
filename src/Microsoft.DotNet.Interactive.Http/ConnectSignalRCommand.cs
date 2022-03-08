@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Http
         public override Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo, SignalRKernelConnector kernelConnectorBase,
             KernelInvocationContext context)
         {
-            return kernelConnectorBase.ConnectKernelAsync(kernelInfo);
+            return kernelConnectorBase.ConnectKernelAsync(kernelInfo.LocalName);
         }
     }
 }

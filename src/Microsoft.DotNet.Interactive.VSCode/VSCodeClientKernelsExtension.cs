@@ -34,15 +34,13 @@ namespace Microsoft.DotNet.Interactive.VSCode
                     }
                 });
 
-                var vscodeKernelInfo = new KernelInfo("vscode")
+                var vscodeKernelInfo = new KernelInfo("vscode", aliases: new[] { "frontend" })
                 { 
-                    Aliases = new[] { "frontend" }, 
                     Uri  = new("kernel://vscode/vscode", UriKind.Absolute)
                 };
 
-                var jsKernelInfo = new KernelInfo("javascript", "javascript")
+                var jsKernelInfo = new KernelInfo("javascript", "javascript", aliases: new[] { "js" })
                 { 
-                    Aliases = new[] { "js" }, 
                     Uri  = new("kernel://webview/javascript", UriKind.Absolute)
                 };
 

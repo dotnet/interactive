@@ -11,7 +11,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
-    public class SqlKernelTests
+    public class SqlDiscoverabilityKernelTests
     {
 
         [Fact]

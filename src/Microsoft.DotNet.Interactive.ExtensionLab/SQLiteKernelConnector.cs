@@ -15,10 +15,10 @@ public class SQLiteKernelConnector : IKernelConnector
 
     public string ConnectionString { get; }
 
-    public Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
+    public Task<Kernel> ConnectKernelAsync(string kernelName)
     {
         var kernel = new SQLiteKernel(
-            $"sql-{kernelInfo}",
+            $"sql-{kernelName}",
             ConnectionString);
 
         return Task.FromResult<Kernel>(kernel);
