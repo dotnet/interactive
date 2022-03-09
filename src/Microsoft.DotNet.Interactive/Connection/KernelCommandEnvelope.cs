@@ -207,11 +207,7 @@ namespace Microsoft.DotNet.Interactive.Server
             {
                 command.DestinationUri = new Uri(destinationUri, UriKind.Absolute);
             }
-            else
-            {
-                command.DestinationUri = command.OriginUri;
-            }
-
+        
             return Create(command);
         }
 

@@ -36,9 +36,7 @@ namespace Microsoft.DotNet.Interactive.Connection
         public override string LanguageName => null;
 
         public override string LanguageVersion => null;
-
-        internal Uri DestinationUri { get; set; }
-
+        
         public void EnsureStarted()
         {
             if (Interlocked.CompareExchange(ref _started, 1, 0) == 1)
@@ -65,8 +63,15 @@ namespace Microsoft.DotNet.Interactive.Connection
             }
         }
 
-        internal override Task HandleAsync(KernelCommand command, KernelInvocationContext context)
+        internal override Task HandleAsync(
+            KernelCommand command, 
+            KernelInvocationContext context)
         {
+            if (ParentKernel?.Host is null)
+            {
+                throw new InvalidOperationException($"ProxyKernel {Name} is not attached to a {nameof(KernelHost)}");
+            }
+
             switch (command)
             {
                 case AnonymousKernelCommand:
@@ -75,11 +80,18 @@ namespace Microsoft.DotNet.Interactive.Connection
                     return base.HandleAsync(command, context);
             }
 
+            if (command.OriginUri is null)
+            {
+                if (context.HandlingKernel == this)
+                {
+                    command.OriginUri = KernelInfo.Uri;
+                }
+            }
+
             _executionContext = ExecutionContext.Capture();
             var token = command.GetOrCreateToken();
 
             command.OriginUri ??= KernelInfo.Uri;
-            command.DestinationUri ??= KernelInfo.Uri;
 
             var targetKernelName = command.TargetKernelName;
             command.TargetKernelName = null;

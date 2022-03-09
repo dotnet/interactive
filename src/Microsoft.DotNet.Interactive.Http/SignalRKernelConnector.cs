@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -11,12 +12,12 @@ namespace Microsoft.DotNet.Interactive.Http;
 
 public class SignalRKernelConnector : IKernelConnector
 {
-    public SignalRKernelConnector(string hubUrl)
+    public SignalRKernelConnector(Uri hubUrl)
     {
         HubUrl = hubUrl;
     }
 
-    public string HubUrl { get; }
+    public Uri HubUrl { get; }
 
     public async Task<Kernel> ConnectKernelAsync(string kernelName)
     {

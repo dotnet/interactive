@@ -33,7 +33,6 @@ namespace Microsoft.DotNet.Interactive.Tests
             var handledCommands = new List<KernelCommand>();
             using var remoteCompositeKernel = new CompositeKernel
             {
-               
                 new FakeKernel("csharp")
                 {
                     Handle = (command, _) =>
@@ -45,7 +44,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 new FakeKernel("fsharp")
                 {
                     Handle = (_, _) => Task.CompletedTask
-                },
+                }
             };
 
             remoteCompositeKernel.DefaultKernelName = "csharp";
@@ -56,7 +55,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             var connection = new NamedPipeKernelConnector(pipeName);
 
             var proxyKernel = await connection.ConnectKernelAsync("proxyKernel");
-            
+
             var code = @"#i ""nuget:source1""
 #i ""nuget:source2""
 #r ""nuget:package1""

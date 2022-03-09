@@ -11,14 +11,21 @@ namespace Microsoft.DotNet.Interactive.Commands
 {
     public abstract class KernelCommand
     {
-        protected KernelCommand(string targetKernelName = null, KernelCommand parent = null)
+        protected KernelCommand(
+            string targetKernelName = null, 
+            KernelCommand parent = null)
         {
             Properties = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
             TargetKernelName = targetKernelName;
             Parent = parent;
         }
 
-        [JsonIgnore]
+        protected KernelCommand(Uri destinationUri) : this()
+        {
+            DestinationUri = destinationUri ?? throw new ArgumentNullException(nameof(destinationUri));
+        }
+
+        [JsonIgnore] 
         public KernelCommandInvocation Handler { get; set; }
 
         [JsonIgnore]

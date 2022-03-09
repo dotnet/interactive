@@ -72,7 +72,8 @@ public class StdioConnectionTests : KernelConnectionTestsBase
 
         localCompositeKernel.DefaultKernelName = "fsharp";
 
-        var connectToRemoteKernel = CreateConnectCommand();
+        var connectToRemoteKernel = new SubmitCode(
+            $"#!connect stdio --kernel-name newKernelName --command \"{_configuration.Command}\" {string.Join(" ", _configuration.Args)}");
 
         await localCompositeKernel.SendAsync(connectToRemoteKernel);
 
@@ -89,10 +90,10 @@ public class StdioConnectionTests : KernelConnectionTestsBase
                 timeout: 10_000);
     }
 
-    protected override SubmitCode CreateConnectCommand()
+    protected override SubmitCode CreateConnectCommand(string localKernelName)
     {
         return new SubmitCode(
-            $"#!connect stdio --kernel-name newKernelName --command \"{_configuration.Command}\" {string.Join(" ", _configuration.Args)}");
+            $"#!connect stdio --kernel-name {localKernelName} --command \"{_configuration.Command}\" {string.Join(" ", _configuration.Args)}");
     }
 
     protected override void AddKernelConnector(CompositeKernel compositeKernel)

@@ -4,7 +4,9 @@
 using System;
 using System.IO.Pipes;
 using System.Security.Principal;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Commands;
 
 #nullable enable
 
@@ -16,16 +18,22 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
     private KernelCommandAndEventPipeStreamSender? _sender;
     private NamedPipeClientStream? _clientStream;
 
+    public NamedPipeKernelConnector(string pipeName)
+    {
+        PipeName = pipeName;
+    }
+
     public string PipeName { get; }
-    public async Task<Kernel> ConnectKernelAsync(string kernelName)
+
+    public async Task<Kernel> ConnectKernelAsync(string localName)
     {
         ProxyKernel? proxyKernel;
 
         if (_receiver is not null)
         {
             proxyKernel = new ProxyKernel(
-                kernelName,
-                _receiver.CreateChildReceiver(), 
+                localName,
+                _receiver.CreateChildReceiver(),
                 _sender);
         }
         else
@@ -34,7 +42,7 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
                 ".",
                 PipeName,
                 PipeDirection.InOut,
-                PipeOptions.Asynchronous, 
+                PipeOptions.Asynchronous,
                 TokenImpersonationLevel.Impersonation);
 
             await _clientStream.ConnectAsync();
@@ -43,18 +51,19 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
 
             _receiver = new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventPipeStreamReceiver(_clientStream));
             _sender = new KernelCommandAndEventPipeStreamSender(_clientStream);
-        
-            proxyKernel = new ProxyKernel(kernelName, _receiver, _sender);
+
+            proxyKernel = new ProxyKernel(localName, _receiver, _sender);
         }
+
+        await _sender.SendAsync(
+            new RequestKernelInfo(destinationUri: proxyKernel.KernelInfo.Uri), 
+            CancellationToken.None);
+
+        // FIX: (ConnectKernelAsync) listen on receiver for KerneInfo
 
         proxyKernel.EnsureStarted();
 
         return proxyKernel;
-    }
-        
-    public NamedPipeKernelConnector(string pipeName)
-    {
-        PipeName = pipeName;
     }
 
     public void Dispose()

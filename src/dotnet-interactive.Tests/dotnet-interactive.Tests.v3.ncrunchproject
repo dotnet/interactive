@@ -1,4 +1,4 @@
-<ProjectConfiguration>
+﻿<ProjectConfiguration>
   <Settings>
     <AdditionalFilesToIncludeForProject>
       <Value>..\microsoft-dotnet-interactive\src\contracts.ts</Value>
@@ -44,9 +44,15 @@
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.Tests.StdIOConnectionTests.it_can_reuse_connection_for_multiple_proxy_kernel</TestName>
       </NamedTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.App.Tests.StdioConnectionTests</FixtureName>
-      </FixtureTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.App.Tests.StdioConnectionTests.can_connect_to_remote_using_connect_magic_command</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.App.Tests.StdioConnectionTests.it_can_reuse_connection_for_multiple_proxy_kernels</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.App.Tests.StdioConnectionTests.stdio_server_encoding_is_utf_8</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

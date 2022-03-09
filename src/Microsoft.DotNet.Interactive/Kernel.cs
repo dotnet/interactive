@@ -704,7 +704,7 @@ namespace Microsoft.DotNet.Interactive
 
         private void TrySetDynamicHandler(KernelCommand command)
         {
-            if (_dynamicHandlers.TryGetValue(command.GetType(), out KernelCommandInvocation handler))
+            if (_dynamicHandlers.TryGetValue(command.GetType(), out var handler))
             {
                 command.Handler = handler;
             }

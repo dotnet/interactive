@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.CommandLine;
+using System.CommandLine.Invocation;
 using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
 using System.IO;
@@ -18,8 +19,6 @@ using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Parsing;
-
-using DocumentKernelName = Microsoft.DotNet.Interactive.Documents.KernelName;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -36,7 +35,6 @@ namespace Microsoft.DotNet.Interactive
         private Command _connectDirective;
         private KernelHost _host;
       
-
         public CompositeKernel() : base(".NET")
         {
             _childKernels = new(this);
@@ -184,7 +182,8 @@ namespace Microsoft.DotNet.Interactive
         }
 
         private protected override string GetHandlingKernelName(
-            KernelCommand command, KernelInvocationContext context)
+            KernelCommand command,
+            KernelInvocationContext context)
         {
             return GetHandlingKernel(command, context).Name;
         }
@@ -193,8 +192,8 @@ namespace Microsoft.DotNet.Interactive
             KernelCommand command,
             KernelInvocationContext context)
         {
-            if (!string.IsNullOrWhiteSpace(command.TargetKernelName) && 
-                _childKernels.TryGetGetByAlias(command.TargetKernelName, out var kernel))
+            if (!string.IsNullOrWhiteSpace(command.TargetKernelName) &&
+                     _childKernels.TryGetGetByAlias(command.TargetKernelName, out var kernel))
             {
                 // route to a subkernel
                 await kernel.Pipeline.SendAsync(command, context);
@@ -283,36 +282,22 @@ namespace Microsoft.DotNet.Interactive
                 context);
         }
 
-        public void AddKernelConnector<TKernelConnector>(
-            ConnectKernelCommand<TKernelConnector> connectionCommand)
-            where TKernelConnector : IKernelConnector
+        public void AddKernelConnector(ConnectKernelCommand connectionCommand)
         {
-            var kernelNameOption = new Option<string>(
-                "--kernel-name",
-                "The name of the subkernel to be added");
-
             if (_connectDirective is null)
             {
                 _connectDirective = new Command(
                     "#!connect",
                     "Connects additional subkernels");
 
-                _connectDirective.Add(kernelNameOption);
-
                 AddDirective(_connectDirective);
             }
 
-            connectionCommand.Handler = CommandHandler.Create<
-                string, TKernelConnector, KernelInvocationContext>(
-                async (kernelName, kernelConnector, context) =>
+            connectionCommand.Handler = CommandHandler.Create<KernelInvocationContext, InvocationContext>(
+                async (context, commandLineContext) =>
                 {
-                    var connectedKernel = await connectionCommand.ConnectKernelAsync(new KernelInfo(kernelName), kernelConnector, context);
+                    var connectedKernel = await connectionCommand.ConnectKernelAsync(context, commandLineContext);
 
-                    // todo: hack to ensure disposal, this should be handled as tear down when client are disposed
-                    if (kernelConnector is IDisposable disposableKernelConnector)
-                    {
-                        RegisterForDisposal(disposableKernelConnector);
-                    }
                     Add(connectedKernel);
 
                     // todo : here the connector should be used to patch the kernelInfo with the right destination uri for the proxy
@@ -331,7 +316,6 @@ namespace Microsoft.DotNet.Interactive
                     context.Display($"Kernel added: #!{connectedKernel.Name}");
                 });
 
-            connectionCommand.Add(kernelNameOption);
             _connectDirective.Add(connectionCommand);
 
             SubmissionParser.ResetParser();

@@ -72,11 +72,12 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
             _receiver = new MultiplexingKernelCommandAndEventReceiver(
                 new KernelCommandAndEventTextReaderReceiver(_process.StandardOutput));
             _sender = new KernelCommandAndEventTextStreamSender(_process.StandardInput);
-            var kernel = new ProxyKernel(kernelName, _receiver, _sender);
+
+            var proxyKernel = new ProxyKernel(kernelName, _receiver, _sender);
         
             var r = _receiver.CreateChildReceiver();
             
-            kernel.EnsureStarted();
+            proxyKernel.EnsureStarted();
 
             var checkReady = Task.Run(async () =>
             {
@@ -94,6 +95,7 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
                 while (!checkReady.IsCompleted)
                 {
                     await Task.Delay(200);
+
                     if (_process.HasExited)
                     {
                         if (_process.ExitCode != 0)
@@ -108,10 +110,9 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
             });
 
             await Task.WhenAny(checkProcessError, checkReady);
-            return kernel;
+
+            return proxyKernel;
         }
-
-
     }
 
     public void Dispose()

@@ -30,9 +30,9 @@ public class NamedPipeConnectionTests : KernelConnectionTestsBase
         return new NamedPipeKernelConnector(_pipeName);
     }
     
-    protected override SubmitCode CreateConnectCommand()
+    protected override SubmitCode CreateConnectCommand(string localKernelName)
     {
-        return new SubmitCode($"#!connect named-pipe --kernel-name newKernelName --pipe-name {_pipeName}");
+        return new SubmitCode($"#!connect named-pipe --kernel-name {localKernelName} --pipe-name {_pipeName}");
     }
 
     protected override void AddKernelConnector(CompositeKernel compositeKernel)

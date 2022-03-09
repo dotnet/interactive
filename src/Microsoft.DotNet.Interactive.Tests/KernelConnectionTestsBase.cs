@@ -92,32 +92,34 @@ public abstract class KernelConnectionTestsBase : IDisposable
 
         AddKernelConnector(localCompositeKernel);
 
-        var connectToRemoteKernel = CreateConnectCommand();
+        var localKernelName = "newKernelName";
+
+        var connectToRemoteKernel = CreateConnectCommand(localKernelName);
 
         var connectResults = await localCompositeKernel.SendAsync(connectToRemoteKernel);
 
-        var codeSubmissionForRemoteKernel = new SubmitCode(@"
-#!newKernelName
+        connectResults.KernelEvents.ToSubscribedList().Should().NotContainErrors();
+
+        var codeSubmissionForRemoteKernel = new SubmitCode($@"
+#!{localKernelName}
 var x = 1 + 1;
 x.Display(""text/plain"");");
 
         var submissionResults = await localCompositeKernel.SendAsync(codeSubmissionForRemoteKernel);
 
-        connectResults.KernelEvents
-                      .ToSubscribedList()
-                      .Should()
-                      .NotContainErrors();
+        var submissionEvents = submissionResults.KernelEvents.ToSubscribedList();
 
-        submissionResults.KernelEvents
-                         .ToSubscribedList()
-                         .Should()
-                         .ContainSingle<DisplayedValueProduced>()
-                         .Which
-                         .FormattedValues
-                         .Single()
-                         .Value
-                         .Should()
-                         .Be("2");
+        submissionEvents
+            .Should()
+            .NotContainErrors()
+            .And
+            .ContainSingle<DisplayedValueProduced>()
+            .Which
+            .FormattedValues
+            .Single()
+            .Value
+            .Should()
+            .Be("2");
     }
 
     [WindowsFact]
@@ -143,7 +145,7 @@ x.Display(""text/plain"");");
 
     protected abstract Task<IKernelConnector> CreateConnectorAsync();
 
-    protected abstract SubmitCode CreateConnectCommand();
+    protected abstract SubmitCode CreateConnectCommand(string localKernelName);
 
     protected abstract void AddKernelConnector(CompositeKernel compositeKernel);
 }

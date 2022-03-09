@@ -128,9 +128,7 @@ namespace Microsoft.DotNet.Interactive
             IKernelConnector kernelConnector)
         {
             var proxyKernel = (ProxyKernel)await kernelConnector.ConnectKernelAsync(kernelInfo.LocalName);
-
-            proxyKernel.DestinationUri = new Uri(Uri, kernelInfo.LocalName);
-
+            
             _kernel.Add(proxyKernel, kernelInfo.Aliases);
 
             proxyKernel.EnsureStarted();
