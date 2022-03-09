@@ -9,7 +9,7 @@ _Our documentation is still a work in progress. There are a number of topics lis
 There are several ways to get started using .NET Interactive with Jupyter, including Jupyter Notebook, JupyterLab, and nteract.
 
 * [Try sample .NET notebooks online using Binder](NotebooksOnBinder.md).
-* [Create and run .NET notebooks on your machine](NotebooksLocalExperience.md).
+* [Create and run .NET notebooks on your machine](NotebookswithJupyter.md).
 * [Share .NET notebooks online using Binder](CreateBinder.md).
 
 ### Visual Studio Code
