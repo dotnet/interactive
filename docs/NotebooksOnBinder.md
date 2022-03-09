@@ -42,4 +42,4 @@ Now that you have had a tour of .NET notebooks with Binder, you can get started 
 
 Follow the link below to get started.
  
-[Create your notebook on your machine](NotebooksLocalExperience.md)
+[Create your notebook on your machine](NotebookswithJupyter.md)
