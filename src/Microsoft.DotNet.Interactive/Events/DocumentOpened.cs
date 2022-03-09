@@ -1,8 +1,7 @@
 ﻿using System;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Events;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Events
+namespace Microsoft.DotNet.Interactive.Events
 {
     public class DocumentOpened : KernelEvent
     {

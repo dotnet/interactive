@@ -7,9 +7,9 @@ namespace Microsoft.DotNet.Interactive
     {
         public IReadOnlyCollection<ProjectFile> Files { get; }
 
-        public Project(IEnumerable<ProjectFile> files)
+        public Project(IReadOnlyCollection<ProjectFile> files)
         {
-            Files = files.ToList();
+            Files = files;
         }
     }
 }

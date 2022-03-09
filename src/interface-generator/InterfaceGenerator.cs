@@ -10,7 +10,6 @@ using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharpProject;
-using Microsoft.DotNet.Interactive.CSharpProject.Events;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Documents.ParserServer;
 using Microsoft.DotNet.Interactive.Events;

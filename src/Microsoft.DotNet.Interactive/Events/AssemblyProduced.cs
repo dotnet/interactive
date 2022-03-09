@@ -3,7 +3,6 @@
 
 using System;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.CSharpProject;
 
 namespace Microsoft.DotNet.Interactive.Events
 {

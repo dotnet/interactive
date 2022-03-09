@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject
+namespace Microsoft.DotNet.Interactive
 {
     public class Base64EncodedAssembly
     {

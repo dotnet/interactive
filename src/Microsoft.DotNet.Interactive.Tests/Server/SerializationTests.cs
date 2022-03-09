@@ -217,6 +217,10 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
             IEnumerable<KernelEvent> events()
             {
+                var compileProject = new CompileProject("123");
+
+                yield return new AssemblyProduced(compileProject, new Base64EncodedAssembly("01020304"));
+
                 var submitCode = new SubmitCode("123");
 
                 yield return new CodeSubmissionReceived(
@@ -232,10 +236,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                    "oops");
 
                 yield return new CommandSucceeded(submitCode);
-
-                var compileProject = new CompileProject("123");
-
-                yield return new AssemblyProduced(compileProject, new Base64EncodedAssembly("01020304"));
 
                 yield return new CompleteCodeSubmissionReceived(submitCode);
 
@@ -285,6 +285,10 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     {
                         new FormattedValue("text/html", "<b>hi!</b>"),
                     });
+
+                var openDocument = new OpenDocument("path");
+
+                yield return new DocumentOpened(openDocument, "path", null, "file contents");
 
                 yield return new ErrorProduced("oops!", submitCode);
 
