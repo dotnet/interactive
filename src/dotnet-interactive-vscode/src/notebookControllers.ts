@@ -69,6 +69,17 @@ export class DotNetNotebookKernel {
             }
         });
         this.commonControllerInit(jupyterController);
+
+        // interactive window controller
+        const interactiveController = vscode.notebooks.createNotebookController(
+            'dotnet-interactive-window',
+            'interactive',
+            '.NET Interactive',
+            this.executeHandler.bind(this),
+            preloads
+        );
+        this.commonControllerInit(interactiveController);
+
         this.disposables.push(vscode.workspace.onDidOpenNotebookDocument(async notebook => {
             if (isDotNetNotebook(notebook)) {
                 // eagerly spin up the backing process

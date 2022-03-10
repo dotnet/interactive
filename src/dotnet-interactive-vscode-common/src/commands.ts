@@ -144,7 +144,7 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
     }));
 }
 
-export function registerFileCommands(context: vscode.ExtensionContext, parserServer: NotebookParserServer) {
+export function registerFileCommands(context: vscode.ExtensionContext, parserServer: NotebookParserServer, clientMapper: ClientMapper) {
 
     const eol = getEol();
 
@@ -285,6 +285,20 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
                     await vscode.commands.executeCommand('dotnet-interactive.openNotebook', uri);
                     break;
             }
+        }
+    }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.createNewInteractive', async () => {
+        const interactiveOpenArgs = [
+            {}, // showOptions
+            undefined, // resource uri
+            `${context.extension.id}/dotnet-interactive-window`, // controllerId
+            '.NET Interactive', // title
+        ];
+        const result = <any>(await vscode.commands.executeCommand('interactive.open', ...interactiveOpenArgs));
+        if (result && result.notebookUri && typeof result.notebookUri.toString === 'function') {
+            // this looks suspiciously like a uri, let's pre-load the backing process
+            clientMapper.getOrAddClient(result.notebookUri.toString());
         }
     }));
 }
