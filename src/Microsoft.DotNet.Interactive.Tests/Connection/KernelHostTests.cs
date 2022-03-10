@@ -39,10 +39,10 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
                 _remoteCompositeKernel,
                 new Uri("kernel://remote/"));
 
-            _localCompositeKernel.Host.CreateProxyKernelOnDefaultConnectorAsync(new KernelInfo("csharp")
-            {
-                Uri = new Uri("kernel://remote/csharp")
-            }).GetAwaiter().GetResult();
+            _localCompositeKernel
+                .Host
+                .ConnectProxyKernelOnDefaultConnectorAsync("csharp")
+                .GetAwaiter().GetResult();
 
             _disposables.Add(output.SubscribeToPocketLogger());
             _disposables.Add(_remoteCompositeKernel.LogEventsToPocketLogger());

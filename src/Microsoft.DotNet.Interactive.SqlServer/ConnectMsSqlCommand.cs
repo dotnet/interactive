@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
             var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
 
-            var kernel = await connector.ConnectKernelAsync(localName);
+            var kernel = await connector.CreateKernelAsync(localName);
 
             if (connector.CreateDbContext)
             {

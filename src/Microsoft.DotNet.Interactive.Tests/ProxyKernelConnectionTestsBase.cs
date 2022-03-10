@@ -16,11 +16,11 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
-public abstract class KernelConnectionTestsBase : IDisposable
+public abstract class ProxyKernelConnectionTestsBase : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
 
-    protected KernelConnectionTestsBase(ITestOutputHelper output)
+    protected ProxyKernelConnectionTestsBase(ITestOutputHelper output)
     {
         _disposables.Add(output.SubscribeToPocketLogger());
     }
@@ -49,9 +49,9 @@ public abstract class KernelConnectionTestsBase : IDisposable
 
         // use same connection to create 2 proxy kernel
 
-        using var proxyKernel1 = await connector.ConnectKernelAsync("kernel1");
+        using var proxyKernel1 = await connector.CreateKernelAsync("kernel1");
 
-        using var proxyKernel2 = await connector.ConnectKernelAsync("kernel2");
+        using var proxyKernel2 = await connector.CreateKernelAsync("kernel2");
 
         var kernelCommand1 = new SubmitCode("\"echo1\"");
 
@@ -128,7 +128,7 @@ x.Display(""text/plain"");");
     {
         var connector = await CreateConnectorAsync();
 
-        using var kernel = await connector.ConnectKernelAsync("newKernelName");
+        using var kernel = await connector.CreateKernelAsync("newKernelName");
 
         var markedCode = "var x = 12$$34;";
 

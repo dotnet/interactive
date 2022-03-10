@@ -15,9 +15,10 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
-public class NamedPipeConnectionTests : KernelConnectionTestsBase
+public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
 {
     private readonly string _pipeName = Guid.NewGuid().ToString();
+    private Uri _remoteHostUri;
 
     public NamedPipeConnectionTests(ITestOutputHelper output) : base(output)
     {
@@ -27,7 +28,11 @@ public class NamedPipeConnectionTests : KernelConnectionTestsBase
     {
         await CreateRemoteKernelTopologyAsync(_pipeName);
 
-        return new NamedPipeKernelConnector(_pipeName);
+        var connector =  new NamedPipeKernelConnector(_pipeName);
+
+        _remoteHostUri = connector.RemoteHostUri;
+
+        return connector;
     }
     
     protected override SubmitCode CreateConnectCommand(string localKernelName)

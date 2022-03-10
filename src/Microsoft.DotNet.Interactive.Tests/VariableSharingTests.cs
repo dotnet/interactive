@@ -292,12 +292,12 @@ x")]
                 remoteCompositeKernel,
                 new Uri("kernel://remote"));
 
-            var kernelInfo = new KernelInfo("javascript")
-            {
-                Uri = new("kernel://remote/js")
-            };
-
-            var javascriptKernel = await localCompositeKernel.Host.CreateProxyKernelOnDefaultConnectorAsync(kernelInfo);
+            var javascriptKernel =
+                await localCompositeKernel
+                      .Host
+                      .ConnectProxyKernelOnDefaultConnectorAsync(
+                          "javascript",
+                          new("kernel://remote/js"));
 
             javascriptKernel.UseValueSharing(new JavaScriptKernelValueDeclarer());
 

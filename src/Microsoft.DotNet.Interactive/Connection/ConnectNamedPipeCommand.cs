@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.Connection
                 IsRequired = true
             };
 
-        public override Task<Kernel> ConnectKernelAsync(
+        public override async Task<Kernel> ConnectKernelAsync(
             KernelInvocationContext context,
             InvocationContext commandLineContext)
         {
@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Interactive.Connection
 
             var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
 
-            var connectKernelAsync = connector.ConnectKernelAsync(localName);
+            var connectKernelAsync = await connector.CreateKernelAsync(localName);
 
             return connectKernelAsync;
         }

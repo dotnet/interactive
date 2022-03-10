@@ -38,11 +38,7 @@ namespace Microsoft.DotNet.Interactive.Server
         public string Token => _command.GetOrCreateToken();
 
         public string CommandId => _command.GetOrCreateId();
-
-        public Uri OriginUri => _command.OriginUri;
-
-        public Uri DestinationUri => _command.DestinationUri;
-
+        
         KernelCommand IKernelCommandEnvelope.Command => _command;
 
         public static void RegisterCommand<T>() where T : KernelCommand
@@ -140,8 +136,6 @@ namespace Microsoft.DotNet.Interactive.Server
             string commandJson;
             var commandToken = string.Empty;
             var commandId = string.Empty;
-            var originUri = string.Empty;
-            var destinationUri = string.Empty;
 
             if (json.TryGetProperty(nameof(SerializationModel.commandType), out var commandTypeProperty))
             {
@@ -186,28 +180,6 @@ namespace Microsoft.DotNet.Interactive.Server
                 command.SetToken(commandToken);
             }
 
-            // restore the command origin
-            if (json.TryGetProperty(nameof(SerializationModel.originUri), out var originUriProperty))
-            {
-                originUri = originUriProperty.GetString();
-            }
-
-            if (!string.IsNullOrWhiteSpace(originUri))
-            {
-                command.OriginUri = new Uri(originUri, UriKind.Absolute);
-            }
-
-            // restore the command destination
-            if (json.TryGetProperty(nameof(SerializationModel.destinationUri), out var destinationUriProperty))
-            {
-                destinationUri = destinationUriProperty.GetString();
-            }
-
-            if (!string.IsNullOrWhiteSpace(destinationUri))
-            {
-                command.DestinationUri = new Uri(destinationUri, UriKind.Absolute);
-            }
-        
             return Create(command);
         }
 
@@ -220,9 +192,7 @@ namespace Microsoft.DotNet.Interactive.Server
                 command = envelope.Command,
                 commandType = envelope.CommandType,
                 token = envelope.Token,
-                id = envelope.CommandId,
-                originUri = envelope.OriginUri?.ToString()??string.Empty,
-                destinationUri = envelope.DestinationUri?.ToString() ?? string.Empty,
+                id = envelope.CommandId
             };
 
             return JsonSerializer.Serialize(
@@ -239,10 +209,6 @@ namespace Microsoft.DotNet.Interactive.Server
             public string commandType { get; set; }
 
             public object command { get; set; }
-
-            public string originUri { get; set; }
-
-            public string destinationUri { get; set; }
         }
     }
 }

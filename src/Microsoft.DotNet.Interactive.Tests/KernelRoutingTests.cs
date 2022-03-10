@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var connection = new NamedPipeKernelConnector(pipeName);
 
-            var proxyKernel = await connection.ConnectKernelAsync("proxyKernel");
+            var proxyKernel = await connection.CreateKernelAsync("proxyKernel");
 
             var code = @"#i ""nuget:source1""
 #i ""nuget:source2""
@@ -98,7 +98,7 @@ Console.WriteLine(1);";
 
             var connection = new NamedPipeKernelConnector(pipeName);
 
-            var proxyKernel = await connection.ConnectKernelAsync("proxyKernel");
+            var proxyKernel = await connection.CreateKernelAsync("proxyKernel");
 
             var code = @"#i ""nuget:source1""
 #i ""nuget:source2""

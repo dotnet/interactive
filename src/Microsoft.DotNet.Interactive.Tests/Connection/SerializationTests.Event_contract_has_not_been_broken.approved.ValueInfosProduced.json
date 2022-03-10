@@ -1,1 +1,1 @@
-{"event":{"valueInfos":[{"name":"a"},{"name":"b"},{"name":"c"}]},"eventType":"ValueInfosProduced","command":{"token":"the-token","id":"command-id","commandType":"RequestValueInfos","command":{"targetKernelName":"csharp"},"originUri":"","destinationUri":""}}
+{"event":{"valueInfos":[{"name":"a"},{"name":"b"},{"name":"c"}]},"eventType":"ValueInfosProduced","command":{"token":"the-token","id":"command-id","commandType":"RequestValueInfos","command":{"targetKernelName":"csharp","originUri":null,"destinationUri":null}}}

@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.Interactive.Kql
 
             var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
 
-            var kernel = await connector.ConnectKernelAsync(localName);
+            var kernel = await connector.CreateKernelAsync(localName);
 
             return kernel;
         }

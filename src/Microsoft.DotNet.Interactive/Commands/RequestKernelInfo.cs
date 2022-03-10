@@ -7,11 +7,10 @@ namespace Microsoft.DotNet.Interactive.Commands;
 
 public class RequestKernelInfo : KernelCommand
 {
-    public RequestKernelInfo(string targetKernelName = null) : base(targetKernelName)
+    public RequestKernelInfo(
+        string targetKernelName = null,
+        Uri destinationUri = null) : base(targetKernelName)
     {
-    }
-    
-    public RequestKernelInfo(Uri destinationUri) : base(destinationUri)
-    {
+        DestinationUri = destinationUri;
     }
 }

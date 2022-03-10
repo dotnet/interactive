@@ -15,7 +15,7 @@ public class SQLiteKernelConnector : IKernelConnector
 
     public string ConnectionString { get; }
 
-    public Task<Kernel> ConnectKernelAsync(string kernelName)
+    public Task<Kernel> CreateKernelAsync(string kernelName)
     {
         var kernel = new SQLiteKernel(
             $"sql-{kernelName}",

@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.Interactive.Http
 
             var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
 
-            return connector.ConnectKernelAsync(localName);
+            return connector.CreateKernelAsync(localName);
         }
     }
 }

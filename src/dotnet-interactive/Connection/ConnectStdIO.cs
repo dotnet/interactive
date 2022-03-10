@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Interactive.App.Connection
 
             var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
 
-            return connector.ConnectKernelAsync(localName);
+            return connector.CreateKernelAsync(localName);
         }
     }
 }

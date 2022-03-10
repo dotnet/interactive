@@ -32,7 +32,7 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
 
     public DirectoryInfo WorkingDirectory { get; }
 
-    public async Task<Kernel> ConnectKernelAsync(string kernelName)
+    public async Task<Kernel> CreateKernelAsync(string kernelName)
     {
         if (_receiver is not null)
         {

@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Interactive
             string localName,
             string? languageName = null,
             string? languageVersion = null,
-            IReadOnlyCollection<string>? aliases = null)
+            string[]? aliases = null)
         {
             if (string.IsNullOrWhiteSpace(localName))
             {
@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public IReadOnlyCollection<string> Aliases
+        public string[] Aliases
         {
             get => NameAndAliases.Where(n => n != LocalName).ToArray();
             init => NameAndAliases.UnionWith(value);

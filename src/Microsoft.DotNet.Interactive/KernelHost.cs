@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
@@ -45,7 +44,7 @@ namespace Microsoft.DotNet.Interactive
                 _defaultReceiver = defaultReceiver;
             }
 
-            public Task<Kernel> ConnectKernelAsync(string kernelName)
+            public Task<Kernel> CreateKernelAsync(string kernelName)
             {
                 var proxy = new ProxyKernel(
                     kernelName, 
@@ -120,23 +119,36 @@ namespace Microsoft.DotNet.Interactive
                 _cancellationTokenSource.Dispose();
             }
         }
-      
+
         public Uri Uri { get; }
 
-        public async Task<ProxyKernel> CreateProxyKernelOnConnectorAsync(
-            KernelInfo kernelInfo,
-            IKernelConnector kernelConnector)
+        public async Task<ProxyKernel> ConnectProxyKernelAsync(
+            string localName,
+            IKernelConnector kernelConnector,
+            string[] aliases = null)
         {
-            var proxyKernel = (ProxyKernel)await kernelConnector.ConnectKernelAsync(kernelInfo.LocalName);
-            
-            _kernel.Add(proxyKernel, kernelInfo.Aliases);
+            var proxyKernel = (ProxyKernel)await kernelConnector.CreateKernelAsync(localName);
+
+            if (aliases is not null)
+            {
+                proxyKernel.KernelInfo.NameAndAliases.UnionWith(aliases);
+            }
+
+            _kernel.Add(proxyKernel);
 
             proxyKernel.EnsureStarted();
 
             return proxyKernel;
         }
 
-        public async Task<ProxyKernel> CreateProxyKernelOnDefaultConnectorAsync(KernelInfo kernelInfo) =>
-            await CreateProxyKernelOnConnectorAsync(kernelInfo, _defaultConnector);
+        public async Task<ProxyKernel> ConnectProxyKernelOnDefaultConnectorAsync(
+            string localName,
+            Uri remoteKernelUri = null, 
+            string[] aliases = null) =>
+            // FIX: (CreateProxyKernelOnDefaultConnectorAsync) what to do with this Uri? It can potentially connect through an intermediate proxy.
+            await ConnectProxyKernelAsync(
+                localName, 
+                _defaultConnector, 
+                aliases);
     }
 }

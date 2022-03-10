@@ -19,7 +19,7 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
 
-public class StdioConnectionTests : KernelConnectionTestsBase
+public class StdioConnectionTests : ProxyKernelConnectionTestsBase
 {
     private readonly StdioConnectionTestConfiguration _configuration;
 

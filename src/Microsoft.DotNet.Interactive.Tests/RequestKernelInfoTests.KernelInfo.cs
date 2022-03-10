@@ -67,24 +67,17 @@ public class RequestKernelInfoTests
                 remoteCompositeKernel,
                 new Uri("kernel://remote"));
 
-            var kernelInfo = new KernelInfo("remote-fsharp", "F#", "6.0")
-            {
-                Uri = new Uri("kernel://remote/fsharp")
-            };
-
             await localCompositeKernel
                   .Host
-                  .CreateProxyKernelOnDefaultConnectorAsync(kernelInfo);
-            
-            // var command = new SubmitCode("123", targetKernelName: "fsharp");
-            // var command = new SubmitCode("123", targetKernelUri: "kernel://remote/fsharp");
+                  .ConnectProxyKernelOnDefaultConnectorAsync(
+                      "remote-fsharp",
+                      new Uri("kernel://remote/fsharp"));
 
             var result = await localCompositeKernel.SendAsync(new RequestKernelInfo("remote-fsharp"));
 
             var events = result.KernelEvents.ToSubscribedList();
 
-            events.Should()
-                  .ContainSingle<KernelInfoProduced>();
+            events.Should().ContainSingle<KernelInfoProduced>();
 
             throw new NotImplementedException();
         }
@@ -113,15 +106,12 @@ public class RequestKernelInfoTests
                 new Uri("kernel://local"),
                 remoteCompositeKernel,
                 new Uri("kernel://remote"));
-
-            var kernelInfo = new KernelInfo("remote-fsharp")
-            {
-                Uri = new Uri("kernel://remote/fsharp")
-            };
-
+            
             await localCompositeKernel
                   .Host
-                  .CreateProxyKernelOnDefaultConnectorAsync(kernelInfo);
+                  .ConnectProxyKernelOnDefaultConnectorAsync(
+                      "remote-fsharp",
+                       new Uri("kernel://remote/fsharp"));
 
             var result = await localCompositeKernel.SendAsync(
                              new SubmitCode(@"Kernel.Root.Add(new Microsoft.DotNet.Interactive.FSharp.FSharpKernel());",
@@ -149,7 +139,7 @@ public class RequestKernelInfoTests
                   .ContainSingle<KernelInfoProduced>()
                   .Which
                   .KernelInfo
-                  .Uri // 
+                  .Uri
                   .Should()
                   .Be(new Uri("kernel://somewhere/csharp"));
         }

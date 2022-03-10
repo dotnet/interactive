@@ -19,7 +19,7 @@ public class SignalRKernelConnector : IKernelConnector
 
     public Uri HubUrl { get; }
 
-    public async Task<Kernel> ConnectKernelAsync(string kernelName)
+    public async Task<Kernel> CreateKernelAsync(string kernelName)
     {
         // QUESTION: (ConnectKernelAsync) tests?
         var hubConnection = new HubConnectionBuilder()

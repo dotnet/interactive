@@ -34,19 +34,15 @@ namespace Microsoft.DotNet.Interactive.VSCode
                     }
                 });
 
-                var vscodeKernelInfo = new KernelInfo("vscode", aliases: new[] { "frontend" })
-                { 
-                    Uri  = new("kernel://vscode/vscode", UriKind.Absolute)
-                };
+                await root.Host.ConnectProxyKernelOnDefaultConnectorAsync(
+                    "vscode",
+                    new Uri("kernel://vscode/vscode"),
+                    new[] { "frontend" });
 
-                var jsKernelInfo = new KernelInfo("javascript", "javascript", aliases: new[] { "js" })
-                { 
-                    Uri  = new("kernel://webview/javascript", UriKind.Absolute)
-                };
-
-                await root.Host.CreateProxyKernelOnDefaultConnectorAsync(vscodeKernelInfo);
-
-                var jsKernel = await root.Host.CreateProxyKernelOnDefaultConnectorAsync(jsKernelInfo);
+                var jsKernel = await root.Host.ConnectProxyKernelOnDefaultConnectorAsync(
+                                   "javascript",
+                                   new Uri("kernel://webview/javascript"),
+                                   new[] { "js" });
 
                 jsKernel.UseValueSharing(new JavaScriptKernelValueDeclarer());
             }

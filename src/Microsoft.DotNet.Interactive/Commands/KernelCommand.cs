@@ -20,11 +20,6 @@ namespace Microsoft.DotNet.Interactive.Commands
             Parent = parent;
         }
 
-        protected KernelCommand(Uri destinationUri) : this()
-        {
-            DestinationUri = destinationUri ?? throw new ArgumentNullException(nameof(destinationUri));
-        }
-
         [JsonIgnore] 
         public KernelCommandInvocation Handler { get; set; }
 
@@ -41,11 +36,9 @@ namespace Microsoft.DotNet.Interactive.Commands
 
         internal static KernelCommand None => new NoCommand();
 
-        [JsonIgnore]
-        internal Uri OriginUri { get; set; }
+        public Uri OriginUri { get; internal set; }
 
-        [JsonIgnore]
-        internal Uri DestinationUri { get; set; }
+        public Uri DestinationUri { get; internal set; }
 
         [JsonIgnore]
         internal SchedulingScope SchedulingScope { get; set; } // FIX (SchedulingScope) can this be removed and we just use OriginUri?

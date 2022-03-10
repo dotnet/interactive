@@ -21,11 +21,14 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
     public NamedPipeKernelConnector(string pipeName)
     {
         PipeName = pipeName;
+        RemoteHostUri = new Uri($"kernel://{PipeName}");
     }
 
     public string PipeName { get; }
 
-    public async Task<Kernel> ConnectKernelAsync(string localName)
+    public Uri RemoteHostUri { get; }
+
+    public async Task<Kernel> CreateKernelAsync(string localName)
     {
         ProxyKernel? proxyKernel;
 
@@ -55,11 +58,14 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
             proxyKernel = new ProxyKernel(localName, _receiver, _sender);
         }
 
+        // FIX: (ConnectKernelAsync)  add an option for a different remote name... should this be general for all proxy kernels?
+        var destinationUri = new Uri(RemoteHostUri, localName);
+
         await _sender.SendAsync(
-            new RequestKernelInfo(destinationUri: proxyKernel.KernelInfo.Uri), 
+            new RequestKernelInfo(destinationUri: destinationUri), 
             CancellationToken.None);
 
-        // FIX: (ConnectKernelAsync) listen on receiver for KerneInfo
+        // FIX: (ConnectKernelAsync) listen on receiver for KernelInfo
 
         proxyKernel.EnsureStarted();
 

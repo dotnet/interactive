@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             using var kernel = CreateKernelWithConnectableFakeKernel(new FakeKernel("my-fake-kernel"));
 
-            var result = await kernel.SubmitCodeAsync("#!connect --kernel-name my-fake-kernel fake --fakeness-level 9000");
+            var result = await kernel.SubmitCodeAsync("#!connect fake --kernel-name my-fake-kernel --fakeness-level 9000");
 
             var events = result.KernelEvents.ToSubscribedList();
 
@@ -92,7 +92,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             using var kernel = CreateKernelWithConnectableFakeKernel(fakeKernel);
 
-            await kernel.SubmitCodeAsync("#!connect --kernel-name my-fake-kernel fake --fakeness-level 9000");
+            await kernel.SubmitCodeAsync("#!connect fake --kernel-name my-fake-kernel --fakeness-level 9000");
 
             await kernel.SubmitCodeAsync(@"
 #!my-fake-kernel
@@ -111,7 +111,10 @@ hello!
 
             using var compositeKernel = CreateKernelWithConnectableFakeKernel(fakeKernel);
 
-            await compositeKernel.SubmitCodeAsync("#!connect --kernel-name my-fake-kernel fake --fakeness-level 9000");
+            var result = await compositeKernel.SubmitCodeAsync("#!connect fake --kernel-name my-fake-kernel --fakeness-level 9000");
+
+            result.KernelEvents.ToSubscribedList().Should().NotContainErrors();
+
             compositeKernel.Dispose();
 
             disposed.Should().BeTrue();
@@ -199,7 +202,7 @@ hello!
             {
                 var connector = new FakeKernelConnector();
                 connector.CreateKernel = _createKernel;
-                return connector.ConnectKernelAsync(commandLineContext.ParseResult.GetValueForOption(KernelNameOption));
+                return connector.CreateKernelAsync(commandLineContext.ParseResult.GetValueForOption(KernelNameOption));
             }
         }
     }
@@ -210,6 +213,6 @@ hello!
 
         public Func<string, Task<Kernel>> CreateKernel { get; set; }
 
-        public Task<Kernel> ConnectKernelAsync(string kernelName) => CreateKernel(kernelName);
+        public Task<Kernel> CreateKernelAsync(string kernelName) => CreateKernel(kernelName);
     }
 }

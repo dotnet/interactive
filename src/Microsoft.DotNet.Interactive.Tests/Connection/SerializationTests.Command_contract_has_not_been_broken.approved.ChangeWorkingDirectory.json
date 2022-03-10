@@ -1,1 +1,1 @@
-{"token":"the-token","id":"command-id","commandType":"ChangeWorkingDirectory","command":{"workingDirectory":"/path/to/somewhere","targetKernelName":null},"originUri":"","destinationUri":""}
+{"token":"the-token","id":"command-id","commandType":"ChangeWorkingDirectory","command":{"workingDirectory":"/path/to/somewhere","targetKernelName":null,"originUri":null,"destinationUri":null}}

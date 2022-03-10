@@ -21,7 +21,7 @@ public class MsSqlKernelConnector : IKernelConnector
 
     public string PathToService { get; set; }
 
-    public async Task<Kernel> ConnectKernelAsync(string kernelName)
+    public async Task<Kernel> CreateKernelAsync(string kernelName)
     {
         if (string.IsNullOrWhiteSpace(PathToService))
         {
