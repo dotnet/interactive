@@ -57,8 +57,10 @@
     "onUri",
     "onNotebook:dotnet-interactive",
     "onNotebook:dotnet-interactive-legacy",
+    "onNotebook:dotnet-interactive-window",
     "onNotebook:jupyter-notebook",
     "onCommand:dotnet-interactive.acquire",
+    "onCommand:dotnet-interactive.createNewInteractive",
     "onCommand:dotnet-interactive.newNotebook",
     "onCommand:dotnet-interactive.openNotebook",
     "onCommand:dotnet-interactive.saveAsNotebook"
@@ -93,6 +95,11 @@
             "filenamePattern": "*.dotnet-interactive"
           }
         ]
+      },
+      {
+        "type": "dotnet-interactive-window",
+        "displayName": ".NET Interactive Notebook",
+        "selector": []
       }
     ],
     "jupyter.kernels": [
@@ -185,6 +192,10 @@
       {
         "command": "dotnet-interactive.acquire",
         "title": "Install .NET Interactive"
+      },
+      {
+        "command": "dotnet-interactive.createNewInteractive",
+        "title": ".NET Interactive: Create Interactive Window"
       },
       {
         "command": "dotnet-interactive.openNotebook",

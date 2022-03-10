@@ -202,7 +202,7 @@ export async function activate(context: vscode.ExtensionContext) {
     ////////////////////////////////////////////////////////////////////////////////
 
     const serializerMap = registerWithVsCode(context, clientMapper, parserServer, clientMapperConfig.createErrorOutput, ...preloads);
-    registerFileCommands(context, parserServer);
+    registerFileCommands(context, parserServer, clientMapper);
 
     context.subscriptions.push(vscode.workspace.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
     context.subscriptions.push(vscode.workspace.onDidRenameFiles(e => handleFileRenames(e, clientMapper)));
