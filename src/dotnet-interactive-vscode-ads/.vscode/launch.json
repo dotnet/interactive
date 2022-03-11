@@ -30,6 +30,21 @@
       "preLaunchTask": "${defaultBuildTask}"
     },
     {
+      "name": "Run Extension - ADS Insiders",
+      "type": "sqlopsExtensionHost",
+      "request": "launch",
+      "runtimeExecutable": "azuredatastudio-insiders",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}"
+      ],
+      "stopOnEntry": false,
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/out/**/*.js"
+      ],
+      "preLaunchTask": "${defaultBuildTask}"
+    },
+    {
       "name": "Run Extension Clean User Data",
       "type": "extensionHost",
       "request": "launch",

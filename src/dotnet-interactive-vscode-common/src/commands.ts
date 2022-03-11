@@ -6,7 +6,7 @@ import * as path from 'path';
 import { acquireDotnetInteractive } from './acquisition';
 import { InstallInteractiveArgs, InteractiveLaunchOptions } from './interfaces';
 import { ClientMapper } from './clientMapper';
-import { getEol, toNotebookDocument } from './vscodeUtilities';
+import { getEol, isAzureDataStudio, toNotebookDocument } from './vscodeUtilities';
 import { DotNetPathManager, KernelIdForJupyter } from './extension';
 import { computeToolInstallArguments, executeSafe, executeSafeAndLog, extensionToDocumentType, getVersionNumber } from './utilities';
 
@@ -288,19 +288,21 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
         }
     }));
 
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.createNewInteractive', async () => {
-        const interactiveOpenArgs = [
-            {}, // showOptions
-            undefined, // resource uri
-            `${context.extension.id}/dotnet-interactive-window`, // controllerId
-            '.NET Interactive', // title
-        ];
-        const result = <any>(await vscode.commands.executeCommand('interactive.open', ...interactiveOpenArgs));
-        if (result && result.notebookUri && typeof result.notebookUri.toString === 'function') {
-            // this looks suspiciously like a uri, let's pre-load the backing process
-            clientMapper.getOrAddClient(result.notebookUri.toString());
-        }
-    }));
+    if (!isAzureDataStudio(context)) {
+        context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.createNewInteractive', async () => {
+            const interactiveOpenArgs = [
+                {}, // showOptions
+                undefined, // resource uri
+                `${context.extension.id}/dotnet-interactive-window`, // controllerId
+                '.NET Interactive', // title
+            ];
+            const result = <any>(await vscode.commands.executeCommand('interactive.open', ...interactiveOpenArgs));
+            if (result && result.notebookUri && typeof result.notebookUri.toString === 'function') {
+                // this looks suspiciously like a uri, let's pre-load the backing process
+                clientMapper.getOrAddClient(result.notebookUri.toString());
+            }
+        }));
+    }
 }
 
 export async function selectDotNetInteractiveKernelForJupyter(): Promise<void> {
