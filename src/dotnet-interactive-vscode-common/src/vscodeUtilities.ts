@@ -17,6 +17,10 @@ export function isStableBuild(): boolean {
     return !isInsidersBuild();
 }
 
+export function isAzureDataStudio(context: vscode.ExtensionContext): boolean {
+    return context.extension.packageJSON?.azureDataStudioMode;
+}
+
 function convertToPosition(linePosition: LinePosition): vscode.Position {
     return new vscode.Position(linePosition.line, linePosition.character);
 }
