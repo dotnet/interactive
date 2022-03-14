@@ -15,7 +15,8 @@ export type LogEntry = {
 };
 
 export class Logger {
-    private static _default: Logger | undefined;
+
+    private static _default: Logger = new Logger('default', (_entry: LogEntry) => { });
 
     private constructor(private readonly source: string, readonly write: (entry: LogEntry) => void) {
     }
