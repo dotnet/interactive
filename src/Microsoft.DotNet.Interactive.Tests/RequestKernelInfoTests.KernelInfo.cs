@@ -77,7 +77,15 @@ public class RequestKernelInfoTests
 
             var events = result.KernelEvents.ToSubscribedList();
 
-            events.Should().ContainSingle<KernelInfoProduced>();
+            events.Should()
+                  .ContainSingle<KernelInfoProduced>()
+                  .Which
+                  .KernelInfo
+                  .Should()
+                  .BeEquivalentTo(new
+                  {
+
+                  }, c=>c.ExcludingMissingMembers());
 
             throw new NotImplementedException();
         }

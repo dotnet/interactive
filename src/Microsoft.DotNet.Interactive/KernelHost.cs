@@ -101,6 +101,10 @@ namespace Microsoft.DotNet.Interactive
                     {
                         var _ = _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
                     }
+                    else
+                    {
+
+                    }
                 }
             }
         }
@@ -147,7 +151,7 @@ namespace Microsoft.DotNet.Interactive
             string localName,
             Uri remoteKernelUri = null, 
             string[] aliases = null) =>
-            // FIX: (CreateProxyKernelOnDefaultConnectorAsync) what to do with this Uri? It can potentially connect through an intermediate proxy.
+            // FIX: (CreateProxyKernelOnDefaultConnectorAsync) what to do with this Uri? It can potentially connect through an intermediate proxy, but the remote needs to be able to resolve it
             await ConnectProxyKernelAsync(
                 localName, 
                 _defaultConnector, 
