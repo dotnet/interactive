@@ -11,12 +11,8 @@ import { provideSignatureHelp } from '../../src/vscode-common/languageServices/s
 import { CommandSucceededType, CompletionsProducedType, HoverTextProducedType, SignatureHelpProducedType } from '../../src/vscode-common/dotnet-interactive/contracts';
 import { createUri } from '../../src/vscode-common/utilities';
 import { createChannelConfig } from './utilities';
-import { Logger } from '../../src/vscode-common/dotnet-interactive/logger';
 
 describe('LanguageProvider tests', () => {
-    before(() => {
-        Logger.configure("test", () => { });
-    });
 
     it('CompletionProvider', async () => {
         const token = '123';
