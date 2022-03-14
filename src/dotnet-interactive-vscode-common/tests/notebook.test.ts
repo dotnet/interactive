@@ -26,13 +26,8 @@ import { createChannelConfig, decodeNotebookCellOutputs, withFakeGlobalStorageLo
 import { createUri } from '../../src/vscode-common/utilities';
 import { backupNotebook, languageToCellKind } from '../../src/vscode-common/interactiveNotebook';
 import * as vscodeLike from '../../src/vscode-common/interfaces/vscode-like';
-import { Logger } from '../../src/vscode-common/dotnet-interactive/logger';
 
 describe('Notebook tests', () => {
-    before(() => {
-        Logger.configure("test", () => { });
-    });
-
 
     for (const language of ['csharp', 'fsharp']) {
         it(`executes and returns expected value: ${language}`, async () => {

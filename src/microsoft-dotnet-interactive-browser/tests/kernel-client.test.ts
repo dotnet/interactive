@@ -22,9 +22,6 @@ interface CustomCommand2 extends contracts.KernelCommand {
 
 describe("dotnet-interactive", () => {
 
-    before(() => {
-        Logger.configure("test", () => { });
-    });
 
     describe("langauge kernel", () => {
         afterEach(() => fetchMock.restore());
@@ -133,7 +130,7 @@ describe("dotnet-interactive", () => {
         let kernel: Kernel | undefined;
         let commandsSentToKernel: contracts.KernelCommandEnvelope[] | undefined;
         let kernelEventHandlers: contracts.KernelEventEnvelopeObserver[] | undefined;
-        let registeredCommandHandlers: { [commandType: string]: ((kernelCommandInvocation: { command: contracts.KernelCommand, context: KernelInvocationContext }) => Promise<void>) }  | undefined;
+        let registeredCommandHandlers: { [commandType: string]: ((kernelCommandInvocation: { command: contracts.KernelCommand, context: KernelInvocationContext }) => Promise<void>) } | undefined;
 
         let makeClient = () => {
             configureFetchForKernelDiscovery(rootUrl);

@@ -13,12 +13,8 @@ import { CodeSubmissionReceivedType, CompleteCodeSubmissionReceivedType, Command
 import { createUri, debounce, wait } from '../../src/vscode-common/utilities';
 import * as vscodeLike from '../../src/vscode-common/interfaces/vscode-like';
 import { createChannelConfig, decodeNotebookCellOutputs } from './utilities';
-import { Logger } from '../../src/vscode-common/dotnet-interactive/logger';
 
 describe('InteractiveClient tests', () => {
-    before(() => {
-        Logger.configure("test", () => { });
-    });
 
     it('command execution returns deferred events', async () => {
         const token = 'test-token';
