@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             var connectionString = commandLineContext.ParseResult.GetValueForArgument(ConnectionStringArgument);
             var connector = new SQLiteKernelConnector(connectionString);
             var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
-            return connector.ConnectKernelAsync(localName);
+            return connector.CreateKernelAsync(localName);
         }
     }
 }

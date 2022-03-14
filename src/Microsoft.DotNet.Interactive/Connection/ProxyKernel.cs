@@ -69,7 +69,8 @@ namespace Microsoft.DotNet.Interactive.Connection
         {
             if (ParentKernel?.Host is null)
             {
-                throw new InvalidOperationException($"ProxyKernel {Name} is not attached to a {nameof(KernelHost)}");
+                // FIX: (HandleAsync) 
+            //    throw new InvalidOperationException($"ProxyKernel {Name} is not attached to a {nameof(KernelHost)}");
             }
 
             switch (command)
@@ -146,13 +147,20 @@ namespace Microsoft.DotNet.Interactive.Connection
 
         private bool HasSameOrigin(KernelEvent kernelEvent, KernelInfo kernelInfo)
         {
-            if (kernelInfo is not null)
+            var commandOriginUri = kernelEvent.Command.OriginUri;
+
+            if (commandOriginUri is null)
             {
-                // FIX: (HasSameOrigin) NRE on OriginUri
-                return kernelEvent.Command.OriginUri.Equals(kernelInfo.Uri);
+                commandOriginUri = KernelInfo.Uri;
             }
-            
-            return kernelEvent.Command.OriginUri is null;
+
+            if (kernelInfo is not null && 
+                commandOriginUri is not null)
+            {
+                return commandOriginUri.Equals(kernelInfo.Uri);
+            }
+
+            return commandOriginUri is null;
         }
 
         internal IKernelValueDeclarer ValueDeclarer

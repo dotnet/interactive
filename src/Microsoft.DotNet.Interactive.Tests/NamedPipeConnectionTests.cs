@@ -72,7 +72,7 @@ public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
         var receiver = new MultiplexingKernelCommandAndEventReceiver
 (kernelCommandAndEventPipeStreamReceiver);
 
-        var host = remoteCompositeKernel.UseHost(sender, receiver);
+        var host = remoteCompositeKernel.UseHost(sender, receiver, new("kernel://dotnet"));
 
         Task.Run(() =>
         {

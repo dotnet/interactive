@@ -65,17 +65,33 @@ public abstract class ProxyKernelConnectionTestsBase : IDisposable
 
         var kernelEvents2 = res2.KernelEvents.ToSubscribedList();
 
-        kernelEvents1.Should().ContainSingle<CommandSucceeded>().Which.Command.As<SubmitCode>().Code.Should()
-            .Be(kernelCommand1.Code);
+        kernelEvents1.Should().NotContainErrors()
+                     .And
+                     .ContainSingle<CommandSucceeded>()
+                     .Which
+                     .Command.As<SubmitCode>()
+                     .Code
+                     .Should().Be(kernelCommand1.Code);
 
-        kernelEvents1.Should().ContainSingle<ReturnValueProduced>().Which.
-            FormattedValues.Should().
-            ContainSingle(f => f.Value == "echo1");
+        kernelEvents1.Should()
+                     .ContainSingle<ReturnValueProduced>()
+                     .Which
+                     .FormattedValues
+                     .Should().ContainSingle(f => f.Value == "echo1");
 
-        kernelEvents2.Should().ContainSingle<CommandSucceeded>().Which.Command.As<SubmitCode>().Code.Should()
-            .Be(kernelCommand2.Code);
+        kernelEvents2.Should().NotContainErrors()
+                     .And
+                     .ContainSingle<CommandSucceeded>()
+                     .Which
+                     .Command.As<SubmitCode>()
+                     .Code
+                     .Should().Be(kernelCommand2.Code);
 
-        kernelEvents2.Should().ContainSingle<ReturnValueProduced>().Which.FormattedValues.Should().ContainSingle(f => f.Value == "echo2");
+        kernelEvents2.Should()
+                     .ContainSingle<ReturnValueProduced>()
+                     .Which
+                     .FormattedValues
+                     .Should().ContainSingle(f => f.Value == "echo2");
     }
 
     [WindowsFact]

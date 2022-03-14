@@ -11,7 +11,7 @@ public static class CompositeKernelExtensions
         this CompositeKernel kernel,
         IKernelCommandAndEventSender defaultSender,
         MultiplexingKernelCommandAndEventReceiver defaultReceiver,
-        Uri hostUri = null)
+        Uri hostUri)
     {
         return new KernelHost(kernel, defaultSender, defaultReceiver, hostUri);
     }

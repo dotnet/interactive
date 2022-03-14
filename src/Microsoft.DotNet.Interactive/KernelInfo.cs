@@ -55,7 +55,10 @@ namespace Microsoft.DotNet.Interactive
 
         public IReadOnlyCollection<DirectiveInfo> SupportedDirectives { get; init; } = Array.Empty<DirectiveInfo>();
 
-        public override string ToString() => LocalName;
+        public override string ToString() => LocalName +
+                                             (Uri is { } uri
+                                                  ? $" ({uri})"
+                                                  : null);
 
         internal HashSet<string> NameAndAliases { get; }
     }

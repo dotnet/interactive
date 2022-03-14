@@ -729,5 +729,18 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public virtual IKernelValueDeclarer GetValueDeclarer(object value) => KernelValueDeclarer.Default;
+
+        public override string ToString()
+        {
+            var value = $"{base.ToString()}: {Name}";
+
+            var kernelInfoUri = KernelInfo.Uri;
+            if (kernelInfoUri is { } uri)
+            {
+                value += $" ({uri})";
+            }
+
+            return value;
+        }
     }
 }

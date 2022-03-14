@@ -50,12 +50,12 @@ public class RequestKernelInfoTests
         [Fact]
         public async Task It_returns_the_list_of_proxied_kernel_commands_for_a_specified_subkernel()
         {
-            using var localCompositeKernel = new CompositeKernel
+            using var localCompositeKernel = new CompositeKernel("LOCAL")
             {
                 new FakeKernel("fsharp")
             };
             var proxiedCsharpKernel = new CSharpKernel();
-            using var remoteCompositeKernel = new CompositeKernel
+            using var remoteCompositeKernel = new CompositeKernel("REMOTE")
             {
                 proxiedCsharpKernel,
                 new FakeKernel("fsharp")

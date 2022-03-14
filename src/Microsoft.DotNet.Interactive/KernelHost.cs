@@ -1,6 +1,8 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#nullable enable
+
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,9 +25,9 @@ namespace Microsoft.DotNet.Interactive
             CompositeKernel kernel,
             IKernelCommandAndEventSender defaultSender,
             MultiplexingKernelCommandAndEventReceiver defaultReceiver,
-            Uri hostUri = null)
+            Uri hostUri)
         {
-            Uri = hostUri ?? new Uri("kernel://dotnet", UriKind.Absolute);
+            Uri = hostUri ?? throw new ArgumentNullException(nameof(hostUri));
             _kernel = kernel;
             _defaultSender = defaultSender;
             _defaultReceiver = defaultReceiver;

@@ -129,7 +129,8 @@ Console.WriteLine(1);";
             
             var host = remoteKernel.UseHost(
                 kernelCommandAndEventPipeStreamSender,
-                new MultiplexingKernelCommandAndEventReceiver(kernelCommandAndEventPipeStreamReceiver));
+                new MultiplexingKernelCommandAndEventReceiver(kernelCommandAndEventPipeStreamReceiver),
+                new("kernel://local"));
             
             remoteKernel.RegisterForDisposal(serverStream);
 

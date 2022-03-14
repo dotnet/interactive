@@ -3,10 +3,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive
 {
+    [DebuggerStepThrough]
     internal class CommandEqualityComparer : IEqualityComparer<KernelCommand>
     {
         public static CommandEqualityComparer Instance { get; } = new();

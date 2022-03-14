@@ -27,9 +27,6 @@ namespace Microsoft.DotNet.Interactive.Commands
         public KernelCommand Parent { get; internal set; }
 
         [JsonIgnore]
-        internal bool? ShouldPublishCompletionEvent { get; set; }
-
-        [JsonIgnore]
         public IDictionary<string, object> Properties { get; }
 
         public string TargetKernelName { get; internal set; }
@@ -44,6 +41,9 @@ namespace Microsoft.DotNet.Interactive.Commands
         internal SchedulingScope SchedulingScope { get; set; } // FIX (SchedulingScope) can this be removed and we just use OriginUri?
 
         [JsonIgnore]
+        internal bool? ShouldPublishCompletionEvent { get; set; }
+
+        [JsonIgnore] // FIX: (KernelChooserParseResult) make this internal / remove
         public ParseResult KernelChooserParseResult { get; internal set; }
 
         public virtual Task InvokeAsync(KernelInvocationContext context)

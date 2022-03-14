@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Interactive
         private Command _connectDirective;
         private KernelHost _host;
       
-        public CompositeKernel() : base(".NET")
+        public CompositeKernel(string name = null) : base(name ?? ".NET")
         {
             _childKernels = new(this);
 
@@ -331,6 +331,8 @@ namespace Microsoft.DotNet.Interactive
             }
 
             _host = host;
+
+            KernelInfo.Uri = _host.Uri;
 
             _childKernels.NotifyHostSet();
         }
