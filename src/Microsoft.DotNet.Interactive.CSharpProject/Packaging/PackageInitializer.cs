@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
             var dotnet = new Dotnet(directory);
 
             // lock sdk to 6.0.200, aka. net6.0
-            var result = await dotnet.New("globaljson", "--sdk-version 6.0.200");
+            var result = await dotnet.New("globaljson", "--sdk-version 6.0.100");
             result.ThrowOnFailure($"Error creating global.json in {directory.FullName}");
             var gbFile = directory.GetFiles("global.json").Single();
             var gj = JObject.Parse(File.ReadAllText(gbFile.FullName));
