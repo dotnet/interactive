@@ -84,17 +84,48 @@ public class RequestKernelInfoTests
                   .Should()
                   .BeEquivalentTo(new
                   {
-
-                  }, c=>c.ExcludingMissingMembers());
-
-            throw new NotImplementedException();
+                      LanguageName = "fsharp",
+                      Uri = new Uri("kernel://remote/fsharp")
+                  }, c => c.ExcludingMissingMembers());
         }
 
         [Fact]
-        public void It_returns_the_list_of_subkernels_of_remote_composite()
+        public async Task It_returns_the_list_of_subkernels_of_remote_composite()
         {
-            // TODO (It_returns_the_list_of_subkernels_of_remote_composite) write test
-            throw new NotImplementedException();
+            using var localCompositeKernel = new CompositeKernel("LOCAL")
+            {
+                new FakeKernel("fsharp")
+            };
+            var proxiedCsharpKernel = new CSharpKernel();
+            using var remoteCompositeKernel = new CompositeKernel("REMOTE")
+            {
+                proxiedCsharpKernel,
+                new FakeKernel("fsharp")
+            };
+
+            ConnectHost.ConnectInProcessHost(
+                localCompositeKernel,
+                new Uri("kernel://local"),
+                remoteCompositeKernel,
+                new Uri("kernel://remote"));
+
+            await localCompositeKernel
+                  .Host
+                  .ConnectProxyKernelOnDefaultConnectorAsync(
+                      "remote-fsharp",
+                      new Uri("kernel://remote/fsharp"));
+
+            var result = await localCompositeKernel.SendAsync(new RequestKernelInfo());
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events.OfType<KernelInfoProduced>()
+                  .Select(k => k.KernelInfo.Uri)
+                  .Should()
+                  .BeEquivalentTo(
+                      new Uri("kernel://local/remote-fsharp"),
+                      new Uri("kernel://remote/fsharp"),
+                      new Uri("kernel://remote/csharp"));
         }
 
         [Fact]

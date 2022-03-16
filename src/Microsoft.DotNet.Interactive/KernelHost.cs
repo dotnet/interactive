@@ -84,7 +84,7 @@ namespace Microsoft.DotNet.Interactive
             _receiverLoop = Task.Factory.StartNew(
                 ReceiverLoop, 
                 _cancellationTokenSource.Token,
-                TaskCreationOptions.LongRunning, 
+                TaskCreationOptions.LongRunning,
                 TaskScheduler.Default);
 
             await _defaultSender.NotifyIsReadyAsync(_cancellationTokenSource.Token);
@@ -95,6 +95,7 @@ namespace Microsoft.DotNet.Interactive
                 {
                     if (commandOrEvent.IsParseError)
                     {
+                        // FIX: (ConnectAsync) why no coverage?
                         var _ = _defaultSender.SendAsync(commandOrEvent.Event, _cancellationTokenSource.Token);
                     }
                     else if (commandOrEvent.Command is { })

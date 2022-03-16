@@ -53,6 +53,9 @@
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.App.Tests.StdioConnectionTests.stdio_server_encoding_is_utf_8</TestName>
       </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.App.Tests.StdioConnectionTests.fast_path_commands_over_proxy_can_be_handled</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

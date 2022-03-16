@@ -18,8 +18,7 @@ namespace Microsoft.DotNet.Interactive.Connection
         private readonly CancellationTokenSource _cancellationTokenSource = new();
         private ExecutionContext _executionContext;
         
-        private readonly Dictionary<string, (KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<KernelEvent> completionSource, KernelInfo kernelInfo,
-            KernelInvocationContext invocationContext)> _inflight = new();
+        private readonly Dictionary<string, (KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<KernelEvent> completionSource, KernelInvocationContext invocationContext)> _inflight = new();
 
         private int _started = 0;
         private IKernelValueDeclarer _valueDeclarer;
@@ -98,7 +97,7 @@ namespace Microsoft.DotNet.Interactive.Connection
             command.TargetKernelName = null;
             var completionSource = new TaskCompletionSource<KernelEvent>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            _inflight[token] = (command, _executionContext, completionSource, kernelInfo: KernelInfo, context);
+            _inflight[token] = (command, _executionContext, completionSource, context);
 
             ExecutionContext.SuppressFlow();
             var _ = _sender.SendAsync(command, context.CancellationToken);
@@ -118,7 +117,7 @@ namespace Microsoft.DotNet.Interactive.Connection
 
             var hasPending = _inflight.TryGetValue(token, out var pending);
 
-            if (hasPending && HasSameOrigin(kernelEvent, pending.kernelInfo))
+            if (hasPending && HasSameOrigin(kernelEvent, KernelInfo))
             {
                 switch (kernelEvent)
                 {

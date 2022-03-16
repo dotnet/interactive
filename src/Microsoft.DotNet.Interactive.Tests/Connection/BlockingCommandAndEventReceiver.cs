@@ -11,8 +11,7 @@ using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive.Tests.Connection;
 
-public class BlockingCommandAndEventReceiver :
-    KernelCommandAndEventReceiverBase
+public class BlockingCommandAndEventReceiver : KernelCommandAndEventReceiverBase
 {
     private readonly BlockingCollection<CommandOrEvent> _commandsOrEvents;
 
@@ -54,9 +53,10 @@ public class BlockingCommandAndEventReceiver :
             KernelCommandEnvelope.Serialize(
                 commandOrEvent.Command));
 
-    protected override Task<CommandOrEvent> ReadCommandOrEventAsync(CancellationToken cancellationToken)
+    protected override async Task<CommandOrEvent> ReadCommandOrEventAsync(CancellationToken cancellationToken)
     {
-        return Task.FromResult(_commandsOrEvents.Take(cancellationToken));
+        await Task.Yield();
+        return _commandsOrEvents.Take(cancellationToken);
     }
 
     public class Sender : IKernelCommandAndEventSender
