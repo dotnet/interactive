@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
             context.DisplayAs($"Scaffolding a `DbContext` and initializing an instance of it called `{kernelName}` in the C# kernel.", "text/markdown");
 
-            var submission1 = @$"
+            var submission1 = @$"  
 #r ""nuget: Microsoft.EntityFrameworkCore.Design, 6.0.0""
 #r ""nuget: Microsoft.EntityFrameworkCore.SqlServer, 6.0.0""
 #r ""nuget: Humanizer.Core, 2.8.26""
