@@ -63,6 +63,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 #r ""nuget: Microsoft.EntityFrameworkCore.SqlServer, 6.0.0""
 #r ""nuget: Humanizer.Core, 2.8.26""
 #r ""nuget: Humanizer, 2.8.26""
+#r ""nuget: Microsoft.Identity.Client, 4.35.1""
 
             using System;
 using System.Reflection;
