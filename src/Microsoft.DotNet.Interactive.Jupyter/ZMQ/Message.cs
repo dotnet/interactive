@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.Json.Serialization;
+
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
@@ -52,7 +53,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
         }
 
         public static Message Create<T>(T content,
-            Header parentHeader = null,
+            Header parentHeader,
             IReadOnlyList<IReadOnlyList<byte>> identifiers = null,
             IReadOnlyDictionary<string, object> metaData = null,
             string signature = null)
@@ -63,9 +64,36 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
                 throw new ArgumentNullException(nameof(content));
             }
 
-            var session = parentHeader?.Session ?? Guid.NewGuid().ToString();
+            if (parentHeader == null)
+            {
+                throw new ArgumentNullException(nameof(parentHeader));
+            }
+
+            var session = parentHeader.Session ?? Guid.NewGuid().ToString();
             var header = Header.Create(content, session);
             var message = new Message(header, parentHeader: parentHeader, content: content, identifiers: identifiers, signature: signature, metaData: metaData);
+
+            return message;
+        }
+
+        public static Message Create<T>(T content,
+            Session session,
+            IReadOnlyList<IReadOnlyList<byte>> identifiers = null,
+            IReadOnlyDictionary<string, object> metaData = null)
+            where T : Protocol.Message
+        {
+            if (content is null)
+            {
+                throw new ArgumentNullException(nameof(content));
+            }
+
+            if (session is null)
+            {
+                throw new ArgumentNullException(nameof(session));
+            }
+
+            var header = Header.Create(content, session);
+            var message = new Message(header, parentHeader: null, content: content, identifiers: identifiers, signature: null, metaData: metaData);
 
             return message;
         }

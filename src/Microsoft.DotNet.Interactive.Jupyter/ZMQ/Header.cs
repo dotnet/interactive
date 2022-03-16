@@ -61,7 +61,22 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
             {
                 throw new ArgumentNullException(nameof(messageContent));
             }
+
             return Create(messageContent.MessageType, session);
+        }
+
+        public static Header Create<T>(T messageContent, Session session)
+            where T : Protocol.Message
+        {
+            if (messageContent is null)
+            {
+                throw new ArgumentNullException(nameof(messageContent));
+            }
+            if (session is null)
+            {
+                throw new ArgumentNullException(nameof(session));
+            }
+            return Create(messageContent.MessageType, session.Id, session.ProtocolVersion, session.Username);
         }
 
         public static Header Create<T>(string session)
@@ -73,11 +88,16 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
 
         private static Header Create(string messageType, string session)
         {
+            return Create(messageType, session, Constants.MESSAGE_PROTOCOL_VERSION, Constants.USERNAME);
+        }
+
+        private static Header Create(string messageType, string session, string protocolVersion, string username)
+        {
             var newHeader = new Header(
                 messageType: messageType,
                 messageId: Guid.NewGuid().ToString(),
-                version: Constants.MESSAGE_PROTOCOL_VERSION,
-                username: Constants.USERNAME,
+                version: protocolVersion,
+                username: username,
                 session: session);
 
             return newHeader;

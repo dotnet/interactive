@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 using FluentAssertions;
 using FluentAssertions.Extensions;
+
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
+
 using Recipes;
 
 using Xunit;
@@ -27,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         public async Task send_completeReply_on_CompleteRequest()
         {
             var scheduler = CreateScheduler();
-            var request = ZeroMQMessage.Create(new CompleteRequest("System.Console.", 15));
+            var request = ZeroMQMessage.Create(new CompleteRequest("System.Console.", 15), new Session());
             var context = new JupyterRequestContext(JupyterMessageSender, request);
 
             await scheduler.Schedule(context);
@@ -46,7 +48,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
             {
                 { "dotnet_interactive", new InputCellMetadata("fsharp" ) }
             };
-            var request = ZeroMQMessage.Create(new CompleteRequest("1+1"), metaData: metaData);
+            var request = ZeroMQMessage.Create(new CompleteRequest("1+1"), new Session(), metaData: metaData);
             var context = new JupyterRequestContext(JupyterMessageSender, request);
             var language = context.GetLanguage();
             language
@@ -57,7 +59,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         [Fact]
         public void cell_language_defaults_to_null_when_it_cant_be_found()
         {
-            var request = ZeroMQMessage.Create(new CompleteRequest("1+1"));
+            var request = ZeroMQMessage.Create(new CompleteRequest("1+1"), new Session());
             var context = new JupyterRequestContext(JupyterMessageSender, request);
             var language = context.GetLanguage();
             language
