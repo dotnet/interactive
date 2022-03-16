@@ -9,6 +9,7 @@ using System.CommandLine.Parsing;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -688,10 +689,45 @@ namespace Microsoft.DotNet.Interactive
                         break;
 
                     default:
-                        TrySetDynamicHandler(command);
+                        if (!TrySetHandlerFromInterface(command))
+                        {
+                            TrySetDynamicHandler(command);
+                        }
                         break;
                 }
             }
+        }
+        private readonly Dictionary<Type, Action<KernelCommand, Kernel>> _customHandlers = new ();
+        private bool TrySetHandlerFromInterface(KernelCommand command)
+        {
+            var commandType = command.GetType();
+           
+            var handlerType = typeof(IKernelCommandHandler<>).MakeGenericType(commandType);
+            
+
+            if (handlerType.IsInstanceOfType(this))
+            {
+                if (!_customHandlers.TryGetValue(commandType, out var setHandler))
+                {
+                    var methodName = nameof(SetHandler);
+                    var setHandlerForCommandType = typeof(Kernel)
+                        .GetMethod(methodName, BindingFlags.Static | BindingFlags.NonPublic)!
+                        .MakeGenericMethod(commandType);
+
+                    setHandler = (kernelCommand, handler) =>
+                    {
+                        setHandlerForCommandType.Invoke(null, new object[] {kernelCommand, handler});
+                    };
+
+                    _customHandlers[commandType] = setHandler;
+
+                }
+
+                setHandler(command, this);
+                return true;
+            }
+
+            return false;
         }
 
         private void TrySetDynamicHandler(KernelCommand command)

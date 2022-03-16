@@ -12,6 +12,7 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
@@ -526,6 +527,28 @@ new [] {1,2,3}");
         }
 
         [Fact]
+        public async Task When_kernel_implements_IKernelCommandHandler_for_a_custom_command_it_is_correctly_selected_has_handler()
+        {
+            using var compositeKernel = new CompositeKernel
+            {
+                new FakeKernel("csharp")
+            };
+
+            compositeKernel.DefaultKernelName = "csharp";
+            compositeKernel.Add(new KernelWithCustomCommand("custom"));
+
+    
+            var commandSentToKernel = new CustomCommandTypes.FirstSubmission.MyCommand("xyzzy","custom");
+            var results = await compositeKernel.SendAsync(commandSentToKernel);
+
+            var events = results.KernelEvents.ToSubscribedList();
+            events.Should().NotContainErrors();
+            events.Should().ContainSingle<DisplayedValueProduced>()
+                .Which
+                .FormattedValues.Should().ContainSingle(fv => fv.Value == commandSentToKernel.Info);
+        }
+
+        [Fact]
         public async Task When_command_handler_registered_and_command_sent_then_handler_is_executed()
         {
             using var compositeKernel = new CompositeKernel();
@@ -588,6 +611,20 @@ new [] {1,2,3}");
             var childKernel = new CompositeKernel();
             var action = new Action( () => compositeKernel.Add(childKernel));
             action.Should().Throw<ArgumentException>();
+        }
+    }
+
+    public class KernelWithCustomCommand : Kernel,
+        IKernelCommandHandler<CustomCommandTypes.FirstSubmission.MyCommand>
+    {
+        public KernelWithCustomCommand(string name) : base(name)
+        {
+        }
+
+        public Task HandleAsync(CustomCommandTypes.FirstSubmission.MyCommand command, KernelInvocationContext context)
+        {
+            context.Publish(new DisplayedValueProduced(command.Info, command,new []{ new FormattedValue(PlainTextFormatter.MimeType, command.Info)}));
+            return Task.CompletedTask;
         }
     }
 }

@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
         {
             public class MyCommand : KernelCommand
             {
-                public MyCommand(string info)
+                public MyCommand(string info, string targetKernelName = null) : base(targetKernelName)
                 {
                     Info = info;
                 }
@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
         {
             public class MyCommand : KernelCommand
             {
-                public MyCommand(string info, int additionalProperty)
+                public MyCommand(string info, int additionalProperty, string targetKernelName = null) : base(targetKernelName)
                 {
                     Info = info;
                     AdditionalProperty = additionalProperty;
