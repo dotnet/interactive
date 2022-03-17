@@ -1,6 +1,9 @@
 Microsoft.DotNet.Interactive
   public class AutomationEnvironment : FrontendEnvironment
     .ctor()
+  public class Base64EncodedAssembly
+    .ctor(System.String value)
+    public System.String Value { get;}
   public class ChooseKernelDirective : System.CommandLine.Command, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
     .ctor(Kernel kernel, System.String description = null)
     public Kernel Kernel { get;}
@@ -308,7 +311,7 @@ Microsoft.DotNet.Interactive
     .ctor(System.String clearTextPassword)
     public System.String GetClearTextPassword()
   public class Project
-    .ctor(System.Collections.Generic.IEnumerable<ProjectFile> files)
+    .ctor(System.Collections.Generic.IReadOnlyCollection<ProjectFile> files)
     public System.Collections.Generic.IReadOnlyCollection<ProjectFile> Files { get;}
   public class ProjectFile
     .ctor(System.String path, System.String content)
@@ -346,6 +349,9 @@ Microsoft.DotNet.Interactive.Commands
     .ctor(System.String workingDirectory)
     public System.String WorkingDirectory { get;}
     public System.Threading.Tasks.Task InvokeAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context)
+  public class CompileProject : KernelCommand
+    .ctor(System.String code = null)
+    public System.String Code { get;}
   public class DisplayError : KernelCommand
     .ctor(System.String message)
     public System.String Message { get;}
@@ -368,6 +374,13 @@ Microsoft.DotNet.Interactive.Commands
     public Microsoft.DotNet.Interactive.LinePosition LinePosition { get;}
     protected System.Void set_Code(System.String value)
     protected System.Void set_LinePosition(Microsoft.DotNet.Interactive.LinePosition value)
+  public class OpenDocument : KernelCommand
+    .ctor(System.String path, System.String regionName = null)
+    public System.String Path { get;}
+    public System.String RegionName { get;}
+  public class OpenProject : KernelCommand
+    .ctor(Microsoft.DotNet.Interactive.Project project)
+    public Microsoft.DotNet.Interactive.Project Project { get;}
   public class Quit : KernelCommand
     .ctor()
     public System.Threading.Tasks.Task InvokeAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context)
@@ -474,6 +487,9 @@ Microsoft.DotNet.Interactive.Connection
     public Microsoft.DotNet.Interactive.ValueSharing.IKernelValueDeclarer GetValueDeclarer(System.Object value)
     public System.Threading.Tasks.Task StartAsync()
 Microsoft.DotNet.Interactive.Events
+  public class AssemblyProduced : KernelEvent
+    .ctor(Microsoft.DotNet.Interactive.Commands.CompileProject command, Microsoft.DotNet.Interactive.Base64EncodedAssembly assembly)
+    public Microsoft.DotNet.Interactive.Base64EncodedAssembly Assembly { get;}
   public class CodeSubmissionReceived : KernelEvent
     .ctor(Microsoft.DotNet.Interactive.Commands.SubmitCode command)
     public System.String Code { get;}
@@ -527,6 +543,11 @@ Microsoft.DotNet.Interactive.Events
     public System.Object Value { get;}
     public System.String ValueId { get;}
     public System.String ToString()
+  public class DocumentOpened : KernelEvent
+    .ctor(Microsoft.DotNet.Interactive.Commands.OpenDocument command, System.String path, System.String regionName, System.String content)
+    public System.String Content { get;}
+    public System.String Path { get;}
+    public System.String RegionName { get;}
   public class ErrorProduced : DisplayEvent
     .ctor(System.String message, Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.FormattedValue> formattedValues = null)
     public System.String Message { get;}
