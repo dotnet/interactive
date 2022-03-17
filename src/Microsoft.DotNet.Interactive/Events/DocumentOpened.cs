@@ -7,14 +7,14 @@ namespace Microsoft.DotNet.Interactive.Events
     {
         public string Path { get; }
         public string RegionName { get; }
-        public string Contents { get; }
+        public string Content { get; }
 
-        public DocumentOpened(OpenDocument command, string path, string regionName, string contents)
+        public DocumentOpened(OpenDocument command, string path, string regionName, string content)
             : base(command)
         {
             Path = path ?? throw new ArgumentNullException(nameof(path));
             RegionName = regionName;
-            Contents = contents ?? throw new ArgumentNullException(nameof(contents));
+            Content = content ?? throw new ArgumentNullException(nameof(content));
         }
     }
 }

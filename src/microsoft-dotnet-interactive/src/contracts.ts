@@ -303,7 +303,7 @@ export interface DisplayedValueUpdated extends DisplayEvent {
 export interface DocumentOpened extends KernelEvent {
     path: string;
     regionName?: string;
-    contents: string;
+    content: string;
 }
 
 export interface ErrorProduced extends DisplayEvent {
