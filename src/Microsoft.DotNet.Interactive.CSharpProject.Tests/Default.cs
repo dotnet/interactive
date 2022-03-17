@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
 {
     public class Default
     {
-        public static PackageRegistry PackageRegistry => PackageRegistry.CreateForHostedMode();
+        public static IPackageFinder PackageRegistry => PackageFinder.Create(ConsoleWorkspace().Result);
 
         public static async Task<Package> ConsoleWorkspace()
         {
