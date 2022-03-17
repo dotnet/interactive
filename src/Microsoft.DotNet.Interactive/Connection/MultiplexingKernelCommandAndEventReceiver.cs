@@ -89,12 +89,12 @@ namespace Microsoft.DotNet.Interactive.Connection
                 {
                     using var op = _log.OnEnterAndExit();
 
+                    await Task.Yield();
+
                     var commandOrEvent = ReceivedCommandsAndEvents.Take(cancellationToken);
 
                     op.Trace("ReceivedCommandsAndEvents.Take", commandOrEvent);
 
-                    await Task.Yield();
-                    
                     yield return commandOrEvent;
                 }
             }

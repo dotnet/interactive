@@ -141,15 +141,11 @@ namespace Microsoft.DotNet.Interactive
             context.HandlingKernel = GetHandlingKernel(command, context);
         }
 
-        private Kernel GetHandlingKernel(
+        private protected override Kernel GetHandlingKernel(
             KernelCommand command,
             KernelInvocationContext context)
         {
-            var targetKernelName = command switch
-            {
-                { } _ => GetKernelNameFromCommand() ?? DefaultKernelName,
-                _ => DefaultKernelName
-            };
+            var targetKernelName = command.TargetKernelName ?? DefaultKernelName;
 
             Kernel kernel;
 
@@ -168,26 +164,8 @@ namespace Microsoft.DotNet.Interactive
             }
 
             return kernel ?? this;
-
-            string GetKernelNameFromCommand()
-            {
-                return command.TargetKernelName;
-            }
         }
-
-        private protected override SchedulingScope GetHandlingKernelCommandScope(
-            KernelCommand command, KernelInvocationContext context)
-        {
-            return GetHandlingKernel(command, context).SchedulingScope;
-        }
-
-        private protected override string GetHandlingKernelName(
-            KernelCommand command,
-            KernelInvocationContext context)
-        {
-            return GetHandlingKernel(command, context).Name;
-        }
-
+        
         internal override async Task HandleAsync(
             KernelCommand command,
             KernelInvocationContext context)

@@ -117,15 +117,15 @@ public class RequestKernelInfoTests
 
             var result = await localCompositeKernel.SendAsync(new RequestKernelInfo());
 
-            var events = result.KernelEvents.ToSubscribedList();
+            var events = result.KernelEvents.ToSubscribedList().OfType<KernelInfoProduced>();
 
-            events.OfType<KernelInfoProduced>()
-                  .Select(k => k.KernelInfo.Uri)
-                  .Should()
-                  .BeEquivalentTo(
-                      new Uri("kernel://local/remote-fsharp"),
-                      new Uri("kernel://remote/fsharp"),
-                      new Uri("kernel://remote/csharp"));
+            events
+                .Select(k => k.KernelInfo.Uri)
+                .Should()
+                .BeEquivalentTo(
+                    new Uri("kernel://local/remote-fsharp"),
+                    new Uri("kernel://remote/fsharp"),
+                    new Uri("kernel://remote/csharp"));
         }
 
         [Fact]

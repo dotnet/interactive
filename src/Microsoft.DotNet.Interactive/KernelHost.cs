@@ -102,10 +102,6 @@ namespace Microsoft.DotNet.Interactive
                     {
                         var _ = _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
                     }
-                    else
-                    {
-
-                    }
                 }
             }
         }

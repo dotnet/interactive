@@ -136,10 +136,12 @@ namespace Microsoft.DotNet.Interactive
 
             foreach (var command in commands)
             {
-                command.SchedulingScope ??= GetHandlingKernelCommandScope(command, context);
-                command.TargetKernelName ??= GetHandlingKernelName(command, context);
+                var handlingKernel = GetHandlingKernel(command, context);
 
-                if (command.Parent is null &&
+                command.SchedulingScope ??= handlingKernel.SchedulingScope;
+                command.TargetKernelName ??= handlingKernel.Name;
+
+                if (command.Parent is null && 
                     !CommandEqualityComparer.Instance.Equals(command, originalCommand))
                 {
                     command.Parent = originalCommand;
@@ -537,14 +539,9 @@ namespace Microsoft.DotNet.Interactive
             return Task.CompletedTask;
         }
 
-        private protected virtual SchedulingScope GetHandlingKernelCommandScope(KernelCommand command, KernelInvocationContext invocationContext)
+        private protected virtual Kernel GetHandlingKernel(KernelCommand command, KernelInvocationContext invocationContext)
         {
-            return SchedulingScope;
-        }
-
-        private protected virtual string GetHandlingKernelName(KernelCommand command, KernelInvocationContext invocationContext)
-        {
-            return Name;
+            return this;
         }
 
         protected internal void PublishEvent(KernelEvent kernelEvent)

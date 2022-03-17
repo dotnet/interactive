@@ -66,12 +66,6 @@ namespace Microsoft.DotNet.Interactive.Connection
             KernelCommand command, 
             KernelInvocationContext context)
         {
-            if (ParentKernel?.Host is null)
-            {
-                // FIX: (HandleAsync) 
-            //    throw new InvalidOperationException($"ProxyKernel {Name} is not attached to a {nameof(KernelHost)}");
-            }
-
             switch (command)
             {
                 case AnonymousKernelCommand:
@@ -132,8 +126,7 @@ namespace Microsoft.DotNet.Interactive.Connection
                     default:
                         if (pending.executionContext is { } ec)
                         {
-                            ExecutionContext.Run(ec, _ => pending.invocationContext.Publish(kernelEvent),
-                                null);
+                            ExecutionContext.Run(ec, _ => pending.invocationContext.Publish(kernelEvent), null);
                         }
                         else
                         {
