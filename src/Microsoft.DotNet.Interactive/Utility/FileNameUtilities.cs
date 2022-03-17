@@ -77,7 +77,7 @@ namespace Microsoft.DotNet.Interactive.Utility
         /// The same functionality as <see cref="System.IO.Path.GetExtension(string)"/> but doesn't throw an exception
         /// if there are invalid characters in the path.
         /// </remarks>
-        internal static string GetExtension(string path)
+        public static string GetExtension(string path)
         {
             if (path is null)
             {
@@ -127,7 +127,7 @@ namespace Microsoft.DotNet.Interactive.Utility
         /// If path does not end with an extension, the new extension is appended to the path.
         /// If extension is null, equivalent to <see cref="RemoveExtension"/>.
         /// </returns>
-        internal static string ChangeExtension(string path, string extension)
+        public static string ChangeExtension(string path, string extension)
         {
             if (path is null)
             {
@@ -175,7 +175,7 @@ namespace Microsoft.DotNet.Interactive.Utility
         /// Get file name from path.
         /// </summary>
         /// <remarks>Unlike <see cref="System.IO.Path.GetFileName"/> doesn't check for invalid path characters.</remarks>
-        internal static string GetFileName(string path, bool includeExtension = true)
+        public static string GetFileName(string path, bool includeExtension = true)
         {
             int fileNameStart = IndexOfFileName(path);
             var fileName = (fileNameStart <= 0) ? path : path.Substring(fileNameStart);

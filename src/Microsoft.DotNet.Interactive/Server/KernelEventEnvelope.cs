@@ -54,6 +54,7 @@ namespace Microsoft.DotNet.Interactive.Server
         {
             _envelopeTypesByEventTypeName = new Dictionary<string, Type>
             {
+                [nameof(AssemblyProduced)] = typeof(KernelEventEnvelope<AssemblyProduced>),
                 [nameof(CodeSubmissionReceived)] = typeof(KernelEventEnvelope<CodeSubmissionReceived>),
                 [nameof(CommandFailed)] = typeof(KernelEventEnvelope<CommandFailed>),
                 [nameof(CommandSucceeded)] = typeof(KernelEventEnvelope<CommandSucceeded>),
@@ -64,6 +65,7 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(DiagnosticsProduced)] = typeof(KernelEventEnvelope<DiagnosticsProduced>),
                 [nameof(DisplayedValueProduced)] = typeof(KernelEventEnvelope<DisplayedValueProduced>),
                 [nameof(DisplayedValueUpdated)] = typeof(KernelEventEnvelope<DisplayedValueUpdated>),
+                [nameof(DocumentOpened)] = typeof(KernelEventEnvelope<DocumentOpened>),
                 [nameof(ErrorProduced)] = typeof(KernelEventEnvelope<ErrorProduced>),
                 [nameof(IncompleteCodeSubmissionReceived)] = typeof(KernelEventEnvelope<IncompleteCodeSubmissionReceived>),
                 [nameof(HoverTextProduced)] = typeof(KernelEventEnvelope<HoverTextProduced>),

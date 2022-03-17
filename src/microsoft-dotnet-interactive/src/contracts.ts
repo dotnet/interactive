@@ -8,9 +8,12 @@
 export const AddPackageType = "AddPackage";
 export const CancelType = "Cancel";
 export const ChangeWorkingDirectoryType = "ChangeWorkingDirectory";
+export const CompileProjectType = "CompileProject";
 export const DisplayErrorType = "DisplayError";
 export const DisplayValueType = "DisplayValue";
 export const GetInputType = "GetInput";
+export const OpenDocumentType = "OpenDocument";
+export const OpenProjectType = "OpenProject";
 export const QuitType = "Quit";
 export const RequestCompletionsType = "RequestCompletions";
 export const RequestDiagnosticsType = "RequestDiagnostics";
@@ -27,9 +30,12 @@ export type KernelCommandType =
       typeof AddPackageType
     | typeof CancelType
     | typeof ChangeWorkingDirectoryType
+    | typeof CompileProjectType
     | typeof DisplayErrorType
     | typeof DisplayValueType
     | typeof GetInputType
+    | typeof OpenDocumentType
+    | typeof OpenProjectType
     | typeof QuitType
     | typeof RequestCompletionsType
     | typeof RequestDiagnosticsType
@@ -57,6 +63,10 @@ export interface ChangeWorkingDirectory extends KernelCommand {
     workingDirectory: string;
 }
 
+export interface CompileProject extends KernelCommand {
+    code: string;
+}
+
 export interface DisplayError extends KernelCommand {
     message: string;
 }
@@ -69,6 +79,15 @@ export interface DisplayValue extends KernelCommand {
 export interface GetInput extends KernelCommand {
     prompt: string;
     isPassword: boolean;
+}
+
+export interface OpenDocument extends KernelCommand {
+    path: string;
+    regionName?: string;
+}
+
+export interface OpenProject extends KernelCommand {
+    project: Project;
 }
 
 export interface Quit extends KernelCommand {
@@ -174,6 +193,7 @@ export interface NotebookErrorResponse extends NotebookParserServerResponse {
 
 // --------------------------------------------- Kernel events
 
+export const AssemblyProducedType = "AssemblyProduced";
 export const CodeSubmissionReceivedType = "CodeSubmissionReceived";
 export const CommandCancelledType = "CommandCancelled";
 export const CommandFailedType = "CommandFailed";
@@ -184,6 +204,7 @@ export const DiagnosticLogEntryProducedType = "DiagnosticLogEntryProduced";
 export const DiagnosticsProducedType = "DiagnosticsProduced";
 export const DisplayedValueProducedType = "DisplayedValueProduced";
 export const DisplayedValueUpdatedType = "DisplayedValueUpdated";
+export const DocumentOpenedType = "DocumentOpened";
 export const ErrorProducedType = "ErrorProduced";
 export const HoverTextProducedType = "HoverTextProduced";
 export const IncompleteCodeSubmissionReceivedType = "IncompleteCodeSubmissionReceived";
@@ -201,7 +222,8 @@ export const ValueProducedType = "ValueProduced";
 export const WorkingDirectoryChangedType = "WorkingDirectoryChanged";
 
 export type KernelEventType =
-      typeof CodeSubmissionReceivedType
+      typeof AssemblyProducedType
+    | typeof CodeSubmissionReceivedType
     | typeof CommandCancelledType
     | typeof CommandFailedType
     | typeof CommandSucceededType
@@ -211,6 +233,7 @@ export type KernelEventType =
     | typeof DiagnosticsProducedType
     | typeof DisplayedValueProducedType
     | typeof DisplayedValueUpdatedType
+    | typeof DocumentOpenedType
     | typeof ErrorProducedType
     | typeof HoverTextProducedType
     | typeof IncompleteCodeSubmissionReceivedType
@@ -226,6 +249,10 @@ export type KernelEventType =
     | typeof ValueInfosProducedType
     | typeof ValueProducedType
     | typeof WorkingDirectoryChangedType;
+
+export interface AssemblyProduced extends KernelEvent {
+    assembly: Base64EncodedAssembly;
+}
 
 export interface CodeSubmissionReceived extends KernelEvent {
     code: string;
@@ -271,6 +298,12 @@ export interface DisplayEvent extends KernelEvent {
 }
 
 export interface DisplayedValueUpdated extends DisplayEvent {
+}
+
+export interface DocumentOpened extends KernelEvent {
+    path: string;
+    regionName?: string;
+    content: string;
 }
 
 export interface ErrorProduced extends DisplayEvent {
@@ -332,6 +365,10 @@ export interface WorkingDirectoryChanged extends KernelEvent {
 }
 
 // --------------------------------------------- Required Types
+
+export interface Base64EncodedAssembly {
+    value: string;
+}
 
 export interface CompletionItem {
     displayText: string;
@@ -412,6 +449,15 @@ export interface PackageReference {
     packageName: string;
     packageVersion: string;
     isPackageVersionSpecified: boolean;
+}
+
+export interface Project {
+    files: Array<ProjectFile>;
+}
+
+export interface ProjectFile {
+    path: string;
+    content: string;
 }
 
 export enum RequestType {
