@@ -4,12 +4,11 @@ $ErrorActionPreference = "Stop"
 $thisDir = Split-Path -Parent $PSCommandPath
 $toolLocation = ""
 $toolVersion = ""
-dotnet run -p (Join-Path -Path $thisDir ".." "interface-generator") --out-file (Join-Path $thisDir ".." "dotnet-interactive-vscode" "src" "interfaces" "src" "contracts.ts")
 
-dotnet run -p (Join-Path -Path $thisDir ".." "interface-generator") --out-file (Join-Path $thisDir ".." "Microsoft.DotNet.Interactive.Js" "src" "dotnet-interactive" "contracts.ts")
+dotnet run -p (Join-Path -Path $thisDir ".." "interface-generator") --out-file (Join-Path $thisDir ".." "microsoft-dotnet-interactive" "src" "contracts.ts")
 
 if (Test-Path 'env:DisableArcade') {
-    dotnet pack (Join-Path $thisDir "dotnet-interactive.csproj") /p:Version=1.0.0
+     dotnet pack (Join-Path $thisDir "dotnet-interactive.csproj") /p:Version=1.0.0
     $script:toolLocation = Join-Path $thisDir "bin" "debug"
     $script:toolVersion = "1.0.0"
 } else {

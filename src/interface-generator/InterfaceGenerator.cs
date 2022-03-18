@@ -6,10 +6,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharpProject;
+using Microsoft.DotNet.Interactive.CSharpProject.Commands;
+using Microsoft.DotNet.Interactive.CSharpProject.Events;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Documents.ParserServer;
 using Microsoft.DotNet.Interactive.Events;
@@ -65,11 +68,44 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
             $"{nameof(SubmitCode)}.{nameof(SubmitCode.SubmissionType)}"
         };
 
-        private static IEnumerable<Type> CoreAssemblyTypes = typeof(KernelCommand).Assembly.ExportedTypes;
-        private static IEnumerable<Type> DotNetTryAssemblyTypes = typeof(CSharpProjectKernel).Assembly.ExportedTypes;
+        private static IEnumerable<Type> CoreAssemblyTypes = GetTypesFromClosure(typeof(KernelCommand).Assembly);
+        private static IEnumerable<Type> CSharpProjectKernelAssemblyTypes = GetTypesFromClosure(typeof(CSharpProjectKernel).Assembly);
         private static IEnumerable<Type> VSCodeAssemblyTypes = typeof(VSCodeInteractiveHost).Assembly.ExportedTypes;
 
-        private static IEnumerable<Type> AllAssemblyTypes = CoreAssemblyTypes.Concat(DotNetTryAssemblyTypes).Concat(VSCodeAssemblyTypes);
+        private static IEnumerable<Type> AllAssemblyTypes = CoreAssemblyTypes.Concat(CSharpProjectKernelAssemblyTypes).Concat(VSCodeAssemblyTypes).Distinct();
+            
+        private static IEnumerable<Type> GetTypesFromClosure(Assembly rootAssembly)
+        {
+            return AssemblyToScan(rootAssembly).SelectMany(a => a.ExportedTypes).Distinct();
+
+            static IEnumerable<Assembly> AssemblyToScan(Assembly rootAssembly)
+            {
+                var queue = new Queue<Assembly>();
+                queue.Enqueue(rootAssembly);
+                var scanned = new HashSet<string> { rootAssembly.GetName().FullName };
+                while (queue.Count > 0)
+                {
+                    var current = queue.Dequeue();
+                    foreach (var ran in current.GetReferencedAssemblies())
+                    {
+                        if (scanned.Add(ran.FullName))
+                        {
+                            try
+                            {
+                                var referencedAssembly = Assembly.Load(ran);
+                                queue.Enqueue(referencedAssembly);
+                            }
+                            catch (System.IO.FileNotFoundException)
+                            {
+                                
+                            }
+                        }
+                    }
+
+                    yield return current;
+                }
+            }
+        }
 
         public static string Generate()
         {

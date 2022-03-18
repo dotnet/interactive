@@ -4,6 +4,7 @@
 using System.Diagnostics;
 using Assent;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.CSharpProject;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
@@ -66,6 +67,13 @@ public class ApiCompatibilityTests
     public void csharp_api_is_not_changed()
     {
         var contract = ApiContract.GenerateContract<CSharpKernel>();
+        this.Assent(contract, _configuration);
+    }
+
+    [Fact(Skip = "this api is in early design stage.")]
+    public void csharpProject_api_is_not_changed()
+    {
+        var contract = ApiContract.GenerateContract<CSharpProjectKernel>();
         this.Assent(contract, _configuration);
     }
 
