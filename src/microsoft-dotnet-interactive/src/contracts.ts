@@ -456,7 +456,7 @@ export interface Project {
 }
 
 export interface ProjectFile {
-    path: string;
+    relativePath: string;
     content: string;
 }
 
