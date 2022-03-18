@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using Assent;
 
 using FluentAssertions;
@@ -13,15 +12,19 @@ using Microsoft.AspNetCore.Html;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharpProject;
+using Microsoft.DotNet.Interactive.CSharpProject.Commands;
+using Microsoft.DotNet.Interactive.CSharpProject.Events;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
+using Microsoft.DotNet.Interactive.VSCode;
 using Pocket;
 
 using Xunit;
 using Xunit.Abstractions;
+using Project = Microsoft.DotNet.Interactive.CSharpProject.Project;
 
 namespace Microsoft.DotNet.Interactive.Tests.Server
 {
@@ -32,6 +35,15 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         public SerializationTests(ITestOutputHelper output)
         {
             _output = output;
+
+            KernelCommandEnvelope.RegisterCommand<OpenProject>();
+            KernelCommandEnvelope.RegisterCommand<OpenDocument>();
+            KernelCommandEnvelope.RegisterCommand<CompileProject>();
+            KernelEventEnvelope.RegisterEvent<DocumentOpened>();
+            KernelEventEnvelope.RegisterEvent<AssemblyProduced>();
+
+            KernelCommandEnvelope.RegisterCommand<GetInput>();
+            KernelEventEnvelope.RegisterEvent<InputProduced>();
         }
 
         [Theory]
@@ -118,11 +130,26 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         [Fact]
         public void All_command_types_are_tested_for_round_trip_serialization()
         {
-            var commandTypes = typeof(KernelCommand)
+            var interactiveCommands = typeof(Kernel)
                 .Assembly
                 .ExportedTypes
                 .Concrete()
                 .DerivedFrom(typeof(KernelCommand));
+
+            var projectKernelCommands = typeof(CSharpProjectKernel)
+                .Assembly
+                .ExportedTypes
+                .Concrete()
+                .DerivedFrom(typeof(KernelCommand));
+
+            var vscodeCommands = typeof(VSCodeClientKernelsExtension)
+                .Assembly
+                .ExportedTypes
+                .Concrete()
+                .DerivedFrom(typeof(KernelCommand));
+
+
+            var commandTypes = interactiveCommands.Concat(vscodeCommands).Concat(projectKernelCommands);
 
             Commands()
                 .Select(e => e[0].GetType())
@@ -134,11 +161,26 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         [Fact]
         public void All_event_types_are_tested_for_round_trip_serialization()
         {
-            var eventTypes = typeof(KernelEvent)
-                             .Assembly
-                             .ExportedTypes
-                             .Concrete()
-                             .DerivedFrom(typeof(KernelEvent));
+
+            var interactiveEvents = typeof(Kernel)
+                .Assembly
+                .ExportedTypes
+                .Concrete()
+                .DerivedFrom(typeof(KernelEvent));
+
+            var projectKernelEvents = typeof(CSharpProjectKernel)
+                .Assembly
+                .ExportedTypes
+                .Concrete()
+                .DerivedFrom(typeof(KernelEvent));
+
+            var vscodeEvents = typeof(VSCodeClientKernelsExtension)
+                .Assembly
+                .ExportedTypes
+                .Concrete()
+                .DerivedFrom(typeof(KernelEvent));
+
+            var eventTypes = interactiveEvents.Concat(vscodeEvents).Concat(projectKernelEvents);
 
             Events()
                 .Select(e => e[0].GetType())
@@ -201,6 +243,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 yield return new RequestValueInfos("csharp");
 
                 yield return new RequestValue("a", "csharp", HtmlFormatter.MimeType);
+
+                yield return new GetInput(prompt:"provide answer", isPassword: true, targetKernelName: "vscode");
             }
         }
 
@@ -376,6 +420,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 yield return new ValueProduced("raw value", "a", new FormattedValue(HtmlFormatter.MimeType, "<span>formatted value</span>"), new RequestValue("a", "csharp", HtmlFormatter.MimeType));
 
                 yield return new CommandCancelled( new Cancel() ,new SubmitCode("var value = 1;", "csharp"));
+
+                yield return new InputProduced("user input", new GetInput(targetKernelName: "vscode"));
             }
         }
 

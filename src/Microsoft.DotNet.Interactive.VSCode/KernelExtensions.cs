@@ -16,6 +16,7 @@ namespace Microsoft.DotNet.Interactive.VSCode
         public static TKernel UseVSCodeCommands<TKernel>(this TKernel kernel) where TKernel : Kernel
         {
             kernel.RegisterCommandType<GetInput>();
+            KernelCommandEnvelope.RegisterCommand<GetInput>();
             KernelEventEnvelope.RegisterEvent<InputProduced>();
             return kernel;
         }
