@@ -68,10 +68,10 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
         };
 
         private static IEnumerable<Type> CoreAssemblyTypes = typeof(KernelCommand).Assembly.ExportedTypes;
-        private static IEnumerable<Type> DotNetTryAssemblyTypes = typeof(CSharpProjectKernel).Assembly.ExportedTypes;
+        private static IEnumerable<Type> CSharpProjectKernelAssemblyTypes = typeof(CSharpProjectKernel).Assembly.ExportedTypes;
         private static IEnumerable<Type> VSCodeAssemblyTypes = typeof(VSCodeInteractiveHost).Assembly.ExportedTypes;
 
-        private static IEnumerable<Type> AllAssemblyTypes = CoreAssemblyTypes.Concat(DotNetTryAssemblyTypes).Concat(VSCodeAssemblyTypes);
+        private static IEnumerable<Type> AllAssemblyTypes = CoreAssemblyTypes.Concat(CSharpProjectKernelAssemblyTypes).Concat(VSCodeAssemblyTypes);
 
         public static string Generate()
         {
