@@ -70,7 +70,7 @@ public class ApiCompatibilityTests
         this.Assent(contract, _configuration);
     }
 
-    [FactSkipLinux]
+    [Fact(Skip = "this api is in early design stage.")]
     public void csharpProject_api_is_not_changed()
     {
         var contract = ApiContract.GenerateContract<CSharpProjectKernel>();
