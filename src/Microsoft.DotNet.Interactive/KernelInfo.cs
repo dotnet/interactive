@@ -51,6 +51,8 @@ namespace Microsoft.DotNet.Interactive
 
         public Uri? Uri { get; set; }
 
+        public Uri DestinationUri { get; set; }
+
         public IReadOnlyCollection<KernelCommandInfo> SupportedKernelCommands { get; init; } = Array.Empty<KernelCommandInfo>();
 
         public IReadOnlyCollection<DirectiveInfo> SupportedDirectives { get; init; } = Array.Empty<DirectiveInfo>();

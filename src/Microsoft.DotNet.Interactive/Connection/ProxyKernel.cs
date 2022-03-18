@@ -22,14 +22,17 @@ namespace Microsoft.DotNet.Interactive.Connection
 
         private int _started = 0;
         private IKernelValueDeclarer _valueDeclarer;
+        private readonly Uri _destinationUri;
 
         public ProxyKernel(
             string name, 
             IKernelCommandAndEventReceiver receiver, 
-            IKernelCommandAndEventSender sender) : base(name)
+            IKernelCommandAndEventSender sender,
+            Uri destinationUri) : base(name)
         {
             _receiver = receiver ?? throw new ArgumentNullException(nameof(receiver));
             _sender = sender ?? throw new ArgumentNullException(nameof(sender));
+            _destinationUri = destinationUri;
         }
 
         public override string LanguageName => null;
@@ -44,6 +47,15 @@ namespace Microsoft.DotNet.Interactive.Connection
             }
             
             Task.Run(ReceiveAndPublishCommandsAndEvents);
+        }
+
+        protected override KernelInfo CreateKernelInfo()
+        {
+            var kernelInfo = base.CreateKernelInfo();
+
+            kernelInfo.DestinationUri = _destinationUri;
+
+            return kernelInfo;
         }
 
         private async Task ReceiveAndPublishCommandsAndEvents()

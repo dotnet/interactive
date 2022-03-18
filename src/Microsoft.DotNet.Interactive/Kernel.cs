@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.ValueSharing;
@@ -146,6 +147,11 @@ namespace Microsoft.DotNet.Interactive
                 {
                     command.Parent = originalCommand;
                 }
+
+                if (handlingKernel is ProxyKernel proxyKernel)
+                {
+                    var kernelInfo = proxyKernel.KernelInfo;
+                }
             }
 
             return true;
@@ -227,13 +233,16 @@ namespace Microsoft.DotNet.Interactive
         {
             get
             {
-                return _kernelInfo ??= new(Name, LanguageName, LanguageVersion)
-                {
-                    SupportedKernelCommands = _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)).ToArray(),
-                    SupportedDirectives = Directives.Select(d => new DirectiveInfo(d.Name)).ToArray(),
-                };
+                return _kernelInfo ??= CreateKernelInfo();
             }
         }
+
+        protected virtual KernelInfo CreateKernelInfo() =>
+            new(Name, LanguageName, LanguageVersion)
+            {
+                SupportedKernelCommands = _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)).ToArray(),
+                SupportedDirectives = Directives.Select(d => new DirectiveInfo(d.Name)).ToArray(),
+            };
 
         public IReadOnlyCollection<Command> Directives => SubmissionParser.Directives;
 

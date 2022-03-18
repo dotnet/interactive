@@ -32,7 +32,7 @@ public class SignalRKernelConnector : IKernelConnector
 
         var receiver = new KernelCommandAndEventSignalRHubConnectionReceiver(hubConnection);
         var sender = new KernelCommandAndEventSignalRHubConnectionSender(hubConnection);
-        var proxyKernel = new ProxyKernel(kernelName, receiver, sender);
+        var proxyKernel = new ProxyKernel(kernelName, receiver, sender, new Uri(HubUrl, kernelName));
 
         proxyKernel.EnsureStarted();
 

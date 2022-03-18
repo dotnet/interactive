@@ -145,6 +145,11 @@ namespace Microsoft.DotNet.Interactive
             KernelCommand command,
             KernelInvocationContext context)
         {
+            if (command.DestinationUri is not null)
+            {
+                // FIX: (GetHandlingKernel) 
+            }
+
             var targetKernelName = command.TargetKernelName ?? DefaultKernelName;
 
             Kernel kernel;

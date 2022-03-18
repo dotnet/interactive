@@ -37,7 +37,8 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
             proxyKernel = new ProxyKernel(
                 localName,
                 _receiver.CreateChildReceiver(),
-                _sender);
+                _sender,
+                new Uri(RemoteHostUri, localName));
         }
         else
         {
@@ -55,10 +56,10 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
             _receiver = new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventPipeStreamReceiver(_clientStream));
             _sender = new KernelCommandAndEventPipeStreamSender(_clientStream);
 
-            proxyKernel = new ProxyKernel(localName, _receiver, _sender);
+            proxyKernel = new ProxyKernel(localName, _receiver, _sender, new Uri(RemoteHostUri, localName));
         }
 
-        // FIX: (ConnectKernelAsync)  add an option for a different remote name... should this be general for all proxy kernels?
+        // FIX: (ConnectKernelAsync) support different remote name via kernel info request
         var destinationUri = new Uri(RemoteHostUri, localName);
 
         await _sender.SendAsync(

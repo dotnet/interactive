@@ -18,7 +18,7 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
-public class RequestKernelInfoTests
+public class KernelInfoTests
 {
     [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
     public class ForCompositeKernel
@@ -168,7 +168,7 @@ public class RequestKernelInfoTests
                 new CSharpKernel()
             };
 
-            localCompositeKernel.ConnectInProcessHost(new Uri("kernel://somewhere/"));
+            localCompositeKernel.ConnectInProcessHost(new Uri("kernel://local/"));
 
             var result = await localCompositeKernel.SendAsync(new RequestKernelInfo());
 
@@ -180,16 +180,67 @@ public class RequestKernelInfoTests
                   .KernelInfo
                   .Uri
                   .Should()
-                  .Be(new Uri("kernel://somewhere/csharp"));
+                  .Be(new Uri("kernel://local/csharp"));
         }
 
         [Fact]
-        public void A_proxy_to_a_local_kernel_cannot_be_created()
+        public async Task ProxyKernels_have_a_local_uri()
         {
-            
+            using var localCompositeKernel = new CompositeKernel
+            {
+                new FakeKernel("csharp")
+            };
+            using var remoteCompositeKernel = new CompositeKernel
+            {
+                new FakeKernel("python")
+            };
 
-            // TODO (A_proxy_to_a_local_kernel_cannot_be_created) write test
-            throw new NotImplementedException();
+            ConnectHost.ConnectInProcessHost(
+                localCompositeKernel,
+                new Uri("kernel://local"),
+                remoteCompositeKernel,
+                new Uri("kernel://remote"));
+
+            var proxyKernel = await localCompositeKernel
+                                    .Host
+                                    .ConnectProxyKernelOnDefaultConnectorAsync(
+                                        "python",
+                                        new Uri("kernel://remote/python"));
+
+            proxyKernel.KernelInfo
+                       .Uri
+                       .Should()
+                       .Be(new Uri("kernel://local/python"));
+        }
+
+        [Fact]
+        public async Task ProxyKernels_have_a_remote_uri()
+        {
+            using var localCompositeKernel = new CompositeKernel
+            {
+                new FakeKernel("csharp")
+            };
+            using var remoteCompositeKernel = new CompositeKernel
+            {
+                new FakeKernel("python")
+            };
+
+            ConnectHost.ConnectInProcessHost(
+                localCompositeKernel,
+                new Uri("kernel://local"),
+                remoteCompositeKernel,
+                new Uri("kernel://remote"));
+
+            var proxyKernel = await localCompositeKernel
+                                    .Host
+                                    .ConnectProxyKernelOnDefaultConnectorAsync(
+                                        "python",
+                                        new Uri("kernel://remote/python"));
+
+            proxyKernel.KernelInfo
+                       .DestinationUri
+                       .Should()
+                       .Be(new Uri("kernel://remote/python"));
         }
     }
 

@@ -4,6 +4,7 @@
 #nullable enable
 
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
@@ -31,17 +32,24 @@ namespace Microsoft.DotNet.Interactive
             _kernel = kernel;
             _defaultSender = defaultSender;
             _defaultReceiver = defaultReceiver;
-            _defaultConnector = new DefaultKernelConnector(_defaultSender, _defaultReceiver);
+            _defaultConnector = new DefaultKernelConnector(
+                this, 
+                _defaultSender, 
+                _defaultReceiver);
             _kernel.SetHost(this);
         }
 
         private class DefaultKernelConnector : IKernelConnector
         {
+            private readonly KernelHost _host;
             private readonly IKernelCommandAndEventSender _defaultSender;
             private readonly MultiplexingKernelCommandAndEventReceiver _defaultReceiver;
 
-            public DefaultKernelConnector(IKernelCommandAndEventSender defaultSender, MultiplexingKernelCommandAndEventReceiver defaultReceiver)
+            public DefaultKernelConnector(
+                KernelHost host,
+                IKernelCommandAndEventSender defaultSender, MultiplexingKernelCommandAndEventReceiver defaultReceiver)
             {
+                _host = host;
                 _defaultSender = defaultSender;
                 _defaultReceiver = defaultReceiver;
             }
@@ -51,7 +59,8 @@ namespace Microsoft.DotNet.Interactive
                 var proxy = new ProxyKernel(
                     kernelName, 
                     _defaultReceiver.CreateChildReceiver(), 
-                    _defaultSender);
+                    _defaultSender,
+                    new Uri(_host.Uri, kernelName));
                 
                 proxy.EnsureStarted();
                 

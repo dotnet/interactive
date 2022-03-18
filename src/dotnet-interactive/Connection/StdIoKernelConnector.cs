@@ -21,6 +21,7 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
     private MultiplexingKernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventTextStreamSender? _sender;
     private Process? _process;
+    private Uri _remoteHostUri;
 
     public StdIoKernelConnector(string[] command, DirectoryInfo? workingDirectory = null)
     {
@@ -39,7 +40,8 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
             var kernel = new ProxyKernel(
                 kernelName, 
                 _receiver.CreateChildReceiver(), 
-                _sender);
+                _sender,
+                new Uri(_remoteHostUri, kernelName));
             
             kernel.EnsureStarted();
             
@@ -68,12 +70,13 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
 
             _process.Start();
             _process.BeginErrorReadLine();
+            _remoteHostUri = new Uri($"kernel://pid-{_process.Id}");
 
             _receiver = new MultiplexingKernelCommandAndEventReceiver(
                 new KernelCommandAndEventTextReaderReceiver(_process.StandardOutput));
             _sender = new KernelCommandAndEventTextStreamSender(_process.StandardInput);
 
-            var proxyKernel = new ProxyKernel(kernelName, _receiver, _sender);
+            var proxyKernel = new ProxyKernel(kernelName, _receiver, _sender, new Uri(_remoteHostUri, kernelName));
         
             var r = _receiver.CreateChildReceiver();
             
