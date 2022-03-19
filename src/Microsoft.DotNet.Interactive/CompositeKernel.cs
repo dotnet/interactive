@@ -145,18 +145,21 @@ namespace Microsoft.DotNet.Interactive
             KernelCommand command,
             KernelInvocationContext context)
         {
+            Kernel kernel;
+
             if (command.DestinationUri is not null)
             {
-                // FIX: (GetHandlingKernel) 
+                if (_childKernels.TryGetByUri(command.DestinationUri, out kernel))
+                {
+                    return kernel;
+                }
             }
 
             var targetKernelName = command.TargetKernelName ?? DefaultKernelName;
 
-            Kernel kernel;
-
             if (targetKernelName is not null)
             {
-                _childKernels.TryGetGetByAlias(targetKernelName, out kernel);
+                _childKernels.TryGetByAlias(targetKernelName, out kernel);
             }
             else
             {
@@ -176,7 +179,7 @@ namespace Microsoft.DotNet.Interactive
             KernelInvocationContext context)
         {
             if (!string.IsNullOrWhiteSpace(command.TargetKernelName) &&
-                     _childKernels.TryGetGetByAlias(command.TargetKernelName, out var kernel))
+                     _childKernels.TryGetByAlias(command.TargetKernelName, out var kernel))
             {
                 // route to a subkernel
                 await kernel.Pipeline.SendAsync(command, context);
@@ -187,13 +190,19 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public override async Task HandleAsync(RequestKernelInfo command, KernelInvocationContext context)
+        public override async Task HandleAsync(
+            RequestKernelInfo command,
+            KernelInvocationContext context)
         {
             foreach (var childKernel in ChildKernels)
             {
                 if (childKernel.SupportsCommand<RequestKernelInfo>())
                 {
-                    await childKernel.HandleAsync(command, context);
+                    if (command.DestinationUri is null ||
+                        command.DestinationUri == childKernel.KernelInfo.Uri)
+                    {
+                        await childKernel.HandleAsync(command, context);
+                    }
                 }
             }
         }

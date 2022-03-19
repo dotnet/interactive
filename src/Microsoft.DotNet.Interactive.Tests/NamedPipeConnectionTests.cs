@@ -67,12 +67,14 @@ public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
 
         var kernelCommandAndEventPipeStreamReceiver = new KernelCommandAndEventPipeStreamReceiver(serverStream);
 
-        var sender = new KernelCommandAndEventPipeStreamSender(serverStream);
+        var sender = new KernelCommandAndEventPipeStreamSender(
+            serverStream,
+            new Uri("kernel://remote"));
 
         var receiver = new MultiplexingKernelCommandAndEventReceiver
 (kernelCommandAndEventPipeStreamReceiver);
 
-        var host = remoteCompositeKernel.UseHost(sender, receiver, new("kernel://dotnet"));
+        var host = remoteCompositeKernel.UseHost(sender, receiver, new Uri("kernel://local"));
 
         Task.Run(() =>
         {

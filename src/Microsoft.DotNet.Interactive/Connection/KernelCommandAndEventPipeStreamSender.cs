@@ -15,9 +15,12 @@ public class KernelCommandAndEventPipeStreamSender : IKernelCommandAndEventSende
 {
     private readonly PipeStream _pipeStream;
 
-    public KernelCommandAndEventPipeStreamSender(PipeStream pipeStream)
+    public KernelCommandAndEventPipeStreamSender(
+        PipeStream pipeStream,
+        Uri remoteHostUri)
     {
         _pipeStream = pipeStream ?? throw new ArgumentNullException(nameof(pipeStream));
+        RemoteHostUri = remoteHostUri;
     }
 
     public async Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
@@ -35,4 +38,6 @@ public class KernelCommandAndEventPipeStreamSender : IKernelCommandAndEventSende
 
         await _pipeStream.FlushAsync(cancellationToken);
     }
+
+    public Uri RemoteHostUri { get; }
 }

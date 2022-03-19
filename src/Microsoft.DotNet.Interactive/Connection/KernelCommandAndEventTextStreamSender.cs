@@ -13,10 +13,12 @@ namespace Microsoft.DotNet.Interactive.Connection
 {
     public class KernelCommandAndEventTextStreamSender : IKernelCommandAndEventSender
     {
+        public Uri RemoteHostUri { get; }
         private readonly TextWriter _writer;
 
-        public KernelCommandAndEventTextStreamSender(TextWriter writer)
+        public KernelCommandAndEventTextStreamSender(TextWriter writer, Uri remoteHostUri)
         {
+            RemoteHostUri = remoteHostUri;
             _writer = writer ?? throw new ArgumentNullException(nameof(writer));
         }
 

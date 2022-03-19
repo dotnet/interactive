@@ -17,22 +17,35 @@ namespace Microsoft.DotNet.Interactive.Connection
         private readonly IKernelCommandAndEventSender _sender;
         private readonly CancellationTokenSource _cancellationTokenSource = new();
         private ExecutionContext _executionContext;
-        
-        private readonly Dictionary<string, (KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<KernelEvent> completionSource, KernelInvocationContext invocationContext)> _inflight = new();
+
+        private readonly Dictionary<string, (KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<KernelEvent> completionSource, KernelInvocationContext
+            invocationContext)> _inflight = new();
 
         private int _started = 0;
         private IKernelValueDeclarer _valueDeclarer;
-        private readonly Uri _destinationUri;
+        private readonly Uri _remoteUri;
 
         public ProxyKernel(
-            string name, 
-            IKernelCommandAndEventReceiver receiver, 
+            string name,
+            IKernelCommandAndEventReceiver receiver,
             IKernelCommandAndEventSender sender,
-            Uri destinationUri) : base(name)
+            Uri remoteUri = null) : base(name)
         {
             _receiver = receiver ?? throw new ArgumentNullException(nameof(receiver));
             _sender = sender ?? throw new ArgumentNullException(nameof(sender));
-            _destinationUri = destinationUri;
+
+            if (remoteUri is not null)
+            {
+                _remoteUri = remoteUri;
+            }
+            else if (sender.RemoteHostUri is { } remoteHostUri)
+            {
+                _remoteUri = new(remoteHostUri, name);
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(remoteUri));
+            }
         }
 
         public override string LanguageName => null;
@@ -53,7 +66,7 @@ namespace Microsoft.DotNet.Interactive.Connection
         {
             var kernelInfo = base.CreateKernelInfo();
 
-            kernelInfo.DestinationUri = _destinationUri;
+            kernelInfo.RemoteUri = _remoteUri;
 
             return kernelInfo;
         }

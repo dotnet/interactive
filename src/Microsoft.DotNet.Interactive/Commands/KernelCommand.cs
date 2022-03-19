@@ -33,9 +33,9 @@ namespace Microsoft.DotNet.Interactive.Commands
 
         internal static KernelCommand None => new NoCommand();
 
-        public Uri OriginUri { get; internal set; }
+        public Uri OriginUri { get; set; }
 
-        public Uri DestinationUri { get; internal set; }
+        public Uri DestinationUri { get; set; }
 
         [JsonIgnore]
         internal SchedulingScope SchedulingScope { get; set; } // FIX (SchedulingScope) can this be removed and we just use OriginUri?

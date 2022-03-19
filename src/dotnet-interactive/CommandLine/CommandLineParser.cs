@@ -455,9 +455,10 @@ public static class CommandLineParser
                     kernel = kernel.UseQuitCommand();
 
                     var host = kernel.UseHost(
-                        new KernelCommandAndEventTextStreamSender(Console.Out),
-                        new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventTextReaderReceiver(Console.In)),
-                        new("kernel://dotnet"));
+                        new KernelCommandAndEventTextStreamSender(
+                            Console.Out,
+                            KernelHost.CreateHostUri("stdio")),
+                        new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventTextReaderReceiver(Console.In)), KernelHost.CreateHostUriForCurrentProcessId());
 
                     if (isVSCode)
                     {

@@ -41,7 +41,6 @@ public abstract class ProxyKernelConnectionTestsBase : IDisposable
     {
         var connector = await CreateConnectorAsync();
 
-        // todo: hack to ensure disposal, this should be handled as tear down when client are disposed
         if (connector is IDisposable disposableConnector)
         {
             _disposables.Add(disposableConnector);

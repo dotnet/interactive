@@ -51,7 +51,7 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
         {
             var command = Command[0];
             var arguments = string.Join(" ", Command.Skip(1));
-            
+
             var psi = new ProcessStartInfo
             {
                 FileName = command,
@@ -70,16 +70,18 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
 
             _process.Start();
             _process.BeginErrorReadLine();
-            _remoteHostUri = new Uri($"kernel://pid-{_process.Id}");
+            _remoteHostUri = KernelHost.CreateHostUriForProcessId(_process.Id);
 
             _receiver = new MultiplexingKernelCommandAndEventReceiver(
                 new KernelCommandAndEventTextReaderReceiver(_process.StandardOutput));
-            _sender = new KernelCommandAndEventTextStreamSender(_process.StandardInput);
+            _sender = new KernelCommandAndEventTextStreamSender(
+                _process.StandardInput,
+                _remoteHostUri);
 
             var proxyKernel = new ProxyKernel(kernelName, _receiver, _sender, new Uri(_remoteHostUri, kernelName));
-        
+
             var r = _receiver.CreateChildReceiver();
-            
+
             proxyKernel.EnsureStarted();
 
             var checkReady = Task.Run(async () =>

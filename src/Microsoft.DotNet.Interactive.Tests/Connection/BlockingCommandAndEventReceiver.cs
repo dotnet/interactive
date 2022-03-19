@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,14 +18,17 @@ public class BlockingCommandAndEventReceiver : KernelCommandAndEventReceiverBase
     private readonly BlockingCollection<CommandOrEvent> _commandsOrEvents;
     private static readonly Logger<BlockingCommandAndEventReceiver> _log = new();
 
-    public BlockingCommandAndEventReceiver()
+    public BlockingCommandAndEventReceiver(Uri hostUri)
     {
+        HostUri = hostUri;
         _commandsOrEvents = new BlockingCollection<CommandOrEvent>();
     }
 
-    public IKernelCommandAndEventSender CreateSender()
+    public Uri HostUri { get; }
+
+    public IKernelCommandAndEventSender CreateSender(Uri remoteHostUri)
     {
-        return new Sender(this);
+        return new Sender(this, remoteHostUri);
     }
 
     public void Write(CommandOrEvent commandOrEvent)
@@ -67,10 +71,12 @@ public class BlockingCommandAndEventReceiver : KernelCommandAndEventReceiverBase
 
     public class Sender : IKernelCommandAndEventSender
     {
+        public Uri RemoteHostUri { get; }
         private readonly BlockingCommandAndEventReceiver _receiver;
 
-        public Sender(BlockingCommandAndEventReceiver receiver)
+        public Sender(BlockingCommandAndEventReceiver receiver, Uri remoteHostUri)
         {
+            RemoteHostUri = remoteHostUri;
             _receiver = receiver;
         }
 

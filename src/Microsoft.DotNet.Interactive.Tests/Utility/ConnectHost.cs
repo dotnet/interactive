@@ -30,17 +30,17 @@ public static class ConnectHost
         CompositeKernel remoteCompositeKernel,
         Uri remoteHostUri)
     {
-        var innerLocalReceiver = new BlockingCommandAndEventReceiver();
+        var innerLocalReceiver = new BlockingCommandAndEventReceiver(localHostUri);
 
         var localReceiver = new MultiplexingKernelCommandAndEventReceiver(innerLocalReceiver);
 
-        var remoteInnerReceiver = new BlockingCommandAndEventReceiver();
+        var remoteInnerReceiver = new BlockingCommandAndEventReceiver(remoteHostUri);
 
-        var localSender = remoteInnerReceiver.CreateSender();
+        var localSender = remoteInnerReceiver.CreateSender(localHostUri);
 
         var remoteReceiver = new MultiplexingKernelCommandAndEventReceiver(remoteInnerReceiver);
 
-        var remoteSender = innerLocalReceiver.CreateSender();
+        var remoteSender = innerLocalReceiver.CreateSender(remoteHostUri);
 
         var localHost = localCompositeKernel.UseHost(
             localSender,

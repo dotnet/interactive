@@ -33,7 +33,6 @@ namespace Microsoft.DotNet.Interactive
             _defaultSender = defaultSender;
             _defaultReceiver = defaultReceiver;
             _defaultConnector = new DefaultKernelConnector(
-                this, 
                 _defaultSender, 
                 _defaultReceiver);
             _kernel.SetHost(this);
@@ -41,15 +40,13 @@ namespace Microsoft.DotNet.Interactive
 
         private class DefaultKernelConnector : IKernelConnector
         {
-            private readonly KernelHost _host;
             private readonly IKernelCommandAndEventSender _defaultSender;
             private readonly MultiplexingKernelCommandAndEventReceiver _defaultReceiver;
 
             public DefaultKernelConnector(
-                KernelHost host,
-                IKernelCommandAndEventSender defaultSender, MultiplexingKernelCommandAndEventReceiver defaultReceiver)
+                IKernelCommandAndEventSender defaultSender,
+                MultiplexingKernelCommandAndEventReceiver defaultReceiver)
             {
-                _host = host;
                 _defaultSender = defaultSender;
                 _defaultReceiver = defaultReceiver;
             }
@@ -57,13 +54,13 @@ namespace Microsoft.DotNet.Interactive
             public Task<Kernel> CreateKernelAsync(string kernelName)
             {
                 var proxy = new ProxyKernel(
-                    kernelName, 
-                    _defaultReceiver.CreateChildReceiver(), 
+                    kernelName,
+                    _defaultReceiver.CreateChildReceiver(),
                     _defaultSender,
-                    new Uri(_host.Uri, kernelName));
-                
+                    new Uri(_defaultSender.RemoteHostUri, kernelName));
+
                 proxy.EnsureStarted();
-                
+
                 return Task.FromResult<Kernel>(proxy);
             }
         }
@@ -137,9 +134,12 @@ namespace Microsoft.DotNet.Interactive
         public async Task<ProxyKernel> ConnectProxyKernelAsync(
             string localName,
             IKernelConnector kernelConnector,
+            Uri remoteKernelUri,
             string[] aliases = null)
         {
             var proxyKernel = (ProxyKernel)await kernelConnector.CreateKernelAsync(localName);
+
+            proxyKernel.KernelInfo.RemoteUri = remoteKernelUri;
 
             if (aliases is not null)
             {
@@ -155,12 +155,19 @@ namespace Microsoft.DotNet.Interactive
 
         public async Task<ProxyKernel> ConnectProxyKernelOnDefaultConnectorAsync(
             string localName,
-            Uri remoteKernelUri = null, 
+            Uri remoteKernelUri,
             string[] aliases = null) =>
-            // FIX: (CreateProxyKernelOnDefaultConnectorAsync) what to do with this Uri? It can potentially connect through an intermediate proxy, but the remote needs to be able to resolve it
             await ConnectProxyKernelAsync(
-                localName, 
-                _defaultConnector, 
+                localName,
+                _defaultConnector,
+                remoteKernelUri,
                 aliases);
+
+        public static Uri CreateHostUriForCurrentProcessId() => CreateHostUriForProcessId(Process.GetCurrentProcess().Id);
+
+        public static Uri CreateHostUriForProcessId(int processId) =>
+            new($"kernel://pid-{processId}");
+
+        public static Uri CreateHostUri(string name) => new($"kernel://{name}");
     }
 }

@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive;
 
@@ -13,7 +14,8 @@ internal class KernelRegistry : IReadOnlyCollection<Kernel>
     private readonly CompositeKernel _compositeKernel;
 
     private readonly List<Kernel> _kernels = new();
-    private readonly Dictionary<Uri, Kernel> _kernelsByUri = new();
+    private readonly Dictionary<Uri, Kernel> _kernelsByLocalUri = new();
+    private readonly Dictionary<Uri, Kernel> _kernelsByRemoteUri = new();
     private readonly Dictionary<string, Kernel> _kernelsByNameOrAlias = new();
 
     public KernelRegistry(CompositeKernel compositeKernel)
@@ -28,19 +30,27 @@ internal class KernelRegistry : IReadOnlyCollection<Kernel>
             throw new ArgumentException($"Alias '#!{collidingAlias}' is already in use.");
         }
 
-        foreach (var alias in kernel.KernelInfo.NameAndAliases)
-        {
-            _kernelsByNameOrAlias.Add(alias, kernel);
-        }
-
-        EnsureKernelInfoIsCorrect(kernel);
+        UpdateKernelInfoAndIndex(kernel);
 
         _kernels.Add(kernel);
     }
 
-    public bool TryGetGetByAlias(string alias, out Kernel kernel)
+    public bool TryGetByAlias(string alias, out Kernel kernel)
     {
         if (_kernelsByNameOrAlias.TryGetValue(alias, out kernel))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public bool TryGetByUri(Uri uri, out Kernel kernel)
+    {
+        if (_kernelsByLocalUri.TryGetValue(uri, out kernel) || 
+            _kernelsByRemoteUri.TryGetValue(uri, out kernel))
         {
             return true;
         }
@@ -62,22 +72,33 @@ internal class KernelRegistry : IReadOnlyCollection<Kernel>
     {
         foreach (var kernel in _kernels)
         {
-            EnsureKernelInfoIsCorrect(kernel);
+            UpdateKernelInfoAndIndex(kernel);
         }
     }
 
-    private void EnsureKernelInfoIsCorrect(Kernel kernel, IEnumerable<string> aliases = null)
+    private void UpdateKernelInfoAndIndex(
+        Kernel kernel,
+        IEnumerable<string> aliases = null)
     {
         if (aliases is not null)
         {
-             kernel.KernelInfo.NameAndAliases.UnionWith(aliases);
+            kernel.KernelInfo.NameAndAliases.UnionWith(aliases);
+        }
+
+        foreach (var alias in kernel.KernelInfo.NameAndAliases)
+        {
+            _kernelsByNameOrAlias.TryAdd(alias, kernel);
         }
 
         if (_compositeKernel.Host is { } host)
         {
-            var kernelUri = new Uri(host.Uri, kernel.Name);
-            kernel.KernelInfo.Uri = kernelUri;
-            _kernelsByUri.Add(kernelUri, kernel);
+            kernel.KernelInfo.Uri = new Uri(host.Uri, kernel.Name);
+            _kernelsByLocalUri.TryAdd(kernel.KernelInfo.Uri, kernel);
+        }
+
+        if (kernel is ProxyKernel proxyKernel)
+        {
+            _kernelsByRemoteUri.TryAdd(proxyKernel.KernelInfo.RemoteUri, proxyKernel);
         }
     }
 }

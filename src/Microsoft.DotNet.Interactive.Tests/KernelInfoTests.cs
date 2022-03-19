@@ -67,13 +67,16 @@ public class KernelInfoTests
                 remoteCompositeKernel,
                 new Uri("kernel://remote"));
 
+            var remoteKernelUri = new Uri("kernel://remote/fsharp");
+
             await localCompositeKernel
                   .Host
                   .ConnectProxyKernelOnDefaultConnectorAsync(
-                      "remote-fsharp",
-                      new Uri("kernel://remote/fsharp"));
+                      "proxied-fsharp",
+                      remoteKernelUri);
 
-            var result = await localCompositeKernel.SendAsync(new RequestKernelInfo("remote-fsharp"));
+            var result = await localCompositeKernel.SendAsync(
+                             new RequestKernelInfo(remoteKernelUri));
 
             var events = result.KernelEvents.ToSubscribedList();
 
@@ -85,7 +88,7 @@ public class KernelInfoTests
                   .BeEquivalentTo(new
                   {
                       LanguageName = "fsharp",
-                      Uri = new Uri("kernel://remote/fsharp")
+                      Uri = remoteKernelUri
                   }, c => c.ExcludingMissingMembers());
         }
 
@@ -145,16 +148,20 @@ public class KernelInfoTests
                 new Uri("kernel://local"),
                 remoteCompositeKernel,
                 new Uri("kernel://remote"));
-            
+
             await localCompositeKernel
                   .Host
                   .ConnectProxyKernelOnDefaultConnectorAsync(
                       "remote-fsharp",
-                       new Uri("kernel://remote/fsharp"));
+                      new Uri("kernel://remote/fsharp"));
 
             var result = await localCompositeKernel.SendAsync(
                              new SubmitCode(@"Kernel.Root.Add(new Microsoft.DotNet.Interactive.FSharp.FSharpKernel());",
                                             targetKernelName: "csharp"));
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should().NotContainErrors();
 
             // TODO (When_a_remote_kernel_is_added_via_an_extension_then_kernel_info_is_updated) write test
             throw new NotImplementedException();
@@ -238,7 +245,7 @@ public class KernelInfoTests
                                         new Uri("kernel://remote/python"));
 
             proxyKernel.KernelInfo
-                       .DestinationUri
+                       .RemoteUri
                        .Should()
                        .Be(new Uri("kernel://remote/python"));
         }

@@ -54,7 +54,9 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
             _clientStream.ReadMode = PipeTransmissionMode.Message;
 
             _receiver = new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventPipeStreamReceiver(_clientStream));
-            _sender = new KernelCommandAndEventPipeStreamSender(_clientStream);
+            _sender = new KernelCommandAndEventPipeStreamSender(
+                _clientStream, 
+                RemoteHostUri);
 
             proxyKernel = new ProxyKernel(localName, _receiver, _sender, new Uri(RemoteHostUri, localName));
         }

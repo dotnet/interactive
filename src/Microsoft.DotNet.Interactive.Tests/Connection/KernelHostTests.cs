@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
 
             _localCompositeKernel
                 .Host
-                .ConnectProxyKernelOnDefaultConnectorAsync("csharp")
+                .ConnectProxyKernelOnDefaultConnectorAsync("csharp", new Uri("kernel://remote/csharp"))
                 .GetAwaiter().GetResult();
 
             _disposables.Add(output.SubscribeToPocketLogger());

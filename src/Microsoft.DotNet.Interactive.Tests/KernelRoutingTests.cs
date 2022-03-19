@@ -94,7 +94,7 @@ Console.WriteLine(1);";
             remoteCompositeKernel.DefaultKernelName = "csharp";
             var pipeName = Guid.NewGuid().ToString();
 
-            using var _ = StartServer(remoteCompositeKernel, pipeName);
+            StartServer(remoteCompositeKernel, pipeName);
 
             var connection = new NamedPipeKernelConnector(pipeName);
 
@@ -114,24 +114,29 @@ Console.WriteLine(1);";
         }
 
         [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
-        KernelHost StartServer(CompositeKernel remoteKernel, string pipeName)
+        private void StartServer(CompositeKernel remoteKernel, string pipeName)
         {
             var serverStream = new NamedPipeServerStream(
-                pipeName, 
-                PipeDirection.InOut, 
-                1, 
-                PipeTransmissionMode.Message, 
+                pipeName,
+                PipeDirection.InOut,
+                1,
+                PipeTransmissionMode.Message,
                 PipeOptions.Asynchronous);
-            
+
             var kernelCommandAndEventPipeStreamReceiver = new KernelCommandAndEventPipeStreamReceiver(serverStream);
-            
-            var kernelCommandAndEventPipeStreamSender = new KernelCommandAndEventPipeStreamSender(serverStream);
-            
+
+            var localHostUri = new Uri("kernel://local");
+            var remoteHostUri = new Uri("kernel://remote");
+
+            var kernelCommandAndEventPipeStreamSender = new KernelCommandAndEventPipeStreamSender(
+                serverStream,
+                remoteHostUri);
+
             var host = remoteKernel.UseHost(
                 kernelCommandAndEventPipeStreamSender,
                 new MultiplexingKernelCommandAndEventReceiver(kernelCommandAndEventPipeStreamReceiver),
-                new("kernel://local"));
-            
+                localHostUri);
+
             remoteKernel.RegisterForDisposal(serverStream);
 
             Task.Run(() =>
@@ -139,8 +144,6 @@ Console.WriteLine(1);";
                 serverStream.WaitForConnection();
                 var _ = host.ConnectAsync();
             });
-
-            return host;
         }
     }
 }
