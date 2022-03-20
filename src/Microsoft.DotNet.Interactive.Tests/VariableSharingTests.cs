@@ -241,7 +241,7 @@ x")]
                           .Be("csharpVariable = 123;");
         }
 
-        [Fact]
+        [Fact(Skip = "Requires kernel language")]
         public async Task CSharpKernel_can_share_variable_from_JavaScript_via_a_ProxyKernel()
         {
             var (compositeKernel, remoteKernel) = await CreateCompositeKernelWithJavaScriptProxyKernel();

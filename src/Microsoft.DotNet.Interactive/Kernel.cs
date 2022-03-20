@@ -550,22 +550,31 @@ namespace Microsoft.DotNet.Interactive
             return Task.CompletedTask;
         }
 
-        private protected virtual Kernel GetHandlingKernel(KernelCommand command, KernelInvocationContext invocationContext)
+        protected virtual bool CanHandle(KernelCommand command)
         {
-            // FIX: (GetHandlingKernel) don't handle commands intended for other kernels
-
-            if (command.TargetKernelName is not null && 
-                command.TargetKernelName != Name) 
+            if (command.TargetKernelName is not null &&
+                command.TargetKernelName != Name)
             {
 
             }
 
             if (command.DestinationUri is not null)
             {
-                
+
             }
 
-            return this;
+            // FIX: (CompositeCanHandle) 
+            return true;
+        }
+
+        private protected virtual Kernel GetHandlingKernel(KernelCommand command, KernelInvocationContext invocationContext)
+        {
+            if (CanHandle(command))
+            {
+                return this;
+            }
+
+            return null;
         }
 
         protected internal void PublishEvent(KernelEvent kernelEvent)

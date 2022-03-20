@@ -158,7 +158,7 @@ namespace Microsoft.DotNet.Interactive
             var targetKernelName = command.TargetKernelName;
             
             if (targetKernelName  is null && 
-                !CompositeCanHandle(command))
+                !CanHandle(command))
             {
                 targetKernelName = DefaultKernelName;
             }
@@ -186,11 +186,6 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
-        private bool CompositeCanHandle(KernelCommand command)
-        {
-            // FIX: (CompositeCanHandle) 
-            return true;
-        }
 
         internal override async Task HandleAsync(
             KernelCommand command,
