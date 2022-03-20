@@ -4,10 +4,6 @@
 using System;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.CSharp;
-using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
 using Xunit;
@@ -18,47 +14,48 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
     public class KernelHostTests : IDisposable
     {
         private readonly CompositeDisposable _disposables = new();
-        private readonly CompositeKernel _localCompositeKernel;
-        private readonly CompositeKernel _remoteCompositeKernel;
 
         public KernelHostTests(ITestOutputHelper output)
         {
-            _localCompositeKernel = new CompositeKernel();
-
-            _remoteCompositeKernel = new CompositeKernel
-            {
-                new CSharpKernel()
-                    .UseKernelHelpers()
-                    .UseNugetDirective()
-                    .UseDefaultMagicCommands()
-            };
-
-            ConnectHost.ConnectInProcessHost(
-                _localCompositeKernel,
-                new Uri("kernel://local/"),
-                _remoteCompositeKernel,
-                new Uri("kernel://remote/"));
-
-            _localCompositeKernel
-                .Host
-                .ConnectProxyKernelOnDefaultConnectorAsync("csharp", new Uri("kernel://remote/csharp"))
-                .GetAwaiter().GetResult();
-
             _disposables.Add(output.SubscribeToPocketLogger());
-            _disposables.Add(_remoteCompositeKernel.LogEventsToPocketLogger());
-            _disposables.Add(_remoteCompositeKernel);
         }
 
         [Fact]
         public void When_kernel_is_added_to_hosted_CompositeKernel_then_origin_URI_is_set()
         {
+            using var composite = new CompositeKernel();
+            composite.ConnectInProcessHost();
+
             var kernel = new FakeKernel("fake");
 
-            _localCompositeKernel.Add(kernel);
+            composite.Add(kernel);
 
             var kernelInfo = kernel.KernelInfo;
 
-            kernelInfo.Uri.Should().Be(new Uri(_localCompositeKernel.Host.Uri, "fake"));
+            kernelInfo.Uri.Should().Be(new Uri(composite.Host.Uri, "fake"));
+        }
+
+        [Fact]
+        public async Task It_does_not_throw_when_proxy_kernel_is_created_for_nonexistent_remote()
+        {
+            using var localCompositeKernel = new CompositeKernel("LOCAL");
+            using var remoteCompositeKernel = new CompositeKernel("REMOTE");
+
+            ConnectHost.ConnectInProcessHost(
+                localCompositeKernel,
+                new Uri("kernel://local"),
+                remoteCompositeKernel,
+                new Uri("kernel://remote"));
+
+            var remoteKernelUri = new Uri("kernel://DOES/NOT/EXIST");
+
+            localCompositeKernel
+                .Invoking(async k =>
+                              await k.Host
+                                     .ConnectProxyKernelOnDefaultConnectorAsync(
+                                         "fsharp",
+                                         remoteKernelUri))
+                .Should().NotThrow();
         }
 
         // FIX: (KernelHostTests) figure out which of these tests are still important
@@ -76,8 +73,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
         //         .Should()
         //         .ContainSingle<CommandSucceeded>();
         // }
-
-
 
         //
         // [Fact]

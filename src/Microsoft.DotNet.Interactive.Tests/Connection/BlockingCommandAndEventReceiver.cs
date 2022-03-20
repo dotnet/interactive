@@ -9,14 +9,12 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Server;
-using Pocket;
 
 namespace Microsoft.DotNet.Interactive.Tests.Connection;
 
 public class BlockingCommandAndEventReceiver : KernelCommandAndEventReceiverBase
 {
     private readonly BlockingCollection<CommandOrEvent> _commandsOrEvents;
-    private static readonly Logger<BlockingCommandAndEventReceiver> _log = new();
 
     public BlockingCommandAndEventReceiver(Uri hostUri)
     {
@@ -33,9 +31,6 @@ public class BlockingCommandAndEventReceiver : KernelCommandAndEventReceiverBase
 
     public void Write(CommandOrEvent commandOrEvent)
     {
-        using var op = _log.OnEnterAndExit();
-        _log.Trace(nameof(commandOrEvent), commandOrEvent);
-
         if (commandOrEvent.Command is { })
         {
             var command = new CommandOrEvent(
@@ -69,7 +64,7 @@ public class BlockingCommandAndEventReceiver : KernelCommandAndEventReceiverBase
         return commandOrEvent;
     }
 
-    public class Sender : IKernelCommandAndEventSender
+    private class Sender : IKernelCommandAndEventSender
     {
         public Uri RemoteHostUri { get; }
         private readonly BlockingCommandAndEventReceiver _receiver;
@@ -82,9 +77,6 @@ public class BlockingCommandAndEventReceiver : KernelCommandAndEventReceiverBase
 
         public Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
         {
-            using var op = _log.OnEnterAndExit();
-            _log.Trace(nameof(kernelCommand), kernelCommand);
-
             _receiver.Write(new CommandOrEvent(kernelCommand));
 
             return Task.CompletedTask;
@@ -92,9 +84,6 @@ public class BlockingCommandAndEventReceiver : KernelCommandAndEventReceiverBase
 
         public Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
         {
-            using var op = _log.OnEnterAndExit();
-            _log.Trace(nameof(kernelEvent), kernelEvent);
-
             _receiver.Write(new CommandOrEvent(kernelEvent));
 
             return Task.CompletedTask;

@@ -3,7 +3,7 @@
     <AdditionalFilesToIncludeForProject>
       <Value>..\microsoft-dotnet-interactive\src\contracts.ts</Value>
     </AdditionalFilesToIncludeForProject>
-    <DefaultTestTimeout>25000</DefaultTestTimeout>
+    <DefaultTestTimeout>10000</DefaultTestTimeout>
     <HiddenComponentWarnings>
       <Value>AspNetTestHostCompatibility</Value>
     </HiddenComponentWarnings>

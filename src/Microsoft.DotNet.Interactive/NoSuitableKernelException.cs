@@ -13,6 +13,10 @@ namespace Microsoft.DotNet.Interactive
             Command = command;
         }
 
+        public NoSuitableKernelException(string message) : base(message)
+        {
+        }
+
         public KernelCommand Command { get; }
     }
 }

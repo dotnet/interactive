@@ -280,14 +280,12 @@ public class TelemetryTests : IDisposable
     {
         await _parser.InvokeAsync("[vscode] stdio", _console);
 
-
         _fakeTelemetry.LogEntries.Should().Contain(
             x => x.EventName == "command" &&
                  x.Properties.Count == 3 &&
                  x.Properties["verb"] == Sha256Hasher.Hash("STDIO") &&
                  x.Properties["frontend"] == "vscode" &&
                  x.Properties["default-kernel"] == Sha256Hasher.Hash("CSHARP"));
-
     }
 
     [Fact]
@@ -322,7 +320,7 @@ public class TelemetryTests : IDisposable
     }
 
     [Fact]
-    public async Task Kernel_server_standalone_command_has_one_entry()
+    public async Task stdio_command_has_one_entry()
     {
         await _parser.InvokeAsync("stdio", _console);
         _fakeTelemetry.LogEntries.Should().HaveCount(1);

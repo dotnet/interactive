@@ -155,25 +155,43 @@ namespace Microsoft.DotNet.Interactive
                 }
             }
 
-            var targetKernelName = command.TargetKernelName ?? DefaultKernelName;
+            var targetKernelName = command.TargetKernelName;
+            
+            if (targetKernelName  is null && 
+                !CompositeCanHandle(command))
+            {
+                targetKernelName = DefaultKernelName;
+            }
 
             if (targetKernelName is not null)
             {
-                _childKernels.TryGetByAlias(targetKernelName, out kernel);
-            }
-            else
-            {
-                kernel = _childKernels.Count switch
+                if (_childKernels.TryGetByAlias(targetKernelName, out kernel))
                 {
-                    0 => this,
-                    1 => _childKernels.Single(),
-                    _ => context?.HandlingKernel
-                };
+                    return kernel;
+                }
             }
 
-            return kernel ?? this;
+            kernel = _childKernels.Count switch
+            {
+                0 => null,
+                1 => _childKernels.Single(),
+                _ => context?.HandlingKernel
+            };
+
+            if (kernel is null)
+            {
+                return this;
+            }
+
+            return kernel;
         }
-        
+
+        private bool CompositeCanHandle(KernelCommand command)
+        {
+            // FIX: (CompositeCanHandle) 
+            return true;
+        }
+
         internal override async Task HandleAsync(
             KernelCommand command,
             KernelInvocationContext context)

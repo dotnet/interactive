@@ -93,17 +93,15 @@ public class KernelInfoTests
         }
 
         [Fact]
-        public async Task It_returns_the_list_of_subkernels_of_remote_composite()
+        public async Task It_returns_the_info_about_unproxied_subkernels_of_remote_composite()
         {
             using var localCompositeKernel = new CompositeKernel("LOCAL")
             {
-                new FakeKernel("fsharp")
+                new FakeKernel("local-fake")
             };
-            var proxiedCsharpKernel = new CSharpKernel();
             using var remoteCompositeKernel = new CompositeKernel("REMOTE")
             {
-                proxiedCsharpKernel,
-                new FakeKernel("fsharp")
+                new FakeKernel("remote-fake")
             };
 
             ConnectHost.ConnectInProcessHost(
@@ -111,13 +109,7 @@ public class KernelInfoTests
                 new Uri("kernel://local"),
                 remoteCompositeKernel,
                 new Uri("kernel://remote"));
-
-            await localCompositeKernel
-                  .Host
-                  .ConnectProxyKernelOnDefaultConnectorAsync(
-                      "remote-fsharp",
-                      new Uri("kernel://remote/fsharp"));
-
+            
             var result = await localCompositeKernel.SendAsync(new RequestKernelInfo());
 
             var events = result.KernelEvents.ToSubscribedList().OfType<KernelInfoProduced>();
@@ -125,10 +117,7 @@ public class KernelInfoTests
             events
                 .Select(k => k.KernelInfo.Uri)
                 .Should()
-                .BeEquivalentTo(
-                    new Uri("kernel://local/remote-fsharp"),
-                    new Uri("kernel://remote/fsharp"),
-                    new Uri("kernel://remote/csharp"));
+                .Contain(new Uri("kernel://remote/remote-fake"));
         }
 
         [Fact]
@@ -153,7 +142,7 @@ public class KernelInfoTests
                   .Host
                   .ConnectProxyKernelOnDefaultConnectorAsync(
                       "remote-fsharp",
-                      new Uri("kernel://remote/fsharp"));
+                      new Uri("kernel://remote/csharp"));
 
             var result = await localCompositeKernel.SendAsync(
                              new SubmitCode(@"Kernel.Root.Add(new Microsoft.DotNet.Interactive.FSharp.FSharpKernel());",

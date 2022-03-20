@@ -26,7 +26,8 @@ namespace Microsoft.DotNet.Interactive
         IKernelCommandHandler<RequestKernelInfo>, 
         IDisposable
     {
-        private  readonly ConcurrentDictionary<Type, HashSet<Type>> _handledCommandTypes = new();
+        private static readonly ConcurrentDictionary<Type, HashSet<Type>> _declaredHandledCommandTypesByKernelType = new();
+
         private readonly Subject<KernelEvent> _kernelEvents = new();
         private readonly CompositeDisposable _disposables;
         private readonly Dictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
@@ -58,7 +59,7 @@ namespace Microsoft.DotNet.Interactive
 
             Pipeline = new KernelCommandPipeline(this);
 
-            _supportedCommandTypes = _handledCommandTypes.GetOrAdd(
+            _supportedCommandTypes = _declaredHandledCommandTypesByKernelType.GetOrAdd(
                 GetType(), 
                 InitializeSupportedCommandTypes);
 
@@ -262,6 +263,7 @@ namespace Microsoft.DotNet.Interactive
         public void RegisterCommandType<TCommand>()
             where TCommand : KernelCommand
         {
+            // FIX: (RegisterCommandType) why is this a separate gesture from RegisterCommand?
             if (_supportedCommandTypes.Add(typeof(TCommand)))
             {
                 var defaultHandler = CreateDefaultHandlerForCommandType<TCommand>() ?? throw new InvalidOperationException("CreateDefaultHandlerForCommandType should not return null");
@@ -550,6 +552,19 @@ namespace Microsoft.DotNet.Interactive
 
         private protected virtual Kernel GetHandlingKernel(KernelCommand command, KernelInvocationContext invocationContext)
         {
+            // FIX: (GetHandlingKernel) don't handle commands intended for other kernels
+
+            if (command.TargetKernelName is not null && 
+                command.TargetKernelName != Name) 
+            {
+
+            }
+
+            if (command.DestinationUri is not null)
+            {
+                
+            }
+
             return this;
         }
 

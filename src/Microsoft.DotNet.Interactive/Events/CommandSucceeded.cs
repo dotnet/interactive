@@ -7,7 +7,6 @@ namespace Microsoft.DotNet.Interactive.Events
 {
     public class CommandSucceeded : KernelEvent
     {
-
         public CommandSucceeded(KernelCommand command) : base(command)
         {
         }
