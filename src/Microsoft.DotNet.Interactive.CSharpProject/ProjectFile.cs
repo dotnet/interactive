@@ -9,19 +9,19 @@ namespace Microsoft.DotNet.Interactive.CSharpProject;
 
 public class ProjectFile
 {
-    private readonly RelativeFilePath _relativePath;
-    public string RelativePath => _relativePath.ToString();
+    private readonly RelativeFilePath _relativeFilePath;
+    public string RelativeFilePath => _relativeFilePath.ToString();
     
     public string Content { get; }
 
     [JsonConstructor]
-    public ProjectFile(string relativePath, string content): this(new RelativeFilePath(relativePath), content)
+    public ProjectFile(string relativeFilePath, string content): this(new RelativeFilePath(relativeFilePath), content)
     {
     }
 
-    public ProjectFile(RelativeFilePath relativePath, string content)
+    public ProjectFile(RelativeFilePath relativeFilePath, string content)
     {
-        _relativePath = relativePath ?? throw new ArgumentNullException(nameof(relativePath));
+        _relativeFilePath = relativeFilePath ?? throw new ArgumentNullException(nameof(relativeFilePath));
         Content = content;
     }
 }

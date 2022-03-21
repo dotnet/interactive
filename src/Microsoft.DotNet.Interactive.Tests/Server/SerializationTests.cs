@@ -40,6 +40,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             KernelCommandEnvelope.RegisterCommand<OpenProject>();
             KernelCommandEnvelope.RegisterCommand<OpenDocument>();
             KernelCommandEnvelope.RegisterCommand<CompileProject>();
+            KernelEventEnvelope.RegisterEvent<ProjectOpened>();
             KernelEventEnvelope.RegisterEvent<DocumentOpened>();
             KernelEventEnvelope.RegisterEvent<AssemblyProduced>();
 
@@ -207,7 +208,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new ChangeWorkingDirectory("/path/to/somewhere");
 
-                yield return new CompileProject("123");
+                yield return new CompileProject();
 
                 yield return new DisplayError("oops!");
 
@@ -262,7 +263,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
             IEnumerable<KernelEvent> events()
             {
-                var compileProject = new CompileProject("123");
+                var compileProject = new CompileProject();
 
                 yield return new AssemblyProduced(compileProject, new Base64EncodedAssembly("01020304"));
 
@@ -372,6 +373,16 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                         packageRoot: "/the/package/root",
                         probingPaths: new[] { "/probing/path/1", "/probing/path/2" }),
                         new SubmitCode("#r \"nuget:ThePackage,1.2.3\""));
+
+                yield return new ProjectOpened(
+                    new OpenProject(new Project(new[]
+                    {
+                        new ProjectFile("Program.cs", "#region some-region\n#endregion"),
+                    })),
+                    new[]
+                    {
+                        new ProjectItem("./Program.cs", new[] { "some-region" })
+                    });
 
                 yield return new ReturnValueProduced(
                     new HtmlString("<b>hi!</b>"),

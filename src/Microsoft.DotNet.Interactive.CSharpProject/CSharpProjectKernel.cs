@@ -19,12 +19,6 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
 {
     public class CSharpProjectKernel
         : Kernel
-    //IKernelCommandHandler<OpenProject>,
-    //IKernelCommandHandler<OpenDocument>,
-    //IKernelCommandHandler<CompileProject>,
-    //IKernelCommandHandler<RequestCompletions>,
-    //IKernelCommandHandler<RequestDiagnostics>,
-    //IKernelCommandHandler<RequestSignatureHelp>
     {
         private RoslynWorkspaceServer _workspaceServer;
         private Protocol.Workspace _workspace;
@@ -50,6 +44,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             RegisterCommandHandler<RequestCompletions>(HandleAsync);
             RegisterCommandHandler<RequestDiagnostics>(HandleAsync);
             RegisterCommandHandler<RequestSignatureHelp>(HandleAsync);
+            RegisterCommandHandler<SubmitCode>(HandleAsync);
         }
 
         public async Task HandleAsync(OpenProject command, KernelInvocationContext context)
@@ -57,21 +52,34 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             var package = await CreateConsoleWorkspacePackage();
             _workspaceServer = new RoslynWorkspaceServer(package);
 
-            _workspace = new Protocol.Workspace(
-                files: command.Project.Files.Select(f => new Protocol.File(f.RelativePath, f.Content)).ToArray());
+            var extractor = new BufferFromRegionExtractor();
+            _workspace = extractor.Extract(command.Project.Files.Select(f => new Protocol.File(f.RelativeFilePath, f.Content)).ToArray());
+
+            context.Publish(new ProjectOpened(command, _workspace.Buffers.GroupBy(b => b.Id.FileName)
+                .OrderBy(g => g.Key).Select(g => new ProjectItem(g.Key, g.Select(r => r.Id.RegionName).Where(r => r != null).OrderBy(r => r).ToList())).ToList()));
         }
 
         public async Task HandleAsync(OpenDocument command, KernelInvocationContext context)
         {
             EnsureProjectOpened();
 
-            var file = _workspace.Files.SingleOrDefault(f => f.Name == command.RelativePath);
+            var file = _workspace.Files.SingleOrDefault(f => f.Name == command.RelativeFilePath);
             if (file is null)
             {
-                // add it to the workspace
-                file = new Protocol.File(command.RelativePath, string.Empty);
-                _workspace = new Protocol.Workspace(
-                    files: _workspace.Files.Concat(new[] { file }).ToArray());
+                // check for a region-less buffer instead
+                var buffer = _workspace.Buffers.SingleOrDefault(b => b.Id.FileName == command.RelativeFilePath && b.Id.RegionName is null);
+                if (buffer is { })
+                {
+                    // create a temporary file with the buffer's content
+                    file = new Protocol.File(command.RelativeFilePath, buffer.Content);
+                }
+                else
+                {
+                    // add it to the workspace
+                    file = new Protocol.File(command.RelativeFilePath, string.Empty);
+                    _workspace = new Protocol.Workspace(
+                        files: _workspace.Files.Concat(new[] { file }).ToArray());
+                }
             }
 
             if (string.IsNullOrWhiteSpace(command.RegionName))
@@ -82,14 +90,24 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             {
                 var extractor = new BufferFromRegionExtractor();
                 _workspace = extractor.Extract(_workspace.Files);
-                _buffer = _workspace.Buffers.SingleOrDefault(b => b.Id.FileName == command.RelativePath && b.Id.RegionName == command.RegionName);
+                _buffer = _workspace.Buffers.SingleOrDefault(b => b.Id.FileName == command.RelativeFilePath && b.Id.RegionName == command.RegionName);
                 if (_buffer is null)
                 {
-                    throw new Exception($"Region '{command.RegionName}' not found in file '{command.RelativePath}'");
+                    throw new Exception($"Region '{command.RegionName}' not found in file '{command.RelativeFilePath}'");
                 }
             }
 
-            context.Publish(new DocumentOpened(command, command.RelativePath, command.RegionName, _buffer.Content));
+            context.Publish(new DocumentOpened(command, command.RelativeFilePath, command.RegionName, _buffer.Content));
+        }
+
+        public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
+        {
+            EnsureProjectOpened();
+            EnsureDocumentOpened();
+
+            var updatedWorkspace = await GetWorkspaceWithCode(command.Code);
+            _buffer = updatedWorkspace.Buffers.Single(b => b.Id == _buffer.Id);
+            _workspace = updatedWorkspace;
         }
 
         public async Task HandleAsync(CompileProject command, KernelInvocationContext context)
@@ -97,10 +115,10 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             EnsureProjectOpened();
             EnsureDocumentOpened();
 
-            var request = await GetWorkspaceRequestWithCode(command.Code);
+            var request = new Protocol.WorkspaceRequest(_workspace, _buffer.Id);
             var result = await _workspaceServer.Compile(request);
 
-            var diagnostics = GetDiagnostics(command.Code, result);
+            var diagnostics = GetDiagnostics(_buffer.Content, result);
             context.Publish(new DiagnosticsProduced(diagnostics, command));
             if (diagnostics.Any(d => d.Severity == CodeAnalysis.DiagnosticSeverity.Error))
             {
@@ -117,7 +135,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             EnsureDocumentOpened();
 
             var position = GetPositionFromLinePosition(command.Code, command.LinePosition);
-            var request = await GetWorkspaceRequestWithCode(command.Code, position);
+            var updatedWorkspace = await GetWorkspaceWithCode(command.Code, position);
+            var request = new Protocol.WorkspaceRequest(updatedWorkspace, _buffer.Id);
             var completionResult = await _workspaceServer.GetCompletionList(request, new Budget());
             var completionItems = completionResult.Items.Select(item => new CompletionItem(item.DisplayText, item.Kind, item.FilterText, item.SortText, item.InsertText, item.Documentation?.Value)).ToList();
 
@@ -129,7 +148,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             EnsureProjectOpened();
             EnsureDocumentOpened();
 
-            var request = await GetWorkspaceRequestWithCode(command.Code);
+            var updatedWorkspace = await GetWorkspaceWithCode(command.Code);
+            var request = new Protocol.WorkspaceRequest(updatedWorkspace, _buffer.Id);
             var result = await _workspaceServer.Compile(request);
 
             var diagnostics = GetDiagnostics(command.Code, result);
@@ -142,7 +162,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             EnsureDocumentOpened();
 
             var position = GetPositionFromLinePosition(command.Code, command.LinePosition);
-            var request = await GetWorkspaceRequestWithCode(command.Code, position);
+            var updatedWorkspace = await GetWorkspaceWithCode(command.Code, position);
+            var request = new Protocol.WorkspaceRequest(updatedWorkspace, _buffer.Id);
             var sigHelpResult = await _workspaceServer.GetSignatureHelp(request, new Budget());
             var sigHelpItems = sigHelpResult.Signatures.Select(s =>
                 new SignatureInformation(
@@ -202,15 +223,13 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             return new LinePosition(currentLine, currentCharacter);
         }
 
-        private async Task<Protocol.WorkspaceRequest> GetWorkspaceRequestWithCode(string code, int position = 0)
+        private async Task<Protocol.Workspace> GetWorkspaceWithCode(string code, int position = 0)
         {
             var updatedWorkspace = new Protocol.Workspace(
                 files: _workspace.Files,
                 buffers: _workspace.Buffers.Where(b => b.Id != _buffer.Id).Concat(new[] { new Protocol.Buffer(_buffer.Id, code, position: position) }).ToArray());
             var inlinedWorkspace = await updatedWorkspace.InlineBuffersAsync();
-
-            var workspaceRequest = new Protocol.WorkspaceRequest(inlinedWorkspace, _buffer.Id);
-            return workspaceRequest;
+            return inlinedWorkspace;
         }
 
         private static IEnumerable<Diagnostic> GetDiagnostics(string code, Protocol.CompileResult result)

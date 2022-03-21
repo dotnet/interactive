@@ -7,9 +7,9 @@ namespace Microsoft.DotNet.Interactive.CSharpProject;
 
 public class Project
 {
-    public IReadOnlyCollection<ProjectFile> Files { get; }
+    public IReadOnlyList<ProjectFile> Files { get; }
 
-    public Project(IReadOnlyCollection<ProjectFile> files)
+    public Project(IReadOnlyList<ProjectFile> files)
     {
         Files = files;
     }

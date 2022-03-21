@@ -1,1 +1,1 @@
-{"event":{"assembly":{"value":"01020304"}},"eventType":"AssemblyProduced","command":{"token":"the-token","id":"command-id","commandType":"CompileProject","command":{"code":"123","targetKernelName":null},"originUri":"","destinationUri":""}}
+{"event":{"assembly":{"value":"01020304"}},"eventType":"AssemblyProduced","command":{"token":"the-token","id":"command-id","commandType":"CompileProject","command":{"targetKernelName":null},"originUri":"","destinationUri":""}}

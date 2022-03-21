@@ -10,20 +10,20 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Commands;
 
 public class OpenDocument : KernelCommand
 {
-    private readonly RelativeFilePath _relativePath;
-    public string RelativePath => _relativePath.ToString();
+    private readonly RelativeFilePath _relativeFilePath;
+    public string RelativeFilePath => _relativeFilePath.ToString();
 
     public string RegionName { get; }
 
     [JsonConstructor]
-    public OpenDocument(string relativePath, string regionName = null)
-        : this(new RelativeFilePath(relativePath), regionName)
+    public OpenDocument(string relativeFilePath, string regionName = null)
+        : this(new RelativeFilePath(relativeFilePath), regionName)
     {
     }
 
-    public OpenDocument(RelativeFilePath relativePath, string regionName)
+    public OpenDocument(RelativeFilePath relativeFilePath, string regionName)
     {
-        _relativePath = relativePath ?? throw new ArgumentNullException(nameof(relativePath));
+        _relativeFilePath = relativeFilePath ?? throw new ArgumentNullException(nameof(relativeFilePath));
         RegionName = regionName;
     }
 }

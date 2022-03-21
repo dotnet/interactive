@@ -33,6 +33,40 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
         }
 
         [Fact]
+        public async Task OpenProject_returns_a_full_list_of_available_project_items()
+        {
+            var kernel = new CSharpProjectKernel("csharp");
+            var result = await kernel.SendAsync(new OpenProject(new Project(new[]
+            {
+                new ProjectFile("FileWithOneRegion.cs", @"
+#region only-region
+#endregion
+"),
+                new ProjectFile("FileWithNoRegions.cs", "class B { }"),
+                new ProjectFile("FileWithTwoRegions.cs", @"
+#region region-one
+#endregion
+
+#region region-two
+#endregion
+"),
+            })));
+            var kernelEvents = result.KernelEvents.ToSubscribedList();
+            kernelEvents
+                .Should()
+                .ContainSingle<ProjectOpened>()
+                .Which
+                .ProjectItems
+                .Should()
+                .BeEquivalentTo(new[]
+                {
+                    new ProjectItem("./FileWithNoRegions.cs", Array.Empty<string>()),
+                    new ProjectItem("./FileWithOneRegion.cs", new[] { "only-region" }),
+                    new ProjectItem("./FileWithTwoRegions.cs", new[] { "region-one", "region-two" }),
+                });
+        }
+
+        [Fact]
         public async Task OpenDocument_with_an_existing_file_path_succeeds()
         {
             var kernel = new CSharpProjectKernel("csharp");
@@ -53,7 +87,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
             var kernelEvents = result.KernelEvents.ToSubscribedList();
             kernelEvents
                 .Should()
-                .ContainSingle<DocumentOpened>(e => e.RelativePath == "./Program.cs" && e.RegionName is null && e.Content == "// content");
+                .ContainSingle<DocumentOpened>(e => e.RelativeFilePath == "./Program.cs" && e.RegionName is null && e.Content == "// content");
         }
 
         [Fact]
@@ -65,7 +99,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
             var kernelEvents = result.KernelEvents.ToSubscribedList();
             kernelEvents
                 .Should()
-                .ContainSingle<DocumentOpened>(e => e.RelativePath == "./Program.cs" && e.RegionName == "region-name" && e.Content == "// content");
+                .ContainSingle<DocumentOpened>(e => e.RelativeFilePath == "./Program.cs" && e.RegionName == "region-name" && e.Content == "// content");
         }
 
         [Fact]
@@ -89,7 +123,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
             var kernelEvents = result.KernelEvents.ToSubscribedList();
             kernelEvents
                 .Should()
-                .ContainSingle<DocumentOpened>(e => e.RelativePath == "./File_that_is_not_part_of_the_project.cs" && e.RegionName is null && e.Content == "");
+                .ContainSingle<DocumentOpened>(e => e.RelativeFilePath == "./File_that_is_not_part_of_the_project.cs" && e.RegionName is null && e.Content == "");
         }
 
         [Fact]
@@ -407,13 +441,14 @@ public class Program
             var kernel = new CSharpProjectKernel("csharp");
             await kernel.SendAsync(new OpenProject(new Project(new[] { new ProjectFile("Program.cs", "// this will be wholly replaced") })));
             await kernel.SendAsync(new OpenDocument("Program.cs"));
-            var result = await kernel.SendAsync(new CompileProject(@"
+            await kernel.SendAsync(new SubmitCode(@"
 public class Program
 {
     public static void Main(string[] args)
     {
     }
 }"));
+            var result = await kernel.SendAsync(new CompileProject());
             var kernelEvents = result.KernelEvents.ToSubscribedList();
             kernelEvents
                 .Should()
@@ -441,7 +476,8 @@ public class Program
     }
 }") })));
             await kernel.SendAsync(new OpenDocument("Program.cs", regionName: "TEST_REGION"));
-            var result = await kernel.SendAsync(new CompileProject("x = 1;"));
+            await kernel.SendAsync(new SubmitCode("x = 1;"));
+            var result = await kernel.SendAsync(new CompileProject());
             var kernelEvents = result.KernelEvents.ToSubscribedList();
             kernelEvents
                 .Should()
@@ -470,7 +506,8 @@ public class Program
 }
 ") })));
             await kernel.SendAsync(new OpenDocument("Program.cs", regionName: "test-region"));
-            var result = await kernel.SendAsync(new CompileProject("someInt = \"this is a string\";"));
+            await kernel.SendAsync(new SubmitCode("someInt = \"this is a string\";"));
+            var result = await kernel.SendAsync(new CompileProject());
             var kernelEvents = result.KernelEvents.ToSubscribedList();
             using var _ = new AssertionScope();
             kernelEvents
@@ -510,7 +547,8 @@ public class Program
 }
 ") })));
             await kernel.SendAsync(new OpenDocument("Program.cs", regionName: "test-region"));
-            var result = await kernel.SendAsync(new CompileProject("int someInt = 1;"));
+            await kernel.SendAsync(new SubmitCode("int someInt = 1;"));
+            var result = await kernel.SendAsync(new CompileProject());
             var kernelEvents = result.KernelEvents.ToSubscribedList();
             using var _ = new AssertionScope();
             kernelEvents

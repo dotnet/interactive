@@ -1,1 +1,1 @@
-{"token":"the-token","id":"command-id","commandType":"OpenDocument","command":{"relativePath":"./path","regionName":null,"targetKernelName":null},"originUri":"","destinationUri":""}
+{"token":"the-token","id":"command-id","commandType":"OpenDocument","command":{"relativeFilePath":"./path","regionName":null,"targetKernelName":null},"originUri":"","destinationUri":""}

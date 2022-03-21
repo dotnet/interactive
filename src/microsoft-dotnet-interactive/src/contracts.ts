@@ -64,7 +64,6 @@ export interface ChangeWorkingDirectory extends KernelCommand {
 }
 
 export interface CompileProject extends KernelCommand {
-    code: string;
 }
 
 export interface DisplayError extends KernelCommand {
@@ -82,7 +81,7 @@ export interface GetInput extends KernelCommand {
 }
 
 export interface OpenDocument extends KernelCommand {
-    path: string;
+    relativeFilePath: string;
     regionName?: string;
 }
 
@@ -213,6 +212,7 @@ export const KernelExtensionLoadedType = "KernelExtensionLoaded";
 export const KernelInfoProducedType = "KernelInfoProduced";
 export const KernelReadyType = "KernelReady";
 export const PackageAddedType = "PackageAdded";
+export const ProjectOpenedType = "ProjectOpened";
 export const ReturnValueProducedType = "ReturnValueProduced";
 export const SignatureHelpProducedType = "SignatureHelpProduced";
 export const StandardErrorValueProducedType = "StandardErrorValueProduced";
@@ -242,6 +242,7 @@ export type KernelEventType =
     | typeof KernelInfoProducedType
     | typeof KernelReadyType
     | typeof PackageAddedType
+    | typeof ProjectOpenedType
     | typeof ReturnValueProducedType
     | typeof SignatureHelpProducedType
     | typeof StandardErrorValueProducedType
@@ -301,7 +302,7 @@ export interface DisplayedValueUpdated extends DisplayEvent {
 }
 
 export interface DocumentOpened extends KernelEvent {
-    path: string;
+    relativeFilePath: string;
     regionName?: string;
     content: string;
 }
@@ -334,6 +335,10 @@ export interface KernelReady extends KernelEvent {
 
 export interface PackageAdded extends KernelEvent {
     packageReference: ResolvedPackageReference;
+}
+
+export interface ProjectOpened extends KernelEvent {
+    projectItems: Array<ProjectItem>;
 }
 
 export interface ReturnValueProduced extends DisplayEvent {
@@ -456,8 +461,13 @@ export interface Project {
 }
 
 export interface ProjectFile {
-    relativePath: string;
+    relativeFilePath: string;
     content: string;
+}
+
+export interface ProjectItem {
+    relativeFilePath: string;
+    regionNames: Array<string>;
 }
 
 export enum RequestType {

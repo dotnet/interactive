@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <AssetTargetFallback>portable-net45+win8+wp8+wpa81</AssetTargetFallback>
+    <NoWarn>$(NoWarn);VSTHRD002</NoWarn><!-- Ignore: Synchronosly awaiting... -->
+    <NoWarn>$(NoWarn);VSTHRD100</NoWarn><!-- Ignore: Synchronosly awaiting... -->
     <NoWarn>$(NoWarn);VSTHRD103</NoWarn><!-- Ignore: Synchronosly awaiting... -->
     <NoWarn>$(NoWarn);VSTHRD200</NoWarn><!-- Ignore: Use "Async" suffix for async methods -->
     <NoWarn>$(NoWarn);1998</NoWarn><!-- async method doesn't use 'await' -->

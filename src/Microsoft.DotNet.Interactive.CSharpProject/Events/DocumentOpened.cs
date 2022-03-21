@@ -11,22 +11,22 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Events;
 
 public class DocumentOpened : KernelEvent
 {
-    private RelativeFilePath _relativePath;
+    private RelativeFilePath _relativeFilePath;
 
-    public string RelativePath => _relativePath.ToString();
+    public string RelativeFilePath => _relativeFilePath.ToString();
     public string RegionName { get; }
     public string Content { get; }
 
     [JsonConstructor]
-    public DocumentOpened(OpenDocument command, string relativePath, string regionName, string content)
-        : this(command, new RelativeFilePath(relativePath), regionName, content)
+    public DocumentOpened(OpenDocument command, string relativeFilePath, string regionName, string content)
+        : this(command, new RelativeFilePath(relativeFilePath), regionName, content)
     {
     }
 
-    public DocumentOpened(OpenDocument command, RelativeFilePath relativePath, string regionName, string content)
+    public DocumentOpened(OpenDocument command, RelativeFilePath relativeFilePath, string regionName, string content)
         : base(command)
     {
-        _relativePath = relativePath ?? throw new ArgumentNullException(nameof(relativePath));
+        _relativeFilePath = relativeFilePath ?? throw new ArgumentNullException(nameof(relativeFilePath));
         RegionName = regionName;
         Content = content ?? throw new ArgumentNullException(nameof(content));
     }
