@@ -1,1 +1,1 @@
-{"event":{"path":"path","regionName":null,"content":"file contents"},"eventType":"DocumentOpened","command":{"token":"the-token","id":"command-id","commandType":"OpenDocument","command":{"path":"path","regionName":null,"targetKernelName":null},"originUri":"","destinationUri":""}}
+{"event":{"relativePath":"./path","regionName":null,"content":"file contents"},"eventType":"DocumentOpened","command":{"token":"the-token","id":"command-id","commandType":"OpenDocument","command":{"relativePath":"./path","regionName":null,"targetKernelName":null},"originUri":"","destinationUri":""}}

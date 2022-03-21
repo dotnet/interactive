@@ -2,23 +2,28 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Commands;
 
 public class OpenDocument : KernelCommand
 {
-    public string Path { get; }
+    private readonly RelativeFilePath _relativePath;
+    public string RelativePath => _relativePath.ToString();
+
     public string RegionName { get; }
 
-    public OpenDocument(string path, string regionName = null)
+    [JsonConstructor]
+    public OpenDocument(string relativePath, string regionName = null)
+        : this(new RelativeFilePath(relativePath), regionName)
     {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            throw new ArgumentOutOfRangeException(nameof(path));
-        }
+    }
 
-        Path = path;
+    public OpenDocument(RelativeFilePath relativePath, string regionName)
+    {
+        _relativePath = relativePath ?? throw new ArgumentNullException(nameof(relativePath));
         RegionName = regionName;
     }
 }

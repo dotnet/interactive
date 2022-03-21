@@ -86,10 +86,11 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Transformations
                     }
                     else
                     {
-                        var target = viewPorts
+                        var targetViewports = viewPorts
                                      .Where(e => e.BufferId.RegionName != null &&
                                                  e.BufferId.RegionName == activeBufferId.RegionName &&
-                                                 (string.IsNullOrWhiteSpace(lineSpanPath) || lineSpanPath.EndsWith(e.Destination.Name)))
+                                                 (string.IsNullOrWhiteSpace(lineSpanPath) || AreSameFile(lineSpanPath, e.Destination.Name))).ToList();
+                        var target = targetViewports
                                      .FirstOrDefault(e => e.Region.Contains(diagnostic.Location.SourceSpan.Start));
 
                         if (target != null && !target.Region.IsEmpty)
@@ -127,6 +128,13 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Transformations
             }
         }
 
+        private static bool AreSameFile(string lineSpanPath, string destinationName)
+        {
+            var fileName = Path.GetFileName(lineSpanPath);
+            var destFileName = Path.GetFileName(destinationName);
+            return string.Compare(fileName, destFileName, StringComparison.OrdinalIgnoreCase) == 0;
+        }
+
         private static SerializableDiagnostic AlignDiagnosticLocation(
             Viewport viewport,
             Diagnostic diagnostic,
@@ -135,7 +143,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Transformations
             // this diagnostics does not apply to viewport
             if (diagnostic.Location!= Location.None
                 && !string.IsNullOrWhiteSpace(diagnostic.Location.SourceTree?.FilePath)
-                && !diagnostic.Location.SourceTree.FilePath.Contains(viewport.Destination.Name))
+                && !AreSameFile(diagnostic.Location.SourceTree.FilePath, viewport.Destination.Name))
             {
                 return null;
             }

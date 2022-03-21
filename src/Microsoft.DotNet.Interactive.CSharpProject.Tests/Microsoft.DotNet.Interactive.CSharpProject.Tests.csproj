@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <AssetTargetFallback>portable-net45+win8+wp8+wpa81</AssetTargetFallback>
+    <NoWarn>$(NoWarn);VSTHRD103</NoWarn><!-- Ignore: Synchronosly awaiting... -->
+    <NoWarn>$(NoWarn);VSTHRD200</NoWarn><!-- Ignore: Use "Async" suffix for async methods -->
     <NoWarn>$(NoWarn);1998</NoWarn><!-- async method doesn't use 'await' -->
     <NoWarn>$(NoWarn);8002</NoWarn><!-- Clockwise isn't strongly signed -->
   </PropertyGroup>
@@ -55,6 +57,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.Tests\Microsoft.DotNet.Interactive.Tests.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.CSharpProject\Microsoft.DotNet.Interactive.CSharpProject.csproj" />
   </ItemGroup>
 

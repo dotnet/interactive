@@ -14,6 +14,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharpProject;
 using Microsoft.DotNet.Interactive.CSharpProject.Commands;
 using Microsoft.DotNet.Interactive.CSharpProject.Events;
+using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Server;
@@ -332,7 +333,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 var openDocument = new OpenDocument("path");
 
-                yield return new DocumentOpened(openDocument, "path", null, "file contents");
+                yield return new DocumentOpened(openDocument, new RelativeFilePath("path"), null, "file contents");
 
                 yield return new ErrorProduced("oops!", submitCode);
 
