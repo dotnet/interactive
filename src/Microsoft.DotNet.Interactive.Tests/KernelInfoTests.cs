@@ -112,7 +112,9 @@ public class KernelInfoTests
             
             var result = await localCompositeKernel.SendAsync(new RequestKernelInfo());
 
-            var events = result.KernelEvents.ToSubscribedList().OfType<KernelInfoProduced>();
+            var events = result.KernelEvents
+                               .ToSubscribedList()
+                               .OfType<KernelInfoProduced>();
 
             events
                 .Select(k => k.KernelInfo.Uri)

@@ -27,11 +27,11 @@ namespace Microsoft.DotNet.Interactive
         IDisposable
     {
         private static readonly ConcurrentDictionary<Type, HashSet<Type>> _declaredHandledCommandTypesByKernelType = new();
+        private readonly HashSet<Type> _supportedCommandTypes;
 
         private readonly Subject<KernelEvent> _kernelEvents = new();
         private readonly CompositeDisposable _disposables;
         private readonly Dictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
-        private readonly HashSet<Type> _supportedCommandTypes;
         private IKernelScheduler<KernelCommand, KernelCommandResult> _fastPathScheduler;
         private FrontendEnvironment _frontendEnvironment;
         private ChooseKernelDirective _chooseKernelDirective;
@@ -149,9 +149,10 @@ namespace Microsoft.DotNet.Interactive
                     command.Parent = originalCommand;
                 }
 
-                if (handlingKernel is ProxyKernel proxyKernel)
+                if (handlingKernel is ProxyKernel &&
+                    command.DestinationUri is null)
                 {
-                    var kernelInfo = proxyKernel.KernelInfo;
+                    command.DestinationUri = handlingKernel.KernelInfo.RemoteUri;
                 }
             }
 
@@ -550,12 +551,12 @@ namespace Microsoft.DotNet.Interactive
             return Task.CompletedTask;
         }
 
-        protected virtual bool CanHandle(KernelCommand command)
+        private protected virtual bool CanHandle(KernelCommand command)
         {
             if (command.TargetKernelName is not null &&
                 command.TargetKernelName != Name)
             {
-
+                return false;
             }
 
             if (command.DestinationUri is not null)
@@ -564,7 +565,7 @@ namespace Microsoft.DotNet.Interactive
             }
 
             // FIX: (CompositeCanHandle) 
-            return true;
+            return SupportsCommand(command.GetType());
         }
 
         private protected virtual Kernel GetHandlingKernel(KernelCommand command, KernelInvocationContext invocationContext)
@@ -753,9 +754,33 @@ namespace Microsoft.DotNet.Interactive
 
         public virtual ChooseKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= new(this);
 
-        public bool SupportsCommand<T>() where T : KernelCommand
+        public bool SupportsCommand<T>() where T : KernelCommand =>
+            SupportsCommand(typeof(T));
+
+        public bool SupportsCommand(Type commandType)
         {
-            return this is IKernelCommandHandler<T> || _dynamicHandlers.ContainsKey(typeof(T));
+            // FIX: (SupportsCommand) generalize, be more specific re: directives
+            if (_supportedCommandTypes.Contains(commandType))
+            {
+                return true;
+            }
+
+            if (commandType == typeof(AnonymousKernelCommand))
+            {
+                return true;
+            }
+
+            if (commandType == typeof(DirectiveCommand))
+            {
+                return true;
+            }
+
+            if (commandType == typeof(DisplayValue))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         public virtual IKernelValueDeclarer GetValueDeclarer(object value) => KernelValueDeclarer.Default;

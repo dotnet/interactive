@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             _connectionString = connectionString;
         }
 
-        public override string LanguageName => "MSSQL";
+        public override string LanguageName => "T-SQL";
 
         public override async Task ConnectAsync()
         {

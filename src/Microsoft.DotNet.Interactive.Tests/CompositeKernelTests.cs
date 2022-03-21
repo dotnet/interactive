@@ -16,6 +16,7 @@ using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
 using Xunit;
 using Xunit.Abstractions;
+using static Microsoft.DotNet.Interactive.Tests.Utility.CustomCommandTypes;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
@@ -529,10 +530,10 @@ new [] {1,2,3}");
         {
             using var compositeKernel = new CompositeKernel();
 
-            CustomCommandTypes.FirstSubmission.MyCommand commandPassedToHandler = null;
+            FirstSubmission.MyCommand commandPassedToHandler = null;
             KernelInvocationContext contextPassedToHandler = null;
 
-            compositeKernel.RegisterCommandHandler<CustomCommandTypes.FirstSubmission.MyCommand>(
+            compositeKernel.RegisterCommandHandler<FirstSubmission.MyCommand>(
                 (command, context) =>
                 {
                     commandPassedToHandler = command;
@@ -540,7 +541,7 @@ new [] {1,2,3}");
                     return Task.CompletedTask;
                 });
 
-            var commandSentToKernel = new CustomCommandTypes.FirstSubmission.MyCommand("xyzzy");
+            var commandSentToKernel = new FirstSubmission.MyCommand("xyzzy");
             await compositeKernel.SendAsync(commandSentToKernel);
 
             commandPassedToHandler
@@ -558,10 +559,10 @@ new [] {1,2,3}");
             var childKernel = new FakeKernel();
             compositeKernel.Add(childKernel);
 
-            CustomCommandTypes.FirstSubmission.MyCommand commandPassedToHandler = null;
+            FirstSubmission.MyCommand commandPassedToHandler = null;
             KernelInvocationContext contextPassedToHandler = null;
 
-            childKernel.RegisterCommandHandler<CustomCommandTypes.FirstSubmission.MyCommand>(
+            childKernel.RegisterCommandHandler<FirstSubmission.MyCommand>(
                 (command, context) =>
                 {
                     commandPassedToHandler = command;
@@ -569,7 +570,7 @@ new [] {1,2,3}");
                     return Task.CompletedTask;
                 });
 
-            var commandSentToCompositeKernel = new CustomCommandTypes.FirstSubmission.MyCommand("xyzzy");
+            var commandSentToCompositeKernel = new FirstSubmission.MyCommand("xyzzy");
             await compositeKernel.SendAsync(commandSentToCompositeKernel);
 
             commandPassedToHandler

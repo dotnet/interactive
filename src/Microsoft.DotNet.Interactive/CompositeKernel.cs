@@ -141,6 +141,11 @@ namespace Microsoft.DotNet.Interactive
             context.HandlingKernel = GetHandlingKernel(command, context);
         }
 
+        private protected override bool CanHandle(KernelCommand command)
+        {
+            return base.CanHandle(command);
+        }
+
         private protected override Kernel GetHandlingKernel(
             KernelCommand command,
             KernelInvocationContext context)
@@ -156,11 +161,18 @@ namespace Microsoft.DotNet.Interactive
             }
 
             var targetKernelName = command.TargetKernelName;
-            
-            if (targetKernelName  is null && 
-                !CanHandle(command))
+
+            if (targetKernelName is null)
             {
-                targetKernelName = DefaultKernelName;
+                if (CanHandle(command))
+                {
+                    // FIX: (GetHandlingKernel) return this?
+                    return this;
+                }
+                else
+                {
+                    targetKernelName = DefaultKernelName;
+                }
             }
 
             if (targetKernelName is not null)
@@ -186,7 +198,6 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
-
         internal override async Task HandleAsync(
             KernelCommand command,
             KernelInvocationContext context)
@@ -211,11 +222,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (childKernel.SupportsCommand<RequestKernelInfo>())
                 {
-                    if (command.DestinationUri is null ||
-                        command.DestinationUri == childKernel.KernelInfo.Uri)
-                    {
-                        await childKernel.HandleAsync(command, context);
-                    }
+                    await childKernel.HandleAsync(command, context);
                 }
             }
         }

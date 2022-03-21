@@ -56,6 +56,9 @@
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.App.Tests.StdioConnectionTests.fast_path_commands_over_proxy_can_be_handled</TestName>
       </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.App.Tests.MagicCommandTests+about.it_shows_the_product_name_and_version_information</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>
