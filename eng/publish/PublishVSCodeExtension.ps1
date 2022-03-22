@@ -32,7 +32,7 @@ try {
             Get-ChildItem "$artifactsPath\packages\Shipping\Microsoft.DotNet*.nupkg" | ForEach-Object {
                 $nugetPackagePath = $_.ToString()
                 # don't publish asp or netstandard packages
-                if (-Not ($nugetPackagePath -match "(AspNetCore|Netstandard20)")) {
+                if (-Not ($nugetPackagePath -match "(AspNetCore|CSharpProject|Netstandard20)")) {
                     dotnet nuget push $nugetPackagePath --source https://api.nuget.org/v3/index.json --api-key $nugetToken --no-symbols 1
                     if ($LASTEXITCODE -ne 0) {
                         exit $LASTEXITCODE
