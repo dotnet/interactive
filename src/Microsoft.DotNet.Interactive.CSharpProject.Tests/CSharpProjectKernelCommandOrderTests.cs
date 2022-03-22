@@ -8,7 +8,6 @@ using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharpProject.Commands;
 using Microsoft.DotNet.Interactive.CSharpProject.Events;
-using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -17,6 +16,11 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
 {
     public class CSharpProjectKernelCommandOrderTests
     {
+        public CSharpProjectKernelCommandOrderTests()
+        {
+            CSharpProjectKernel.RegisterEventsAndCommands();
+        }
+
         [Fact]
         public async Task OpenDocument_before_OpenProject_fails()
         {
@@ -152,6 +156,7 @@ public class Program
     public static void Main(string[] args)
     {
         #region TEST_REGION
+        var a = 123;
         #endregion
     }
 }") })));
@@ -160,6 +165,11 @@ public class Program
             kernelEvents
                 .Should()
                 .NotContainErrors();
+                
+            kernelEvents
+                .Should()
+                .ContainSingle<DocumentOpened>()
+                .Which.Content.Should().Be("var a = 123;");
         }
 
         [Fact]

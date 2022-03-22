@@ -46,8 +46,12 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public static void RegisterEvent<TEvent>() where TEvent : KernelEvent
         {
-            _envelopeTypesByEventTypeName[typeof(TEvent).Name] = typeof(KernelEventEnvelope<TEvent>);
-            _eventTypesByEventTypeName[typeof(TEvent).Name] = typeof(TEvent);
+            RegisterEvent(typeof(TEvent));       }
+
+        public static void RegisterEvent(Type eventType) 
+        {
+            _envelopeTypesByEventTypeName[eventType.Name] = typeof(KernelEventEnvelope<>).MakeGenericType(eventType);
+            _eventTypesByEventTypeName[eventType.Name] = eventType;
         }
 
         public static void RegisterDefaults()

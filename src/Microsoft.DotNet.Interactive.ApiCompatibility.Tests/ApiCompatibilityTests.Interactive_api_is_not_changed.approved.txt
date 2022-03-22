@@ -679,6 +679,7 @@ Microsoft.DotNet.Interactive.Server
     public static IKernelCommandEnvelope Deserialize(System.String json)
     public static IKernelCommandEnvelope Deserialize(System.Text.Json.JsonElement json)
     public static System.Void RegisterCommand<T>()
+    public static System.Void RegisterCommand(System.Type commandType)
     public static System.Void RegisterDefaults()
     public static System.String Serialize(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public static System.String Serialize(IKernelCommandEnvelope envelope)
@@ -699,6 +700,7 @@ Microsoft.DotNet.Interactive.Server
     public static IKernelEventEnvelope DeserializeWithCommand(System.Text.Json.JsonElement jsonObject, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public static System.Void RegisterDefaults()
     public static System.Void RegisterEvent<TEvent>()
+    public static System.Void RegisterEvent(System.Type eventType)
     public static System.String Serialize(Microsoft.DotNet.Interactive.Events.KernelEvent event)
     public static System.String Serialize(IKernelEventEnvelope eventEnvelope)
     public System.String CommandType { get;}
