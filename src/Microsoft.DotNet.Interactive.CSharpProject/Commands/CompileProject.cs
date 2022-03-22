@@ -7,10 +7,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Commands;
 
 public class CompileProject : KernelCommand
 {
-    public string Code { get; }
-
-    public CompileProject(string code = null)
+    public CompileProject()
     {
-        Code = code;
     }
 }

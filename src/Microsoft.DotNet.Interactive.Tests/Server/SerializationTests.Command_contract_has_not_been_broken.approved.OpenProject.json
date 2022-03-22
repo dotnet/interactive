@@ -1,1 +1,1 @@
-{"token":"the-token","id":"command-id","commandType":"OpenProject","command":{"project":{"files":[{"relativePath":"./Program.cs","content":"// file contents"}]},"targetKernelName":null},"originUri":"","destinationUri":""}
+{"token":"the-token","id":"command-id","commandType":"OpenProject","command":{"project":{"files":[{"relativeFilePath":"./Program.cs","content":"// file contents"}]},"targetKernelName":null},"originUri":"","destinationUri":""}

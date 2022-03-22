@@ -4,6 +4,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
 using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
+using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
 {
@@ -15,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
         public static bool IsMatch(this Document d, SourceFile source) => 
             d.IsMatch(source.Name);
 
-        public static bool IsMatch(this Document d, string sourceName) => 
-            d.Name == sourceName || d.FilePath == sourceName;
+        public static bool IsMatch(this Document d, string sourceName) =>
+            d.Name == sourceName || d.FilePath == sourceName || (!string.IsNullOrWhiteSpace(sourceName) && (new RelativeFilePath(sourceName).Value == new RelativeFilePath(d.Name).Value));
     }
 }
