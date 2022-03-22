@@ -31,6 +31,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             KernelCommandEnvelope.RegisterCommand<OpenDocument>();
             KernelCommandEnvelope.RegisterCommand<CompileProject>();
 
+            KernelEventEnvelope.RegisterEvent<ProjectOpened>();
             KernelEventEnvelope.RegisterEvent<DocumentOpened>();
             KernelEventEnvelope.RegisterEvent<AssemblyProduced>();
         }
