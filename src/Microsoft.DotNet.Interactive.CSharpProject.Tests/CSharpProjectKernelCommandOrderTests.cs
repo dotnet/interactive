@@ -152,6 +152,7 @@ public class Program
     public static void Main(string[] args)
     {
         #region TEST_REGION
+        var a = 123;
         #endregion
     }
 }") })));
@@ -160,6 +161,11 @@ public class Program
             kernelEvents
                 .Should()
                 .NotContainErrors();
+                
+            kernelEvents
+                .Should()
+                .ContainSingle<DocumentOpened>()
+                .Which.Content.Should().Be("var a = 123;");
         }
 
         [Fact]

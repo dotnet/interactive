@@ -27,13 +27,27 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
         static CSharpProjectKernel()
         {
             // register commands and event with serialization
-            KernelCommandEnvelope.RegisterCommand<OpenProject>();
-            KernelCommandEnvelope.RegisterCommand<OpenDocument>();
-            KernelCommandEnvelope.RegisterCommand<CompileProject>();
 
-            KernelEventEnvelope.RegisterEvent<ProjectOpened>();
-            KernelEventEnvelope.RegisterEvent<DocumentOpened>();
-            KernelEventEnvelope.RegisterEvent<AssemblyProduced>();
+            var commandTypes = typeof(CSharpProjectKernel).Assembly.ExportedTypes
+                .Where(t => !t.IsAbstract && !t.IsInterface)
+                .Where(t => typeof(KernelCommand).IsAssignableFrom(t))
+                .OrderBy(t => t.Name)
+                .ToList();
+            var eventTypes = typeof(CSharpProjectKernel).Assembly.ExportedTypes
+                .Where(t => !t.IsAbstract && !t.IsInterface)
+                .Where(t => typeof(KernelEvent).IsAssignableFrom(t))
+                .OrderBy(t => t.Name)
+                .ToList();
+
+            foreach (var commandType in commandTypes)
+            {
+                KernelCommandEnvelope.RegisterCommand(commandType);
+            }
+
+            foreach (var eventType in eventTypes)
+            {
+                KernelEventEnvelope.RegisterEvent(eventType);
+            }
         }
 
         public CSharpProjectKernel(string name)

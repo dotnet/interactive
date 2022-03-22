@@ -47,10 +47,14 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public static void RegisterCommand<T>() where T : KernelCommand
         {
-            var commandEnvelopeType = typeof(KernelCommandEnvelope<T>);
             var commandType = typeof(T);
-            var commandTypeName = commandType.Name;
+            RegisterCommand(commandType);
+        }
 
+        public static void RegisterCommand(Type commandType)
+        {
+            var commandTypeName = commandType.Name;
+            var commandEnvelopeType = typeof(KernelCommandEnvelope<>).MakeGenericType(commandType);
             _envelopeTypesByCommandTypeName[commandTypeName] = commandEnvelopeType;
             _commandTypesByCommandTypeName[commandTypeName] = commandType;
         }
