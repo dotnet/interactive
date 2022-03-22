@@ -352,7 +352,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
                         Uri = new Uri("kernel://vscode/javascript"),
                         SupportedDirectives = new[]
                         {
-                            new DirectiveInfo("#r")
+                            new KernelDirectiveInfo("#r")
                         },
                         SupportedKernelCommands = new[]
                         {

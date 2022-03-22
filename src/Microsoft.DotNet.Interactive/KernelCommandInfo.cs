@@ -3,12 +3,4 @@
 
 namespace Microsoft.DotNet.Interactive;
 
-public class KernelCommandInfo
-{
-    public KernelCommandInfo(string name)
-    {
-        Name = name;
-    }
-
-    public string Name { get; }
-}
+public record KernelCommandInfo(string Name);

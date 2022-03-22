@@ -240,6 +240,43 @@ public class KernelInfoTests
                        .Should()
                        .Be(new Uri("kernel://remote/python"));
         }
+
+        [Fact]
+        public async Task When_kernel_info_is_requested_from_proxy_then_ProxyKernel_kernel_info_is_updated()
+        {
+            using var localCompositeKernel = new CompositeKernel();
+            
+            var csharpKernel = new CSharpKernel();
+            
+            using var remoteCompositeKernel = new CompositeKernel
+            {
+                csharpKernel
+            };
+
+            ConnectHost.ConnectInProcessHost(
+                localCompositeKernel,
+                new Uri("kernel://local"),
+                remoteCompositeKernel,
+                new Uri("kernel://remote"));
+
+            var remoteKernelUri = new Uri("kernel://remote/csharp");
+
+            var proxyKernel = await localCompositeKernel
+                                    .Host
+                                    .ConnectProxyKernelOnDefaultConnectorAsync(
+                                        "csharp",
+                                        remoteKernelUri);
+
+            await localCompositeKernel.SendAsync(
+                new RequestKernelInfo(remoteKernelUri));
+
+            proxyKernel
+                  .KernelInfo
+                  .SupportedKernelCommands
+                  .Select(c => c.Name)
+                  .Should()
+                  .Contain(csharpKernel.KernelInfo.SupportedKernelCommands.Select(c => c.Name));
+        }
     }
 
     public class ForUnparentedKernel

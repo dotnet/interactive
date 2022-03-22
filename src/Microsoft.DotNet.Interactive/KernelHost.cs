@@ -5,11 +5,8 @@
 
 using System;
 using System.Diagnostics;
-using System.Linq;
-using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 
@@ -84,7 +81,11 @@ namespace Microsoft.DotNet.Interactive
 
                 if (e is KernelInfoProduced kernelInfoProduced)
                 {
-                    // FIX: (ConnectAsync) update index
+                    // FIX: (ConnectAsync) update local KernelInfo for ProxyKernel
+                    if (_kernel.FindKernel(e.Command.TargetKernelName) is ProxyKernel proxyKernel)
+                    {
+                        proxyKernel.KernelInfo.UpdateFrom(kernelInfoProduced.KernelInfo);
+                    }
                 }
 
                 var _ = _defaultSender.SendAsync(e, _cancellationTokenSource.Token);

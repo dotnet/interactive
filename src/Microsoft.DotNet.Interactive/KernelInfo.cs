@@ -10,8 +10,7 @@ namespace Microsoft.DotNet.Interactive
 {
     public class KernelInfo
     {
-        private readonly List<KernelCommandInfo> _supportedKernelCommands = new();
-        private readonly HashSet<string> _supportedKernelCommandNames = new();
+        private readonly HashSet<KernelCommandInfo> _supportedKernelCommands = new();
 
         public KernelInfo(
             string localName,
@@ -59,14 +58,10 @@ namespace Microsoft.DotNet.Interactive
         public IReadOnlyCollection<KernelCommandInfo> SupportedKernelCommands
         {
             get => _supportedKernelCommands;
-            init
-            {
-                _supportedKernelCommands = new List<KernelCommandInfo>(value);
-                _supportedKernelCommandNames.UnionWith(_supportedKernelCommands.Select(i => i.Name));
-            }
+            init => _supportedKernelCommands.UnionWith(value ?? throw new ArgumentNullException(nameof(value)));
         }
 
-        public IReadOnlyCollection<DirectiveInfo> SupportedDirectives { get; init; } = Array.Empty<DirectiveInfo>();
+        public IReadOnlyCollection<KernelDirectiveInfo> SupportedDirectives { get; init; } = Array.Empty<KernelDirectiveInfo>();
 
         public override string ToString() => LocalName +
                                              (Uri is { } uri
@@ -76,6 +71,9 @@ namespace Microsoft.DotNet.Interactive
         internal HashSet<string> NameAndAliases { get; }
 
         internal bool SupportsCommand(string commandName) =>
-            _supportedKernelCommandNames.Contains(commandName);
+            _supportedKernelCommands.Contains(new(commandName));
+
+        public void UpdateFrom(KernelInfo source) =>
+            _supportedKernelCommands.UnionWith(source.SupportedKernelCommands);
     }
 }

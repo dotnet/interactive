@@ -3,12 +3,4 @@
 
 namespace Microsoft.DotNet.Interactive;
 
-public class DirectiveInfo  
-{
-    public DirectiveInfo(string name)
-    {
-        Name = name;
-    }
-
-    public string Name { get; }
-}
+public record KernelDirectiveInfo(string Name);

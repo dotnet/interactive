@@ -243,7 +243,7 @@ namespace Microsoft.DotNet.Interactive
             new(Name, LanguageName, LanguageVersion)
             {
                 SupportedKernelCommands = _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)).ToArray(),
-                SupportedDirectives = Directives.Select(d => new DirectiveInfo(d.Name)).ToArray(),
+                SupportedDirectives = Directives.Select(d => new KernelDirectiveInfo(d.Name)).ToArray(),
             };
 
         public IReadOnlyCollection<Command> Directives => SubmissionParser.Directives;
@@ -786,8 +786,6 @@ namespace Microsoft.DotNet.Interactive
             {
                 return true;
             }
-
-
 
             return false;
         }
