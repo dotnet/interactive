@@ -26,6 +26,11 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
 
         static CSharpProjectKernel()
         {
+            RegisterEventsAndCommands();
+        }
+
+        public static void RegisterEventsAndCommands()
+        {
             // register commands and event with serialization
 
             var commandTypes = typeof(CSharpProjectKernel).Assembly.ExportedTypes
