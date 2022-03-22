@@ -220,7 +220,7 @@ namespace Microsoft.DotNet.Interactive
         {
             foreach (var childKernel in ChildKernels)
             {
-                if (childKernel.SupportsCommand<RequestKernelInfo>())
+                if (childKernel.SupportsCommand(command))
                 {
                     await childKernel.HandleAsync(command, context);
                 }

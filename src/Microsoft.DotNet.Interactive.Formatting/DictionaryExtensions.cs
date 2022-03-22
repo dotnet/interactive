@@ -22,6 +22,24 @@ namespace Microsoft.DotNet.Interactive
             return value;
         }
 
+#if NETSTANDARD2_0
+        public static bool TryAdd<TKey, TValue>(
+            this IDictionary<TKey, TValue> source, 
+            TKey key,
+            TValue value)
+        {
+            if (source.TryGetValue(key, out _))
+            {
+                return false;
+            }
+            else
+            {
+                source.Add(key, value);
+                return true;
+            }
+        }  
+#endif
+
         public static IDictionary<TKey, TValue> Merge<TKey, TValue>(
             this IDictionary<TKey, TValue> dictionary1,
             IDictionary<TKey, TValue> dictionary2,

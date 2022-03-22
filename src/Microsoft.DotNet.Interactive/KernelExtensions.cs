@@ -173,11 +173,11 @@ namespace Microsoft.DotNet.Interactive
 
         public static T UseValueSharing<T>(this T kernel) where T : Kernel
         {
-            var variableNameArg = new Argument<string>(
+            var valueNameArg = new Argument<string>(
                 "name",
                 "The name of the variable to create in the destination kernel");
 
-            variableNameArg.AddCompletions(_ =>
+            valueNameArg.AddCompletions(_ =>
             {
                 if (kernel.ParentKernel is { } composite)
                 {
@@ -210,18 +210,18 @@ namespace Microsoft.DotNet.Interactive
             var share = new Command("#!share", "Share a value between subkernels")
             {
                 fromKernelOption,
-                variableNameArg
+                valueNameArg
             };
 
             share.Handler = CommandHandler.Create(async (InvocationContext cmdLineContext) =>
             {
                 var from = cmdLineContext.ParseResult.GetValueForOption(fromKernelOption);
-                var name = cmdLineContext.ParseResult.GetValueForArgument(variableNameArg);
+                var valueName = cmdLineContext.ParseResult.GetValueForArgument(valueNameArg);
                 var context = cmdLineContext.GetService<KernelInvocationContext>();
 
                 if (kernel.FindKernel(from) is { } fromKernel)
                 {
-                    await fromKernel.ImportValue(kernel, name);
+                    await fromKernel.ImportValue(kernel, valueName);
                 }
                 else
                 {
@@ -234,7 +234,10 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
-        public static async Task ImportValue(this Kernel fromKernel, Kernel toKernel, string valueName)
+        public static async Task ImportValue(
+            this Kernel fromKernel, 
+            Kernel toKernel, 
+            string valueName)
         {
             if (fromKernel is ISupportGetValue fromInProcessKernel)
             {
@@ -265,7 +268,7 @@ namespace Microsoft.DotNet.Interactive
                     }
                 }
             } 
-            else if (fromKernel.SupportsCommand<RequestValue>())
+            else if (fromKernel.SupportsCommandType(typeof(RequestValue)))
             {
                 // FIX: (ImportValue) share some variables
                 var result = await fromKernel.SendAsync(new RequestValue(valueName));

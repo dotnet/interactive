@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.Interactive.Http
                         return;
                     }
                     
-                    if (targetKernel.SupportsCommand<RequestValue>() || targetKernel is ISupportGetValue)
+                    if (targetKernel.SupportsCommandType(typeof(RequestValue)) || targetKernel is ISupportGetValue)
                     {
                         foreach (var variableName in kernelProperty.Value.EnumerateArray().Select(v => v.GetString()))
                         {

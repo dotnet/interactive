@@ -565,7 +565,7 @@ namespace Microsoft.DotNet.Interactive
             }
 
             // FIX: (CompositeCanHandle) 
-            return SupportsCommand(command.GetType());
+            return SupportsCommand(command);
         }
 
         private protected virtual Kernel GetHandlingKernel(KernelCommand command, KernelInvocationContext invocationContext)
@@ -753,12 +753,19 @@ namespace Microsoft.DotNet.Interactive
         public void Dispose() => _disposables.Dispose();
 
         public virtual ChooseKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= new(this);
-
-        public bool SupportsCommand<T>() where T : KernelCommand =>
-            SupportsCommand(typeof(T));
-
-        public bool SupportsCommand(Type commandType)
+        
+        public bool SupportsCommand(KernelCommand command)
         {
+            return SupportsCommandType(command.GetType());
+        }
+
+        public bool SupportsCommandType(Type commandType)
+        {
+            if (KernelInfo.SupportsCommand(commandType.Name))
+            {
+                return true;
+            }
+
             // FIX: (SupportsCommand) generalize, be more specific re: directives
             if (_supportedCommandTypes.Contains(commandType))
             {
@@ -779,6 +786,8 @@ namespace Microsoft.DotNet.Interactive
             {
                 return true;
             }
+
+
 
             return false;
         }

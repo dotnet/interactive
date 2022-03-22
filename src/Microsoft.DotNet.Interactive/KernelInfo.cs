@@ -10,6 +10,9 @@ namespace Microsoft.DotNet.Interactive
 {
     public class KernelInfo
     {
+        private readonly List<KernelCommandInfo> _supportedKernelCommands = new();
+        private readonly HashSet<string> _supportedKernelCommandNames = new();
+
         public KernelInfo(
             string localName,
             string? languageName = null,
@@ -53,7 +56,15 @@ namespace Microsoft.DotNet.Interactive
 
         public Uri? RemoteUri { get; set; }
 
-        public IReadOnlyCollection<KernelCommandInfo> SupportedKernelCommands { get; init; } = Array.Empty<KernelCommandInfo>();
+        public IReadOnlyCollection<KernelCommandInfo> SupportedKernelCommands
+        {
+            get => _supportedKernelCommands;
+            init
+            {
+                _supportedKernelCommands = new List<KernelCommandInfo>(value);
+                _supportedKernelCommandNames.UnionWith(_supportedKernelCommands.Select(i => i.Name));
+            }
+        }
 
         public IReadOnlyCollection<DirectiveInfo> SupportedDirectives { get; init; } = Array.Empty<DirectiveInfo>();
 
@@ -63,5 +74,8 @@ namespace Microsoft.DotNet.Interactive
                                                   : null);
 
         internal HashSet<string> NameAndAliases { get; }
+
+        internal bool SupportsCommand(string commandName) =>
+            _supportedKernelCommandNames.Contains(commandName);
     }
 }
