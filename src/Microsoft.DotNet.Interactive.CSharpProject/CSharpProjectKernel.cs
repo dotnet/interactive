@@ -76,7 +76,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
 
         public async Task HandleAsync(OpenDocument command, KernelInvocationContext context)
         {
-            EnsureProjectOpened();
+            ThrowIfProjectIsNotOpened();
 
             var file = _workspace.Files.SingleOrDefault(f => f.Name == command.RelativeFilePath);
             if (file is null)
@@ -117,8 +117,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
 
         public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
         {
-            EnsureProjectOpened();
-            EnsureDocumentOpened();
+            ThrowIfProjectIsNotOpened();
+            ThrowIfDocumentIsNotOpened();
 
             var updatedWorkspace = await GetWorkspaceWithCode(command.Code);
             _buffer = updatedWorkspace.Buffers.Single(b => b.Id == _buffer.Id);
@@ -127,8 +127,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
 
         public async Task HandleAsync(CompileProject command, KernelInvocationContext context)
         {
-            EnsureProjectOpened();
-            EnsureDocumentOpened();
+            ThrowIfProjectIsNotOpened();
+            ThrowIfDocumentIsNotOpened();
 
             var request = new Protocol.WorkspaceRequest(_workspace, _buffer.Id);
             var result = await _workspaceServer.Compile(request);
@@ -146,8 +146,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
 
         public async Task HandleAsync(RequestCompletions command, KernelInvocationContext context)
         {
-            EnsureProjectOpened();
-            EnsureDocumentOpened();
+            ThrowIfProjectIsNotOpened();
+            ThrowIfDocumentIsNotOpened();
 
             var position = GetPositionFromLinePosition(command.Code, command.LinePosition);
             var updatedWorkspace = await GetWorkspaceWithCode(command.Code, position);
@@ -160,8 +160,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
 
         public async Task HandleAsync(RequestDiagnostics command, KernelInvocationContext context)
         {
-            EnsureProjectOpened();
-            EnsureDocumentOpened();
+            ThrowIfProjectIsNotOpened();
+            ThrowIfDocumentIsNotOpened();
 
             var updatedWorkspace = await GetWorkspaceWithCode(command.Code);
             var request = new Protocol.WorkspaceRequest(updatedWorkspace, _buffer.Id);
@@ -173,8 +173,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
 
         public async Task HandleAsync(RequestSignatureHelp command, KernelInvocationContext context)
         {
-            EnsureProjectOpened();
-            EnsureDocumentOpened();
+            ThrowIfProjectIsNotOpened();
+            ThrowIfDocumentIsNotOpened();
 
             var position = GetPositionFromLinePosition(command.Code, command.LinePosition);
             var updatedWorkspace = await GetWorkspaceWithCode(command.Code, position);
@@ -288,19 +288,19 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             }
         }
 
-        private void EnsureProjectOpened()
+        private void ThrowIfProjectIsNotOpened()
         {
             if (_workspaceServer is null || _workspace is null)
             {
-                throw new Exception($"Project must be opened, send the command '{nameof(OpenProject)}' first.");
+                throw new InvalidOperationException($"Project must be opened, send the command '{nameof(OpenProject)}' first.");
             }
         }
 
-        private void EnsureDocumentOpened()
+        private void ThrowIfDocumentIsNotOpened()
         {
             if (_buffer is null)
             {
-                throw new Exception($"Document must be opened, send the command '{nameof(OpenDocument)}' first.");
+                throw new InvalidOperationException($"Document must be opened, send the command '{nameof(OpenDocument)}' first.");
             }
         }
 
@@ -311,7 +311,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             packageBuilder.TrySetLanguageVersion("8.0");
             packageBuilder.AddPackageReference("Newtonsoft.Json", "13.0.1");
             var package = packageBuilder.GetPackage() as Package;
-            await package.CreateRoslynWorkspaceForRunAsync(new Budget());
+            await package!.CreateRoslynWorkspaceForRunAsync(new Budget());
             return package;
         }
     }
