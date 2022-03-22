@@ -24,11 +24,6 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
         private Protocol.Workspace _workspace;
         private Protocol.Buffer _buffer;
 
-        static CSharpProjectKernel()
-        {
-            RegisterEventsAndCommands();
-        }
-
         public static void RegisterEventsAndCommands()
         {
             // register commands and event with serialization
