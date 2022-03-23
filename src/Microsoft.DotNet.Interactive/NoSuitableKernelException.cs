@@ -4,19 +4,19 @@
 using System;
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+public class NoSuitableKernelException : Exception
 {
-    public class NoSuitableKernelException : Exception
+    public NoSuitableKernelException(KernelCommand command) : base($"No kernel found for {command} with target kernel '{command.TargetKernelName}'")
     {
-        public NoSuitableKernelException(KernelCommand command) : base($"No kernel found for {command} with target kernel '{command.TargetKernelName}'")
-        {
-            Command = command;
-        }
-
-        public NoSuitableKernelException(string message) : base(message)
-        {
-        }
-
-        public KernelCommand Command { get; }
+        Command = command;
     }
+
+    public KernelCommand Command { get; }
+}
+
+public class CommandNotSupportedException : Exception
+{
+
 }

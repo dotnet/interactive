@@ -122,15 +122,21 @@ namespace Microsoft.DotNet.Interactive
                 case SubmitCode { LanguageNode: null } submitCode:
                     commands = SubmissionParser.SplitSubmission(submitCode);
                     break;
+
                 case RequestDiagnostics { LanguageNode: null } requestDiagnostics:
                     commands = SubmissionParser.SplitSubmission(requestDiagnostics);
                     break;
+
                 case LanguageServiceCommand { LanguageNode: null } languageServiceCommand:
-                    if (!TryPreprocessLanguageServiceCommand(languageServiceCommand, context, out commands))
+                    if (!TryAdjustLanguageServiceCommandLinePositions(languageServiceCommand, context, out var adjustedCommand))
                     {
+                        commands = null;
                         return false;
                     }
+
+                    commands = new[] { adjustedCommand };
                     break;
+
                 default:
                     commands = new[] { originalCommand };
                     break;
@@ -139,6 +145,12 @@ namespace Microsoft.DotNet.Interactive
             foreach (var command in commands)
             {
                 var handlingKernel = GetHandlingKernel(command, context);
+
+                if (handlingKernel is null)
+                {
+                    context.Fail(command, new NoSuitableKernelException(command));
+                    return false;
+                }
 
                 command.SchedulingScope ??= handlingKernel.SchedulingScope;
                 command.TargetKernelName ??= handlingKernel.Name;
@@ -159,9 +171,11 @@ namespace Microsoft.DotNet.Interactive
             return true;
         }
 
-        private bool TryPreprocessLanguageServiceCommand(LanguageServiceCommand command, KernelInvocationContext context, out IReadOnlyList<KernelCommand> commands)
+        private bool TryAdjustLanguageServiceCommandLinePositions(
+            LanguageServiceCommand command, 
+            KernelInvocationContext context, 
+            out LanguageServiceCommand adjustedCommand)
         {
-            var postProcessCommands = new List<KernelCommand>();
             var tree = SubmissionParser.Parse(command.Code, command.TargetKernelName);
             var rootNode = tree.GetRoot();
             var sourceText = SourceText.From(command.Code);
@@ -172,7 +186,7 @@ namespace Microsoft.DotNet.Interactive
                 || command.LinePosition.Character > lines[command.LinePosition.Line].Span.Length)
             {
                 context.Fail(command, message: $"The specified position {command.LinePosition}");
-                commands = null;
+                adjustedCommand = null;
                 return false;
             }
 
@@ -205,10 +219,13 @@ namespace Microsoft.DotNet.Interactive
                     _ => node.KernelName,
                 };
 
-                postProcessCommands.Add(offsetLanguageServiceCommand);
+                adjustedCommand = offsetLanguageServiceCommand;
             }
-
-            commands = postProcessCommands;
+            else
+            {
+                // FIX: (TryAdjustLanguageServiceCommandLinePositions) 
+                adjustedCommand = null;
+            }
 
             return true;
         }
@@ -568,7 +585,9 @@ namespace Microsoft.DotNet.Interactive
             return SupportsCommand(command);
         }
 
-        private protected virtual Kernel GetHandlingKernel(KernelCommand command, KernelInvocationContext invocationContext)
+        private protected virtual Kernel GetHandlingKernel(
+            KernelCommand command, 
+            KernelInvocationContext invocationContext)
         {
             if (CanHandle(command))
             {

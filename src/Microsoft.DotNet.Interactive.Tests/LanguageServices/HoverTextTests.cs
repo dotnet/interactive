@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
         }
 
         [Fact]
-        public async Task hover_on_unsupported_language_service_returns_nothing()
+        public async Task hover_on_unsupported_language_service_fails_with_informative_error()
         {
             using var kernel = new FakeKernel();
 
@@ -35,7 +35,15 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
             result.KernelEvents
                   .ToSubscribedList()
                   .Should()
-                  .NotContain(kv => kv is HoverTextProduced);
+                  .ContainSingle<CommandFailed>()
+                  .Which
+                  .Exception
+                  .Should()
+                  .BeOfType<CommandNotSupportedException>()
+                  .Which
+                  .Message
+                  .Should()
+                  .Be($"something!");
         }
 
         [Theory]
