@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.Interactive
 
         public Uri? RemoteUri { get; set; }
 
-        public IReadOnlyCollection<KernelCommandInfo> SupportedKernelCommands
+        public ICollection<KernelCommandInfo> SupportedKernelCommands
         {
             get => _supportedKernelCommands;
             init => _supportedKernelCommands.UnionWith(value ?? throw new ArgumentNullException(nameof(value)));
@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.Interactive
         internal bool SupportsCommand(string commandName) =>
             _supportedKernelCommands.Contains(new(commandName));
 
-        public void UpdateFrom(KernelInfo source) =>
+        internal void UpdateFrom(KernelInfo source) =>
             _supportedKernelCommands.UnionWith(source.SupportedKernelCommands);
     }
 }

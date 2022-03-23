@@ -9,7 +9,7 @@ using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive;
 
-internal class KernelRegistry : IReadOnlyCollection<Kernel>
+public class KernelCollection : IReadOnlyCollection<Kernel>
 {
     private readonly CompositeKernel _compositeKernel;
 
@@ -18,12 +18,12 @@ internal class KernelRegistry : IReadOnlyCollection<Kernel>
     private readonly Dictionary<Uri, Kernel> _kernelsByRemoteUri = new();
     private readonly Dictionary<string, Kernel> _kernelsByNameOrAlias = new();
 
-    public KernelRegistry(CompositeKernel compositeKernel)
+    public KernelCollection(CompositeKernel compositeKernel)
     {
         _compositeKernel = compositeKernel;
     }
 
-    public void Add(Kernel kernel)
+    internal void Add(Kernel kernel)
     {
         if (kernel.KernelInfo.NameAndAliases.FirstOrDefault(a => _kernelsByNameOrAlias.ContainsKey(a)) is { } collidingAlias)
         {
@@ -49,15 +49,18 @@ internal class KernelRegistry : IReadOnlyCollection<Kernel>
 
     public bool TryGetByUri(Uri uri, out Kernel kernel)
     {
-        if (_kernelsByLocalUri.TryGetValue(uri, out kernel) || 
-            _kernelsByRemoteUri.TryGetValue(uri, out kernel))
+        if (_kernelsByRemoteUri.TryGetValue(uri, out kernel))
         {
             return true;
         }
-        else
+
+        if (_kernelsByLocalUri.TryGetValue(uri, out kernel))
         {
-            return false;
+            return true;
         }
+
+
+        return false;
     }
 
     public IEnumerator<Kernel> GetEnumerator() =>
@@ -68,7 +71,7 @@ internal class KernelRegistry : IReadOnlyCollection<Kernel>
 
     public int Count => _kernels.Count;
 
-    public void NotifyHostSet()
+    internal void NotifyThatHostWasSet()
     {
         foreach (var kernel in _kernels)
         {

@@ -6,12 +6,9 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive;
 
-public class NoSuitableKernelException : Exception
+public class CommandNotSupportedException : Exception
 {
-    public NoSuitableKernelException(KernelCommand command) : base($"No kernel found for {command} with target kernel '{command.TargetKernelName}'.")
+    public CommandNotSupportedException(KernelCommand command, Kernel kernel) : base($"Kernel {kernel} does not support command type {command.GetType().Name}.")
     {
-        Command = command;
     }
-
-    public KernelCommand Command { get; }
 }

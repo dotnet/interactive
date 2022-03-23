@@ -93,7 +93,7 @@ public class KernelInfoTests
         }
 
         [Fact]
-        public async Task It_returns_the_info_about_unproxied_subkernels_of_remote_composite()
+        public async Task It_returns_info_about_unproxied_subkernels_of_remote_composite()
         {
             using var localCompositeKernel = new CompositeKernel("LOCAL")
             {

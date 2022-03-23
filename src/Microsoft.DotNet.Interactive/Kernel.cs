@@ -223,7 +223,6 @@ namespace Microsoft.DotNet.Interactive
             }
             else
             {
-                // FIX: (TryAdjustLanguageServiceCommandLinePositions) 
                 adjustedCommand = null;
             }
 
@@ -568,7 +567,7 @@ namespace Microsoft.DotNet.Interactive
             return Task.CompletedTask;
         }
 
-        private protected virtual bool CanHandle(KernelCommand command)
+        private protected bool CanHandle(KernelCommand command)
         {
             if (command.TargetKernelName is not null &&
                 command.TargetKernelName != Name)
@@ -578,7 +577,10 @@ namespace Microsoft.DotNet.Interactive
 
             if (command.DestinationUri is not null)
             {
-
+                if (KernelInfo.RemoteUri != command.DestinationUri)
+                {
+                    return false;
+                }
             }
 
             // FIX: (CompositeCanHandle) 
@@ -586,15 +588,20 @@ namespace Microsoft.DotNet.Interactive
         }
 
         private protected virtual Kernel GetHandlingKernel(
-            KernelCommand command, 
-            KernelInvocationContext invocationContext)
+            KernelCommand command,
+            KernelInvocationContext context)
         {
             if (CanHandle(command))
             {
                 return this;
             }
+            else
+            {
+                // FIX: (TryPreprocessCommands) 
+                context.Fail(command, new CommandNotSupportedException(command, this));
 
-            return null;
+                return null;
+            }
         }
 
         protected internal void PublishEvent(KernelEvent kernelEvent)
@@ -701,7 +708,7 @@ namespace Microsoft.DotNet.Interactive
             yield return SubmissionParser.GetDirectiveParser();
         }
 
-        private protected void TrySetHandler(
+        private void TrySetHandler(
             KernelCommand command,
             KernelInvocationContext context)
         {
@@ -772,21 +779,41 @@ namespace Microsoft.DotNet.Interactive
         public void Dispose() => _disposables.Dispose();
 
         public virtual ChooseKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= new(this);
-        
+
         public bool SupportsCommand(KernelCommand command)
         {
-            return SupportsCommandType(command.GetType());
+            if (command.Handler is not null)
+            {
+                return true;
+            }
+
+            if (KernelInfo.SupportsCommand(command.GetType().Name))
+            {
+                return true;
+            }
+
+            switch (command)
+            {
+                case AnonymousKernelCommand:
+                    return true;
+                case DirectiveCommand:
+                    return true;
+                case Quit:
+                    return true;
+                case Cancel:
+                    return true;
+                case DisplayValue:
+                    return true;
+                case RequestCompletions:
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         public bool SupportsCommandType(Type commandType)
         {
             if (KernelInfo.SupportsCommand(commandType.Name))
-            {
-                return true;
-            }
-
-            // FIX: (SupportsCommand) generalize, be more specific re: directives
-            if (_supportedCommandTypes.Contains(commandType))
             {
                 return true;
             }

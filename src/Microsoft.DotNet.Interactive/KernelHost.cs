@@ -81,8 +81,7 @@ namespace Microsoft.DotNet.Interactive
 
                 if (e is KernelInfoProduced kernelInfoProduced)
                 {
-                    // FIX: (ConnectAsync) update local KernelInfo for ProxyKernel
-                    if (_kernel.FindKernel(e.Command.TargetKernelName) is ProxyKernel proxyKernel)
+                    if (_kernel.ChildKernels.TryGetByUri(e.Command.DestinationUri, out var proxyKernel))
                     {
                         proxyKernel.KernelInfo.UpdateFrom(kernelInfoProduced.KernelInfo);
                     }

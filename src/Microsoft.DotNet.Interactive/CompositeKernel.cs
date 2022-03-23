@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Interactive
         IEnumerable<Kernel>
     {
         private readonly ConcurrentQueue<PackageAdded> _packagesToCheckForExtensions = new();
-        private readonly KernelRegistry _childKernels;
+        private readonly KernelCollection _childKernels;
         private readonly AssemblyBasedExtensionLoader _extensionLoader = new();
         private readonly ScriptBasedExtensionLoader _scriptExtensionLoader = new();
         private string _defaultKernelName;
@@ -134,16 +134,11 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public IReadOnlyCollection<Kernel> ChildKernels => _childKernels;
+        public KernelCollection ChildKernels => _childKernels;
 
         protected override void SetHandlingKernel(KernelCommand command, KernelInvocationContext context)
         {
             context.HandlingKernel = GetHandlingKernel(command, context);
-        }
-
-        private protected override bool CanHandle(KernelCommand command)
-        {
-            return base.CanHandle(command);
         }
 
         private protected override Kernel GetHandlingKernel(
@@ -166,7 +161,6 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (CanHandle(command))
                 {
-                    // FIX: (GetHandlingKernel) return this?
                     return this;
                 }
                 else
@@ -346,7 +340,7 @@ namespace Microsoft.DotNet.Interactive
 
             KernelInfo.Uri = _host.Uri;
 
-            _childKernels.NotifyHostSet();
+            _childKernels.NotifyThatHostWasSet();
         }
     }
 }

@@ -283,7 +283,7 @@ x")]
             localCompositeKernel.DefaultKernelName = "csharp";
 
             var remoteCompositeKernel = new CompositeKernel();
-            var remoteKernel = new FakeKernel();
+            var remoteKernel = new FakeKernel("remote-javascript");
             remoteCompositeKernel.Add(remoteKernel);
 
             ConnectHost.ConnectInProcessHost(
@@ -292,12 +292,15 @@ x")]
                 remoteCompositeKernel,
                 new Uri("kernel://remote"));
 
+            var remoteKernelUri = new Uri("kernel://remote/js");
             var javascriptKernel =
                 await localCompositeKernel
                       .Host
                       .ConnectProxyKernelOnDefaultConnectorAsync(
                           "javascript",
-                          new("kernel://remote/js"));
+                          remoteKernelUri);
+
+            await localCompositeKernel.SendAsync(new RequestKernelInfo(remoteKernelUri));
 
             javascriptKernel.UseValueSharing(new JavaScriptKernelValueDeclarer());
 
