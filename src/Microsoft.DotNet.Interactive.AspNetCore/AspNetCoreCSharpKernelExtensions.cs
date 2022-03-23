@@ -3,7 +3,6 @@
 
 using System;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.CommandLine.NamingConventionBinder;
 using System.Linq;
 using System.Net.Http;
@@ -92,7 +91,6 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
             };
 
             kernel.AddDirective(directive);
-
             kernel.AddDirective(new Command("#!aspnet-stop", "Stop ASP.NET Core host")
             {
                 Handler = CommandHandler.Create(async () =>
@@ -106,6 +104,12 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
 
                     interactiveHost = null;
                 })
+            });
+
+            kernel.RegisterForDisposal(() =>
+            {
+                interactiveHost?.Dispose();
+                interactiveHost = null;
             });
 
             Formatter.Register<HttpResponseMessage>((responseMessage, context) =>

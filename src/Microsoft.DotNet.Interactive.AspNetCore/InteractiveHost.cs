@@ -16,7 +16,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.Interactive.AspNetCore
 {
-    internal class InteractiveHost : IAsyncDisposable
+    internal class InteractiveHost : IAsyncDisposable, IDisposable
     {
         private readonly IHost _host;
         private readonly Startup _startup;
@@ -62,6 +62,11 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
 
             _host.Dispose();
             return default;
+        }
+
+        public void Dispose()
+        {
+            _host.Dispose();
         }
     }
 }
