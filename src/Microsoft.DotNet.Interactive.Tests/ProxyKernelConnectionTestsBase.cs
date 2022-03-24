@@ -49,8 +49,10 @@ public abstract class ProxyKernelConnectionTestsBase : IDisposable
         // use same connection to create 2 proxy kernel
 
         using var proxyKernel1 = await connector.CreateKernelAsync("kernel1");
+        proxyKernel1.KernelInfo.SupportedKernelCommands.Add(new(nameof(SubmitCode)));
 
         using var proxyKernel2 = await connector.CreateKernelAsync("kernel2");
+        proxyKernel2.KernelInfo.SupportedKernelCommands.Add(new(nameof(SubmitCode)));
 
         var kernelCommand1 = new SubmitCode("\"echo1\"");
 
@@ -144,6 +146,7 @@ x.Display(""text/plain"");");
         var connector = await CreateConnectorAsync();
 
         using var kernel = await connector.CreateKernelAsync("newKernelName");
+        kernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestHoverText)));
 
         var markedCode = "var x = 12$$34;";
 
