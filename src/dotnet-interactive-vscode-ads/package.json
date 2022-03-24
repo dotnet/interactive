@@ -46,9 +46,7 @@
     "onNotebook:dotnet-interactive-legacy",
     "onNotebook:jupyter-notebook",
     "onCommand:dotnet-interactive.acquire",
-    "onCommand:dotnet-interactive.newNotebook",
-    "onCommand:dotnet-interactive.openNotebook",
-    "onCommand:dotnet-interactive.saveAsNotebook"
+    "onCommand:dotnet-interactive.newNotebook"
   ],
   "main": "./out/src/vscode-common/extension.js",
   "extensionDependencies": [
@@ -172,14 +170,6 @@
       {
         "command": "dotnet-interactive.acquire",
         "title": "Install .NET Interactive"
-      },
-      {
-        "command": "dotnet-interactive.openNotebook",
-        "title": ".NET Interactive: Open notebook"
-      },
-      {
-        "command": "dotnet-interactive.saveAsNotebook",
-        "title": ".NET Interactive: Save notebook as..."
       },
       {
         "command": "dotnet-interactive.newNotebook",

@@ -153,19 +153,25 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
         'Jupyter Notebooks': ['ipynb'],
     };
 
-    const newDibNotebookText = `Create as '.dib'`;
-    const newIpynbNotebookText = `Create as '.ipynb'`;
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebook', async () => {
-        const selected = await vscode.window.showQuickPick([newDibNotebookText, newIpynbNotebookText]);
-        switch (selected) {
-            case newDibNotebookText:
-                await vscode.commands.executeCommand('dotnet-interactive.newNotebookDib');
-                break;
-            case newIpynbNotebookText:
-                await vscode.commands.executeCommand('dotnet-interactive.newNotebookIpynb');
-                break;
-            default:
-                break;
+        if (isAzureDataStudio(context)) {
+            // only `.dib` is allowed
+            await vscode.commands.executeCommand('dotnet-interactive.newNotebookDib');
+        } else {
+            // offer to create either `.dib` or `.ipynb`
+            const newDibNotebookText = `Create as '.dib'`;
+            const newIpynbNotebookText = `Create as '.ipynb'`;
+            const selected = await vscode.window.showQuickPick([newDibNotebookText, newIpynbNotebookText]);
+            switch (selected) {
+                case newDibNotebookText:
+                    await vscode.commands.executeCommand('dotnet-interactive.newNotebookDib');
+                    break;
+                case newIpynbNotebookText:
+                    await vscode.commands.executeCommand('dotnet-interactive.newNotebookIpynb');
+                    break;
+                default:
+                    break;
+            }
         }
     }));
 
@@ -234,25 +240,27 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
         const _editor = await vscode.window.showNotebookDocument(notebook);
     }
 
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.openNotebook', async (notebookUri: vscode.Uri | undefined) => {
-        // ensure we have a notebook uri
-        if (!notebookUri) {
-            const uris = await vscode.window.showOpenDialog({
-                filters: notebookFileFilters
-            });
-
-            if (uris && uris.length > 0) {
-                notebookUri = uris[0];
-            }
-
+    if (!isAzureDataStudio(context)) {
+        context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.openNotebook', async (notebookUri: vscode.Uri | undefined) => {
+            // ensure we have a notebook uri
             if (!notebookUri) {
-                // no appropriate uri
-                return;
-            }
-        }
+                const uris = await vscode.window.showOpenDialog({
+                    filters: notebookFileFilters
+                });
 
-        await openNotebook(notebookUri);
-    }));
+                if (uris && uris.length > 0) {
+                    notebookUri = uris[0];
+                }
+
+                if (!notebookUri) {
+                    // no appropriate uri
+                    return;
+                }
+            }
+
+            await openNotebook(notebookUri);
+        }));
+    }
 
     async function openNotebook(uri: vscode.Uri): Promise<void> {
         const extension = path.extname(uri.toString());
@@ -262,31 +270,33 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
         await vscode.commands.executeCommand('vscode.openWith', uri, viewType);
     }
 
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.saveAsNotebook', async () => {
-        if (vscode.window.activeNotebookEditor) {
-            const uri = await vscode.window.showSaveDialog({
-                filters: notebookFileFilters
-            });
+    if (!isAzureDataStudio(context)) {
+        context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.saveAsNotebook', async () => {
+            if (vscode.window.activeNotebookEditor) {
+                const uri = await vscode.window.showSaveDialog({
+                    filters: notebookFileFilters
+                });
 
-            if (!uri) {
-                return;
-            }
+                if (!uri) {
+                    return;
+                }
 
-            const { document } = vscode.window.activeNotebookEditor;
-            const notebook = toNotebookDocument(document);
-            const uriPath = uri.toString();
-            const extension = path.extname(uriPath);
-            const documentType = extensionToDocumentType(extension);
-            const buffer = await parserServer.serializeNotebook(documentType, eol, notebook);
-            await vscode.workspace.fs.writeFile(uri, buffer);
-            switch (path.extname(uriPath)) {
-                case '.dib':
-                case '.dotnet-interactive':
-                    await vscode.commands.executeCommand('dotnet-interactive.openNotebook', uri);
-                    break;
+                const { document } = vscode.window.activeNotebookEditor;
+                const notebook = toNotebookDocument(document);
+                const uriPath = uri.toString();
+                const extension = path.extname(uriPath);
+                const documentType = extensionToDocumentType(extension);
+                const buffer = await parserServer.serializeNotebook(documentType, eol, notebook);
+                await vscode.workspace.fs.writeFile(uri, buffer);
+                switch (path.extname(uriPath)) {
+                    case '.dib':
+                    case '.dotnet-interactive':
+                        await vscode.commands.executeCommand('dotnet-interactive.openNotebook', uri);
+                        break;
+                }
             }
-        }
-    }));
+        }));
+    }
 
     if (!isAzureDataStudio(context)) {
         context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.createNewInteractive', async () => {
