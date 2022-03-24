@@ -28,13 +28,13 @@ public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
     {
         await CreateRemoteKernelTopologyAsync(_pipeName);
 
-        var connector =  new NamedPipeKernelConnector(_pipeName);
+        var connector = new NamedPipeKernelConnector(_pipeName);
 
         _remoteHostUri = connector.RemoteHostUri;
 
         return connector;
     }
-    
+
     protected override SubmitCode CreateConnectCommand(string localKernelName)
     {
         return new SubmitCode($"#!connect named-pipe --kernel-name {localKernelName} --pipe-name {_pipeName}");

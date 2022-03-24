@@ -64,7 +64,11 @@ namespace Microsoft.DotNet.Interactive.Tests
 Console.WriteLine(1);";
 
             var command = new SubmitCode(code, proxyKernel.Name);
-            await proxyKernel.SendAsync(command);
+            var result = await proxyKernel.SendAsync(command);
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should().NotContainErrors();
 
             handledCommands.Should().ContainSingle<SubmitCode>();
         }
@@ -108,7 +112,9 @@ Console.WriteLine(1);";
 Console.WriteLine(1);";
 
             var command = new SubmitCode(code);
-            await proxyKernel.SendAsync(command);
+            var result = await proxyKernel.SendAsync(command);
+            var events = result.KernelEvents.ToSubscribedList();
+            events.Should().NotContainErrors();
 
             handledCommands.Should().ContainSingle<SubmitCode>();
         }
