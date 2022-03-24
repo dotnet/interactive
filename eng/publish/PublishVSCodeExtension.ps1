@@ -3,7 +3,8 @@ param (
     [string]$artifactsPath,
     [string[]]$vscodeTargets,
     [string]$vscodeToken,
-    [string]$nugetToken
+    [string]$nugetToken,
+    [switch]$simulate
 )
 
 Set-StrictMode -version 2.0
@@ -22,9 +23,11 @@ try {
         $extension = Get-ChildItem "$artifactsPath\vscode\$vscodeTarget\dotnet-interactive-vscode-*.vsix" | Select-Object -First 1
 
         # verify
-        . "$PSScriptRoot\VerifyVSCodeExtension.ps1" -extensionPath $extension
-        if ($LASTEXITCODE -ne 0) {
-            exit $LASTEXITCODE
+        if (-Not $simulate) {
+            . "$PSScriptRoot\VerifyVSCodeExtension.ps1" -extensionPath $extension
+            if ($LASTEXITCODE -ne 0) {
+                exit $LASTEXITCODE
+            }
         }
 
         # publish nuget
@@ -33,16 +36,22 @@ try {
                 $nugetPackagePath = $_.ToString()
                 # don't publish asp or netstandard packages
                 if (-Not ($nugetPackagePath -match "(AspNetCore|CSharpProject|Netstandard20)")) {
-                    dotnet nuget push $nugetPackagePath --source https://api.nuget.org/v3/index.json --api-key $nugetToken --no-symbols 1
-                    if ($LASTEXITCODE -ne 0) {
-                        exit $LASTEXITCODE
+                    Write-Host "Publishing $nugetPackagePath"
+                    if (-Not $simulate) {
+                        dotnet nuget push $nugetPackagePath --source https://api.nuget.org/v3/index.json --api-key $nugetToken --no-symbols 1
+                        if ($LASTEXITCODE -ne 0) {
+                            exit $LASTEXITCODE
+                        }
                     }
                 }
             }
         }
 
         # publish vs code marketplace
-        vsce publish --packagePath $extension --pat $vscodeToken --noVerify
+        Write-Host "Publishing $extension"
+        if (-Not $simulate) {
+            vsce publish --packagePath $extension --pat $vscodeToken --noVerify
+        }
     }
 }
 catch {
