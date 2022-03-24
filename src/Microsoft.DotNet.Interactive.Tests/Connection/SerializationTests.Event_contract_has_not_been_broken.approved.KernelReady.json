@@ -1,1 +1,5 @@
-{"event":{},"eventType":"KernelReady","command":null}
+{
+  "event": {},
+  "eventType": "KernelReady",
+  "command": null
+}

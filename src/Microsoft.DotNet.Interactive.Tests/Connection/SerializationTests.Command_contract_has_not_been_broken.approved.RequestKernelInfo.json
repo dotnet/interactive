@@ -1,1 +1,10 @@
-{"token":"the-token","id":"command-id","commandType":"RequestKernelInfo","command":{"targetKernelName":null,"originUri":null,"destinationUri":null}}
+{
+  "token": "the-token",
+  "id": "command-id",
+  "commandType": "RequestKernelInfo",
+  "command": {
+    "targetKernelName": null,
+    "originUri": "kernel://pid-1234/csharp",
+    "destinationUri": "kernel://webview/javascript"
+  }
+}

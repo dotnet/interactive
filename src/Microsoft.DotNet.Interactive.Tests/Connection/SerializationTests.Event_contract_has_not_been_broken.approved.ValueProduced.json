@@ -1,1 +1,22 @@
-{"event":{"name":"a","formattedValue":{"mimeType":"text/html","value":"<span>formatted value</span>"}},"eventType":"ValueProduced","command":{"token":"the-token","id":"command-id","commandType":"RequestValue","command":{"name":"a","mimeType":"text/html","targetKernelName":"csharp","originUri":null,"destinationUri":null}}}
+{
+  "event": {
+    "name": "a",
+    "formattedValue": {
+      "mimeType": "text/html",
+      "value": "\u003Cspan\u003Eformatted value\u003C/span\u003E"
+    }
+  },
+  "eventType": "ValueProduced",
+  "command": {
+    "token": "the-token",
+    "id": "command-id",
+    "commandType": "RequestValue",
+    "command": {
+      "name": "a",
+      "mimeType": "text/html",
+      "targetKernelName": "csharp",
+      "originUri": null,
+      "destinationUri": null
+    }
+  }
+}

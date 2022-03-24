@@ -1,1 +1,11 @@
-{"token":"the-token","id":"command-id","commandType":"RequestDiagnostics","command":{"code":"the-code","targetKernelName":null,"originUri":null,"destinationUri":null}}
+{
+  "token": "the-token",
+  "id": "command-id",
+  "commandType": "RequestDiagnostics",
+  "command": {
+    "code": "the-code",
+    "targetKernelName": null,
+    "originUri": null,
+    "destinationUri": null
+  }
+}

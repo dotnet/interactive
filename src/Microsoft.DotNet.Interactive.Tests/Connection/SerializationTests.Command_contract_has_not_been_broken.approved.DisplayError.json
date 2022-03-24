@@ -1,1 +1,11 @@
-{"token":"the-token","id":"command-id","commandType":"DisplayError","command":{"message":"oops!","targetKernelName":null,"originUri":null,"destinationUri":null}}
+{
+  "token": "the-token",
+  "id": "command-id",
+  "commandType": "DisplayError",
+  "command": {
+    "message": "oops!",
+    "targetKernelName": null,
+    "originUri": null,
+    "destinationUri": null
+  }
+}

@@ -20,7 +20,8 @@ public static class ConnectHost
         ConnectInProcessHost(
             localCompositeKernel,
             remoteCompositeKernel,
-            uri ?? new Uri("kernel://local/"), new Uri("kernel://remote/"));
+            uri ?? new Uri("kernel://local/"), 
+            new Uri("kernel://remote/"));
 
         return localCompositeKernel;
     }

@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Assent;
 using FluentAssertions;
 using Microsoft.AspNetCore.Html;
@@ -109,7 +111,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
 
             var json = KernelCommandEnvelope.Serialize(command);
 
-            this.Assent(json, _configuration);
+            this.Assent(Indent(json), _configuration);
         }
 
         [Theory]
@@ -124,7 +126,16 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
 
             var json = KernelEventEnvelope.Serialize(@event);
 
-            this.Assent(json, configuration);
+            this.Assent(Indent(json), configuration);
+        }
+
+        private static string Indent(string json)
+        {
+            json = JsonNode.Parse(json).ToJsonString(new JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+            return json;
         }
 
         [Fact]
@@ -238,7 +249,10 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
 
                 yield return new Cancel("csharp");
 
-                yield return new RequestKernelInfo();
+                yield return new RequestKernelInfo(new Uri("kernel://webview/javascript"))
+                {
+                    OriginUri = new("kernel://pid-1234/csharp")
+                };
 
                 yield return new RequestValueInfos("csharp");
 
@@ -359,7 +373,10 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
                             new KernelCommandInfo(nameof(SubmitCode))
                         }
                     },
-                    new RequestKernelInfo());
+                    new RequestKernelInfo(new Uri("kernel://webview/javascript"))
+                    {
+                        OriginUri = new("kernel://pid-1234/csharp")
+                    });
 
                 yield return new KernelReady();
 
