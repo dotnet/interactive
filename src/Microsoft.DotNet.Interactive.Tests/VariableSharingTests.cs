@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -288,9 +287,8 @@ x")]
 
             ConnectHost.ConnectInProcessHost(
                 localCompositeKernel,
-                new Uri("kernel://local"),
                 remoteCompositeKernel,
-                new Uri("kernel://remote"));
+                new Uri("kernel://local"), new Uri("kernel://remote"));
 
             var remoteKernelUri = new Uri("kernel://remote/js");
             var javascriptKernel =

@@ -43,9 +43,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
 
             ConnectHost.ConnectInProcessHost(
                 localCompositeKernel,
-                new Uri("kernel://local"),
                 remoteCompositeKernel,
-                new Uri("kernel://remote"));
+                new Uri("kernel://local"), new Uri("kernel://remote"));
 
             var remoteKernelUri = new Uri("kernel://DOES/NOT/EXIST");
 

@@ -9,7 +9,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility;
 
 public static class ConnectHost
 {
-    public static CompositeKernel ConnectInProcessHost(this CompositeKernel localCompositeKernel, Uri uri = null)
+    public static CompositeKernel ConnectInProcessHost(
+        this CompositeKernel localCompositeKernel
+        , Uri uri = null)
     {
         CompositeKernel remoteCompositeKernel = new();
 
@@ -17,19 +19,21 @@ public static class ConnectHost
 
         ConnectInProcessHost(
             localCompositeKernel,
-            uri ?? new Uri("kernel://local/"),
             remoteCompositeKernel,
-            new Uri("kernel://remote/"));
+            uri ?? new Uri("kernel://local/"), new Uri("kernel://remote/"));
 
         return localCompositeKernel;
     }
 
     public static void ConnectInProcessHost(
         CompositeKernel localCompositeKernel,
-        Uri localHostUri,
         CompositeKernel remoteCompositeKernel,
-        Uri remoteHostUri)
+        Uri localHostUri = null,
+        Uri remoteHostUri = null)
     {
+        localHostUri ??= new("kernel://local");
+        remoteHostUri ??= new("kernel://remote");
+
         var innerLocalReceiver = new BlockingCommandAndEventReceiver(localHostUri);
 
         var localReceiver = new MultiplexingKernelCommandAndEventReceiver(innerLocalReceiver);
