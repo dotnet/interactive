@@ -492,11 +492,12 @@ Microsoft.DotNet.Interactive.Events
     public System.String Code { get;}
     public System.String ToString()
   public class CompletionItem
-    .ctor(System.String displayText, System.String kind, System.String filterText = null, System.String sortText = null, System.String insertText = null, System.String documentation = null)
+    .ctor(System.String displayText, System.String kind, System.String filterText = null, System.String sortText = null, System.String insertText = null, System.Nullable<InsertTextFormat> insertTextFormat = null, System.String documentation = null)
     public System.String DisplayText { get;}
     public System.String Documentation { get; set;}
     public System.String FilterText { get;}
     public System.String InsertText { get;}
+    public System.Nullable<InsertTextFormat> InsertTextFormat { get;}
     public System.String Kind { get;}
     public System.String SortText { get;}
     public System.String ToString()
@@ -532,6 +533,9 @@ Microsoft.DotNet.Interactive.Events
     public Microsoft.DotNet.Interactive.LinePositionSpan LinePositionSpan { get;}
   public class IncompleteCodeSubmissionReceived : KernelEvent
     .ctor(Microsoft.DotNet.Interactive.Commands.SubmitCode submitCode)
+  public enum InsertTextFormat : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
+    PlainText=1
+    Snippet=2
   public abstract class KernelEvent
     public Microsoft.DotNet.Interactive.Commands.KernelCommand Command { get;}
     public System.String ToString()

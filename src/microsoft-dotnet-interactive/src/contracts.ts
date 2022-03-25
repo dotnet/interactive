@@ -381,7 +381,13 @@ export interface CompletionItem {
     filterText: string;
     sortText: string;
     insertText: string;
+    insertTextFormat?: InsertTextFormat;
     documentation: string;
+}
+
+export enum InsertTextFormat {
+    PlainText = "plaintext",
+    Snippet = "snippet",
 }
 
 export interface Diagnostic {

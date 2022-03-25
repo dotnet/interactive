@@ -139,12 +139,12 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             return sqlCompletionItems.Select(item =>
             {
                 return new CompletionItem(
-                    item.Label,
-                    item.Kind is not null ? Enum.GetName(typeof(SqlCompletionItemKind), item.Kind) : string.Empty,
-                    item.FilterText,
-                    item.SortText,
-                    item.InsertText,
-                    item.Documentation);
+                    displayText: item.Label,
+                    kind: item.Kind is not null ? Enum.GetName(typeof(SqlCompletionItemKind), item.Kind) : string.Empty,
+                    filterText: item.FilterText,
+                    sortText: item.SortText,
+                    insertText: item.InsertText,
+                    documentation: item.Documentation);
             });
         }
 

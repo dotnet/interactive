@@ -51,12 +51,36 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public static CompletionItem ToModel(this RoslynCompletionItem item, RoslynCompletionDescription description)
         {
+            var isGeneric =
+                item.Properties.TryGetValue("IsGeneric", out var isGenericProperty) &&
+                bool.TryParse(isGenericProperty, out var isGenericResult) &&
+                isGenericResult;
+
+            var isMethod =
+                item.Tags.Contains(WellKnownTags.Method) ||
+                item.Tags.Contains(WellKnownTags.ExtensionMethod);
+
+            var (displayTextSuffix, insertTextSuffix) = (isGeneric, isMethod) switch
+            {
+                (true, true) => ("<>", "<$1>($2)"),
+                (true, false) => ("<>", "<$1>"),
+                (false, true) => ("", "($1)"),
+                (false, false) => ("", ""),
+            };
+
+            var displayText = item.DisplayText + displayTextSuffix;
+            var insertText = item.FilterText + insertTextSuffix;
+
+            InsertTextFormat? insertTextFormat = isGeneric || isMethod
+                ? InsertTextFormat.Snippet
+                : null;
             return new CompletionItem(
-                displayText: item.DisplayText,
+                displayText: displayText,
                 kind: item.GetKind(),
                 filterText: item.FilterText,
                 sortText: item.SortText,
-                insertText: item.FilterText,
+                insertText: insertText,
+                insertTextFormat: insertTextFormat,
                 documentation: description.Text);
         }
     }

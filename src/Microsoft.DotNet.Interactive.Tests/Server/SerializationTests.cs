@@ -291,12 +291,13 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     new[]
                     {
                         new CompletionItem(
-                            "WriteLine",
-                            "Method",
-                            "WriteLine",
-                            "WriteLine",
-                            "WriteLine",
-                            "Writes the line")
+                            displayText: "WriteLine",
+                            kind: "Method",
+                            filterText: "WriteLine",
+                            sortText: "WriteLine",
+                            insertText: "WriteLine",
+                            insertTextFormat: InsertTextFormat.Snippet,
+                            documentation: "Writes the line")
                     },
                     requestCompletion);
 

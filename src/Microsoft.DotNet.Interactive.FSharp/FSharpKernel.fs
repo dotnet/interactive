@@ -157,7 +157,13 @@ type FSharpKernel () as this =
             let kind = getKindString declarationItem.Glyph
             let filterText = getFilterText declarationItem
             let! documentation = getDocumentation declarationItem
-            return CompletionItem(declarationItem.Name, kind, filterText=filterText, documentation=documentation, insertText=declarationItem.NameInCode)
+            let isMethod =
+                match declarationItem.Kind with
+                | CompletionItemKind.Method _ -> true
+                | _ -> false
+            let insertTextSuffix = if isMethod then "($1)" else ""
+            let insertTextFormat = if isMethod then System.Nullable(InsertTextFormat.Snippet) else System.Nullable<InsertTextFormat>()
+            return CompletionItem(declarationItem.Name, kind, filterText=filterText, documentation=documentation, insertText=declarationItem.NameInCode + insertTextSuffix, insertTextFormat=insertTextFormat)
         }
 
     let getDiagnostic (error: FSharpDiagnostic) =

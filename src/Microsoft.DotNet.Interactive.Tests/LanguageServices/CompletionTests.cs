@@ -459,5 +459,153 @@ public class C
                 .Should()
                 .ContainSingle(ci => !string.IsNullOrEmpty(ci.Documentation) && ci.Documentation.Contains("Represents JavaScript's null as a string. This field is read-only."));
         }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Property_completions_are_returned_as_plain_text(Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            var markupCode = "Console.Ou$$";
+
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
+
+            await kernel.SendAsync(new RequestCompletions(code, new LinePosition(line, character)));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CompletionsProduced>()
+                .Which
+                .Completions
+                .Should()
+                .Contain(item =>
+                    item.DisplayText == "Out" &&
+                    item.InsertText == "Out" &&
+                    item.InsertTextFormat == null);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Method_completions_are_returned_as_a_snippet(Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            var markupCode = "Console.Wri$$";
+
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
+
+            await kernel.SendAsync(new RequestCompletions(code, new LinePosition(line, character)));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CompletionsProduced>()
+                .Which
+                .Completions
+                .Should()
+                .Contain(item =>
+                    item.DisplayText == "WriteLine" &&
+                    item.InsertText == "WriteLine($1)" &&
+                    item.InsertTextFormat == InsertTextFormat.Snippet);
+        }
+
+        [Fact]
+        public async Task FSharp_module_functions_are_returned_as_plain_text()
+        {
+            var kernel = CreateKernel(Language.FSharp);
+
+            var markupCode = "[1;2;3] |> List.ma$$";
+
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
+
+            await kernel.SendAsync(new RequestCompletions(code, new LinePosition(line, character)));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CompletionsProduced>()
+                .Which
+                .Completions
+                .Should()
+                .Contain(item =>
+                    item.DisplayText == "map" &&
+                    item.InsertText == "map" &&
+                    item.InsertTextFormat == null);
+        }
+
+        [Fact]
+        public async Task CSharp_generic_method_completions_are_returned_as_a_snippet()
+        {
+            // in general F# prefers to infer generic types, not specify them
+
+            var kernel = CreateKernel(Language.CSharp);
+
+            var markupCode = "System.Array.Emp$$";
+
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
+
+            await kernel.SendAsync(new RequestCompletions(code, new LinePosition(line, character)));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CompletionsProduced>()
+                .Which
+                .Completions
+                .Should()
+                .Contain(item =>
+                    item.DisplayText == "Empty<>" &&
+                    item.InsertText == "Empty<$1>($2)" &&
+                    item.InsertTextFormat == InsertTextFormat.Snippet);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Non_generic_type_completions_are_returned_as_plain_text(Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            var markupCode = "System.Cons$$";
+
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
+
+            await kernel.SendAsync(new RequestCompletions(code, new LinePosition(line, character)));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CompletionsProduced>()
+                .Which
+                .Completions
+                .Should()
+                .Contain(item =>
+                    item.DisplayText == "Console" &&
+                    item.InsertText == "Console" &&
+                    item.InsertTextFormat == null);
+        }
+
+        [Fact]
+        public async Task CSharp_generic_type_completions_are_returned_as_a_snippet()
+        {
+            // in general F# prefers to infer generic types, not specify them
+
+            var kernel = CreateKernel(Language.CSharp);
+
+            var markupCode = "System.Collections.Generic.IEnu$$";
+
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
+
+            await kernel.SendAsync(new RequestCompletions(code, new LinePosition(line, character)));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CompletionsProduced>()
+                .Which
+                .Completions
+                .Should()
+                .Contain(item =>
+                    item.DisplayText == "IEnumerable<>" &&
+                    item.InsertText == "IEnumerable<$1>" &&
+                    item.InsertTextFormat == InsertTextFormat.Snippet);
+        }
     }
 }
