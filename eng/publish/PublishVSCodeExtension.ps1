@@ -38,7 +38,7 @@ try {
                 if (-Not ($nugetPackagePath -match "(AspNetCore|CSharpProject|Netstandard20)")) {
                     Write-Host "Publishing $nugetPackagePath"
                     if (-Not $simulate) {
-                        dotnet nuget push $nugetPackagePath --source https://api.nuget.org/v3/index.json --api-key $nugetToken --no-symbols 1
+                        dotnet nuget push $nugetPackagePath --source https://api.nuget.org/v3/index.json --api-key $nugetToken --no-symbols
                         if ($LASTEXITCODE -ne 0) {
                             exit $LASTEXITCODE
                         }
