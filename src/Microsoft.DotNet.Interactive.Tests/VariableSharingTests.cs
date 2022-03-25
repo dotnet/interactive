@@ -287,8 +287,7 @@ x")]
 
             ConnectHost.ConnectInProcessHost(
                 localCompositeKernel,
-                remoteCompositeKernel,
-                new Uri("kernel://local"), new Uri("kernel://remote"));
+                remoteCompositeKernel);
 
             var remoteKernelUri = new Uri("kernel://remote/js");
             var javascriptKernel =
