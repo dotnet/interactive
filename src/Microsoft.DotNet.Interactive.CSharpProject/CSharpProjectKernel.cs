@@ -153,7 +153,13 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             var updatedWorkspace = await GetWorkspaceWithCode(command.Code, position);
             var request = new Protocol.WorkspaceRequest(updatedWorkspace, _buffer.Id);
             var completionResult = await _workspaceServer.GetCompletionList(request, new Budget());
-            var completionItems = completionResult.Items.Select(item => new CompletionItem(item.DisplayText, item.Kind, item.FilterText, item.SortText, item.InsertText, item.Documentation?.Value)).ToList();
+            var completionItems = completionResult.Items.Select(item => new CompletionItem(
+                displayText: item.DisplayText,
+                kind: item.Kind,
+                filterText: item.FilterText,
+                sortText: item.SortText,
+                insertText: item.InsertText,
+                documentation: item.Documentation?.Value)).ToList();
 
             context.Publish(new CompletionsProduced(completionItems, command));
         }
