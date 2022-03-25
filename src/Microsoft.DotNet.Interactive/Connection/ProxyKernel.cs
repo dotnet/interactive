@@ -87,9 +87,7 @@ namespace Microsoft.DotNet.Interactive.Connection
             }
         }
 
-        internal override Task HandleAsync(
-            KernelCommand command, 
-            KernelInvocationContext context)
+        private Task HandleByForwardingToRemoteAsync(KernelCommand command, KernelInvocationContext context)
         {
             switch (command)
             {
@@ -129,6 +127,15 @@ namespace Microsoft.DotNet.Interactive.Connection
                 }
             });
         }
+
+        internal override Task HandleAsync(
+            KernelCommand command, 
+            KernelInvocationContext context) =>
+            HandleByForwardingToRemoteAsync(command, context);
+
+        public override Task HandleAsync(RequestKernelInfo command, KernelInvocationContext context) =>
+            // override the default handler on Kernel and forward the command instead
+            HandleByForwardingToRemoteAsync(command, context);
 
         protected internal override void DelegatePublication(KernelEvent kernelEvent)
         {

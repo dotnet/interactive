@@ -93,11 +93,11 @@ public class KernelInfoTests
         [Fact]
         public async Task It_returns_info_about_unproxied_subkernels_of_remote_composite()
         {
-            using var localCompositeKernel = new CompositeKernel("LOCAL")
+            using var localCompositeKernel = new CompositeKernel("LOCAL-COMPOSITE")
             {
                 new FakeKernel("local-fake")
             };
-            using var remoteCompositeKernel = new CompositeKernel("REMOTE")
+            using var remoteCompositeKernel = new CompositeKernel("REMOTE-COMPOSITE")
             {
                 new FakeKernel("remote-fake")
             };
@@ -105,7 +105,13 @@ public class KernelInfoTests
             ConnectHost.ConnectInProcessHost(
                 localCompositeKernel,
                 remoteCompositeKernel);
-            
+
+            await localCompositeKernel
+                  .Host
+                  .ConnectProxyKernelOnDefaultConnectorAsync(
+                      "remote-composite",
+                      remoteCompositeKernel.Host.Uri);
+
             var result = await localCompositeKernel.SendAsync(new RequestKernelInfo());
 
             var events = result.KernelEvents

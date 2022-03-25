@@ -845,7 +845,13 @@ namespace Microsoft.DotNet.Interactive
             var kernelInfoUri = KernelInfo.Uri;
             if (kernelInfoUri is { } uri)
             {
-                value += $" ({uri})";
+                string remoteUri = null;
+                if (KernelInfo.RemoteUri is not null)
+                {
+                    remoteUri += $" -> {KernelInfo.RemoteUri}";
+                }
+
+                value += $" ({uri}{remoteUri})";
             }
 
             return value;

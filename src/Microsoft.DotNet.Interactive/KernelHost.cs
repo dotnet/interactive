@@ -81,7 +81,8 @@ namespace Microsoft.DotNet.Interactive
 
                 if (e is KernelInfoProduced kernelInfoProduced)
                 {
-                    if (_kernel.ChildKernels.TryGetByUri(e.Command.DestinationUri, out var proxyKernel))
+                    if (e.Command.DestinationUri is { } destinationUri &&
+                        _kernel.ChildKernels.TryGetByUri(destinationUri, out var proxyKernel))
                     {
                         proxyKernel.KernelInfo.UpdateFrom(kernelInfoProduced.KernelInfo);
                     }
