@@ -103,7 +103,7 @@ public class CommandLineParserTests : IDisposable
     }
 
     [Fact]
-    public async Task kernel_server_honors_log_path()
+    public async Task stdio_mode_honors_log_path()
     {
         using var logPath = DisposableDirectory.Create();
 

@@ -2,9 +2,11 @@ Microsoft.DotNet.Interactive.Kql
   public class ChooseMsKqlKernelDirective : Microsoft.DotNet.Interactive.ChooseKernelDirective, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
     .ctor(Microsoft.DotNet.Interactive.Kernel kernel)
     public System.CommandLine.Option<System.String> NameOption { get;}
-  public class ConnectKqlCommand : Microsoft.DotNet.Interactive.Connection.ConnectKernelCommand<KqlKernelConnector>, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
+  public class ConnectKqlCommand : Microsoft.DotNet.Interactive.Connection.ConnectKernelCommand, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
     .ctor(System.String resolvedToolsServicePath)
-    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> ConnectKernelAsync(Microsoft.DotNet.Interactive.KernelInfo kernelInfo, KqlKernelConnector connector, Microsoft.DotNet.Interactive.KernelInvocationContext context)
+    public System.CommandLine.Option<System.String> ClusterOption { get;}
+    public System.CommandLine.Option<System.String> DatabaseOption { get;}
+    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> ConnectKernelAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context, System.CommandLine.Invocation.InvocationContext commandLineContext)
   public class KqlConnectionDetails
     .ctor()
     public System.String AuthenticationType { get; set;}
@@ -16,7 +18,7 @@ Microsoft.DotNet.Interactive.Kql
     public System.String Cluster { get;}
     public System.String Database { get;}
     public System.String PathToService { get; set;}
-    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> ConnectKernelAsync(Microsoft.DotNet.Interactive.KernelInfo kernelInfo)
+    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> CreateKernelAsync(System.String kernelName)
   public class KqlKernelExtension, Microsoft.DotNet.Interactive.IKernelExtension
     .ctor()
     public System.Threading.Tasks.Task OnLoadAsync(Microsoft.DotNet.Interactive.Kernel kernel)

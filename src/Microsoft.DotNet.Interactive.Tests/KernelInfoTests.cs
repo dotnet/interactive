@@ -123,47 +123,7 @@ public class KernelInfoTests
                 .Should()
                 .Contain(new Uri("kernel://remote/remote-fake"));
         }
-
-        [Fact]
-        public async Task When_a_remote_subkernel_is_connected_then_kernel_info_is_updated()
-        {
-            using var localCompositeKernel = new CompositeKernel
-            {
-                new FakeKernel("fake")
-            };
-            using var remoteCompositeKernel = new CompositeKernel
-            {
-                new CSharpKernel()
-            };
-
-            ConnectHost.ConnectInProcessHost(
-                localCompositeKernel,
-                remoteCompositeKernel);
-
-            await localCompositeKernel
-                  .Host
-                  .ConnectProxyKernelOnDefaultConnectorAsync(
-                      "remote-fsharp",
-                      new Uri("kernel://remote/csharp"));
-
-            var submitCode = new SubmitCode(
-                @"
-using Microsoft.DotNet.Interactive;
-Kernel.Root.Add(new Microsoft.DotNet.Interactive.CSharp.CSharpKernel(""csharp-2""));")
-            {
-                DestinationUri = new(remoteCompositeKernel.Host.Uri, "csharp")
-            };
-
-            var result = await localCompositeKernel.SendAsync(submitCode);
-
-            var events = result.KernelEvents.ToSubscribedList();
-
-            events.Should().NotContainErrors();
-
-            // TODO (When_a_remote_kernel_is_added_via_an_extension_then_kernel_info_is_updated) write test
-            throw new NotImplementedException();
-        }
-
+        
         [Fact]
         public async Task Unproxied_kernels_have_a_URI()
         {

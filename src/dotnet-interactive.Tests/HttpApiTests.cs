@@ -393,7 +393,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         }
 
         [Fact]
-        public async Task kernel_server_returns_javascript_api_via_http()
+        public async Task stdio_mode_returns_javascript_api_via_http()
         {
             var port = GetFreePort();
 
