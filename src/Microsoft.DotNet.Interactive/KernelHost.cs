@@ -18,8 +18,8 @@ namespace Microsoft.DotNet.Interactive
         private readonly CompositeKernel _kernel;
         private readonly IKernelCommandAndEventSender _defaultSender;
         private readonly MultiplexingKernelCommandAndEventReceiver _defaultReceiver;
-        private Task<Task> _receiverLoop;
-        private IDisposable _kernelEventSubscription;
+        private Task<Task>? _receiverLoop;
+        private IDisposable? _kernelEventSubscription;
         private readonly IKernelConnector _defaultConnector;
 
         internal KernelHost(
@@ -119,7 +119,7 @@ namespace Microsoft.DotNet.Interactive
         public async Task ConnectAndWaitAsync()
         {
             await ConnectAsync();
-            await _receiverLoop;
+            await _receiverLoop!;
         }
 
         public void Dispose()
@@ -139,7 +139,7 @@ namespace Microsoft.DotNet.Interactive
             string localName,
             IKernelConnector kernelConnector,
             Uri remoteKernelUri,
-            string[] aliases = null)
+            string[]? aliases = null)
         {
             var proxyKernel = (ProxyKernel)await kernelConnector.CreateKernelAsync(localName);
 
@@ -160,7 +160,7 @@ namespace Microsoft.DotNet.Interactive
         public async Task<ProxyKernel> ConnectProxyKernelOnDefaultConnectorAsync(
             string localName,
             Uri remoteKernelUri,
-            string[] aliases = null) =>
+            string[]? aliases = null) =>
             await ConnectProxyKernelAsync(
                 localName,
                 _defaultConnector,

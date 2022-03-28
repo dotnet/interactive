@@ -63,7 +63,7 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
         
         var destinationUri = new Uri(RemoteHostUri, localName);
 
-        await _sender.SendAsync(
+        await _sender!.SendAsync(
             new RequestKernelInfo(destinationUri: destinationUri), 
             CancellationToken.None);
         

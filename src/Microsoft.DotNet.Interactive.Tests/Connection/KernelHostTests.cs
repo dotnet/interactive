@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
         }
 
         [Fact]
-        public async Task It_does_not_throw_when_proxy_kernel_is_created_for_nonexistent_remote()
+        public void It_does_not_throw_when_proxy_kernel_is_created_for_nonexistent_remote()
         {
             using var localCompositeKernel = new CompositeKernel("LOCAL");
             using var remoteCompositeKernel = new CompositeKernel("REMOTE");

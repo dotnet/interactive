@@ -21,7 +21,7 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
     private MultiplexingKernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventTextStreamSender? _sender;
     private Process? _process;
-    private Uri _remoteHostUri;
+    private Uri? _remoteHostUri;
 
     public StdIoKernelConnector(string[] command, DirectoryInfo? workingDirectory = null)
     {
@@ -41,7 +41,7 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
                 kernelName, 
                 _receiver.CreateChildReceiver(), 
                 _sender,
-                new Uri(_remoteHostUri, kernelName));
+                new Uri(_remoteHostUri!, kernelName));
             
             kernel.EnsureStarted();
             
