@@ -9,8 +9,8 @@ import { Logger } from './logger';
 import { KernelCommandScheduler } from './kernelCommandScheduler';
 
 export class KernelHost {
-    private readonly _destinationUriToKernel = new Map<string, Kernel>();
-    private readonly _originUriToKernel = new Map<string, Kernel>();
+    private readonly _remoteUriToKernel = new Map<string, Kernel>();
+    private readonly _uriToKernel = new Map<string, Kernel>();
     private readonly _kernelToKernelInfo = new Map<Kernel, contracts.KernelInfo>();
     private readonly _uri: string;
     private readonly _scheduler: KernelCommandScheduler;
@@ -24,12 +24,12 @@ export class KernelHost {
         });
     }
 
-    public tryGetKernelByDestinationUri(destinationUri: string): Kernel | undefined {
-        return this._destinationUriToKernel.get(destinationUri);
+    public tryGetKernelByRemoteUri(remoteUri: string): Kernel | undefined {
+        return this._remoteUriToKernel.get(remoteUri);
     }
 
     public trygetKernelByOriginUri(originUri: string): Kernel | undefined {
-        return this._originUriToKernel.get(originUri);
+        return this._uriToKernel.get(originUri);
     }
 
     public tryGetKernelInfo(kernel: Kernel): contracts.KernelInfo | undefined {
@@ -38,31 +38,31 @@ export class KernelHost {
 
     public addKernelInfo(kernel: Kernel, kernelInfo: contracts.KernelInfo) {
 
-        kernelInfo.originUri = `${this._uri}/${kernel.name}`;
+        kernelInfo.uri = `${this._uri}/${kernel.name}`;
         this._kernelToKernelInfo.set(kernel, kernelInfo);
-        this._originUriToKernel.set(kernelInfo.originUri, kernel);
+        this._uriToKernel.set(kernelInfo.uri, kernel);
     }
 
     public getKernel(kernelCommandEnvelope: contracts.KernelCommandEnvelope): Kernel {
 
-        if (kernelCommandEnvelope.destinationUri) {
-            let fromDestinationUri = this._originUriToKernel.get(kernelCommandEnvelope.destinationUri.toLowerCase());
+        if (kernelCommandEnvelope.command.destinationUri) {
+            let fromDestinationUri = this._uriToKernel.get(kernelCommandEnvelope.command.destinationUri.toLowerCase());
             if (fromDestinationUri) {
-                Logger.default.info(`Kernel ${fromDestinationUri.name} found for destination uri ${kernelCommandEnvelope.destinationUri}`);
+                Logger.default.info(`Kernel ${fromDestinationUri.name} found for destination uri ${kernelCommandEnvelope.command.destinationUri}`);
                 return fromDestinationUri;
             }
 
-            fromDestinationUri = this._destinationUriToKernel.get(kernelCommandEnvelope.destinationUri.toLowerCase());
+            fromDestinationUri = this._remoteUriToKernel.get(kernelCommandEnvelope.command.destinationUri.toLowerCase());
             if (fromDestinationUri) {
-                Logger.default.info(`Kernel ${fromDestinationUri.name} found for destination uri ${kernelCommandEnvelope.destinationUri}`);
+                Logger.default.info(`Kernel ${fromDestinationUri.name} found for destination uri ${kernelCommandEnvelope.command.destinationUri}`);
                 return fromDestinationUri;
             }
         }
 
-        if (kernelCommandEnvelope.originUri) {
-            let fromOriginUri = this._originUriToKernel.get(kernelCommandEnvelope.originUri.toLowerCase());
+        if (kernelCommandEnvelope.command.originUri) {
+            let fromOriginUri = this._uriToKernel.get(kernelCommandEnvelope.command.originUri.toLowerCase());
             if (fromOriginUri) {
-                Logger.default.info(`Kernel ${fromOriginUri.name} found for origin uri ${kernelCommandEnvelope.originUri}`);
+                Logger.default.info(`Kernel ${fromOriginUri.name} found for origin uri ${kernelCommandEnvelope.command.originUri}`);
                 return fromOriginUri;
             }
         }
@@ -71,7 +71,7 @@ export class KernelHost {
         return this._kernel;
     }
 
-    public registerDestinationUriForProxy(proxyLocalKernelName: string, destinationUri: string) {
+    public registerRemoteUriForProxy(proxyLocalKernelName: string, remoteUri: string) {
         const kernel = this._kernel.findKernelByName(proxyLocalKernelName);
         if (!(kernel as ProxyKernel)) {
             throw new Error(`Kernel ${proxyLocalKernelName} is not a proxy kernel`);
@@ -82,23 +82,23 @@ export class KernelHost {
         if (!kernelinfo) {
             throw new Error("kernelinfo not found");
         }
-        if (kernelinfo?.destinationUri) {
-            Logger.default.info(`Removing destination uri ${kernelinfo.destinationUri} for proxy kernel ${kernelinfo.localName}`);
-            this._destinationUriToKernel.delete(kernelinfo.destinationUri.toLowerCase());
+        if (kernelinfo?.remoteUri) {
+            Logger.default.info(`Removing remote uri ${kernelinfo.remoteUri} for proxy kernel ${kernelinfo.localName}`);
+            this._remoteUriToKernel.delete(kernelinfo.remoteUri.toLowerCase());
         }
-        kernelinfo.destinationUri = destinationUri;
+        kernelinfo.remoteUri = remoteUri;
 
         if (kernel) {
-            Logger.default.info(`Registering destination uri ${destinationUri} for proxy kernel ${kernelinfo.localName}`);
-            this._destinationUriToKernel.set(destinationUri.toLowerCase(), kernel);
+            Logger.default.info(`Registering remote uri ${remoteUri} for proxy kernel ${kernelinfo.localName}`);
+            this._remoteUriToKernel.set(remoteUri.toLowerCase(), kernel);
         }
     }
 
     public createProxyKernelOnDefaultConnector(kernelInfo: contracts.KernelInfo): ProxyKernel {
         const proxyKernel = new ProxyKernel(kernelInfo.localName, this._channel);
         this._kernel.add(proxyKernel, kernelInfo.aliases);
-        if (kernelInfo.destinationUri) {
-            this.registerDestinationUriForProxy(proxyKernel.name, kernelInfo.destinationUri);
+        if (kernelInfo.remoteUri) {
+            this.registerRemoteUriForProxy(proxyKernel.name, kernelInfo.remoteUri);
         }
         return proxyKernel;
     }

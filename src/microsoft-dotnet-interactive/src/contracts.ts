@@ -54,6 +54,8 @@ export interface AddPackage extends KernelCommand {
 
 export interface KernelCommand {
     targetKernelName?: string;
+    originUri?: string;
+    destinationUri?: string;
 }
 
 export interface Cancel extends KernelCommand {
@@ -436,19 +438,20 @@ export interface InteractiveDocumentElement {
 
 export interface KernelInfo {
     aliases: Array<string>;
-    language?: string;
+    languageName?: string;
+    languageVersion?: string;
     localName: string;
-    originUri?: string;
-    destinationUri?: string;
+    uri?: string;
+    remoteUri?: string;
     supportedKernelCommands: Array<KernelCommandInfo>;
-    supportedDirectives: Array<DirectiveInfo>;
-}
-
-export interface DirectiveInfo {
-    name: string;
+    supportedDirectives: Array<KernelDirectiveInfo>;
 }
 
 export interface KernelCommandInfo {
+    name: string;
+}
+
+export interface KernelDirectiveInfo {
     name: string;
 }
 
@@ -514,8 +517,6 @@ export interface KernelCommandEnvelope {
     id?: string;
     commandType: KernelCommandType;
     command: KernelCommand;
-    originUri?: string;
-    destinationUri?: string;
 }
 
 export interface KernelEventEnvelopeObserver {

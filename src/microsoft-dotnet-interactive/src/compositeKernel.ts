@@ -70,7 +70,7 @@ export class CompositeKernel extends Kernel {
         let kernelInfo: KernelInfo = {
             localName: kernel.name,
             aliases: aliases === undefined ? [] : [...aliases],
-            language: "",
+            languageName: "",
             supportedKernelCommands: [],
             supportedDirectives: []
         };
