@@ -583,7 +583,6 @@ namespace Microsoft.DotNet.Interactive
                 }
             }
 
-            // FIX: (CompositeCanHandle) 
             return SupportsCommand(command);
         }
 
@@ -597,7 +596,6 @@ namespace Microsoft.DotNet.Interactive
             }
             else
             {
-                // FIX: (TryPreprocessCommands) 
                 context.Fail(command, new CommandNotSupportedException(command, this));
 
                 return null;

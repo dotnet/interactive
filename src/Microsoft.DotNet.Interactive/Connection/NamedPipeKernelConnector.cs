@@ -60,16 +60,13 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
 
             proxyKernel = new ProxyKernel(localName, _receiver, _sender, new Uri(RemoteHostUri, localName));
         }
-
-        // FIX: (ConnectKernelAsync) support different remote name via kernel info request
+        
         var destinationUri = new Uri(RemoteHostUri, localName);
 
         await _sender.SendAsync(
             new RequestKernelInfo(destinationUri: destinationUri), 
             CancellationToken.None);
-
-        // FIX: (ConnectKernelAsync) listen on receiver for KernelInfo
-
+        
         proxyKernel.EnsureStarted();
 
         return proxyKernel;

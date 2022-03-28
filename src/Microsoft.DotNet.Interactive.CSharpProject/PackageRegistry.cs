@@ -84,7 +84,6 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
 
             var descriptor = new PackageDescriptor(packageName);
 
-            // FIX: (Get) move this into the cache
             var package = await GetPackage2<T>(descriptor);
 
             if (!(package is T))

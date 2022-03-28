@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.Interactive.Commands
         [JsonIgnore]
         internal bool? ShouldPublishCompletionEvent { get; set; }
 
-        [JsonIgnore] // FIX: (KernelChooserParseResult) make this internal / remove
+        [JsonIgnore] 
         public ParseResult KernelChooserParseResult { get; internal set; }
 
         public virtual Task InvokeAsync(KernelInvocationContext context)
