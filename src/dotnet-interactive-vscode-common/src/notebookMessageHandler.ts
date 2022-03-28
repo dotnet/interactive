@@ -54,7 +54,7 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, messageHandlerMap: M
         const proxyJsKernel = new ProxyKernel('javascript', documentWebViewTrasport);
         client.kernel.add(proxyJsKernel, ['js']);
 
-        client.kernelHost.registerDestinationUriForProxy(proxyJsKernel.name, "kernel://webview/javascript");
+        client.kernelHost.registerRemoteUriForProxy(proxyJsKernel.name, "kernel://webview/javascript");
 
         documentWebViewTrasport.setCommandHandler(envelope => {
             const kernel = client.kernelHost.getKernel(envelope);
@@ -63,7 +63,7 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, messageHandlerMap: M
         });
 
         client.channel.subscribeToKernelEvents(eventEnvelope => {
-            Logger.default.info(`forwarding event to webview ${eventEnvelope.toString()}`);
+            Logger.default.info(`forwarding event to webview: ${JSON.stringify(eventEnvelope)}`);
             return documentWebViewTrasport.publishKernelEvent(eventEnvelope);
         });
 

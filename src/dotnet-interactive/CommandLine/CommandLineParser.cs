@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.App.Connection;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Documents.ParserServer;
@@ -494,7 +495,9 @@ public static class CommandLineParser
                     {
                         if (!isVSCode)
                         {
-                            await host.ConnectProxyKernelOnDefaultConnectorAsync("javascript", new Uri("kernel://webview/javascript"));
+                            var proxy = await host.ConnectProxyKernelOnDefaultConnectorAsync("javascript", new Uri("kernel://webview/javascript"));
+
+                            proxy.KernelInfo.SupportedKernelCommands.Add(new(nameof(SubmitCode)));
                         }
 
                         await startKernelHost(startupOptions, host, console);

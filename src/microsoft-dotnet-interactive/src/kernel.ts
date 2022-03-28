@@ -104,7 +104,7 @@ export class Kernel {
             let handler = this.getCommandHandler(commandEnvelope.commandType);
             if (handler) {
                 try {
-                    Logger.default.info(`kernel ${this.name} about to handle command ${commandEnvelope.commandType}`);
+                    Logger.default.info(`kernel ${this.name} about to handle command: ${JSON.stringify(commandEnvelope)}`);
                     await handler.handle({ commandEnvelope: commandEnvelope, context });
 
                     context.complete(commandEnvelope);
@@ -112,7 +112,7 @@ export class Kernel {
                         context.dispose();
                     }
 
-                    Logger.default.info(`kernel ${this.name} done handling command ${commandEnvelope.commandType}`);
+                    Logger.default.info(`kernel ${this.name} done handling command: ${JSON.stringify(commandEnvelope)}`);
                     resolve();
                 }
                 catch (e) {

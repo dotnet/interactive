@@ -3,6 +3,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
@@ -34,15 +35,20 @@ namespace Microsoft.DotNet.Interactive.VSCode
                     }
                 });
 
-                await root.Host.ConnectProxyKernelOnDefaultConnectorAsync(
-                    "vscode",
-                    new Uri("kernel://vscode/vscode"),
-                    new[] { "frontend" });
+                var hostKernel = await root.Host.ConnectProxyKernelOnDefaultConnectorAsync(
+                                     "vscode",
+                                     new Uri("kernel://vscode/vscode"),
+                                     new[] { "frontend" });
+                hostKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(GetInput)));
+                hostKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(SendEditableCode)));
 
                 var jsKernel = await root.Host.ConnectProxyKernelOnDefaultConnectorAsync(
                                    "javascript",
                                    new Uri("kernel://webview/javascript"),
                                    new[] { "js" });
+                jsKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(SubmitCode)));
+                jsKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValue)));
+                jsKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValueInfos)));
 
                 jsKernel.UseValueSharing(new JavaScriptKernelValueDeclarer());
             }

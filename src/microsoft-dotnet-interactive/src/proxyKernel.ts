@@ -24,7 +24,7 @@ export class ProxyKernel extends Kernel {
         const token = commandInvocation.commandEnvelope.token;
         const completionSource = new PromiseCompletionSource<contracts.KernelEventEnvelope>();
         let sub = this.channel.subscribeToKernelEvents((envelope: contracts.KernelEventEnvelope) => {
-            Logger.default.info(`proxy ${this.name} got event ${envelope.eventType} from ${envelope.command?.command?.targetKernelName} with token ${envelope.command?.token}`);
+            Logger.default.info(`proxy ${this.name} got event ${JSON.stringify(envelope)}`);
             if (envelope.command!.token === token) {
                 switch (envelope.eventType) {
                     case contracts.CommandFailedType:
