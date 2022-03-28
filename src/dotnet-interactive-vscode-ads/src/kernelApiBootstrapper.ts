@@ -80,7 +80,7 @@ export function configure(global?: any) {
     kernelHost.createProxyKernelOnDefaultConnector({ localName: 'csharp', aliases: ['c#', 'C#'], supportedDirectives: [], supportedKernelCommands: [] });
     kernelHost.createProxyKernelOnDefaultConnector({ localName: 'fsharp', aliases: ['fs', 'F#'], supportedDirectives: [], supportedKernelCommands: [] });
     kernelHost.createProxyKernelOnDefaultConnector({ localName: 'pwsh', aliases: ['powershell'], supportedDirectives: [], supportedKernelCommands: [] });
-    kernelHost.createProxyKernelOnDefaultConnector({ localName: 'vscode', aliases: [], destinationUri: "kernel://vscode/vscode", supportedDirectives: [], supportedKernelCommands: [] });
+    kernelHost.createProxyKernelOnDefaultConnector({ localName: 'vscode', aliases: [], remoteUri: "kernel://vscode/vscode", supportedDirectives: [], supportedKernelCommands: [] });
 
     kernelHost.connect();
     channel.run();
