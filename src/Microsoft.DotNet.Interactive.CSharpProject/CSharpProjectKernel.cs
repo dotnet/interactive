@@ -17,8 +17,7 @@ using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject
 {
-    public class CSharpProjectKernel
-        : Kernel
+    public class CSharpProjectKernel : Kernel
     {
         private RoslynWorkspaceServer _workspaceServer;
         private Protocol.Workspace _workspace;
@@ -61,6 +60,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             RegisterCommandHandler<RequestSignatureHelp>(HandleAsync);
             RegisterCommandHandler<SubmitCode>(HandleAsync);
         }
+
+        public override string LanguageName => "C#";
 
         public async Task HandleAsync(OpenProject command, KernelInvocationContext context)
         {
