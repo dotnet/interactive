@@ -167,7 +167,7 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.312803",
+          "default": "1.0.317502",
           "description": "The minimum required version of the .NET Interactive tool."
         },
         "dotnet-interactive.logLevel": {

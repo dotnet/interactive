@@ -49,8 +49,10 @@ try {
     $vsCodeStableVersion = (Get-Content "$PSScriptRoot\vscodeStableVersion.txt").Trim() # e.g., "1.53"
     $vsCodeVersionParts = $vsCodeStableVersion -split "\."
     $vsCodeInsidersVersion = $vsCodeVersionParts[0] + "." + ([int]$vsCodeVersionParts[1] + 1)
+    $adsStableVersion = (Get-Content "$PSScriptRoot\..\dotnet-interactive-vscode-ads\adsStableVersion.txt").Trim() # e.g., "1.53"
 
     Update-VersionNumbers -packageJsonPath "$PSScriptRoot\package.json" -vscodeEngine "^$vsCodeStableVersion.0" -updateToolVersion $updateAll
+    Update-VersionNumbers -packageJsonPath "$PSScriptRoot\..\dotnet-interactive-vscode-ads\package.json" -vscodeEngine "^$adsStableVersion.0" -updateToolVersion $updateAll
     Update-VersionNumbers -packageJsonPath "$PSScriptRoot\..\dotnet-interactive-vscode-insiders\package.json" -vscodeEngine "$vsCodeInsidersVersion.0-insider" -updateToolVersion $true
 }
 catch {
