@@ -9,9 +9,6 @@
     </HiddenComponentWarnings>
     <IgnoredTests>
       <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.App.Tests.CommandLine.CommandLineParserTests.kernel_server_honors_log_path</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.App.Tests.TypeScriptInterfacesContractTests.vscode_generated_TypeScript_interfaces_file_has_known_shape</TestName>
       </NamedTestSelector>
       <NamedTestSelector>
@@ -44,20 +41,14 @@
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.Tests.StdIOConnectionTests.it_can_reuse_connection_for_multiple_proxy_kernel</TestName>
       </NamedTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.App.Tests.StdioConnectionTests</FixtureName>
+      </FixtureTestSelector>
       <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.App.Tests.StdioConnectionTests.can_connect_to_remote_using_connect_magic_command</TestName>
+        <TestName>Microsoft.DotNet.Interactive.App.Tests.HttpApiTests.stdio_mode_returns_javascript_api_via_http</TestName>
       </NamedTestSelector>
       <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.App.Tests.StdioConnectionTests.it_can_reuse_connection_for_multiple_proxy_kernels</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.App.Tests.StdioConnectionTests.stdio_server_encoding_is_utf_8</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.App.Tests.StdioConnectionTests.fast_path_commands_over_proxy_can_be_handled</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.App.Tests.MagicCommandTests+about.it_shows_the_product_name_and_version_information</TestName>
+        <TestName>Microsoft.DotNet.Interactive.App.Tests.CommandLine.CommandLineParserTests.stdio_mode_honors_log_path</TestName>
       </NamedTestSelector>
     </IgnoredTests>
   </Settings>

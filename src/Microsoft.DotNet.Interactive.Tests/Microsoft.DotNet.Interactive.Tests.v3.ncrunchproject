@@ -6,47 +6,8 @@
       <Value>CopyReferencedAssembliesToWorkspaceIsOn</Value>
     </HiddenComponentWarnings>
     <IgnoredTests>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.CancelCommandTests</FixtureName>
-      </FixtureTestSelector>
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.Tests.LanguageKernelPackageTests.Loads_native_dependencies_from_nugets</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.LanguageKernelScriptReferenceTests.it_can_load_script_files_using_load_directive_with_relative_path("CSharp")</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.LanguageKernelScriptReferenceTests.it_can_load_script_files_using_load_directive_with_relative_path("FSharp")</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.LanguageKernelScriptReferenceTests.it_can_load_script_files_using_load_directive_with_relative_path_after_command_changeWorkingDirectory("CSharp")</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.LanguageKernelScriptReferenceTests.it_can_load_script_files_using_load_directive_with_relative_path_after_user_code_changes_current_directory("CSharp")</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.LanguageKernelTests.it_produces_a_final_value_if_the_code_expression_evaluates("CSharp")</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.LanguageKernelTests.it_produces_a_final_value_if_the_code_expression_evaluates("FSharp")</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.LanguageKernelTests.it_produces_values_when_executing_Console_output("CSharp")</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.LanguageKernelTests.it_produces_values_when_executing_Console_output("FSharp")</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.LanguageKernelTests.kernel_captures_stderr("FSharp")</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.LanguageKernelTests.kernel_captures_stdout("FSharp")</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.LanguageKernelTests.the_output_is_asynchronous("CSharp")</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.LanguageKernelTests.the_output_is_asynchronous("FSharp")</TestName>
       </NamedTestSelector>
     </IgnoredTests>
   </Settings>
