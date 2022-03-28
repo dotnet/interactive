@@ -8,6 +8,7 @@
         "filterText": "WriteLine",
         "sortText": "WriteLine",
         "insertText": "WriteLine",
+        "insertTextFormat": "snippet",
         "documentation": "Writes the line"
       }
     ]

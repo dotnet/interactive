@@ -1,0 +1,20 @@
+{
+  "event": {
+    "relativeFilePath": "./path",
+    "regionName": null,
+    "content": "file contents"
+  },
+  "eventType": "DocumentOpened",
+  "command": {
+    "token": "the-token",
+    "id": "command-id",
+    "commandType": "OpenDocument",
+    "command": {
+      "relativeFilePath": "./path",
+      "regionName": null,
+      "targetKernelName": null,
+      "originUri": null,
+      "destinationUri": null
+    }
+  }
+}
