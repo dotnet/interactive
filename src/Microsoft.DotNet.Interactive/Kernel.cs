@@ -252,11 +252,7 @@ namespace Microsoft.DotNet.Interactive
         protected bool IsDisposed => _disposables.IsDisposed;
 
         public IObservable<KernelEvent> KernelEvents => _kernelEvents;
-        
-        public string LanguageName { get; }
-        
-        public string LanguageVersion { get; }
-
+      
         public string Name { get; }
 
         public KernelInfo KernelInfo => _kernelInfo;
