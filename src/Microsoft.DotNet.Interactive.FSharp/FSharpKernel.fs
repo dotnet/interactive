@@ -34,7 +34,7 @@ open FSharp.Compiler.Symbols
 
 type FSharpKernel () as this =
 
-    inherit Kernel("fsharp")
+    inherit Kernel("fsharp", "F#", "6.0")
 
     static let lockObj = Object();
 
@@ -402,10 +402,6 @@ type FSharpKernel () as this =
     member this.handleSetValueAsync(name: string, value: Object, [<Optional>] declaredType: Type) : Task = 
         script.Value.Fsi.AddBoundValue(name, value) |> ignore
         Task.CompletedTask
-
-    override _.LanguageName = "F#"
-
-    override _.LanguageVersion = "6.0"
 
     member _.RestoreSources = _packageRestoreContext.Value.RestoreSources;
 

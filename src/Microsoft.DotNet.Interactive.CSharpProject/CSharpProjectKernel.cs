@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
         }
 
         public CSharpProjectKernel(string name)
-            : base(name)
+            : base(name, "C#")
         {
             RegisterCommandHandler<OpenProject>(HandleAsync);
             RegisterCommandHandler<OpenDocument>(HandleAsync);
@@ -60,8 +60,6 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             RegisterCommandHandler<RequestSignatureHelp>(HandleAsync);
             RegisterCommandHandler<SubmitCode>(HandleAsync);
         }
-
-        public override string LanguageName => "C#";
 
         public async Task HandleAsync(OpenProject command, KernelInvocationContext context)
         {

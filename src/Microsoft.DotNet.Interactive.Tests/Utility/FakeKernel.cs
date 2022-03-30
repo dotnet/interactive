@@ -12,13 +12,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
         Kernel,
         IKernelCommandHandler<SubmitCode>
     {
-        public FakeKernel([CallerMemberName] string name = null) : base(name)
+        public FakeKernel([CallerMemberName] string name = null) : base(name, name)
         {
         }
 
         public KernelCommandInvocation Handle { get; set; }
-
-        public override string LanguageName => Name;
 
         public Task HandleAsync(SubmitCode command, KernelInvocationContext context)
         {

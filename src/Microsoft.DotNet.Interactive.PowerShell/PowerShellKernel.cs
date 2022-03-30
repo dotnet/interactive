@@ -54,6 +54,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         public Func<string, PasswordString> ReadPassword { get; set; }
 
         internal AzShellConnectionUtils AzShell { get; set; }
+
         internal int DefaultRunspaceId => _lazyPwsh.IsValueCreated ? pwsh.Runspace.Id : -1;
 
         static PowerShellKernel()
@@ -75,7 +76,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             _addAccelerator = acceleratorType?.GetMethod("Add", new[] { typeof(string), typeof(Type) });
         }
 
-        public PowerShellKernel() : base(DefaultKernelName)
+        public PowerShellKernel() : base(DefaultKernelName, "PowerShell")
         {
             _psHost = new PSKernelHost(this);
             _lazyPwsh = new Lazy<PowerShell>(CreatePowerShell);
@@ -111,8 +112,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             RegisterForDisposal(pwsh);
             return pwsh;
         }
-
-        public override string LanguageName => "PowerShell";
 
         public void AddModulePath(string modulePath)
         {

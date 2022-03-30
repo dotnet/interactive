@@ -11,6 +11,7 @@ namespace Microsoft.DotNet.Interactive
     public class KernelInfo
     {
         private readonly HashSet<KernelCommandInfo> _supportedKernelCommands = new();
+        private readonly HashSet<KernelDirectiveInfo> _supportedDirectives = new();
 
         public KernelInfo(
             string localName,
@@ -61,7 +62,11 @@ namespace Microsoft.DotNet.Interactive
             init => _supportedKernelCommands.UnionWith(value ?? throw new ArgumentNullException(nameof(value)));
         }
 
-        public IReadOnlyCollection<KernelDirectiveInfo> SupportedDirectives { get; init; } = Array.Empty<KernelDirectiveInfo>();
+        public ICollection<KernelDirectiveInfo> SupportedDirectives
+        {
+            get => _supportedDirectives;
+            init => _supportedDirectives.UnionWith(value ?? throw new ArgumentNullException(nameof(value)));
+        }
 
         public override string ToString() => LocalName +
                                              (Uri is { } uri

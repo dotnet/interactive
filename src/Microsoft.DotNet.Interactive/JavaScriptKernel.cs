@@ -20,8 +20,6 @@ namespace Microsoft.DotNet.Interactive
             _client = client;
         }
 
-        public override string LanguageName => "JavaScript";
-
         public Task HandleAsync(
             SubmitCode command,
             KernelInvocationContext context)

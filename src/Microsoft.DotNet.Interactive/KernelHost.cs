@@ -82,9 +82,14 @@ namespace Microsoft.DotNet.Interactive
                 if (e is KernelInfoProduced kernelInfoProduced)
                 {
                     if (e.Command.DestinationUri is { } destinationUri &&
-                        _kernel.ChildKernels.TryGetByUri(destinationUri, out var proxyKernel))
+                        _kernel.ChildKernels.TryGetByUri(destinationUri, out var kernelByUri))
                     {
-                        proxyKernel.KernelInfo.UpdateFrom(kernelInfoProduced.KernelInfo);
+                        kernelByUri.KernelInfo.UpdateFrom(kernelInfoProduced.KernelInfo);
+                    }
+                    else if (e.Command.TargetKernelName is { } targetKernelName &&
+                             _kernel.ChildKernels.TryGetByAlias(targetKernelName, out var kernelByName))
+                    {
+                        kernelByName.KernelInfo.UpdateFrom(kernelInfoProduced.KernelInfo);
                     }
                 }
 

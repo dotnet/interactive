@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         {
 
         }
-        public CSharpKernel(string name) : base(name)
+        public CSharpKernel(string name) : base(name, "C#", "10.0")
         {
             _workspace = new InteractiveWorkspace();
 
@@ -106,10 +106,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 ScriptOptions = null;
             });
         }
-
-        public override string LanguageName => "C#";
-
-        public override string LanguageVersion => "10.0";
 
         public ScriptState ScriptState { get; private set; }
 

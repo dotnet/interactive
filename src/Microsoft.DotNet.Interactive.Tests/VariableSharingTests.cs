@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 {
     public class VariableSharingTests : IDisposable
     {
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        private readonly CompositeDisposable _disposables = new();
 
         [Theory]
         [InlineData(
@@ -240,18 +240,23 @@ x")]
                           .Be("csharpVariable = 123;");
         }
 
-        [Fact(Skip = "Requires kernel language")]
+        [Fact]
         public async Task CSharpKernel_can_share_variable_from_JavaScript_via_a_ProxyKernel()
         {
-            var (compositeKernel, remoteKernel) = await CreateCompositeKernelWithJavaScriptProxyKernel();
-            
-            remoteKernel.RegisterCommandHandler<RequestValue>((cmd, context) =>
+            var (compositeKernel, jsKernel) = await CreateCompositeKernelWithJavaScriptProxyKernel();
+
+            jsKernel.RegisterCommandHandler<RequestValue>((cmd, context) =>
             {
                 context.Publish(new ValueProduced(null, "jsVariable", new FormattedValue(JsonFormatter.MimeType, "[1, 2, 3]"), cmd));
                 return Task.CompletedTask;
             });
 
-            var jsVariableName = @"jsVariable";
+            var result = await compositeKernel.SendAsync(new RequestKernelInfo("javascript"));
+
+            var events = result.KernelEvents.ToSubscribedList();
+            events.Should().NotContainErrors();
+
+            var jsVariableName = "jsVariable";
 
             var submitCode = new SubmitCode($@"
 #!csharp
@@ -266,8 +271,9 @@ x")]
 
             csharpKernel.TryGetValue<int[]>(jsVariableName, out var jsVariable);
 
-
-
+            jsVariable.Should().BeEquivalentTo(
+                new[] { 1, 2, 3 },
+                c => c.WithStrictOrdering());
 
             // TODO (CSharpKernel_can_share_variable_fro_JavaScript_ProxyKernel) write test
             throw new NotImplementedException();
@@ -289,7 +295,7 @@ x")]
                 localCompositeKernel,
                 remoteCompositeKernel);
 
-            var remoteKernelUri = new Uri("kernel://remote/js");
+            var remoteKernelUri = new Uri("kernel://remote/remote-javascript");
             var javascriptKernel =
                 await localCompositeKernel
                       .Host

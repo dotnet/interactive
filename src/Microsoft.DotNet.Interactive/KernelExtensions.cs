@@ -235,12 +235,23 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public static async Task ImportValue(
-            this Kernel fromKernel, 
-            Kernel toKernel, 
+            this Kernel fromKernel,
+            Kernel toKernel,
             string valueName)
         {
+            var supportedRequestValue = fromKernel.SupportsCommandType(typeof(RequestValue));
+
+            if (!supportedRequestValue)
+            {
+                throw new InvalidOperationException($"Kernel {fromKernel} does not support command {nameof(RequestValue)}");
+            }
+
+            var requestValueResult = fromKernel.SendAsync(new RequestValue(valueName));
+
             if (fromKernel is ISupportGetValue fromInProcessKernel)
             {
+                // FIX: (ImportValue) 
+
                 if (fromInProcessKernel.TryGetValue(valueName, out object value))
                 {
                     if (toKernel is ISupportSetClrValue toInProcessKernel)
@@ -268,14 +279,21 @@ namespace Microsoft.DotNet.Interactive
                     }
                 }
             } 
-            else if (fromKernel.SupportsCommandType(typeof(RequestValue)))
+            else
             {
-                // FIX: (ImportValue) share some variables
-                var result = await fromKernel.SendAsync(new RequestValue(valueName));
+             
+                if (supportedRequestValue)
+                {
+                    // FIX: (ImportValue) share some variables
+                    var result = await fromKernel.SendAsync(new RequestValue(valueName));
+
+                    var events = result.KernelEvents.ToEnumerable().ToArray();
 
 
 
 
+
+                }
             }
         }
 

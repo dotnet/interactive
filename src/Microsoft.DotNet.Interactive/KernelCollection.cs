@@ -59,7 +59,6 @@ public class KernelCollection : IReadOnlyCollection<Kernel>
             return true;
         }
 
-
         return false;
     }
 

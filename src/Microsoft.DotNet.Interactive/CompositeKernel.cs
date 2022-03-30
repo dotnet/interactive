@@ -58,8 +58,6 @@ namespace Microsoft.DotNet.Interactive
             set => _defaultKernelName = value;
         }
 
-        public override string LanguageName => null;
-
         public void Add(Kernel kernel, IEnumerable<string> aliases = null)
         {
             if (kernel is null)

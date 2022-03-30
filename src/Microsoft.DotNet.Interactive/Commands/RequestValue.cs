@@ -51,6 +51,11 @@ namespace Microsoft.DotNet.Interactive.Commands
 
                 throw new InvalidOperationException($"Cannot find value named: {Name}");
             }
+            else
+            {
+                // FIX: (InvokeAsync) out of proc
+
+            }
 
             throw new InvalidOperationException($"Kernel {context.HandlingKernel.Name} doesn't support command {nameof(RequestValue)}");
         }

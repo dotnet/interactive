@@ -581,19 +581,22 @@ public static class CommandLineParser
                 .UseWho()
                 .UseMathAndLaTeX()
                 .UseValueSharing(),
-                    
             new[] { "c#", "C#" });
 
+        // FIX: (CreateKernel) what is it about this...
+        var fSharpKernel = new FSharpKernel();
+
         compositeKernel.Add(
-            new FSharpKernel()
-                .UseDefaultFormatting()
-                .UseNugetDirective()
-                .UseKernelHelpers()
-                .UseWho()
-                .UseDefaultNamespaces()
-                .UseMathAndLaTeX()
-                .UseValueSharing(),
-            new[] { "f#", "F#" });
+            fSharpKernel
+                // .UseDefaultFormatting()
+                // .UseNugetDirective()
+                // .UseKernelHelpers()
+                // .UseWho()
+                // .UseDefaultNamespaces()
+                // .UseMathAndLaTeX()
+                // .UseValueSharing(),
+           // , new[] { "f#", "F#" }
+            );
 
         compositeKernel.Add(
             new PowerShellKernel()

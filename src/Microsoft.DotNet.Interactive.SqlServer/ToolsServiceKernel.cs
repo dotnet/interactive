@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         private readonly Dictionary<string, object> _variables = new(StringComparer.Ordinal);
 
 
-        protected ToolsServiceKernel(string name, ToolsServiceClient client) : base(name)
+        protected ToolsServiceKernel(string name, ToolsServiceClient client, string languageName) : base(name)
         {
             var filePath = Path.GetTempFileName();
             TempFileUri = new Uri(filePath);

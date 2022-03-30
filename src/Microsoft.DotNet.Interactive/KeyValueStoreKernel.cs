@@ -54,8 +54,6 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public override string LanguageName => "text";
-
         // todo: change to ChooseKeyValueStoreKernelDirective after removing NetStandardc2.0 dependency
         public override ChooseKernelDirective ChooseKernelDirective =>
             _chooseKernelDirective ??= new (this);

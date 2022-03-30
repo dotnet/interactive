@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.CommandLine.Binding;
 using System.CommandLine.Invocation;
 using System.CommandLine.IO;
 using System.CommandLine.NamingConventionBinder;
@@ -18,7 +17,6 @@ using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.App.Tests.Extensions;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Telemetry;
@@ -34,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine;
 public class CommandLineParserTests : IDisposable
 {
     private readonly ITestOutputHelper _output;
-    private readonly TestConsole _console = new TestConsole();
+    private readonly TestConsole _console = new();
     private StartupOptions _startOptions;
     private readonly Parser _parser;
     private readonly FileInfo _connectionFile;
@@ -139,7 +137,7 @@ public class CommandLineParserTests : IDisposable
     [Fact]
     public async Task It_parses_verbose_option()
     {
-        await _parser.InvokeAsync($"jupyter --verbose {_connectionFile}", _console);
+       await _parser.InvokeAsync($"jupyter --verbose {_connectionFile}", _console);
 
         _startOptions
             .Verbose

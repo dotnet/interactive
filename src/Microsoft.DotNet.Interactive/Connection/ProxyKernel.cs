@@ -46,11 +46,9 @@ namespace Microsoft.DotNet.Interactive.Connection
             {
                 throw new ArgumentNullException(nameof(remoteUri));
             }
+
+            KernelInfo.RemoteUri = _remoteUri;
         }
-
-        public override string LanguageName => null;
-
-        public override string LanguageVersion => null;
         
         public void EnsureStarted()
         {
@@ -60,15 +58,6 @@ namespace Microsoft.DotNet.Interactive.Connection
             }
             
             Task.Run(ReceiveAndPublishCommandsAndEvents);
-        }
-
-        protected override KernelInfo CreateKernelInfo()
-        {
-            var kernelInfo = base.CreateKernelInfo();
-
-            kernelInfo.RemoteUri = _remoteUri;
-
-            return kernelInfo;
         }
 
         private async Task ReceiveAndPublishCommandsAndEvents()

@@ -40,9 +40,12 @@ namespace Microsoft.DotNet.Interactive
         private readonly SemaphoreSlim _fastPathSchedulerLock = new(1);
         private KernelInvocationContext _inFlightContext;
         private int _countOfLanguageServiceCommandsInFlight = 0;
-        private KernelInfo _kernelInfo;
+        private readonly KernelInfo _kernelInfo;
 
-        protected Kernel(string name)
+        protected Kernel(
+            string name,
+            string languageName = null,
+            string languageVersion = null)
         {
             if (string.IsNullOrWhiteSpace(name))
             {
@@ -60,12 +63,31 @@ namespace Microsoft.DotNet.Interactive
             Pipeline = new KernelCommandPipeline(this);
 
             _supportedCommandTypes = _declaredHandledCommandTypesByKernelType.GetOrAdd(
-                GetType(), 
+                GetType(),
                 InitializeSupportedCommandTypes);
 
             _disposables.Add(Disposable.Create(() => _kernelEvents.OnCompleted()));
+            var supportedKernelCommands = _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)).ToArray();
+
+            var supportedDirectives = Directives.Select(d => new KernelDirectiveInfo(d.Name)).ToArray();
+
+            _kernelInfo = new KernelInfo(name, languageName, languageVersion)
+            {
+                SupportedKernelCommands = supportedKernelCommands,
+                SupportedDirectives = supportedDirectives,
+            };
 
             RegisterCommandHandlers();
+
+            void RegisterCommandHandlers()
+            {
+                if (this is ISupportGetValue)
+                {
+                    RegisterCommandHandler<RequestValueInfos>((command, context) => command.InvokeAsync(context));
+
+                    RegisterCommandHandler<RequestValue>((command, context) => command.InvokeAsync(context));
+                }
+            }
 
             HashSet<Type> InitializeSupportedCommandTypes(Type kernelType)
             {
@@ -78,16 +100,6 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private void RegisterCommandHandlers()
-        {
-            if (this is ISupportGetValue)
-            {
-                RegisterCommandHandler<RequestValueInfos>((command, context) => command.InvokeAsync(context));
-
-                RegisterCommandHandler<RequestValue>((command, context) => command.InvokeAsync(context));
-            }
-        }
-      
         internal KernelCommandPipeline Pipeline { get; }
 
         public CompositeKernel ParentKernel { get; internal set; }
@@ -241,30 +253,21 @@ namespace Microsoft.DotNet.Interactive
 
         public IObservable<KernelEvent> KernelEvents => _kernelEvents;
         
-        public abstract string LanguageName { get; }
+        public string LanguageName { get; }
         
-        public virtual string LanguageVersion { get; }
+        public string LanguageVersion { get; }
 
         public string Name { get; }
 
-        public KernelInfo KernelInfo
-        {
-            get
-            {
-                return _kernelInfo ??= CreateKernelInfo();
-            }
-        }
-
-        protected virtual KernelInfo CreateKernelInfo() =>
-            new(Name, LanguageName, LanguageVersion)
-            {
-                SupportedKernelCommands = _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)).ToArray(),
-                SupportedDirectives = Directives.Select(d => new KernelDirectiveInfo(d.Name)).ToArray(),
-            };
+        public KernelInfo KernelInfo => _kernelInfo;
 
         public IReadOnlyCollection<Command> Directives => SubmissionParser.Directives;
 
-        public void AddDirective(Command command) => SubmissionParser.AddDirective(command);
+        public void AddDirective(Command command)
+        {
+            SubmissionParser.AddDirective(command);
+            KernelInfo.SupportedDirectives.Add(new(command.Name));
+        }
 
         public void RegisterCommandHandler<TCommand>(Func<TCommand, KernelInvocationContext, Task> handler)
             where TCommand : KernelCommand
@@ -286,6 +289,8 @@ namespace Microsoft.DotNet.Interactive
                 var defaultHandler = CreateDefaultHandlerForCommandType<TCommand>() ?? throw new InvalidOperationException("CreateDefaultHandlerForCommandType should not return null");
                 
                 _dynamicHandlers[typeof(TCommand)] = (command, context) => defaultHandler((TCommand)command, context);
+
+                _kernelInfo.SupportedKernelCommands.Add(new(typeof(TCommand).Name));
             }
         }
 

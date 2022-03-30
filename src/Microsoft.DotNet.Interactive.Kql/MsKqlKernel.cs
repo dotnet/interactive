@@ -21,12 +21,10 @@ internal class MsKqlKernel : ToolsServiceKernel
     public MsKqlKernel(
         string name,
         KqlConnectionDetails connectionDetails,
-        ToolsServiceClient client) : base(name, client)
+        ToolsServiceClient client) : base(name, client, "KQL")
     {
         _connectionDetails = connectionDetails ?? throw new ArgumentException("Value cannot be null or whitespace.", nameof(connectionDetails));
     }
-
-    public override string LanguageName => "KQL";
 
     public override async Task ConnectAsync()
     {

@@ -26,8 +26,6 @@ namespace Microsoft.DotNet.Interactive
             };
         }
 
-        public override string LanguageName => null;
-
         public Task HandleAsync(SubmitCode command, KernelInvocationContext context)
         {
             var root = (Kernel)ParentKernel ?? this;
