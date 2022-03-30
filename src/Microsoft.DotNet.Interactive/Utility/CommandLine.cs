@@ -24,7 +24,6 @@ namespace Microsoft.DotNet.Interactive.Utility
                 workingDir,
                 timeout);
 
-
         public static async Task<CommandLineResult> Execute(
             string command,
             string args,

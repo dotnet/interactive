@@ -24,7 +24,6 @@ Microsoft.DotNet.Interactive
     public KernelCollection ChildKernels { get;}
     public System.String DefaultKernelName { get; set;}
     public KernelHost Host { get;}
-    public System.String LanguageName { get;}
     public System.Void Add(Kernel kernel, System.Collections.Generic.IEnumerable<System.String> aliases = null)
     public System.Void AddKernelConnector(Microsoft.DotNet.Interactive.Connection.ConnectKernelCommand connectionCommand)
      System.Collections.Generic.IEnumerable<System.CommandLine.Parsing.Parser> GetDirectiveParsersForCompletion(Microsoft.DotNet.Interactive.Parsing.DirectiveNode directiveNode, System.Int32 requestPosition)
@@ -75,7 +74,6 @@ Microsoft.DotNet.Interactive
     public System.Threading.Tasks.Task ExecuteClientScript(System.String code, KernelInvocationContext context)
   public class HtmlKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
     .ctor()
-    public System.String LanguageName { get;}
     public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SubmitCode command, KernelInvocationContext context)
   public abstract class IKernelCommandHandler<TCommand>
     public System.Threading.Tasks.Task HandleAsync(TCommand command, KernelInvocationContext context)
@@ -98,7 +96,6 @@ Microsoft.DotNet.Interactive
     public System.String Name { get;}
   public class JavaScriptKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
     .ctor(Microsoft.DotNet.Interactive.Connection.KernelClientBase client = null)
-    public System.String LanguageName { get;}
     protected Func<TCommand,KernelInvocationContext,System.Threading.Tasks.Task> CreateDefaultHandlerForCommandType<TCommand>()
     public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SubmitCode command, KernelInvocationContext context)
   public abstract class JsonConverter<T> : JsonConverter<T>
@@ -117,8 +114,6 @@ Microsoft.DotNet.Interactive
     public FrontendEnvironment FrontendEnvironment { get; set;}
     public System.IObservable<Microsoft.DotNet.Interactive.Events.KernelEvent> KernelEvents { get;}
     public KernelInfo KernelInfo { get;}
-    public System.String LanguageName { get;}
-    public System.String LanguageVersion { get;}
     public System.String Name { get;}
     public CompositeKernel ParentKernel { get;}
     public Kernel RootKernel { get;}
@@ -127,7 +122,6 @@ Microsoft.DotNet.Interactive
     public System.Void AddMiddleware(KernelCommandPipelineMiddleware middleware, System.String caller = null)
      System.Boolean CanHandle(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     protected Func<TCommand,KernelInvocationContext,System.Threading.Tasks.Task> CreateDefaultHandlerForCommandType<TCommand>()
-    protected KernelInfo CreateKernelInfo()
     public System.Void DeferCommand(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
      System.Void DelegatePublication(Microsoft.DotNet.Interactive.Events.KernelEvent kernelEvent)
     public System.Void Dispose()
@@ -236,7 +230,7 @@ Microsoft.DotNet.Interactive
     public System.String LanguageVersion { get;}
     public System.String LocalName { get;}
     public System.Uri RemoteUri { get; set;}
-    public System.Collections.Generic.IReadOnlyCollection<KernelDirectiveInfo> SupportedDirectives { get; set;}
+    public System.Collections.Generic.ICollection<KernelDirectiveInfo> SupportedDirectives { get; set;}
     public System.Collections.Generic.ICollection<KernelCommandInfo> SupportedKernelCommands { get; set;}
     public System.Uri Uri { get; set;}
     public System.String ToString()
@@ -284,14 +278,12 @@ Microsoft.DotNet.Interactive
   public class KeyValueStoreKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, Microsoft.DotNet.Interactive.ValueSharing.ISupportGetValue, Microsoft.DotNet.Interactive.ValueSharing.ISupportSetClrValue, System.IDisposable
     .ctor()
     public ChooseKernelDirective ChooseKernelDirective { get;}
-    public System.String LanguageName { get;}
     public System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.ValueSharing.KernelValueInfo> GetValueInfos()
     public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SubmitCode command, KernelInvocationContext context)
     public System.Threading.Tasks.Task SetValueAsync(System.String name, System.Object value, System.Type declaredType = null)
     public System.Boolean TryGetValue<T>(System.String name, ref T& value)
   public class KqlDiscoverabilityKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
     .ctor()
-    public System.String LanguageName { get;}
     public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SubmitCode command, KernelInvocationContext context)
   public class LinePosition, System.IEquatable<LinePosition>
     public static LinePosition FromCodeAnalysisLinePosition(Microsoft.CodeAnalysis.Text.LinePosition linePosition)
@@ -360,7 +352,6 @@ Microsoft.DotNet.Interactive
     public System.Collections.Generic.IReadOnlyList<ParameterInformation> Parameters { get;}
   public class SqlDiscoverabilityKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
     .ctor()
-    public System.String LanguageName { get;}
     public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SubmitCode command, KernelInvocationContext context)
   public class TabularDataResourceSummaryExplorer : DataExplorer<Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource>
     .ctor(Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource data)
@@ -509,9 +500,6 @@ Microsoft.DotNet.Interactive.Connection
     public System.Void Dispose()
   public class ProxyKernel : Microsoft.DotNet.Interactive.Kernel, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, System.IDisposable
     .ctor(System.String name, IKernelCommandAndEventReceiver receiver, IKernelCommandAndEventSender sender, System.Uri remoteUri = null)
-    public System.String LanguageName { get;}
-    public System.String LanguageVersion { get;}
-    protected Microsoft.DotNet.Interactive.KernelInfo CreateKernelInfo()
      System.Void DelegatePublication(Microsoft.DotNet.Interactive.Events.KernelEvent kernelEvent)
     public System.Void EnsureStarted()
     public Microsoft.DotNet.Interactive.ValueSharing.IKernelValueDeclarer GetValueDeclarer(System.Object value)
