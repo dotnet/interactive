@@ -249,7 +249,7 @@ x")]
 
             jsKernel.RegisterCommandHandler<RequestValue>((cmd, context) =>
             {
-                context.Publish(new ValueProduced(null, jsVariableName, new FormattedValue(JsonFormatter.MimeType, "[1, 2, 3]"), cmd));
+                context.Publish(new ValueProduced(null, jsVariableName, new FormattedValue(JsonFormatter.MimeType, "123"), cmd));
                 return Task.CompletedTask;
             });
 
@@ -269,12 +269,10 @@ x")]
                         .Should()
                         .ContainSingle(v => v.Name == jsVariableName);
 
-            csharpKernel.TryGetValue<int[]>(jsVariableName, out var jsVariable)
+            csharpKernel.TryGetValue<float>(jsVariableName, out var jsVariable)
                         .Should().BeTrue();
 
-            jsVariable.Should().BeEquivalentTo(
-                new[] { 1, 2, 3 },
-                c => c.WithStrictOrdering());
+            jsVariable.Should().Be(123);
         }
 
         private async Task<(CompositeKernel, FakeKernel)> CreateCompositeKernelWithJavaScriptProxyKernel()

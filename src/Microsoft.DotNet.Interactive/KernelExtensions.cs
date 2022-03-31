@@ -9,6 +9,7 @@ using System.CommandLine.NamingConventionBinder;
 using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
@@ -254,48 +255,57 @@ namespace Microsoft.DotNet.Interactive
             {
                 await DeclareValue(
                     toKernel,
-                    valueProduced,
-                    fromKernel.Name);
+                    valueProduced);
             }
         }
-        
+
         private static async Task DeclareValue(
             Kernel importingKernel,
-            ValueProduced valueProduced,
-            string sourceKernelName)
+            ValueProduced valueProduced)
         {
             var valueName = valueProduced.Name;
 
             if (importingKernel is ISupportSetClrValue toInProcessKernel)
             {
-                if (valueProduced.Value is { } value)
+                if (valueProduced.Value is not { } value)
                 {
-                    try
+                    if (valueProduced.FormattedValue.MimeType == JsonFormatter.MimeType)
                     {
-                        await toInProcessKernel.SetValueAsync(valueName, value);
+                        var jsonDoc = JsonDocument.Parse(valueProduced.FormattedValue.Value);
+
+                        value = jsonDoc.RootElement.ValueKind switch
+                        {
+                            JsonValueKind.Undefined => null,
+                            JsonValueKind.Object => null,
+                            JsonValueKind.Array => null,
+                            JsonValueKind.String => jsonDoc.Deserialize<string>(),
+                            JsonValueKind.Number => jsonDoc.Deserialize<float>(),
+                            JsonValueKind.True => true,
+                            JsonValueKind.False => false,
+                            JsonValueKind.Null => null,
+                            _ => throw new ArgumentOutOfRangeException()
+                        };
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        throw new InvalidOperationException($"Error sharing value '{valueName}' from kernel '{sourceKernelName}' into kernel '{importingKernel.Name}'. {ex.Message}", ex);
+                        throw new ArgumentException($"Unable to import value '{valueName}' into kernel {importingKernel}");
                     }
                 }
-                else
-                {
-                    
-                }
+
+                await toInProcessKernel.SetValueAsync(valueName, value);
+
+                return;
+            }
+
+            var declarer = importingKernel.GetValueDeclarer();
+
+            if (declarer.TryGetValueDeclaration(valueProduced, out KernelCommand command))
+            {
+                await importingKernel.SendAsync(command);
             }
             else
             {
-                var declarer = importingKernel.GetValueDeclarer();
-
-                if (declarer.TryGetValueDeclaration(valueProduced, out KernelCommand command))
-                {
-                    await importingKernel.SendAsync(command);
-                }
-                else
-                {
-                    throw new ArgumentException($"Value '{valueName}' cannot be declared in kernel '{importingKernel.Name}'");
-                }
+                throw new ArgumentException($"Value '{valueName}' cannot be declared in kernel '{importingKernel.Name}'");
             }
         }
 
