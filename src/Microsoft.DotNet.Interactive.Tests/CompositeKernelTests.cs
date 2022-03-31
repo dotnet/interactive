@@ -571,7 +571,8 @@ new [] {1,2,3}");
                 });
 
             var commandSentToCompositeKernel = new FirstSubmission.MyCommand("xyzzy");
-            await compositeKernel.SendAsync(commandSentToCompositeKernel);
+            var result = await compositeKernel.SendAsync(commandSentToCompositeKernel);
+            result.KernelEvents.ToSubscribedList().Should().NotContainErrors();
 
             commandPassedToHandler
                 .Should()
