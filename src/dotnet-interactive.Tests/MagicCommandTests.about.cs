@@ -39,6 +39,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                       .ContainAll(
                           ".NET Interactive",
                           "Version",
+                          "Library version",
                           "https://github.com/dotnet/interactive");
             }
         }
