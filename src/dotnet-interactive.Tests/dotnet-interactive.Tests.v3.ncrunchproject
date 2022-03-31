@@ -56,6 +56,9 @@
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.App.Tests.FileProviderTests.It_tracks_extensions_that_are_not_file_providers("FSharp")</TestName>
       </NamedTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.App.Tests.HttpApiTests</FixtureName>
+      </FixtureTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

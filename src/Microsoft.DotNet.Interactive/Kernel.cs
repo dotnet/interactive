@@ -64,6 +64,7 @@ namespace Microsoft.DotNet.Interactive
             SubmissionParser = new SubmissionParser(this);
 
             _disposables = new CompositeDisposable();
+            _disposables.Add(Disposable.Create(() => _kernelEvents.OnCompleted()));
 
             Pipeline = new KernelCommandPipeline(this);
 
@@ -71,7 +72,6 @@ namespace Microsoft.DotNet.Interactive
                 GetType(),
                 InitializeSupportedCommandTypes);
 
-            _disposables.Add(Disposable.Create(() => _kernelEvents.OnCompleted()));
             var supportedKernelCommands = _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)).ToArray();
 
             var supportedDirectives = Directives.Select(d => new KernelDirectiveInfo(d.Name)).ToArray();
