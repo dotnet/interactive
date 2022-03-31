@@ -5,6 +5,7 @@ using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.NamingConventionBinder;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
@@ -47,6 +48,11 @@ namespace Microsoft.DotNet.Interactive.App
 
                 }
 
+                var libraryAssembly = typeof(Kernel).Assembly;
+                var libraryInformationalVersion = libraryAssembly
+                                               .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                                               .InformationalVersion;
+
                 PocketView html = table(
                     tbody(
                         tr(
@@ -55,6 +61,7 @@ namespace Microsoft.DotNet.Interactive.App
                                 p[style: "font-size:1.5em"](b(".NET Interactive")),
                                 p("© 2020 Microsoft Corporation"),
                                 p(b("Version: "), info.AssemblyInformationalVersion),
+                                p(b("Library version: "), libraryInformationalVersion),
                                 p(b("Build date: "), info.BuildDate),
                                 p(a[href: url](url))
                             ))
