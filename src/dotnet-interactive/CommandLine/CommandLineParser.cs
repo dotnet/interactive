@@ -583,11 +583,8 @@ public static class CommandLineParser
                 .UseValueSharing(),
             new[] { "c#", "C#" });
 
-        // FIX: (CreateKernel) what is it about this...
-        var fSharpKernel = new FSharpKernel();
-
         compositeKernel.Add(
-            fSharpKernel
+            new FSharpKernel()
                 .UseDefaultFormatting()
                 .UseNugetDirective()
                 .UseKernelHelpers()

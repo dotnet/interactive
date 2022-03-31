@@ -8,6 +8,7 @@ using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 using FluentAssertions;
@@ -126,12 +127,23 @@ public class CommandLineParserTests : IDisposable
 
         // check log file for expected contents
         (await logFile.WaitForFileCondition(
-                timeout: waitTime,
-                predicate: file => file.Length > 0))
+             timeout: waitTime,
+             predicate: file => file.Length > 0))
             .Should()
             .BeTrue($"expected non-empty log file within {waitTime.TotalSeconds}s");
-        var logFileContents = File.ReadAllText(logFile.FullName);
-        logFileContents.Should().Contain("CodeSubmissionReceived: 1+1");
+        
+        var logFileContents = new StringBuilder();
+
+        await using var fileStream = new FileStream(logFile.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        using var fileReader = new StreamReader(fileStream);
+        
+        while (!fileReader.EndOfStream)
+        {
+            var line = await fileReader.ReadLineAsync();
+            logFileContents.Append(line);
+        }
+
+        logFileContents.ToString().Should().Contain("CodeSubmissionReceived: 1+1");
     }
 
     [Fact]
@@ -226,8 +238,6 @@ public class CommandLineParserTests : IDisposable
         _startOptions.HttpPort.Should().NotBeNull();
         _startOptions.HttpPort.IsAuto.Should().BeTrue();
     }
-
-
 
     [Fact]
     public void http_command__does_not_parse_http_port_range_option()

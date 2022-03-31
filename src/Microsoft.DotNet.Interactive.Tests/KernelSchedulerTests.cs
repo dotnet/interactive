@@ -150,7 +150,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             var _ = scheduler.RunAsync(1, async v =>
             {
                 barrier.SignalAndWait();
-                await Task.Delay(1000);
+                await Task.Delay(2000);
                 return v;
             }, cancellationToken: cts.Token);
 

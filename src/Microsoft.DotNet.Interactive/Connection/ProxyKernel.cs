@@ -126,7 +126,7 @@ namespace Microsoft.DotNet.Interactive.Connection
             // override the default handler on Kernel and forward the command instead
             HandleByForwardingToRemoteAsync(command, context);
 
-        protected internal override void DelegatePublication(KernelEvent kernelEvent)
+        private void DelegatePublication(KernelEvent kernelEvent)
         {
             var token = kernelEvent.Command.GetOrCreateToken();
 

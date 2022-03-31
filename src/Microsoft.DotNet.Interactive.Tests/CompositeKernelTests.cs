@@ -568,6 +568,8 @@ new [] {1,2,3}");
                     return Task.CompletedTask;
                 });
 
+            childKernel.KernelInfo.SupportedKernelCommands.Should().Contain(new KernelCommandInfo(nameof(FirstSubmission.MyCommand)));
+
             var commandSentToCompositeKernel = new FirstSubmission.MyCommand("xyzzy");
             var result = await compositeKernel.SendAsync(commandSentToCompositeKernel);
             result.KernelEvents.ToSubscribedList().Should().NotContainErrors();

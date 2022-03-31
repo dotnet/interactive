@@ -291,18 +291,7 @@ namespace Microsoft.DotNet.Interactive
             TrySetHandler(command, context);
             await command.InvokeAsync(context);
         }
-
-        protected internal virtual void DelegatePublication(KernelEvent kernelEvent)
-        {
-            // FIX: (DelegatePublication) only overrides are used... does this need to be here?
-            if (kernelEvent is null)
-            {
-                throw new ArgumentNullException(nameof(kernelEvent));
-            }
-
-            PublishEvent(kernelEvent);
-        }
-
+        
         public async Task<KernelCommandResult> SendAsync(
             KernelCommand command,
             CancellationToken cancellationToken)
