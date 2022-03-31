@@ -6,6 +6,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Parsing;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
@@ -17,6 +19,7 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.ValueSharing;
 
@@ -24,6 +27,8 @@ namespace Microsoft.DotNet.Interactive
 {
     public abstract partial class Kernel : 
         IKernelCommandHandler<RequestKernelInfo>, 
+        IKernelCommandHandler<RequestValue>, 
+        IKernelCommandHandler<RequestValueInfos>, 
         IDisposable
     {
         private static readonly ConcurrentDictionary<Type, HashSet<Type>> _declaredHandledCommandTypesByKernelType = new();
@@ -76,18 +81,6 @@ namespace Microsoft.DotNet.Interactive
                 SupportedKernelCommands = supportedKernelCommands,
                 SupportedDirectives = supportedDirectives,
             };
-
-            RegisterCommandHandlers();
-
-            void RegisterCommandHandlers()
-            {
-                if (this is ISupportGetValue)
-                {
-                    RegisterCommandHandler<RequestValueInfos>((command, context) => command.InvokeAsync(context));
-
-                    RegisterCommandHandler<RequestValue>((command, context) => command.InvokeAsync(context));
-                }
-            }
 
             HashSet<Type> InitializeSupportedCommandTypes(Type kernelType)
             {
@@ -279,7 +272,7 @@ namespace Microsoft.DotNet.Interactive
         public void RegisterCommandType<TCommand>()
             where TCommand : KernelCommand
         {
-            // FIX: (RegisterCommandType) why is this a separate gesture from RegisterCommand?
+            // QUESTION: (RegisterCommandType) why is this a separate gesture from RegisterCommand?
             if (_supportedCommandTypes.Add(typeof(TCommand)))
             {
                 var defaultHandler = CreateDefaultHandlerForCommandType<TCommand>() ?? throw new InvalidOperationException("CreateDefaultHandlerForCommandType should not return null");
@@ -568,6 +561,57 @@ namespace Microsoft.DotNet.Interactive
             return Task.CompletedTask;
         }
 
+        public virtual Task HandleAsync(
+            RequestValue command,
+            KernelInvocationContext context)
+        {
+            if (this is ISupportGetValue supportsGetValue)
+            {
+                if (supportsGetValue.TryGetValue(Name, out object value))
+                {
+                    if (value is { })
+                    {
+                        var valueType = value.GetType();
+                        var formatter = Formatter.GetPreferredFormatterFor(valueType, command.MimeType);
+
+                        using var writer = new StringWriter(CultureInfo.InvariantCulture);
+                        formatter.Format(value, writer);
+                        var formatted = new FormattedValue(command.MimeType, writer.ToString());
+                        context.Publish(new ValueProduced(value, Name, formatted, command));
+                    }
+                    else
+                    {
+                        var formatted = new FormattedValue(command.MimeType, "null");
+
+                        context.Publish(new ValueProduced(value, Name, formatted, command));
+                    }
+
+                    return Task.CompletedTask;
+                }
+
+                throw new InvalidOperationException($"Cannot find value named: {Name}");
+            }
+            else
+            {
+                // FIX: (InvokeAsync) out of proc
+            }
+
+            return Task.CompletedTask;
+        }
+
+        public virtual Task HandleAsync(
+            RequestValueInfos command,
+            KernelInvocationContext context)
+        {
+            if (context.HandlingKernel is ISupportGetValue supportsGetValue)
+            {
+                context.Publish(new ValueInfosProduced(supportsGetValue.GetValueInfos(), command));
+                return Task.CompletedTask;
+            }
+
+            throw new InvalidOperationException($"Kernel {context.HandlingKernel.Name} doesn't support command {nameof(RequestValueInfos)}");
+        }
+
         private protected bool CanHandle(KernelCommand command)
         {
             if (command.TargetKernelName is not null &&
@@ -742,6 +786,11 @@ namespace Microsoft.DotNet.Interactive
                         requestSignatureHelpHandler):
                         SetHandler(requestSignatureHelp, requestSignatureHelpHandler);
                         break;
+                    
+                    case (RequestValue requestValue, IKernelCommandHandler<RequestValue>
+                        requestValueHandler):
+                        SetHandler(requestValue, requestValueHandler);
+                        break;
 
                     case (ChangeWorkingDirectory changeWorkingDirectory, IKernelCommandHandler<ChangeWorkingDirectory> changeWorkingDirectoryHandler):
                         SetHandler(changeWorkingDirectory, changeWorkingDirectoryHandler);
@@ -835,7 +884,7 @@ namespace Microsoft.DotNet.Interactive
             return false;
         }
 
-        public virtual IKernelValueDeclarer GetValueDeclarer(object value) => KernelValueDeclarer.Default;
+        public virtual IKernelValueDeclarer GetValueDeclarer() => KernelValueDeclarer.Default;
 
         public override string ToString()
         {

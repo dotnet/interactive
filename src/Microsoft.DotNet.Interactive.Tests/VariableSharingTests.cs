@@ -305,7 +305,7 @@ x")]
 
             await localCompositeKernel.SendAsync(new RequestKernelInfo(remoteKernelUri));
 
-            javascriptKernel.UseValueSharing(new JavaScriptKernelValueDeclarer());
+            javascriptKernel.UseValueSharing(new JavaScriptValueDeclarer());
 
             _disposables.Add(remoteCompositeKernel);
 

@@ -22,42 +22,5 @@ namespace Microsoft.DotNet.Interactive.Commands
             Name = name;
             MimeType = mimeType ?? JsonFormatter.MimeType;
         }
-
-        public override Task InvokeAsync(KernelInvocationContext context)
-        {
-            if (context.HandlingKernel is ISupportGetValue supportGetValuesKernel)
-            {
-                if (supportGetValuesKernel.TryGetValue(Name, out object value))
-                {
-                    if (value is { })
-                    {
-                        var valueType = value.GetType();
-                        var formatter = Formatter.GetPreferredFormatterFor(valueType, MimeType);
-
-                        using var writer = new StringWriter(CultureInfo.InvariantCulture);
-                        formatter.Format(value, writer);
-                        var formatted = new FormattedValue(MimeType, writer.ToString());
-                        context.Publish(new ValueProduced(value, Name, formatted, this));
-                    }
-                    else
-                    {
-                        var formatted = new FormattedValue(MimeType, "null");
-
-                        context.Publish(new ValueProduced(value, Name, formatted, this));
-                    }
-
-                    return Task.CompletedTask;
-                }
-
-                throw new InvalidOperationException($"Cannot find value named: {Name}");
-            }
-            else
-            {
-                // FIX: (InvokeAsync) out of proc
-
-            }
-
-            throw new InvalidOperationException($"Kernel {context.HandlingKernel.Name} doesn't support command {nameof(RequestValue)}");
-        }
     }
 }

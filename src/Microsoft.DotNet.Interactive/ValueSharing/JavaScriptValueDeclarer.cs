@@ -9,11 +9,11 @@ using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
 namespace Microsoft.DotNet.Interactive.ValueSharing
 {
-    public class JavaScriptKernelValueDeclarer : IKernelValueDeclarer
+    public class JavaScriptValueDeclarer : IKernelValueDeclarer
     {
         private static readonly JsonSerializerOptions _serializerOptions;
 
-        static JavaScriptKernelValueDeclarer()
+        static JavaScriptValueDeclarer()
         {
             _serializerOptions = new JsonSerializerOptions
             {
@@ -31,7 +31,10 @@ namespace Microsoft.DotNet.Interactive.ValueSharing
             };
         }
 
-        public bool TryGetValueDeclaration(string valueName, object value, out KernelCommand command)
+        public bool TryGetValueDeclaration(
+            string valueName, 
+            object value, 
+            out KernelCommand command)
         {
             var code = $"{valueName} = {JsonSerializer.Serialize(value, _serializerOptions)};";
             command = new SubmitCode(code);

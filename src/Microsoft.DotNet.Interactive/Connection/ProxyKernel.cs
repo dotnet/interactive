@@ -181,6 +181,6 @@ namespace Microsoft.DotNet.Interactive.Connection
             set => _valueDeclarer = value;
         }
 
-        public override IKernelValueDeclarer GetValueDeclarer(object value) => _valueDeclarer ?? KernelValueDeclarer.Default;
+        public override IKernelValueDeclarer GetValueDeclarer() => _valueDeclarer ?? KernelValueDeclarer.Default;
     }
 }
