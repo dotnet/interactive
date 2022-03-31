@@ -938,11 +938,11 @@ Console.Write(""value two"");
 Console.Write(""value three"");"
             };
 
-            var kernelCommand = new SubmitCode(source);
+            var result = await kernel.SendAsync(new SubmitCode(source));
 
-            await kernel.SendAsync(kernelCommand);
+            var events = result.KernelEvents.ToSubscribedList();
 
-            KernelEvents
+            events
                 .OfType<StandardOutputValueProduced>()
                 .Select(e => e.FormattedValues.ToArray())
                 .Should()
@@ -960,9 +960,11 @@ Console.Write(""value three"");"
 
             var source = "printf \"hello from F#\"";
 
-            await SubmitCode(kernel, source);
+            var result = await SubmitCode(kernel, source);
 
-            KernelEvents
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events
                 .OfType<StandardOutputValueProduced>()
                 .Last()
                 .FormattedValues
@@ -1028,26 +1030,28 @@ Console.Write(""value three"");"
             {
                 Language.FSharp => @"
 open System
-Console.Write(""value one"")
-Console.Write(""value two"")
-Console.Write(""value three"")
+""value one"".Display()
+""value two"".Display()
+""value three"".Display()
 5",
 
                 Language.CSharp => @"
-Console.Write(""value one"");
-Console.Write(""value two"");
-Console.Write(""value three"");
+""value one"".Display();
+""value two"".Display();
+""value three"".Display();
 5",
             };
 
-            await SubmitCode(kernel, source);
+            var result = await SubmitCode(kernel, source);
 
-            KernelEvents
-                .OfType<StandardOutputValueProduced>()
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events
+                .OfType<DisplayedValueProduced>()
                 .Should()
                 .HaveCount(3);
 
-            KernelEvents
+            events
                 .OfType<ReturnValueProduced>()
                 .Last()
                 .Value.Should().Be(5);

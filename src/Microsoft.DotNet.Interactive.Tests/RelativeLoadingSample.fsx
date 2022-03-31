@@ -1,1 +1,1 @@
-﻿printfn "hello!"
+﻿"hello!".Display()
