@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         private readonly Dictionary<string, object> _variables = new(StringComparer.Ordinal);
 
 
-        protected ToolsServiceKernel(string name, ToolsServiceClient client, string languageName) : base(name)
+        protected ToolsServiceKernel(string name, ToolsServiceClient client, string languageName) : base(name, languageName)
         {
             var filePath = Path.GetTempFileName();
             TempFileUri = new Uri(filePath);
@@ -115,7 +115,6 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             {
                 return;
             }
-
 
             // If a query handler is already defined, then it means another query is already running in parallel.
             // We only want to run one query at a time, so we display an error here instead.
@@ -313,9 +312,10 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         public bool TryGetValue<T>(string name, out T value)
         {
-            if (QueryResults.TryGetValue(name, out var resultSet))
+            if (QueryResults.TryGetValue(name, out var resultSet) && 
+                resultSet is T resultSetT)
             {
-                value = (T)(resultSet as object);
+                value = resultSetT;
                 return true;
             }
             value = default;
@@ -361,9 +361,10 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         {
             if (value == null)
             {
-                throw new ArgumentNullException(nameof(name), $"Sharing null values is not supported at this time.");
+                throw new ArgumentNullException(nameof(value), $"Sharing null values is not supported at this time.");
             }
-            else if (!CanDeclareVariable(name, value, out string msg))
+
+            if (!CanDeclareVariable(name, value, out string msg))
             {
                 throw new ArgumentException($"Cannot support value of Type {value.GetType()}. {msg}");
             }

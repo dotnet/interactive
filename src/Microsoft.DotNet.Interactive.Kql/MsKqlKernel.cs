@@ -71,7 +71,6 @@ internal class MsKqlKernel : ToolsServiceKernel
         return true;
     }
 
-
     protected override void StoreQueryResults(IReadOnlyCollection<TabularDataResource> results, ParseResult commandKernelChooserParseResult)
     {
         var chooser = ChooseKernelDirective;

@@ -273,12 +273,13 @@ print testVar";
 
         [KqlTheory]
         [InlineData("string testVar = null;")] // Don't support null vars currently
-        [InlineData("decimal testVar = 123456.789;", true)] // Incorrect type
         [InlineData("nint testVar = 123456;")] // Unsupported type
         [InlineData("nuint testVar = 123456;")] // Unsupported type
         [InlineData("var testVar = new List<int>();")] // Unsupported type
-        [InlineData("string testVar = \"tricky\\\"string\";", false, false)] // string with ", bug https://github.com/microsoft/sqltoolsservice/issues/1271
-        public async Task Invalid_shared_variables_are_handled_correctly(string csharpVariableDeclaration, bool isCSharpError = false, bool expectInvalidOperationException = true)
+        [InlineData("string testVar = \"tricky\\\"string\";", false)] // string with ", bug https://github.com/microsoft/sqltoolsservice/issues/1271
+        public async Task Invalid_shared_variables_are_handled_correctly(
+            string csharpVariableDeclaration, 
+            bool expectInvalidOperationException = true)
         {
             var cluster = KqlFactAttribute.GetClusterForTests();
             using var kernel = await CreateKernel();
@@ -291,16 +292,7 @@ print testVar";
                 .Should()
                 .NotContainErrors();
 
-            var cSharpResult = await kernel.SendAsync(new SubmitCode(csharpVariableDeclaration));
-
-            var cSharpEvents = cSharpResult.KernelEvents.ToSubscribedList();
-            if (isCSharpError)
-            {
-                cSharpEvents
-                    .Should()
-                    .ContainSingle<CommandFailed>();
-            }
-
+            await kernel.SendAsync(new SubmitCode(csharpVariableDeclaration));
 
             var code = @"
 #!kql-KustoHelp
@@ -314,8 +306,8 @@ print testVar";
             var assertion = events
                 .Should()
                 .ContainSingle<CommandFailed>();
-            Type t = typeof(StreamJsonRpc.RemoteInvocationException);
-            if (!isCSharpError && expectInvalidOperationException)
+
+            if (expectInvalidOperationException)
             {
                 // Errors that occurred in the csharp block will result in this failing, but not with an inner exception
                 assertion

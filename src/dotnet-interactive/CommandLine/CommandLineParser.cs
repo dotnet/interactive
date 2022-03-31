@@ -588,15 +588,14 @@ public static class CommandLineParser
 
         compositeKernel.Add(
             fSharpKernel
-                // .UseDefaultFormatting()
-                // .UseNugetDirective()
-                // .UseKernelHelpers()
-                // .UseWho()
-                // .UseDefaultNamespaces()
-                // .UseMathAndLaTeX()
-                // .UseValueSharing(),
-           // , new[] { "f#", "F#" }
-            );
+                .UseDefaultFormatting()
+                .UseNugetDirective()
+                .UseKernelHelpers()
+                .UseWho()
+                .UseDefaultNamespaces()
+                .UseMathAndLaTeX()
+                .UseValueSharing(),
+            new[] { "f#", "F#" });
 
         compositeKernel.Add(
             new PowerShellKernel()

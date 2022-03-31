@@ -275,14 +275,16 @@ namespace Microsoft.DotNet.Interactive
 
                         value = jsonDoc.RootElement.ValueKind switch
                         {
+                            JsonValueKind.Object => jsonDoc,
+                            JsonValueKind.Array => jsonDoc,
+
                             JsonValueKind.Undefined => null,
-                            JsonValueKind.Object => null,
-                            JsonValueKind.Array => null,
-                            JsonValueKind.String => jsonDoc.Deserialize<string>(),
-                            JsonValueKind.Number => jsonDoc.Deserialize<float>(),
                             JsonValueKind.True => true,
                             JsonValueKind.False => false,
                             JsonValueKind.Null => null,
+                            JsonValueKind.String => jsonDoc.Deserialize<string>(),
+                            JsonValueKind.Number => jsonDoc.Deserialize<double>(),
+
                             _ => throw new ArgumentOutOfRangeException()
                         };
                     }

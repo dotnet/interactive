@@ -3,12 +3,11 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive.ValueSharing
-{
-    public interface ISupportGetValue
-    {
-        public bool TryGetValue<T>(string name, out T value);
+namespace Microsoft.DotNet.Interactive.ValueSharing;
 
-        public IReadOnlyCollection<KernelValueInfo> GetValueInfos();
-    }
+public interface ISupportGetValue
+{
+    public bool TryGetValue<T>(string name, out T value);
+
+    public IReadOnlyCollection<KernelValueInfo> GetValueInfos();
 }

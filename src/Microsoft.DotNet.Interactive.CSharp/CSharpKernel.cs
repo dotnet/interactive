@@ -122,9 +122,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
                        .ToArray() ??
             Array.Empty<KernelValueInfo>();
 
-        public override IKernelValueDeclarer GetValueDeclarer() => 
-            new CSharpValueDeclarer();
-
         public bool TryGetValue<T>(
             string name,
             out T value)

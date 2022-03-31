@@ -560,13 +560,11 @@ new [] {1,2,3}");
             compositeKernel.Add(childKernel);
 
             FirstSubmission.MyCommand commandPassedToHandler = null;
-            KernelInvocationContext contextPassedToHandler = null;
 
             childKernel.RegisterCommandHandler<FirstSubmission.MyCommand>(
                 (command, context) =>
                 {
                     commandPassedToHandler = command;
-                    contextPassedToHandler = context;
                     return Task.CompletedTask;
                 });
 
@@ -577,9 +575,6 @@ new [] {1,2,3}");
             commandPassedToHandler
                 .Should()
                 .BeSameAs(commandSentToCompositeKernel);
-            contextPassedToHandler
-                .Should()
-                .NotBeNull();
         }
 
         [Fact]

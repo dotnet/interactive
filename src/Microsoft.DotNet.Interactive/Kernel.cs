@@ -549,7 +549,7 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public virtual Task HandleAsync(
-            RequestKernelInfo command, 
+            RequestKernelInfo command,
             KernelInvocationContext context)
         {
             context.Publish(new KernelInfoProduced(KernelInfo, command));
@@ -581,15 +581,11 @@ namespace Microsoft.DotNet.Interactive
 
                         context.Publish(new ValueProduced(value, command.Name, formatted, command));
                     }
-
-                    return Task.CompletedTask;
                 }
-
-                throw new InvalidOperationException($"Cannot find value named: {Name}");
-            }
-            else
-            {
-                // FIX: (InvokeAsync) out of proc
+                else
+                {
+                    throw new InvalidOperationException($"Cannot find value named: {command.Name}");
+                }
             }
 
             return Task.CompletedTask;
@@ -765,7 +761,7 @@ namespace Microsoft.DotNet.Interactive
                         break;
 
                     case (RequestCompletions {LanguageNode: DirectiveNode} rq, _):
-                        rq.Handler = (__, ___) => HandleRequestCompletionsAsync(rq, context);
+                        rq.Handler = (_, _) => HandleRequestCompletionsAsync(rq, context);
                         break;
 
                     case (RequestCompletions requestCompletion, IKernelCommandHandler<RequestCompletions>
@@ -778,8 +774,7 @@ namespace Microsoft.DotNet.Interactive
                         SetHandler(requestDiagnostics, requestDiagnosticsHandler);
                         break;
 
-                    case (RequestHoverText hoverCommand, IKernelCommandHandler<RequestHoverText> requestHoverTextHandler
-                        ):
+                    case (RequestHoverText hoverCommand, IKernelCommandHandler<RequestHoverText> requestHoverTextHandler):
                         SetHandler(hoverCommand, requestHoverTextHandler);
                         break;
 
@@ -791,6 +786,11 @@ namespace Microsoft.DotNet.Interactive
                     case (RequestValue requestValue, IKernelCommandHandler<RequestValue>
                         requestValueHandler):
                         SetHandler(requestValue, requestValueHandler);
+                        break; 
+
+                    case (RequestValueInfos requestValueInfos, IKernelCommandHandler<RequestValueInfos>
+                        requestValueInfosHandler):
+                        SetHandler(requestValueInfos, requestValueInfosHandler);
                         break;
 
                     case (ChangeWorkingDirectory changeWorkingDirectory, IKernelCommandHandler<ChangeWorkingDirectory> changeWorkingDirectoryHandler):
