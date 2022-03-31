@@ -269,7 +269,7 @@ x")]
                         .Should()
                         .ContainSingle(v => v.Name == jsVariableName);
 
-            csharpKernel.TryGetValue<float>(jsVariableName, out var jsVariable)
+            csharpKernel.TryGetValue<double>(jsVariableName, out var jsVariable)
                         .Should().BeTrue();
 
             jsVariable.Should().Be(123);

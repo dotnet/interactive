@@ -276,10 +276,8 @@ print testVar";
         [InlineData("nint testVar = 123456;")] // Unsupported type
         [InlineData("nuint testVar = 123456;")] // Unsupported type
         [InlineData("var testVar = new List<int>();")] // Unsupported type
-        [InlineData("string testVar = \"tricky\\\"string\";", false)] // string with ", bug https://github.com/microsoft/sqltoolsservice/issues/1271
-        public async Task Invalid_shared_variables_are_handled_correctly(
-            string csharpVariableDeclaration, 
-            bool expectInvalidOperationException = true)
+        [InlineData("string testVar = \"tricky\\\"string\";")] // string with ", bug https://github.com/microsoft/sqltoolsservice/issues/1271
+        public async Task Invalid_shared_variables_are_handled_correctly(string csharpVariableDeclaration)
         {
             var cluster = KqlFactAttribute.GetClusterForTests();
             using var kernel = await CreateKernel();
@@ -303,19 +301,7 @@ print testVar";
 
             var events = result.KernelEvents.ToSubscribedList();
 
-            var assertion = events
-                .Should()
-                .ContainSingle<CommandFailed>();
-
-            if (expectInvalidOperationException)
-            {
-                // Errors that occurred in the csharp block will result in this failing, but not with an inner exception
-                assertion
-                    .Which
-                    .Exception
-                    .Should()
-                    .BeOfType<InvalidOperationException>();
-            }
+            events.Should().ContainSingle<CommandFailed>();
         }
 
         public void Dispose()
