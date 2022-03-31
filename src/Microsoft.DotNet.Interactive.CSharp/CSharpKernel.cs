@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             .GetMethod("HasReturnValue", BindingFlags.Instance | BindingFlags.NonPublic);
 
         protected CSharpParseOptions _csharpParseOptions =
-            new(CodeAnalysis.CSharp.LanguageVersion.Latest, kind: SourceCodeKind.Script);
+            new(LanguageVersion.Latest, kind: SourceCodeKind.Script);
 
         private InteractiveWorkspace _workspace;
 
@@ -121,6 +121,9 @@ namespace Microsoft.DotNet.Interactive.CSharp
                        .Distinct()
                        .ToArray() ??
             Array.Empty<KernelValueInfo>();
+
+        public override IKernelValueDeclarer GetValueDeclarer() => 
+            new CSharpValueDeclarer();
 
         public bool TryGetValue<T>(
             string name,
@@ -503,7 +506,5 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public IEnumerable<string> RestoreSources =>
             PackageRestoreContext.RestoreSources;
-
-        
     }
 }

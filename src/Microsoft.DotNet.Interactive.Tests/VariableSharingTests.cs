@@ -245,9 +245,11 @@ x")]
         {
             var (compositeKernel, jsKernel) = await CreateCompositeKernelWithJavaScriptProxyKernel();
 
+            var jsVariableName = "jsVariable";
+
             jsKernel.RegisterCommandHandler<RequestValue>((cmd, context) =>
             {
-                context.Publish(new ValueProduced(null, "jsVariable", new FormattedValue(JsonFormatter.MimeType, "[1, 2, 3]"), cmd));
+                context.Publish(new ValueProduced(null, jsVariableName, new FormattedValue(JsonFormatter.MimeType, "[1, 2, 3]"), cmd));
                 return Task.CompletedTask;
             });
 
@@ -256,27 +258,23 @@ x")]
             var events = result.KernelEvents.ToSubscribedList();
             events.Should().NotContainErrors();
 
-            var jsVariableName = "jsVariable";
-
             var submitCode = new SubmitCode($@"
 #!csharp
 #!share --from javascript {jsVariableName}");
             await compositeKernel.SendAsync(submitCode);
 
-            var csharpKernel = (CSharpKernel) compositeKernel.FindKernel("csharp");
+            var csharpKernel = (CSharpKernel)compositeKernel.FindKernel("csharp");
 
             csharpKernel.GetValueInfos()
                         .Should()
                         .ContainSingle(v => v.Name == jsVariableName);
 
-            csharpKernel.TryGetValue<int[]>(jsVariableName, out var jsVariable);
+            csharpKernel.TryGetValue<int[]>(jsVariableName, out var jsVariable)
+                        .Should().BeTrue();
 
             jsVariable.Should().BeEquivalentTo(
                 new[] { 1, 2, 3 },
                 c => c.WithStrictOrdering());
-
-            // TODO (CSharpKernel_can_share_variable_fro_JavaScript_ProxyKernel) write test
-            throw new NotImplementedException();
         }
 
         private async Task<(CompositeKernel, FakeKernel)> CreateCompositeKernelWithJavaScriptProxyKernel()

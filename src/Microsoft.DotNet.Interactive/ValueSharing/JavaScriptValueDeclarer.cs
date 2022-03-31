@@ -5,6 +5,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
 namespace Microsoft.DotNet.Interactive.ValueSharing
@@ -32,13 +33,18 @@ namespace Microsoft.DotNet.Interactive.ValueSharing
         }
 
         public bool TryGetValueDeclaration(
-            string valueName, 
-            object value, 
+            ValueProduced valueProduced,
             out KernelCommand command)
         {
-            var code = $"{valueName} = {JsonSerializer.Serialize(value, _serializerOptions)};";
-            command = new SubmitCode(code);
-            return true;
+            if (valueProduced.Value is { } value)
+            {
+                var code = $"{valueProduced.Name} = {JsonSerializer.Serialize(value, _serializerOptions)};";
+                command = new SubmitCode(code);
+                return true;
+            }
+
+            command = null;
+            return false;
         }
     }
 }

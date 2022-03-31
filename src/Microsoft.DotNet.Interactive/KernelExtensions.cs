@@ -159,7 +159,9 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
         
-        public static ProxyKernel UseValueSharing(this ProxyKernel kernel, IKernelValueDeclarer kernelValueDeclarer)
+        public static ProxyKernel UseValueSharing(
+            this ProxyKernel kernel, 
+            IKernelValueDeclarer kernelValueDeclarer)
         {
             if (kernelValueDeclarer is null)
             {
@@ -250,57 +252,43 @@ namespace Microsoft.DotNet.Interactive
 
             if (requestValueResult.KernelEvents.ToEnumerable().OfType<ValueProduced>().SingleOrDefault() is { } valueProduced)
             {
-
-            }
-
-            await ImportValue(fromKernel, toKernel, valueName);
-        }
-
-        internal static async Task ImportValue(
-            Kernel fromKernel, 
-            Kernel toKernel, 
-            string valueName)
-        {
-            if (fromKernel is ISupportGetValue fromInProcessKernel)
-            {
-                // FIX: (ImportValue) 
-
-                if (fromInProcessKernel.TryGetValue(valueName, out object value))
-                {
-                    await DeclareValue(toKernel, valueName, value, fromKernel.Name);
-                }
-            }
-            else
-            {
-                // FIX: (ImportValue) share some variables
-                var result = await fromKernel.SendAsync(new RequestValue(valueName));
-
-                var events = result.KernelEvents.ToEnumerable().ToArray();
+                await DeclareValue(
+                    toKernel,
+                    valueProduced,
+                    fromKernel.Name);
             }
         }
-
+        
         private static async Task DeclareValue(
             Kernel importingKernel,
-            string valueName,
-            object value,
+            ValueProduced valueProduced,
             string sourceKernelName)
         {
+            var valueName = valueProduced.Name;
+
             if (importingKernel is ISupportSetClrValue toInProcessKernel)
             {
-                try
+                if (valueProduced.Value is { } value)
                 {
-                    await toInProcessKernel.SetValueAsync(valueName, value);
+                    try
+                    {
+                        await toInProcessKernel.SetValueAsync(valueName, value);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new InvalidOperationException($"Error sharing value '{valueName}' from kernel '{sourceKernelName}' into kernel '{importingKernel.Name}'. {ex.Message}", ex);
+                    }
                 }
-                catch (Exception ex)
+                else
                 {
-                    throw new InvalidOperationException($"Error sharing value '{valueName}' from kernel '{sourceKernelName}' into kernel '{importingKernel.Name}'. {ex.Message}", ex);
+                    
                 }
             }
             else
             {
                 var declarer = importingKernel.GetValueDeclarer();
 
-                if (declarer.TryGetValueDeclaration(valueName, value, out KernelCommand command))
+                if (declarer.TryGetValueDeclaration(valueProduced, out KernelCommand command))
                 {
                     await importingKernel.SendAsync(command);
                 }

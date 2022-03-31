@@ -261,10 +261,6 @@ namespace Microsoft.DotNet.Interactive
         public void RegisterCommandHandler<TCommand>(Func<TCommand, KernelInvocationContext, Task> handler)
             where TCommand : KernelCommand
         {
-            if (this is IKernelCommandHandler<TCommand>)
-            {
-                throw new InvalidOperationException($"Command {typeof(TCommand)} is already directly implemented and registration of an alternative handler is not supported.");
-            }
             RegisterCommandType<TCommand>();
             _dynamicHandlers[typeof(TCommand)] = (command, context) => handler((TCommand)command, context);
         }
@@ -567,7 +563,7 @@ namespace Microsoft.DotNet.Interactive
         {
             if (this is ISupportGetValue supportsGetValue)
             {
-                if (supportsGetValue.TryGetValue(Name, out object value))
+                if (supportsGetValue.TryGetValue(command.Name, out object value))
                 {
                     if (value is { })
                     {
@@ -577,13 +573,13 @@ namespace Microsoft.DotNet.Interactive
                         using var writer = new StringWriter(CultureInfo.InvariantCulture);
                         formatter.Format(value, writer);
                         var formatted = new FormattedValue(command.MimeType, writer.ToString());
-                        context.Publish(new ValueProduced(value, Name, formatted, command));
+                        context.Publish(new ValueProduced(value, command.Name, formatted, command));
                     }
                     else
                     {
                         var formatted = new FormattedValue(command.MimeType, "null");
 
-                        context.Publish(new ValueProduced(value, Name, formatted, command));
+                        context.Publish(new ValueProduced(value, command.Name, formatted, command));
                     }
 
                     return Task.CompletedTask;
@@ -757,6 +753,11 @@ namespace Microsoft.DotNet.Interactive
         {
             if (command.Handler is null)
             {
+                if (TrySetDynamicHandler(command))
+                {
+                    return;
+                }
+
                 switch (command, this)
                 {
                     case (SubmitCode submitCode, IKernelCommandHandler<SubmitCode> submitCodeHandler):
@@ -799,19 +800,20 @@ namespace Microsoft.DotNet.Interactive
                     case (RequestKernelInfo requestKernelInfo, IKernelCommandHandler<RequestKernelInfo> requestKernelInfoHandler):
                         SetHandler(requestKernelInfo, requestKernelInfoHandler);
                         break;
-
-                    default:
-                        TrySetDynamicHandler(command);
-                        break;
                 }
             }
         }
 
-        private void TrySetDynamicHandler(KernelCommand command)
+        private bool TrySetDynamicHandler(KernelCommand command)
         {
             if (_dynamicHandlers.TryGetValue(command.GetType(), out var handler))
             {
                 command.Handler = handler;
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
 
