@@ -9,7 +9,6 @@
   "license": "MIT",
   "enabledApiProposals": [
     "notebookConcatTextDocument",
-    "notebookContentProvider",
     "notebookCellExecutionState",
     "notebookControllerKind",
     "notebookDebugOptions",
