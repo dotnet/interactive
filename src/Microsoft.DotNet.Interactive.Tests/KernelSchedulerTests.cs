@@ -138,7 +138,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             laterWorkWasExecuted.Should().BeFalse();
         }
 
-        [Fact]
+        [FactSkipLinux]
         public void cancelling_work_in_progress_prevents_subsequent_work_scheduled_before_cancellation_from_executing()
         {
             using var scheduler = new KernelScheduler<int, int>();
