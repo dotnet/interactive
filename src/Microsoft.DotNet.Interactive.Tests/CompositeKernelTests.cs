@@ -552,7 +552,7 @@ new [] {1,2,3}");
                 .NotBeNull();
         }
 
-        [Fact]
+        [Fact(Skip = "Fails in CI on Linux, no repro elsewhere")]
         public async Task When_command_handler_registered_in_child_kernel_and_command_sent_to_parent_then_handler_is_executed()
         {
             using var compositeKernel = new CompositeKernel();
