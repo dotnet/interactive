@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             KernelEvents.Should().NotContainErrors();
 
             KernelEvents.Should()
-                        .ContainSingle<StandardOutputValueProduced>(e => e.FormattedValues.Any(v => v.Value.Contains("hello!")));
+                        .ContainSingle<DisplayedValueProduced>(e => e.FormattedValues.Any(v => v.Value.Contains("hello!")));
         }
 
         [Theory]
