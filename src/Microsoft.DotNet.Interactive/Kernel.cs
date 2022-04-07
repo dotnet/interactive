@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly Subject<KernelEvent> _kernelEvents = new();
         private readonly CompositeDisposable _disposables;
-        private readonly Dictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
+        private readonly ConcurrentDictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
         private IKernelScheduler<KernelCommand, KernelCommandResult> _fastPathScheduler;
         private FrontendEnvironment _frontendEnvironment;
         private ChooseKernelDirective _chooseKernelDirective;
