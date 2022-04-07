@@ -1,6 +1,7 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#nullable enable
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -77,16 +78,15 @@ namespace Microsoft.DotNet.Interactive
         {
             foreach (var operation in _topLevelScheduledOperations.GetConsumingEnumerable(_schedulerDisposalSource.Token))
             {
-                ExecutionContext executionContext;
+                _currentTopLevelOperation.Value = operation;
+                ExecutionContext? executionContext = null;
 
-                if (_currentTopLevelOperation.Value is { } parentOperation)
+                _currentTopLevelOperation.Value = operation;
+                executionContext = operation.ExecutionContext;
+
+                if (executionContext is null)
                 {
-                    executionContext = parentOperation.ExecutionContext;
-                }
-                else
-                {
-                    _currentTopLevelOperation.Value = operation;
-                    executionContext = operation.ExecutionContext;
+                    executionContext = ExecutionContext.Capture();
                 }
 
                 _currentlyRunningOperation = operation;
@@ -253,7 +253,7 @@ namespace Microsoft.DotNet.Interactive
 
             public T Value { get; }
 
-            public ExecutionContext ExecutionContext { get; }
+            public ExecutionContext? ExecutionContext { get; set; }
 
             public string Scope { get; }
 

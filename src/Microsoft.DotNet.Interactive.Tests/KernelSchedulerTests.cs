@@ -500,9 +500,49 @@ namespace Microsoft.DotNet.Interactive.Tests
             });
 
             asyncIdsForDeferredWork.Should()
-                .HaveCount(3)
-                .And
-                .AllBeEquivalentTo(asyncIdForScheduledWork);
+                                   .HaveCount(3)
+                                   .And
+                                   .AllBeEquivalentTo(asyncIdForScheduledWork);
+        }
+        
+        [Fact]
+        public async Task AsyncContext_does_not_leak_between_scheduled_work_when_ExecutionContext_is_suppressed()
+        {
+            ExecutionContext.SuppressFlow();
+            
+            await AsyncContext_does_not_leak_between_scheduled_work();
+        }
+
+        [Fact]
+        public async Task work_can_be_scheduled_from_within_scheduled_work_when_ExecutionContext_is_suppressed()
+        {
+            ExecutionContext.SuppressFlow();
+            
+            await work_can_be_scheduled_from_within_scheduled_work();
+        }
+
+        [Fact]
+        public async Task concurrent_schedulers_do_not_interfere_with_one_another_when_ExecutionContext_is_suppressed()
+        {
+            ExecutionContext.SuppressFlow();
+            
+            await concurrent_schedulers_do_not_interfere_with_one_another();
+        }
+
+        [Fact]
+        public async Task AsyncContext_is_maintained_across_async_operations_within_scheduled_work_when_ExecutionContext_is_suppressed()
+        {
+            ExecutionContext.SuppressFlow();
+            
+            await AsyncContext_is_maintained_across_async_operations_within_scheduled_work();
+        }
+
+        [Fact]
+        public async Task AsyncContext_does_not_leak_from_inner_context_when_ExecutionContext_is_suppressed()
+        {
+            ExecutionContext.SuppressFlow();
+            
+            await AsyncContext_does_not_leak_from_inner_context();
         }
     }
 }
