@@ -1070,15 +1070,15 @@ open System
             {
                 Language.FSharp => @"
 open System
-Console.Write(1)
+1s.Display(""text/plain"")
 System.Threading.Thread.Sleep(1000)
-Console.Write(2)
+2s.Display(""text/plain"")
 5",
 
                 Language.CSharp => @"
-Console.Write(1);
+1.Display(""text/plain"");
 System.Threading.Thread.Sleep(1000);
-Console.Write(2);
+2.Display(""text/plain"");
 5",
             };
 
@@ -1086,7 +1086,7 @@ Console.Write(2);
 
             var events =
                 timeStampedEvents
-                    .Where(e => e.Value is StandardOutputValueProduced)
+                    .Where(e => e.Value is DisplayedValueProduced)
                     .ToArray();
 
             events.Should().HaveCount(2);
@@ -1095,7 +1095,7 @@ Console.Write(2);
 
             diff.Should().BeCloseTo(1.Seconds(), precision: 500);
             events
-                .Select(e => e.Value as StandardOutputValueProduced)
+                .Select(e => e.Value as DisplayedValueProduced)
                 .SelectMany(e => e.FormattedValues.Select(v => v.Value))
                 .Should()
                 .BeEquivalentTo(new[] { "1", "2" });

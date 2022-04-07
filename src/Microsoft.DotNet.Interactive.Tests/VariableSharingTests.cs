@@ -107,10 +107,10 @@ x")]
             
             await kernel.SubmitCodeAsync($"{from}\n{codeToWrite}");
 
-            var results = await kernel.SubmitCodeAsync($"#!pwsh\n{codeToRead}");
+            var results = await kernel.SubmitCodeAsync($"#!pwsh\n{codeToRead} | Out-Display -MimeType text/plain");
 
             results.KernelEvents.ToSubscribedList().Should()
-                  .ContainSingle<StandardOutputValueProduced>()
+                  .ContainSingle<DisplayedValueProduced>()
                   .Which
                   .FormattedValues
                   .Should()
@@ -193,10 +193,10 @@ x")]
 
             await kernel.SubmitCodeAsync($"{from}\n{codeToWrite}");
 
-            await kernel.SubmitCodeAsync($"#!pwsh\n{codeToRead}\n$x + 1");
+            await kernel.SubmitCodeAsync($"#!pwsh\n{codeToRead}\n$x + 1 | Out-Display -MimeType text/plain");
 
             events.Should()
-                  .ContainSingle<StandardOutputValueProduced>()
+                  .ContainSingle<DisplayedValueProduced>()
                   .Which
                   .FormattedValues
                   .Should()
