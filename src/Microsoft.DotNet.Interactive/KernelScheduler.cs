@@ -85,6 +85,7 @@ namespace Microsoft.DotNet.Interactive
 
                 if (executionContext is null)
                 {
+                    Log.Warning($"{nameof(operation.ExecutionContext)} was null for operation {operation}");
                     executionContext = ExecutionContext.Capture();
                 }
 
