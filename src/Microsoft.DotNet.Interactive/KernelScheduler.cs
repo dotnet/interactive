@@ -78,10 +78,9 @@ namespace Microsoft.DotNet.Interactive
             foreach (var operation in _topLevelScheduledOperations.GetConsumingEnumerable(_schedulerDisposalSource.Token))
             {
                 _currentTopLevelOperation.Value = operation;
-                ExecutionContext executionContext = null;
 
                 _currentTopLevelOperation.Value = operation;
-                executionContext = operation.ExecutionContext;
+                var executionContext = operation.ExecutionContext;
 
                 if (executionContext is null)
                 {

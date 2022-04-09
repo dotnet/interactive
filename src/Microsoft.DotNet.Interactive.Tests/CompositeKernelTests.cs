@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
@@ -553,7 +552,7 @@ new [] {1,2,3}");
                 .NotBeNull();
         }
 
-        [FactSkipLinux] // FIX: (When_command_handler_registered_in_child_kernel_and_command_sent_to_parent_then_handler_is_executed) why does this fail on Linux?
+        [Fact] 
         public async Task When_command_handler_registered_in_child_kernel_and_command_sent_to_parent_then_handler_is_executed()
         {
             using var compositeKernel = new CompositeKernel();

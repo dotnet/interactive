@@ -31,13 +31,13 @@ namespace Microsoft.DotNet.Interactive
         IKernelCommandHandler<RequestValueInfos>, 
         IDisposable
     {
-        private static readonly ConcurrentDictionary<Type, HashSet<Type>> _declaredHandledCommandTypesByKernelType = new();
+        private static readonly ConcurrentDictionary<Type, IReadOnlyCollection<Type>> _declaredHandledCommandTypesByKernelType = new();
         private readonly HashSet<Type> _supportedCommandTypes;
 
         private readonly Subject<KernelEvent> _kernelEvents = new();
         private readonly CompositeDisposable _disposables;
         private readonly ConcurrentDictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
-        private IKernelScheduler<KernelCommand, KernelCommandResult> _fastPathScheduler;
+        private ImmediateScheduler<KernelCommand, KernelCommandResult> _fastPathScheduler;
         private FrontendEnvironment _frontendEnvironment;
         private ChooseKernelDirective _chooseKernelDirective;
         private KernelScheduler<KernelCommand, KernelCommandResult> _commandScheduler;
@@ -68,9 +68,11 @@ namespace Microsoft.DotNet.Interactive
 
             Pipeline = new KernelCommandPipeline(this);
 
-            _supportedCommandTypes = _declaredHandledCommandTypesByKernelType.GetOrAdd(
-                GetType(),
-                InitializeSupportedCommandTypes);
+            _supportedCommandTypes = _declaredHandledCommandTypesByKernelType
+                                     .GetOrAdd(
+                                         GetType(),
+                                         InitializeSupportedCommandTypes)
+                                     .ToHashSet();
 
             var supportedKernelCommands = _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)).ToArray();
 
@@ -82,14 +84,12 @@ namespace Microsoft.DotNet.Interactive
                 SupportedDirectives = supportedDirectives,
             };
 
-            HashSet<Type> InitializeSupportedCommandTypes(Type kernelType)
+            IReadOnlyCollection<Type> InitializeSupportedCommandTypes(Type kernelType)
             {
-                var types = kernelType.GetInterfaces()
-                                      .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IKernelCommandHandler<>))
-                                      .SelectMany(i => i.GenericTypeArguments)
-                                      .ToArray();
-
-                return new HashSet<Type>(types);
+                return kernelType.GetInterfaces()
+                                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IKernelCommandHandler<>))
+                                 .SelectMany(i => i.GenericTypeArguments)
+                                 .ToArray();
             }
         }
 
@@ -444,21 +444,26 @@ namespace Microsoft.DotNet.Interactive
         private async Task<IKernelScheduler<KernelCommand, KernelCommandResult>> GetFastPathSchedulerAsync(
             KernelInvocationContext invocationContext)
         {
-            await _fastPathSchedulerLock.WaitAsync();
-            try
+            if (_fastPathScheduler is null)
             {
-                if (_fastPathScheduler is null)
+                // FIX: (GetFastPathSchedulerAsync) is this lock needed? maybe instantiate up front?
+                await _fastPathSchedulerLock.WaitAsync();
+                try
                 {
-                    await SendAsync(
-                        new AnonymousKernelCommand((_, _) => Task.CompletedTask, invocationContext.HandlingKernel.Name,
-                            invocationContext.Command), invocationContext.CancellationToken);
-                    _fastPathScheduler = new ImmediateScheduler<KernelCommand, KernelCommandResult>();
-
+                    if (_fastPathScheduler is null)
+                    {
+                        await SendAsync(
+                            new AnonymousKernelCommand((_, _) => Task.CompletedTask, invocationContext.HandlingKernel.Name,
+                                                       invocationContext.Command), invocationContext.CancellationToken);
+                        _fastPathScheduler = new ImmediateScheduler<KernelCommand, KernelCommandResult>();
+                    }
                 }
-            }
-            finally
-            {
-                _fastPathSchedulerLock.Release();
+                finally
+                {
+                    _fastPathSchedulerLock.Release();
+                }
+
+                return _fastPathScheduler;
             }
 
             return _fastPathScheduler;
