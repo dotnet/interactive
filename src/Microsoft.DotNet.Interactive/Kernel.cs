@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly Subject<KernelEvent> _kernelEvents = new();
         private readonly CompositeDisposable _disposables;
         private readonly ConcurrentDictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
-        private ImmediateScheduler<KernelCommand, KernelCommandResult> _fastPathScheduler;
+        private ImmediateScheduler<KernelCommand, KernelCommandResult> _fastPathScheduler = new();
         private FrontendEnvironment _frontendEnvironment;
         private ChooseKernelDirective _chooseKernelDirective;
         private KernelScheduler<KernelCommand, KernelCommandResult> _commandScheduler;
@@ -418,16 +418,27 @@ namespace Microsoft.DotNet.Interactive
             return context.ResultFor(command);
         }
 
-        internal SchedulingScope SchedulingScope =>
-            ParentKernel is null
-                ? SchedulingScope.Parse(Name)
-                : ParentKernel.SchedulingScope.Append($"{Name}");
+        internal SchedulingScope SchedulingScope
+        {
+            get
+            {
+                if (ParentKernel is null)
+                {
+                    return SchedulingScope.Parse(Name);
+                }
+                else
+                {
+                    return ParentKernel.SchedulingScope.Append($"{Name}");
+                }
+            }
+        }
 
         private async Task RunOnFastPath(KernelInvocationContext context,
             KernelCommand command, CancellationToken cancellationToken)
         {
-            var fastPathScheduler = await context.HandlingKernel.GetFastPathSchedulerAsync(context);
-            await fastPathScheduler.RunAsync(
+            await RunDeferredCommandsAsync(context);
+
+            await _fastPathScheduler.RunAsync(
                     command,
                     InvokePipelineAndCommandHandler,
                     command.SchedulingScope.ToString(),
@@ -441,33 +452,11 @@ namespace Microsoft.DotNet.Interactive
                 }, cancellationToken);
         }
 
-        private async Task<IKernelScheduler<KernelCommand, KernelCommandResult>> GetFastPathSchedulerAsync(
-            KernelInvocationContext invocationContext)
-        {
-            if (_fastPathScheduler is null)
-            {
-                // FIX: (GetFastPathSchedulerAsync) is this lock needed? maybe instantiate up front?
-                await _fastPathSchedulerLock.WaitAsync();
-                try
-                {
-                    if (_fastPathScheduler is null)
-                    {
-                        await SendAsync(
-                            new AnonymousKernelCommand((_, _) => Task.CompletedTask, invocationContext.HandlingKernel.Name,
-                                                       invocationContext.Command), invocationContext.CancellationToken);
-                        _fastPathScheduler = new ImmediateScheduler<KernelCommand, KernelCommandResult>();
-                    }
-                }
-                finally
-                {
-                    _fastPathSchedulerLock.Release();
-                }
-
-                return _fastPathScheduler;
-            }
-
-            return _fastPathScheduler;
-        }
+        private async Task RunDeferredCommandsAsync(KernelInvocationContext context) =>
+            await SendAsync(
+                new AnonymousKernelCommand((_, _) => Task.CompletedTask,
+                                           context.HandlingKernel.Name,
+                                           context.Command), context.CancellationToken);
 
         internal async Task<KernelCommandResult> InvokePipelineAndCommandHandler(KernelCommand command)
         {
@@ -514,17 +503,19 @@ namespace Microsoft.DotNet.Interactive
         {
             _commandScheduler = scheduler;
 
-            _commandScheduler.RegisterDeferredOperationSource(GetDeferredOperations, InvokePipelineAndCommandHandler);
+            _commandScheduler.RegisterDeferredOperationSource(
+                GetDeferredCommands, 
+                InvokePipelineAndCommandHandler);
         }
 
-        protected IReadOnlyList<KernelCommand> GetDeferredOperations(KernelCommand command, string scope)
+        private IReadOnlyList<KernelCommand> GetDeferredCommands(KernelCommand command, string scope)
         {
             if (!command.SchedulingScope.Contains(SchedulingScope))
             {
                 return Array.Empty<KernelCommand>();
             }
 
-            var splitCommands = new List<KernelCommand>();
+            var deferredCommands = new List<KernelCommand>();
 
             while (_deferredCommands.TryDequeue(out var kernelCommand))
             {
@@ -535,11 +526,11 @@ namespace Microsoft.DotNet.Interactive
 
                 if (TryPreprocessCommands(kernelCommand, currentInvocationContext, out var commands))
                 {
-                    splitCommands.AddRange(commands);
+                    deferredCommands.AddRange(commands);
                 }
             }
 
-            return splitCommands;
+            return deferredCommands;
         }
 
         public virtual Task HandleAsync(

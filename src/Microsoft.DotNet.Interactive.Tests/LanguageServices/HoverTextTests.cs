@@ -124,9 +124,11 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
             MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
             var commandResult = await SendHoverRequest(kernel, code, line, character);
 
-            commandResult
-                .KernelEvents
-                .ToSubscribedList()
+            var events = commandResult.KernelEvents.ToSubscribedList();
+
+            events.Should().NotContainErrors();
+
+            events
                 .Should()
                 .ContainSingle<HoverTextProduced>()
                 .Which

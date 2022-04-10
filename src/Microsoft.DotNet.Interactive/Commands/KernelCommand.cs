@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Interactive.Commands
         public Uri DestinationUri { get; set; }
 
         [JsonIgnore]
-        internal SchedulingScope SchedulingScope { get; set; } // FIX (SchedulingScope) can this be removed and we just use OriginUri?
+        internal SchedulingScope SchedulingScope { get; set; } 
 
         [JsonIgnore]
         internal bool? ShouldPublishCompletionEvent { get; set; }
