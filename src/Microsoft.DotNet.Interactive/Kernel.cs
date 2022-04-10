@@ -68,11 +68,11 @@ namespace Microsoft.DotNet.Interactive
 
             Pipeline = new KernelCommandPipeline(this);
 
-            _supportedCommandTypes = _declaredHandledCommandTypesByKernelType
-                                     .GetOrAdd(
-                                         GetType(),
-                                         InitializeSupportedCommandTypes)
-                                     .ToHashSet();
+            _supportedCommandTypes = new HashSet<Type>(
+                _declaredHandledCommandTypesByKernelType
+                    .GetOrAdd(
+                        GetType(),
+                        InitializeSupportedCommandTypes));
 
             var supportedKernelCommands = _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)).ToArray();
 
