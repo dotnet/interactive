@@ -126,7 +126,6 @@ Microsoft.DotNet.Interactive
     public System.Void Dispose()
     protected System.Boolean get_IsDisposed()
      KernelScheduler<Microsoft.DotNet.Interactive.Commands.KernelCommand,KernelCommandResult> get_Scheduler()
-    protected System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.KernelCommand> GetDeferredOperations(Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.String scope)
      System.Collections.Generic.IEnumerable<System.CommandLine.Parsing.Parser> GetDirectiveParsersForCompletion(Microsoft.DotNet.Interactive.Parsing.DirectiveNode directiveNode, System.Int32 requestPosition)
      Kernel GetHandlingKernel(Microsoft.DotNet.Interactive.Commands.KernelCommand command, KernelInvocationContext context)
     public Microsoft.DotNet.Interactive.ValueSharing.IKernelValueDeclarer GetValueDeclarer()
