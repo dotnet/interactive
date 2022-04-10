@@ -237,7 +237,13 @@ namespace Microsoft.DotNet.Interactive
                 throw new InvalidOperationException("Internal error - unable to locate the nuget package manager, please try to reinstall.");
             }
 
-            return _dependencyProvider.Resolve(iDependencyManager, ".csx", packageManagerTextLines, reportError, executionTfm);
+            return _dependencyProvider.Resolve(
+                iDependencyManager, 
+                ".csx", 
+                packageManagerTextLines, 
+                reportError, 
+                executionTfm, 
+                timeout: 60000);
         }
 
         public async Task<PackageRestoreResult> RestoreAsync()
