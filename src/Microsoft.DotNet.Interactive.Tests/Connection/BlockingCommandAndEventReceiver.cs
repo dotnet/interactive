@@ -12,7 +12,7 @@ using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive.Tests.Connection;
 
-public class BlockingCommandAndEventReceiver : KernelCommandAndEventReceiverBase
+public class BlockingCommandAndEventReceiver : KernelCommandAndEventReceiverBase, IDisposable
 {
     private readonly BlockingCollection<CommandOrEvent> _commandsOrEvents;
 
@@ -20,6 +20,11 @@ public class BlockingCommandAndEventReceiver : KernelCommandAndEventReceiverBase
     {
         HostUri = hostUri;
         _commandsOrEvents = new BlockingCollection<CommandOrEvent>();
+    }
+
+    public void Dispose()
+    {
+        _commandsOrEvents.Dispose();
     }
 
     public Uri HostUri { get; }

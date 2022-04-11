@@ -61,8 +61,10 @@ public static class ConnectHost
         var __ = remoteHost.ConnectAsync();
 
         localCompositeKernel.RegisterForDisposal(localHost);
+        localCompositeKernel.RegisterForDisposal(innerLocalReceiver);
         localCompositeKernel.RegisterForDisposal(localReceiver);
         remoteCompositeKernel.RegisterForDisposal(remoteHost);
+        remoteCompositeKernel.RegisterForDisposal(remoteInnerReceiver);
         remoteCompositeKernel.RegisterForDisposal(remoteReceiver);
     }
 }

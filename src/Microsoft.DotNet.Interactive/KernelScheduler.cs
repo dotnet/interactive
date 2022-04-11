@@ -13,6 +13,8 @@ namespace Microsoft.DotNet.Interactive
     public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TResult>
     {
         private static readonly Logger Log = new("KernelScheduler");
+
+        private readonly CompositeDisposable _disposables;
         private readonly List<DeferredOperationSource> _deferredOperationSources = new();
         private readonly CancellationTokenSource _schedulerDisposalSource = new();
         private readonly Task _runLoopTask;
@@ -27,6 +29,12 @@ namespace Microsoft.DotNet.Interactive
                 ScheduledOperationRunLoop,
                 TaskCreationOptions.LongRunning,
                 _schedulerDisposalSource.Token);
+
+            _disposables = new CompositeDisposable
+            {
+                _topLevelScheduledOperations,
+                () => { _schedulerDisposalSource.Cancel(); }
+            };
         }
 
         public void CancelCurrentOperation(Action<T> onCancellation = null)
@@ -208,7 +216,7 @@ namespace Microsoft.DotNet.Interactive
 
         public void Dispose()
         {
-            _schedulerDisposalSource.Cancel();
+            _disposables.Dispose();
         }
 
         private void ThrowIfDisposed()
