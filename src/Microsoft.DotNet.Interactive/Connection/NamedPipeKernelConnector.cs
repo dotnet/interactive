@@ -3,10 +3,12 @@
 
 using System;
 using System.IO.Pipes;
+using System.Reactive.Disposables;
 using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
+using CompositeDisposable = Pocket.CompositeDisposable;
 
 #nullable enable
 
@@ -17,6 +19,7 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
     private MultiplexingKernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventPipeStreamSender? _sender;
     private NamedPipeClientStream? _clientStream;
+    private RefCountDisposable _refCountDisposable = null;
 
     public NamedPipeKernelConnector(string pipeName)
     {
@@ -55,18 +58,26 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
 
             _receiver = new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventPipeStreamReceiver(_clientStream));
             _sender = new KernelCommandAndEventPipeStreamSender(
-                _clientStream, 
+                _clientStream,
                 RemoteHostUri);
+
+            _refCountDisposable = new RefCountDisposable(new CompositeDisposable
+            {
+                () => _clientStream.Dispose(),
+                () => _receiver.Dispose()
+            });
 
             proxyKernel = new ProxyKernel(localName, _receiver, _sender, new Uri(RemoteHostUri, localName));
         }
-        
+
+        proxyKernel.RegisterForDisposal(_refCountDisposable.GetDisposable());
+
         var destinationUri = new Uri(RemoteHostUri, localName);
 
         await _sender!.SendAsync(
-            new RequestKernelInfo(destinationUri: destinationUri), 
+            new RequestKernelInfo(destinationUri),
             CancellationToken.None);
-        
+
         proxyKernel.EnsureStarted();
 
         return proxyKernel;
@@ -74,7 +85,6 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
 
     public void Dispose()
     {
-        _receiver?.Dispose();
-        _clientStream?.Dispose();
+        _refCountDisposable?.Dispose();
     }
 }

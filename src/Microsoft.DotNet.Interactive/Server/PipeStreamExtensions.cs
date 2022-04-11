@@ -12,7 +12,9 @@ namespace Microsoft.DotNet.Interactive.Server
 {
     internal static class PipeStreamExtensions
     {
-        public static async Task<string> ReadMessageAsync(this PipeStream stream, CancellationToken cancellationToken = default)
+        public static async Task<string> ReadMessageAsync(
+            this PipeStream stream, 
+            CancellationToken cancellationToken)
         {
             var buffer = ArrayPool<byte>.Shared.Rent(4096);
             try
