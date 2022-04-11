@@ -94,7 +94,7 @@ while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested
                 .ContainSingle<CommandSucceeded>(c => c.Command == cancelCommand);
         }
 
-        [Fact]
+        [FactSkipWindows]
         public async Task when_cancelling_command_it_reports_what_command_was_cancelled()
         {
             // todo: this test is flaky and timeouts in CI

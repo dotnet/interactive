@@ -6,13 +6,13 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests.Utility;
 
-public sealed class FactSkipLinux : FactAttribute
+public sealed class FactSkipWindows : FactAttribute
 {
-    public FactSkipLinux()
+    public FactSkipWindows()
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            Skip = "Ignored on Linux";
+            Skip = "Ignored on Windows";
         }
     }
 }
