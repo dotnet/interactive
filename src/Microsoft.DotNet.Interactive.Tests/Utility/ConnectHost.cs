@@ -15,7 +15,7 @@ public static class ConnectHost
     {
         CompositeKernel remoteCompositeKernel = new();
 
-        localCompositeKernel.RegisterForDisposal(localCompositeKernel);
+        localCompositeKernel.RegisterForDisposal(remoteCompositeKernel);
 
         ConnectInProcessHost(
             localCompositeKernel,
