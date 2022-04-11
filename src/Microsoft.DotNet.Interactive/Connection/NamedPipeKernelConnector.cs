@@ -19,7 +19,7 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
     private MultiplexingKernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventPipeStreamSender? _sender;
     private NamedPipeClientStream? _clientStream;
-    private RefCountDisposable _refCountDisposable = null;
+    private RefCountDisposable? _refCountDisposable = null;
 
     public NamedPipeKernelConnector(string pipeName)
     {
@@ -35,15 +35,7 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
     {
         ProxyKernel? proxyKernel;
 
-        if (_receiver is not null)
-        {
-            proxyKernel = new ProxyKernel(
-                localName,
-                _receiver.CreateChildReceiver(),
-                _sender,
-                new Uri(RemoteHostUri, localName));
-        }
-        else
+        if (_receiver is null)
         {
             _clientStream = new NamedPipeClientStream(
                 ".",
@@ -69,8 +61,16 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
 
             proxyKernel = new ProxyKernel(localName, _receiver, _sender, new Uri(RemoteHostUri, localName));
         }
+        else
+        {
+            proxyKernel = new ProxyKernel(
+                localName,
+                _receiver.CreateChildReceiver(),
+                _sender,
+                new Uri(RemoteHostUri, localName));
+        }
 
-        proxyKernel.RegisterForDisposal(_refCountDisposable.GetDisposable());
+        proxyKernel.RegisterForDisposal(_refCountDisposable!.GetDisposable());
 
         var destinationUri = new Uri(RemoteHostUri, localName);
 
