@@ -492,7 +492,9 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (_commandScheduler is null)
                 {
-                    SetScheduler(new KernelScheduler<KernelCommand, KernelCommandResult>());
+                    var scheduler = new KernelScheduler<KernelCommand, KernelCommandResult>();
+                    RegisterForDisposal(scheduler);
+                    SetScheduler(scheduler);
                 }
 
                 return _commandScheduler;
