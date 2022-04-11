@@ -44,4 +44,8 @@ export class ChildProcessLineAdapter implements LineAdapter {
     writeLine(line: string) {
         this._cp.stdin.write(line + '\n');
     }
+
+    dispose() {
+        this._cp.kill();
+    }
 }

@@ -15,7 +15,7 @@ export interface ClientMapperConfiguration {
 
 export class ClientMapper {
     private clientMap: Map<string, Promise<InteractiveClient>> = new Map();
-    private clientCreationCallbackMap: Map<string, (client: InteractiveClient) => Promise<void>> = new Map();
+    private clientCreationCallbacks: ((uri: Uri, client: InteractiveClient) => void)[] = [];
 
     constructor(readonly config: ClientMapperConfiguration) {
     }
@@ -61,9 +61,8 @@ export class ClientMapper {
                     const client = new InteractiveClient(config);
                     this.config.configureKernel(client.kernel, uri);
 
-                    let onCreate = this.clientCreationCallbackMap.get(key);
-                    if (onCreate) {
-                        await onCreate(client);
+                    for (const callback of this.clientCreationCallbacks) {
+                        callback(uri, client);
                     }
 
                     resolve(client);
@@ -77,9 +76,8 @@ export class ClientMapper {
         return clientPromise;
     }
 
-    onClientCreate(uri: Uri, callBack: (client: InteractiveClient) => Promise<void>) {
-        let key = ClientMapper.keyFromUri(uri);
-        this.clientCreationCallbackMap.set(key, callBack);
+    onClientCreate(callBack: (uri: Uri, client: InteractiveClient) => void) {
+        this.clientCreationCallbacks.push(callBack);
     }
 
     reassociateClient(oldUri: Uri, newUri: Uri) {
