@@ -19,7 +19,6 @@ namespace Microsoft.DotNet.Interactive.Connection
         IKernelCommandAndEventReceiver, 
         IDisposable
     {
-        private static readonly Logger<MultiplexingKernelCommandAndEventReceiver> _log = new();
         private readonly IKernelCommandAndEventReceiver _source;
         private readonly CompositeDisposable _disposables = new();
         private ImmutableList<MultiplexedKernelCommandAndEventReceiver> _children = ImmutableList<MultiplexedKernelCommandAndEventReceiver>.Empty;

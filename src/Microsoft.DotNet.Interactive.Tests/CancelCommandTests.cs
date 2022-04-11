@@ -131,9 +131,7 @@ while(!cancellationToken.IsCancellationRequested){
                 catch (TimeoutException)
                 {
                 }
-
             }
-
         }
 
         [Fact]
