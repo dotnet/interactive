@@ -15,7 +15,8 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
-public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
+// FIX: (NamedPipeConnectionTests) temporarily hiding these tests
+internal class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
 {
     private readonly string _pipeName = Guid.NewGuid().ToString();
     private Uri _remoteHostUri;
