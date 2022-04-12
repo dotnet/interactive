@@ -53,6 +53,12 @@
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.App.Tests.HttpApiTests</FixtureName>
       </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.App.Tests.StdioConnectionTests</FixtureName>
+      </FixtureTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.App.Tests.CommandLine.CommandLineParserTests.stdio_mode_honors_log_path</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

@@ -51,19 +51,10 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
             budget = budget ?? new Budget();
 
             var dotnet = new Dotnet(directory);
-
-            // lock sdk to 6.0.200, aka. net6.0
-            var result = await dotnet.New("globaljson", "--sdk-version 6.0.100");
-            result.ThrowOnFailure($"Error creating global.json in {directory.FullName}");
-            var gbFile = directory.GetFiles("global.json").Single();
-            var gj = JObject.Parse(File.ReadAllText(gbFile.FullName));
-
-            gj["sdk"]["rollForward"] = "latestMinor";
-            File.WriteAllText(gbFile.FullName, gj.ToString(Newtonsoft.Json.Formatting.Indented));
-
-            result = await dotnet
-                             .New(Template,
-                                  args: $"--name \"{ProjectName}\" --language \"{Language}\" --output \"{directory.FullName}\"");
+            
+            var result = await dotnet
+                         .New(Template,
+                              args: $"--name \"{ProjectName}\" --language \"{Language}\" --output \"{directory.FullName}\"");
             result.ThrowOnFailure($"Error initializing in {directory.FullName}");
 
             if (afterCreate != null)

@@ -5,15 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Buildalyzer;
-using Buildalyzer.Workspaces;
-using Clockwise;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.DotNet.Interactive.Utility;
-using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
 {
