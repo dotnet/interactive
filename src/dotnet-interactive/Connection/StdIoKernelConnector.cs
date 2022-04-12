@@ -7,12 +7,14 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Utility;
+using CompositeDisposable = Pocket.CompositeDisposable;
 
 namespace Microsoft.DotNet.Interactive.App.Connection;
 
@@ -22,6 +24,7 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
     private KernelCommandAndEventTextStreamSender? _sender;
     private Process? _process;
     private Uri? _remoteHostUri;
+    private RefCountDisposable? _refCountDisposable = null;
 
     public StdIoKernelConnector(string[] command, DirectoryInfo? workingDirectory = null)
     {
@@ -35,19 +38,9 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
 
     public async Task<Kernel> CreateKernelAsync(string kernelName)
     {
-        if (_receiver is not null)
-        {
-            var kernel = new ProxyKernel(
-                kernelName, 
-                _receiver.CreateChildReceiver(), 
-                _sender,
-                new Uri(_remoteHostUri!, kernelName));
-            
-            kernel.EnsureStarted();
-            
-            return kernel;
-        }
-        else
+        ProxyKernel? proxyKernel;
+
+        if (_receiver is null)
         {
             var command = Command[0];
             var arguments = string.Join(" ", Command.Skip(1));
@@ -78,11 +71,19 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
                 _process.StandardInput,
                 _remoteHostUri);
 
-            var proxyKernel = new ProxyKernel(kernelName, _receiver, _sender, new Uri(_remoteHostUri, kernelName));
+            _refCountDisposable = new RefCountDisposable(new CompositeDisposable
+            {
+                KillRemoteKernelProcess,
+                () => _receiver.Dispose()
+            });
+
+            proxyKernel = new ProxyKernel(
+                kernelName,
+                _receiver,
+                _sender,
+                new Uri(_remoteHostUri, kernelName));
 
             var r = _receiver.CreateChildReceiver();
-
-            proxyKernel.EnsureStarted();
 
             var checkReady = Task.Run(async () =>
             {
@@ -105,25 +106,38 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
                     {
                         if (_process.ExitCode != 0)
                         {
+                            var stdErrString = stdErr.ToString()
+                                                     .Split(new[] { '\r', '\n' },
+                                                            StringSplitOptions.RemoveEmptyEntries);
+
                             throw new CommandLineInvocationException(
                                 new CommandLineResult(_process.ExitCode,
-                                    error: stdErr.ToString().Split(new[] { '\r', '\n' },
-                                        StringSplitOptions.RemoveEmptyEntries)));
+                                                      error: stdErrString));
                         }
                     }
                 }
             });
 
             await Task.WhenAny(checkProcessError, checkReady);
-
-            return proxyKernel;
         }
+        else
+        {
+            proxyKernel = new ProxyKernel(
+                kernelName,
+                _receiver.CreateChildReceiver(),
+                _sender,
+                new Uri(_remoteHostUri!, kernelName));
+        }
+
+        proxyKernel.RegisterForDisposal(_refCountDisposable!.GetDisposable());
+
+        proxyKernel.EnsureStarted();
+
+        return proxyKernel;
     }
 
-    public void Dispose()
+    private void KillRemoteKernelProcess()
     {
-        _receiver?.Dispose();
-
         if (_process is { HasExited: false })
         {
             // todo: ensure killing process tree
@@ -132,4 +146,6 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
             _process = null;
         }
     }
+
+    public void Dispose() => _refCountDisposable?.Dispose();
 }

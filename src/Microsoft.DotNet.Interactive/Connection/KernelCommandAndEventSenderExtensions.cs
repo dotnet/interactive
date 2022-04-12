@@ -9,12 +9,6 @@ namespace Microsoft.DotNet.Interactive.Connection
 {
     public static class KernelCommandAndEventSenderExtensions
     {
-        public static void NotifyIsReady(this IKernelCommandAndEventSender sender)
-        {
-            sender.NotifyIsReadyAsync( CancellationToken.None)
-                .Wait();
-        }
-
         public static Task NotifyIsReadyAsync(this IKernelCommandAndEventSender sender, CancellationToken cancellationToken)
         {
             return sender.SendAsync(new KernelReady(), cancellationToken);

@@ -35,13 +35,15 @@ public class KqlKernelConnector : IKernelConnector
 
         var connectionDetails = await BuildConnectionDetailsAsync();
 
-        var sqlClient = new ToolsServiceClient(PathToService);
+        var client = new ToolsServiceClient(PathToService);
 
         var kernel = new MsKqlKernel(
                 $"kql-{kernelName}",
                 connectionDetails,
-                sqlClient)
+                client)
             .UseValueSharing();
+
+        kernel.RegisterForDisposal(client);
 
         await kernel.ConnectAsync();
 

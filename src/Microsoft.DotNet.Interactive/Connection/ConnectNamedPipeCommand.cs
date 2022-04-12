@@ -31,9 +31,9 @@ namespace Microsoft.DotNet.Interactive.Connection
 
             var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
 
-            var connectKernelAsync = await connector.CreateKernelAsync(localName);
+            var proxyKernel = await connector.CreateKernelAsync(localName);
 
-            return connectKernelAsync;
+            return proxyKernel;
         }
     }
 }

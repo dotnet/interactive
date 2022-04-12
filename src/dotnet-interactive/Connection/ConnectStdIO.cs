@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.Interactive.App.Connection
             var workingDir = commandLineContext.ParseResult.GetValueForOption(WorkingDirectoryOption);
             
             var connector = new StdIoKernelConnector(command, workingDir);
-
+            
             var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
 
             return connector.CreateKernelAsync(localName);

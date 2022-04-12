@@ -28,15 +28,15 @@ public class MsSqlKernelConnector : IKernelConnector
             throw new InvalidOperationException($"{nameof(PathToService)} cannot be null or whitespace.");
         }
 
-        var sqlClient = new ToolsServiceClient(PathToService, $"--parent-pid {Environment.ProcessId}");
+        var client = new ToolsServiceClient(PathToService, $"--parent-pid {Environment.ProcessId}");
 
         var kernel = new MsSqlKernel(
                 $"sql-{kernelName}",
                 ConnectionString,
-                sqlClient)
+                client)
             .UseValueSharing();
 
-        kernel.RegisterForDisposal(sqlClient);
+        kernel.RegisterForDisposal(client);
 
         await kernel.ConnectAsync();
 

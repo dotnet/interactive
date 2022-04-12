@@ -15,11 +15,9 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
-// FIX: (NamedPipeConnectionTests) temporarily hiding these tests
-internal class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
+public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
 {
     private readonly string _pipeName = Guid.NewGuid().ToString();
-    private Uri _remoteHostUri;
 
     public NamedPipeConnectionTests(ITestOutputHelper output) : base(output)
     {
@@ -30,8 +28,8 @@ internal class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
         await CreateRemoteKernelTopologyAsync(_pipeName);
 
         var connector = new NamedPipeKernelConnector(_pipeName);
-
-        _remoteHostUri = connector.RemoteHostUri;
+        
+        RegisterForDisposal(connector);
 
         return connector;
     }
@@ -66,14 +64,12 @@ internal class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
             PipeTransmissionMode.Message,
             PipeOptions.Asynchronous);
 
-        var kernelCommandAndEventPipeStreamReceiver = new KernelCommandAndEventPipeStreamReceiver(serverStream);
-
         var sender = new KernelCommandAndEventPipeStreamSender(
             serverStream,
             new Uri("kernel://remote"));
 
         var receiver = new MultiplexingKernelCommandAndEventReceiver
-(kernelCommandAndEventPipeStreamReceiver);
+(new KernelCommandAndEventPipeStreamReceiver(serverStream));
 
         var host = remoteCompositeKernel.UseHost(sender, receiver, new Uri("kernel://local"));
 
@@ -85,6 +81,7 @@ internal class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
         });
 
         RegisterForDisposal(host);
+        RegisterForDisposal(receiver);
         RegisterForDisposal(serverStream);
 
         return Task.FromResult<IDisposable>(host);

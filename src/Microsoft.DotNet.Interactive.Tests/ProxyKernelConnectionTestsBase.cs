@@ -40,14 +40,8 @@ public abstract class ProxyKernelConnectionTestsBase : IDisposable
     public async Task it_can_reuse_connection_for_multiple_proxy_kernels()
     {
         var connector = await CreateConnectorAsync();
-
-        if (connector is IDisposable disposableConnector)
-        {
-            _disposables.Add(disposableConnector);
-        }
-
+        
         // use same connection to create 2 proxy kernel
-
         using var proxyKernel1 = await connector.CreateKernelAsync("kernel1");
         proxyKernel1.KernelInfo.SupportedKernelCommands.Add(new(nameof(SubmitCode)));
 
@@ -106,7 +100,7 @@ public abstract class ProxyKernelConnectionTestsBase : IDisposable
         localCompositeKernel.DefaultKernelName = "fsharp";
 
         await CreateConnectorAsync();
-
+        
         AddKernelConnector(localCompositeKernel);
 
         var localKernelName = "newKernelName";

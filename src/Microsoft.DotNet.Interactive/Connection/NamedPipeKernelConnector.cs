@@ -87,8 +87,5 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
         return proxyKernel;
     }
 
-    public void Dispose()
-    {
-        _refCountDisposable?.Dispose();
-    }
+    public void Dispose() => _refCountDisposable?.Dispose();
 }
