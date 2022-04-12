@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Clockwise;
 using FluentAssertions;
 using FluentAssertions.Extensions;
-using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.Reactive.Testing;
 using Pocket;
 using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
