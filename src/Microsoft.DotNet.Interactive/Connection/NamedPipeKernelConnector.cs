@@ -59,7 +59,11 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
                 () => _receiver.Dispose()
             });
 
-            proxyKernel = new ProxyKernel(localName, _receiver, _sender, new Uri(RemoteHostUri, localName));
+            proxyKernel = new ProxyKernel(
+                localName, 
+                _receiver, 
+                _sender, 
+                new Uri(RemoteHostUri, localName));
         }
         else
         {

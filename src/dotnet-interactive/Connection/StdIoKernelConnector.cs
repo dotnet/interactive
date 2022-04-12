@@ -124,7 +124,7 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
     {
         _receiver?.Dispose();
 
-        if (_process is not null && _process.HasExited == false)
+        if (_process is { HasExited: false })
         {
             // todo: ensure killing process tree
             _process?.Kill(true);

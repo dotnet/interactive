@@ -71,7 +71,6 @@ public class BlockingCommandAndEventReceiver : KernelCommandAndEventReceiverBase
 
     private class Sender : IKernelCommandAndEventSender
     {
-        public Uri RemoteHostUri { get; }
         private readonly BlockingCommandAndEventReceiver _receiver;
 
         public Sender(BlockingCommandAndEventReceiver receiver, Uri remoteHostUri)
@@ -79,6 +78,8 @@ public class BlockingCommandAndEventReceiver : KernelCommandAndEventReceiverBase
             RemoteHostUri = remoteHostUri;
             _receiver = receiver;
         }
+
+        public Uri RemoteHostUri { get; }
 
         public Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
         {
