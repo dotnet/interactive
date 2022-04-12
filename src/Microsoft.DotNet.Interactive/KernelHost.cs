@@ -102,7 +102,9 @@ namespace Microsoft.DotNet.Interactive
                 TaskCreationOptions.LongRunning,
                 TaskScheduler.Default);
 
-            await _defaultSender.NotifyIsReadyAsync(_cancellationTokenSource.Token);
+            await _defaultSender.SendAsync(
+                new KernelReady(), 
+                _cancellationTokenSource.Token);
 
             async Task ReceiverLoop()
             {

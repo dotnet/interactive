@@ -472,9 +472,6 @@ Microsoft.DotNet.Interactive.Connection
   public abstract class KernelCommandAndEventReceiverBase, IKernelCommandAndEventReceiver
     public System.Collections.Generic.IAsyncEnumerable<CommandOrEvent> CommandsAndEventsAsync(System.Threading.CancellationToken cancellationToken)
     protected System.Threading.Tasks.Task<CommandOrEvent> ReadCommandOrEventAsync(System.Threading.CancellationToken cancellationToken)
-  public static class KernelCommandAndEventSenderExtensions
-    public static System.Void NotifyIsReady()
-    public static System.Threading.Tasks.Task NotifyIsReadyAsync(System.Threading.CancellationToken cancellationToken)
   public class KernelCommandAndEventTextReaderReceiver : KernelCommandAndEventDeserializingReceiverBase, IKernelCommandAndEventReceiver
     .ctor(System.IO.TextReader reader)
     protected System.Threading.Tasks.Task<System.String> ReadMessageAsync(System.Threading.CancellationToken cancellationToken)
