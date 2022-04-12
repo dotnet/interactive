@@ -21,7 +21,8 @@ namespace Microsoft.DotNet.Interactive.Connection
         protected override Task<string> ReadMessageAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return _reader.ReadLineAsync();
+            var message = _reader.ReadLineAsync();
+            return message;
         }
     }
 }

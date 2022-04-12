@@ -19,7 +19,7 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
 
-internal class StdioConnectionTests : ProxyKernelConnectionTestsBase
+public class StdioConnectionTests : ProxyKernelConnectionTestsBase
 {
     private readonly StdioConnectionTestConfiguration _configuration;
 
@@ -64,7 +64,7 @@ internal class StdioConnectionTests : ProxyKernelConnectionTestsBase
         };
     }
 
-  //  [Fact(Skip = "Investigating test hang")] // FIX: (stdio_server_encoding_is_utf_8) 
+    [Fact] 
     public async Task stdio_server_encoding_is_utf_8()
     {
         using var localCompositeKernel = new CompositeKernel

@@ -64,6 +64,7 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
                 _receiver, 
                 _sender, 
                 new Uri(RemoteHostUri, localName));
+            proxyKernel.RegisterForDisposal(_refCountDisposable);
         }
         else
         {
@@ -72,9 +73,9 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
                 _receiver.CreateChildReceiver(),
                 _sender,
                 new Uri(RemoteHostUri, localName));
-        }
 
-        proxyKernel.RegisterForDisposal(_refCountDisposable!.GetDisposable());
+            proxyKernel.RegisterForDisposal(_refCountDisposable!.GetDisposable());
+        }
 
         var destinationUri = new Uri(RemoteHostUri, localName);
 

@@ -45,20 +45,27 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
             var command = Command[0];
             var arguments = string.Join(" ", Command.Skip(1));
 
-            var psi = new ProcessStartInfo
+            _process = new Process
             {
-                FileName = command,
-                Arguments = arguments,
-                WorkingDirectory = WorkingDirectory.FullName,
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                StandardOutputEncoding = Encoding.UTF8
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = command,
+                    Arguments = arguments,
+                    WorkingDirectory = WorkingDirectory.FullName,
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    StandardOutputEncoding = Encoding.UTF8
+                },
+                EnableRaisingEvents = true
             };
-            _process = new Process { StartInfo = psi };
-            _process.EnableRaisingEvents = true;
+
             var stdErr = new StringBuilder();
-            _process.ErrorDataReceived += (o, args) => { stdErr.Append(args.Data); };
+            _process.ErrorDataReceived += (_, args) =>
+            {
+                stdErr.Append(args.Data);
+            };
+
             await Task.Yield();
 
             _process.Start();
@@ -82,12 +89,12 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
                 _receiver,
                 _sender,
                 new Uri(_remoteHostUri, kernelName));
-
-            var r = _receiver.CreateChildReceiver();
+            
+            proxyKernel.RegisterForDisposal(_refCountDisposable);
 
             var checkReady = Task.Run(async () =>
             {
-                await foreach (var commandOrEvent in r.CommandsAndEventsAsync(CancellationToken.None))
+                await foreach (var commandOrEvent in _receiver.CommandsAndEventsAsync(CancellationToken.None))
                 {
                     if (commandOrEvent.Event is KernelReady)
                     {
@@ -118,7 +125,11 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
                 }
             });
 
-            await Task.WhenAny(checkProcessError, checkReady);
+            if (await Task.WhenAny(checkProcessError, checkReady) == checkProcessError &&
+                checkProcessError.Exception is { } ex)
+            {
+                throw ex;
+            }
         }
         else
         {
@@ -127,9 +138,9 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
                 _receiver.CreateChildReceiver(),
                 _sender,
                 new Uri(_remoteHostUri!, kernelName));
-        }
 
-        proxyKernel.RegisterForDisposal(_refCountDisposable!.GetDisposable());
+            proxyKernel.RegisterForDisposal(_refCountDisposable!.GetDisposable());
+        }
 
         proxyKernel.EnsureStarted();
 

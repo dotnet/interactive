@@ -8,8 +8,6 @@ using System.Linq;
 using System.Reactive.Concurrency;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using Clockwise;
-using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Recipes;
 using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
