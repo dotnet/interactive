@@ -5,10 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
 using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
-using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Buffer;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.MLS.Project
+namespace Microsoft.DotNet.Interactive.CSharpProject
 {
     public class CodeMergeTransformer : IWorkspaceTransformer
     {
@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.MLS.Project
                 throw new ArgumentNullException(nameof(source));
             }
 
-            var files = (source.Files ?? Array.Empty<File>())
+            var files = (source.Files ?? Array.Empty<ProjectFileContent>())
                 .GroupBy(file => file.Name)
                 .Select(fileGroup => MergeFiles(fileGroup.Key, fileGroup));
 
@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.MLS.Project
             return Task.FromResult(workspace);
         }
 
-        private File MergeFiles(string fileName, IEnumerable<File> files)
+        private ProjectFileContent MergeFiles(string fileName, IEnumerable<ProjectFileContent> files)
         {
             var content = string.Empty;
             var order = 0;
@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.MLS.Project
             }
             content = content.Substring(0, content.Length - Padding.Length);
 
-            return new File(fileName, content, order: order);
+            return new(fileName, content, order: order);
         }
 
         private IEnumerable<Buffer> MergeBuffers(BufferId id, IEnumerable<Buffer> buffers)

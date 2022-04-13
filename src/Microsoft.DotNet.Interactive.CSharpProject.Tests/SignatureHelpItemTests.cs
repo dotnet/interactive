@@ -15,23 +15,30 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
 @"{
   ""name"": ""Write"",
   ""label"": ""void Console.Write(bool value)"",
-  ""documentation"": ""Writes the text representation of the specified Boolean value to the standard output stream."",
+  ""documentation"": {
+    ""value"": ""Writes the text representation of the specified Boolean value to the standard output stream."",
+    ""mimeType"": ""text/markdown""
+  },
   ""parameters"": [
     {
-      ""name"": ""value"",
       ""label"": ""bool value"",
-      ""documentation"": ""**value**: The value to write.""
+      ""documentation"": {
+        ""value"": ""**value**: The value to write."",
+        ""mimeType"": ""text/markdown""
+      }
     }
   ]
 }")]
         public void CanDeserializeFromJson(string source)
         {
-            var si = JsonConvert.DeserializeObject<SignatureHelpItem>(source);
+            var si = JsonConvert.DeserializeObject<SignatureInformation>(source);
             si.Documentation.Should().NotBeNull();
-            si.Documentation.Should().Be("Writes the text representation of the specified Boolean value to the standard output stream.");
+            si.Documentation.Value.Should().Be("Writes the text representation of the specified Boolean value to the standard output stream.");
+            si.Documentation.MimeType.Should().Be("text/markdown");
 
             si.Parameters.Should().NotBeNullOrEmpty();
-            si.Parameters.First().Documentation.Should().Be("**value**: The value to write.");
+            si.Parameters.First().Documentation.Value.Should().Be("**value**: The value to write.");
+            si.Parameters.First().Documentation.MimeType.Should().Be("text/markdown");
         }
     }
 }

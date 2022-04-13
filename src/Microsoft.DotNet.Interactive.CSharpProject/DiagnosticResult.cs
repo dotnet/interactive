@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Protocol
+namespace Microsoft.DotNet.Interactive.CSharpProject
 {
     public class DiagnosticResult
     {

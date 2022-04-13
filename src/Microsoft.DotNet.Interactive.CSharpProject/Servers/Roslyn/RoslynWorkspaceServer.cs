@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
             var solution = project.Solution;
 
             // get most up-to-date document
-            var file = workspace.GetFileFromBufferId(request.ActiveBufferId);
+            var file = workspace.GetContentFromBufferId(request.ActiveBufferId);
             var selectedDocumentId = documents.First(doc => doc.IsMatch(file)).Id;
             var selectedDocument = solution.GetDocument(selectedDocumentId);
 

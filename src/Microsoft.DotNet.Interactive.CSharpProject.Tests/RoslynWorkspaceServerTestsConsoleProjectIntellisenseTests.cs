@@ -261,7 +261,7 @@ namespace FibonacciTest
                     new Buffer("generators/FibonacciGenerator.cs@codeRegion", processed, position)
                 }, files: new[]
                 {
-                    new File("generators/FibonacciGenerator.cs", generator.EnforceLF())
+                    new ProjectFileContent("generators/FibonacciGenerator.cs", generator.EnforceLF())
                 });
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs@codeRegion");
@@ -331,7 +331,7 @@ namespace FibonacciTest
                     new Buffer("generators/FibonacciGenerator.cs@codeRegion", processed, position)
                 }, files: new[]
                 {
-                    new File("generators/FibonacciGenerator.cs", generator)
+                    new ProjectFileContent("generators/FibonacciGenerator.cs", generator)
                 });
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs@codeRegion");
@@ -381,7 +381,7 @@ namespace FibonacciTest
                     new Buffer("Program.cs", program),
                     new Buffer("generators/FibonacciGenerator.cs@codeRegion", processed, position)
                 }, files: new[] {
-                    new File("generators/FibonacciGenerator.cs", generator)
+                    new ProjectFileContent("generators/FibonacciGenerator.cs", generator)
                 });
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs@codeRegion");
@@ -568,7 +568,7 @@ namespace FibonacciTest
                     new Buffer("generators/FibonacciGenerator.cs@codeRegion", processed, position)
                 }, files: new[]
                 {
-                    new File("generators/FibonacciGenerator.cs", generator),
+                    new ProjectFileContent("generators/FibonacciGenerator.cs", generator),
                 });
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs@codeRegion");
@@ -635,7 +635,7 @@ namespace FibonacciTest
                     new Buffer("generators/FibonacciGenerator.cs@codeRegion", processed, position)
                 }, files: new[]
                 {
-                    new File("generators/FibonacciGenerator.cs", generator),
+                    new ProjectFileContent("generators/FibonacciGenerator.cs", generator),
                 });
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs@codeRegion");
@@ -704,16 +704,14 @@ namespace FibonacciTest
             result.Signatures.Should().NotBeNullOrEmpty();
 
             var sample = result.Signatures.First(e => e.Label == "void Console.WriteLine(string format, params object?[]? arg)");
-            sample.Documentation.Should().Contain("Writes the text representation of the specified array of objects, followed by the current line terminator, to the standard output stream using the specified format information.");
+            sample.Documentation.Value.Should().Contain("Writes the text representation of the specified array of objects, followed by the current line terminator, to the standard output stream using the specified format information.");
             sample.Parameters.Should().HaveCount(2);
 
-            sample.Parameters.ElementAt(0).Name.Should().Be("format");
             sample.Parameters.ElementAt(0).Label.Should().Be("string format");
-            sample.Parameters.ElementAt(0).Documentation.Should().Contain("A composite format string.");
+            sample.Parameters.ElementAt(0).Documentation.Value.Should().Contain("A composite format string.");
 
-            sample.Parameters.ElementAt(1).Name.Should().Be("arg");
             sample.Parameters.ElementAt(1).Label.Should().Be("params object?[]? arg");
-            sample.Parameters.ElementAt(1).Documentation.Should().Contain("An array of objects to write using format .");
+            sample.Parameters.ElementAt(1).Documentation.Value.Should().Contain("An array of objects to write using format .");
         }
     }
 }

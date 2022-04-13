@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
             var original = new Workspace(
                 files: new[]
                 {
-                    new Protocol.File("Program.cs", SourceCodeProvider.ConsoleProgramSingleRegion)
+                    new ProjectFileContent("Program.cs", SourceCodeProvider.ConsoleProgramSingleRegion)
                 },
                 buffers: new[]
                 {
@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
             var original = new Workspace(
                 files: new[]
                 {
-                    new Protocol.File("Program.cs", SourceCodeProvider.ConsoleProgramSingleRegion)
+                    new ProjectFileContent("Program.cs", SourceCodeProvider.ConsoleProgramSingleRegion)
                 },
                 buffers: new[]
                 {
@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
             var original = new Workspace(
                 files: new[]
                 {
-                    new Protocol.File("Program.cs", SourceCodeProvider.ConsoleProgramSingleRegion)
+                    new ProjectFileContent("Program.cs", SourceCodeProvider.ConsoleProgramSingleRegion)
                 },
                 buffers: new[]
                 {
@@ -126,7 +126,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
             var original = new Workspace(
                 files: new[]
                 {
-                    new Protocol.File("Program.cs", SourceCodeProvider.ConsoleProgramSingleRegion)
+                    new ProjectFileContent("Program.cs", SourceCodeProvider.ConsoleProgramSingleRegion)
                 },
                 buffers: new[]
                 {
@@ -155,7 +155,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
             var ws = new Workspace(
                 files: new[]
                 {
-                    new Protocol.File("Program.cs", SourceCodeProvider.ConsoleProgramSingleRegion)
+                    new ProjectFileContent("Program.cs", SourceCodeProvider.ConsoleProgramSingleRegion)
                 },
                 buffers: new[]
                 {
@@ -220,7 +220,7 @@ Console.Write(newValueA + newValueB);
             var ws = new Workspace(
                 files: new[]
                 {
-                    new Protocol.File("Program.cs", SourceCodeProvider.ConsoleProgramMultipleRegions)
+                    new ProjectFileContent("Program.cs", SourceCodeProvider.ConsoleProgramMultipleRegions)
                 },
                 buffers: new[]
                 {
@@ -248,7 +248,7 @@ Console.Write(newValueA + newValueB);
                 var ws = new Workspace(
                    files: new[]
                    {
-                    new Protocol.File(filePath, null)
+                    new ProjectFileContent(filePath, null)
                    }
                    );
 

@@ -5,13 +5,12 @@ using System;
 using System.Linq;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
-using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Buffer;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Models.Execution
 {
     public static class WorkspaceExtensions
     {
-        public static File GetFileFromBufferId(this Workspace workspace, BufferId bufferId)
+        public static ProjectFileContent GetContentFromBufferId(this Workspace workspace, BufferId bufferId)
         {
             if (bufferId == null)
             {
@@ -38,10 +37,10 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Models.Execution
             this Workspace workspace,
             BufferId bufferId)
         {
-            var file = workspace.GetFileFromBufferId(bufferId);
+            var fileContent = workspace.GetContentFromBufferId(bufferId);
             var absolutePosition = GetAbsolutePositionForGetBufferWithSpecifiedIdOrSingleBufferIfThereIsOnlyOne(workspace, bufferId);
 
-            var src = SourceText.From(file.Text);
+            var src = SourceText.From(fileContent.Text);
             var line = src.Lines.GetLineFromPosition(absolutePosition);
 
             return (line: line.LineNumber, column: absolutePosition - line.Start, absolutePosition);
@@ -83,7 +82,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Models.Execution
             new Workspace(
                 workspace.Usings,
                 workspace.Files
-                         .Concat(new[] { new File(name, text) })
+                         .Concat(new[] { new ProjectFileContent(name, text) })
                          .ToArray(),
                 workspace.Buffers,
                 workspace.WorkspaceType,
@@ -98,7 +97,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Models.Execution
                 workspace.Usings,
                 workspace.Files
                          .Where(f => f.Name != name)
-                         .Concat(new[] { new File(name, text) })
+                         .Concat(new[] { new ProjectFileContent(name, text) })
                          .ToArray(),
                 workspace.Buffers,
                 workspace.WorkspaceType,

@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Microsoft.DotNet.Interactive.CSharpProject.Transformations;
 using Workspace = Microsoft.DotNet.Interactive.CSharpProject.Protocol.Workspace;
 

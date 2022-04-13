@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             _workspaceServer = new RoslynWorkspaceServer(package);
 
             var extractor = new BufferFromRegionExtractor();
-            _workspace = extractor.Extract(command.Project.Files.Select(f => new Protocol.File(f.RelativeFilePath, f.Content)).ToArray());
+            _workspace = extractor.Extract(command.Project.Files.Select(f => new ProjectFileContent(f.RelativeFilePath, f.Content)).ToArray());
 
             context.Publish(new ProjectOpened(command, _workspace.Buffers.GroupBy(b => b.Id.FileName)
                 .OrderBy(g => g.Key).Select(g => new ProjectItem(g.Key, g.Select(r => r.Id.RegionName).Where(r => r != null).OrderBy(r => r).ToList())).ToList()));
@@ -84,12 +84,12 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
                 if (buffer is { })
                 {
                     // create a temporary file with the buffer's content
-                    file = new Protocol.File(command.RelativeFilePath, buffer.Content);
+                    file = new(command.RelativeFilePath, buffer.Content);
                 }
                 else
                 {
                     // add it to the workspace
-                    file = new Protocol.File(command.RelativeFilePath, string.Empty);
+                    file = new(command.RelativeFilePath, string.Empty);
                     _workspace = new Protocol.Workspace(
                         files: _workspace.Files.Concat(new[] { file }).ToArray());
                 }
@@ -187,8 +187,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             var sigHelpItems = sigHelpResult.Signatures.Select(s =>
                 new SignatureInformation(
                     s.Label,
-                    new FormattedValue("text/markdown", s.Documentation),
-                    s.Parameters.Select(p => new ParameterInformation(p.Label, new FormattedValue("text/markdown", p.Documentation))).ToList())).ToList();
+                    s.Documentation,
+                    s.Parameters.Select(p => new ParameterInformation(p.Label, p.Documentation)).ToArray())).ToArray();
 
             context.Publish(new SignatureHelpProduced(command, sigHelpItems, sigHelpResult.ActiveSignature, sigHelpResult.ActiveParameter));
         }
@@ -253,11 +253,11 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
 
         private static IEnumerable<Diagnostic> GetDiagnostics(string code, CompileResult result)
         {
-            var diagnostics = Enumerable.Empty<Protocol.SerializableDiagnostic>();
-            var projectDiagnostics = Enumerable.Empty<Protocol.SerializableDiagnostic>();
+            var diagnostics = Enumerable.Empty<SerializableDiagnostic>();
+            var projectDiagnostics = Enumerable.Empty<SerializableDiagnostic>();
 
-            if (result.Features.TryGetValue(nameof(Protocol.Diagnostics), out var candidateDiagnostics) &&
-                candidateDiagnostics is Protocol.Diagnostics diags)
+            if (result.Features.TryGetValue(nameof(Diagnostics), out var candidateDiagnostics) &&
+                candidateDiagnostics is Diagnostics diags)
             {
                 diagnostics = diags;
             }
@@ -270,28 +270,11 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
 
             var allDiagnostics = diagnostics.Concat(projectDiagnostics);
 
-            var finalDiagnostics = diagnostics.Select(d => new Diagnostic(new LinePositionSpan(GetLinePositionFromPosition(code, d.Start), GetLinePositionFromPosition(code, d.End)), ConvertSeverity(d.Severity), d.Id, d.Message));
+            var finalDiagnostics = diagnostics.Select(d => new Diagnostic(new LinePositionSpan(GetLinePositionFromPosition(code, d.Start), GetLinePositionFromPosition(code, d.End)), d.Severity, d.Id, d.Message));
 
             return finalDiagnostics;
         }
-
-        private static CodeAnalysis.DiagnosticSeverity ConvertSeverity(Protocol.DiagnosticSeverity severity)
-        {
-            switch (severity)
-            {
-                case Protocol.DiagnosticSeverity.Hidden:
-                    return CodeAnalysis.DiagnosticSeverity.Hidden;
-                case Protocol.DiagnosticSeverity.Info:
-                    return CodeAnalysis.DiagnosticSeverity.Info;
-                case Protocol.DiagnosticSeverity.Warning:
-                    return CodeAnalysis.DiagnosticSeverity.Warning;
-                case Protocol.DiagnosticSeverity.Error:
-                    return CodeAnalysis.DiagnosticSeverity.Error;
-                default:
-                    return CodeAnalysis.DiagnosticSeverity.Warning;
-            }
-        }
-
+        
         private void ThrowIfProjectIsNotOpened()
         {
             if (_workspaceServer is null || _workspace is null)

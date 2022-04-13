@@ -3,17 +3,18 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Newtonsoft.Json;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Protocol
+namespace Microsoft.DotNet.Interactive.CSharpProject
 {
     public class SignatureHelpResult
     {
-        private IEnumerable<SignatureHelpItem> signatures ;
+        private IEnumerable<SignatureInformation> signatures ;
 
-        public IEnumerable<SignatureHelpItem> Signatures
+        public IEnumerable<SignatureInformation> Signatures
         {
-            get => signatures ?? (signatures = Array.Empty<SignatureHelpItem>());
+            get => signatures ??= Array.Empty<SignatureInformation>();
             set => signatures  = value;
         }
 
@@ -26,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Protocol
         public IEnumerable<SerializableDiagnostic> Diagnostics { get; set; }
 
 
-        public SignatureHelpResult(IEnumerable<SignatureHelpItem> signatures = null, IEnumerable<SerializableDiagnostic> diagnostics = null, string requestId = null)
+        public SignatureHelpResult(IEnumerable<SignatureInformation> signatures = null, IEnumerable<SerializableDiagnostic> diagnostics = null, string requestId = null)
         {
             RequestId = requestId;
             Signatures = signatures;

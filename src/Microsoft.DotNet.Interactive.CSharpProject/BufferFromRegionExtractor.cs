@@ -5,23 +5,22 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Workspace = Microsoft.DotNet.Interactive.CSharpProject.Protocol.Workspace;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject
 {
     public class BufferFromRegionExtractor
     {
-        public Workspace Extract(IReadOnlyCollection<File> sourceFiles, string workspaceType = null, string[] usings = null)
+        public Workspace Extract(IReadOnlyCollection<ProjectFileContent> sourceFiles, string workspaceType = null, string[] usings = null)
         {
             var workSpaceType = workspaceType ?? "script";
             var (newFiles, newBuffers) = ProcessSourceFiles(sourceFiles);
             return new Workspace(files: newFiles, buffers: newBuffers, usings: usings, workspaceType: workSpaceType);
         }
 
-        private static (File[], Buffer[]) ProcessSourceFiles(IEnumerable<File> sourceFiles)
+        private static (ProjectFileContent[], Buffer[]) ProcessSourceFiles(IEnumerable<ProjectFileContent> sourceFiles)
         {
-            var files = new Dictionary<string, File>();
+            var files = new Dictionary<string, ProjectFileContent>();
             var newBuffers = new List<Buffer>();
             foreach (var sourceFile in sourceFiles)
             {

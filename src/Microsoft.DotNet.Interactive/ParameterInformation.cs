@@ -12,6 +12,7 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public string Label { get; }
+
         public FormattedValue Documentation { get; }
     }
 }

@@ -6,18 +6,17 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject
-{
-    public static class DirectoryAccessExtensions
-    {
-        public static Task<IDisposable> TryLockAsync(this IDirectoryAccessor directoryAccessor)
-        {
-            if (directoryAccessor == null)
-            {
-                throw new ArgumentNullException(nameof(directoryAccessor));
-            }
+namespace Microsoft.DotNet.Interactive.CSharpProject;
 
-            return FileLock.TryCreateAsync(directoryAccessor);
+internal static class DirectoryAccessExtensions
+{
+    public static Task<IDisposable> TryLockAsync(this IDirectoryAccessor directoryAccessor)
+    {
+        if (directoryAccessor == null)
+        {
+            throw new ArgumentNullException(nameof(directoryAccessor));
         }
+
+        return FileLock.TryCreateAsync(directoryAccessor);
     }
 }

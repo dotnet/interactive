@@ -5,9 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 using Microsoft.DotNet.Interactive.Utility;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Tools
+namespace Microsoft.DotNet.Interactive.CSharpProject
 {
     public class FileSystemDirectoryAccessor : IDirectoryAccessor
     {
@@ -15,6 +16,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tools
 
         public FileSystemDirectoryAccessor(string directory): this(new DirectoryInfo(directory))
         {
+            // FIX: (FileSystemDirectoryAccessor) dead code?
         }
 
         public FileSystemDirectoryAccessor(DirectoryInfo rootDir)

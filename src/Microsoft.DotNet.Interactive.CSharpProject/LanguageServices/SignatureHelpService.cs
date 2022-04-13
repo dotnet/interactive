@@ -43,9 +43,9 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.LanguageServices
             }
 
             // process all signatures, define active signature by types
-            var signaturesSet = new HashSet<SignatureHelpItem>();
+            var signaturesSet = new HashSet<SignatureInformation>();
             var bestScore = int.MinValue;
-            SignatureHelpItem bestScoredItem = null;
+            SignatureInformation bestScoredItem = null;
 
             var types = invocation.ArgumentTypes;
             foreach (var methodOverload in GetMethodOverloads(invocation.SemanticModel, invocation.Receiver))
@@ -156,22 +156,19 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.LanguageServices
             return score;
         }
 
-        private static SignatureHelpItem BuildSignature(IMethodSymbol symbol)
+        private static SignatureInformation BuildSignature(IMethodSymbol symbol)
         {
-            var signature = new SignatureHelpItem
-            {
-                Documentation = DocumentationConverter.GetDocumentation(symbol, "\n"),
-                Name = symbol.MethodKind == MethodKind.Constructor ? symbol.ContainingType.Name : symbol.Name,
-                Label = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat),
-                Parameters = GetParameters(symbol).Select(parameter => new SignatureHelpParameter
-                {
-                    Name = parameter.Name,
-                    Label = parameter.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat),
-                    Documentation = DocumentationConverter.GetDocumentation(parameter, "\n"),
-                })
-            };
+            var documentation = DocumentationConverter.GetDocumentation(symbol, "\n");
 
-            return signature;
+            var label = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+
+            var parameters = GetParameters(symbol)
+                             .Select(parameter => new ParameterInformation
+                                     (label: parameter.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat),
+                                      documentation: DocumentationConverter.GetDocumentation(parameter, "\n")))
+                             .ToArray();
+
+            return new(label, documentation, parameters);
         }
 
         private static IEnumerable<IParameterSymbol> GetParameters(IMethodSymbol methodSymbol)

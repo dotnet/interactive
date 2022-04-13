@@ -5,8 +5,6 @@ using System.IO;
 using System.Linq;
 using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Microsoft.DotNet.Interactive.CSharpProject.Tools;
-using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Buffer;
-using File = Microsoft.DotNet.Interactive.CSharpProject.Protocol.File;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Models.Execution
 {
@@ -21,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Models.Execution
                                        .Where(f => !f.IsBuildOutput())
                                        .ToArray();
 
-            var files = filesOnDisk.Select(file => new File(file.Name, file.Read())).ToList();
+            var files = filesOnDisk.Select(file => new ProjectFileContent(file.Name, file.Read())).ToList();
 
             return new Workspace(
                 files: files.ToArray(),

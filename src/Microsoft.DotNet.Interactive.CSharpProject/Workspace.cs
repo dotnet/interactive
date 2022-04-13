@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Protocol
 
         public Workspace(
             string[] usings = null,
-            File[] files = null,
+            ProjectFileContent[] files = null,
             Buffer[] buffers = null,
             string workspaceType = DefaultWorkspaceType,
             string language =  DefaultLanguage,
@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Protocol
             Language = string.IsNullOrWhiteSpace(language) ? DefaultLanguage : language;
             Usings = usings ?? Array.Empty<string>();
             Usings = usings ?? Array.Empty<string>();
-            Files = files ?? Array.Empty<File>();
+            Files = files ?? Array.Empty<ProjectFileContent>();
             Buffers = buffers ?? Array.Empty<Buffer>();
 
             IncludeInstrumentation = includeInstrumentation;
@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Protocol
         public string Language { get; }
 
         [JsonProperty("files")]
-        public File[] Files { get; }
+        public ProjectFileContent[] Files { get; }
 
         [JsonProperty("usings")]
         public string[] Usings { get; }

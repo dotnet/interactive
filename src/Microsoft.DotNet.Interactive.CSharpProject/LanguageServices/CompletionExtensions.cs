@@ -73,16 +73,17 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.LanguageServices
                 filterText: item.FilterText,
                 sortText: item.SortText,
                 insertText: item.FilterText,
-                documentation: documentation);
+                documentation: documentation?.Value);
         }
 
-        public static string GetDocumentation(
+        public static FormattedValue GetDocumentation(
             this RoslynCompletionItem item,
             Dictionary<(string, int), ISymbol> recommendedSymbols,
             Document document)
         {
             var symbol = GetCompletionSymbolAsync(item, recommendedSymbols, document);
-            if (symbol != null)
+            
+            if (symbol is { })
             {
                 return DocumentationConverter.GetDocumentation(symbol, "\n");
             }

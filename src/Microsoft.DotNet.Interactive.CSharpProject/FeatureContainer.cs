@@ -3,34 +3,33 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Pocket;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Protocol
+namespace Microsoft.DotNet.Interactive.CSharpProject;
+
+public abstract class FeatureContainer : IDisposable
 {
-    public abstract class FeatureContainer : IDisposable
+    private readonly CompositeDisposable _disposables = new();
+    private readonly Dictionary<string, object> _features = new(StringComparer.OrdinalIgnoreCase);
+    private List<(string, object)> _featureProperties;
+
+
+    public IReadOnlyDictionary<string, object> Features => _features;
+
+    public void Dispose() => _disposables.Dispose();
+
+    public void AddFeature(IRunResultFeature feature)
     {
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
-        private readonly Dictionary<string, object> _features =
-            new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-        private List<(string, object)> _featureProperties;
-
-
-        public IReadOnlyDictionary<string, object> Features => _features;
-
-        public void Dispose() => _disposables.Dispose();
-
-        public void AddFeature(IRunResultFeature feature)
+        if (feature is IDisposable disposable)
         {
-            if (feature is IDisposable disposable)
-            {
-                _disposables.Add(disposable);
-            }
-
-            _features.Add(feature.Name, feature);
+            _disposables.Add(disposable);
         }
 
-        public List<(string Name, object Value)> FeatureProperties => _featureProperties ?? (_featureProperties = new List<(string, object)>()); // TODO: (FeatureProperties) replace tuple with a class
-
-        public void AddProperty(string name, object value) => FeatureProperties.Add((name, value));
+        _features.Add(feature.Name, feature);
     }
+
+    public List<(string Name, object Value)> FeatureProperties => _featureProperties ??= new List<(string, object)>(); // TODO: (FeatureProperties) replace tuple with a class
+
+    public void AddProperty(string name, object value) => FeatureProperties.Add((name, value));
 }

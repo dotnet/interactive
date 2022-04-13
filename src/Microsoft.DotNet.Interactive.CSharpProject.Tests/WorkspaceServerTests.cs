@@ -4,11 +4,11 @@
 using System;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Pocket;
 using Xunit;
 using Xunit.Abstractions;
-using DiagnosticSeverity = Microsoft.DotNet.Interactive.CSharpProject.Protocol.DiagnosticSeverity;
 using Workspace = Microsoft.DotNet.Interactive.CSharpProject.Protocol.Workspace;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests

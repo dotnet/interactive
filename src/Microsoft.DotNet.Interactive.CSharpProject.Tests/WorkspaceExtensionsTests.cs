@@ -49,10 +49,10 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
                 },
                 files: new[]
                 {
-                    new File("", "content")
+                    new ProjectFileContent("", "content")
                 });
 
-            workspace.GetFileFromBufferId(BufferId.Empty).Should().NotBeNull();
+            workspace.GetContentFromBufferId(BufferId.Empty).Should().NotBeNull();
         }
     }
 }

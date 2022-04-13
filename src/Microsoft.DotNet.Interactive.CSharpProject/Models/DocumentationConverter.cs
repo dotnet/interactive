@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Models
         /// <summary>
         /// Converts the xml documentation string into a plain text string.
         /// </summary>
-        public static string GetDocumentation(ISymbol symbol, string lineEnding)
+        public static FormattedValue GetDocumentation(ISymbol symbol, string lineEnding)
         {
             string documentation;
             switch (symbol)
@@ -29,12 +29,12 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Models
                     break;
             }
 
-            if(string.IsNullOrEmpty(documentation))
+            if (string.IsNullOrEmpty(documentation))
             {
                 return null;
             }
 
-            return documentation;
+            return new("text/markdown", documentation);
         }
 
         public static DocumentationComment GetDocumentationComment(ISymbol symbol, string lineEnding)

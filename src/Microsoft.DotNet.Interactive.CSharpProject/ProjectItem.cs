@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
 {
     public class ProjectItem
     {
-        private RelativeFilePath _relativeFilePath;
+        private readonly RelativeFilePath _relativeFilePath;
         public string RelativeFilePath => _relativeFilePath.ToString();
 
         public IReadOnlyList<string> RegionNames { get; }

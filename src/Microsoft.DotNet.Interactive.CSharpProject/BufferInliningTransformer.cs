@@ -35,17 +35,17 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
                 includeInstrumentation: source.IncludeInstrumentation);
         }
 
-        protected async Task<(Protocol.File[] files, Buffer[] buffers)> InlineBuffersAsync(Workspace source)
+        protected async Task<(ProjectFileContent[] files, Buffer[] buffers)> InlineBuffersAsync(Workspace source)
         {
-            var files = (source.Files ?? Array.Empty<Protocol.File>()).ToDictionary(f => f.Name, f =>
-             {
-                 if (string.IsNullOrEmpty(f.Text) && File.Exists(f.Name))
-                 {
-                     return SourceFile.Create(File.ReadAllText(f.Name), f.Name);
-                 }
+            var files = (source.Files ?? Array.Empty<ProjectFileContent>()).ToDictionary(f => f.Name, f =>
+            {
+                if (string.IsNullOrEmpty(f.Text) && File.Exists(f.Name))
+                {
+                    return SourceFile.Create(File.ReadAllText(f.Name), f.Name);
+                }
 
-                 return f.ToSourceFile();
-             });
+                return f.ToSourceFile();
+            });
 
             var buffers = new List<Buffer>();
             foreach (var sourceBuffer in source.Buffers)
@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
                     var normalizedBufferId = sourceBuffer.Id.GetNormalized();
                     var injectionPoint = sourceBuffer.Id.GetInjectionPoint();
                     var viewPorts = files.Select(f => f.Value).ExtractViewports();
-                    if (viewPorts.SingleOrDefault(viewport => viewport.BufferId == normalizedBufferId) is Viewport viewPort)
+                    if (viewPorts.SingleOrDefault(viewport => viewport.BufferId == normalizedBufferId) is { } viewPort)
                     {
                         await InjectBuffer(viewPort, sourceBuffer, buffers, files, injectionPoint);
                     }
@@ -78,7 +78,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
                 }
             }
 
-            var processedFiles = files.Values.Select(sf => new Protocol.File(sf.Name, sf.Text.ToString())).ToArray();
+            var processedFiles = files.Values.Select(sf => new ProjectFileContent(sf.Name, sf.Text.ToString())).ToArray();
             var processedBuffers = buffers.ToArray();
 
             return (processedFiles, processedBuffers);

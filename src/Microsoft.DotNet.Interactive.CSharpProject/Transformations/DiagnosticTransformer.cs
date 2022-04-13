@@ -174,7 +174,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Transformations
                             start,
                             end,
                             errorMessage,
-                            diagnostic.ConvertSeverity(),
+                            diagnostic.Severity,
                             diagnostic.Id,
                             viewport.BufferId);
                     }

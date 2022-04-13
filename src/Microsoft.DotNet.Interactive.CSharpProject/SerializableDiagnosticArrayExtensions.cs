@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
+using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject
 {
