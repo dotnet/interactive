@@ -907,6 +907,8 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
 
             var result = await kernel.SendAsync(command);
 
+            events.Should().NotContainErrors();
+
             using var _ = new AssertionScope();
 
             events

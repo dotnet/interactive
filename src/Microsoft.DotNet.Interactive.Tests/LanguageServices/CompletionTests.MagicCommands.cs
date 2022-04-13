@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 string expected)
             {
                 var kernel = CreateKernel();
-                    kernel.AddKernelConnector(new ConnectSignalRCommand());
+                kernel.AddKernelConnector(new ConnectSignalRCommand());
 
                 markupCode
                     .ParseMarkupCode()

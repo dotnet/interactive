@@ -1,1 +1,1 @@
-﻿Console.Write("hello!");
+﻿"hello!".Display();

@@ -10,9 +10,14 @@ namespace Microsoft.DotNet.Interactive
 {
     public class KernelInfo
     {
-        private readonly IReadOnlyCollection<string> _aliases = Array.Empty<string>();
+        private readonly HashSet<KernelCommandInfo> _supportedKernelCommands = new();
+        private readonly HashSet<KernelDirectiveInfo> _supportedDirectives = new();
 
-        public KernelInfo(string localName, string? language = null)
+        public KernelInfo(
+            string localName,
+            string? languageName = null,
+            string? languageVersion = null,
+            string[]? aliases = null)
         {
             if (string.IsNullOrWhiteSpace(localName))
             {
@@ -25,35 +30,55 @@ namespace Microsoft.DotNet.Interactive
             }
 
             LocalName = localName;
-            Language = language;
+            LanguageName = languageName;
+            LanguageVersion = languageVersion;
+            NameAndAliases = new HashSet<string> { LocalName };
+
+            if (aliases is not null)
+            {
+                NameAndAliases.UnionWith(aliases);
+            }
         }
 
-        public IReadOnlyCollection<string> Aliases
+        public string[] Aliases
         {
-            get => _aliases;
-            init => _aliases = value.Except(new[] { LocalName }).ToArray();
+            get => NameAndAliases.Where(n => n != LocalName).ToArray();
+            init => NameAndAliases.UnionWith(value);
         }
 
-        public string? Language { get; } 
+        public string? LanguageName { get; }
+
+        public string? LanguageVersion { get; }
 
         public string LocalName { get; }
 
-        public Uri? OriginUri { get; set; }
+        public Uri? Uri { get; set; }
 
-        public Uri? DestinationUri { get; set; }
+        public Uri? RemoteUri { get; set; }
 
-        public IReadOnlyCollection<KernelCommandInfo> SupportedKernelCommands { get; init; } = Array.Empty<KernelCommandInfo>();
+        public ICollection<KernelCommandInfo> SupportedKernelCommands
+        {
+            get => _supportedKernelCommands;
+            init => _supportedKernelCommands.UnionWith(value ?? throw new ArgumentNullException(nameof(value)));
+        }
 
-        public IReadOnlyCollection<DirectiveInfo> SupportedDirectives { get; init; } = Array.Empty<DirectiveInfo>();
+        public ICollection<KernelDirectiveInfo> SupportedDirectives
+        {
+            get => _supportedDirectives;
+            init => _supportedDirectives.UnionWith(value ?? throw new ArgumentNullException(nameof(value)));
+        }
 
-        public override string ToString() => LocalName;
+        public override string ToString() => LocalName +
+                                             (Uri is { } uri
+                                                  ? $" ({uri})"
+                                                  : null);
 
-        public static KernelInfo Create(Kernel kernel, IReadOnlyCollection<string>? aliases = null) =>
-            new(kernel.Name)
-            {
-                Aliases = aliases ?? Array.Empty<string>(),
-                SupportedDirectives = kernel.Directives.Select(d => new DirectiveInfo(d.Name)).ToArray(),
-                SupportedKernelCommands = kernel.SupportedCommandTypes().Select(c => new KernelCommandInfo(c.Name)).ToArray()
-            };
+        internal HashSet<string> NameAndAliases { get; }
+
+        internal bool SupportsCommand(string commandName) =>
+            _supportedKernelCommands.Contains(new(commandName));
+
+        internal void UpdateFrom(KernelInfo source) =>
+            _supportedKernelCommands.UnionWith(source.SupportedKernelCommands);
     }
 }

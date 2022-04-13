@@ -2,26 +2,26 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.CommandLine;
-using System.CommandLine.Invocation;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
+using Pocket;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
-    public class VariableSharingTests
+    public class VariableSharingTests : IDisposable
     {
+        private readonly CompositeDisposable _disposables = new();
+
         [Theory]
         [InlineData(
             "#!fsharp",
@@ -103,16 +103,14 @@ x")]
             string codeToWrite,
             string codeToRead)
         {
-            using var _ = await ConsoleLock.AcquireAsync();
-
             using var kernel = CreateKernel();
             
             await kernel.SubmitCodeAsync($"{from}\n{codeToWrite}");
 
-            var results = await kernel.SubmitCodeAsync($"#!pwsh\n{codeToRead}");
+            var results = await kernel.SubmitCodeAsync($"#!pwsh\n{codeToRead} | Out-Display -MimeType text/plain");
 
             results.KernelEvents.ToSubscribedList().Should()
-                  .ContainSingle<StandardOutputValueProduced>()
+                  .ContainSingle<DisplayedValueProduced>()
                   .Which
                   .FormattedValues
                   .Should()
@@ -189,18 +187,16 @@ x")]
             "#!share --from fsharp x")]
         public async Task pwsh_kernel_variables_shared_from_other_kernels_resolve_to_the_correct_runtime_type(string from, string codeToWrite, string codeToRead)
         {
-            using var _ = await ConsoleLock.AcquireAsync();
-
             using var kernel = CreateKernel();
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
             await kernel.SubmitCodeAsync($"{from}\n{codeToWrite}");
 
-            await kernel.SubmitCodeAsync($"#!pwsh\n{codeToRead}\n$x + 1");
+            await kernel.SubmitCodeAsync($"#!pwsh\n{codeToRead}\n$x + 1 | Out-Display -MimeType text/plain");
 
             events.Should()
-                  .ContainSingle<StandardOutputValueProduced>()
+                  .ContainSingle<DisplayedValueProduced>()
                   .Which
                   .FormattedValues
                   .Should()
@@ -217,14 +213,20 @@ x")]
         {
             var (compositeKernel, remoteKernel) = await CreateCompositeKernelWithJavaScriptProxyKernel();
 
+            var remoteCommands = new List<KernelCommand>();
+
+            remoteKernel.AddMiddleware(async (command, context, next) =>
+            {
+                remoteCommands.Add(command);
+                await next(command, context);
+            });
+
             await compositeKernel.SubmitCodeAsync("var csharpVariable = 123;");
 
             var submitCode = new SubmitCode(@"
 #!javascript
 #!share --from csharp csharpVariable");
             await compositeKernel.SendAsync(submitCode);
-
-            var remoteCommands = remoteKernel.Sender.Commands;
 
             remoteCommands.Should()
                           .ContainSingle<SubmitCode>()
@@ -234,54 +236,72 @@ x")]
                           .Be("csharpVariable = 123;");
         }
 
-        [Fact(Skip = "Requires kernel language")]
+        [Fact]
         public async Task CSharpKernel_can_share_variable_from_JavaScript_via_a_ProxyKernel()
         {
-            var (compositeKernel, remoteKernel) = await CreateCompositeKernelWithJavaScriptProxyKernel();
-            
-            remoteKernel.RegisterCommandHandler<RequestValue>((cmd, context) =>
+            var (compositeKernel, jsKernel) = await CreateCompositeKernelWithJavaScriptProxyKernel();
+
+            var jsVariableName = "jsVariable";
+
+            jsKernel.RegisterCommandHandler<RequestValue>((cmd, context) =>
             {
-                context.Publish(new ValueProduced(null, "jsVariable", new FormattedValue(JsonFormatter.MimeType, "[1, 2, 3]"), cmd));
+                context.Publish(new ValueProduced(null, jsVariableName, new FormattedValue(JsonFormatter.MimeType, "123"), cmd));
                 return Task.CompletedTask;
             });
 
-            var submitCode = new SubmitCode(@"
+            var result = await compositeKernel.SendAsync(new RequestKernelInfo("javascript"));
+
+            var events = result.KernelEvents.ToSubscribedList();
+            events.Should().NotContainErrors();
+
+            var submitCode = new SubmitCode($@"
 #!csharp
-#!share --from javascript jsVariable");
+#!share --from javascript {jsVariableName}");
             await compositeKernel.SendAsync(submitCode);
 
-            // TODO (CSharpKernel_can_share_variable_fro_JavaScript_ProxyKernel) write test
-            throw new NotImplementedException();
+            var csharpKernel = (CSharpKernel)compositeKernel.FindKernel("csharp");
+
+            csharpKernel.GetValueInfos()
+                        .Should()
+                        .ContainSingle(v => v.Name == jsVariableName);
+
+            csharpKernel.TryGetValue<double>(jsVariableName, out var jsVariable)
+                        .Should().BeTrue();
+
+            jsVariable.Should().Be(123);
         }
 
-        private static async Task<(CompositeKernel, FakeRemoteKernel)> CreateCompositeKernelWithJavaScriptProxyKernel()
+        private async Task<(CompositeKernel, FakeKernel)> CreateCompositeKernelWithJavaScriptProxyKernel()
         {
-            var compositeKernel = new CompositeKernel
+            var localCompositeKernel = new CompositeKernel
             {
                 new CSharpKernel().UseValueSharing()
             };
-            compositeKernel.DefaultKernelName = "csharp";
-            var remoteKernel = new FakeRemoteKernel();
+            localCompositeKernel.DefaultKernelName = "csharp";
 
-            var receiver = new MultiplexingKernelCommandAndEventReceiver(remoteKernel.Receiver);
+            var remoteCompositeKernel = new CompositeKernel();
+            var remoteKernel = new FakeKernel("remote-javascript");
+            remoteCompositeKernel.Add(remoteKernel);
 
-            var host = new KernelHost(compositeKernel, remoteKernel.Sender, receiver);
+            ConnectHost.ConnectInProcessHost(
+                localCompositeKernel,
+                remoteCompositeKernel);
 
-            var _ = host.ConnectAsync();
+            var remoteKernelUri = new Uri("kernel://remote/remote-javascript");
+            var javascriptKernel =
+                await localCompositeKernel
+                      .Host
+                      .ConnectProxyKernelOnDefaultConnectorAsync(
+                          "javascript",
+                          remoteKernelUri);
 
-            var kernelInfo = new KernelInfo("javascript")
-            {
-                DestinationUri = new("kernel://remote/js")
-            };
+            await localCompositeKernel.SendAsync(new RequestKernelInfo(remoteKernelUri));
 
-            var javascriptKernel = await host.CreateProxyKernelOnDefaultConnectorAsync(kernelInfo);
+            javascriptKernel.UseValueSharing(new JavaScriptValueDeclarer());
 
-            javascriptKernel.UseValueSharing(new JavaScriptKernelValueDeclarer());
+            _disposables.Add(remoteCompositeKernel);
 
-            compositeKernel.RegisterForDisposal(remoteKernel);
-            compositeKernel.RegisterForDisposal(host);
-
-            return (compositeKernel, remoteKernel);
+            return (localCompositeKernel, remoteKernel);
         }
 
         private static CompositeKernel CreateKernel()
@@ -307,5 +327,7 @@ x")]
         {
             throw new NotImplementedException("test not written");
         }
+
+        public void Dispose() => _disposables.Dispose();
     }
 }

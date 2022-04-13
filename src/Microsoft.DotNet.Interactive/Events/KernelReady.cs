@@ -3,13 +3,11 @@
 
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Events
+namespace Microsoft.DotNet.Interactive.Events;
+
+public class KernelReady : KernelEvent
 {
-    public class KernelReady : KernelEvent
+    public KernelReady() : base(KernelCommand.None)
     {
-        public KernelReady(): base(KernelCommand.None)
-        {
-            
-        }
     }
 }

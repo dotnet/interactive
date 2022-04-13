@@ -24,7 +24,7 @@ export class ProxyKernel extends Kernel {
         const token = commandInvocation.commandEnvelope.token;
         const completionSource = new PromiseCompletionSource<contracts.KernelEventEnvelope>();
         let sub = this.channel.subscribeToKernelEvents((envelope: contracts.KernelEventEnvelope) => {
-            Logger.default.info(`proxy ${this.name} got event ${envelope.eventType} from ${envelope.command?.command?.targetKernelName} with token ${envelope.command?.token}`);
+            Logger.default.info(`proxy ${this.name} got event ${JSON.stringify(envelope)}`);
             if (envelope.command!.token === token) {
                 switch (envelope.eventType) {
                     case contracts.CommandFailedType:
@@ -43,11 +43,11 @@ export class ProxyKernel extends Kernel {
         });
 
         try {
-            if (!commandInvocation.commandEnvelope.destinationUri || !commandInvocation.commandEnvelope.originUri) {
+            if (!commandInvocation.commandEnvelope.command.destinationUri || !commandInvocation.commandEnvelope.command.originUri) {
                 const kernelInfo = this.parentKernel?.host?.tryGetKernelInfo(this);
                 if (kernelInfo) {
-                    commandInvocation.commandEnvelope.originUri ??= kernelInfo.originUri;
-                    commandInvocation.commandEnvelope.destinationUri ??= kernelInfo.destinationUri;
+                    commandInvocation.commandEnvelope.command.originUri ??= kernelInfo.uri;
+                    commandInvocation.commandEnvelope.command.destinationUri ??= kernelInfo.remoteUri;
                 }
             }
 

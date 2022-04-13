@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
 {
     public static class LanguageServiceAssertionExtensions
     {
-        public static MarkedUpCode ParseMarkupCode(this string markupCode) => new MarkedUpCode(markupCode);
+        public static MarkedUpCode ParseMarkupCode(this string markupCode) => new(markupCode);
 
         public static IEnumerable<MarkedUpCodeLinePosition> PositionsInMarkedSpans(
             this MarkedUpCode markedUpCode)

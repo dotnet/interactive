@@ -3,58 +3,90 @@
 
 using System;
 using System.IO.Pipes;
+using System.Reactive.Disposables;
 using System.Security.Principal;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Commands;
+using CompositeDisposable = Pocket.CompositeDisposable;
 
 #nullable enable
 
 namespace Microsoft.DotNet.Interactive.Connection;
 
-public class NamedPipeKernelConnector : KernelConnectorBase, IDisposable
+public class NamedPipeKernelConnector : IKernelConnector, IDisposable
 {
     private MultiplexingKernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventPipeStreamSender? _sender;
     private NamedPipeClientStream? _clientStream;
+    private RefCountDisposable? _refCountDisposable = null;
+
+    public NamedPipeKernelConnector(string pipeName)
+    {
+        PipeName = pipeName;
+        RemoteHostUri = new Uri($"kernel://{PipeName}");
+    }
 
     public string PipeName { get; }
-    public override async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
+
+    public Uri RemoteHostUri { get; }
+
+    public async Task<Kernel> CreateKernelAsync(string localName)
     {
         ProxyKernel? proxyKernel;
 
-        if (_receiver is not null)
-        {
-            proxyKernel = new ProxyKernel(kernelInfo.LocalName,_receiver.CreateChildReceiver(), _sender);
-        }
-        else
+        if (_receiver is null)
         {
             _clientStream = new NamedPipeClientStream(
                 ".",
                 PipeName,
                 PipeDirection.InOut,
-                PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
+                PipeOptions.Asynchronous,
+                TokenImpersonationLevel.Impersonation);
 
             await _clientStream.ConnectAsync();
+
             _clientStream.ReadMode = PipeTransmissionMode.Message;
 
             _receiver = new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventPipeStreamReceiver(_clientStream));
-            _sender = new KernelCommandAndEventPipeStreamSender(_clientStream);
+            _sender = new KernelCommandAndEventPipeStreamSender(
+                _clientStream,
+                RemoteHostUri);
 
-        
-            proxyKernel = new ProxyKernel(kernelInfo.LocalName, _receiver, _sender);
+            _refCountDisposable = new RefCountDisposable(new CompositeDisposable
+            {
+                () => _clientStream.Dispose(),
+                () => _receiver.Dispose()
+            });
+
+            proxyKernel = new ProxyKernel(
+                localName, 
+                _receiver, 
+                _sender, 
+                new Uri(RemoteHostUri, localName));
+            proxyKernel.RegisterForDisposal(_refCountDisposable);
+        }
+        else
+        {
+            proxyKernel = new ProxyKernel(
+                localName,
+                _receiver.CreateChildReceiver(),
+                _sender,
+                new Uri(RemoteHostUri, localName));
+
+            proxyKernel.RegisterForDisposal(_refCountDisposable!.GetDisposable());
         }
 
-        var _ = proxyKernel.StartAsync();
-        return proxyKernel; ;
-    }
-        
-    public NamedPipeKernelConnector(string pipeName)
-    {
-        PipeName = pipeName;
+        var destinationUri = new Uri(RemoteHostUri, localName);
+
+        await _sender!.SendAsync(
+            new RequestKernelInfo(destinationUri),
+            CancellationToken.None);
+
+        proxyKernel.EnsureStarted();
+
+        return proxyKernel;
     }
 
-    public void Dispose()
-    {
-        _receiver?.Dispose();
-        _clientStream?.Dispose();
-    }
+    public void Dispose() => _refCountDisposable?.Dispose();
 }

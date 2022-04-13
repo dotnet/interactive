@@ -2,13 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.CommandLine;
+using System.CommandLine.Invocation;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
-    public class ConnectMsSqlCommand : ConnectKernelCommand<MsSqlKernelConnector>
+    public class ConnectMsSqlCommand : ConnectKernelCommand
     {
         private readonly string ResolvedToolsServicePath;
 
@@ -16,24 +17,37 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             : base("mssql", "Connects to a Microsoft SQL Server database")
         {
             ResolvedToolsServicePath = resolvedToolsServicePath;
-            Add(new Argument<string>(
-                    "connectionString",
-                    "The connection string used to connect to the database"));
-            Add(new Option<bool>(
-                    "--create-dbcontext",
-                    "Scaffold a DbContext in the C# kernel."));
+            Add(ConnectionStringArgument);
+            Add(CreateDbContextOption);
         }
 
-        public override async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo, MsSqlKernelConnector connector,
-            KernelInvocationContext context)
+        private static Option<bool> CreateDbContextOption { get; } =
+            new Option<bool>(
+                "--create-dbcontext",
+                "Scaffold a DbContext in the C# kernel.");
+
+        public Argument<string> ConnectionStringArgument { get; } =
+            new Argument<string>(
+                "connectionString",
+                "The connection string used to connect to the database");
+
+        public override async Task<Kernel> ConnectKernelAsync(
+            KernelInvocationContext context,
+            InvocationContext commandLineContext)
         {
+            var connector = new MsSqlKernelConnector(
+                commandLineContext.ParseResult.GetValueForOption(CreateDbContextOption),
+                commandLineContext.ParseResult.GetValueForArgument(ConnectionStringArgument)
+            );
             connector.PathToService = ResolvedToolsServicePath;
 
-            var kernel = await connector.ConnectKernelAsync(kernelInfo);
+            var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
+
+            var kernel = await connector.CreateKernelAsync(localName);
 
             if (connector.CreateDbContext)
             {
-                await InitializeDbContextAsync(kernelInfo.LocalName, connector, context);
+                await InitializeDbContextAsync(localName, connector, context);
             }
 
             return kernel;

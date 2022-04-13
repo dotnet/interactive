@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.Commands
             Code = code ?? throw new ArgumentNullException(nameof(code));
             SubmissionType = submissionType;
         }
-
+      
         internal SubmitCode(
             LanguageNode languageNode,
             SubmissionType submissionType = SubmissionType.Run,
@@ -32,7 +32,6 @@ namespace Microsoft.DotNet.Interactive.Commands
 
             if (languageNode is ActionDirectiveNode actionDirectiveNode)
             {
-                // FIX: (SubmitCode) needed?
                 TargetKernelName = actionDirectiveNode.ParentKernelName;
             }
         }

@@ -1,0 +1,18 @@
+{
+  "event": {
+    "code": "123"
+  },
+  "eventType": "CodeSubmissionReceived",
+  "command": {
+    "token": "the-token",
+    "id": "command-id",
+    "commandType": "SubmitCode",
+    "command": {
+      "code": "123",
+      "submissionType": "run",
+      "targetKernelName": null,
+      "originUri": null,
+      "destinationUri": null
+    }
+  }
+}

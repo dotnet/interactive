@@ -4,28 +4,29 @@
 using System;
 using System.Collections.Generic;
 using System.CommandLine.Parsing;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
+    [DebuggerStepThrough]
     public abstract class KernelCommand
     {
-        protected KernelCommand(string targetKernelName = null, KernelCommand parent = null)
+        protected KernelCommand(
+            string targetKernelName = null, 
+            KernelCommand parent = null)
         {
             Properties = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
             TargetKernelName = targetKernelName;
             Parent = parent;
         }
 
-        [JsonIgnore]
+        [JsonIgnore] 
         public KernelCommandInvocation Handler { get; set; }
 
         [JsonIgnore]
         public KernelCommand Parent { get; internal set; }
-
-        [JsonIgnore]
-        public bool? ShouldPublishCompletionEvent { get; protected internal set; }
 
         [JsonIgnore]
         public IDictionary<string, object> Properties { get; }
@@ -34,16 +35,17 @@ namespace Microsoft.DotNet.Interactive.Commands
 
         internal static KernelCommand None => new NoCommand();
 
-        [JsonIgnore]
-        internal Uri OriginUri { get; set; }
+        public Uri OriginUri { get; set; }
+
+        public Uri DestinationUri { get; set; }
 
         [JsonIgnore]
-        internal Uri DestinationUri { get; set; }
+        internal SchedulingScope SchedulingScope { get; set; } 
 
         [JsonIgnore]
-        internal SchedulingScope SchedulingScope { get; set; }
+        internal bool? ShouldPublishCompletionEvent { get; set; }
 
-        [JsonIgnore]
+        [JsonIgnore] 
         public ParseResult KernelChooserParseResult { get; internal set; }
 
         public virtual Task InvokeAsync(KernelInvocationContext context)

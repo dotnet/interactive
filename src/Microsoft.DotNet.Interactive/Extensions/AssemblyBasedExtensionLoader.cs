@@ -16,8 +16,8 @@ namespace Microsoft.DotNet.Interactive.Extensions
 {
     public class AssemblyBasedExtensionLoader : IKernelExtensionLoader
     {
-        private readonly HashSet<AssemblyName> _loadedAssemblies = new HashSet<AssemblyName>();
-        private readonly object _lock = new object();
+        private readonly HashSet<AssemblyName> _loadedAssemblies = new();
+        private readonly object _lock = new();
 
         public async Task LoadFromDirectoryAsync(
             DirectoryInfo directory,

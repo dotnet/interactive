@@ -4,16 +4,15 @@
 using System.Runtime.InteropServices;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Tests.Utility
+namespace Microsoft.DotNet.Interactive.Tests.Utility;
+
+public sealed class FactSkipLinux : FactAttribute
 {
-    public sealed class FactSkipLinux : FactAttribute
+    public FactSkipLinux()
     {
-        public FactSkipLinux()
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                Skip = "Ignored on Linux";
-            }
+            Skip = "Ignored on Linux";
         }
     }
 }

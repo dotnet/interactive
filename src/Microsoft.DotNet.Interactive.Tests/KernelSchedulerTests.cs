@@ -138,7 +138,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             laterWorkWasExecuted.Should().BeFalse();
         }
 
-        [Fact]
+        [FactSkipLinux]
         public void cancelling_work_in_progress_prevents_subsequent_work_scheduled_before_cancellation_from_executing()
         {
             using var scheduler = new KernelScheduler<int, int>();
@@ -150,7 +150,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             var _ = scheduler.RunAsync(1, async v =>
             {
                 barrier.SignalAndWait();
-                await Task.Delay(1000);
+                await Task.Delay(5000);
                 return v;
             }, cancellationToken: cts.Token);
 
@@ -500,9 +500,49 @@ namespace Microsoft.DotNet.Interactive.Tests
             });
 
             asyncIdsForDeferredWork.Should()
-                .HaveCount(3)
-                .And
-                .AllBeEquivalentTo(asyncIdForScheduledWork);
+                                   .HaveCount(3)
+                                   .And
+                                   .AllBeEquivalentTo(asyncIdForScheduledWork);
+        }
+        
+        [Fact]
+        public async Task AsyncContext_does_not_leak_between_scheduled_work_when_ExecutionContext_is_suppressed()
+        {
+            ExecutionContext.SuppressFlow();
+            
+            await AsyncContext_does_not_leak_between_scheduled_work();
+        }
+
+        [Fact]
+        public async Task work_can_be_scheduled_from_within_scheduled_work_when_ExecutionContext_is_suppressed()
+        {
+            ExecutionContext.SuppressFlow();
+            
+            await work_can_be_scheduled_from_within_scheduled_work();
+        }
+
+        [Fact]
+        public async Task concurrent_schedulers_do_not_interfere_with_one_another_when_ExecutionContext_is_suppressed()
+        {
+            ExecutionContext.SuppressFlow();
+            
+            await concurrent_schedulers_do_not_interfere_with_one_another();
+        }
+
+        [Fact]
+        public async Task AsyncContext_is_maintained_across_async_operations_within_scheduled_work_when_ExecutionContext_is_suppressed()
+        {
+            ExecutionContext.SuppressFlow();
+            
+            await AsyncContext_is_maintained_across_async_operations_within_scheduled_work();
+        }
+
+        [Fact]
+        public async Task AsyncContext_does_not_leak_from_inner_context_when_ExecutionContext_is_suppressed()
+        {
+            ExecutionContext.SuppressFlow();
+            
+            await AsyncContext_does_not_leak_from_inner_context();
         }
     }
 }

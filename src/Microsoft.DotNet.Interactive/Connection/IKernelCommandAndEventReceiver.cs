@@ -4,10 +4,9 @@
 using System.Collections.Generic;
 using System.Threading;
 
-namespace Microsoft.DotNet.Interactive.Connection
+namespace Microsoft.DotNet.Interactive.Connection;
+
+public interface IKernelCommandAndEventReceiver
 {
-    public interface IKernelCommandAndEventReceiver
-    {
-        IAsyncEnumerable<CommandOrEvent> CommandsAndEventsAsync(CancellationToken cancellationToken);
-    }
+    IAsyncEnumerable<CommandOrEvent> CommandsAndEventsAsync(CancellationToken cancellationToken);
 }

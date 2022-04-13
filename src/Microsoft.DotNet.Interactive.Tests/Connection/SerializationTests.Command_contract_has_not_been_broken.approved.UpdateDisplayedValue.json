@@ -1,0 +1,15 @@
+{
+  "token": "the-token",
+  "id": "command-id",
+  "commandType": "UpdateDisplayedValue",
+  "command": {
+    "formattedValue": {
+      "mimeType": "text/html",
+      "value": "\u003Cb\u003Ehi!\u003C/b\u003E"
+    },
+    "valueId": "the-value-id",
+    "targetKernelName": null,
+    "originUri": null,
+    "destinationUri": null
+  }
+}

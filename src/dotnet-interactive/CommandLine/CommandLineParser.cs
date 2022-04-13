@@ -18,6 +18,8 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Html;
+using Microsoft.DotNet.Interactive.App.Connection;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Documents.ParserServer;
@@ -453,9 +455,11 @@ public static class CommandLineParser
 
                     kernel = kernel.UseQuitCommand();
 
-                    var host = new KernelHost(kernel, new KernelCommandAndEventTextStreamSender(Console.Out),
-                        new MultiplexingKernelCommandAndEventReceiver(
-                            new KernelCommandAndEventTextReceiver(Console.In)));
+                    var host = kernel.UseHost(
+                        new KernelCommandAndEventTextStreamSender(
+                            Console.Out,
+                            KernelHost.CreateHostUri("stdio")),
+                        new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventTextReaderReceiver(Console.In)), KernelHost.CreateHostUriForCurrentProcessId());
 
                     if (isVSCode)
                     {
@@ -478,25 +482,22 @@ public static class CommandLineParser
                             kernel.Add(
                                 new JavaScriptKernel(clientSideKernelClient),
                                 new[] { "js" });
-
                         }
-
 
                         onServerStarted ??= () =>
                         {
                             var _ = host.ConnectAsync();
                         };
+
                         await startHttp(startupOptions, console, startServer, context);
                     }
                     else
                     {
                         if (!isVSCode)
                         {
-                            await host.CreateProxyKernelOnDefaultConnectorAsync(new KernelInfo("javascript", "javascript")
-                            {
-                                Aliases = new[] { "js" },
-                                DestinationUri = new Uri("kernel://webview/javascript")
-                            });
+                            var proxy = await host.ConnectProxyKernelOnDefaultConnectorAsync("javascript", new Uri("kernel://webview/javascript"));
+
+                            proxy.KernelInfo.SupportedKernelCommands.Add(new(nameof(SubmitCode)));
                         }
 
                         await startKernelHost(startupOptions, host, console);
@@ -580,7 +581,6 @@ public static class CommandLineParser
                 .UseWho()
                 .UseMathAndLaTeX()
                 .UseValueSharing(),
-                    
             new[] { "c#", "C#" });
 
         compositeKernel.Add(

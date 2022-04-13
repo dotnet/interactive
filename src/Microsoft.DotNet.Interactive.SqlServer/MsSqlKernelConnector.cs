@@ -7,39 +7,39 @@ using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.SqlServer;
 
-public class MsSqlKernelConnector : KernelConnectorBase
+public class MsSqlKernelConnector : IKernelConnector
 {
+    public MsSqlKernelConnector(bool createDbContext, string connectionString)
+    {
+        CreateDbContext = createDbContext;
+        ConnectionString = connectionString;
+    }
+
     public bool CreateDbContext { get; }
 
     public string ConnectionString { get; }
 
     public string PathToService { get; set; }
 
-    public override async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
+    public async Task<Kernel> CreateKernelAsync(string kernelName)
     {
         if (string.IsNullOrWhiteSpace(PathToService))
         {
             throw new InvalidOperationException($"{nameof(PathToService)} cannot be null or whitespace.");
         }
 
-        var sqlClient = new ToolsServiceClient(PathToService, $"--parent-pid {Environment.ProcessId}");
+        var client = new ToolsServiceClient(PathToService, $"--parent-pid {Environment.ProcessId}");
 
         var kernel = new MsSqlKernel(
-                $"sql-{kernelInfo}",
+                $"sql-{kernelName}",
                 ConnectionString,
-                sqlClient)
+                client)
             .UseValueSharing();
 
-        kernel.RegisterForDisposal(sqlClient);
+        kernel.RegisterForDisposal(client);
 
         await kernel.ConnectAsync();
 
         return kernel;
-    }
-
-    public MsSqlKernelConnector(bool createDbContext, string connectionString)
-    {
-        CreateDbContext = createDbContext;
-        ConnectionString = connectionString;
     }
 }

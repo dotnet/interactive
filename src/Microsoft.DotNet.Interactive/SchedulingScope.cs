@@ -55,11 +55,7 @@ namespace Microsoft.DotNet.Interactive
             return _stringValue;
         }
 
-        public static SchedulingScope Parse(string scope)
-        {
-            return new(scope);
-
-        }
+        public static SchedulingScope Parse(string scope) => new(scope);
 
         public string[] Parts { get; }
 

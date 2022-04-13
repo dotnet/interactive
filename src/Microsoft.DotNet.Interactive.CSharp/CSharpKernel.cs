@@ -50,9 +50,9 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         private InteractiveWorkspace _workspace;
 
-        private Lazy<PackageRestoreContext> _packageRestoreContext;
+        private Lazy<PackageRestoreContext> _lazyPackageRestoreContext;
 
-        internal ScriptOptions ScriptOptions;
+        private ScriptOptions _scriptOptions;
 
         private readonly AssemblyBasedExtensionLoader _extensionLoader = new();
         private readonly ScriptBasedExtensionLoader _scriptExtensionLoader = new();
@@ -63,14 +63,14 @@ namespace Microsoft.DotNet.Interactive.CSharp
         {
 
         }
-        public CSharpKernel(string name) : base(name)
+        public CSharpKernel(string name) : base(name, "C#", "10.0")
         {
             _workspace = new InteractiveWorkspace();
 
             //For the VSCode-Add-In Directory.GetCurrentDirectory() would here return something like: c:\Users\<username>\AppData\Roaming\Code\User\globalStorage\ms-dotnettools.dotnet-interactive-vscode
             //...so we wait for RunAsync to read Directory.GetCurrentDirectory() the first time.
 
-            ScriptOptions = ScriptOptions.Default
+            _scriptOptions = ScriptOptions.Default
                          .WithLanguageVersion(LanguageVersion.Latest)
                          .AddImports(
                              "System",
@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                              typeof(CSharpKernel).Assembly,
                              typeof(PocketView).Assembly);
 
-            _packageRestoreContext = new Lazy<PackageRestoreContext>(() =>
+            _lazyPackageRestoreContext = new Lazy<PackageRestoreContext>(() =>
             {
                 var packageRestoreContext = new PackageRestoreContext();
 
@@ -101,9 +101,9 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 _workspace.Dispose();
                 _workspace = null;
 
-                _packageRestoreContext = null;
+                _lazyPackageRestoreContext = null;
                 ScriptState = null;
-                ScriptOptions = null;
+                _scriptOptions = null;
             });
         }
 
@@ -152,7 +152,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public async Task SetValueAsync(string name, object value, Type declaredType = null)
         {
-            var csharpTypeDeclaration = new StringWriter();
+            using var csharpTypeDeclaration = new StringWriter();
 
             declaredType ??= value.GetType();
             declaredType.WriteCSharpDeclarationTo(csharpTypeDeclaration);
@@ -213,13 +213,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
             {
                 ScriptState = await CSharpScript.RunAsync(
                         string.Empty,
-                        ScriptOptions,
+                        _scriptOptions,
                         cancellationToken: context.CancellationToken)
                     .UntilCancelled(context.CancellationToken) ?? ScriptState;
-                if (ScriptState is not null)
-                {
-                    _workspace.UpdateWorkspace(ScriptState);
-                }
+
+                _workspace.UpdateWorkspace(ScriptState);
             }
         }
 
@@ -339,13 +337,18 @@ namespace Microsoft.DotNet.Interactive.CSharp
             CancellationToken cancellationToken = default,
             Func<Exception, bool> catchException = default)
         {
+            if (cancellationToken.IsCancellationRequested || IsDisposed)
+            {
+                return;
+            }
+
             UpdateScriptOptionsIfWorkingDirectoryChanged();
 
             if (ScriptState is null)
             {
                 ScriptState = await CSharpScript.RunAsync(
                                                     code,
-                                                    ScriptOptions,
+                                                    _scriptOptions,
                                                     cancellationToken: cancellationToken)
                                                 .UntilCancelled(cancellationToken) ?? ScriptState;
             }
@@ -353,15 +356,10 @@ namespace Microsoft.DotNet.Interactive.CSharp
             {
                 ScriptState = await ScriptState.ContinueWithAsync(
                                                    code,
-                                                   ScriptOptions,
+                                                   _scriptOptions,
                                                    catchException: catchException,
                                                    cancellationToken: cancellationToken)
-                    .UntilCancelled(cancellationToken) ?? ScriptState;
-            }
-
-            if (IsDisposed)
-            {
-                return;
+                                               .UntilCancelled(cancellationToken) ?? ScriptState;
             }
 
             if (ScriptState is not null && ScriptState.Exception is null)
@@ -377,7 +375,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 {
                     _workingDirectory = currentDir;
                     
-                    ScriptOptions = ScriptOptions
+                    _scriptOptions = _scriptOptions
                                     .WithMetadataResolver(CachingMetadataResolver.Default.WithBaseDirectory(_workingDirectory))
                                     .WithSourceResolver(new SourceFileResolver(ImmutableArray<string>.Empty, _workingDirectory));
                 }
@@ -465,16 +463,16 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 context);
         }
 
-        public PackageRestoreContext PackageRestoreContext => _packageRestoreContext.Value;
+        public PackageRestoreContext PackageRestoreContext => _lazyPackageRestoreContext.Value;
 
         private bool HasReturnValue =>
             ScriptState is not null &&
             (bool)_hasReturnValueMethod.Invoke(ScriptState.Script, null);
 
-        void ISupportNuget.TryAddRestoreSource(string source) => _packageRestoreContext.Value.TryAddRestoreSource(source);
+        void ISupportNuget.TryAddRestoreSource(string source) => _lazyPackageRestoreContext.Value.TryAddRestoreSource(source);
 
         PackageReference ISupportNuget.GetOrAddPackageReference(string packageName, string packageVersion) =>
-            _packageRestoreContext.Value.GetOrAddPackageReference(
+            _lazyPackageRestoreContext.Value.GetOrAddPackageReference(
                 packageName,
                 packageVersion);
 
@@ -490,10 +488,10 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 _workspace.AddPackageManagerReference(reference);
             }
 
-            ScriptOptions = ScriptOptions.AddReferences(references);
+            _scriptOptions = _scriptOptions.AddReferences(references);
         }
 
-        Task<PackageRestoreResult> ISupportNuget.RestoreAsync() => _packageRestoreContext.Value.RestoreAsync();
+        Task<PackageRestoreResult> ISupportNuget.RestoreAsync() => _lazyPackageRestoreContext.Value.RestoreAsync();
 
         public IEnumerable<PackageReference> RequestedPackageReferences =>
             PackageRestoreContext.RequestedPackageReferences;
@@ -503,7 +501,5 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public IEnumerable<string> RestoreSources =>
             PackageRestoreContext.RestoreSources;
-
-        
     }
 }

@@ -72,12 +72,12 @@ namespace Microsoft.DotNet.Interactive.App
         {
             using var _ = Log.OnEnterAndExit();
 
-            // FIX: (ConstructWebHostBuilder) dispose me
+            // TODO: (ConstructWebHostBuilder) dispose me
             var disposables = new CompositeDisposable
             {
                 StartToolLogging(options)
             };
-
+            
             HttpProbingSettings probingSettings = null;
 
             if (options.EnableHttpApi)

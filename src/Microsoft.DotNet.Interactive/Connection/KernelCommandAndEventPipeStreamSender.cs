@@ -9,31 +9,35 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Server;
 
-namespace Microsoft.DotNet.Interactive.Connection
+namespace Microsoft.DotNet.Interactive.Connection;
+
+public class KernelCommandAndEventPipeStreamSender : IKernelCommandAndEventSender
 {
-    public class KernelCommandAndEventPipeStreamSender : IKernelCommandAndEventSender
+    private readonly PipeStream _pipeStream;
+
+    public KernelCommandAndEventPipeStreamSender(
+        PipeStream pipeStream,
+        Uri remoteHostUri)
     {
-        private readonly PipeStream _sender;
-
-        public KernelCommandAndEventPipeStreamSender(PipeStream sender)
-        {
-            _sender = sender ?? throw new ArgumentNullException(nameof(sender));
-        }
-
-        public async Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            _sender.WriteMessage(KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)));
-
-            await _sender.FlushAsync(cancellationToken);
-        }
-
-        public async Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            _sender.WriteMessage(KernelEventEnvelope.Serialize(KernelEventEnvelope.Create(kernelEvent)));
-
-            await _sender.FlushAsync(cancellationToken);
-        }
+        _pipeStream = pipeStream ?? throw new ArgumentNullException(nameof(pipeStream));
+        RemoteHostUri = remoteHostUri;
     }
+
+    public async Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        _pipeStream.WriteMessage(KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)));
+
+        await _pipeStream.FlushAsync(cancellationToken);
+    }
+
+    public async Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        _pipeStream.WriteMessage(KernelEventEnvelope.Serialize(KernelEventEnvelope.Create(kernelEvent)));
+
+        await _pipeStream.FlushAsync(cancellationToken);
+    }
+
+    public Uri RemoteHostUri { get; }
 }

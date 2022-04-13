@@ -252,7 +252,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
         [Fact]
         // Question:   should it not throw, or is ignore sufficient
-        public async Task Ignores__subsequent_package_specifications_with_different_higer_version()
+        public async Task Ignores__subsequent_package_specifications_with_different_higher_version()
         {
             using var restoreContext = new PackageRestoreContext();
             restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0-preview");

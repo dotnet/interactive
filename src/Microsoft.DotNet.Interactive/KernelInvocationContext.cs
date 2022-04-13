@@ -81,11 +81,9 @@ namespace Microsoft.DotNet.Interactive
 
         public void Complete(KernelCommand command)
         {
-            var commandSucceeded = new CommandSucceeded(command);
-
             if (CommandEqualityComparer.Instance.Equals(command, Command))
             {
-                Publish(commandSucceeded);
+                Publish(new CommandSucceeded(command));
                 if (!_events.IsDisposed)
                 {
                     _events.OnCompleted();
@@ -96,7 +94,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (command.ShouldPublishCompletionEvent == true)
                 {
-                    Publish(commandSucceeded);
+                    Publish(new CommandSucceeded(command));
                 }
 
                 if (_childCommands.TryGetValue(command, out var events) && 

@@ -85,9 +85,10 @@ Microsoft.DotNet.Interactive.SqlServer
     public System.String DatabaseName { get; set;}
     public System.String ServerName { get; set;}
     public System.String UserName { get; set;}
-  public class ConnectMsSqlCommand : Microsoft.DotNet.Interactive.Connection.ConnectKernelCommand<MsSqlKernelConnector>, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
+  public class ConnectMsSqlCommand : Microsoft.DotNet.Interactive.Connection.ConnectKernelCommand, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
     .ctor(System.String resolvedToolsServicePath)
-    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> ConnectKernelAsync(Microsoft.DotNet.Interactive.KernelInfo kernelInfo, MsSqlKernelConnector connector, Microsoft.DotNet.Interactive.KernelInvocationContext context)
+    public System.CommandLine.Argument<System.String> ConnectionStringArgument { get;}
+    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> ConnectKernelAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context, System.CommandLine.Invocation.InvocationContext commandLineContext)
   public class ConnectParams
     .ctor()
     public ConnectionDetails Connection { get; set;}
@@ -106,12 +107,12 @@ Microsoft.DotNet.Interactive.SqlServer
     .ctor()
     public ResultMessage Message { get; set;}
     public System.String OwnerUri { get; set;}
-  public class MsSqlKernelConnector : Microsoft.DotNet.Interactive.Connection.KernelConnectorBase
+  public class MsSqlKernelConnector, Microsoft.DotNet.Interactive.Connection.IKernelConnector
     .ctor(System.Boolean createDbContext, System.String connectionString)
     public System.String ConnectionString { get;}
     public System.Boolean CreateDbContext { get;}
     public System.String PathToService { get; set;}
-    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> ConnectKernelAsync(Microsoft.DotNet.Interactive.KernelInfo kernelInfo)
+    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> CreateKernelAsync(System.String kernelName)
   public class MsSqlKernelExtension, Microsoft.DotNet.Interactive.IKernelExtension
     .ctor()
     public System.Threading.Tasks.Task OnLoadAsync(Microsoft.DotNet.Interactive.Kernel kernel)
@@ -256,7 +257,7 @@ Microsoft.DotNet.Interactive.SqlServer
     public System.Void remove_OnQueryMessage(System.EventHandler<MessageParams> value)
     public System.Threading.Tasks.Task SendTextChangeNotificationAsync(System.Uri ownerUri, System.String newText, System.String oldText)
   public static class ToolsServiceClientExtensions
-  public abstract class ToolsServiceKernel : Microsoft.DotNet.Interactive.Kernel, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestCompletions>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, Microsoft.DotNet.Interactive.ValueSharing.ISupportGetValue, Microsoft.DotNet.Interactive.ValueSharing.ISupportSetClrValue, System.IDisposable
+  public abstract class ToolsServiceKernel : Microsoft.DotNet.Interactive.Kernel, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestCompletions>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValue>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValueInfos>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, Microsoft.DotNet.Interactive.ValueSharing.ISupportGetValue, Microsoft.DotNet.Interactive.ValueSharing.ISupportSetClrValue, System.IDisposable
     protected System.Boolean CanDeclareVariable(System.String name, System.Object value, ref System.String& msg)
     public System.Threading.Tasks.Task ConnectAsync()
     protected System.String CreateVariableDeclaration(System.String name, System.Object value)

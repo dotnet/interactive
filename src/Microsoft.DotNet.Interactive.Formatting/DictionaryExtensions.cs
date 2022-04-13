@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive
 {
     internal static class DictionaryExtensions
     {
@@ -21,6 +21,24 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             return value;
         }
+
+#if NETSTANDARD2_0
+        public static bool TryAdd<TKey, TValue>(
+            this IDictionary<TKey, TValue> source, 
+            TKey key,
+            TValue value)
+        {
+            if (source.TryGetValue(key, out _))
+            {
+                return false;
+            }
+            else
+            {
+                source.Add(key, value);
+                return true;
+            }
+        }  
+#endif
 
         public static IDictionary<TKey, TValue> Merge<TKey, TValue>(
             this IDictionary<TKey, TValue> dictionary1,

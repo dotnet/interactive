@@ -2,11 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.ValueSharing
 {
     public interface IKernelValueDeclarer
     {
-        bool TryGetValueDeclaration(string valueName, object value, out KernelCommand command);
+        bool TryGetValueDeclaration(
+            ValueProduced valueProduced, 
+            out KernelCommand command);
     }
 }

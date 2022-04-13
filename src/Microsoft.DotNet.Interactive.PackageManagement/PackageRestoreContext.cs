@@ -24,11 +24,11 @@ namespace Microsoft.DotNet.Interactive
         private readonly ConcurrentDictionary<string, string> _requestedRestoreSources = new(StringComparer.Ordinal);
         private readonly ConcurrentDictionary<string, string> _resolvedRestoreSources = new(StringComparer.Ordinal);
 
-        private readonly DependencyProvider _dependencies;
+        private readonly DependencyProvider _dependencyProvider;
 
         public PackageRestoreContext()
         {
-            _dependencies = new DependencyProvider(AssemblyProbingPaths, NativeProbingRoots);
+            _dependencyProvider = new DependencyProvider(AssemblyProbingPaths, NativeProbingRoots);
             AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
         }
 
@@ -162,8 +162,10 @@ namespace Microsoft.DotNet.Interactive
                     packageReference = new PackageReference(packageName, packageVersion);
                     return true;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    Log.Error("Exception while trying to get package name and version {exception} for {packageName} and {packageVersion}",
+                              ex, packageName, packageVersion);
                 }
             }
 
@@ -221,9 +223,12 @@ namespace Microsoft.DotNet.Interactive
             Log.Info("OnAssemblyLoad: {location}", args.LoadedAssembly.Location);
         }
 
-        private IResolveDependenciesResult ResolveAsync(IEnumerable<Tuple<string, string>> packageManagerTextLines, string executionTfm, ResolvingErrorReport reportError)
+        private IResolveDependenciesResult Resolve(
+            IEnumerable<Tuple<string, string>> packageManagerTextLines, 
+            string executionTfm, 
+            ResolvingErrorReport reportError)
         {
-            IDependencyManagerProvider iDependencyManager = _dependencies.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget");
+            IDependencyManagerProvider iDependencyManager = _dependencyProvider.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget");
 
             if (iDependencyManager is null)
             {
@@ -232,7 +237,13 @@ namespace Microsoft.DotNet.Interactive
                 throw new InvalidOperationException("Internal error - unable to locate the nuget package manager, please try to reinstall.");
             }
 
-            return _dependencies.Resolve(iDependencyManager, ".csx", packageManagerTextLines, reportError, executionTfm);
+            return _dependencyProvider.Resolve(
+                iDependencyManager, 
+                ".csx", 
+                packageManagerTextLines, 
+                reportError, 
+                executionTfm, 
+                timeout: 60000);
         }
 
         public async Task<PackageRestoreResult> RestoreAsync()
@@ -249,7 +260,7 @@ namespace Microsoft.DotNet.Interactive
 
             var errors = new List<string>();
 
-            var result = await Task.Run(() => ResolveAsync(GetPackageManagerLines(), restoreTfm, ReportError));
+            var result = await Task.Run(() => Resolve(GetPackageManagerLines(), restoreTfm, ReportError));
 
             PackageRestoreResult packageRestoreResult;
 
@@ -313,7 +324,10 @@ namespace Microsoft.DotNet.Interactive
         {
             try
             {
-                (_dependencies as IDisposable)?.Dispose();
+                if (_dependencyProvider is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
                 AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
             }
             catch

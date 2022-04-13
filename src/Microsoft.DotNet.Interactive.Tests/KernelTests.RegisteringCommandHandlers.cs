@@ -93,23 +93,5 @@ public partial class KernelTests
                 .Should()
                 .Be(originalCommand.AdditionalProperty);
         }
-
-        [Fact]
-        public void When_attempting_to_register_a_handler_for_an_implemented_handler_it_throws()
-        {
-            using var csharpKernel = new CSharpKernel();
-
-            Action register = () =>
-                csharpKernel.RegisterCommandHandler<SubmitCode>((_, _) => Task.CompletedTask);
-
-            register.Should()
-                    .Throw<InvalidOperationException>()
-                    .Which
-                    .Message
-                    .Should()
-                    .Be($"Command {typeof(SubmitCode)} is already directly implemented and registration of an alternative handler is not supported.");
-        }
-
-     
     }
 }

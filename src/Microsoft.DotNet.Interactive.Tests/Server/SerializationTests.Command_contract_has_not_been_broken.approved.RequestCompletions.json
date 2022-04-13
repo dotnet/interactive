@@ -1,1 +1,0 @@
-{"token":"the-token","id":"command-id","commandType":"RequestCompletions","command":{"code":"Cons","linePosition":{"line":0,"character":4},"targetKernelName":"csharp"},"originUri":"","destinationUri":""}

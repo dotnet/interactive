@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.Interactive.Utility
             return Observable.Empty<string>();
         }
 
-        public override Encoding Encoding => _encoding ?? (_encoding = new UnicodeEncoding(false, false));
+        public override Encoding Encoding => _encoding ??= new UnicodeEncoding(false, false);
 
         public IEnumerable<TextWriter> Writers => _writers.Select(w => w.Value);
 

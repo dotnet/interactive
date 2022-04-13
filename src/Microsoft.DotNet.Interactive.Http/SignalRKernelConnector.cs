@@ -10,17 +10,21 @@ using Microsoft.DotNet.Interactive.Connection;
 #nullable enable
 namespace Microsoft.DotNet.Interactive.Http;
 
-public class SignalRKernelConnector : KernelConnectorBase, IDisposable
+public class SignalRKernelConnector : IKernelConnector
 {
-    private readonly CompositeDisposable _disposables = new();
-    public string HubUrl { get;  }
+    public SignalRKernelConnector(Uri hubUrl)
+    {
+        HubUrl = hubUrl;
+    }
 
-    public override async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
+    public Uri HubUrl { get; }
+
+    public async Task<Kernel> CreateKernelAsync(string kernelName)
     {
         // QUESTION: (ConnectKernelAsync) tests?
         var hubConnection = new HubConnectionBuilder()
-            .WithUrl(HubUrl)
-            .Build();
+                            .WithUrl(HubUrl)
+                            .Build();
 
         await hubConnection.StartAsync();
 
@@ -28,26 +32,13 @@ public class SignalRKernelConnector : KernelConnectorBase, IDisposable
 
         var receiver = new KernelCommandAndEventSignalRHubConnectionReceiver(hubConnection);
         var sender = new KernelCommandAndEventSignalRHubConnectionSender(hubConnection);
-        var proxyKernel = new ProxyKernel(kernelInfo.LocalName, receiver, sender);
+        var proxyKernel = new ProxyKernel(kernelName, receiver, sender, new Uri(HubUrl, kernelName));
 
-        var _ = proxyKernel.StartAsync();
+        proxyKernel.EnsureStarted();
 
-        _disposables.Add(receiver);
-        _disposables.Add(Disposable.Create( async () =>
-        {
-            await hubConnection.DisposeAsync();
-        }));
+        proxyKernel.RegisterForDisposal(receiver);
+        proxyKernel.RegisterForDisposal(Disposable.Create(async () => await hubConnection.DisposeAsync()));
 
         return proxyKernel;
-    }
-
-    public SignalRKernelConnector( string hubUrl)
-    {
-        HubUrl = hubUrl;
-    }
-
-    public void Dispose()
-    {
-        _disposables.Dispose();
     }
 }

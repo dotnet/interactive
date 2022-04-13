@@ -5,19 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Events;
 
-namespace Microsoft.DotNet.Interactive.Connection
-{
-    public static class KernelCommandAndEventSenderExtensions
-    {
-        public static void NotifyIsReady(this IKernelCommandAndEventSender sender)
-        {
-            sender.NotifyIsReadyAsync( CancellationToken.None)
-                .Wait();
-        }
+namespace Microsoft.DotNet.Interactive.Connection;
 
-        public static Task NotifyIsReadyAsync(this IKernelCommandAndEventSender sender, CancellationToken cancellationToken)
-        {
-            return sender.SendAsync(new KernelReady(), cancellationToken);
-        }
-    }
+internal static class KernelCommandAndEventSenderExtensions
+{
 }

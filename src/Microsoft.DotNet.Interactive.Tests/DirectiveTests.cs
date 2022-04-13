@@ -245,8 +245,6 @@ i");
         [InlineData(".NET")]
         public async Task Directives_can_display_help(string kernelName)
         {
-            using var _ = await ConsoleLock.AcquireAsync();
-
             var cSharpKernel = new CSharpKernel().UseDefaultMagicCommands();
             using var compositeKernel = new CompositeKernel
             {

@@ -4,15 +4,14 @@
 using System;
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive
-{
-    public class NoSuitableKernelException : Exception
-    {
-        public NoSuitableKernelException(KernelCommand command) : base($"No kernel found for {command} with target kernel '{command.TargetKernelName}'")
-        {
-            Command = command;
-        }
+namespace Microsoft.DotNet.Interactive;
 
-        public KernelCommand Command { get; }
+public class NoSuitableKernelException : Exception
+{
+    public NoSuitableKernelException(KernelCommand command) : base($"No kernel found for {command} with target kernel '{command.TargetKernelName}'.")
+    {
+        Command = command;
     }
+
+    public KernelCommand Command { get; }
 }

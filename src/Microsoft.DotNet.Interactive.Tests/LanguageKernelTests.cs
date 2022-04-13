@@ -938,11 +938,11 @@ Console.Write(""value two"");
 Console.Write(""value three"");"
             };
 
-            var kernelCommand = new SubmitCode(source);
+            var result = await kernel.SendAsync(new SubmitCode(source));
 
-            await kernel.SendAsync(kernelCommand);
+            var events = result.KernelEvents.ToSubscribedList();
 
-            KernelEvents
+            events
                 .OfType<StandardOutputValueProduced>()
                 .Select(e => e.FormattedValues.ToArray())
                 .Should()
@@ -960,9 +960,11 @@ Console.Write(""value three"");"
 
             var source = "printf \"hello from F#\"";
 
-            await SubmitCode(kernel, source);
+            var result = await SubmitCode(kernel, source);
 
-            KernelEvents
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events
                 .OfType<StandardOutputValueProduced>()
                 .Last()
                 .FormattedValues
@@ -1028,26 +1030,28 @@ Console.Write(""value three"");"
             {
                 Language.FSharp => @"
 open System
-Console.Write(""value one"")
-Console.Write(""value two"")
-Console.Write(""value three"")
+""value one"".Display()
+""value two"".Display()
+""value three"".Display()
 5",
 
                 Language.CSharp => @"
-Console.Write(""value one"");
-Console.Write(""value two"");
-Console.Write(""value three"");
+""value one"".Display();
+""value two"".Display();
+""value three"".Display();
 5",
             };
 
-            await SubmitCode(kernel, source);
+            var result = await SubmitCode(kernel, source);
 
-            KernelEvents
-                .OfType<StandardOutputValueProduced>()
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events
+                .OfType<DisplayedValueProduced>()
                 .Should()
                 .HaveCount(3);
 
-            KernelEvents
+            events
                 .OfType<ReturnValueProduced>()
                 .Last()
                 .Value.Should().Be(5);
@@ -1066,15 +1070,15 @@ Console.Write(""value three"");
             {
                 Language.FSharp => @"
 open System
-Console.Write(1)
+1s.Display(""text/plain"")
 System.Threading.Thread.Sleep(1000)
-Console.Write(2)
+2s.Display(""text/plain"")
 5",
 
                 Language.CSharp => @"
-Console.Write(1);
+1.Display(""text/plain"");
 System.Threading.Thread.Sleep(1000);
-Console.Write(2);
+2.Display(""text/plain"");
 5",
             };
 
@@ -1082,7 +1086,7 @@ Console.Write(2);
 
             var events =
                 timeStampedEvents
-                    .Where(e => e.Value is StandardOutputValueProduced)
+                    .Where(e => e.Value is DisplayedValueProduced)
                     .ToArray();
 
             events.Should().HaveCount(2);
@@ -1091,7 +1095,7 @@ Console.Write(2);
 
             diff.Should().BeCloseTo(1.Seconds(), precision: 500);
             events
-                .Select(e => e.Value as StandardOutputValueProduced)
+                .Select(e => e.Value as DisplayedValueProduced)
                 .SelectMany(e => e.FormattedValues.Select(v => v.Value))
                 .Should()
                 .BeEquivalentTo(new[] { "1", "2" });

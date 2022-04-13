@@ -3,6 +3,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
@@ -34,23 +35,22 @@ namespace Microsoft.DotNet.Interactive.VSCode
                     }
                 });
 
-                var vscodeKernelInfo = new KernelInfo("vscode")
-                { 
-                    Aliases = new[] { "frontend" }, 
-                    DestinationUri  = new("kernel://vscode/vscode", UriKind.Absolute)
-                };
+                var hostKernel = await root.Host.ConnectProxyKernelOnDefaultConnectorAsync(
+                                     "vscode",
+                                     new Uri("kernel://vscode/vscode"),
+                                     new[] { "frontend" });
+                hostKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(GetInput)));
+                hostKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(SendEditableCode)));
 
-                var jsKernelInfo = new KernelInfo("javascript", "javascript")
-                { 
-                    Aliases = new[] { "js" }, 
-                    DestinationUri  = new("kernel://webview/javascript", UriKind.Absolute)
-                };
+                var jsKernel = await root.Host.ConnectProxyKernelOnDefaultConnectorAsync(
+                                   "javascript",
+                                   new Uri("kernel://webview/javascript"),
+                                   new[] { "js" });
+                jsKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(SubmitCode)));
+                jsKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValue)));
+                jsKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValueInfos)));
 
-                await root.Host.CreateProxyKernelOnDefaultConnectorAsync(vscodeKernelInfo);
-
-                var jsKernel = await root.Host.CreateProxyKernelOnDefaultConnectorAsync(jsKernelInfo);
-
-                jsKernel.UseValueSharing(new JavaScriptKernelValueDeclarer());
+                jsKernel.UseValueSharing(new JavaScriptValueDeclarer());
             }
         }
     }

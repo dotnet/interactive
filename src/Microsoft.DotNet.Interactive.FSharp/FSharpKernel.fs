@@ -34,7 +34,7 @@ open FSharp.Compiler.Symbols
 
 type FSharpKernel () as this =
 
-    inherit Kernel("fsharp")
+    inherit Kernel("fsharp", "F#", "6.0")
 
     static let lockObj = Object();
 

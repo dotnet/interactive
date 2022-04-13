@@ -17,33 +17,50 @@ namespace Microsoft.DotNet.Interactive.Connection
         private readonly IKernelCommandAndEventSender _sender;
         private readonly CancellationTokenSource _cancellationTokenSource = new();
         private ExecutionContext _executionContext;
-        private readonly Dictionary<string,(KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<KernelEvent> completionSource, KernelInfo kernelInfo ,KernelInvocationContext invocationContext)> _inflight = new();
+
+        private readonly Dictionary<string, (KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<KernelEvent> completionSource, KernelInvocationContext
+            invocationContext)> _inflight = new();
+
         private int _started = 0;
         private IKernelValueDeclarer _valueDeclarer;
+        private readonly Uri _remoteUri;
 
-        public ProxyKernel(string name, IKernelCommandAndEventReceiver receiver, IKernelCommandAndEventSender sender) : base(name)
+        public ProxyKernel(
+            string name,
+            IKernelCommandAndEventReceiver receiver,
+            IKernelCommandAndEventSender sender,
+            Uri remoteUri = null) : base(name)
         {
             _receiver = receiver ?? throw new ArgumentNullException(nameof(receiver));
             _sender = sender ?? throw new ArgumentNullException(nameof(sender));
 
-            RegisterForDisposal(() =>
+            if (remoteUri is not null)
             {
-                _cancellationTokenSource.Cancel();
-                _cancellationTokenSource.Dispose();
-            });
-        }
+                _remoteUri = remoteUri;
+            }
+            else if (sender.RemoteHostUri is { } remoteHostUri)
+            {
+                _remoteUri = new(remoteHostUri, name);
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(remoteUri));
+            }
 
-        public Task StartAsync()
+            KernelInfo.RemoteUri = _remoteUri;
+        }
+        
+        public void EnsureStarted()
         {
             if (Interlocked.CompareExchange(ref _started, 1, 0) == 1)
             {
-                throw new InvalidOperationException($"ProxyKernel {Name} is already started.");
+                return;
             }
             
-            return Task.Run(async () => { await ReceiveAndDispatchCommandsAndEvents(); }, _cancellationTokenSource.Token);
+            Task.Run(ReceiveAndPublishCommandsAndEvents);
         }
 
-        private async Task ReceiveAndDispatchCommandsAndEvents()
+        private async Task ReceiveAndPublishCommandsAndEvents()
         {
             await foreach (var d in _receiver.CommandsAndEventsAsync(_cancellationTokenSource.Token))
             {
@@ -59,7 +76,7 @@ namespace Microsoft.DotNet.Interactive.Connection
             }
         }
 
-        internal override Task HandleAsync(KernelCommand command, KernelInvocationContext context)
+        private Task HandleByForwardingToRemoteAsync(KernelCommand command, KernelInvocationContext context)
         {
             switch (command)
             {
@@ -69,24 +86,24 @@ namespace Microsoft.DotNet.Interactive.Connection
                     return base.HandleAsync(command, context);
             }
 
-            _executionContext = ExecutionContext.Capture();
-            var token = command.GetOrCreateToken();
-            
-            KernelInfo kernelInfo = null;
-            if (command.OriginUri is null || command.DestinationUri is null)
+            if (command.OriginUri is null)
             {
-                if (ParentKernel?.Host?.TryGetKernelInfo(this, out kernelInfo) == true && kernelInfo is not null)
+                if (context.HandlingKernel == this)
                 {
-                    command.OriginUri??= kernelInfo.OriginUri;
-                    command.DestinationUri??= kernelInfo.DestinationUri;
+                    command.OriginUri = KernelInfo.Uri;
                 }
             }
+
+            _executionContext = ExecutionContext.Capture();
+            var token = command.GetOrCreateToken();
+
+            command.OriginUri ??= KernelInfo.Uri;
 
             var targetKernelName = command.TargetKernelName;
             command.TargetKernelName = null;
             var completionSource = new TaskCompletionSource<KernelEvent>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            _inflight[token] = (command, _executionContext, completionSource, kernelInfo, context);
+            _inflight[token] = (command, _executionContext, completionSource, context);
 
             ExecutionContext.SuppressFlow();
             var _ = _sender.SendAsync(command, context.CancellationToken);
@@ -100,13 +117,22 @@ namespace Microsoft.DotNet.Interactive.Connection
             });
         }
 
-        protected internal override void DelegatePublication(KernelEvent kernelEvent)
+        internal override Task HandleAsync(
+            KernelCommand command, 
+            KernelInvocationContext context) =>
+            HandleByForwardingToRemoteAsync(command, context);
+
+        public override Task HandleAsync(RequestKernelInfo command, KernelInvocationContext context) =>
+            // override the default handler on Kernel and forward the command instead
+            HandleByForwardingToRemoteAsync(command, context);
+
+        private void DelegatePublication(KernelEvent kernelEvent)
         {
             var token = kernelEvent.Command.GetOrCreateToken();
 
             var hasPending = _inflight.TryGetValue(token, out var pending);
 
-            if (hasPending && HasSameOrigin(kernelEvent, pending.kernelInfo))
+            if (hasPending && HasSameOrigin(kernelEvent, KernelInfo))
             {
                 switch (kernelEvent)
                 {
@@ -121,8 +147,7 @@ namespace Microsoft.DotNet.Interactive.Connection
                     default:
                         if (pending.executionContext is { } ec)
                         {
-                            ExecutionContext.Run(ec, _ => { pending.invocationContext.Publish(kernelEvent); },
-                                null);
+                            ExecutionContext.Run(ec, _ => pending.invocationContext.Publish(kernelEvent), null);
                         }
                         else
                         {
@@ -135,17 +160,20 @@ namespace Microsoft.DotNet.Interactive.Connection
 
         private bool HasSameOrigin(KernelEvent kernelEvent, KernelInfo kernelInfo)
         {
-            if (kernelInfo is not null)
-            {
-                var areEqual = kernelEvent.Command.OriginUri.Equals( kernelInfo.OriginUri);
-                return areEqual;
-            }else if(kernelEvent.Command.OriginUri is null)
+            var commandOriginUri = kernelEvent.Command.OriginUri;
 
+            if (commandOriginUri is null)
             {
-                return true;
+                commandOriginUri = KernelInfo.Uri;
             }
 
-            return false;
+            if (kernelInfo is not null && 
+                commandOriginUri is not null)
+            {
+                return commandOriginUri.Equals(kernelInfo.Uri);
+            }
+
+            return commandOriginUri is null;
         }
 
         internal IKernelValueDeclarer ValueDeclarer
@@ -153,6 +181,6 @@ namespace Microsoft.DotNet.Interactive.Connection
             set => _valueDeclarer = value;
         }
 
-        public override IKernelValueDeclarer GetValueDeclarer(object value) => _valueDeclarer ?? KernelValueDeclarer.Default;
+        public override IKernelValueDeclarer GetValueDeclarer() => _valueDeclarer ?? KernelValueDeclarer.Default;
     }
 }

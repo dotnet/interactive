@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
@@ -63,9 +62,13 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
             $"{nameof(DisplayEvent)}.{nameof(DisplayEvent.ValueId)}",
             $"{nameof(DocumentOpened)}.{nameof(DocumentOpened.RegionName)}",
             $"{nameof(HoverTextProduced)}.{nameof(HoverTextProduced.LinePositionSpan)}",
-            $"{nameof(KernelCommand)}.{nameof(KernelCommand.TargetKernelName)}",
             $"{nameof(OpenDocument)}.{nameof(OpenDocument.RegionName)}",
-            $"{nameof(SubmitCode)}.{nameof(SubmitCode.SubmissionType)}"
+            $"{nameof(SubmitCode)}.{nameof(SubmitCode.SubmissionType)}",
+            
+            $"{nameof(KernelCommand)}.{nameof(KernelCommand.TargetKernelName)}",
+            $"{nameof(KernelCommand)}.{nameof(KernelCommand.DestinationUri)}",
+            $"{nameof(KernelCommand)}.{nameof(KernelCommand.OriginUri)}",
+
         };
 
         private static IEnumerable<Type> CoreAssemblyTypes = GetTypesFromClosure(typeof(KernelCommand).Assembly);

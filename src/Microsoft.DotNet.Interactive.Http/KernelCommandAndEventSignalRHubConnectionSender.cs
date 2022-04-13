@@ -15,24 +15,27 @@ namespace Microsoft.DotNet.Interactive.Http
     public class KernelCommandAndEventSignalRHubConnectionSender : IKernelCommandAndEventSender
     {
         // QUESTION: (KernelCommandAndEventSignalRHubConnectionSender) tests?
-        private readonly HubConnection _sender;
+        private readonly HubConnection _hubConnection;
 
         public KernelCommandAndEventSignalRHubConnectionSender(HubConnection sender)
         {
-            _sender = sender ?? throw new ArgumentNullException(nameof(sender));
+            _hubConnection = sender ?? throw new ArgumentNullException(nameof(sender));
+            RemoteHostUri = KernelHost.CreateHostUri($"signalrhub{_hubConnection.ConnectionId}");
         }
 
         public async Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
         {
             // FIX: remove this one as this is for backward compatibility
-            await _sender.SendAsync("submitCommand", KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)), cancellationToken: cancellationToken);
+            await _hubConnection.SendAsync("submitCommand", KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)), cancellationToken: cancellationToken);
 
-            await _sender.SendAsync("kernelCommandFromServer", KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)), cancellationToken: cancellationToken);
+            await _hubConnection.SendAsync("kernelCommandFromServer", KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)), cancellationToken: cancellationToken);
         }
 
         public async Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
         {
-            await _sender.SendAsync("kernelEventFromServer", KernelEventEnvelope.Serialize(KernelEventEnvelope.Create(kernelEvent)), cancellationToken: cancellationToken);
+            await _hubConnection.SendAsync("kernelEventFromServer", KernelEventEnvelope.Serialize(KernelEventEnvelope.Create(kernelEvent)), cancellationToken: cancellationToken);
         }
+
+        public Uri RemoteHostUri { get; }
     }
 }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -13,6 +13,8 @@ namespace Microsoft.DotNet.Interactive
     public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TResult>
     {
         private static readonly Logger Log = new("KernelScheduler");
+
+        private readonly CompositeDisposable _disposables;
         private readonly List<DeferredOperationSource> _deferredOperationSources = new();
         private readonly CancellationTokenSource _schedulerDisposalSource = new();
         private readonly Task _runLoopTask;
@@ -27,6 +29,12 @@ namespace Microsoft.DotNet.Interactive
                 ScheduledOperationRunLoop,
                 TaskCreationOptions.LongRunning,
                 _schedulerDisposalSource.Token);
+
+            _disposables = new CompositeDisposable
+            {
+                _topLevelScheduledOperations,
+                () => { _schedulerDisposalSource.Cancel(); }
+            };
         }
 
         public void CancelCurrentOperation(Action<T> onCancellation = null)
@@ -77,16 +85,15 @@ namespace Microsoft.DotNet.Interactive
         {
             foreach (var operation in _topLevelScheduledOperations.GetConsumingEnumerable(_schedulerDisposalSource.Token))
             {
-                ExecutionContext executionContext;
+                _currentTopLevelOperation.Value = operation;
 
-                if (_currentTopLevelOperation.Value is { } parentOperation)
+                _currentTopLevelOperation.Value = operation;
+                var executionContext = operation.ExecutionContext;
+
+                if (executionContext is null)
                 {
-                    executionContext = parentOperation.ExecutionContext;
-                }
-                else
-                {
-                    _currentTopLevelOperation.Value = operation;
-                    executionContext = operation.ExecutionContext;
+                    Log.Warning($"{nameof(operation.ExecutionContext)} was null for operation {operation}");
+                    executionContext = ExecutionContext.Capture();
                 }
 
                 _currentlyRunningOperation = operation;
@@ -209,7 +216,7 @@ namespace Microsoft.DotNet.Interactive
 
         public void Dispose()
         {
-            _schedulerDisposalSource.Cancel();
+            _disposables.Dispose();
         }
 
         private void ThrowIfDisposed()

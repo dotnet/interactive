@@ -2,22 +2,22 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.CommandLine.Binding;
 using System.CommandLine.Invocation;
 using System.CommandLine.IO;
 using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 using FluentAssertions;
 using FluentAssertions.Execution;
 
 using Microsoft.DotNet.Interactive.App.CommandLine;
+using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.App.Tests.Extensions;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Telemetry;
@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine;
 public class CommandLineParserTests : IDisposable
 {
     private readonly ITestOutputHelper _output;
-    private readonly TestConsole _console = new TestConsole();
+    private readonly TestConsole _console = new();
     private StartupOptions _startOptions;
     private readonly Parser _parser;
     private readonly FileInfo _connectionFile;
@@ -101,8 +101,8 @@ public class CommandLineParserTests : IDisposable
             .Be(logPath.FullName);
     }
 
-    [Fact]
-    public async Task kernel_server_honors_log_path()
+    [Fact] 
+    public async Task stdio_mode_honors_log_path()
     {
         using var logPath = DisposableDirectory.Create();
 
@@ -127,18 +127,29 @@ public class CommandLineParserTests : IDisposable
 
         // check log file for expected contents
         (await logFile.WaitForFileCondition(
-                timeout: waitTime,
-                predicate: file => file.Length > 0))
+             timeout: waitTime,
+             predicate: file => file.Length > 0))
             .Should()
             .BeTrue($"expected non-empty log file within {waitTime.TotalSeconds}s");
-        var logFileContents = File.ReadAllText(logFile.FullName);
-        logFileContents.Should().Contain("CodeSubmissionReceived: 1+1");
+        
+        var logFileContents = new StringBuilder();
+
+        await using var fileStream = new FileStream(logFile.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        using var fileReader = new StreamReader(fileStream);
+        
+        while (!fileReader.EndOfStream)
+        {
+            var line = await fileReader.ReadLineAsync();
+            logFileContents.Append(line);
+        }
+
+        logFileContents.ToString().Should().Contain("CodeSubmissionReceived: 1+1");
     }
 
     [Fact]
     public async Task It_parses_verbose_option()
     {
-        await _parser.InvokeAsync($"jupyter --verbose {_connectionFile}", _console);
+       await _parser.InvokeAsync($"jupyter --verbose {_connectionFile}", _console);
 
         _startOptions
             .Verbose
@@ -227,8 +238,6 @@ public class CommandLineParserTests : IDisposable
         _startOptions.HttpPort.Should().NotBeNull();
         _startOptions.HttpPort.IsAuto.Should().BeTrue();
     }
-
-
 
     [Fact]
     public void http_command__does_not_parse_http_port_range_option()

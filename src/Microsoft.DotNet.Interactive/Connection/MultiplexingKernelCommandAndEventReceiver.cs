@@ -6,14 +6,18 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Reactive.Disposables;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Pocket;
+using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
+using Disposable = System.Reactive.Disposables.Disposable;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public class MultiplexingKernelCommandAndEventReceiver : IKernelCommandAndEventReceiver, IDisposable
+    public sealed class MultiplexingKernelCommandAndEventReceiver : 
+        IKernelCommandAndEventReceiver, 
+        IDisposable
     {
         private readonly IKernelCommandAndEventReceiver _source;
         private readonly CompositeDisposable _disposables = new();
@@ -26,10 +30,9 @@ namespace Microsoft.DotNet.Interactive.Connection
 
         public async IAsyncEnumerable<CommandOrEvent> CommandsAndEventsAsync([EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            
             await foreach (var commandOrEvent in _source.CommandsAndEventsAsync(cancellationToken))
             {
-                var sources = _children.Select(c => c.LocalStorage).ToArray();
+                var sources = _children.Select(c => c.ReceivedCommandsAndEvents).ToArray();
 
                 if (sources.Length > 0)
                 {
@@ -38,6 +41,7 @@ namespace Microsoft.DotNet.Interactive.Connection
                         destination.Add(commandOrEvent, cancellationToken);
                     }
                 }
+
                 yield return commandOrEvent;
             }
         }
@@ -57,38 +61,44 @@ namespace Microsoft.DotNet.Interactive.Connection
             return receiver;
         }
 
-        private class MultiplexedKernelCommandAndEventReceiver : IKernelCommandAndEventReceiver, IDisposable
+        private class MultiplexedKernelCommandAndEventReceiver : 
+            IKernelCommandAndEventReceiver, 
+            IDisposable
         {
-            public BlockingCollection<CommandOrEvent> LocalStorage { get; } = new();
+            private static readonly Logger<MultiplexedKernelCommandAndEventReceiver> _log = new();
+
             private readonly CompositeDisposable _disposables = new();
+
             public MultiplexedKernelCommandAndEventReceiver()
             {
                 _disposables.Add(Disposable.Create(() =>
                 {
-                    LocalStorage.CompleteAdding();
+                    ReceivedCommandsAndEvents.CompleteAdding();
                 }));
-                _disposables.Add(LocalStorage);
+                _disposables.Add(ReceivedCommandsAndEvents);
             }
 
-            public void Dispose()
-            {
-                _disposables.Dispose();
-            }
+            public BlockingCollection<CommandOrEvent> ReceivedCommandsAndEvents { get; } = new();
+
+            public void Dispose() => _disposables.Dispose();
 
             public async IAsyncEnumerable<CommandOrEvent> CommandsAndEventsAsync([EnumeratorCancellation] CancellationToken cancellationToken)
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    var commandOrEvent = LocalStorage.Take(cancellationToken);
+                    using var op = _log.OnEnterAndExit();
+
                     await Task.Yield();
+
+                    var commandOrEvent = ReceivedCommandsAndEvents.Take(cancellationToken);
+
+                    op.Trace("ReceivedCommandsAndEvents.Take", commandOrEvent);
+
                     yield return commandOrEvent;
                 }
             }
         }
 
-        public void Dispose()
-        {
-            _disposables?.Dispose();
-        }
+        public void Dispose() => _disposables.Dispose();
     }
 }

@@ -11,7 +11,6 @@ namespace Microsoft.DotNet.Interactive
         public async Task<TResult> RunAsync(T value, KernelSchedulerDelegate<T, TResult> onExecuteAsync, string scope = "default",
             CancellationToken cancellationToken = default)
         {
-            await Task.Yield();
             return await onExecuteAsync(value);
         }
     }

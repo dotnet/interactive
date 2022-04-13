@@ -12,17 +12,22 @@ using Microsoft.DotNet.Interactive.SqlServer;
 
 namespace Microsoft.DotNet.Interactive.Kql;
 
-public class KqlKernelConnector : KernelConnectorBase
+public class KqlKernelConnector : IKernelConnector
 {
+    public KqlKernelConnector(string cluster, string database)
+    {
+        Cluster = cluster;
+        Database = database;
+    }
+
     public string Cluster { get; }
 
     public string Database { get; }
 
     public string PathToService { get; set; }
 
-    public override async Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo)
+    public async Task<Kernel> CreateKernelAsync(string kernelName)
     {
-
         if (string.IsNullOrWhiteSpace(PathToService))
         {
             throw new InvalidOperationException($"{nameof(PathToService)} cannot be null or whitespace.");
@@ -30,13 +35,15 @@ public class KqlKernelConnector : KernelConnectorBase
 
         var connectionDetails = await BuildConnectionDetailsAsync();
 
-        var sqlClient = new ToolsServiceClient(PathToService);
+        var client = new ToolsServiceClient(PathToService);
 
         var kernel = new MsKqlKernel(
-                $"kql-{kernelInfo}",
+                $"kql-{kernelName}",
                 connectionDetails,
-                sqlClient)
+                client)
             .UseValueSharing();
+
+        kernel.RegisterForDisposal(client);
 
         await kernel.ConnectAsync();
 
@@ -65,11 +72,5 @@ public class KqlKernelConnector : KernelConnectorBase
         // first value of authorization is the auth token
         // stored in <bearer> <token> format
         return request.Headers.GetValues("Authorization").First().Split(' ').Last();
-    }
-
-    public KqlKernelConnector(string cluster, string database)
-    {
-        Cluster = cluster;
-        Database = database;
     }
 }

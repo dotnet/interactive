@@ -2,23 +2,31 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.CommandLine;
+using System.CommandLine.Invocation;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
-    public class ConnectSQLiteCommand : ConnectKernelCommand<SQLiteKernelConnector>
+    public class ConnectSQLiteCommand : ConnectKernelCommand
     {
         public ConnectSQLiteCommand()
             : base("sqlite", "Connects to a SQLite database")
         {
-            Add(new Argument<string>("connectionString", "The connection string used to connect to the database"));
+            Add(ConnectionStringArgument);
         }
 
-        public override Task<Kernel> ConnectKernelAsync(KernelInfo kernelInfo, SQLiteKernelConnector kernelConnectorBase,
-            KernelInvocationContext context)
+        public Argument<string> ConnectionStringArgument { get; } =
+            new("connectionString", "The connection string used to connect to the database");
+
+        public override Task<Kernel> ConnectKernelAsync(
+            KernelInvocationContext context,
+            InvocationContext commandLineContext)
         {
-            return kernelConnectorBase.ConnectKernelAsync(kernelInfo);
+            var connectionString = commandLineContext.ParseResult.GetValueForArgument(ConnectionStringArgument);
+            var connector = new SQLiteKernelConnector(connectionString);
+            var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
+            return connector.CreateKernelAsync(localName);
         }
     }
 }

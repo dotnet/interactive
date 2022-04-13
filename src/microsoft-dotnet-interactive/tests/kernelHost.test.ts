@@ -27,8 +27,8 @@ describe("kernelHost",
             const kernelInfo = kernelHost.tryGetKernelInfo(childKernel);
 
             expect(kernelInfo).to.not.be.undefined;
-            expect(kernelInfo!.originUri).to.not.be.undefined;
-            expect(kernelInfo!.originUri).to.equal("kernel://vscode/test");
+            expect(kernelInfo!.uri).to.not.be.undefined;
+            expect(kernelInfo!.uri).to.equal("kernel://vscode/test");
             expect(kernelInfo!.aliases).to.be.deep.eq(["test1", "test2"]);
 
         });
@@ -45,8 +45,8 @@ describe("kernelHost",
             const kernelInfo = kernelHost.tryGetKernelInfo(childKernel);
 
             expect(kernelInfo).to.not.be.undefined;
-            expect(kernelInfo!.originUri).to.not.be.undefined;
-            expect(kernelInfo!.originUri).to.equal("kernel://vscode/test");
+            expect(kernelInfo!.uri).to.not.be.undefined;
+            expect(kernelInfo!.uri).to.equal("kernel://vscode/test");
             expect(kernelInfo!.aliases).to.be.deep.eq(["test1", "test2"]);
 
         });
@@ -59,8 +59,8 @@ describe("kernelHost",
 
             const vscodeHost = new KernelHost(vscodeKernel, inMemory.channels[0].channel, "kernel://vscode");
 
-            vscodeHost.createProxyKernelOnDefaultConnector({ localName: "python", destinationUri: "kernel://remote/python", aliases: [], supportedDirectives: [], supportedKernelCommands: []});
-            vscodeHost.createProxyKernelOnDefaultConnector({ localName: "go", destinationUri: "kernel://remote/go", aliases: [], supportedDirectives: [], supportedKernelCommands: []});
+            vscodeHost.createProxyKernelOnDefaultConnector({ localName: "python", remoteUri: "kernel://remote/python", aliases: [], supportedDirectives: [], supportedKernelCommands: [] });
+            vscodeHost.createProxyKernelOnDefaultConnector({ localName: "go", remoteUri: "kernel://remote/go", aliases: [], supportedDirectives: [], supportedKernelCommands: [] });
             vscodeHost.connect();
 
             vscodeKernel.subscribeToKernelEvents(e => {

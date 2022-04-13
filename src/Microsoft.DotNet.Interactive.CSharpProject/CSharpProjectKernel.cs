@@ -17,8 +17,7 @@ using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject
 {
-    public class CSharpProjectKernel
-        : Kernel
+    public class CSharpProjectKernel : Kernel
     {
         private RoslynWorkspaceServer _workspaceServer;
         private Protocol.Workspace _workspace;
@@ -51,7 +50,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
         }
 
         public CSharpProjectKernel(string name)
-            : base(name)
+            : base(name, "C#")
         {
             RegisterCommandHandler<OpenProject>(HandleAsync);
             RegisterCommandHandler<OpenDocument>(HandleAsync);

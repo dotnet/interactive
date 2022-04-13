@@ -165,10 +165,10 @@ namespace Microsoft.DotNet.Interactive.Tests
             }
         }
 
-        public async Task SubmitCode(Kernel kernel, string submission, SubmissionType submissionType = SubmissionType.Run)
+        public async Task<KernelCommandResult> SubmitCode(Kernel kernel, string submission, SubmissionType submissionType = SubmissionType.Run)
         {
             var command = new SubmitCode(submission, submissionType: submissionType);
-            await kernel.SendAsync(command);
+            return await kernel.SendAsync(command);
         }
 
         protected SubscribedList<KernelEvent> KernelEvents { get; private set; }

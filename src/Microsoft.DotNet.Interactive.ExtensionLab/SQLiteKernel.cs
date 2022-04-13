@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Enumerable = System.Linq.Enumerable;
-using System.CommandLine.Parsing;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
@@ -21,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         private readonly string _connectionString;
         private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> _tables;
 
-        public SQLiteKernel(string name, string connectionString) : base(name)
+        public SQLiteKernel(string name, string connectionString) : base(name, "SQLite")
         {
             _connectionString = connectionString;
         }

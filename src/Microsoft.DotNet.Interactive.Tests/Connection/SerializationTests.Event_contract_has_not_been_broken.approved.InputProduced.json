@@ -1,0 +1,18 @@
+{
+  "event": {
+    "value": "user input"
+  },
+  "eventType": "InputProduced",
+  "command": {
+    "token": "the-token",
+    "id": "command-id",
+    "commandType": "GetInput",
+    "command": {
+      "prompt": "",
+      "isPassword": false,
+      "targetKernelName": "vscode",
+      "originUri": null,
+      "destinationUri": null
+    }
+  }
+}

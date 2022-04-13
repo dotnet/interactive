@@ -16,12 +16,6 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.PowerShell.Tests
 {
-    public class Tags
-    {
-        public const string PlainTextBegin = "<div class=\"dni-plaintext\">";
-        public const string PlainTextEnd = "</div>";
-
-    }
     public class PowerShellKernelTests : LanguageKernelTestBase
     {
         private readonly string _allUsersCurrentHostProfilePath = Path.Combine(Path.GetDirectoryName(typeof(PSObject).Assembly.Location), "Microsoft.dotnet-interactive_profile.ps1");

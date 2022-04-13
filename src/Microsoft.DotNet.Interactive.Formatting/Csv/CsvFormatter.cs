@@ -114,7 +114,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Csv
 
             if (keys is not ICollection headers)
             {
-                // FIX: (CreateForAnyEnumerable) can this happen?
                 return false;
             }
 

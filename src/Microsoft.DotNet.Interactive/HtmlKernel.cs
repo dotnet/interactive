@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Interactive
     {
         public const string DefaultKernelName = "html";
 
-        public HtmlKernel() : base(DefaultKernelName)
+        public HtmlKernel() : base(DefaultKernelName, "HTML")
         {
         }
 

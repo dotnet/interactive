@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.CommandLine.NamingConventionBinder;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,6 +16,7 @@ using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
 using Xunit;
 using Xunit.Abstractions;
+using static Microsoft.DotNet.Interactive.Tests.Utility.CustomCommandTypes;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
@@ -530,10 +530,10 @@ new [] {1,2,3}");
         {
             using var compositeKernel = new CompositeKernel();
 
-            CustomCommandTypes.FirstSubmission.MyCommand commandPassedToHandler = null;
+            FirstSubmission.MyCommand commandPassedToHandler = null;
             KernelInvocationContext contextPassedToHandler = null;
 
-            compositeKernel.RegisterCommandHandler<CustomCommandTypes.FirstSubmission.MyCommand>(
+            compositeKernel.RegisterCommandHandler<FirstSubmission.MyCommand>(
                 (command, context) =>
                 {
                     commandPassedToHandler = command;
@@ -541,7 +541,7 @@ new [] {1,2,3}");
                     return Task.CompletedTask;
                 });
 
-            var commandSentToKernel = new CustomCommandTypes.FirstSubmission.MyCommand("xyzzy");
+            var commandSentToKernel = new FirstSubmission.MyCommand("xyzzy");
             await compositeKernel.SendAsync(commandSentToKernel);
 
             commandPassedToHandler
@@ -552,33 +552,31 @@ new [] {1,2,3}");
                 .NotBeNull();
         }
 
-        [Fact]
+        [Fact] 
         public async Task When_command_handler_registered_in_child_kernel_and_command_sent_to_parent_then_handler_is_executed()
         {
             using var compositeKernel = new CompositeKernel();
             var childKernel = new FakeKernel();
             compositeKernel.Add(childKernel);
 
-            CustomCommandTypes.FirstSubmission.MyCommand commandPassedToHandler = null;
-            KernelInvocationContext contextPassedToHandler = null;
+            FirstSubmission.MyCommand commandPassedToHandler = null;
 
-            childKernel.RegisterCommandHandler<CustomCommandTypes.FirstSubmission.MyCommand>(
+            childKernel.RegisterCommandHandler<FirstSubmission.MyCommand>(
                 (command, context) =>
                 {
                     commandPassedToHandler = command;
-                    contextPassedToHandler = context;
                     return Task.CompletedTask;
                 });
 
-            var commandSentToCompositeKernel = new CustomCommandTypes.FirstSubmission.MyCommand("xyzzy");
-            await compositeKernel.SendAsync(commandSentToCompositeKernel);
+            childKernel.KernelInfo.SupportedKernelCommands.Should().Contain(new KernelCommandInfo(nameof(FirstSubmission.MyCommand)));
+
+            var commandSentToCompositeKernel = new FirstSubmission.MyCommand("test");
+            var result = await compositeKernel.SendAsync(commandSentToCompositeKernel);
+            result.KernelEvents.ToSubscribedList().Should().NotContainErrors();
 
             commandPassedToHandler
                 .Should()
                 .BeSameAs(commandSentToCompositeKernel);
-            contextPassedToHandler
-                .Should()
-                .NotBeNull();
         }
 
         [Fact]

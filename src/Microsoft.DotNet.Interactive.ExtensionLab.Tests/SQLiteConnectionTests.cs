@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             using var _ = CreateInMemorySQLiteDb(out var connectionString);
 
             var result = await kernel.SubmitCodeAsync(
-                $"#!connect --kernel-name mydb sqlite \"{connectionString}\"");
+                $"#!connect sqlite --kernel-name mydb \"{connectionString}\"");
 
             result.KernelEvents
                 .ToSubscribedList()
@@ -70,7 +70,7 @@ SELECT * FROM fruit
             using var _ = CreateInMemorySQLiteDb(out var connectionString);
 
             var result = await kernel.SubmitCodeAsync(
-                             $"#!connect --kernel-name mydb sqlite \"{connectionString}\"");
+                             $"#!connect sqlite --kernel-name mydb  \"{connectionString}\"");
 
             result.KernelEvents
                   .ToSubscribedList()

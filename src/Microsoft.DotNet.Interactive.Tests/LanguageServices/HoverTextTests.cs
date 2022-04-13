@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
         }
 
         [Fact]
-        public async Task hover_on_unsupported_language_service_returns_nothing()
+        public async Task hover_on_unsupported_language_service_fails_with_informative_error()
         {
             using var kernel = new FakeKernel();
 
@@ -35,7 +35,15 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
             result.KernelEvents
                   .ToSubscribedList()
                   .Should()
-                  .NotContain(kv => kv is HoverTextProduced);
+                  .ContainSingle<CommandFailed>()
+                  .Which
+                  .Exception
+                  .Should()
+                  .BeOfType<CommandNotSupportedException>()
+                  .Which
+                  .Message
+                  .Should()
+                  .Be($"Kernel {kernel} does not support command type {nameof(RequestHoverText)}.");
         }
 
         [Theory]
@@ -116,9 +124,11 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
             MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
             var commandResult = await SendHoverRequest(kernel, code, line, character);
 
-            commandResult
-                .KernelEvents
-                .ToSubscribedList()
+            var events = commandResult.KernelEvents.ToSubscribedList();
+
+            events.Should().NotContainErrors();
+
+            events
                 .Should()
                 .ContainSingle<HoverTextProduced>()
                 .Which
@@ -150,7 +160,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .Contain(expectedHoverTextSubString);
         }
 
-    [Theory]
+        [Theory]
         [InlineData(Language.CSharp, "/// <summary>Adds two numbers.</summary>\nint Add(int a, int b) => a + b;", "Ad$$d(1, 2)", "Adds two numbers.")]
         [InlineData(Language.FSharp, "/// Adds two numbers.\nlet add a b = a + b", "ad$$d 1 2", "Adds two numbers.")]
         public async Task hover_text_doc_comments_can_be_loaded_from_source_in_a_previous_submission(Language language, string previousSubmission, string markupCode, string expectedHoverTextSubString)

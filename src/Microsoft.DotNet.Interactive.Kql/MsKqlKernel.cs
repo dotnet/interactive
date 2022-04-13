@@ -21,7 +21,7 @@ internal class MsKqlKernel : ToolsServiceKernel
     public MsKqlKernel(
         string name,
         KqlConnectionDetails connectionDetails,
-        ToolsServiceClient client) : base(name, client)
+        ToolsServiceClient client) : base(name, client, "KQL")
     {
         _connectionDetails = connectionDetails ?? throw new ArgumentException("Value cannot be null or whitespace.", nameof(connectionDetails));
     }
@@ -35,7 +35,6 @@ internal class MsKqlKernel : ToolsServiceKernel
             Connected = true;
         }
     }
-
 
     public override ChooseMsKqlKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= new(this);
 
@@ -71,7 +70,6 @@ internal class MsKqlKernel : ToolsServiceKernel
         }
         return true;
     }
-
 
     protected override void StoreQueryResults(IReadOnlyCollection<TabularDataResource> results, ParseResult commandKernelChooserParseResult)
     {
