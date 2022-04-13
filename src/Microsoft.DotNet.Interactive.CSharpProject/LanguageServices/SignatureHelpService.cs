@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Clockwise;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
@@ -18,14 +17,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.LanguageServices
 {
     public class SignatureHelpService
     {
-
-        public static async Task<SignatureHelpResult> GetSignatureHelp(Document document, int position, Budget budget = null)
-        {
-            var invocation = await GetInvocation(document, position);
-            return InternalGetSignatureHelp(invocation);
-        }
-
-        public static async Task<SignatureHelpResult> GetSignatureHelp(Func<Task<SemanticModel>> getSemanticModel, SyntaxNode node, int position)
+        public static async Task<SignatureHelpResult> GetSignatureHelpAsync(Func<Task<SemanticModel>> getSemanticModel, SyntaxNode node, int position)
         {
             var invocation = await GetInvocation(getSemanticModel, node, position);
             return InternalGetSignatureHelp(invocation);

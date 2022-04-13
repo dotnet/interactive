@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
-using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Protocol.Buffer;
+using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Buffer;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.MLS.Project
 {

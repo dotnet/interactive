@@ -5,10 +5,11 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Protocol
 {
     public class SignatureHelpParameter
     {
+        // FIX: (SignatureHelpParameter) delete, use ParameterInformation
         public string Name { get; set; }
 
         public string Label { get; set; }
 
-        public MarkdownString Documentation { get; set; }
+        public string Documentation { get; set; }
     }
 }

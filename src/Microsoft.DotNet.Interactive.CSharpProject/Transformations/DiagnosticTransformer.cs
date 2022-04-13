@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Clockwise;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
@@ -21,8 +20,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Transformations
         internal static (IReadOnlyCollection<SerializableDiagnostic> DiagnosticsInActiveBuffer, IReadOnlyCollection<SerializableDiagnostic> AllDiagnostics) MapDiagnostics(
             this Workspace workspace,
             BufferId activeBufferId,
-            IReadOnlyCollection<Diagnostic> diagnostics,
-            Budget budget = null)
+            IReadOnlyCollection<Diagnostic> diagnostics)
         {
             if (workspace == null)
             {
@@ -37,12 +35,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Transformations
             {
                 diagnostics = diagnostics.RemoveSuppressed();
             }
-
-            budget = budget ?? new Budget();
             
             var viewPorts = workspace.ExtractViewPorts().ToList();
-
-            budget.RecordEntry();
 
             var paddingSize = BufferInliningTransformer.PaddingSize;
 
@@ -193,7 +187,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Transformations
         }
 
         private static readonly HashSet<string> _suppressedDiagnosticIds =
-            new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            new(StringComparer.OrdinalIgnoreCase)
             {
                 "CS7022", // The entry point of the program is global script code; ignoring 'Main()' entry point.
                 "CS8019", // unused using directive

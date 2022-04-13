@@ -3,7 +3,7 @@
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown
 {
-    public sealed class SuccessfulCodeBlockContentFetchResult : CodeBlockContentFetchResult
+    internal sealed class SuccessfulCodeBlockContentFetchResult : CodeBlockContentFetchResult
     {
         public SuccessfulCodeBlockContentFetchResult(string content)
         {

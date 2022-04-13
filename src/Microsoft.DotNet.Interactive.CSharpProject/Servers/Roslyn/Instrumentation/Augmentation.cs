@@ -6,21 +6,20 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using static InstrumentationEmitter;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation
 {
     public class Augmentation
     {
         public Augmentation(
-            CSharpSyntaxNode associatedStatment,
+            CSharpSyntaxNode associatedStatement,
             IEnumerable<ISymbol> locals,
             IEnumerable<ISymbol> fields,
             IEnumerable<ISymbol> parameters,
             IEnumerable<ISymbol> internalLocals,
             FilePosition position = null)
         {
-            AssociatedStatement = associatedStatment ?? throw new ArgumentNullException(nameof(associatedStatment));
+            AssociatedStatement = associatedStatement ?? throw new ArgumentNullException(nameof(associatedStatement));
             Locals = locals ?? Array.Empty<ISymbol>();
             Fields = fields ?? Array.Empty<ISymbol>();
             Parameters = parameters ?? Array.Empty<ISymbol>();
@@ -42,7 +41,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentat
             }
         }
 
-        public Augmentation withPosition(FilePosition position) => new Augmentation(
+        public Augmentation withPosition(FilePosition position) => new(
             AssociatedStatement,
             Locals,
             Fields,

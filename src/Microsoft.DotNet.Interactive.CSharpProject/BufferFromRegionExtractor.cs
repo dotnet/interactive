@@ -4,11 +4,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
 using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
-using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Protocol.Buffer;
 using Workspace = Microsoft.DotNet.Interactive.CSharpProject.Protocol.Workspace;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.MLS.Project
+namespace Microsoft.DotNet.Interactive.CSharpProject
 {
     public class BufferFromRegionExtractor
     {

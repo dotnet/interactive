@@ -3,10 +3,10 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
 using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
-using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Protocol.Buffer;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.MLS.Project
+namespace Microsoft.DotNet.Interactive.CSharpProject
 {
     public static class BufferGenerator
     {

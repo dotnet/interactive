@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
-using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Protocol.Buffer;
+using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Buffer;
 using InvalidOperationException = System.InvalidOperationException;
 using Path = System.IO.Path;
 

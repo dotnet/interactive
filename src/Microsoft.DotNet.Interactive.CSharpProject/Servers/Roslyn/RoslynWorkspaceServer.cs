@@ -7,14 +7,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Clockwise;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
 using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
-using Pocket;
 using Recipes;
 using Microsoft.DotNet.Interactive.CSharpProject.Models.Execution;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation;
@@ -44,10 +42,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
             _packageFinder = packageRegistry ?? throw new ArgumentNullException(nameof(packageRegistry));
         }
 
-        public async Task<CompletionResult> GetCompletionList(WorkspaceRequest request, Budget budget)
+        public async Task<CompletionResult> GetCompletionsAsync(WorkspaceRequest request)
         {
-            budget ??= new TimeBudget(TimeSpan.FromSeconds(defaultBudgetInSeconds));
-            
             var package = await _packageFinder.Find<ICreateWorkspace>(request.Workspace.WorkspaceType);
 
             var workspace = await request.Workspace.InlineBuffersAsync();
@@ -57,8 +53,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
             var (_compilation, project) = await package.GetCompilationForLanguageServices(
                                      sourceFiles,
                                      GetSourceCodeKind(request),
-                                     GetUsings(request.Workspace),
-                                     budget);
+                                     GetUsings(request.Workspace));
             var documents = project.Documents.ToList();
             var solution = project.Solution;
 
@@ -72,7 +67,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
             var (_line, _column, absolutePosition) = workspace.GetTextLocation(request.ActiveBufferId);
             var completionList = await service.GetCompletionsAsync(selectedDocument, absolutePosition);
             var semanticModel = await selectedDocument.GetSemanticModelAsync();
-            var diagnostics = DiagnosticsExtractor.ExtractSerializableDiagnosticsFromSemanticModel(request.ActiveBufferId, budget, semanticModel, workspace);
+            var diagnostics = DiagnosticsExtractor.ExtractSerializableDiagnosticsFromSemanticModel(request.ActiveBufferId, semanticModel, workspace);
 
             var symbols = Recommender.GetRecommendedSymbolsAtPosition(
                               semanticModel,
@@ -119,16 +114,14 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
                        : workspace.Usings;
         }
 
-        public async Task<SignatureHelpResult> GetSignatureHelp(WorkspaceRequest request, Budget budget)
+        public async Task<SignatureHelpResult> GetSignatureHelp(WorkspaceRequest request)
         {
-            budget ??= new TimeBudget(TimeSpan.FromSeconds(defaultBudgetInSeconds));
-
             var package = await _packageFinder.Find<ICreateWorkspace>(request.Workspace.WorkspaceType);
 
             var workspace = await request.Workspace.InlineBuffersAsync();
 
             var sourceFiles = workspace.GetSourceFiles();
-            var (compilation, project) = await package.GetCompilationForLanguageServices(sourceFiles, GetSourceCodeKind(request), GetUsings(request.Workspace), budget);
+            var (compilation, project) = await package.GetCompilationForLanguageServices(sourceFiles, GetSourceCodeKind(request), GetUsings(request.Workspace));
             var documents = project.Documents.ToList();
 
             var selectedDocument = documents.FirstOrDefault(doc => doc.IsMatch(request.ActiveBufferId.FileName))
@@ -140,7 +133,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
                 return new SignatureHelpResult(requestId: request.RequestId);
             }
 
-            var diagnostics = await DiagnosticsExtractor.ExtractSerializableDiagnosticsFromDocument(request.ActiveBufferId, budget, selectedDocument, workspace);
+            var diagnostics = await DiagnosticsExtractor.ExtractSerializableDiagnosticsFromDocument(request.ActiveBufferId, selectedDocument, workspace);
 
             var tree = await selectedDocument.GetSyntaxTreeAsync();
 
@@ -148,7 +141,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
 
             var syntaxNode = tree.GetRoot().FindToken(absolutePosition).Parent;
 
-            var result = await SignatureHelpService.GetSignatureHelp(
+            var result = await SignatureHelpService.GetSignatureHelpAsync(
                              () => Task.FromResult(compilation.GetSemanticModel(tree)),
                              syntaxNode,
                              absolutePosition);
@@ -161,16 +154,14 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
             return result;
         }
 
-        public async Task<DiagnosticResult> GetDiagnostics(WorkspaceRequest request, Budget budget)
+        public async Task<DiagnosticResult> GetDiagnostics(WorkspaceRequest request)
         {
-            budget ??= new TimeBudget(TimeSpan.FromSeconds(defaultBudgetInSeconds));
-
             var package = await _packageFinder.Find<ICreateWorkspace>(request.Workspace.WorkspaceType);
 
             var workspace = await request.Workspace.InlineBuffersAsync();
 
             var sourceFiles = workspace.GetSourceFiles();
-            var (_compilation, project) = await package.GetCompilationForLanguageServices(sourceFiles, GetSourceCodeKind(request), GetUsings(request.Workspace), budget);
+            var (_compilation, project) = await package.GetCompilationForLanguageServices(sourceFiles, GetSourceCodeKind(request), GetUsings(request.Workspace));
             var documents = project.Documents.ToList();
 
             var selectedDocument = documents.FirstOrDefault(doc => doc.IsMatch( request.ActiveBufferId.FileName))
@@ -182,20 +173,19 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
                 return new DiagnosticResult(requestId: request.RequestId);
             }
 
-            var diagnostics = await DiagnosticsExtractor.ExtractSerializableDiagnosticsFromDocument(request.ActiveBufferId, budget, selectedDocument, workspace);
+            var diagnostics = await DiagnosticsExtractor.ExtractSerializableDiagnosticsFromDocument(request.ActiveBufferId, selectedDocument, workspace);
 
             var result = new DiagnosticResult(diagnostics, request.RequestId);
             return result;
         }
 
-        public async Task<CompileResult> Compile(WorkspaceRequest request, Budget budget = null)
+        public async Task<CompileResult> CompileAsync(WorkspaceRequest request)
         {
             var workspace = request.Workspace;
-            budget ??= new TimeBudget(TimeSpan.FromSeconds(defaultBudgetInSeconds));
 
             using (await locks.GetOrAdd(workspace.WorkspaceType, s => new AsyncLock()).LockAsync())
             {
-                var result = await CompileWorker(request.Workspace, request.ActiveBufferId, budget);
+                var result = await CompileWorker(request.Workspace, request.ActiveBufferId);
 
                 if (result.DiagnosticsWithinBuffers.ContainsError())
                 {
@@ -227,16 +217,15 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
             }
         }
 
-        public async Task<RunResult> Run(WorkspaceRequest request, Budget budget = null)
+        public async Task<RunResult> RunAsync(WorkspaceRequest request)
         {
             var workspace = request.Workspace;
-            budget = budget ?? new TimeBudget(TimeSpan.FromSeconds(defaultBudgetInSeconds));
 
             using (await locks.GetOrAdd(workspace.WorkspaceType, s => new AsyncLock()).LockAsync())
             {
                 var package = await _packageFinder.Find<Package>(workspace.WorkspaceType);
 
-                var result = await CompileWorker(request.Workspace, request.ActiveBufferId, budget);
+                var result = await CompileWorker(request.Workspace, request.ActiveBufferId);
 
                 if (result.ProjectDiagnostics.ContainsError())
                 {
@@ -264,13 +253,12 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
 
                 if (package.IsUnitTestProject)
                 {
-                    return await RunUnitTestsAsync(package, result.DiagnosticsWithinBuffers, budget, request.RequestId);
+                    return await RunUnitTestsAsync(package, result.DiagnosticsWithinBuffers, request.RequestId);
                 }
 
                 return await RunConsoleAsync(
                            package,
                            result.DiagnosticsWithinBuffers,
-                           budget,
                            request.RequestId,
                            workspace.IncludeInstrumentation,
                            request.RunArgs);
@@ -309,7 +297,6 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
         internal static async Task<RunResult> RunConsoleAsync(
             Package package,
             IEnumerable<SerializableDiagnostic> diagnostics,
-            Budget budget,
             string requestId,
             bool includeInstrumentation,
             string commandLineArgs)
@@ -320,13 +307,11 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
             var commandLineResult = await dotnet.Execute(
                                         commandName.AppendArgs(commandLineArgs));
 
-            budget.RecordEntry(UserCodeCompleted);
-
             var output = InstrumentedOutputExtractor.ExtractOutput(commandLineResult.Output);
 
             if (commandLineResult.ExitCode == 124)
             {
-                throw new BudgetExceededException(budget);
+                throw new TimeoutException();
             }
 
             string exceptionMessage = null;
@@ -355,7 +340,6 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
         private static async Task<RunResult> RunUnitTestsAsync(
             Package package, 
             IEnumerable<SerializableDiagnostic> diagnostics, 
-            Budget budget, 
             string requestId)
         {
             var dotnet = new Dotnet(package.Directory);
@@ -363,11 +347,9 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
             var commandLineResult = await dotnet.VSTest(
                                         $@"--logger:trx ""{package.EntryPointAssemblyPath}""");
 
-            budget.RecordEntry(UserCodeCompleted);
-
             if (commandLineResult.ExitCode == 124)
             {
-                throw new BudgetExceededException(budget);
+                throw new TimeoutException();
             }
 
             var trex = new FileInfo(
@@ -407,17 +389,14 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
 
         private async Task<CompileWorkerResult> CompileWorker(
             Workspace workspace,
-            BufferId activeBufferId,
-            Budget budget)
+            BufferId activeBufferId)
         {
             var package = await _packageFinder.Find<ICreateWorkspace>(workspace.WorkspaceType);
             workspace = await workspace.InlineBuffersAsync();
             var sources = workspace.GetSourceFiles();
-            var (compilation, project) = await package.GetCompilation(sources, SourceCodeKind.Regular, workspace.Usings, () => package.CreateRoslynWorkspaceAsync(budget), budget);
+            var (compilation, project) = await package.GetCompilationAsync(sources, SourceCodeKind.Regular, workspace.Usings, () => package.CreateWorkspaceAsync());
             var documents = project.Documents.ToList();
             var (diagnosticsInActiveBuffer, allDiagnostics) = workspace.MapDiagnostics(activeBufferId, compilation.GetDiagnostics());
-
-            budget.RecordEntryAndThrowIfBudgetExceeded();
             return new CompileWorkerResult(
                 compilation,
                 diagnosticsInActiveBuffer,

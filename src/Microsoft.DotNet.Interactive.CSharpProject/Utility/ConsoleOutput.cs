@@ -16,15 +16,15 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Utility
     {
         private TextWriter _originalOutputWriter;
         private TextWriter _originalErrorWriter;
-        private readonly TrackingStringWriter _outputWriter = new TrackingStringWriter();
-        private readonly TrackingStringWriter _errorWriter = new TrackingStringWriter();
+        private readonly TrackingStringWriter _outputWriter = new();
+        private readonly TrackingStringWriter _errorWriter = new();
 
         private const int NOT_DISPOSED = 0;
         private const int DISPOSED = 1;
 
         private int _alreadyDisposed = NOT_DISPOSED;
 
-        private static readonly SemaphoreSlim _consoleLock = new SemaphoreSlim(1, 1);
+        private static readonly SemaphoreSlim _consoleLock = new(1, 1);
 
         private ConsoleOutput()
         {

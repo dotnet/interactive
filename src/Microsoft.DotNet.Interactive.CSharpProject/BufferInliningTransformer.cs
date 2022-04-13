@@ -7,11 +7,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
 using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
-using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Protocol.Buffer;
 using File = System.IO.File;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.MLS.Project
+namespace Microsoft.DotNet.Interactive.CSharpProject
 {
     public class BufferInliningTransformer : IWorkspaceTransformer
     {
@@ -83,7 +83,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.MLS.Project
 
             return (processedFiles, processedBuffers);
         }
-        protected Task InjectBuffer(Viewport viewPort, Buffer sourceBuffer, ICollection<Buffer> buffers, IDictionary<string, SourceFile> files,
+      
+        private Task InjectBuffer(Viewport viewPort, Buffer sourceBuffer, ICollection<Buffer> buffers, IDictionary<string, SourceFile> files,
             BufferInjectionPoints bufferIdInjectionPoints)
         {
             TextSpan targetSpan;

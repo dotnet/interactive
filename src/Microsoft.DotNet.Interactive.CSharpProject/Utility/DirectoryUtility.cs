@@ -7,9 +7,9 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Utility
 {
     public static class DirectoryUtility
     {
-        private static readonly object CreateDirectoryLock = new object();
+        private static readonly object CreateDirectoryLock = new();
 
-        private static readonly DirectoryInfo _defaultDirectory = new DirectoryInfo(
+        private static readonly DirectoryInfo _defaultDirectory = new(
             Path.Combine(
                 Paths.UserProfile,
                 ".net-interactive-tests"));

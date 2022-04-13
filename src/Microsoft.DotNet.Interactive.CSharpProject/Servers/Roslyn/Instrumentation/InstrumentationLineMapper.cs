@@ -81,10 +81,10 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentat
 
         private static VariableLocation MapVariableLocationToViewport(
             VariableLocation input,
-            LinePositionSpan viewportSpan) => new VariableLocation(
+            LinePositionSpan viewportSpan) => new(
             input.Variable,
-            (int) CalculateOffset(input.StartLine, viewportSpan),
-            (int) CalculateOffset(input.EndLine, viewportSpan),
+            (int)CalculateOffset(input.StartLine, viewportSpan),
+            (int)CalculateOffset(input.EndLine, viewportSpan),
             input.StartColumn,
             input.EndColumn
         );

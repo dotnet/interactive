@@ -3,7 +3,6 @@
 
 using System.IO;
 using System.Threading.Tasks;
-using Clockwise;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 
@@ -31,16 +30,16 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
 
     public interface ICreateWorkspace : IPackage
     {
-        Task<Workspace> CreateRoslynWorkspaceAsync(Budget budget);
+        Task<Workspace> CreateWorkspaceAsync();
     }
 
     public interface ICreateWorkspaceForRun : IPackage, ICreateWorkspace
     {
-        Task<Workspace> CreateRoslynWorkspaceForRunAsync(Budget budget);
+        Task<Workspace> CreateWorkspaceForRunAsync();
     }
 
     public interface ICreateWorkspaceForLanguageServices : IPackage, ICreateWorkspace
     {
-        Task<Workspace> CreateRoslynWorkspaceForLanguageServicesAsync(Budget budget);
+        Task<Workspace> CreateWorkspaceForLanguageServicesAsync();
     }
 }

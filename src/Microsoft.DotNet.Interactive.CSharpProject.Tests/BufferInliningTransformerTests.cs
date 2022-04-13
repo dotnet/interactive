@@ -9,7 +9,7 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Xunit;
-using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Protocol.Buffer;
+using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Buffer;
 using File = System.IO.File;
 using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
 

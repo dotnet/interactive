@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using Clockwise;
 using Microsoft.CodeAnalysis.Scripting;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject
@@ -13,9 +12,6 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
         {
             switch (exception)
             {
-                case BudgetExceededException _:
-                    return new TimeoutException().ToString();
-
                 case CompilationErrorException _:
                     return null;
 
@@ -26,7 +22,6 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
 
         public static bool IsConsideredRunFailure(this Exception exception) =>
             exception is TimeoutException ||
-            exception is BudgetExceededException ||
             exception is CompilationErrorException;
     }
 }

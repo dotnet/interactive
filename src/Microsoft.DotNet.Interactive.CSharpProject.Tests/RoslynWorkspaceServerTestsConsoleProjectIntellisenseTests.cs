@@ -7,8 +7,6 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Xunit;
 using Xunit.Abstractions;
-using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Protocol.Buffer;
-using Package = Microsoft.DotNet.Interactive.CSharpProject.Packaging.Package;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
 {
@@ -71,7 +69,7 @@ namespace FibonacciTest
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs");
             var server = GetLanguageService();
-            var result = await server.GetCompletionList(request);
+            var result = await server.GetCompletionsAsync(request);
             result.Items.Should().NotBeNullOrEmpty();
             result.Items.Should().NotContain(signature => string.IsNullOrEmpty(signature.Kind));
             result.Items.Should().Contain(completion => completion.SortText == "Console");
@@ -132,7 +130,7 @@ namespace FibonacciTest
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs");
             var server = GetLanguageService();
-            var result = await server.GetCompletionList(request);
+            var result = await server.GetCompletionsAsync(request);
 
             result.Items.Should().NotBeNullOrEmpty();
             result.Items.Should().NotContain(signature => string.IsNullOrEmpty(signature.Kind));
@@ -195,14 +193,14 @@ namespace FibonacciTest
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs");
             var server = GetLanguageService();
-            var result = await server.GetCompletionList(request);
+            var result = await server.GetCompletionsAsync(request);
 
             result.Should().NotBeNull();
             result.Items.Should().NotBeNullOrEmpty();
 
             result.Items
-                .Where(i => i.Documentation != null && !string.IsNullOrWhiteSpace(i.Documentation.Value))
-                .Select(i => i.Documentation.Value)
+                .Where(i => i.Documentation != null && !string.IsNullOrWhiteSpace(i.Documentation))
+                .Select(i => i.Documentation)
                 .Should()
                 .Contain(d => d == "Writes the text representation of the specified Boolean value to the standard output stream.");
         }
@@ -268,7 +266,7 @@ namespace FibonacciTest
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs@codeRegion");
             var server = GetLanguageService();
-            var result = await server.GetCompletionList(request);
+            var result = await server.GetCompletionsAsync(request);
 
             result.Items.Should().NotBeNullOrEmpty();
             result.Items.Should().NotContain(signature => string.IsNullOrEmpty(signature.Kind));
@@ -338,7 +336,7 @@ namespace FibonacciTest
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs@codeRegion");
             var server = GetLanguageService();
-            var result = await server.GetCompletionList(request);
+            var result = await server.GetCompletionsAsync(request);
             result.Items.Should().NotBeNullOrEmpty();
             result.Items.Should().NotContain(signature => string.IsNullOrEmpty(signature.Kind));
             result.Items.Should().Contain(signature => signature.SortText == "FromObject");
@@ -388,7 +386,7 @@ namespace FibonacciTest
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs@codeRegion");
             var server = GetLanguageService();
-            var result = await server.GetCompletionList(request);
+            var result = await server.GetCompletionsAsync(request);
             result.Items.Should().BeEmpty();
         }
 
@@ -706,16 +704,16 @@ namespace FibonacciTest
             result.Signatures.Should().NotBeNullOrEmpty();
 
             var sample = result.Signatures.First(e => e.Label == "void Console.WriteLine(string format, params object?[]? arg)");
-            sample.Documentation.Value.Should().Contain("Writes the text representation of the specified array of objects, followed by the current line terminator, to the standard output stream using the specified format information.");
+            sample.Documentation.Should().Contain("Writes the text representation of the specified array of objects, followed by the current line terminator, to the standard output stream using the specified format information.");
             sample.Parameters.Should().HaveCount(2);
 
             sample.Parameters.ElementAt(0).Name.Should().Be("format");
             sample.Parameters.ElementAt(0).Label.Should().Be("string format");
-            sample.Parameters.ElementAt(0).Documentation.Value.Should().Contain("A composite format string.");
+            sample.Parameters.ElementAt(0).Documentation.Should().Contain("A composite format string.");
 
             sample.Parameters.ElementAt(1).Name.Should().Be("arg");
             sample.Parameters.ElementAt(1).Label.Should().Be("params object?[]? arg");
-            sample.Parameters.ElementAt(1).Documentation.Value.Should().Contain("An array of objects to write using format .");
+            sample.Parameters.ElementAt(1).Documentation.Should().Contain("An array of objects to write using format .");
         }
     }
 }

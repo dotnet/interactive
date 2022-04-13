@@ -7,7 +7,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Clockwise;
 using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 
@@ -74,7 +73,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             _packageBuilders.TryAdd(name, Task.FromResult(packageBuilder));
         }
 
-        public async Task<T> Get<T>(string packageName, Budget budget = null)
+        public async Task<T> Get<T>(string packageName)
             where T : class, IPackage
         {
             if (packageName == "script")
@@ -88,7 +87,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
 
             if (!(package is T))
             {
-                package = await GetPackageFromPackageBuilder(packageName, budget, descriptor);
+                package = await GetPackageFromPackageBuilder(packageName, descriptor);
             }
 
             return (T)package;
@@ -131,7 +130,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             return null;
         }
 
-        private Task<IPackage> GetPackageFromPackageBuilder(string packageName, Budget budget, PackageDescriptor descriptor)
+        private Task<IPackage> GetPackageFromPackageBuilder(string packageName, PackageDescriptor descriptor)
         {
             return _packages.GetOrAdd(packageName, async name =>
             {
@@ -141,7 +140,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
                                          {
                                              foreach (var strategy in _strategies)
                                              {
-                                                 var builder = await strategy.Locate(descriptor, budget);
+                                                 var builder = await strategy.LocatePackageAsync(descriptor);
 
                                                  if (builder != null)
                                                  {
@@ -152,7 +151,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
                                              throw new PackageNotFoundException($"Package named \"{name2}\" not found.");
                                          });
 
-                return packageBuilder.GetPackage(budget);
+                return packageBuilder.GetPackage();
             });
         }
 

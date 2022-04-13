@@ -8,8 +8,8 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Tags;
 using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Microsoft.DotNet.Interactive.CSharpProject.Models;
+using Microsoft.DotNet.Interactive.Events;
 using RoslynCompletionItem = Microsoft.CodeAnalysis.Completion.CompletionItem;
-using TdnCompletionItem = Microsoft.DotNet.Interactive.CSharpProject.Protocol.CompletionItem;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.LanguageServices
 {
@@ -60,7 +60,9 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.LanguageServices
             return null;
         }
 
-        public static CompletionItem ToModel(this RoslynCompletionItem item, Dictionary<(string, int), ISymbol> recommendedSymbols,
+        public static CompletionItem ToModel(
+            this RoslynCompletionItem item, 
+            Dictionary<(string, int), ISymbol> recommendedSymbols,
             Document document)
         {
             var documentation =  GetDocumentation(item, recommendedSymbols, document);
@@ -74,8 +76,10 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.LanguageServices
                 documentation: documentation);
         }
 
-        public static MarkdownString GetDocumentation(this RoslynCompletionItem item, Dictionary<(string, int), ISymbol> recommendedSymbols,
-        Document document)
+        public static string GetDocumentation(
+            this RoslynCompletionItem item,
+            Dictionary<(string, int), ISymbol> recommendedSymbols,
+            Document document)
         {
             var symbol = GetCompletionSymbolAsync(item, recommendedSymbols, document);
             if (symbol != null)

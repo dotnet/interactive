@@ -2,9 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Newtonsoft.Json;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Protocol
+namespace Microsoft.DotNet.Interactive.CSharpProject
 {
     public class Buffer
     {

@@ -6,7 +6,7 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Xunit;
 using Xunit.Abstractions;
-using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Protocol.Buffer;
+using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Buffer;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
 {

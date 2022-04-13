@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
         ICanSupportWasm
     {
         private readonly PackageDescriptor _descriptor;
-        private readonly Dictionary<Type, PackageAsset> _assets = new Dictionary<Type, PackageAsset>();
+        private readonly Dictionary<Type, PackageAsset> _assets = new();
         private bool _loaded;
 
         public Package2(

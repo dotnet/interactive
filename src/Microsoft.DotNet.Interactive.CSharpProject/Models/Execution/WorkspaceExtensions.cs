@@ -5,7 +5,7 @@ using System;
 using System.Linq;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
-using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Protocol.Buffer;
+using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Buffer;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Models.Execution
 {

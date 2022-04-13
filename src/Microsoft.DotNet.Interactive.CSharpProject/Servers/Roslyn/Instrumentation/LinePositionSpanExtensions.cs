@@ -3,11 +3,9 @@
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation
 {
-    using LinePositionSpan = CodeAnalysis.Text.LinePositionSpan;
-
-    public static class LinePositionSpanExtensions
+    internal static class LinePositionSpanExtensions
     {
-        public static bool ContainsLine(this LinePositionSpan viewportSpan, int line) =>
+        public static bool ContainsLine(this CodeAnalysis.Text.LinePositionSpan viewportSpan, int line) =>
             line < viewportSpan.End.Line && line > viewportSpan.Start.Line;
     }
 }

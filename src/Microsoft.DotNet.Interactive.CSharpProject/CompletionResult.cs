@@ -3,9 +3,11 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
+using Microsoft.DotNet.Interactive.Events;
 using Newtonsoft.Json;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Protocol
+namespace Microsoft.DotNet.Interactive.CSharpProject
 {
     public class CompletionResult
     {

@@ -4,10 +4,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Protocol
+namespace Microsoft.DotNet.Interactive.CSharpProject
 {
     [JsonConverter(typeof(CompileResultJsonConverter))]
     public class CompileResult : FeatureContainer

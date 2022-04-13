@@ -13,58 +13,57 @@ using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 
 //adpated from https://github.com/daveaglick/Buildalyzer/blob/master/src/Buildalyzer.Workspaces/AnalyzerResultExtensions.cs
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
+namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
+
+public static class AnalyzerResultExtensions
 {
-    public static class AnalyzerResultExtensions
+    private static readonly ConditionalWeakTable<IAnalyzerResult, string[]> CompilerInputs = new();
+
+    public static CSharpParseOptions GetCSharpParseOptions(this IAnalyzerResult analyzerResult)
     {
-        private static readonly ConditionalWeakTable<IAnalyzerResult, string[]> CompilerInputs = new ConditionalWeakTable<IAnalyzerResult, string[]>();
+        var parseOptions = new CSharpParseOptions();
 
-        public static CSharpParseOptions GetCSharpParseOptions(this IAnalyzerResult analyzerResult)
+        // Add any constants
+        var constants = analyzerResult.GetProperty("DefineConstants");
+        if (!string.IsNullOrWhiteSpace(constants))
         {
-            var parseOptions = new CSharpParseOptions();
-
-            // Add any constants
-            var constants = analyzerResult.GetProperty("DefineConstants");
-            if (!string.IsNullOrWhiteSpace(constants))
-            {
-                parseOptions = parseOptions
-                    .WithPreprocessorSymbols(constants.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()));
-            }
-
-            // Get language version
-            var langVersion = analyzerResult.GetProperty("LangVersion");
-            if (!string.IsNullOrWhiteSpace(langVersion)
-                && LanguageVersionFacts.TryParse(langVersion, out var languageVersion))
-            {
-                parseOptions = parseOptions.WithLanguageVersion(languageVersion);
-            }
-
-            return parseOptions;
+            parseOptions = parseOptions
+                .WithPreprocessorSymbols(constants.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()));
         }
 
-        public static string[] GetCompileInputs(this IAnalyzerResult analyzerResult)
+        // Get language version
+        var langVersion = analyzerResult.GetProperty("LangVersion");
+        if (!string.IsNullOrWhiteSpace(langVersion)
+            && LanguageVersionFacts.TryParse(langVersion, out var languageVersion))
         {
-            string[] files;
-            lock (CompilerInputs)
+            parseOptions = parseOptions.WithLanguageVersion(languageVersion);
+        }
+
+        return parseOptions;
+    }
+
+    public static string[] GetCompileInputs(this IAnalyzerResult analyzerResult)
+    {
+        string[] files;
+        lock (CompilerInputs)
+        {
+            if (!CompilerInputs.TryGetValue(analyzerResult, out files))
             {
-                if (!CompilerInputs.TryGetValue(analyzerResult, out files))
-                {
-                    var projectDirectory = Path.GetDirectoryName(analyzerResult.ProjectFilePath);
-                    var found = analyzerResult.Items.TryGetValue("Compile", out var inputFiles);
-                    files = found ? inputFiles.Select(pi => Path.Combine(projectDirectory, pi.ItemSpec)).ToArray() : Array.Empty<string>();
-                    CompilerInputs.Add(analyzerResult, files);
-                }
+                var projectDirectory = Path.GetDirectoryName(analyzerResult.ProjectFilePath);
+                var found = analyzerResult.Items.TryGetValue("Compile", out var inputFiles);
+                files = found ? inputFiles.Select(pi => Path.Combine(projectDirectory, pi.ItemSpec)).ToArray() : Array.Empty<string>();
+                CompilerInputs.Add(analyzerResult, files);
             }
-
-            return files;
         }
 
-        internal static bool TryGetWorkspace(
-            this IAnalyzerResult analyzerResult,
-            out Workspace ws)
-        {
-            ws = analyzerResult.GetWorkspace();
-            return ws.CanBeUsedToGenerateCompilation();
-        }
+        return files;
+    }
+
+    internal static bool TryGetWorkspace(
+        this IAnalyzerResult analyzerResult,
+        out Workspace ws)
+    {
+        ws = analyzerResult.GetWorkspace();
+        return ws.CanBeUsedToGenerateCompilation();
     }
 }

@@ -3,13 +3,12 @@
 
 using System;
 using System.IO;
-using Clockwise;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.CSharpProject.Tools;
-using Pocket;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
+using Microsoft.DotNet.Interactive.CSharpProject.Utility;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
 {
@@ -46,24 +45,22 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
         public DirectoryInfo Directory { get; set; }
        
 
-        protected Task<bool> EnsureCreated() => _lazyCreation.ValueAsync();
+        protected Task<bool> EnsureCreatedAsync() => _lazyCreation.ValueAsync();
 
-        protected virtual async Task EnsureBuilt([CallerMemberName] string caller = null)
+        protected virtual async Task EnsureBuiltAsync([CallerMemberName] string caller = null)
         {
             {
-                await EnsureCreated();
+                await EnsureCreatedAsync();
 
-                await FullBuild();
+                await FullBuildAsync();
             }
         }
 
-        public virtual async Task EnsureReady(Budget budget)
+        public virtual async Task EnsureReadyAsync()
         {
-            await EnsureCreated().CancelIfExceeds(budget);
+            await EnsureCreatedAsync();
 
-            await EnsureBuilt().CancelIfExceeds(budget);
-
-            budget.RecordEntry();
+            await EnsureBuiltAsync();
         }
 
         public bool CanSupportWasm
@@ -84,12 +81,12 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
             }
         }
 
-        public virtual async Task FullBuild()
+        public virtual async Task FullBuildAsync()
         {
-            await DotnetBuild();
+            await DotnetBuildAsync();
         }
 
-        protected async Task DotnetBuild()
+        protected async Task DotnetBuildAsync()
         {
             {
                 this.CleanObjFolder();

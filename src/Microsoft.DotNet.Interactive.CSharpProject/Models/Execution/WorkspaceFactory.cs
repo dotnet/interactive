@@ -1,12 +1,11 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.IO;
 using System.Linq;
 using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Microsoft.DotNet.Interactive.CSharpProject.Tools;
-using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Protocol.Buffer;
+using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Buffer;
 using File = Microsoft.DotNet.Interactive.CSharpProject.Protocol.File;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Models.Execution
