@@ -72,6 +72,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 {
                     string s => $"N{s.AsSingleQuotedString()}",
                     char c => $"N{c.ToString().AsSingleQuotedString()}",
+                    Guid g => $"N{g.ToString().AsSingleQuotedString()}",
                     bool b => b ? "1" : "0",
                     null => "NULL",
                     _ => value.ToString()
