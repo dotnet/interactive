@@ -295,6 +295,11 @@ my_data_result");
                 .Be(2);
         }
 
+        public static readonly IEnumerable<object[]> SharedObjectVariables =
+            new List<object[]>
+            {
+                new object[] { "Guid testVar = Guid.Parse(\"4df65065-2369-4d63-a6b0-20dc7cdd02fe\");", Guid.Parse("4df65065-2369-4d63-a6b0-20dc7cdd02fe") } // GUID
+            };
 
         [MsSqlTheory]
         [InlineData("var testVar = 2;", 2)] // var
@@ -311,6 +316,7 @@ my_data_result");
         [InlineData("int testVar = 123456;", 123456)] // int
         [InlineData("long testVar = 123456789012345;", 123456789012345)] // long
         [InlineData("short testVar = 123;", (short)123)] // short
+        [MemberData(nameof(SharedObjectVariables))]
         public async Task Shared_variable_can_be_used_to_parameterize_a_sql_query(string csharpVariableDeclaration, object expectedValue, Type changeType = null)
         {
             using var kernel = await CreateKernelAsync();
