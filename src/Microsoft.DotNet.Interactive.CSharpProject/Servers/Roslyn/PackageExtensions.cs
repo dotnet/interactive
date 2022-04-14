@@ -8,12 +8,11 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation;
 using static System.Environment;
 using Package = Microsoft.DotNet.Interactive.CSharpProject.Packaging.Package;
-using Workspace = Microsoft.DotNet.Interactive.CSharpProject.Protocol.Workspace;
+using Workspace = Microsoft.DotNet.Interactive.CSharpProject.Workspace;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
 {
@@ -121,7 +120,7 @@ Source
             {
                 if (currentSolution.Projects
                     .SelectMany(p => p.Documents)
-                    .FirstOrDefault(d => d.IsMatch(source)) is Document document)
+                    .FirstOrDefault(d => d.IsMatch(source)) is { } document)
                 {
                     // there's a pre-existing document, so overwrite its contents
                     document = document.WithText(source.Text);

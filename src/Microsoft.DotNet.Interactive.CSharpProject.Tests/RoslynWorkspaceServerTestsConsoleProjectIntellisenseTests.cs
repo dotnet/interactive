@@ -4,7 +4,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -450,7 +449,7 @@ namespace FibonacciTest
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs");
             var server = GetLanguageService();
-            var result = await server.GetSignatureHelp(request);
+            var result = await server.GetSignatureHelpAsync(request);
 
             result.Signatures.Should().NotBeNullOrEmpty();
             result.Signatures.Should().Contain(signature => signature.Label == "void Console.WriteLine(string format, params object?[]? arg)");
@@ -509,7 +508,7 @@ namespace FibonacciTest
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs");
             var server = GetLanguageService();
-            var result = await server.GetSignatureHelp(request);
+            var result = await server.GetSignatureHelpAsync(request);
             result.Should().NotBeNull();
             result.Signatures.Should().BeNullOrEmpty();
         }
@@ -573,7 +572,7 @@ namespace FibonacciTest
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs@codeRegion");
             var server = GetLanguageService();
-            var result = await server.GetSignatureHelp(request);
+            var result = await server.GetSignatureHelpAsync(request);
 
             result.Signatures.Should().NotBeNullOrEmpty();
             result.Signatures.Should().Contain(signature => signature.Label == "void Console.WriteLine(string format, params object?[]? arg)");
@@ -640,7 +639,7 @@ namespace FibonacciTest
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs@codeRegion");
             var server = GetLanguageService();
-            var result = await server.GetSignatureHelp(request);
+            var result = await server.GetSignatureHelpAsync(request);
 
             result.Signatures.Should().NotBeNullOrEmpty();
             result.Signatures.Should().Contain(signature => signature.Label == "JToken JToken.FromObject(object o)");
@@ -699,7 +698,7 @@ namespace FibonacciTest
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs");
             var server = GetLanguageService();
-            var result = await server.GetSignatureHelp(request);
+            var result = await server.GetSignatureHelpAsync(request);
 
             result.Signatures.Should().NotBeNullOrEmpty();
 

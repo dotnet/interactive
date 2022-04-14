@@ -5,11 +5,10 @@ using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.CodeAnalysis;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Pocket;
 using Xunit;
 using Xunit.Abstractions;
-using Workspace = Microsoft.DotNet.Interactive.CSharpProject.Protocol.Workspace;
+using Workspace = Microsoft.DotNet.Interactive.CSharpProject.Workspace;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
 {

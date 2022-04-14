@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 
@@ -29,14 +28,14 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers
             return _roslynWorkspaceServer.GetCompletionsAsync(request);
         }
 
-        public Task<DiagnosticResult> GetDiagnostics(WorkspaceRequest request)
+        public Task<DiagnosticResult> GetDiagnosticsAsync(WorkspaceRequest request)
         {
-            return _roslynWorkspaceServer.GetDiagnostics(request);
+            return _roslynWorkspaceServer.GetDiagnosticsAsync(request);
         }
 
-        public Task<SignatureHelpResult> GetSignatureHelp(WorkspaceRequest request)
+        public Task<SignatureHelpResult> GetSignatureHelpAsync(WorkspaceRequest request)
         {
-            return _roslynWorkspaceServer.GetSignatureHelp(request);
+            return _roslynWorkspaceServer.GetSignatureHelpAsync(request);
         }
 
         public Task<RunResult> RunAsync(WorkspaceRequest request)

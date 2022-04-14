@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
     public class CSharpProjectKernel : Kernel
     {
         private RoslynWorkspaceServer _workspaceServer;
-        private Protocol.Workspace _workspace;
+        private Workspace _workspace;
         private Buffer _buffer;
 
         public static void RegisterEventsAndCommands()
@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
                 {
                     // add it to the workspace
                     file = new(command.RelativeFilePath, string.Empty);
-                    _workspace = new Protocol.Workspace(
+                    _workspace = new Workspace(
                         files: _workspace.Files.Concat(new[] { file }).ToArray());
                 }
             }
@@ -128,7 +128,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             ThrowIfProjectIsNotOpened();
             ThrowIfDocumentIsNotOpened();
 
-            var request = new Protocol.WorkspaceRequest(_workspace, _buffer.Id);
+            var request = new WorkspaceRequest(_workspace, _buffer.Id);
             var result = await _workspaceServer.CompileAsync(request);
 
             var diagnostics = GetDiagnostics(_buffer.Content, result);
@@ -149,7 +149,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
 
             var position = GetPositionFromLinePosition(command.Code, command.LinePosition);
             var updatedWorkspace = await GetWorkspaceWithCode(command.Code, position);
-            var request = new Protocol.WorkspaceRequest(updatedWorkspace, _buffer.Id);
+            var request = new WorkspaceRequest(updatedWorkspace, _buffer.Id);
             var completionResult = await _workspaceServer.GetCompletionsAsync(request);
             var completionItems = completionResult.Items.Select(item => new CompletionItem(
                 displayText: item.DisplayText,
@@ -168,7 +168,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             ThrowIfDocumentIsNotOpened();
 
             var updatedWorkspace = await GetWorkspaceWithCode(command.Code);
-            var request = new Protocol.WorkspaceRequest(updatedWorkspace, _buffer.Id);
+            var request = new WorkspaceRequest(updatedWorkspace, _buffer.Id);
             var result = await _workspaceServer.CompileAsync(request);
 
             var diagnostics = GetDiagnostics(command.Code, result);
@@ -182,8 +182,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
 
             var position = GetPositionFromLinePosition(command.Code, command.LinePosition);
             var updatedWorkspace = await GetWorkspaceWithCode(command.Code, position);
-            var request = new Protocol.WorkspaceRequest(updatedWorkspace, _buffer.Id);
-            var sigHelpResult = await _workspaceServer.GetSignatureHelp(request);
+            var request = new WorkspaceRequest(updatedWorkspace, _buffer.Id);
+            var sigHelpResult = await _workspaceServer.GetSignatureHelpAsync(request);
             var sigHelpItems = sigHelpResult.Signatures.Select(s =>
                 new SignatureInformation(
                     s.Label,
@@ -242,9 +242,9 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             return new LinePosition(currentLine, currentCharacter);
         }
 
-        private async Task<Protocol.Workspace> GetWorkspaceWithCode(string code, int position = 0)
+        private async Task<Workspace> GetWorkspaceWithCode(string code, int position = 0)
         {
-            var updatedWorkspace = new Protocol.Workspace(
+            var updatedWorkspace = new Workspace(
                 files: _workspace.Files,
                 buffers: _workspace.Buffers.Where(b => b.Id != _buffer.Id).Concat(new[] { new Buffer(_buffer.Id, code, position: position) }).ToArray());
             var inlinedWorkspace = await updatedWorkspace.InlineBuffersAsync();
@@ -262,8 +262,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
                 diagnostics = diags;
             }
 
-            if (result.Features.TryGetValue(nameof(Protocol.ProjectDiagnostics), out var candidateProjectDiagnostics) &&
-                candidateDiagnostics is Protocol.ProjectDiagnostics projectDiags)
+            if (result.Features.TryGetValue(nameof(ProjectDiagnostics), out var candidateProjectDiagnostics) &&
+                candidateDiagnostics is ProjectDiagnostics projectDiags)
             {
                 projectDiagnostics = projectDiags;
             }

@@ -3,35 +3,33 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Newtonsoft.Json;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject
+namespace Microsoft.DotNet.Interactive.CSharpProject;
+
+public class SignatureHelpResult
 {
-    public class SignatureHelpResult
+    private IEnumerable<SignatureInformation> signatures ;
+
+    public IEnumerable<SignatureInformation> Signatures
     {
-        private IEnumerable<SignatureInformation> signatures ;
+        get => signatures ??= Array.Empty<SignatureInformation>();
+        set => signatures  = value;
+    }
 
-        public IEnumerable<SignatureInformation> Signatures
-        {
-            get => signatures ??= Array.Empty<SignatureInformation>();
-            set => signatures  = value;
-        }
+    public int ActiveSignature { get; set; }
 
-        public int ActiveSignature { get; set; }
+    public int ActiveParameter { get; set; }
 
-        public int ActiveParameter { get; set; }
-
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string RequestId { get; set; }
-        public IEnumerable<SerializableDiagnostic> Diagnostics { get; set; }
+    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+    public string RequestId { get; set; }
+    public IEnumerable<SerializableDiagnostic> Diagnostics { get; set; }
 
 
-        public SignatureHelpResult(IEnumerable<SignatureInformation> signatures = null, IEnumerable<SerializableDiagnostic> diagnostics = null, string requestId = null)
-        {
-            RequestId = requestId;
-            Signatures = signatures;
-            Diagnostics = diagnostics;
-        }
+    public SignatureHelpResult(IEnumerable<SignatureInformation> signatures = null, IEnumerable<SerializableDiagnostic> diagnostics = null, string requestId = null)
+    {
+        RequestId = requestId;
+        Signatures = signatures;
+        Diagnostics = diagnostics;
     }
 }

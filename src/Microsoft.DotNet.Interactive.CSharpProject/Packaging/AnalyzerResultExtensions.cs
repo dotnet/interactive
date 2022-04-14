@@ -7,7 +7,6 @@ using Buildalyzer.Workspaces;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Buildalyzer;
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 
@@ -61,7 +60,7 @@ public static class AnalyzerResultExtensions
 
     internal static bool TryGetWorkspace(
         this IAnalyzerResult analyzerResult,
-        out Workspace ws)
+        out CodeAnalysis.Workspace ws)
     {
         ws = analyzerResult.GetWorkspace();
         return ws.CanBeUsedToGenerateCompilation();

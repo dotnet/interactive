@@ -4,7 +4,7 @@
 using System;
 using Newtonsoft.Json;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Protocol
+namespace Microsoft.DotNet.Interactive.CSharpProject
 {
     public class WorkspaceRequest
     {
@@ -15,14 +15,11 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Protocol
 
         public Workspace Workspace { get; }
 
-        public HttpRequest HttpRequest { get; }
-
         public BufferId ActiveBufferId { get; }
 
         public WorkspaceRequest(
             Workspace workspace,
             BufferId activeBufferId = null,
-            HttpRequest httpRequest = null,
             int? position = null,
             string requestId = null,
             string runArgs = "")
@@ -31,8 +28,6 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Protocol
 
             RequestId = requestId;
             RunArgs = runArgs;
-
-            HttpRequest = httpRequest;
 
             if (activeBufferId != null)
             {

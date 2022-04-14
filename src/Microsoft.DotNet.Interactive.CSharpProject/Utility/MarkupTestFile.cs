@@ -9,7 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.MLS.Project
+namespace Microsoft.DotNet.Interactive.CSharpProject.Utility
 {
     /// <summary>
     /// To aid with testing, we define a special type of text file that can encode additional

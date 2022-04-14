@@ -3,7 +3,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
+using Microsoft.DotNet.Interactive.CSharpProject.Utility;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject;
 

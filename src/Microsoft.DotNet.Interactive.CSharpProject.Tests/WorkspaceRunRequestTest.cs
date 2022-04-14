@@ -3,7 +3,6 @@
 
 using System.Linq;
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Newtonsoft.Json;
 using Xunit;
 

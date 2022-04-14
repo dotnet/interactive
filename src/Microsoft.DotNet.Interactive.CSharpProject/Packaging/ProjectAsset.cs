@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
         private readonly FileInfo _projectFile;
         private readonly FileInfo _lastBuildErrorLogFile;
         private readonly PipelineStep<IAnalyzerResult> _projectBuildStep;
-        private readonly PipelineStep<Workspace> _workspaceStep;
+        private readonly PipelineStep<CodeAnalysis.Workspace> _workspaceStep;
         private readonly PipelineStep<IAnalyzerResult> _cleanupStep;
 
         public string Name { get; }
@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
             return compilerInputs > 0 && sourceCount > 0;
         }
 
-        private Task<Workspace> BuildWorkspaceAsync(IAnalyzerResult result)
+        private Task<CodeAnalysis.Workspace> BuildWorkspaceAsync(IAnalyzerResult result)
         {
             if (result.TryGetWorkspace(out var ws))
             {
@@ -159,17 +159,17 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
             return results;
         }
 
-        public Task<Workspace> CreateWorkspaceAsync()
+        public Task<CodeAnalysis.Workspace> CreateWorkspaceAsync()
         {
             return _workspaceStep.GetLatestAsync();
         }
 
-        public Task<Workspace> CreateWorkspaceForRunAsync()
+        public Task<CodeAnalysis.Workspace> CreateWorkspaceForRunAsync()
         {
             return CreateWorkspaceAsync();
         }
 
-        public Task<Workspace> CreateWorkspaceForLanguageServicesAsync()
+        public Task<CodeAnalysis.Workspace> CreateWorkspaceForLanguageServicesAsync()
         {
             return CreateWorkspaceAsync();
         }

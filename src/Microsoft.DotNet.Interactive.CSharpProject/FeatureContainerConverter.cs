@@ -3,7 +3,6 @@
 
 using System;
 using System.Linq;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 

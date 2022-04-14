@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
 {
@@ -26,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
         }
 
         public override async Task<TextAndVersion> LoadTextAndVersionAsync(
-            Workspace workspace,
+            CodeAnalysis.Workspace workspace,
             DocumentId documentId,
             CancellationToken cancellationToken)
         {

@@ -5,7 +5,6 @@ using System;
 using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests

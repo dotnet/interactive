@@ -4,7 +4,7 @@
 using System;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.MLS.Project
+namespace Microsoft.DotNet.Interactive.CSharpProject
 {
     public class SourceFile
     {
@@ -18,7 +18,6 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.MLS.Project
             Name = name;
         }
 
-        public static SourceFile Create(string text, string name)
-            => new SourceFile(SourceText.From(text ?? string.Empty), name: name);
+        public static SourceFile Create(string text, string name) => new(SourceText.From(text ?? string.Empty), name: name);
     }
 }

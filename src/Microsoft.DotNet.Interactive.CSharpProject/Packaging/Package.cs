@@ -26,6 +26,7 @@ using Pocket;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.CSharpProject.Packaging.Package>;
 using Disposable = System.Reactive.Disposables.Disposable;
+using Workspace = Microsoft.CodeAnalysis.Workspace;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
 {
@@ -82,8 +83,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
         private readonly Subject<Unit> _designTimeBuildRequestChannel;
         private readonly SerialDisposable _designTimeBuildThrottlerSubscription;
 
-        private TaskCompletionSource<Workspace> _fullBuildCompletionSource = new();
-        private TaskCompletionSource<Workspace> _designTimeBuildCompletionSource = new();
+        private TaskCompletionSource<CodeAnalysis.Workspace> _fullBuildCompletionSource = new();
+        private TaskCompletionSource<CodeAnalysis.Workspace> _designTimeBuildCompletionSource = new();
 
         private readonly object _fullBuildCompletionSourceLock = new();
         private readonly object _designTimeBuildCompletionSourceLock = new();
@@ -205,7 +206,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
         public string TargetFramework => 
             _targetFramework ??= this.GetTargetFramework();
 
-        public Task<Workspace> CreateWorkspaceForRunAsync()
+        public Task<CodeAnalysis.Workspace> CreateWorkspaceForRunAsync()
         {
             CreateCompletionSourceIfNeeded(ref _fullBuildCompletionSource, _fullBuildCompletionSourceLock);
 
@@ -214,7 +215,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
             return _fullBuildCompletionSource.Task;
         }
 
-        public Task<Workspace> CreateWorkspaceForLanguageServicesAsync()
+        public Task<CodeAnalysis.Workspace> CreateWorkspaceForLanguageServicesAsync()
         {
             var shouldBuild = ShouldDoDesignTimeBuild();
             if (!shouldBuild)
@@ -229,7 +230,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
             return RequestDesignTimeBuildAsync();
         }
 
-        private void CreateCompletionSourceIfNeeded(ref TaskCompletionSource<Workspace> completionSource, object lockObject)
+        private void CreateCompletionSourceIfNeeded(ref TaskCompletionSource<CodeAnalysis.Workspace> completionSource, object lockObject)
         {
             lock (lockObject)
             {
@@ -238,13 +239,13 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
                     case TaskStatus.Canceled:
                     case TaskStatus.Faulted:
                     case TaskStatus.RanToCompletion:
-                        completionSource = new TaskCompletionSource<Workspace>();
+                        completionSource = new TaskCompletionSource<CodeAnalysis.Workspace>();
                         break;
                 }
             }
         }
 
-        private void SetCompletionSourceResult(TaskCompletionSource<Workspace> completionSource, Workspace result, object lockObject)
+        private void SetCompletionSourceResult(TaskCompletionSource<CodeAnalysis.Workspace> completionSource, CodeAnalysis.Workspace result, object lockObject)
         {
             lock (lockObject)
             {
@@ -261,7 +262,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
             }
         }
 
-        private void SetCompletionSourceException(TaskCompletionSource<Workspace> completionSource, Exception exception, object lockObject)
+        private void SetCompletionSourceException(TaskCompletionSource<CodeAnalysis.Workspace> completionSource, Exception exception, object lockObject)
         {
             lock (lockObject)
             {
@@ -278,7 +279,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
             }
         }
 
-        private Task<Workspace> RequestDesignTimeBuildAsync()
+        private Task<CodeAnalysis.Workspace> RequestDesignTimeBuildAsync()
         {
             CreateCompletionSourceIfNeeded(ref _designTimeBuildCompletionSource, _designTimeBuildCompletionSourceLock);
 
@@ -354,7 +355,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
             SetCompletionSourceResult(_designTimeBuildCompletionSource, ws, _designTimeBuildCompletionSourceLock);
         }
 
-        private Workspace CreateRoslynWorkspace()
+        private CodeAnalysis.Workspace CreateRoslynWorkspace()
         {
             var build = DesignTimeBuildResult;
             if (build == null)
@@ -382,7 +383,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
             return ws;
         }
 
-        protected Workspace RoslynWorkspace { get; set; }
+        protected CodeAnalysis.Workspace RoslynWorkspace { get; set; }
 
         public override async Task EnsureReadyAsync()
         {
@@ -529,7 +530,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
             return $"{Name} ({Directory.FullName})";
         }
 
-        public Task<Workspace> CreateWorkspaceAsync()
+        public Task<CodeAnalysis.Workspace> CreateWorkspaceAsync()
         {
             return CreateWorkspaceForRunAsync();
         }

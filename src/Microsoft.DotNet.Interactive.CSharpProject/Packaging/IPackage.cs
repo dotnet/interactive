@@ -3,8 +3,6 @@
 
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
-using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
 {
@@ -30,16 +28,16 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
 
     public interface ICreateWorkspace : IPackage
     {
-        Task<Workspace> CreateWorkspaceAsync();
+        Task<CodeAnalysis.Workspace> CreateWorkspaceAsync();
     }
 
     public interface ICreateWorkspaceForRun : IPackage, ICreateWorkspace
     {
-        Task<Workspace> CreateWorkspaceForRunAsync();
+        Task<CodeAnalysis.Workspace> CreateWorkspaceForRunAsync();
     }
 
     public interface ICreateWorkspaceForLanguageServices : IPackage, ICreateWorkspace
     {
-        Task<Workspace> CreateWorkspaceForLanguageServicesAsync();
+        Task<CodeAnalysis.Workspace> CreateWorkspaceForLanguageServicesAsync();
     }
 }

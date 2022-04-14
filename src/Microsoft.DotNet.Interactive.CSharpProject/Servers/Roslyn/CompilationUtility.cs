@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
 {
     internal static class CompilationUtility
     {
-        internal static bool CanBeUsedToGenerateCompilation(this Workspace workspace)
+        internal static bool CanBeUsedToGenerateCompilation(this CodeAnalysis.Workspace workspace)
         {
             return workspace?.CurrentSolution?.Projects?.Count() > 0;
         }

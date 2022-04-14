@@ -6,7 +6,6 @@ using System.Collections.Immutable;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Tags;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Microsoft.DotNet.Interactive.CSharpProject.Models;
 using Microsoft.DotNet.Interactive.Events;
 using RoslynCompletionItem = Microsoft.CodeAnalysis.Completion.CompletionItem;

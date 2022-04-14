@@ -12,12 +12,11 @@ using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Recipes;
 using Microsoft.DotNet.Interactive.CSharpProject.Models.Execution;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation;
 using Microsoft.DotNet.Interactive.CSharpProject.Transformations;
-using Workspace = Microsoft.DotNet.Interactive.CSharpProject.Protocol.Workspace;
+using Workspace = Microsoft.DotNet.Interactive.CSharpProject.Workspace;
 using Microsoft.DotNet.Interactive.CSharpProject.LanguageServices;
 using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 using Microsoft.DotNet.Interactive.CSharpProject.WorkspaceFeatures;
@@ -29,7 +28,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
     {
         private readonly IPackageFinder _packageFinder;
         private const int defaultBudgetInSeconds = 30;
-        private static readonly ConcurrentDictionary<string, AsyncLock> locks = new ConcurrentDictionary<string, AsyncLock>();
+        private static readonly ConcurrentDictionary<string, AsyncLock> locks = new();
         private static readonly string UserCodeCompleted = nameof(UserCodeCompleted);
 
         public RoslynWorkspaceServer(IPackage package)
@@ -114,7 +113,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
                        : workspace.Usings;
         }
 
-        public async Task<SignatureHelpResult> GetSignatureHelp(WorkspaceRequest request)
+        public async Task<SignatureHelpResult> GetSignatureHelpAsync(WorkspaceRequest request)
         {
             var package = await _packageFinder.Find<ICreateWorkspace>(request.Workspace.WorkspaceType);
 
@@ -154,7 +153,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
             return result;
         }
 
-        public async Task<DiagnosticResult> GetDiagnostics(WorkspaceRequest request)
+        public async Task<DiagnosticResult> GetDiagnosticsAsync(WorkspaceRequest request)
         {
             var package = await _packageFinder.Find<ICreateWorkspace>(request.Workspace.WorkspaceType);
 

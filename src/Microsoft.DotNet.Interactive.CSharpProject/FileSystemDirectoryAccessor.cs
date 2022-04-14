@@ -14,11 +14,6 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
     {
         private readonly DirectoryInfo _rootDirectory;
 
-        public FileSystemDirectoryAccessor(string directory): this(new DirectoryInfo(directory))
-        {
-            // FIX: (FileSystemDirectoryAccessor) dead code?
-        }
-
         public FileSystemDirectoryAccessor(DirectoryInfo rootDir)
         {
             _rootDirectory = rootDir ?? throw new ArgumentNullException(nameof(rootDir));
@@ -72,7 +67,6 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             var absolutePath = _rootDirectory.Combine(relativePath).FullName;
             return new FileSystemDirectoryAccessor(new DirectoryInfo(absolutePath));
         }
-
 
         public IEnumerable<RelativeDirectoryPath> GetAllDirectoriesRecursively()
         {
