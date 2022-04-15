@@ -3,7 +3,6 @@
 
 using System;
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Recipes;
 using Microsoft.DotNet.Interactive.CSharpProject.Models.Execution;
 using Xunit;

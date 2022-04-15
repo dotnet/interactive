@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Clockwise;
 using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
@@ -13,8 +12,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
     public class PackageBuilder
     {
         private PackageBase _packageBase;
-        private readonly List<Func<PackageBase, Budget, Task>> _afterCreateActions = new List<Func<PackageBase, Budget, Task>>();
-       private readonly List<(string packageName, string packageVersion, string restoreSources)> _addPackages = new List<(string packageName, string packageVersion, string restoreSources)>();
+        private readonly List<Func<PackageBase, Task>> _afterCreateActions = new();
+       private readonly List<(string packageName, string packageVersion, string restoreSources)> _addPackages = new();
         private string _languageVersion = "8.0";
 
         public PackageBuilder(string packageName, IPackageInitializer packageInitializer = null)
@@ -44,13 +43,13 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
                template,
                projectName ?? PackageName,
                language,
-               AfterCreate);
+               RunAfterCreateActionsAsync);
         }
 
         public void AddPackageReference(string packageId, string version = null, string restoreSources = null)
         {
             _addPackages.Add((packageId, version, restoreSources));
-            _afterCreateActions.Add(async (package, budget) =>
+            _afterCreateActions.Add(async package =>
             {
                 Func<Task> action = async () =>
                 {
@@ -67,7 +66,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
         {
             _languageVersion = version;
 
-            _afterCreateActions.Add(async (package, budget) =>
+            _afterCreateActions.Add(async (package) =>
             {
                 async Task Action()
                 {
@@ -88,7 +87,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
         {
             _languageVersion = version;
 
-            _afterCreateActions.Add(async (package, budget) =>
+            _afterCreateActions.Add(async (package) =>
             {
                 async Task Action()
                 {
@@ -107,7 +106,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
 
         public void DeleteFile(string relativePath)
         {
-            _afterCreateActions.Add(async (workspace, budget) =>
+            _afterCreateActions.Add(async (workspace) =>
             {
                 await Task.Yield();
                 var filePath = Path.Combine(workspace.Directory.FullName, relativePath);
@@ -120,7 +119,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
 
         public void WriteFile(string relativePath, string content)
         {
-            _afterCreateActions.Add(async (workspace, budget) =>
+            _afterCreateActions.Add(async workspace =>
             {
                 await Task.Yield();
                 var filePath = Path.Combine(workspace.Directory.FullName, relativePath);
@@ -128,10 +127,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
             });
         }
 
-        public PackageBase GetPackage(Budget budget = null)
+        public PackageBase GetPackage()
         {
-            budget = budget ?? new Budget();
-
             if (_packageBase == null)
             {
                 if (PackageInitializer is BlazorPackageInitializer)
@@ -157,16 +154,14 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
                 }
             }
 
-            budget?.RecordEntry();
-
             return _packageBase;
         }
 
-        private async Task AfterCreate(DirectoryInfo directoryInfo, Budget budget)
+        private async Task RunAfterCreateActionsAsync(DirectoryInfo directoryInfo)
         {
             foreach (var action in _afterCreateActions)
             {
-                await action(_packageBase, budget);
+                await action(_packageBase);
             }
         }
     }

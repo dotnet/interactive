@@ -3,8 +3,6 @@
 
 using System.Linq;
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
@@ -14,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
         [Fact]
         public void can_create_buffers_from_file_with_regions()
         {
-            var file = FileGenerator.Create("Program.cs", SourceCodeProvider.ConsoleProgramMultipleRegions);
+            var file = new ProjectFileContent("Program.cs", SourceCodeProvider.ConsoleProgramMultipleRegions);
 
             var buffers = BufferGenerator.CreateBuffers(file).ToList();
 
@@ -27,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
         [Fact]
         public void can_create_buffers_from_file_without_regions()
         {
-            var file = FileGenerator.Create("Program.cs", SourceCodeProvider.ConsoleProgramNoRegion);
+            var file = new ProjectFileContent("Program.cs", SourceCodeProvider.ConsoleProgramNoRegion);
 
             var buffers = BufferGenerator.CreateBuffers(file).ToList();
 

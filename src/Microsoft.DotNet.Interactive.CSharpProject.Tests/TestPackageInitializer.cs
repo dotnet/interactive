@@ -4,7 +4,6 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Clockwise;
 using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
@@ -17,15 +16,15 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
             string template,
             string projectName,
             string language = null,
-            Func<DirectoryInfo, Budget, Task> afterCreate = null) :
+            Func<DirectoryInfo, Task> afterCreate = null) :
             base(template, projectName, language, afterCreate)
         {
         }
 
-        public override Task Initialize(DirectoryInfo directory, Budget budget = null)
+        public override Task InitializeAsync(DirectoryInfo directory)
         {
             InitializeCount++;
-            return base.Initialize(directory, budget);
+            return base.InitializeAsync(directory);
         }
     }
 }

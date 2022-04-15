@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Clockwise;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 using Microsoft.DotNet.Interactive.CSharpProject.Utility;
@@ -33,18 +32,18 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
             _addPackages = packages.Concat(requiredPackages).Distinct().ToList();
         }
 
-        public override async Task Initialize(DirectoryInfo directory, Budget budget = null)
+        public override async Task InitializeAsync(DirectoryInfo directory)
         {
             if (directory.Name != "MLS.Blazor")
             {
                 throw new ArgumentException(@"Directory must be called `MLS.Blazor` but is actually called {nameof(directory)}");
             }
 
-            await base.Initialize(directory, budget);
-            await MakeBlazorProject(directory, budget);
+            await base.InitializeAsync(directory);
+            await MakeBlazorProject(directory);
         }
 
-        private async Task MakeBlazorProject(DirectoryInfo directory, Budget budget)
+        private async Task MakeBlazorProject(DirectoryInfo directory)
         {
             var dotnet = new Dotnet(directory);
             var root = directory.FullName;

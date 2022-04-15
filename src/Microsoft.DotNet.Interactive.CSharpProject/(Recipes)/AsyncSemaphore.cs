@@ -7,7 +7,7 @@ namespace Recipes
     internal class AsyncSemaphore
     {
         private static readonly Task _completed = Task.FromResult(true);
-        private readonly Queue<TaskCompletionSource<bool>> _waiters = new Queue<TaskCompletionSource<bool>>();
+        private readonly Queue<TaskCompletionSource<bool>> _waiters = new();
         private int m_currentCount;
 
         public AsyncSemaphore(int initialCount)

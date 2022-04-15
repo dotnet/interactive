@@ -2,12 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.MLS.Project
+namespace Microsoft.DotNet.Interactive.CSharpProject;
+
+public interface IWorkspaceTransformer
 {
-    public interface IWorkspaceTransformer
-    {
-        Task<Workspace> TransformAsync(Workspace source);
-    }
+    Task<Workspace> TransformAsync(Workspace source);
 }

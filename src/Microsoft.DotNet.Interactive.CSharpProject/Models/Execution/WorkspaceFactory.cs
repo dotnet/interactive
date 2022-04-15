@@ -1,13 +1,9 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.IO;
 using System.Linq;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Microsoft.DotNet.Interactive.CSharpProject.Tools;
-using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Protocol.Buffer;
-using File = Microsoft.DotNet.Interactive.CSharpProject.Protocol.File;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Models.Execution
 {
@@ -22,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Models.Execution
                                        .Where(f => !f.IsBuildOutput())
                                        .ToArray();
 
-            var files = filesOnDisk.Select(file => new File(file.Name, file.Read())).ToList();
+            var files = filesOnDisk.Select(file => new ProjectFileContent(file.Name, file.Read())).ToList();
 
             return new Workspace(
                 files: files.ToArray(),

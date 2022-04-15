@@ -4,48 +4,47 @@
 using System;
 using System.IO;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Tools
+namespace Microsoft.DotNet.Interactive.CSharpProject;
+
+public static class RelativePathExtensions
 {
-    public static class RelativePathExtensions
+    public static FileInfo Combine(
+        this DirectoryInfo directory,
+        RelativeFilePath filePath)
     {
-        public static FileInfo Combine(
-            this DirectoryInfo directory,
-            RelativeFilePath filePath)
+        var filePart = filePath.Value;
+
+        if (filePart.StartsWith("./"))
         {
-            var filePart = filePath.Value;
-
-            if (filePart.StartsWith("./"))
-            {
-                filePart = filePart.Substring(2);
-            }
-
-            return new FileInfo(
-                Path.Combine(
-                    directory.FullName,
-                    filePart.Replace('/', Path.DirectorySeparatorChar)));
+            filePart = filePart.Substring(2);
         }
 
-        public static DirectoryInfo Combine(
-            this DirectoryInfo directory,
-            RelativeDirectoryPath directoryPath)
-        {
-            return new DirectoryInfo(
-                Path.Combine(
-                    RelativePath.NormalizeDirectory(directory.FullName),
-                    directoryPath.Value.Replace('/', Path.DirectorySeparatorChar)));
-        }
+        return new FileInfo(
+            Path.Combine(
+                directory.FullName,
+                filePart.Replace('/', Path.DirectorySeparatorChar)));
+    }
 
-        public static T Match<T>(this RelativePath path, Func<RelativeDirectoryPath, T> directory, Func<RelativeFilePath, T> file)
+    public static DirectoryInfo Combine(
+        this DirectoryInfo directory,
+        RelativeDirectoryPath directoryPath)
+    {
+        return new DirectoryInfo(
+            Path.Combine(
+                RelativePath.NormalizeDirectory(directory.FullName),
+                directoryPath.Value.Replace('/', Path.DirectorySeparatorChar)));
+    }
+
+    public static T Match<T>(this RelativePath path, Func<RelativeDirectoryPath, T> directory, Func<RelativeFilePath, T> file)
+    {
+        switch (path)
         {
-            switch (path)
-            {
-                case RelativeDirectoryPath relativeDirectoryPath:
-                    return directory(relativeDirectoryPath);
-                case RelativeFilePath relativeFilePath:
-                    return file(relativeFilePath);
-                default:
-                    throw new ArgumentOutOfRangeException($"Unexpected type derived from {nameof(RelativePath)}: {path.GetType().Name}");
-            }
+            case RelativeDirectoryPath relativeDirectoryPath:
+                return directory(relativeDirectoryPath);
+            case RelativeFilePath relativeFilePath:
+                return file(relativeFilePath);
+            default:
+                throw new ArgumentOutOfRangeException($"Unexpected type derived from {nameof(RelativePath)}: {path.GetType().Name}");
         }
     }
 }

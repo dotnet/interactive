@@ -4,41 +4,40 @@
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Tools
+namespace Microsoft.DotNet.Interactive.CSharpProject;
+
+public static class FileInfoExtensions
 {
-    public static class FileInfoExtensions
+    public static string Read(this FileInfo file)
     {
-        public static string Read(this FileInfo file)
+        using (var reader = file.OpenText())
         {
-            using (var reader = file.OpenText())
-            {
-                return reader.ReadToEnd();
-            }
+            return reader.ReadToEnd();
         }
+    }
 
-        public static async Task<string> ReadAsync(this FileInfo file)
+    public static async Task<string> ReadAsync(this FileInfo file)
+    {
+        using (var reader = file.OpenText())
         {
-            using (var reader = file.OpenText())
-            {
-                return await reader.ReadToEndAsync();
-            }
+            return await reader.ReadToEndAsync();
         }
+    }
 
-        public static bool IsBuildOutput(this FileInfo fileInfo)
+    public static bool IsBuildOutput(this FileInfo fileInfo)
+    {
+        var directory = fileInfo.Directory;
+
+        while (directory != null)
         {
-            var directory = fileInfo.Directory;
-
-            while (directory != null)
+            if (directory.Name == "obj" || directory.Name == "bin")
             {
-                if (directory.Name == "obj" || directory.Name == "bin")
-                {
-                    return true;
-                }
-
-                directory = directory.Parent;
+                return true;
             }
 
-            return false;
+            directory = directory.Parent;
         }
+
+        return false;
     }
 }

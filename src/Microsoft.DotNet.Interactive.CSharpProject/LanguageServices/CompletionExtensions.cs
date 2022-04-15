@@ -6,10 +6,9 @@ using System.Collections.Immutable;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Tags;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Microsoft.DotNet.Interactive.CSharpProject.Models;
+using Microsoft.DotNet.Interactive.Events;
 using RoslynCompletionItem = Microsoft.CodeAnalysis.Completion.CompletionItem;
-using TdnCompletionItem = Microsoft.DotNet.Interactive.CSharpProject.Protocol.CompletionItem;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.LanguageServices
 {
@@ -60,7 +59,9 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.LanguageServices
             return null;
         }
 
-        public static CompletionItem ToModel(this RoslynCompletionItem item, Dictionary<(string, int), ISymbol> recommendedSymbols,
+        public static CompletionItem ToModel(
+            this RoslynCompletionItem item, 
+            Dictionary<(string, int), ISymbol> recommendedSymbols,
             Document document)
         {
             var documentation =  GetDocumentation(item, recommendedSymbols, document);
@@ -71,14 +72,17 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.LanguageServices
                 filterText: item.FilterText,
                 sortText: item.SortText,
                 insertText: item.FilterText,
-                documentation: documentation);
+                documentation: documentation?.Value);
         }
 
-        public static MarkdownString GetDocumentation(this RoslynCompletionItem item, Dictionary<(string, int), ISymbol> recommendedSymbols,
-        Document document)
+        public static FormattedValue GetDocumentation(
+            this RoslynCompletionItem item,
+            Dictionary<(string, int), ISymbol> recommendedSymbols,
+            Document document)
         {
             var symbol = GetCompletionSymbolAsync(item, recommendedSymbols, document);
-            if (symbol != null)
+            
+            if (symbol is { })
             {
                 return DocumentationConverter.GetDocumentation(symbol, "\n");
             }

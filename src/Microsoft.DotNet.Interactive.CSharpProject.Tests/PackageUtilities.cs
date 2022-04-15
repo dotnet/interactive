@@ -5,7 +5,6 @@ using System;
 using System.IO;
 using System.Reactive.Concurrency;
 using System.Threading.Tasks;
-using Clockwise;
 using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 
@@ -13,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
 {
     public static class PackageUtilities
     {
-        private static readonly object CreateDirectoryLock = new object();
+        private static readonly object CreateDirectoryLock = new();
 
         public static async Task<Package> Copy(
             Package fromPackage,
@@ -27,10 +26,10 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
                 throw new ArgumentNullException(nameof(fromPackage));
             }
 
-            await fromPackage.EnsureReady(new Budget());
+            await fromPackage.EnsureReadyAsync();
 
-            folderNameStartsWith = folderNameStartsWith ?? fromPackage.Name;
-            parentDirectory = parentDirectory ?? fromPackage.Directory.Parent;
+            folderNameStartsWith ??= fromPackage.Name;
+            parentDirectory ??= fromPackage.Directory.Parent;
 
             var destination =
                 CreateDirectory(folderNameStartsWith,

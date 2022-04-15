@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Protocol
+namespace Microsoft.DotNet.Interactive.CSharpProject
 {
     [JsonConverter(typeof(BufferIdConverter))]
     public class BufferId
@@ -79,8 +79,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Protocol
             return new BufferId(FileName, RemoveInjectionModifiers(RegionName));
         }
 
-     
-        public BufferInjectionPoints GetInjectionPoint()
+        internal BufferInjectionPoints GetInjectionPoint()
         {
             if (string.IsNullOrWhiteSpace(RegionName))
             {

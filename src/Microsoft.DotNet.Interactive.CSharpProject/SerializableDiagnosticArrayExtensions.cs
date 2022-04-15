@@ -4,22 +4,21 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
+using Microsoft.CodeAnalysis;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject
+namespace Microsoft.DotNet.Interactive.CSharpProject;
+
+internal static class SerializableDiagnosticArrayExtensions
 {
-    public static class SerializableDiagnosticArrayExtensions
+    public static bool ContainsError(this IEnumerable<SerializableDiagnostic> diagnostics)
     {
-        public static bool ContainsError(this IEnumerable<SerializableDiagnostic> diagnostics)
-        {
-            return diagnostics.Any(e => e.Severity == DiagnosticSeverity.Error);
-        }
+        return diagnostics.Any(e => e.Severity == DiagnosticSeverity.Error);
+    }
 
-        public static string[] GetCompileErrorMessages(this IEnumerable<SerializableDiagnostic> diagnostics)
-        {
-            return diagnostics?.Where(d => d.Severity == DiagnosticSeverity.Error)
-                              .Select(d => d.Message)
-                              .ToArray() ?? Array.Empty<string>();
-        }
+    public static string[] GetCompileErrorMessages(this IEnumerable<SerializableDiagnostic> diagnostics)
+    {
+        return diagnostics?.Where(d => d.Severity == DiagnosticSeverity.Error)
+                          .Select(d => d.Message)
+                          .ToArray() ?? Array.Empty<string>();
     }
 }

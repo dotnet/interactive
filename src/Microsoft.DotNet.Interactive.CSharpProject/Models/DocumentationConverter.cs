@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.CodeAnalysis;
-using System.Text;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Models
 {
@@ -12,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Models
         /// <summary>
         /// Converts the xml documentation string into a plain text string.
         /// </summary>
-        public static MarkdownString GetDocumentation(ISymbol symbol, string lineEnding)
+        public static FormattedValue GetDocumentation(ISymbol symbol, string lineEnding)
         {
             string documentation;
             switch (symbol)
@@ -31,12 +29,12 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Models
                     break;
             }
 
-            if(string.IsNullOrEmpty(documentation))
+            if (string.IsNullOrEmpty(documentation))
             {
                 return null;
             }
 
-            return new MarkdownString(documentation);
+            return new("text/markdown", documentation);
         }
 
         public static DocumentationComment GetDocumentationComment(ISymbol symbol, string lineEnding)

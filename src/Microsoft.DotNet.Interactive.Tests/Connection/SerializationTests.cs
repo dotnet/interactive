@@ -12,10 +12,6 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Html;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.CSharpProject;
-using Microsoft.DotNet.Interactive.CSharpProject.Commands;
-using Microsoft.DotNet.Interactive.CSharpProject.Events;
-using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Server;
@@ -25,7 +21,6 @@ using Microsoft.DotNet.Interactive.VSCode;
 using Pocket;
 using Xunit;
 using Xunit.Abstractions;
-using Project = Microsoft.DotNet.Interactive.CSharpProject.Project;
 
 namespace Microsoft.DotNet.Interactive.Tests.Connection
 {
@@ -36,13 +31,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
         public SerializationTests(ITestOutputHelper output)
         {
             _output = output;
-
-            KernelCommandEnvelope.RegisterCommand<OpenProject>();
-            KernelCommandEnvelope.RegisterCommand<OpenDocument>();
-            KernelCommandEnvelope.RegisterCommand<CompileProject>();
-            KernelEventEnvelope.RegisterEvent<ProjectOpened>();
-            KernelEventEnvelope.RegisterEvent<DocumentOpened>();
-            KernelEventEnvelope.RegisterEvent<AssemblyProduced>();
 
             KernelCommandEnvelope.RegisterCommand<GetInput>();
             KernelEventEnvelope.RegisterEvent<InputProduced>();
@@ -129,25 +117,10 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
             this.Assent(Indent(json), configuration);
         }
 
-        private static string Indent(string json)
-        {
-            json = JsonNode.Parse(json).ToJsonString(new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
-            return json;
-        }
-
         [Fact]
         public void All_command_types_are_tested_for_round_trip_serialization()
         {
             var interactiveCommands = typeof(Kernel)
-                .Assembly
-                .ExportedTypes
-                .Concrete()
-                .DerivedFrom(typeof(KernelCommand));
-
-            var projectKernelCommands = typeof(CSharpProjectKernel)
                 .Assembly
                 .ExportedTypes
                 .Concrete()
@@ -160,7 +133,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
                 .DerivedFrom(typeof(KernelCommand));
 
 
-            var commandTypes = interactiveCommands.Concat(vscodeCommands).Concat(projectKernelCommands);
+            var commandTypes = interactiveCommands.Concat(vscodeCommands);
 
             Commands()
                 .Select(e => e[0].GetType())
@@ -168,7 +141,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
                 .Should()
                 .BeEquivalentTo(commandTypes);
         }
-        
+
         [Fact]
         public void All_event_types_are_tested_for_round_trip_serialization()
         {
@@ -178,20 +151,14 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
                 .ExportedTypes
                 .Concrete()
                 .DerivedFrom(typeof(KernelEvent));
-
-            var projectKernelEvents = typeof(CSharpProjectKernel)
-                .Assembly
-                .ExportedTypes
-                .Concrete()
-                .DerivedFrom(typeof(KernelEvent));
-
+            
             var vscodeEvents = typeof(VSCodeClientKernelsExtension)
                 .Assembly
                 .ExportedTypes
                 .Concrete()
                 .DerivedFrom(typeof(KernelEvent));
 
-            var eventTypes = interactiveEvents.Concat(vscodeEvents).Concat(projectKernelEvents);
+            var eventTypes = interactiveEvents.Concat(vscodeEvents);
 
             Events()
                 .Select(e => e[0].GetType())
@@ -217,17 +184,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
 
                 yield return new ChangeWorkingDirectory("/path/to/somewhere");
 
-                yield return new CompileProject();
-
                 yield return new DisplayError("oops!");
 
                 yield return new DisplayValue(
                     new FormattedValue("text/html", "<b>hi!</b>")
                 );
-
-                yield return new OpenDocument("path");
-
-                yield return new OpenProject(new Project(new[] { new ProjectFile("Program.cs", "// file contents") }));
 
                 yield return new RequestCompletions("Cons", new LinePosition(0, 4), "csharp");
 
@@ -275,10 +236,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
 
             IEnumerable<KernelEvent> events()
             {
-                var compileProject = new CompileProject();
-
-                yield return new AssemblyProduced(compileProject, new Base64EncodedAssembly("01020304"));
-
                 var submitCode = new SubmitCode("123");
 
                 yield return new CodeSubmissionReceived(
@@ -345,10 +302,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
                         new FormattedValue("text/html", "<b>hi!</b>"),
                     });
 
-                var openDocument = new OpenDocument("path");
-
-                yield return new DocumentOpened(openDocument, new RelativeFilePath("path"), null, "file contents");
-
                 yield return new ErrorProduced("oops!", submitCode);
 
                 yield return new IncompleteCodeSubmissionReceived(submitCode);
@@ -388,17 +341,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
                         packageRoot: "/the/package/root",
                         probingPaths: new[] { "/probing/path/1", "/probing/path/2" }),
                         new SubmitCode("#r \"nuget:ThePackage,1.2.3\""));
-
-                yield return new ProjectOpened(
-                    new OpenProject(new Project(new[]
-                    {
-                        new ProjectFile("Program.cs", "#region some-region\n#endregion"),
-                    })),
-                    new[]
-                    {
-                        new ProjectItem("./Program.cs", new[] { "some-region" })
-                    });
-
+                
                 yield return new ReturnValueProduced(
                     new HtmlString("<b>hi!</b>"),
                     new SubmitCode("b(\"hi!\")", "csharp", SubmissionType.Run),
@@ -462,6 +405,15 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
             }
 
             return dictionary.Values.Select(e => new[] { e });
+        }
+
+        private static string Indent(string json)
+        {
+            json = JsonNode.Parse(json).ToJsonString(new JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+            return json;
         }
     }
 }

@@ -1,6 +1,7 @@
-﻿using System.Threading.Tasks;
-using Clockwise;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 
@@ -17,29 +18,29 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers
             _roslynWorkspaceServer = new RoslynWorkspaceServer(packageFinder);
         }
 
-        public Task<CompileResult> Compile(WorkspaceRequest request, Budget budget = null)
+        public Task<CompileResult> CompileAsync(WorkspaceRequest request)
         {
-            return _roslynWorkspaceServer.Compile(request, budget);
+            return _roslynWorkspaceServer.CompileAsync(request);
         }
 
-        public Task<CompletionResult> GetCompletionList(WorkspaceRequest request, Budget budget = null)
+        public Task<CompletionResult> GetCompletionsAsync(WorkspaceRequest request)
         {
-            return _roslynWorkspaceServer.GetCompletionList(request, budget);
+            return _roslynWorkspaceServer.GetCompletionsAsync(request);
         }
 
-        public Task<DiagnosticResult> GetDiagnostics(WorkspaceRequest request, Budget budget = null)
+        public Task<DiagnosticResult> GetDiagnosticsAsync(WorkspaceRequest request)
         {
-            return _roslynWorkspaceServer.GetDiagnostics(request, budget);
+            return _roslynWorkspaceServer.GetDiagnosticsAsync(request);
         }
 
-        public Task<SignatureHelpResult> GetSignatureHelp(WorkspaceRequest request, Budget budget = null)
+        public Task<SignatureHelpResult> GetSignatureHelpAsync(WorkspaceRequest request)
         {
-            return _roslynWorkspaceServer.GetSignatureHelp(request, budget);
+            return _roslynWorkspaceServer.GetSignatureHelpAsync(request);
         }
 
-        public Task<RunResult> Run(WorkspaceRequest request, Budget budget = null)
+        public Task<RunResult> RunAsync(WorkspaceRequest request)
         {
-            return _roslynWorkspaceServer.Run(request, budget);
+            return _roslynWorkspaceServer.RunAsync(request);
         }
     }
 }

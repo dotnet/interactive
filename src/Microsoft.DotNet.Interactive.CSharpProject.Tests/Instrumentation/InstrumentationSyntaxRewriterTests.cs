@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Microsoft.DotNet.Interactive.CSharpProject.Models.Execution;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation;
@@ -172,7 +171,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests.Instrumentation
             var package = await Create.ConsoleWorkspaceCopy();
             var workspace = WorkspaceFactory.CreateWorkspaceFromDirectory(package.Directory, package.Name, includeInstrumentation: true);
             var roslynWorkspaceServer = new RoslynWorkspaceServer(package);
-            Func<Task> run = ()=> roslynWorkspaceServer.Run(new WorkspaceRequest(workspace));
+            Func<Task> run = ()=> roslynWorkspaceServer.RunAsync(new WorkspaceRequest(workspace));
             run.Should().NotThrow();
         }
     }

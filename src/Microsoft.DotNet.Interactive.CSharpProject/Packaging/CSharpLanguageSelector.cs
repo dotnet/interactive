@@ -8,7 +8,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
 {
     internal static class CSharpLanguageSelector
     {
-        private static readonly Dictionary<string, string> CSharpLanguageVersions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) {
+        private static readonly Dictionary<string, string> CSharpLanguageVersions = new(StringComparer.OrdinalIgnoreCase) {
             { "netcoreapp2.0", "7.3" },
             { "netcoreapp2.1", "7.3" },
             { "netstandard2.0", "7.3" },

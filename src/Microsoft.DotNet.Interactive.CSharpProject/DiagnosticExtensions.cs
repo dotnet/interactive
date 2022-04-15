@@ -5,9 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
-using DiagnosticSeverity = Microsoft.CodeAnalysis.DiagnosticSeverity;
-using TdnDiagnosticSeverity = Microsoft.DotNet.Interactive.CSharpProject.Protocol.DiagnosticSeverity;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject
 {
@@ -23,11 +20,6 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
         public static bool ContainsError(this IEnumerable<Diagnostic> diagnostics)
         {
             return diagnostics.Any(e => e.IsError());
-        }
-
-        public static TdnDiagnosticSeverity ConvertSeverity(this Diagnostic diagnostic)
-        {
-            return (TdnDiagnosticSeverity)diagnostic.Severity;
         }
 
         public static SerializableDiagnostic ToSerializableDiagnostic(
@@ -51,7 +43,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             return new SerializableDiagnostic(diagnostic.Location?.SourceSpan.Start ?? throw new ArgumentException(nameof(diagnostic.Location)),
                                               diagnostic.Location.SourceSpan.End,
                                               message ?? diagnosticMessage,
-                                              diagnostic.ConvertSeverity(),
+                                              diagnostic.Severity,
                                               diagnostic.Descriptor.Id,
                                               bufferId,
                                               location);

@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation
 {
@@ -81,10 +80,10 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentat
 
         private static VariableLocation MapVariableLocationToViewport(
             VariableLocation input,
-            LinePositionSpan viewportSpan) => new VariableLocation(
+            LinePositionSpan viewportSpan) => new(
             input.Variable,
-            (int) CalculateOffset(input.StartLine, viewportSpan),
-            (int) CalculateOffset(input.EndLine, viewportSpan),
+            (int)CalculateOffset(input.StartLine, viewportSpan),
+            (int)CalculateOffset(input.EndLine, viewportSpan),
             input.StartColumn,
             input.EndColumn
         );

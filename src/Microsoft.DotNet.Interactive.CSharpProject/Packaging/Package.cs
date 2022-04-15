@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
@@ -14,7 +15,6 @@ using System.Xml.Linq;
 using System.Xml.XPath;
 using Buildalyzer;
 using Buildalyzer.Workspaces;
-using Clockwise;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
@@ -26,6 +26,7 @@ using Pocket;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.CSharpProject.Packaging.Package>;
 using Disposable = System.Reactive.Disposables.Disposable;
+using Workspace = Microsoft.CodeAnalysis.Workspace;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
 {
@@ -37,8 +38,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
         internal const string DesignTimeBuildBinlogFileName = "package_designTimeBuild.binlog";
 
 
-        private static readonly ConcurrentDictionary<string, SemaphoreSlim> _packageBuildSemaphores = new ConcurrentDictionary<string, SemaphoreSlim>();
-        private static readonly ConcurrentDictionary<string, SemaphoreSlim> _packagePublishSemaphores = new ConcurrentDictionary<string, SemaphoreSlim>();
+        private static readonly ConcurrentDictionary<string, SemaphoreSlim> _packageBuildSemaphores = new();
+        private static readonly ConcurrentDictionary<string, SemaphoreSlim> _packagePublishSemaphores = new();
 
         static Package()
         {
@@ -71,7 +72,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
         private FileInfo _entryPointAssemblyPath;
         private static string _targetFramework;
         private readonly Logger _log;
-        private readonly Subject<Budget> _fullBuildRequestChannel;
+        private readonly Subject<Unit> _fullBuildRequestChannel;
 
         private readonly IScheduler _buildThrottleScheduler;
         private readonly SerialDisposable _fullBuildThrottlerSubscription;
@@ -79,14 +80,14 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
         private readonly SemaphoreSlim _buildSemaphore;
         private readonly SemaphoreSlim _publishSemaphore;
 
-        private readonly Subject<Budget> _designTimeBuildRequestChannel;
+        private readonly Subject<Unit> _designTimeBuildRequestChannel;
         private readonly SerialDisposable _designTimeBuildThrottlerSubscription;
 
-        private TaskCompletionSource<Workspace> _fullBuildCompletionSource = new TaskCompletionSource<Workspace>();
-        private TaskCompletionSource<Workspace> _designTimeBuildCompletionSource = new TaskCompletionSource<Workspace>();
+        private TaskCompletionSource<CodeAnalysis.Workspace> _fullBuildCompletionSource = new();
+        private TaskCompletionSource<CodeAnalysis.Workspace> _designTimeBuildCompletionSource = new();
 
-        private readonly object _fullBuildCompletionSourceLock = new object();
-        private readonly object _designTimeBuildCompletionSourceLock = new object();
+        private readonly object _fullBuildCompletionSourceLock = new();
+        private readonly object _designTimeBuildCompletionSourceLock = new();
 
         protected Package(
             string name = null,
@@ -99,10 +100,10 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
             _log = new Logger($"{nameof(Package)}:{Name}");
             _buildThrottleScheduler = buildThrottleScheduler ?? TaskPoolScheduler.Default;
 
-            _fullBuildRequestChannel = new Subject<Budget>();
+            _fullBuildRequestChannel = new Subject<Unit>();
             _fullBuildThrottlerSubscription = new SerialDisposable();
 
-            _designTimeBuildRequestChannel = new Subject<Budget>();
+            _designTimeBuildRequestChannel = new Subject<Unit>();
             _designTimeBuildThrottlerSubscription = new SerialDisposable();
 
             SetupWorkspaceCreationFromBuildChannel();
@@ -205,16 +206,16 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
         public string TargetFramework => 
             _targetFramework ??= this.GetTargetFramework();
 
-        public Task<Workspace> CreateRoslynWorkspaceForRunAsync(Budget budget)
+        public Task<CodeAnalysis.Workspace> CreateWorkspaceForRunAsync()
         {
             CreateCompletionSourceIfNeeded(ref _fullBuildCompletionSource, _fullBuildCompletionSourceLock);
 
-            _fullBuildRequestChannel.OnNext(budget);
+            _fullBuildRequestChannel.OnNext(Unit.Default);
 
             return _fullBuildCompletionSource.Task;
         }
 
-        public Task<Workspace> CreateRoslynWorkspaceForLanguageServicesAsync(Budget budget)
+        public Task<CodeAnalysis.Workspace> CreateWorkspaceForLanguageServicesAsync()
         {
             var shouldBuild = ShouldDoDesignTimeBuild();
             if (!shouldBuild)
@@ -226,10 +227,10 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
                 }
             }
 
-            return RequestDesignTimeBuild(budget);
+            return RequestDesignTimeBuildAsync();
         }
 
-        private void CreateCompletionSourceIfNeeded(ref TaskCompletionSource<Workspace> completionSource, object lockObject)
+        private void CreateCompletionSourceIfNeeded(ref TaskCompletionSource<CodeAnalysis.Workspace> completionSource, object lockObject)
         {
             lock (lockObject)
             {
@@ -238,13 +239,13 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
                     case TaskStatus.Canceled:
                     case TaskStatus.Faulted:
                     case TaskStatus.RanToCompletion:
-                        completionSource = new TaskCompletionSource<Workspace>();
+                        completionSource = new TaskCompletionSource<CodeAnalysis.Workspace>();
                         break;
                 }
             }
         }
 
-        private void SetCompletionSourceResult(TaskCompletionSource<Workspace> completionSource, Workspace result, object lockObject)
+        private void SetCompletionSourceResult(TaskCompletionSource<CodeAnalysis.Workspace> completionSource, CodeAnalysis.Workspace result, object lockObject)
         {
             lock (lockObject)
             {
@@ -261,7 +262,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
             }
         }
 
-        private void SetCompletionSourceException(TaskCompletionSource<Workspace> completionSource, Exception exception, object lockObject)
+        private void SetCompletionSourceException(TaskCompletionSource<CodeAnalysis.Workspace> completionSource, Exception exception, object lockObject)
         {
             lock (lockObject)
             {
@@ -278,11 +279,11 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
             }
         }
 
-        private Task<Workspace> RequestDesignTimeBuild(Budget budget)
+        private Task<CodeAnalysis.Workspace> RequestDesignTimeBuildAsync()
         {
             CreateCompletionSourceIfNeeded(ref _designTimeBuildCompletionSource, _designTimeBuildCompletionSourceLock);
 
-            _designTimeBuildRequestChannel.OnNext(budget);
+            _designTimeBuildRequestChannel.OnNext(Unit.Default);
             return _designTimeBuildCompletionSource.Task;
         }
 
@@ -296,7 +297,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
                       {
                           try
                           {
-                              await ProcessFullBuildRequest(budget);
+                              await ProcessFullBuildRequest();
                           }
                           catch (Exception e)
                           {
@@ -320,7 +321,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
                     {
                         try
                         {
-                            await ProcessDesignTimeBuildRequest(budget);
+                            await ProcessDesignTimeBuildRequest();
                         }
                         catch (Exception e)
                         {
@@ -334,27 +335,27 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
                     });
         }
 
-        private async Task ProcessFullBuildRequest(Budget budget)
+        private async Task ProcessFullBuildRequest()
         {
-            await EnsureCreated().CancelIfExceeds(budget);
-            await EnsureBuilt().CancelIfExceeds(budget);
+            await EnsureCreatedAsync();
+            await EnsureBuiltAsync();
             var ws = CreateRoslynWorkspace();
             if (IsWebProject)
             {
-                await EnsurePublished().CancelIfExceeds(budget);
+                await EnsurePublishedAsync();
             }
             SetCompletionSourceResult(_fullBuildCompletionSource, ws, _fullBuildCompletionSourceLock);
         }
 
-        private async Task ProcessDesignTimeBuildRequest(Budget budget)
+        private async Task ProcessDesignTimeBuildRequest()
         {
-            await EnsureCreated().CancelIfExceeds(budget);
-            await EnsureDesignTimeBuilt().CancelIfExceeds(budget);
+            await EnsureCreatedAsync();
+            await EnsureDesignTimeBuilt();
             var ws = CreateRoslynWorkspace();
             SetCompletionSourceResult(_designTimeBuildCompletionSource, ws, _designTimeBuildCompletionSourceLock);
         }
 
-        private Workspace CreateRoslynWorkspace()
+        private CodeAnalysis.Workspace CreateRoslynWorkspace()
         {
             var build = DesignTimeBuildResult;
             if (build == null)
@@ -382,29 +383,27 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
             return ws;
         }
 
-        protected Workspace RoslynWorkspace { get; set; }
+        protected CodeAnalysis.Workspace RoslynWorkspace { get; set; }
 
-        public override async Task EnsureReady(Budget budget)
+        public override async Task EnsureReadyAsync()
         {
-            await base.EnsureReady(budget);
+            await base.EnsureReadyAsync();
 
             if (RequiresPublish)
             {
-                await EnsurePublished().CancelIfExceeds(budget);
+                await EnsurePublishedAsync();
             }
-
-            budget.RecordEntry();
         }
 
-        protected override async Task EnsureBuilt([CallerMemberName] string caller = null)
+        protected override async Task EnsureBuiltAsync([CallerMemberName] string caller = null)
         {
             using (var operation = _log.OnEnterAndConfirmOnExit())
             {
-                await EnsureCreated();
+                await EnsureCreatedAsync();
 
                 if (ShouldDoFullBuild())
                 {
-                    await FullBuild();
+                    await FullBuildAsync();
                 }
                 else
                 {
@@ -417,7 +416,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
 
         protected async Task EnsureDesignTimeBuilt([CallerMemberName] string caller = null)
         {
-            await EnsureCreated();
+            await EnsureCreatedAsync();
             using (var operation = _log.OnEnterAndConfirmOnExit())
             {
                 if (ShouldDoDesignTimeBuild())
@@ -433,22 +432,23 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
             }
         }
 
-        public virtual async Task EnsurePublished()
+        public virtual async Task EnsurePublishedAsync()
         {
-            await EnsureBuilt();
-            using (var operation = _log.OnEnterAndConfirmOnExit())
+            await EnsureBuiltAsync();
+            
+            using var operation = _log.OnEnterAndConfirmOnExit();
+            
+            if (PublicationTime == null || PublicationTime < LastSuccessfulBuildTime)
             {
-                if (PublicationTime == null || PublicationTime < LastSuccessfulBuildTime)
-                {
-                    await Publish();
-                }
-                operation.Succeed();
+                await Publish();
             }
+
+            operation.Succeed();
         }
 
         public bool RequiresPublish => IsWebProject;
 
-        public override async Task FullBuild()
+        public override async Task FullBuildAsync()
         {
             using (var operation = Log.OnEnterAndConfirmOnExit())
             {
@@ -473,7 +473,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
 
                         using (await FileLock.TryCreateAsync(Directory))
                         {
-                            await DotnetBuild();
+                            await DotnetBuildAsync();
                         }
                     }
 
@@ -520,7 +520,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
 
                 operation.Info("Workspace published");
                 operation.Succeed();
-                PublicationTime = Clock.Current.Now();
+                PublicationTime = DateTimeOffset.Now;
                 Interlocked.Exchange(ref publishCount, 0);
             }
         }
@@ -530,9 +530,9 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
             return $"{Name} ({Directory.FullName})";
         }
 
-        public Task<Workspace> CreateRoslynWorkspaceAsync(Budget budget)
+        public Task<CodeAnalysis.Workspace> CreateWorkspaceAsync()
         {
-            return CreateRoslynWorkspaceForRunAsync(budget);
+            return CreateWorkspaceForRunAsync();
         }
 
         protected SyntaxTree CreateInstrumentationEmitterSyntaxTree()
@@ -590,7 +590,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
                 }
 
                 DesignTimeBuildResult = result;
-                LastDesignTimeBuild = Clock.Current.Now();
+                LastDesignTimeBuild = DateTimeOffset.Now;
                 if (result.Succeeded == false)
                 {
                     var logData = logWriter.ToString();

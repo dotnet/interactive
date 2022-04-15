@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.WorkspaceFeatures
 {
