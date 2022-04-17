@@ -6,7 +6,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive.Disposables;
-
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Host.Mef;
@@ -26,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         private DocumentId _workingDocumentId;
         private readonly IReadOnlyCollection<MetadataReference> _referenceAssemblies;
         private readonly List<MetadataReference> _packageManagerReferences = new();
-        private readonly object _workspaceLock = new();
+        private readonly SemaphoreSlim _workspaceLock = new(1, 1);
 
         public InteractiveWorkspace() : base(MefHostServices.DefaultHost, WorkspaceKind.Interactive)
         {
@@ -108,10 +109,12 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return assemblyRefs;
         }
 
-        public void UpdateWorkspace(ScriptState scriptState)
+        public async Task UpdateWorkspaceAsync(ScriptState scriptState)
         {
-            lock (_workspaceLock)
+            try
             {
+                await _workspaceLock.WaitAsync();
+
                 _currentCompilation = scriptState.Script.GetCompilation();
 
                 var solution = CurrentSolution;
@@ -122,7 +125,18 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 _previousSubmissionProjectId = AddProjectWithPreviousSubmissionToSolution(_currentCompilation,
                     scriptState.Script.Code, _workingProjectId, _previousSubmissionProjectId);
 
+                //This fixes an issue where the performance of language services is degrading each time a new submission is run.
+                //Forces the creation of the Compilation object in the project of the previous submission
+                //If the compilation were not eagerly created, the entire solution would be compiled each
+                //time it is used to answer a language service question (ForkDocumentForLanguageServices).
+                //Instead, only the working project will be compiled to answer language service questions.
+                await CurrentSolution.GetProject(_previousSubmissionProjectId).GetCompilationAsync();
+
                 AddNewWorkingProjectToSolution(_currentCompilation, _previousSubmissionProjectId);
+            }
+            finally
+            {
+                _workspaceLock.Release();
             }
         }
 

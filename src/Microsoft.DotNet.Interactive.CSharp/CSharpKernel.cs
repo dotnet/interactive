@@ -217,7 +217,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                         cancellationToken: context.CancellationToken)
                     .UntilCancelled(context.CancellationToken) ?? ScriptState;
 
-                _workspace.UpdateWorkspace(ScriptState);
+                await _workspace.UpdateWorkspaceAsync(ScriptState);
             }
         }
 
@@ -364,7 +364,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             if (ScriptState is not null && ScriptState.Exception is null)
             {
-                _workspace.UpdateWorkspace(ScriptState);
+                await _workspace.UpdateWorkspaceAsync(ScriptState);
             }
 
             void UpdateScriptOptionsIfWorkingDirectoryChanged()
