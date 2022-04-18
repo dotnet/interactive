@@ -4,18 +4,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
+using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.MLS.Project
+namespace Microsoft.DotNet.Interactive.CSharpProject
 {
     public static class FileExtensions
     {
-        public static SourceFile ToSourceFile(this File file)
+        public static SourceFile ToSourceFile(this ProjectFileContent file)
         {
             return SourceFile.Create(file.Text, file.Name);
         }
 
-        public static IEnumerable<Viewport> ExtractViewPorts(this File file)
+        public static IEnumerable<Viewport> ExtractViewPorts(this ProjectFileContent file)
         {
             return file.ToSourceFile().ExtractViewPorts();
         }
@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.MLS.Project
             }
         }
 
-        public static IEnumerable<Viewport> ExtractViewports(this IEnumerable<File> files)
+        public static IEnumerable<Viewport> ExtractViewports(this IEnumerable<ProjectFileContent> files)
         {
             return files.Select(f => f.ToSourceFile()).ExtractViewports();
         }

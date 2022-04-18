@@ -5,10 +5,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Xunit;
-using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Protocol.Buffer;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
 {
@@ -30,13 +27,13 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
                 workspaceType: "console",
                 files: new[]
                 {
-                    new File("fileA.cs", "first line;", 0),
-                    new File("fileA.cs", "third line;", 2),
-                    new File("fileA.cs", "second line;", 1),
+                    new ProjectFileContent("fileA.cs", "first line;", 0),
+                    new ProjectFileContent("fileA.cs", "third line;", 2),
+                    new ProjectFileContent("fileA.cs", "second line;", 1),
 
-                    new File("fileB.cs", "first line;", 2),
-                    new File("fileB.cs", "third line;", 0),
-                    new File("fileB.cs", "second line;", 1)
+                    new ProjectFileContent("fileB.cs", "first line;", 2),
+                    new ProjectFileContent("fileB.cs", "third line;", 0),
+                    new ProjectFileContent("fileB.cs", "second line;", 1)
                 }
             );
             var processed = await processor.TransformAsync(workspace);

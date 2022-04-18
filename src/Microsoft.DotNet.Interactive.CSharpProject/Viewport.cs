@@ -3,7 +3,6 @@
 
 using System;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.MLS.Project
 {

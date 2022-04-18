@@ -5,16 +5,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Clockwise;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation;
 using static System.Environment;
 using Package = Microsoft.DotNet.Interactive.CSharpProject.Packaging.Package;
-using Workspace = Microsoft.DotNet.Interactive.CSharpProject.Protocol.Workspace;
+using Workspace = Microsoft.DotNet.Interactive.CSharpProject.Workspace;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
 {
@@ -23,12 +21,11 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
         public static async Task<Compilation> Compile(
             this Package package, 
             Workspace workspace, 
-            Budget budget, 
             BufferId activeBufferId)
         {
             var sourceFiles = workspace.GetSourceFiles().ToArray();
 
-            var (compilation, documents) = await package.GetCompilationForRun(sourceFiles, SourceCodeKind.Regular, workspace.Usings, budget);
+            var (compilation, documents) = await package.GetCompilationForRun(sourceFiles, SourceCodeKind.Regular, workspace.Usings);
 
             var viewports = workspace.ExtractViewPorts();
 
@@ -107,13 +104,12 @@ Source
             return newCompilation;
         }
 
-        public static async Task<(Compilation compilation, IReadOnlyCollection<Document> documents)> GetCompilation(
+        public static async Task<(Compilation compilation, IReadOnlyCollection<Document> documents)> GetCompilationAsync(
             this Package package,
             IReadOnlyCollection<SourceFile> sources,
             SourceCodeKind sourceCodeKind,
             IEnumerable<string> defaultUsings,
-            Func<Task<Microsoft.CodeAnalysis.Workspace>> workspaceFactory,
-            Budget budget)
+            Func<Task<Microsoft.CodeAnalysis.Workspace>> workspaceFactory)
         {
             var workspace = await workspaceFactory();
 
@@ -124,7 +120,7 @@ Source
             {
                 if (currentSolution.Projects
                     .SelectMany(p => p.Documents)
-                    .FirstOrDefault(d => d.IsMatch(source)) is Document document)
+                    .FirstOrDefault(d => d.IsMatch(source)) is { } document)
                 {
                     // there's a pre-existing document, so overwrite its contents
                     document = document.WithText(source.Text);
@@ -149,7 +145,7 @@ Source
                 project = project.WithCompilationOptions(options.WithUsings(usings));
             }
 
-            var compilation = await project.GetCompilationAsync().CancelIfExceeds(budget);
+            var compilation = await project.GetCompilationAsync();
 
             return (compilation, project.Documents.ToArray());
         }
@@ -158,30 +154,27 @@ Source
             this Package package,
             IReadOnlyCollection<SourceFile> sources,
             SourceCodeKind sourceCodeKind,
-            IEnumerable<string> defaultUsings,
-            Budget budget) =>
-            package.GetCompilation(sources, sourceCodeKind, defaultUsings, () => package.CreateRoslynWorkspaceForRunAsync(budget), budget);
+            IEnumerable<string> defaultUsings) =>
+            package.GetCompilationAsync(sources, sourceCodeKind, defaultUsings, () => package.CreateWorkspaceForRunAsync());
 
         public static Task<(Compilation compilation, CodeAnalysis.Project project)> GetCompilationForLanguageServices(
           this ICreateWorkspace package,
           IReadOnlyCollection<SourceFile> sources,
           SourceCodeKind sourceCodeKind,
-          IEnumerable<string> defaultUsings,
-          Budget budget) =>
-            package.GetCompilation(sources, sourceCodeKind, defaultUsings, () => package.CreateRoslynWorkspaceAsync(budget), budget);
+          IEnumerable<string> defaultUsings) =>
+            package.GetCompilationAsync(sources, sourceCodeKind, defaultUsings, () => package.CreateWorkspaceAsync());
 
         private static Document GetActiveDocument(IEnumerable<Document> documents, BufferId activeBufferId)
         {
             return documents.First(d => d.Name.Equals(activeBufferId.FileName));
         }
 
-        public static async Task<(Compilation compilation, CodeAnalysis.Project project)> GetCompilation(
+        public static async Task<(Compilation compilation, CodeAnalysis.Project project)> GetCompilationAsync(
            this IPackage package,
            IReadOnlyCollection<SourceFile> sources,
            SourceCodeKind sourceCodeKind,
            IEnumerable<string> defaultUsings,
-           Func<Task<Microsoft.CodeAnalysis.Workspace>> workspaceFactory,
-           Budget budget)
+           Func<Task<Microsoft.CodeAnalysis.Workspace>> workspaceFactory)
         {
             var workspace = await workspaceFactory();
 
@@ -192,7 +185,7 @@ Source
             {
                 if (currentSolution.Projects
                     .SelectMany(p => p.Documents)
-                    .FirstOrDefault(d => d.IsMatch(source)) is Document document)
+                    .FirstOrDefault(d => d.IsMatch(source)) is { } document)
                 {
                     // there's a pre-existing document, so overwrite its contents
                     document = document.WithText(source.Text);
@@ -221,7 +214,7 @@ Source
             currentSolution.Workspace.TryApplyChanges(currentSolution);
             currentSolution = workspace.CurrentSolution;
             project = currentSolution.GetProject(projectId);
-            var compilation = await project.GetCompilationAsync().CancelIfExceeds(budget);
+            var compilation = await project.GetCompilationAsync();
             return (compilation, project);
         }
     }

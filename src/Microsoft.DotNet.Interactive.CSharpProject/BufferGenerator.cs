@@ -3,37 +3,35 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
-using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Protocol.Buffer;
+using Microsoft.DotNet.Interactive.CSharpProject.Utility;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.MLS.Project
+namespace Microsoft.DotNet.Interactive.CSharpProject;
+
+public static class BufferGenerator
 {
-    public static class BufferGenerator
+    public static IEnumerable<Buffer> CreateBuffers(ProjectFileContent content)
     {
-        public static IEnumerable<Buffer> CreateBuffers(File file)
+        var viewPorts = content.ExtractViewPorts().ToList();
+        if (viewPorts.Count > 0)
         {
-            var viewPorts = file.ExtractViewPorts().ToList();
-            if (viewPorts.Count > 0)
+            foreach (var viewport in viewPorts)
             {
-                foreach (var viewport in viewPorts)
-                {
-                    yield return CreateBuffer(viewport.Region.ToString(), viewport.BufferId);
-                }
-            }
-            else
-            {
-                yield return CreateBuffer(file.Text, file.Name);
+                yield return CreateBuffer(viewport.Region.ToString(), viewport.BufferId);
             }
         }
-
-        public static Buffer CreateBuffer(string content, BufferId id)
+        else
         {
-            MarkupTestFile.GetPosition(content, out var output, out var position);
-
-            return new Buffer(
-                id,
-                output,
-                position ?? 0);
+            yield return CreateBuffer(content.Text, content.Name);
         }
+    }
+
+    public static Buffer CreateBuffer(string content, BufferId id)
+    {
+        MarkupTestFile.GetPosition(content, out var output, out var position);
+
+        return new Buffer(
+            id,
+            output,
+            position ?? 0);
     }
 }

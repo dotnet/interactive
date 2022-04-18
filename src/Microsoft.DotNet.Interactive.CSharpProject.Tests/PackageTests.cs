@@ -7,7 +7,6 @@ using System.IO;
 using FluentAssertions;
 using FluentAssertions.Extensions;
 using System.Threading.Tasks;
-using Clockwise;
 using Pocket;
 using Xunit;
 using Xunit.Abstractions;
@@ -23,7 +22,6 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
         public PackageTests(ITestOutputHelper output)
         {
             _disposables.Add(output.SubscribeToPocketLogger());
-            _disposables.Add(VirtualClock.Start());
         }
 
         public void Dispose() => _disposables.Dispose();
@@ -37,8 +35,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
 
             var package = Create.EmptyWorkspace(initializer: initializer);
 
-            await package.CreateRoslynWorkspaceForRunAsync(new TimeBudget(30.Seconds()));
-            await package.CreateRoslynWorkspaceForRunAsync(new TimeBudget(30.Seconds()));
+            await package.CreateWorkspaceForRunAsync();
+            await package.CreateWorkspaceForRunAsync();
 
             initializer.InitializeCount.Should().Be(1);
         }
@@ -51,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
             var initializer = new PackageInitializer(
                 "console",
                 "test",
-                afterCreate: async (_, __) =>
+                afterCreate: async _ =>
                 {
                     await Task.Yield();
                     afterCreateCallCount++;
@@ -59,8 +57,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
 
             var package = Create.EmptyWorkspace(initializer: initializer);
 
-            await package.CreateRoslynWorkspaceForRunAsync(new TimeBudget(30.Seconds()));
-            await package.CreateRoslynWorkspaceForRunAsync(new TimeBudget(30.Seconds()));
+            await package.CreateWorkspaceForRunAsync();
+            await package.CreateWorkspaceForRunAsync();
 
             afterCreateCallCount.Should().Be(1);
         }
@@ -74,11 +72,11 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
 
             var original = Create.EmptyWorkspace(initializer: initializer);
 
-            await original.CreateRoslynWorkspaceForLanguageServicesAsync(new TimeBudget(30.Seconds()));
+            await original.CreateWorkspaceForLanguageServicesAsync();
 
             var copy = await PackageUtilities.Copy(original);
 
-            await copy.CreateRoslynWorkspaceForLanguageServicesAsync(new TimeBudget(30.Seconds()));
+            await copy.CreateWorkspaceForLanguageServicesAsync();
 
             initializer.InitializeCount.Should().Be(1);
         }
@@ -88,7 +86,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
         {
             var package = await Create.ConsoleWorkspaceCopy();
 
-            await package.CreateRoslynWorkspaceForLanguageServicesAsync(new TimeBudget(30.Seconds()));
+            await package.CreateWorkspaceForLanguageServicesAsync();
 
             package.IsWebProject.Should().BeFalse();
         }
@@ -98,7 +96,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
         {
             var package = Create.EmptyWorkspace(initializer: new PackageInitializer("console", "empty"));
 
-            await package.CreateRoslynWorkspaceForRunAsync(new TimeBudget(30.Seconds()));
+            await package.CreateWorkspaceForRunAsync();
 
             package.EntryPointAssemblyPath.Exists.Should().BeTrue();
 
@@ -119,7 +117,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
         {
             var package = Create.EmptyWorkspace(initializer: new PackageInitializer("webapi", "aspnet.webapi"));
 
-            await package.CreateRoslynWorkspaceForRunAsync(new TimeBudget(30.Seconds()));
+            await package.CreateWorkspaceForRunAsync();
 
             package.EntryPointAssemblyPath.Exists.Should().BeTrue();
 
@@ -153,8 +151,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
             }))
             {
                 await Task.WhenAll(
-                    Task.Run(() => package.FullBuild()),
-                    Task.Run(() => package.FullBuild()));
+                    Task.Run(() => package.FullBuildAsync()),
+                    Task.Run(() => package.FullBuildAsync()));
             }
 
             buildEventsMessages.Should()

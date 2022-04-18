@@ -197,7 +197,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Models
         public string GetTypeParameterText(string name)
             => Array.Find(TypeParamElements, typeParam => typeParam.Name == name)?.Documentation ?? string.Empty;
 
-        public static readonly DocumentationComment Empty = new DocumentationComment();
+        public static readonly DocumentationComment Empty = new();
 
         private class DocumentationItemBuilder
         {

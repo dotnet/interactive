@@ -12,7 +12,7 @@ using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Utility
 {
-    public class Dotnet2
+    internal class Dotnet2
     {
         protected readonly DirectoryInfo _workingDirectory;
 
@@ -118,9 +118,9 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Utility
         public Task<CommandLineResult> Pack(string args = null) =>
             Execute("pack".AppendArgs(args));
 
-        private static readonly Lazy<FileInfo> _getPath = new Lazy<FileInfo>(() =>
-                                                                                 FindDotnetFromAppContext() ??
-                                                                                 FindDotnetFromPath());
+        private static readonly Lazy<FileInfo> _getPath = new(() =>
+                                                                  FindDotnetFromAppContext() ??
+                                                                  FindDotnetFromPath());
 
         public static FileInfo Path => _getPath.Value;
 

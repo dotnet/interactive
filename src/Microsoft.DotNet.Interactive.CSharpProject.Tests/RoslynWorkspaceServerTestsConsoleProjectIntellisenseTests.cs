@@ -4,11 +4,8 @@
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Xunit;
 using Xunit.Abstractions;
-using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Protocol.Buffer;
-using Package = Microsoft.DotNet.Interactive.CSharpProject.Packaging.Package;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
 {
@@ -71,7 +68,7 @@ namespace FibonacciTest
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs");
             var server = GetLanguageService();
-            var result = await server.GetCompletionList(request);
+            var result = await server.GetCompletionsAsync(request);
             result.Items.Should().NotBeNullOrEmpty();
             result.Items.Should().NotContain(signature => string.IsNullOrEmpty(signature.Kind));
             result.Items.Should().Contain(completion => completion.SortText == "Console");
@@ -132,7 +129,7 @@ namespace FibonacciTest
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs");
             var server = GetLanguageService();
-            var result = await server.GetCompletionList(request);
+            var result = await server.GetCompletionsAsync(request);
 
             result.Items.Should().NotBeNullOrEmpty();
             result.Items.Should().NotContain(signature => string.IsNullOrEmpty(signature.Kind));
@@ -195,14 +192,14 @@ namespace FibonacciTest
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs");
             var server = GetLanguageService();
-            var result = await server.GetCompletionList(request);
+            var result = await server.GetCompletionsAsync(request);
 
             result.Should().NotBeNull();
             result.Items.Should().NotBeNullOrEmpty();
 
             result.Items
-                .Where(i => i.Documentation != null && !string.IsNullOrWhiteSpace(i.Documentation.Value))
-                .Select(i => i.Documentation.Value)
+                .Where(i => i.Documentation != null && !string.IsNullOrWhiteSpace(i.Documentation))
+                .Select(i => i.Documentation)
                 .Should()
                 .Contain(d => d == "Writes the text representation of the specified Boolean value to the standard output stream.");
         }
@@ -263,12 +260,12 @@ namespace FibonacciTest
                     new Buffer("generators/FibonacciGenerator.cs@codeRegion", processed, position)
                 }, files: new[]
                 {
-                    new File("generators/FibonacciGenerator.cs", generator.EnforceLF())
+                    new ProjectFileContent("generators/FibonacciGenerator.cs", generator.EnforceLF())
                 });
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs@codeRegion");
             var server = GetLanguageService();
-            var result = await server.GetCompletionList(request);
+            var result = await server.GetCompletionsAsync(request);
 
             result.Items.Should().NotBeNullOrEmpty();
             result.Items.Should().NotContain(signature => string.IsNullOrEmpty(signature.Kind));
@@ -333,12 +330,12 @@ namespace FibonacciTest
                     new Buffer("generators/FibonacciGenerator.cs@codeRegion", processed, position)
                 }, files: new[]
                 {
-                    new File("generators/FibonacciGenerator.cs", generator)
+                    new ProjectFileContent("generators/FibonacciGenerator.cs", generator)
                 });
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs@codeRegion");
             var server = GetLanguageService();
-            var result = await server.GetCompletionList(request);
+            var result = await server.GetCompletionsAsync(request);
             result.Items.Should().NotBeNullOrEmpty();
             result.Items.Should().NotContain(signature => string.IsNullOrEmpty(signature.Kind));
             result.Items.Should().Contain(signature => signature.SortText == "FromObject");
@@ -383,12 +380,12 @@ namespace FibonacciTest
                     new Buffer("Program.cs", program),
                     new Buffer("generators/FibonacciGenerator.cs@codeRegion", processed, position)
                 }, files: new[] {
-                    new File("generators/FibonacciGenerator.cs", generator)
+                    new ProjectFileContent("generators/FibonacciGenerator.cs", generator)
                 });
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs@codeRegion");
             var server = GetLanguageService();
-            var result = await server.GetCompletionList(request);
+            var result = await server.GetCompletionsAsync(request);
             result.Items.Should().BeEmpty();
         }
 
@@ -452,7 +449,7 @@ namespace FibonacciTest
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs");
             var server = GetLanguageService();
-            var result = await server.GetSignatureHelp(request);
+            var result = await server.GetSignatureHelpAsync(request);
 
             result.Signatures.Should().NotBeNullOrEmpty();
             result.Signatures.Should().Contain(signature => signature.Label == "void Console.WriteLine(string format, params object?[]? arg)");
@@ -511,7 +508,7 @@ namespace FibonacciTest
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs");
             var server = GetLanguageService();
-            var result = await server.GetSignatureHelp(request);
+            var result = await server.GetSignatureHelpAsync(request);
             result.Should().NotBeNull();
             result.Signatures.Should().BeNullOrEmpty();
         }
@@ -570,12 +567,12 @@ namespace FibonacciTest
                     new Buffer("generators/FibonacciGenerator.cs@codeRegion", processed, position)
                 }, files: new[]
                 {
-                    new File("generators/FibonacciGenerator.cs", generator),
+                    new ProjectFileContent("generators/FibonacciGenerator.cs", generator),
                 });
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs@codeRegion");
             var server = GetLanguageService();
-            var result = await server.GetSignatureHelp(request);
+            var result = await server.GetSignatureHelpAsync(request);
 
             result.Signatures.Should().NotBeNullOrEmpty();
             result.Signatures.Should().Contain(signature => signature.Label == "void Console.WriteLine(string format, params object?[]? arg)");
@@ -637,12 +634,12 @@ namespace FibonacciTest
                     new Buffer("generators/FibonacciGenerator.cs@codeRegion", processed, position)
                 }, files: new[]
                 {
-                    new File("generators/FibonacciGenerator.cs", generator),
+                    new ProjectFileContent("generators/FibonacciGenerator.cs", generator),
                 });
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs@codeRegion");
             var server = GetLanguageService();
-            var result = await server.GetSignatureHelp(request);
+            var result = await server.GetSignatureHelpAsync(request);
 
             result.Signatures.Should().NotBeNullOrEmpty();
             result.Signatures.Should().Contain(signature => signature.Label == "JToken JToken.FromObject(object o)");
@@ -701,7 +698,7 @@ namespace FibonacciTest
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs");
             var server = GetLanguageService();
-            var result = await server.GetSignatureHelp(request);
+            var result = await server.GetSignatureHelpAsync(request);
 
             result.Signatures.Should().NotBeNullOrEmpty();
 
@@ -709,11 +706,9 @@ namespace FibonacciTest
             sample.Documentation.Value.Should().Contain("Writes the text representation of the specified array of objects, followed by the current line terminator, to the standard output stream using the specified format information.");
             sample.Parameters.Should().HaveCount(2);
 
-            sample.Parameters.ElementAt(0).Name.Should().Be("format");
             sample.Parameters.ElementAt(0).Label.Should().Be("string format");
             sample.Parameters.ElementAt(0).Documentation.Value.Should().Contain("A composite format string.");
 
-            sample.Parameters.ElementAt(1).Name.Should().Be("arg");
             sample.Parameters.ElementAt(1).Label.Should().Be("params object?[]? arg");
             sample.Parameters.ElementAt(1).Documentation.Value.Should().Contain("An array of objects to write using format .");
         }

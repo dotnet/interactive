@@ -1,12 +1,14 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
 using Newtonsoft.Json;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Protocol
+namespace Microsoft.DotNet.Interactive.CSharpProject
 {
     public class SerializableDiagnostic
     {
+        // FIX: (SerializableDiagnostic) delete this and use Microsoft.DotNet.Interactive.Diagnostic instead
         [JsonConstructor]
         public SerializableDiagnostic(
             int start,

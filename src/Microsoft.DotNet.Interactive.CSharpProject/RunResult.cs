@@ -7,13 +7,13 @@ using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Protocol
+namespace Microsoft.DotNet.Interactive.CSharpProject
 {
     [JsonConverter(typeof(RunResultJsonConverter))]
     public class RunResult : FeatureContainer
     {
 
-        private readonly List<string> _output = new List<string>(); 
+        private readonly List<string> _output = new(); 
 
         public RunResult(
             bool succeeded,

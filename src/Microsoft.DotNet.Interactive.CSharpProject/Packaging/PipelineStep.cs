@@ -14,9 +14,9 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
     public class PipelineStep<T> : IPipelineStep
     {
         private readonly Func<Task<T>> _createValue;
-        private TaskCompletionSource<T> _latestValue = new TaskCompletionSource<T>();
+        private TaskCompletionSource<T> _latestValue = new();
         private Task<T> _inFlight;
-        private readonly object _lock = new object();
+        private readonly object _lock = new();
         private bool _invalidated = true;
         private Guid _operationId;
         private IPipelineStep _nextStep;
@@ -43,8 +43,6 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
             _nextStep = newStep;
             return newStep;
         }
-
-       
 
         public Task<T> GetLatestAsync()
         {

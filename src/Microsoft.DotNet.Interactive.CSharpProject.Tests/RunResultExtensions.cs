@@ -5,7 +5,6 @@ using System;
 using System.Linq;
 using FluentAssertions;
 using FluentAssertions.Execution;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
 {

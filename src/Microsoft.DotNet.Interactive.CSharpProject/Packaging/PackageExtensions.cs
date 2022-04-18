@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
                     {
                         operation.Info("Initializing package using {_initializer} in {directory}", initializer,
                             packageBase.Directory);
-                        await initializer.Initialize(packageBase.Directory);
+                        await initializer.InitializeAsync(packageBase.Directory);
                     }
                 }
 

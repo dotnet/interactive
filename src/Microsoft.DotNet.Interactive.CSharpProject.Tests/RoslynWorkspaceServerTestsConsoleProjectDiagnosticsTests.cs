@@ -3,10 +3,9 @@
 
 using System.Threading.Tasks;
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Xunit;
 using Xunit.Abstractions;
-using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Protocol.Buffer;
+using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Buffer;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
 {
@@ -52,7 +51,7 @@ namespace FibonacciTest
 
             var request = new WorkspaceRequest(workspace, activeBufferId: new BufferId("Program.cs", "code"));
             var server = GetLanguageService();
-            var result = await server.GetDiagnostics(request);
+            var result = await server.GetDiagnosticsAsync(request);
 
             result.Diagnostics.Should().NotBeNullOrEmpty();
             result.Diagnostics.Should().Contain(diagnostics => diagnostics.Message == "(1,1): error CS0103: The name 'adddd' does not exist in the current context");
@@ -91,7 +90,7 @@ namespace FibonacciTest
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "Program.cs");
             var server = GetLanguageService();
-            var result = await server.GetDiagnostics(request);
+            var result = await server.GetDiagnosticsAsync(request);
 
             result.Diagnostics.Should().NotBeNullOrEmpty();
             result.Diagnostics.Should().Contain(diagnostics => diagnostics.Message == "Program.cs(13,13): warning CS0168: The variable 'moreError' is declared but never used");
@@ -151,7 +150,7 @@ namespace FibonacciTest
 
             var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs");
             var server = GetLanguageService();
-            var result = await server.GetDiagnostics(request);
+            var result = await server.GetDiagnosticsAsync(request);
 
             result.Diagnostics.Should().NotBeNullOrEmpty();
             result.Diagnostics.Should().Contain(diagnostics => diagnostics.Message == "generators/FibonacciGenerator.cs(14,17): error CS0246: The type or namespace name \'adddd\' could not be found (are you missing a using directive or an assembly reference?)");

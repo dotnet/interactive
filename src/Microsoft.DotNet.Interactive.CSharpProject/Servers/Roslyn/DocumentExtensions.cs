@@ -3,15 +3,14 @@
 
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
 {
     public static class DocumentExtensions
     {
-        public static bool IsMatch(this Document doc, File file) => 
-            doc.IsMatch(file.Name);
+        public static bool IsMatch(this Document doc, ProjectFileContent fileContent) => 
+            doc.IsMatch(fileContent.Name);
 
         public static bool IsMatch(this Document d, SourceFile source) => 
             d.IsMatch(source.Name);

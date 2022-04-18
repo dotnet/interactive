@@ -2,9 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.IO;
+using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 using Microsoft.DotNet.Interactive.Utility;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Tools
+namespace Microsoft.DotNet.Interactive.CSharpProject
 {
     public static class DirectoryAccessor
     {

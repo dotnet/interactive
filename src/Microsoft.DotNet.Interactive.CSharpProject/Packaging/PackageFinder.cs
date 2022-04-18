@@ -3,7 +3,6 @@
 
 using System;
 using System.Threading.Tasks;
-using Clockwise;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
 {
@@ -11,8 +10,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
     {
         public static Task<T> Find<T>(
             this IPackageFinder finder, 
-            string packageName, 
-            Budget budget = null) 
+            string packageName) 
             where T : class, IPackage =>
             finder.Find<T>(new PackageDescriptor(packageName));
 

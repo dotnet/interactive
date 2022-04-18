@@ -1,4 +1,6 @@
-using System;
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using Newtonsoft.Json;
 
 namespace Recipes
@@ -10,8 +12,5 @@ namespace Recipes
 
         public static T FromJsonTo<T>(this string json) =>
             JsonConvert.DeserializeObject<T>(json);
-
-        public static object FromJsonTo(this string json, Type type, JsonSerializerSettings settings = null) =>
-            JsonConvert.DeserializeObject(json, type, settings);
     }
 }

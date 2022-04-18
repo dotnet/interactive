@@ -6,7 +6,6 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Clockwise;
 using FluentAssertions;
 using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.CSharpProject.Packaging;

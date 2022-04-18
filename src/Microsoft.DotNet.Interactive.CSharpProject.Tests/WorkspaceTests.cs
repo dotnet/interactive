@@ -5,7 +5,6 @@ using System;
 using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
@@ -17,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
         {
             var ws = new Workspace(files: new[]
             {
-                new File("Program.cs", SourceCodeProvider.ConsoleProgramSingleRegion)
+                new ProjectFileContent("Program.cs", SourceCodeProvider.ConsoleProgramSingleRegion)
             });
 
             var viewPorts = ws.ExtractViewPorts();
@@ -30,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
         {
             var ws = new Workspace(files: new[]
             {
-                new File("Program.cs", SourceCodeProvider.ConsoleProgramCollidingRegions)
+                new ProjectFileContent("Program.cs", SourceCodeProvider.ConsoleProgramCollidingRegions)
             });
 
             Action extraction = () => ws.ExtractViewPorts().ToList();
@@ -42,8 +41,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
         {
             var ws = new Workspace(files: new[]
             {
-                new File("ProgramA.cs", SourceCodeProvider.ConsoleProgramSingleRegion),
-                new File("ProgramB.cs", SourceCodeProvider.ConsoleProgramSingleRegion)
+                new ProjectFileContent("ProgramA.cs", SourceCodeProvider.ConsoleProgramSingleRegion),
+                new ProjectFileContent("ProgramB.cs", SourceCodeProvider.ConsoleProgramSingleRegion)
             });
 
             Action extraction = () => ws.ExtractViewPorts();

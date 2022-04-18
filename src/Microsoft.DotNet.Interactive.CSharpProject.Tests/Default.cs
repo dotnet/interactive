@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Threading.Tasks;
-using Clockwise;
 using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
@@ -18,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
             packageBuilder.TrySetLanguageVersion("8.0");
             packageBuilder.AddPackageReference("Newtonsoft.Json", "13.0.1");
             var package = packageBuilder.GetPackage() as Package;
-            await package.CreateRoslynWorkspaceForRunAsync(new Budget());
+            await package.CreateWorkspaceForRunAsync();
             return package;
         }
     }

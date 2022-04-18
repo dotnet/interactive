@@ -37,7 +37,6 @@
   <ItemGroup>
     <PackageReference Include="Buildalyzer" Version="4.1.2" />
     <PackageReference Include="Buildalyzer.Workspaces" Version="4.1.2" />
-    <PackageReference Include="Clockwise" Version="1.0.261-beta" />
     <PackageReference Include="Markdig.Signed" Version="0.23.0" />
     <PackageReference Include="Microsoft.AspNetCore.Html.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCommonVersion)" />

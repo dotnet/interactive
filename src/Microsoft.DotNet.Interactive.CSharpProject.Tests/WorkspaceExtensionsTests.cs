@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.CSharpProject.Protocol;
 using Microsoft.DotNet.Interactive.CSharpProject.Models.Execution;
 using Xunit;
 
@@ -49,10 +48,10 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
                 },
                 files: new[]
                 {
-                    new File("", "content")
+                    new ProjectFileContent("", "content")
                 });
 
-            workspace.GetFileFromBufferId(BufferId.Empty).Should().NotBeNull();
+            workspace.GetContentFromBufferId(BufferId.Empty).Should().NotBeNull();
         }
     }
 }

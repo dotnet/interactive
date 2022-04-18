@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Clockwise;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharpProject.Commands;
 using Microsoft.DotNet.Interactive.CSharpProject.Events;
@@ -20,8 +19,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
     public class CSharpProjectKernel : Kernel
     {
         private RoslynWorkspaceServer _workspaceServer;
-        private Protocol.Workspace _workspace;
-        private Protocol.Buffer _buffer;
+        private Workspace _workspace;
+        private Buffer _buffer;
 
         public static void RegisterEventsAndCommands()
         {
@@ -67,7 +66,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             _workspaceServer = new RoslynWorkspaceServer(package);
 
             var extractor = new BufferFromRegionExtractor();
-            _workspace = extractor.Extract(command.Project.Files.Select(f => new Protocol.File(f.RelativeFilePath, f.Content)).ToArray());
+            _workspace = extractor.Extract(command.Project.Files.Select(f => new ProjectFileContent(f.RelativeFilePath, f.Content)).ToArray());
 
             context.Publish(new ProjectOpened(command, _workspace.Buffers.GroupBy(b => b.Id.FileName)
                 .OrderBy(g => g.Key).Select(g => new ProjectItem(g.Key, g.Select(r => r.Id.RegionName).Where(r => r != null).OrderBy(r => r).ToList())).ToList()));
@@ -85,20 +84,20 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
                 if (buffer is { })
                 {
                     // create a temporary file with the buffer's content
-                    file = new Protocol.File(command.RelativeFilePath, buffer.Content);
+                    file = new(command.RelativeFilePath, buffer.Content);
                 }
                 else
                 {
                     // add it to the workspace
-                    file = new Protocol.File(command.RelativeFilePath, string.Empty);
-                    _workspace = new Protocol.Workspace(
+                    file = new(command.RelativeFilePath, string.Empty);
+                    _workspace = new Workspace(
                         files: _workspace.Files.Concat(new[] { file }).ToArray());
                 }
             }
 
             if (string.IsNullOrWhiteSpace(command.RegionName))
             {
-                _buffer = new Protocol.Buffer(file.Name, file.Text);
+                _buffer = new Buffer(file.Name, file.Text);
             }
             else
             {
@@ -129,8 +128,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             ThrowIfProjectIsNotOpened();
             ThrowIfDocumentIsNotOpened();
 
-            var request = new Protocol.WorkspaceRequest(_workspace, _buffer.Id);
-            var result = await _workspaceServer.Compile(request);
+            var request = new WorkspaceRequest(_workspace, _buffer.Id);
+            var result = await _workspaceServer.CompileAsync(request);
 
             var diagnostics = GetDiagnostics(_buffer.Content, result);
             context.Publish(new DiagnosticsProduced(diagnostics, command));
@@ -150,15 +149,15 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
 
             var position = GetPositionFromLinePosition(command.Code, command.LinePosition);
             var updatedWorkspace = await GetWorkspaceWithCode(command.Code, position);
-            var request = new Protocol.WorkspaceRequest(updatedWorkspace, _buffer.Id);
-            var completionResult = await _workspaceServer.GetCompletionList(request, new Budget());
+            var request = new WorkspaceRequest(updatedWorkspace, _buffer.Id);
+            var completionResult = await _workspaceServer.GetCompletionsAsync(request);
             var completionItems = completionResult.Items.Select(item => new CompletionItem(
                 displayText: item.DisplayText,
                 kind: item.Kind,
                 filterText: item.FilterText,
                 sortText: item.SortText,
                 insertText: item.InsertText,
-                documentation: item.Documentation?.Value)).ToList();
+                documentation: item.Documentation)).ToList();
 
             context.Publish(new CompletionsProduced(completionItems, command));
         }
@@ -169,8 +168,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             ThrowIfDocumentIsNotOpened();
 
             var updatedWorkspace = await GetWorkspaceWithCode(command.Code);
-            var request = new Protocol.WorkspaceRequest(updatedWorkspace, _buffer.Id);
-            var result = await _workspaceServer.Compile(request);
+            var request = new WorkspaceRequest(updatedWorkspace, _buffer.Id);
+            var result = await _workspaceServer.CompileAsync(request);
 
             var diagnostics = GetDiagnostics(command.Code, result);
             context.Publish(new DiagnosticsProduced(diagnostics, command));
@@ -183,13 +182,13 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
 
             var position = GetPositionFromLinePosition(command.Code, command.LinePosition);
             var updatedWorkspace = await GetWorkspaceWithCode(command.Code, position);
-            var request = new Protocol.WorkspaceRequest(updatedWorkspace, _buffer.Id);
-            var sigHelpResult = await _workspaceServer.GetSignatureHelp(request, new Budget());
+            var request = new WorkspaceRequest(updatedWorkspace, _buffer.Id);
+            var sigHelpResult = await _workspaceServer.GetSignatureHelpAsync(request);
             var sigHelpItems = sigHelpResult.Signatures.Select(s =>
                 new SignatureInformation(
                     s.Label,
-                    new FormattedValue("text/markdown", s.Documentation.Value),
-                    s.Parameters.Select(p => new ParameterInformation(p.Label, new FormattedValue("text/markdown", p.Documentation.Value))).ToList())).ToList();
+                    s.Documentation,
+                    s.Parameters.Select(p => new ParameterInformation(p.Label, p.Documentation)).ToArray())).ToArray();
 
             context.Publish(new SignatureHelpProduced(command, sigHelpItems, sigHelpResult.ActiveSignature, sigHelpResult.ActiveParameter));
         }
@@ -243,56 +242,39 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             return new LinePosition(currentLine, currentCharacter);
         }
 
-        private async Task<Protocol.Workspace> GetWorkspaceWithCode(string code, int position = 0)
+        private async Task<Workspace> GetWorkspaceWithCode(string code, int position = 0)
         {
-            var updatedWorkspace = new Protocol.Workspace(
+            var updatedWorkspace = new Workspace(
                 files: _workspace.Files,
-                buffers: _workspace.Buffers.Where(b => b.Id != _buffer.Id).Concat(new[] { new Protocol.Buffer(_buffer.Id, code, position: position) }).ToArray());
+                buffers: _workspace.Buffers.Where(b => b.Id != _buffer.Id).Concat(new[] { new Buffer(_buffer.Id, code, position: position) }).ToArray());
             var inlinedWorkspace = await updatedWorkspace.InlineBuffersAsync();
             return inlinedWorkspace;
         }
 
-        private static IEnumerable<Diagnostic> GetDiagnostics(string code, Protocol.CompileResult result)
+        private static IEnumerable<Diagnostic> GetDiagnostics(string code, CompileResult result)
         {
-            var diagnostics = Enumerable.Empty<Protocol.SerializableDiagnostic>();
-            var projectDiagnostics = Enumerable.Empty<Protocol.SerializableDiagnostic>();
+            var diagnostics = Enumerable.Empty<SerializableDiagnostic>();
+            var projectDiagnostics = Enumerable.Empty<SerializableDiagnostic>();
 
-            if (result.Features.TryGetValue(nameof(Protocol.Diagnostics), out var candidateDiagnostics) &&
-                candidateDiagnostics is Protocol.Diagnostics diags)
+            if (result.Features.TryGetValue(nameof(Diagnostics), out var candidateDiagnostics) &&
+                candidateDiagnostics is Diagnostics diags)
             {
                 diagnostics = diags;
             }
 
-            if (result.Features.TryGetValue(nameof(Protocol.ProjectDiagnostics), out var candidateProjectDiagnostics) &&
-                candidateDiagnostics is Protocol.ProjectDiagnostics projectDiags)
+            if (result.Features.TryGetValue(nameof(ProjectDiagnostics), out var candidateProjectDiagnostics) &&
+                candidateDiagnostics is ProjectDiagnostics projectDiags)
             {
                 projectDiagnostics = projectDiags;
             }
 
             var allDiagnostics = diagnostics.Concat(projectDiagnostics);
 
-            var finalDiagnostics = diagnostics.Select(d => new Diagnostic(new LinePositionSpan(GetLinePositionFromPosition(code, d.Start), GetLinePositionFromPosition(code, d.End)), ConvertSeverity(d.Severity), d.Id, d.Message));
+            var finalDiagnostics = diagnostics.Select(d => new Diagnostic(new LinePositionSpan(GetLinePositionFromPosition(code, d.Start), GetLinePositionFromPosition(code, d.End)), d.Severity, d.Id, d.Message));
 
             return finalDiagnostics;
         }
-
-        private static CodeAnalysis.DiagnosticSeverity ConvertSeverity(Protocol.DiagnosticSeverity severity)
-        {
-            switch (severity)
-            {
-                case Protocol.DiagnosticSeverity.Hidden:
-                    return CodeAnalysis.DiagnosticSeverity.Hidden;
-                case Protocol.DiagnosticSeverity.Info:
-                    return CodeAnalysis.DiagnosticSeverity.Info;
-                case Protocol.DiagnosticSeverity.Warning:
-                    return CodeAnalysis.DiagnosticSeverity.Warning;
-                case Protocol.DiagnosticSeverity.Error:
-                    return CodeAnalysis.DiagnosticSeverity.Error;
-                default:
-                    return CodeAnalysis.DiagnosticSeverity.Warning;
-            }
-        }
-
+        
         private void ThrowIfProjectIsNotOpened()
         {
             if (_workspaceServer is null || _workspace is null)
@@ -316,7 +298,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
             packageBuilder.TrySetLanguageVersion("8.0");
             packageBuilder.AddPackageReference("Newtonsoft.Json", "13.0.1");
             var package = packageBuilder.GetPackage() as Package;
-            await package!.CreateRoslynWorkspaceForRunAsync(new Budget());
+            await package!.CreateWorkspaceForRunAsync();
             return package;
         }
     }

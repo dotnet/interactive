@@ -3,10 +3,11 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.DotNet.Interactive.Events;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Protocol
+namespace Microsoft.DotNet.Interactive.CSharpProject
 {
-    public static class CompletionUtilities
+    internal static class CompletionUtilities
     {
         public static IEnumerable<CompletionItem> Deduplicate(this IEnumerable<CompletionItem> source)
         {
@@ -19,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Protocol
             {
             }
 
-            public static CompletionItemEqualityComparer Instance { get; } = new CompletionItemEqualityComparer();
+            public static CompletionItemEqualityComparer Instance { get; } = new();
 
             public bool Equals(CompletionItem x, CompletionItem y)
             {

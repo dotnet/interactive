@@ -5,17 +5,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 using Microsoft.DotNet.Interactive.Utility;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Tools
+namespace Microsoft.DotNet.Interactive.CSharpProject
 {
     public class FileSystemDirectoryAccessor : IDirectoryAccessor
     {
         private readonly DirectoryInfo _rootDirectory;
-
-        public FileSystemDirectoryAccessor(string directory): this(new DirectoryInfo(directory))
-        {
-        }
 
         public FileSystemDirectoryAccessor(DirectoryInfo rootDir)
         {
@@ -70,7 +67,6 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tools
             var absolutePath = _rootDirectory.Combine(relativePath).FullName;
             return new FileSystemDirectoryAccessor(new DirectoryInfo(absolutePath));
         }
-
 
         public IEnumerable<RelativeDirectoryPath> GetAllDirectoriesRecursively()
         {

@@ -3,19 +3,19 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.CodeAnalysis.Text;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation
+namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation;
+
+public class InstrumentationMap
 {
-    public class InstrumentationMap
+    public InstrumentationMap(string fileToInstrument, IEnumerable<TextSpan> instrumentationRegions)
     {
-        public InstrumentationMap(string fileToInstrument, IEnumerable<Microsoft.CodeAnalysis.Text.TextSpan> instrumentationRegions)
-        {
-            FileToInstrument = fileToInstrument;
-            InstrumentationRegions = instrumentationRegions ?? Array.Empty<Microsoft.CodeAnalysis.Text.TextSpan>();
-        }
-
-        public string FileToInstrument { get; }
-
-        public IEnumerable<Microsoft.CodeAnalysis.Text.TextSpan> InstrumentationRegions { get; }
+        FileToInstrument = fileToInstrument;
+        InstrumentationRegions = instrumentationRegions ?? Array.Empty<TextSpan>();
     }
+
+    public string FileToInstrument { get; }
+
+    public IEnumerable<TextSpan> InstrumentationRegions { get; }
 }

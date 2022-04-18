@@ -6,11 +6,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Buildalyzer;
-using Clockwise;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.CSharpProject.Tools;
-using Pocket;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
@@ -24,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
         private readonly FileInfo _projectFile;
         private readonly FileInfo _lastBuildErrorLogFile;
         private readonly PipelineStep<IAnalyzerResult> _projectBuildStep;
-        private readonly PipelineStep<Workspace> _workspaceStep;
+        private readonly PipelineStep<CodeAnalysis.Workspace> _workspaceStep;
         private readonly PipelineStep<IAnalyzerResult> _cleanupStep;
 
         public string Name { get; }
@@ -100,7 +98,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
             return compilerInputs > 0 && sourceCount > 0;
         }
 
-        private Task<Workspace> BuildWorkspaceAsync(IAnalyzerResult result)
+        private Task<CodeAnalysis.Workspace> BuildWorkspaceAsync(IAnalyzerResult result)
         {
             if (result.TryGetWorkspace(out var ws))
             {
@@ -117,41 +115,37 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
 
         private async Task<IAnalyzerResult> BuildProjectAsync(IAnalyzerResult result)
         {
-            if (result != null)
+            if (result is { })
             {
                 return result;
             }
 
-            using (await DirectoryAccessor.TryLockAsync())
+            using var _ = await DirectoryAccessor.TryLockAsync();
+
+            await DotnetBuild();
+
+            var binLog = this.FindLatestBinLog();
+
+            if (binLog == null)
             {
-
-                {
-                    await DotnetBuild();
-
-                    var binLog = this.FindLatestBinLog();
-
-                    if (binLog == null)
-                    {
-                        throw new InvalidOperationException("Failed to build");
-                    }
-
-                    var results = await TryLoadAnalyzerResultsAsync(binLog);
-
-                    if (results?.Count == 0)
-                    {
-                        throw new InvalidOperationException("The build log seems to contain no solutions or projects");
-                    }
-
-                    result = results?.FirstOrDefault(p => p.ProjectFilePath == _projectFile.FullName);
-
-                    if (result?.Succeeded == true)
-                    {
-                        return result;
-                    }
-
-                    throw new InvalidOperationException("Failed to build");
-                }
+                throw new InvalidOperationException("Failed to build");
             }
+
+            var results = await TryLoadAnalyzerResultsAsync(binLog);
+
+            if (results?.Count == 0)
+            {
+                throw new InvalidOperationException("The build log seems to contain no solutions or projects");
+            }
+
+            result = results?.FirstOrDefault(p => p.ProjectFilePath == _projectFile.FullName);
+
+            if (result?.Succeeded == true)
+            {
+                return result;
+            }
+
+            throw new InvalidOperationException("Failed to build");
         }
 
         private async Task<IAnalyzerResults> TryLoadAnalyzerResultsAsync(FileInfo binLog)
@@ -165,46 +159,43 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
             return results;
         }
 
-        public Task<Workspace> CreateRoslynWorkspaceAsync(Budget budget)
+        public Task<CodeAnalysis.Workspace> CreateWorkspaceAsync()
         {
             return _workspaceStep.GetLatestAsync();
         }
 
-        public Task<Workspace> CreateRoslynWorkspaceForRunAsync(Budget budget)
+        public Task<CodeAnalysis.Workspace> CreateWorkspaceForRunAsync()
         {
-            return CreateRoslynWorkspaceAsync(budget);
+            return CreateWorkspaceAsync();
         }
 
-        public Task<Workspace> CreateRoslynWorkspaceForLanguageServicesAsync(Budget budget)
+        public Task<CodeAnalysis.Workspace> CreateWorkspaceForLanguageServicesAsync()
         {
-            return CreateRoslynWorkspaceAsync(budget);
+            return CreateWorkspaceAsync();
         }
-
 
         protected async Task DotnetBuild()
         {
+            var args = $"/bl:{FullBuildBinlogFileName}";
+            if (_projectFile?.Exists == true)
             {
-                var args = $"/bl:{FullBuildBinlogFileName}";
-                if (_projectFile?.Exists == true)
-                {
-                    args = $@"""{_projectFile.FullName}"" {args}";
-                }
-
-                var result = await new Dotnet(Directory).Build(args: args);
-
-                if (result.ExitCode != 0)
-                {
-                    File.WriteAllText(
-                        _lastBuildErrorLogFile.FullName,
-                        string.Join(Environment.NewLine, result.Error));
-                }
-                else if (_lastBuildErrorLogFile.Exists)
-                {
-                    _lastBuildErrorLogFile.Delete();
-                }
-
-                result.ThrowOnFailure();
+                args = $@"""{_projectFile.FullName}"" {args}";
             }
+
+            var result = await new Dotnet(Directory).Build(args: args);
+
+            if (result.ExitCode != 0)
+            {
+                File.WriteAllText(
+                    _lastBuildErrorLogFile.FullName,
+                    string.Join(Environment.NewLine, result.Error));
+            }
+            else if (_lastBuildErrorLogFile.Exists)
+            {
+                _lastBuildErrorLogFile.Delete();
+            }
+
+            result.ThrowOnFailure();
         }
     }
 }

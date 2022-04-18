@@ -5,22 +5,21 @@ using System;
 using System.IO;
 using Newtonsoft.Json.Linq;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
+namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
+
+internal static class RuntimeConfig
 {
-    internal static class RuntimeConfig
+    public static string GetTargetFramework(FileInfo runtimeConfigFile)
     {
-        public static string GetTargetFramework(FileInfo runtimeConfigFile)
+        if (runtimeConfigFile == null)
         {
-            if (runtimeConfigFile == null)
-            {
-                throw new ArgumentNullException(nameof(runtimeConfigFile));
-            }
-
-            var content = File.ReadAllText(runtimeConfigFile.FullName);
-
-            var fileContentJson = JObject.Parse(content);
-
-            return fileContentJson["runtimeOptions"]["tfm"].Value<string>();
+            throw new ArgumentNullException(nameof(runtimeConfigFile));
         }
+
+        var content = File.ReadAllText(runtimeConfigFile.FullName);
+
+        var fileContentJson = JObject.Parse(content);
+
+        return fileContentJson["runtimeOptions"]["tfm"].Value<string>();
     }
 }

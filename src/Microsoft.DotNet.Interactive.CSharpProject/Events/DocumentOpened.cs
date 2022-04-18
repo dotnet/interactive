@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Events;
 
 public class DocumentOpened : KernelEvent
 {
-    private RelativeFilePath _relativeFilePath;
+    private readonly RelativeFilePath _relativeFilePath;
 
     public string RelativeFilePath => _relativeFilePath.ToString();
     public string RegionName { get; }

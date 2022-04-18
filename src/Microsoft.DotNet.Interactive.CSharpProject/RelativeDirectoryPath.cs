@@ -2,65 +2,65 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Tools
+namespace Microsoft.DotNet.Interactive.CSharpProject;
+
+public class RelativeDirectoryPath :
+    RelativePath,
+    IEquatable<RelativeDirectoryPath>
 {
-    public class RelativeDirectoryPath :
-        RelativePath,
-        IEquatable<RelativeDirectoryPath>
-    {
-        public static RelativeDirectoryPath Root { get; } = new RelativeDirectoryPath("./");
+    public static RelativeDirectoryPath Root { get; } = new("./");
       
-        public RelativeDirectoryPath(string value) : base(value)
+    public RelativeDirectoryPath(string value) : base(value)
+    {
+        Value = NormalizeDirectory(value);
+    }
+
+    public bool Equals(RelativeDirectoryPath other)
+    {
+        if (ReferenceEquals(null, other))
         {
-            Value = NormalizeDirectory(value);
+            return false;
         }
 
-        public bool Equals(RelativeDirectoryPath other)
+        if (ReferenceEquals(this, other))
         {
-            if (ReferenceEquals(null, other))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, other))
-            {
-                return true;
-            }
-
-            return Equals(Value, other.Value);
+            return true;
         }
 
-        public override bool Equals(object obj)
+        return Equals(Value, other.Value);
+    }
+
+    public override bool Equals(object obj)
+    {
+        if (ReferenceEquals(null, obj))
         {
-            if (ReferenceEquals(null, obj))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, obj))
-            {
-                return true;
-            }
-
-            if (obj.GetType() != GetType())
-            {
-                return false;
-            }
-
-            return Equals((RelativeDirectoryPath) obj);
+            return false;
         }
 
-        public override int GetHashCode() => Value.GetHashCode();
-
-        public static bool operator ==(RelativeDirectoryPath left, RelativeDirectoryPath right)
+        if (ReferenceEquals(this, obj))
         {
-            return Equals(left, right);
+            return true;
         }
 
-        public static bool operator !=(RelativeDirectoryPath left, RelativeDirectoryPath right)
+        if (obj.GetType() != GetType())
         {
-            return !Equals(left, right);
+            return false;
         }
+
+        return Equals((RelativeDirectoryPath) obj);
+    }
+
+    public override int GetHashCode() => Value.GetHashCode();
+
+    public static bool operator ==(RelativeDirectoryPath left, RelativeDirectoryPath right)
+    {
+        return Equals(left, right);
+    }
+
+    public static bool operator !=(RelativeDirectoryPath left, RelativeDirectoryPath right)
+    {
+        return !Equals(left, right);
     }
 }
