@@ -283,11 +283,11 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                 var commandLineBuilder =
                     new CommandLineBuilder(_rootCommand)
-                        .ParseResponseFileAs(ResponseFileHandling.Disabled)
                         .UseTypoCorrections()
                         .UseHelpBuilder(_ => new DirectiveHelpBuilder(_rootCommand.Name))
                         .UseHelp()
                         .EnableDirectives(false)
+                        .UseTokenReplacer(InterpolateValueFromKernel)
                         .AddMiddleware(
                             context =>
                             {
@@ -301,6 +301,38 @@ namespace Microsoft.DotNet.Interactive.Parsing
             }
 
             return _directiveParser;
+        }
+
+        private bool InterpolateValueFromKernel(
+            string tokenToReplace, 
+            out IReadOnlyList<string> replacementTokens, 
+            out string errorMessage)
+        {
+            var parts = tokenToReplace.Split(":");
+
+            var (targetKernelName, valueName) =
+                parts.Length == 1
+                    ? (_kernel.Name, parts[0])
+                    : (parts[0], parts[1]);
+
+            var result = _kernel.RootKernel.SendAsync(new RequestValue(valueName, targetKernelName)).GetAwaiter().GetResult();
+
+            replacementTokens = null;
+            errorMessage = null;
+
+            var events = result.KernelEvents.ToEnumerable().ToArray();
+            var valueProduced = events.OfType<ValueProduced>().SingleOrDefault();
+
+            if (valueProduced is { })
+            {
+                // FIX: (InterpolateValueFromKernel) 
+                replacementTokens = new[] { $"{123}" };
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public void AddDirective(Command command)
