@@ -8,6 +8,7 @@ using System.CommandLine.Builder;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
@@ -286,6 +287,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         .UseTypoCorrections()
                         .UseHelpBuilder(_ => new DirectiveHelpBuilder(_rootCommand.Name))
                         .UseHelp()
+                        .EnableDirectives(false)
                         .AddMiddleware(
                             context =>
                             {
@@ -294,9 +296,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                                            typeof(KernelInvocationContext),
                                            _ => KernelInvocationContext.Current);
                             });
-
-                commandLineBuilder.EnableDirectives = false;
-
+                
                 _directiveParser = commandLineBuilder.Build();
             }
 

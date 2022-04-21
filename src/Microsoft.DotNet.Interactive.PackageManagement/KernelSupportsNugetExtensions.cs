@@ -4,7 +4,6 @@
 using System;
 using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
-using System.CommandLine.Rendering;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -105,13 +104,13 @@ namespace Microsoft.DotNet.Interactive
 
                             if (added is null)
                             {
-                                var errorMessage = GenerateErrorMessage(pkg).ToString(OutputMode.NonAnsi);
+                                var errorMessage = GenerateErrorMessage(pkg);
                                 context.Fail(context.Command, message: errorMessage);
                             }
                         }
                         else
                         {
-                            var errorMessage = GenerateErrorMessage(pkg, alreadyGotten).ToString(OutputMode.NonAnsi);
+                            var errorMessage = GenerateErrorMessage(pkg, alreadyGotten);
                             context.Fail(context.Command, message: errorMessage);
                         }
                     }
@@ -121,29 +120,27 @@ namespace Microsoft.DotNet.Interactive
 
                         if (added is null)
                         {
-                            var errorMessage = GenerateErrorMessage(pkg).ToString(OutputMode.NonAnsi);
+                            var errorMessage = GenerateErrorMessage(pkg);
                             context.Fail(context.Command, message: errorMessage);
                         }
                     }
 
-                    static TextSpan GenerateErrorMessage(
+                    static string GenerateErrorMessage(
                         PackageReference requested,
                         PackageReference existing = null)
                     {
-                        var spanFormatter = new TextSpanFormatter();
                         if (existing is not null)
                         {
                             if (!string.IsNullOrEmpty(requested.PackageName))
                             {
                                 if (!string.IsNullOrEmpty(requested.PackageVersion))
                                 {
-                                    return spanFormatter.ParseToSpan(
-                                        $"{Ansi.Color.Foreground.Red}{requested.PackageName} version {requested.PackageVersion} cannot be added because version {existing.PackageVersion} was added previously.{Ansi.Text.AttributesOff}");
+                                    return $"{requested.PackageName} version {requested.PackageVersion} cannot be added because version {existing.PackageVersion} was added previously.";
                                 }
                             }
                         }
 
-                        return spanFormatter.ParseToSpan($"Invalid Package specification: '{requested}'");
+                        return $"Invalid Package specification: '{requested}'";
                     }
                 }
 
