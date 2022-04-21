@@ -9,6 +9,7 @@ using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
@@ -304,7 +305,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
         }
 
         private bool InterpolateValueFromKernel(
-            string tokenToReplace, 
+            string tokenToReplace,
             out IReadOnlyList<string> replacementTokens, 
             out string errorMessage)
         {
@@ -323,14 +324,37 @@ namespace Microsoft.DotNet.Interactive.Parsing
             var events = result.KernelEvents.ToEnumerable().ToArray();
             var valueProduced = events.OfType<ValueProduced>().SingleOrDefault();
 
-            if (valueProduced is { })
+            if (valueProduced is { } &&
+                valueProduced.FormattedValue.MimeType == "application/json")
             {
-                // FIX: (InterpolateValueFromKernel) 
-                replacementTokens = new[] { $"{123}" };
-                return true;
+                var stringValue = valueProduced.FormattedValue.Value;
+
+                var jsonDoc = JsonDocument.Parse(stringValue);
+
+                object interpolatedValue = jsonDoc.RootElement.ValueKind switch
+                {
+                    JsonValueKind.True => true,
+                    JsonValueKind.False => false,
+                    JsonValueKind.String => jsonDoc.Deserialize<string>(),
+                    JsonValueKind.Number => jsonDoc.Deserialize<double>(),
+
+                    _ => null
+                };
+
+                if (interpolatedValue is { })
+                {
+                    replacementTokens = new[] { $"{interpolatedValue}" };
+                    return true;
+                }
+                else
+                {
+                    errorMessage = $"Value @{tokenToReplace} cannot be interpolated into magic command:\n{stringValue}";
+                    return false;
+                }
             }
             else
             {
+                errorMessage = events.OfType<CommandFailed>().Last().Message;
                 return false;
             }
         }
