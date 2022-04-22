@@ -309,7 +309,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             out IReadOnlyList<string> replacementTokens, 
             out string errorMessage)
         {
-            var parts = tokenToReplace.Split(":");
+            var parts = tokenToReplace.Split(':');
 
             var (targetKernelName, valueName) =
                 parts.Length == 1
