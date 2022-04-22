@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
@@ -306,9 +307,18 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         private bool InterpolateValueFromKernel(
             string tokenToReplace,
-            out IReadOnlyList<string> replacementTokens, 
+            out IReadOnlyList<string> replacementTokens,
             out string errorMessage)
         {
+            errorMessage = null;
+            replacementTokens = null;
+
+            if (ContainsInvalidCharactersForValueReference(tokenToReplace.AsSpan()))
+            {
+                // F# verbatim strings should not be replaced but it's hard to detect them because the quotes are also stripped away by the tokenizer, so we use slashes as a proxy to detect file paths
+                return false;
+            }
+
             var parts = tokenToReplace.Split(':');
 
             var (targetKernelName, valueName) =
@@ -317,9 +327,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     : (parts[0], parts[1]);
 
             var result = _kernel.RootKernel.SendAsync(new RequestValue(valueName, targetKernelName)).GetAwaiter().GetResult();
-
-            replacementTokens = null;
-            errorMessage = null;
 
             var events = result.KernelEvents.ToEnumerable().ToArray();
             var valueProduced = events.OfType<ValueProduced>().SingleOrDefault();
@@ -355,6 +362,22 @@ namespace Microsoft.DotNet.Interactive.Parsing
             else
             {
                 errorMessage = events.OfType<CommandFailed>().Last().Message;
+
+                return false;
+            }
+
+            static bool ContainsInvalidCharactersForValueReference(ReadOnlySpan<char> tokenToReplace)
+            {
+                for (var i = 0; i < tokenToReplace.Length; i++)
+                {
+                    var c = tokenToReplace[i];
+
+                    if (c == '\\' || c == '/')
+                    {
+                        return true;
+                    }
+                }
+
                 return false;
             }
         }

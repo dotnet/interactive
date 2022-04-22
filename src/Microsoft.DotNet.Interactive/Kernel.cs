@@ -573,6 +573,10 @@ namespace Microsoft.DotNet.Interactive
                     throw new InvalidOperationException($"Cannot find value named: {command.Name}");
                 }
             }
+            else
+            {
+                context.Fail(command, message: $"Value '{command.Name}' not found in kernel {this}");
+            }
 
             return Task.CompletedTask;
         }
