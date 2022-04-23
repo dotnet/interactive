@@ -7,7 +7,7 @@ using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Microsoft.DotNet.Interactive.Documents.ParserServer;
 
-namespace Microsoft.DotNet.Interactive.Server
+namespace Microsoft.DotNet.Interactive.Connection
 {
     internal static class Serializer
     {

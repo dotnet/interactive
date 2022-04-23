@@ -3,12 +3,11 @@
 
 using Microsoft.DotNet.Interactive.Events;
 
-namespace Microsoft.DotNet.Interactive.Server
-{
-    public interface IKernelEventEnvelope
-    {
-        KernelEvent Event { get; }
+namespace Microsoft.DotNet.Interactive.Connection;
 
-        string EventType { get; }
-    }
+public interface IKernelEventEnvelope
+{
+    KernelEvent Event { get; }
+
+    string EventType { get; }
 }

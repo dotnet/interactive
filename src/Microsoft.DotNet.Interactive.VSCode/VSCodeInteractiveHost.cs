@@ -5,11 +5,15 @@ using System;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.VSCode
 {
     public static class VSCodeInteractiveHost
     {
+        // FIX: (VSCodeInteractiveHost) move this to someplace more central
+
         private const string VSCodeKernelName = "vscode";
 
         /// <summary>
@@ -23,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.VSCode
         {
             var kernel = Kernel.Root.FindKernel(VSCodeKernelName) ?? throw new ArgumentNullException($"Cannot find kernel {VSCodeKernelName}");
 
-            var command = new GetInput(prompt, isPassword, targetKernelName: VSCodeKernelName);
+            var command = new RequestInput(prompt, isPassword, targetKernelName: VSCodeKernelName);
 
             var results = await kernel.SendAsync(command, cancellationToken);
 

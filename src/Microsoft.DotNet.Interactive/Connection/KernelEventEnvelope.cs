@@ -12,7 +12,7 @@ using Microsoft.DotNet.Interactive.Events;
 
 using BindingFlags = System.Reflection.BindingFlags;
 
-namespace Microsoft.DotNet.Interactive.Server
+namespace Microsoft.DotNet.Interactive.Connection
 {
     public abstract class KernelEventEnvelope : IKernelEventEnvelope
     {
@@ -71,6 +71,7 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(ErrorProduced)] = typeof(KernelEventEnvelope<ErrorProduced>),
                 [nameof(IncompleteCodeSubmissionReceived)] = typeof(KernelEventEnvelope<IncompleteCodeSubmissionReceived>),
                 [nameof(HoverTextProduced)] = typeof(KernelEventEnvelope<HoverTextProduced>),
+                [nameof(InputProduced)] = typeof(KernelEventEnvelope<InputProduced>),
                 [nameof(KernelInfoProduced)] = typeof(KernelEventEnvelope<KernelInfoProduced>),
                 [nameof(KernelReady)] = typeof(KernelEventEnvelope<KernelReady>),
                 [nameof(PackageAdded)] = typeof(KernelEventEnvelope<PackageAdded>),

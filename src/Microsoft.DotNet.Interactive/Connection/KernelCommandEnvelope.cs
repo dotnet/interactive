@@ -7,8 +7,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text.Json;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 
-namespace Microsoft.DotNet.Interactive.Server
+namespace Microsoft.DotNet.Interactive.Connection
 {
     public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
     {
@@ -72,6 +73,7 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(UpdateDisplayedValue)] = typeof(KernelCommandEnvelope<UpdateDisplayedValue>),
                 [nameof(Quit)] = typeof(KernelCommandEnvelope<Quit>),
                 [nameof(Cancel)] = typeof(KernelCommandEnvelope<Cancel>),
+                [nameof(RequestInput)] = typeof(KernelCommandEnvelope<RequestInput>),
                 [nameof(RequestValue)] = typeof(KernelCommandEnvelope<RequestValue>),
                 [nameof(RequestValueInfos)] = typeof(KernelCommandEnvelope<RequestValueInfos>)
             };

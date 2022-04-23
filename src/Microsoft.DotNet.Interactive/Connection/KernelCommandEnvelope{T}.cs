@@ -3,10 +3,9 @@
 
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Server
+namespace Microsoft.DotNet.Interactive.Connection
 {
-    public class KernelCommandEnvelope<T> : KernelCommandEnvelope
-        where T : KernelCommand
+    public class KernelCommandEnvelope<T> : KernelCommandEnvelope where T : KernelCommand
     {
         public KernelCommandEnvelope(T command) : base(command)
         {

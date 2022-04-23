@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text.Json.Serialization;
 
 
-namespace Microsoft.DotNet.Interactive.Server
+namespace Microsoft.DotNet.Interactive.Connection
 {
     //public class NotebookCellOutputJsonConverter : JsonConverter
     //{

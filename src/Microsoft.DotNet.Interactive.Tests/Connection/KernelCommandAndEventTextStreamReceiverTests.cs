@@ -9,7 +9,6 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Server;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests.Connection

@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive.Http
 {
