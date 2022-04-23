@@ -4,7 +4,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.CommandLine.Rendering;
 using System.Dynamic;
 using System.Linq;
 using System.Numerics;
@@ -254,12 +253,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         
                                                    return true;
                                                }),
-
-            new PlainTextFormatter<TextSpan>((span, context) =>
-            {
-                context.Writer.Write(span.ToString(OutputMode.Ansi));
-                return true;
-            }),
 
             new PlainTextFormatter<JsonElement>((obj, context) =>
             {

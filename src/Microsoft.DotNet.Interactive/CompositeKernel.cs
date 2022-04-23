@@ -195,7 +195,7 @@ namespace Microsoft.DotNet.Interactive
             KernelInvocationContext context)
         {
             if (!string.IsNullOrWhiteSpace(command.TargetKernelName) &&
-                     _childKernels.TryGetByAlias(command.TargetKernelName, out var kernel))
+                _childKernels.TryGetByAlias(command.TargetKernelName, out var kernel))
             {
                 // route to a subkernel
                 await kernel.Pipeline.SendAsync(command, context);
