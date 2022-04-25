@@ -57,6 +57,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
         internal int DefaultRunspaceId => _lazyPwsh.IsValueCreated ? pwsh.Runspace.Id : -1;
 
+        private HashSet<string> _suppressedValueInfoNames;
+
         static PowerShellKernel()
         {
             // Prepare for marking PSObject as error with 'WriteStream'.
@@ -80,6 +82,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         {
             _psHost = new PSKernelHost(this);
             _lazyPwsh = new Lazy<PowerShell>(CreatePowerShell);
+            _suppressedValueInfoNames = GetAllValueInfos().Select(v => v.Name).ToHashSet();
         }
 
         private PowerShell CreatePowerShell()
@@ -132,16 +135,21 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             _addAccelerator?.Invoke(null, new object[] { name, type });
         }
 
-        public IReadOnlyCollection<KernelValueInfo> GetValueInfos()
+        private IEnumerable<KernelValueInfo> GetAllValueInfos()
         {
             var psObject = pwsh.Runspace.SessionStateProxy.InvokeProvider.Item.Get("variable:")?.FirstOrDefault();
 
             if (psObject?.BaseObject is Dictionary<string, PSVariable>.ValueCollection valueCollection)
             {
-                return valueCollection.Select(v => new KernelValueInfo( v.Name, v.Value?.GetType())).ToArray();
+                return valueCollection.Select(v => new KernelValueInfo(v.Name, v.Value?.GetType())).ToArray();
             }
 
             return Array.Empty<KernelValueInfo>();
+        }
+
+        public IReadOnlyCollection<KernelValueInfo> GetValueInfos()
+        {
+            return GetAllValueInfos().Where(v => !_suppressedValueInfoNames.Contains(v.Name)).ToArray();
         }
 
         public bool TryGetValue<T>(string name, out T value)

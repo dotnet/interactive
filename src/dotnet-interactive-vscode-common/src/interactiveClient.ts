@@ -31,11 +31,19 @@ import {
     RequestHoverTextType,
     RequestSignatureHelp,
     RequestSignatureHelpType,
+    RequestValue,
+    RequestValueType,
+    RequestValueInfos,
+    RequestValueInfosType,
     ReturnValueProducedType,
     SignatureHelpProduced,
     SignatureHelpProducedType,
     StandardErrorValueProducedType,
     StandardOutputValueProducedType,
+    ValueInfosProduced,
+    ValueInfosProducedType,
+    ValueProduced,
+    ValueProducedType,
     SubmissionType,
     SubmitCode,
     SubmitCodeType,
@@ -274,6 +282,22 @@ export class InteractiveClient {
         let disposable = this.subscribeToKernelTokenEvents(token, observer);
         await this.submitCommand(command, SubmitCodeType, token, id);
         return disposable;
+    }
+
+    requestValueInfos(kernelName: string): Promise<ValueInfosProduced> {
+        const command: RequestValueInfos = {
+            targetKernelName: kernelName,
+        };
+        return this.submitCommandAndGetResult(command, RequestValueInfosType, ValueInfosProducedType, undefined);
+    }
+
+    requestValue(valueName: string, kernelName: string): Promise<ValueProduced> {
+        const command: RequestValue = {
+            name: valueName,
+            mimeType: 'text/plain',
+            targetKernelName: kernelName,
+        };
+        return this.submitCommandAndGetResult(command, RequestValueType, ValueProducedType, undefined);
     }
 
     cancel(token?: string | undefined): Promise<void> {

@@ -49,7 +49,6 @@ namespace Microsoft.DotNet.Interactive.VSCode
                 jsKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(SubmitCode)));
                 jsKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValue)));
                 jsKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValueInfos)));
-
                 jsKernel.UseValueSharing(new JavaScriptValueDeclarer());
             }
         }

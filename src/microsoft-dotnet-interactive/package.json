@@ -12,7 +12,10 @@
     "url": "https://github.com/dotnet/interactive"
   },
   "scripts": {
-    "compile": "tsc -p ./",
+    "compile-preloads": "rollup -c rollup.config.js -i ./src/webview/kernelApiBootstrapper.ts -o ./dist/kernelApiBootstrapper.js",
+    "compile-variable-grid": "rollup -c rollup.config.js -i src/webview/variableGrid.ts -o dist/variableGrid.js",
+    "compile-webview": "npm run compile-preloads && npm run compile-variable-grid",
+    "compile": "npm run lint && tsc -p ./ && npm run compile-webview",
     "lint": "eslint src --ext ts",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
@@ -31,6 +34,8 @@
     ]
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "21.0.1",
+    "@rollup/plugin-node-resolve": "13.0.5",
     "@testdeck/mocha": "0.1.2",
     "@types/chai": "4.2.21",
     "@types/chai-as-promised": "7.1.4",
@@ -47,6 +52,8 @@
     "mocha": "9.2.0",
     "mocha-multi-reporters": "1.5.1",
     "mocha-trx-reporter": "3.3.1",
+    "rollup": "2.60.1",
+    "rollup-plugin-typescript2": "0.31.1",
     "tmp": "0.2.1",
     "ts-mocha": "9.0.2",
     "ts-node": "10.2.0",

@@ -46,7 +46,8 @@
     "onNotebook:dotnet-interactive-legacy",
     "onNotebook:jupyter-notebook",
     "onCommand:dotnet-interactive.acquire",
-    "onCommand:dotnet-interactive.newNotebook"
+    "onCommand:dotnet-interactive.newNotebook",
+    "onView:dotnet-interactive-panel-values"
   ],
   "main": "./out/src/vscode-common/extension.js",
   "extensionDependencies": [
@@ -166,6 +167,25 @@
         }
       }
     },
+    "viewsContainers": {
+      "panel": [
+        {
+          "id": "dotnet-interactive-panel",
+          "title": ".NET Interactive",
+          "icon": "resources/icons/notebook.svg"
+        }
+      ]
+    },
+    "views": {
+      "dotnet-interactive-panel": [
+        {
+          "type": "webview",
+          "id": "dotnet-interactive-panel-values",
+          "name": "Values",
+          "icon": "resources/icons/notebook.svg"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "dotnet-interactive.acquire",
@@ -186,6 +206,10 @@
       {
         "command": "dotnet-interactive.stopAllNotebookKernels",
         "title": ".NET Interactive: Stop all notebook kernels"
+      },
+      {
+        "command": "dotnet-interactive.shareValueTo",
+        "title": "Share value to..."
       }
     ],
     "keybindings": [
@@ -418,9 +442,11 @@
     ]
   },
   "scripts": {
-    "compile-preloads": "rollup -c rollup.config.js -i src/kernelApiBootstrapper.ts -o resources/kernelApiBootstrapper.js",
+    "compile-webview": "cd ../microsoft-dotnet-interactive && npm run compile-webview",
+    "copy-preloads": "npx copyfiles --error --verbose --up 3 ../microsoft-dotnet-interactive/dist/kernelApiBootstrapper.js ./resources",
+    "copy-variable-grid": "npx copyfiles --error --verbose --up 3 ../microsoft-dotnet-interactive/dist/variableGrid.js ./resources",
     "vscode:prepublish": "npm run compile",
-    "compile": "npm run lint && tsc -p ./ && npm run compile-preloads",
+    "compile": "npm run lint && tsc -p ./ && npm run compile-webview && npm run copy-preloads && npm run copy-variable-grid",
     "lint": "eslint src --ext ts",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile",
@@ -448,6 +474,7 @@
     "chai": "4.2.0",
     "chai-as-promised": "7.1.1",
     "chai-fs": "2.0.0",
+    "copyfiles": "2.4.1",
     "del-cli": "4.0.1",
     "eslint": "7.32.0",
     "eslint-plugin-deprecation": "1.2.1",

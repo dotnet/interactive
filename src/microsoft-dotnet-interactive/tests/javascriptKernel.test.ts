@@ -25,6 +25,36 @@ describe("javascriptKernel", () => {
         expect(events.find(e => e.eventType === contracts.CommandSucceededType)).to.not.be.undefined;
     });
 
+    it("does not return built-in values from RequestValueInfos", async () => {
+        const events: contracts.KernelEventEnvelope[] = [];
+        const kernel = new JavascriptKernel();
+        kernel.subscribeToKernelEvents((e) => events.push(e));
+
+        await kernel.send({ commandType: contracts.RequestValueInfosType, command: <contracts.RequestValueInfos>{} });
+
+        expect((<contracts.ValueInfosProduced>events.find(e => e.eventType === contracts.ValueInfosProducedType)!.event).valueInfos).to.be.empty;
+    });
+
+    it("reports values defined in SubmitCode", async () => {
+        const events: contracts.KernelEventEnvelope[] = [];
+        const kernel = new JavascriptKernel();
+        kernel.subscribeToKernelEvents((e) => events.push(e));
+
+        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "theAnswer = 42;" } });
+        await kernel.send({ commandType: contracts.RequestValueInfosType, command: <contracts.RequestValueInfos>{} });
+        expect((<contracts.ValueInfosProduced>events.find(e => e.eventType === contracts.ValueInfosProducedType)!.event).valueInfos).to.deep.equal([{ name: 'theAnswer' }]);
+    });
+
+    it("returns values from RequestValue", async () => {
+        const events: contracts.KernelEventEnvelope[] = [];
+        const kernel = new JavascriptKernel();
+        kernel.subscribeToKernelEvents((e) => events.push(e));
+
+        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "theAnswer = 42;" } });
+        await kernel.send({ commandType: contracts.RequestValueType, command: <contracts.RequestValue>{ name: "theAnswer" } });
+        expect((<contracts.ValueProduced>events.find(e => e.eventType === contracts.ValueProducedType)!.event).formattedValue).to.deep.equal({ mimeType: 'application/json', value: '42' });
+    });
+
     it("notifies about CodeSumbission", async () => {
         let events: contracts.KernelEventEnvelope[] = [];
         const kernel = new JavascriptKernel();

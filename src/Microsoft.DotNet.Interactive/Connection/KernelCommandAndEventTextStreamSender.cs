@@ -25,20 +25,20 @@ namespace Microsoft.DotNet.Interactive.Connection
         public async Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            await _writer.WriteAsync(KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)));
-
-            await _writer.WriteAsync(Delimiter);
-
+            
+            // the entirety of the content (envelope and the trailing newline) needs to be send atomically to prevent interleaving between rapid outputs
+            var content = KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)) + Delimiter;
+            await _writer.WriteAsync(content);
             await _writer.FlushAsync();
         }
 
         public async Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            await _writer.WriteAsync(KernelEventEnvelope.Serialize(KernelEventEnvelope.Create(kernelEvent)));
 
-            await _writer.WriteAsync(Delimiter);
-
+            // the entirety of the content (envelope and the trailing newline) needs to be send atomically to prevent interleaving between rapid outputs
+            var content = KernelEventEnvelope.Serialize(KernelEventEnvelope.Create(kernelEvent)) + Delimiter;
+            await _writer.WriteAsync(content);
             await _writer.FlushAsync();
         }
 

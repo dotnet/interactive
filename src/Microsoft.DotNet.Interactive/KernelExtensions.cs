@@ -159,9 +159,9 @@ namespace Microsoft.DotNet.Interactive
 
             return kernel;
         }
-        
+
         public static ProxyKernel UseValueSharing(
-            this ProxyKernel kernel, 
+            this ProxyKernel kernel,
             IKernelValueDeclarer kernelValueDeclarer)
         {
             if (kernelValueDeclarer is null)
@@ -368,7 +368,7 @@ namespace Microsoft.DotNet.Interactive
                     using var __ = result.KernelEvents.OfType<ValueProduced>().Subscribe(e => valueEvents.Add(e));
                 }
 
-                var kernelValues = valueEvents.Select(e => new KernelValue( new KernelValueInfo( e.Name, e.Value.GetType()), e.Value, context.HandlingKernel.Name));
+                var kernelValues = valueEvents.Select(e => new KernelValue(new KernelValueInfo(e.Name, e.Value.GetType()), e.Value, context.HandlingKernel.Name));
 
                 var currentVariables = new KernelValues(
                     kernelValues,
