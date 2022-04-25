@@ -567,7 +567,6 @@ Formatter.Register<DataFrame>((df, writer) =>
                         .UseDefaultFormatting()
                         .UseKernelHelpers()
                         .UseWho()
-                        .UseDefaultNamespaces()
                         .LogEventsToPocketLogger();
 
             using var kernel =

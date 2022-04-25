@@ -2,24 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
 {
-    public static class JupyterInteractiveHost 
+    public static class JupyterInteractiveHost
     {
-        public static  Task<string> GetInputAsync(string prompt = "", bool isPassword = false, CancellationToken cancellationToken = default)
-        {
-            // FIX: (GetInputAsync) move this to someplace central
-
-            var result = isPassword
-                ? GetPassword(prompt).GetClearTextPassword()
-                : GetInput(prompt);
-            return Task.FromResult(result);
-        }
-
         internal static string GetInput(string prompt)
         {
             if (!StandardInputIsAllowed())

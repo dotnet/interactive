@@ -2,10 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
@@ -26,6 +29,34 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public static IHtmlContent HTML(string content) => content.ToHtmlContent();
+
+        /// <summary>
+        /// Gets input from the user.
+        /// </summary>
+        /// <param name="prompt">The prompt to show.</param>
+        /// <returns>The user input value.</returns>
+        public static async Task<string> GetInputAsync(string prompt = "")
+        {
+            return await GetInputAsync(prompt, false);
+        }
+        
+        public static async Task<string> GetPasswordAsync(string prompt = "")
+        {
+            return await GetInputAsync(prompt, true);
+        }
+
+        private static async Task<string> GetInputAsync(string prompt, bool isPassword)
+        {
+            var command = new RequestInput(prompt, isPassword);
+
+            var results = await Root.SendAsync(command, CancellationToken.None);
+
+            var inputProduced = await results.KernelEvents
+                                             .OfType<InputProduced>()
+                                             .FirstOrDefaultAsync();
+
+            return inputProduced?.Value;
+        }
 
         public static void CSS(string content) =>
             // From https://stackoverflow.com/questions/524696/how-to-create-a-style-tag-with-javascript

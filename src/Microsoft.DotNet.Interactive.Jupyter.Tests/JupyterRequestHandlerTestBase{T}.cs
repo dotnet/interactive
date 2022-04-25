@@ -37,7 +37,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                 .UseNugetDirective()
                 .UseDefaultFormatting()
                 .UseKernelHelpers()
-                .UseDefaultNamespaces()
                 .UseMathAndLaTeX();
 
             _psKernel = new PowerShellKernel()

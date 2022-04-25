@@ -77,6 +77,12 @@ x")]
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
+
+            await kernel.SendAsync(new SubmitCode("",targetKernelName:"fsharp"));
+            events.Should().NotContainErrors();
+
+
+
             await kernel.SubmitCodeAsync($"{from}\n{codeToWrite}");
 
             await kernel.SubmitCodeAsync($"#!fsharp\n{codeToRead}");
@@ -315,7 +321,6 @@ x")]
                 new FSharpKernel()
                     .UseNugetDirective()
                     .UseKernelHelpers()
-                    .UseDefaultNamespaces() 
                     .UseValueSharing(),
                 new PowerShellKernel()
                     .UseValueSharing()

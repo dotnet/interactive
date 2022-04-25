@@ -8,7 +8,7 @@ using Microsoft.DotNet.Interactive.ValueSharing;
 
 namespace Microsoft.DotNet.Interactive.VSCode
 {
-    public class VSCodeClientKernelsExtension : IKernelExtension
+    public class VSCodeClientKernelExtension : IKernelExtension
     {
         public async Task OnLoadAsync(Kernel kernel)
         {
@@ -19,6 +19,7 @@ namespace Microsoft.DotNet.Interactive.VSCode
                                      new Uri("kernel://vscode/vscode"),
                                      new[] { "frontend" });
                 hostKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestInput)));
+                root.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), "vscode");
                 hostKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(SendEditableCode)));
 
                 var jsKernel = await root.Host.ConnectProxyKernelOnDefaultConnectorAsync(

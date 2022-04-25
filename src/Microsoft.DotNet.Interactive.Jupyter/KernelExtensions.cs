@@ -41,25 +41,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             var command = new SubmitCode($@"
 #r ""{typeof(TopLevelMethods).Assembly.Location.Replace("\\", "/")}""
 using static {typeof(TopLevelMethods).FullName};
-using static {typeof(JupyterInteractiveHost).FullName};
-");
-
-            kernel.DeferCommand(command);
-            return kernel;
-        }
-
-        public static FSharpKernel UseJupyterHelpers(
-            this FSharpKernel kernel)
-        {
-
-            // FIX: (UseJupyterHelpers) this should not be needed
-            var command = new SubmitCode($@"
-#r ""{typeof(TopLevelMethods).Assembly.Location.Replace("\\", "/")}""
-
-[<AutoOpen>]
-module JupyterTopLevelModule =
-    let GetInputAsync ( prompt : string ) ( isPassword : bool) = 
-        {typeof(JupyterInteractiveHost).FullName}.{nameof(JupyterInteractiveHost.GetInputAsync)}( prompt, isPassword ) |> Async.AwaitTask
 ");
 
             kernel.DeferCommand(command);
