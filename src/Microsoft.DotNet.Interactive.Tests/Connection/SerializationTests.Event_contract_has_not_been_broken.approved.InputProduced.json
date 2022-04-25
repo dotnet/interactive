@@ -8,7 +8,7 @@
     "id": "command-id",
     "commandType": "RequestInput",
     "command": {
-      "prompt": "",
+      "prompt": "Input?",
       "isPassword": false,
       "targetKernelName": "vscode",
       "originUri": null,

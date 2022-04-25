@@ -10,7 +10,6 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
@@ -326,44 +325,63 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     ? (_kernel.Name, parts[0])
                     : (parts[0], parts[1]);
 
-            var result = _kernel.RootKernel.SendAsync(new RequestValue(valueName, targetKernelName)).GetAwaiter().GetResult();
-
-            var events = result.KernelEvents.ToEnumerable().ToArray();
-            var valueProduced = events.OfType<ValueProduced>().SingleOrDefault();
-
-            if (valueProduced is { } &&
-                valueProduced.FormattedValue.MimeType == "application/json")
+            if (targetKernelName is "input" or "password")
             {
-                var stringValue = valueProduced.FormattedValue.Value;
+                var inputRequest = new RequestInput($"Please enter a value for field \"{valueName}\".", isPassword: targetKernelName == "password");
 
-                var jsonDoc = JsonDocument.Parse(stringValue);
+                var result = _kernel.RootKernel.SendAsync(inputRequest).GetAwaiter().GetResult();
 
-                object interpolatedValue = jsonDoc.RootElement.ValueKind switch
+                var events = result.KernelEvents.ToEnumerable().ToArray();
+                var valueProduced = events.OfType<InputProduced>().SingleOrDefault();
+
+                if (valueProduced is { })
                 {
-                    JsonValueKind.True => true,
-                    JsonValueKind.False => false,
-                    JsonValueKind.String => jsonDoc.Deserialize<string>(),
-                    JsonValueKind.Number => jsonDoc.Deserialize<double>(),
-
-                    _ => null
-                };
-
-                if (interpolatedValue is { })
-                {
-                    replacementTokens = new[] { $"{interpolatedValue}" };
-                    return true;
+                    replacementTokens = new[] { valueProduced.Value };
                 }
-                else
-                {
-                    errorMessage = $"Value @{tokenToReplace} cannot be interpolated into magic command:\n{stringValue}";
-                    return false;
-                }
+
+                return true;
             }
             else
             {
-                errorMessage = events.OfType<CommandFailed>().Last().Message;
+                var result = _kernel.RootKernel.SendAsync(new RequestValue(valueName, targetKernelName)).GetAwaiter().GetResult();
 
-                return false;
+                var events = result.KernelEvents.ToEnumerable().ToArray();
+                var valueProduced = events.OfType<ValueProduced>().SingleOrDefault();
+
+                if (valueProduced is { } &&
+                    valueProduced.FormattedValue.MimeType == "application/json")
+                {
+                    var stringValue = valueProduced.FormattedValue.Value;
+
+                    var jsonDoc = JsonDocument.Parse(stringValue);
+
+                    object interpolatedValue = jsonDoc.RootElement.ValueKind switch
+                    {
+                        JsonValueKind.True => true,
+                        JsonValueKind.False => false,
+                        JsonValueKind.String => jsonDoc.Deserialize<string>(),
+                        JsonValueKind.Number => jsonDoc.Deserialize<double>(),
+
+                        _ => null
+                    };
+
+                    if (interpolatedValue is { })
+                    {
+                        replacementTokens = new[] { $"{interpolatedValue}" };
+                        return true;
+                    }
+                    else
+                    {
+                        errorMessage = $"Value @{tokenToReplace} cannot be interpolated into magic command:\n{stringValue}";
+                        return false;
+                    }
+                }
+                else
+                {
+                    errorMessage = events.OfType<CommandFailed>().Last().Message;
+
+                    return false;
+                }
             }
 
             static bool ContainsInvalidCharactersForValueReference(ReadOnlySpan<char> tokenToReplace)

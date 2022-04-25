@@ -5,7 +5,7 @@ namespace Microsoft.DotNet.Interactive.Commands;
 
 public class RequestInput : KernelCommand
 {
-    public RequestInput(string prompt = "", bool isPassword = false, string targetKernelName = null)
+    public RequestInput(string prompt, bool isPassword = false, string targetKernelName = null)
         : base(targetKernelName)
     {
         Prompt = prompt;

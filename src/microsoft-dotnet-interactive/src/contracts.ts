@@ -77,7 +77,6 @@ export interface DisplayValue extends KernelCommand {
     valueId: string;
 }
 
-
 export interface OpenDocument extends KernelCommand {
     relativeFilePath: string;
     regionName?: string;
@@ -109,6 +108,7 @@ export interface RequestInput extends KernelCommand {
     prompt: string;
     isPassword: boolean;
 }
+
 export interface RequestKernelInfo extends KernelCommand {
 }
 

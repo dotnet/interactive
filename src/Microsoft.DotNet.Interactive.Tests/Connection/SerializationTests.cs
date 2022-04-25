@@ -369,7 +369,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
 
                 yield return new CommandCancelled( new Cancel() ,new SubmitCode("var value = 1;", "csharp"));
 
-                yield return new InputProduced("user input", new RequestInput(targetKernelName: "vscode"));
+                yield return new InputProduced("user input", new RequestInput("Input?", targetKernelName: "vscode"));
             }
         }
 
