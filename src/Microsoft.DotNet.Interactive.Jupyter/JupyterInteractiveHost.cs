@@ -12,6 +12,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
     {
         public static  Task<string> GetInputAsync(string prompt = "", bool isPassword = false, CancellationToken cancellationToken = default)
         {
+            // FIX: (GetInputAsync) move this to someplace central
+
             var result = isPassword
                 ? GetPassword(prompt).GetClearTextPassword()
                 : GetInput(prompt);
@@ -25,6 +27,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                 throw new NotSupportedException("Input request is not supported. The stdin channel is not allowed by the frontend.");
             }
 
+            // FIX: (GetInput) move this to someplace central
+
             var inputReq = new InputRequest(prompt, password: false);
             var result = JupyterRequestContext.Current.JupyterMessageSender.Send(inputReq);
             return result;
@@ -32,6 +36,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
         internal static PasswordString GetPassword(string prompt)
         {
+            // FIX: (GetPassword) move this to someplace central
+
             if (!StandardInputIsAllowed())
             {
                 throw new NotSupportedException("Password request is not supported.");

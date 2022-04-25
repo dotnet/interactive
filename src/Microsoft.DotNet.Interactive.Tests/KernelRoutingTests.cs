@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
 using Xunit;
@@ -126,6 +127,43 @@ Console.WriteLine(1);";
                            .Code
                            .Should()
                            .Be(code);
+        }
+
+        [Fact]
+        public async Task A_default_kernel_name_can_be_specified_to_handle_a_command_type()
+        {
+            KernelCommand receivedByKernelOne = null;
+            KernelCommand receivedByKernelTwo = null;
+
+            var kernelOne = new FakeKernel("one");
+
+            kernelOne.AddMiddleware((command, context, next) =>
+            {
+                receivedByKernelOne = command;
+                return Task.CompletedTask;
+            });
+
+            var kernelTwo = new FakeKernel("two");
+
+            kernelTwo.AddMiddleware((command, context, next) =>
+            {
+                receivedByKernelTwo = command;
+                return Task.CompletedTask;
+            });
+
+            using var compositeKernel = new CompositeKernel
+            {
+                kernelOne,
+                kernelTwo
+            };
+
+            compositeKernel.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), "one");
+
+            var command = new RequestInput();
+
+            await compositeKernel.SendAsync(command);
+
+            receivedByKernelOne.Should().Be(command);
         }
     }
 }

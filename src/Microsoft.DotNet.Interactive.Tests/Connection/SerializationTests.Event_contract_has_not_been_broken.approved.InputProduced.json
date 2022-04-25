@@ -6,7 +6,7 @@
   "command": {
     "token": "the-token",
     "id": "command-id",
-    "commandType": "GetInput",
+    "commandType": "RequestInput",
     "command": {
       "prompt": "",
       "isPassword": false,

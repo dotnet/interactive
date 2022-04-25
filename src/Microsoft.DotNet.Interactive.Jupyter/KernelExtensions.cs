@@ -51,6 +51,8 @@ using static {typeof(JupyterInteractiveHost).FullName};
         public static FSharpKernel UseJupyterHelpers(
             this FSharpKernel kernel)
         {
+
+            // FIX: (UseJupyterHelpers) this should not be needed
             var command = new SubmitCode($@"
 #r ""{typeof(TopLevelMethods).Assembly.Location.Replace("\\", "/")}""
 

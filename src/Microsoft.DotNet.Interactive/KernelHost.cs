@@ -112,7 +112,6 @@ namespace Microsoft.DotNet.Interactive
                 {
                     if (commandOrEvent.IsParseError)
                     {
-                        // FIX: (ConnectAsync) why no coverage?
                         var _ = _defaultSender.SendAsync(commandOrEvent.Event, _cancellationTokenSource.Token);
                     }
                     else if (commandOrEvent.Command is { })

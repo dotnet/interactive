@@ -34,7 +34,8 @@ namespace Microsoft.DotNet.Interactive
         private string _defaultKernelName;
         private Command _connectDirective;
         private KernelHost _host;
-      
+        private readonly ConcurrentDictionary<Type, string> _defaultKernelNamesByCommandType = new();
+
         public CompositeKernel(string name = null) : base(name ?? ".NET")
         {
             _childKernels = new(this);
@@ -85,12 +86,20 @@ namespace Microsoft.DotNet.Interactive
             {
                 kernel.KernelInfo.NameAndAliases.UnionWith(aliases);
             }
+
             AddChooseKernelDirective(kernel);
 
             _childKernels.Add(kernel);
 
             RegisterForDisposal(kernel.KernelEvents.Subscribe(PublishEvent));
             RegisterForDisposal(kernel);
+        }
+
+        public void SetDefaultTargetKernelNameForCommand(
+            Type commandType,
+            string kernelName)
+        {
+            _defaultKernelNamesByCommandType[commandType] = kernelName;
         }
 
         private void AddChooseKernelDirective(Kernel kernel)
@@ -161,8 +170,13 @@ namespace Microsoft.DotNet.Interactive
                 {
                     return this;
                 }
-                else
+                else if (_defaultKernelNamesByCommandType.TryGetValue(command.GetType(), out targetKernelName))
                 {
+
+                }
+                else 
+                {
+
                     targetKernelName = DefaultKernelName;
                 }
             }
