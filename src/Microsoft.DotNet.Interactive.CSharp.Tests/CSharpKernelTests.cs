@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Interactive.CSharp.Tests
         }
 
         [Fact]
-        public async Task GetValueInfos_only_returns_newly_bindable_objects()
+        public async Task GetValueInfos_only_returns_non_shadowed_values()
         {
             using var kernel = new CSharpKernel();
 

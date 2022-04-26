@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.Connection
         {
             cancellationToken.ThrowIfCancellationRequested();
             
-            // the entirety of the content (envelope and the trailing newline) needs to be send atomically to prevent interleaving between rapid outputs
+            // the entirety of the content (envelope and the trailing newline) needs to be sent atomically to prevent interleaving between rapid outputs
             var content = KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)) + Delimiter;
             await _writer.WriteAsync(content);
             await _writer.FlushAsync();
@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive.Connection
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            // the entirety of the content (envelope and the trailing newline) needs to be send atomically to prevent interleaving between rapid outputs
+            // the entirety of the content (envelope and the trailing newline) needs to be sent atomically to prevent interleaving between rapid outputs
             var content = KernelEventEnvelope.Serialize(KernelEventEnvelope.Create(kernelEvent)) + Delimiter;
             await _writer.WriteAsync(content);
             await _writer.FlushAsync();
