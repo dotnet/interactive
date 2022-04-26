@@ -56,40 +56,48 @@ namespace Microsoft.DotNet.Interactive
 
         // todo: change to ChooseKeyValueStoreKernelDirective after removing NetStandardc2.0 dependency
         public override ChooseKernelDirective ChooseKernelDirective =>
-            _chooseKernelDirective ??= new (this);
+            _chooseKernelDirective ??= new(this);
 
-        public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
+        public async Task HandleAsync(
+            SubmitCode command,
+            KernelInvocationContext context)
         {
             var parseResult = command.KernelChooserParseResult;
 
             var value = command.LanguageNode.Text.Trim();
 
             var options = ValueDirectiveOptions.Create(parseResult, _chooseKernelDirective);
-            
+
             await StoreValueAsync(command, context, options, value);
         }
 
-        internal async Task TryStoreValueFromOptionsAsync(KernelInvocationContext context,
+        internal async Task TryStoreValueFromOptionsAsync(
+            KernelInvocationContext context,
             ValueDirectiveOptions options)
         {
             string newValue = null;
             var loadedFromOptions = false;
-            if (options.FromFile is { })
+
+            if (options.FromFile is { } file)
             {
-                newValue = File.ReadAllText(options.FromFile.FullName);
+                newValue = File.ReadAllText(file.FullName);
                 loadedFromOptions = true;
             }
-            else if (options.FromUrl is { })
+            else if (options.FromUrl is { } uri)
             {
                 var client = new HttpClient();
-                var response = await client.GetAsync(options.FromUrl, context.CancellationToken);
+                var response = await client.GetAsync(uri, context.CancellationToken);
                 newValue = await response.Content.ReadAsStringAsync();
+                loadedFromOptions = true;
+            }
+            else if (options.FromValue is { } value)
+            {
+                newValue = value;
                 loadedFromOptions = true;
             }
 
             if (loadedFromOptions)
             {
-
                 var hadValue = TryGetValue(options.Name, out object previousValue);
 
                 _lastOperation = (hadValue, previousValue, newValue);
@@ -102,7 +110,10 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private async Task StoreValueAsync(KernelCommand command, KernelInvocationContext context, ValueDirectiveOptions options,
+        private async Task StoreValueAsync(
+            KernelCommand command, 
+            KernelInvocationContext context, 
+            ValueDirectiveOptions options,
             string value = null)
         {
             if (options.FromFile is { })
@@ -126,7 +137,6 @@ namespace Microsoft.DotNet.Interactive
             }
             else
             {
-
                 await StoreValueAsync(value, options, context);
             }
 

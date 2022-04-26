@@ -92,7 +92,11 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         {
                             if (directiveNode.IsUnknownActionDirective())
                             {
-                                commands.Add(createCommand(directiveNode, originalCommand, lastKernelNameNode));
+                                var command = createCommand(directiveNode, originalCommand, lastKernelNameNode);
+
+                                command.KernelChooserParseResult = lastKernelNameNode?.GetDirectiveParseResult();
+
+                                commands.Add(command);
                             }
                             else
                             {
@@ -165,9 +169,17 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                     case LanguageNode languageNode:
                     {
-                        var kernelCommand = createCommand(languageNode, originalCommand, lastKernelNameNode);
-                        kernelCommand.KernelChooserParseResult = lastKernelNameNode?.GetDirectiveParseResult();
-                        commands.Add(kernelCommand);
+                        if (commands.Count > 0 &&
+                            commands[commands.Count - 1] is SubmitCode previous)
+                        {
+                            previous.Code += languageNode.Text;
+                        }
+                        else
+                        {
+                            var command = createCommand(languageNode, originalCommand, lastKernelNameNode);
+                            command.KernelChooserParseResult = lastKernelNameNode?.GetDirectiveParseResult();
+                            commands.Add(command);
+                        }
                     }
                         break;
 
