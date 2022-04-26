@@ -51,24 +51,27 @@ function setDataRows(container: HTMLElement, rows: VariableGridRow[]): Displayed
     const displayedRows: DisplayedVariableGridRow[] = [];
 
     const table = document.createElement('table');
-    table.setAttribute('border', '1');
     const header = document.createElement('tr');
     table.appendChild(header);
 
     // create headers
     const nameHeader = document.createElement('th');
+    nameHeader.classList.add('name-column');
     nameHeader.innerText = 'Name';
     header.appendChild(nameHeader);
 
     const valueHeader = document.createElement('th');
+    valueHeader.classList.add('value-column');
     valueHeader.innerText = 'Value';
     header.appendChild(valueHeader);
 
     const kernelHeader = document.createElement('th');
+    kernelHeader.classList.add('kernel-column');
     kernelHeader.innerText = 'Kernel';
     header.appendChild(kernelHeader);
 
     const shareHeader = document.createElement('th');
+    shareHeader.classList.add('share-column');
     shareHeader.innerText = 'Share';
     header.appendChild(shareHeader);
 
