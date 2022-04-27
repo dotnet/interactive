@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.Connection
     {
         private readonly IKernelCommandAndEventReceiver _source;
         private readonly CompositeDisposable _disposables = new();
-        private ImmutableList<MultiplexedKernelCommandAndEventReceiver> _children = ImmutableList<MultiplexedKernelCommandAndEventReceiver>.Empty;
+        private ImmutableList<MultiplexedKernelCommandAndEventReceiver> _childReceivers = ImmutableList<MultiplexedKernelCommandAndEventReceiver>.Empty;
         
         public MultiplexingKernelCommandAndEventReceiver(IKernelCommandAndEventReceiver source)
         {
@@ -32,13 +32,13 @@ namespace Microsoft.DotNet.Interactive.Connection
         {
             await foreach (var commandOrEvent in _source.CommandsAndEventsAsync(cancellationToken))
             {
-                var sources = _children.Select(c => c.ReceivedCommandsAndEvents).ToArray();
+                var childBlockingCollections = _childReceivers.Select(c => c.ReceivedCommandsAndEvents).ToArray();
 
-                if (sources.Length > 0)
+                if (childBlockingCollections.Length > 0)
                 {
-                    foreach (var destination in sources)
+                    foreach (var blockingCollection in childBlockingCollections)
                     {
-                        destination.Add(commandOrEvent, cancellationToken);
+                        blockingCollection.Add(commandOrEvent, cancellationToken);
                     }
                 }
 
@@ -49,15 +49,15 @@ namespace Microsoft.DotNet.Interactive.Connection
         public IKernelCommandAndEventReceiver CreateChildReceiver()
         {
             var receiver = new MultiplexedKernelCommandAndEventReceiver();
-            
-            _children = _children.Add(receiver);
-            
-            _disposables.Add( Disposable.Create(() =>
+
+            _childReceivers = _childReceivers.Add(receiver);
+
+            _disposables.Add(Disposable.Create(() =>
             {
-                _children = _children.Remove(receiver);
+                _childReceivers = _childReceivers.Remove(receiver);
                 receiver.Dispose();
             }));
-           
+
             return receiver;
         }
 

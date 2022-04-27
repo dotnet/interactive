@@ -5,23 +5,32 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Pocket;
+using static Pocket.Logger<Microsoft.DotNet.Interactive.Connection.KernelCommandAndEventTextStreamReceiver>;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public class KernelCommandAndEventTextReaderReceiver : KernelCommandAndEventDeserializingReceiverBase
+    public class KernelCommandAndEventTextStreamReceiver : KernelCommandAndEventDeserializingReceiverBase
     {
         private readonly TextReader _reader;
+        private readonly string _name;
 
-        public KernelCommandAndEventTextReaderReceiver(TextReader reader)
+        public KernelCommandAndEventTextStreamReceiver(
+            TextReader reader,
+            string name = null)
         {
             _reader = reader ?? throw new ArgumentNullException(nameof(reader));
+            _name = name;
+            
+            Log.Info($"Created receiver \"{name}\" ({GetHashCode()})");
         }
 
-
-        protected override Task<string> ReadMessageAsync(CancellationToken cancellationToken)
+        protected override async Task<string> ReadMessageAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var message = _reader.ReadLineAsync();
+
+            var message = await _reader.ReadLineAsync( );
+            
             return message;
         }
     }

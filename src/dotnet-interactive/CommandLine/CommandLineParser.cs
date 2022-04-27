@@ -436,7 +436,7 @@ public static class CommandLineParser
                         new KernelCommandAndEventTextStreamSender(
                             Console.Out,
                             KernelHost.CreateHostUri("stdio")),
-                        new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventTextReaderReceiver(Console.In)), KernelHost.CreateHostUriForCurrentProcessId());
+                        new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventTextStreamReceiver(Console.In)), KernelHost.CreateHostUriForCurrentProcessId());
 
                     if (isVSCode)
                     {

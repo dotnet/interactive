@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -27,7 +28,7 @@ public class KernelCommandAndEventTextStreamSenderTests
         var envelopeMessage = buffer.ToString();
 
         envelopeMessage.Should()
-                       .BeEquivalentTo(KernelEventEnvelope.Serialize(KernelEventEnvelope.Create(kernelEvent)) + KernelCommandAndEventTextStreamSender.Delimiter);
+                       .BeEquivalentTo(KernelEventEnvelope.Serialize(KernelEventEnvelope.Create(kernelEvent)) + '\n');
     }
 
     [Fact]
@@ -42,6 +43,6 @@ public class KernelCommandAndEventTextStreamSenderTests
         var envelopeMessage = buffer.ToString();
 
         envelopeMessage.Should()
-                       .BeEquivalentTo(KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)) + KernelCommandAndEventTextStreamSender.Delimiter);
+                       .BeEquivalentTo(KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)) + '\n');
     }
 }

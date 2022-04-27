@@ -12,6 +12,7 @@ Microsoft.DotNet.Interactive
     .ctor(Kernel kernel)
     public System.CommandLine.Option<System.IO.FileInfo> FromFileOption { get;}
     public System.CommandLine.Option<System.Uri> FromUrlOption { get;}
+    public System.CommandLine.Option<System.String> FromValueOption { get;}
     public System.CommandLine.Option<System.String> MimeTypeOption { get;}
     public System.CommandLine.Option<System.String> NameOption { get;}
     protected System.Threading.Tasks.Task Handle(KernelInvocationContext kernelInvocationContext, System.CommandLine.Invocation.InvocationContext commandLineInvocationContext)

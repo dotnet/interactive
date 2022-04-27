@@ -3,9 +3,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Management.Automation.Internal;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -275,6 +277,44 @@ x")]
                         .Should().BeTrue();
 
             jsVariable.Should().Be(123);
+        }
+
+        [Fact]
+        public async Task CSharpKernel_can_prompt_for_input_from_JavaScript_via_a_ProxyKernel()
+        {
+            var (compositeKernel, jsKernel) = await CreateCompositeKernelWithJavaScriptProxyKernel();
+
+            var valueKernel = new KeyValueStoreKernel().UseValueSharing();
+            compositeKernel.Add(valueKernel);
+
+            jsKernel.RegisterCommandHandler<RequestInput>((cmd, context) =>
+            {
+                context.Publish(new InputProduced("hello!", cmd));
+                return Task.CompletedTask;
+            });
+
+            compositeKernel.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), "javascript");
+            
+            var valueName = "input";
+
+            // FIX: (CSharpKernel_can_prompt_for_input_from_JavaScript_via_a_ProxyKernel) the newline is causing the value to get overwritten
+            var submitCode = new SubmitCode($@"
+#!value --name {valueName} --from-value @input:input-please
+");
+            var result = await compositeKernel.SendAsync(submitCode);
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should().NotContainErrors();
+
+            valueKernel
+                .TryGetValue<string>(valueName, out var inputValue)
+                .Should()
+                .BeTrue();
+
+            inputValue.Should().Be("hello!");
+
+            throw new NotImplementedException();
         }
 
         private async Task<(CompositeKernel, FakeKernel)> CreateCompositeKernelWithJavaScriptProxyKernel()

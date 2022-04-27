@@ -73,7 +73,7 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
             _remoteHostUri = KernelHost.CreateHostUriForProcessId(_process.Id);
 
             _receiver = new MultiplexingKernelCommandAndEventReceiver(
-                new KernelCommandAndEventTextReaderReceiver(_process.StandardOutput));
+                new KernelCommandAndEventTextStreamReceiver(_process.StandardOutput));
             _sender = new KernelCommandAndEventTextStreamSender(
                 _process.StandardInput,
                 _remoteHostUri);

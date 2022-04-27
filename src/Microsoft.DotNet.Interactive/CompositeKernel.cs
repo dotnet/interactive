@@ -254,6 +254,11 @@ namespace Microsoft.DotNet.Interactive
 
                 var kernel = this.FindKernel(actionDirectiveNode.ParentKernelName);
 
+                if (kernel is null)
+                {
+                    yield break;
+                }
+
                 var languageKernelDirectiveParser = kernel.SubmissionParser.GetDirectiveParser();
 
                 if (IsDirectiveDefinedIn(languageKernelDirectiveParser))

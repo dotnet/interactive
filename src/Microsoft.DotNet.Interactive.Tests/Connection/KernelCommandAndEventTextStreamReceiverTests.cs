@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
             var message = KernelEventEnvelope.Serialize( KernelEventEnvelope.Create(kernelEvent));
 
             using var stringReader = new StringReader(message);
-            var receiver = new KernelCommandAndEventTextReaderReceiver(stringReader);
+            var receiver = new KernelCommandAndEventTextStreamReceiver(stringReader);
 
             var d = await receiver.CommandsAndEventsAsync(CancellationToken.None).FirstAsync();
 
@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
             var message = KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand));
 
             using var stringReader = new StringReader(message);
-            var receiver = new KernelCommandAndEventTextReaderReceiver(stringReader);
+            var receiver = new KernelCommandAndEventTextStreamReceiver(stringReader);
 
             var d = await receiver.CommandsAndEventsAsync(CancellationToken.None).FirstAsync();
 
@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
         {
             var invalidJson = " { hello";
             using var stringReader = new StringReader(invalidJson);
-            var receiver = new KernelCommandAndEventTextReaderReceiver(stringReader);
+            var receiver = new KernelCommandAndEventTextStreamReceiver(stringReader);
 
             var d = await receiver.CommandsAndEventsAsync(CancellationToken.None).FirstAsync();
 

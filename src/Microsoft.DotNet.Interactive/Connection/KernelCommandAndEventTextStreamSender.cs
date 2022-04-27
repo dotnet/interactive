@@ -7,28 +7,32 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
     public class KernelCommandAndEventTextStreamSender : IKernelCommandAndEventSender
     {
-        public Uri RemoteHostUri { get; }
         private readonly TextWriter _writer;
 
-        public KernelCommandAndEventTextStreamSender(TextWriter writer, Uri remoteHostUri)
+        public KernelCommandAndEventTextStreamSender(
+            TextWriter writer, 
+            Uri remoteHostUri)
         {
             RemoteHostUri = remoteHostUri;
             _writer = writer ?? throw new ArgumentNullException(nameof(writer));
+            _writer.NewLine = "\n";
         }
+
+        public Uri RemoteHostUri { get; }
 
         public async Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             
             // the entirety of the content (envelope and the trailing newline) needs to be sent atomically to prevent interleaving between rapid outputs
-            var content = KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)) + Delimiter;
-            await _writer.WriteAsync(content);
+            var content = KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand));
+            
+            await _writer.WriteLineAsync(content);
             await _writer.FlushAsync();
         }
 
@@ -37,11 +41,9 @@ namespace Microsoft.DotNet.Interactive.Connection
             cancellationToken.ThrowIfCancellationRequested();
 
             // the entirety of the content (envelope and the trailing newline) needs to be sent atomically to prevent interleaving between rapid outputs
-            var content = KernelEventEnvelope.Serialize(KernelEventEnvelope.Create(kernelEvent)) + Delimiter;
-            await _writer.WriteAsync(content);
+            var content = KernelEventEnvelope.Serialize(KernelEventEnvelope.Create(kernelEvent));
+            await _writer.WriteLineAsync(content);
             await _writer.FlushAsync();
         }
-
-        public static string Delimiter => "\r\n";
     }
 }

@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.CommandLine;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -12,50 +13,54 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
-public class VariableSharingWithinMagicCommandsTests
+public class VariableSharingWithinMagicCommandsTests : IDisposable
 {
+    private readonly CompositeKernel _kernel;
+    private string receivedValue = null;
+
+    public VariableSharingWithinMagicCommandsTests()
+    {
+        _kernel = CreateKernel();
+
+        Option<string> valueOption = new("--value");
+        Command shim = new("#!shim")
+        {
+            valueOption
+        };
+        shim.SetHandler(
+            (string value) => receivedValue = value,
+            valueOption);
+
+        _kernel.FindKernel("csharp").AddDirective(shim);
+    }
+
+    public void Dispose()
+    {
+        _kernel.Dispose();
+    }
+
     [Fact]
     public async Task Magic_commands_can_interpolate_variables_from_the_current_kernel()
     {
-        using var kernel = CreateKernel();
+        await _kernel.SendAsync(new SubmitCode("var x = 123;", "csharp"));
 
-        int receivedValue = 0;
-
-        Option<int> valueOption = new("--value");
-        Command shim = new("#!shim") { valueOption };
-        shim.SetHandler((int value) => receivedValue = value, valueOption);
-
-        kernel.FindKernel("csharp").AddDirective(shim);
-
-        await kernel.SendAsync(new SubmitCode("var x = 123;", "csharp"));
-
-        var result = await kernel.SendAsync(new SubmitCode("#!shim --value @x", "csharp"));
+        var result = await _kernel.SendAsync(new SubmitCode("#!shim --value @x", "csharp"));
 
         using var events = result.KernelEvents.ToSubscribedList();
 
         events.Should().NotContainErrors();
 
-        receivedValue.Should().Be(123);
+        receivedValue.Should().Be("123");
     }
 
     [Fact]
     public async Task Magic_commands_can_interpolate_variables_from_a_different_kernel()
     {
-        using var kernel = CreateKernel();
-
-        string receivedValue = null;
-
-        Option<string> valueOption = new("--value");
-        Command shim = new("#!shim") { valueOption };
-        shim.SetHandler((string value) => receivedValue = value, valueOption);
-
-        kernel.FindKernel("csharp").AddDirective(shim);
-
         var valueX = "value from the value kernel";
 
-        await kernel.SendAsync(new SubmitCode($"#!value-kernel --name x\n{valueX}"));
+        await _kernel.SendAsync(new SubmitCode($"#!value-kernel --name x\n{valueX}"));
 
-        var result = await kernel.SendAsync(new SubmitCode("#!shim --value @value-kernel:x", "csharp"));
+        var result = await _kernel.SendAsync(new SubmitCode("#!shim --value @value-kernel:x", "csharp"));
 
         using var events = result.KernelEvents.ToSubscribedList();
 
@@ -67,19 +72,9 @@ public class VariableSharingWithinMagicCommandsTests
     [Fact]
     public async Task Magic_commands_cannot_interpolate_complex_objects()
     {
-        using var kernel = CreateKernel();
+        await _kernel.SendAsync(new SubmitCode("var x = new { name = \"my object\", shareability = 0 };", "csharp"));
 
-        int receivedValue = 0;
-
-        Option<int> valueOption = new("--value");
-        Command shim = new("#!shim") { valueOption };
-        shim.SetHandler((int value) => receivedValue = value, valueOption);
-
-        kernel.FindKernel("csharp").AddDirective(shim);
-
-        await kernel.SendAsync(new SubmitCode("var x = new { name = \"my object\", shareability = 0 };", "csharp"));
-
-        var result = await kernel.SendAsync(new SubmitCode("#!shim --value @x", "csharp"));
+        var result = await _kernel.SendAsync(new SubmitCode("#!shim --value @x", "csharp"));
 
         using var events = result.KernelEvents.ToSubscribedList();
 
@@ -94,17 +89,7 @@ public class VariableSharingWithinMagicCommandsTests
     [Fact]
     public async Task When_variable_does_not_exist_then_an_error_is_returned()
     {
-         using var kernel = CreateKernel();
-
-        string receivedValue = null;
-
-        Option<string> valueOption = new("--value");
-        Command shim = new("#!shim") { valueOption };
-        shim.SetHandler((string value) => receivedValue = value, valueOption);
-
-        kernel.FindKernel("csharp").AddDirective(shim);
-
-        var result = await kernel.SendAsync(new SubmitCode("#!shim --value @x", "csharp"));
+        var result = await _kernel.SendAsync(new SubmitCode("#!shim --value @x", "csharp"));
 
         using var events = result.KernelEvents.ToSubscribedList();
 
@@ -116,6 +101,25 @@ public class VariableSharingWithinMagicCommandsTests
               .Message
               .Should()
               .Contain("Cannot find value named: x");
+    }
+
+    [Fact]
+    public async Task Language_service_requests_do_not_trigger_value_interpolation()
+    {
+        var inputWasRequested = false;
+        _kernel.RegisterCommandHandler<RequestInput>((input, context) =>
+        {
+            inputWasRequested = true;
+            return Task.CompletedTask;
+        });
+        _kernel.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), _kernel.Name);
+
+        var code = "#!share @input:stuff";
+        var result = await _kernel.SendAsync(new RequestCompletions(code, new LinePosition(0, code.Length)));
+
+        result.KernelEvents.ToSubscribedList().Should().NotContainErrors();
+
+        inputWasRequested.Should().BeFalse();
     }
 
     private static CompositeKernel CreateKernel() =>

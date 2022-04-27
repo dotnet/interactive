@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         public void Dispose() => _disposables.Dispose();
 
         [Fact]
-        public async Task When_target_kernel_name_is_specified_then_proxyKernel_does_not_split_magics()
+        public async Task When_target_kernel_name_is_specified_then_ProxyKernel_does_not_split_magics()
         {
             var handledCommands = new List<KernelCommand>();
             using var localCompositeKernel = new CompositeKernel();

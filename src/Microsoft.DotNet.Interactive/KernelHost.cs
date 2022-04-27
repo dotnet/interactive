@@ -116,7 +116,10 @@ namespace Microsoft.DotNet.Interactive
                     }
                     else if (commandOrEvent.Command is { })
                     {
-                        var _ = _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
+                        var _ = Task.Run(() =>
+                        {
+                            var _ = _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
+                        }, _cancellationTokenSource.Token);
                     }
                 }
             }

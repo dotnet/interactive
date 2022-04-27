@@ -323,10 +323,15 @@ namespace Microsoft.DotNet.Interactive.Parsing
         {
             errorMessage = null;
             replacementTokens = null;
-
+            
             if (ContainsInvalidCharactersForValueReference(tokenToReplace.AsSpan()))
             {
                 // F# verbatim strings should not be replaced but it's hard to detect them because the quotes are also stripped away by the tokenizer, so we use slashes as a proxy to detect file paths
+                return false;
+            }
+
+            if (KernelInvocationContext.Current?.Command is not SubmitCode)
+            {
                 return false;
             }
 
