@@ -1,14 +1,14 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { CompositeKernel } from "./vscode-common/dotnet-interactive/compositeKernel";
-import * as genericChannel from "./vscode-common/dotnet-interactive/genericChannel";
-import { JavascriptKernel } from "./vscode-common/dotnet-interactive/javascriptKernel";
-import { Kernel } from "./vscode-common/dotnet-interactive/kernel";
-import * as contracts from "./vscode-common/dotnet-interactive/contracts";
-import { isKernelEventEnvelope } from "./vscode-common/dotnet-interactive/utilities";
-import { Logger } from "./vscode-common/dotnet-interactive/logger";
-import { KernelHost } from "./vscode-common/dotnet-interactive/kernelHost";
+import { CompositeKernel } from "../compositeKernel";
+import * as genericChannel from "../genericChannel";
+import { JavascriptKernel } from "../javascriptKernel";
+import { Kernel } from "../kernel";
+import * as contracts from "../contracts";
+import { isKernelEventEnvelope } from "../utilities";
+import { Logger } from "../logger";
+import { KernelHost } from "../kernelHost";
 
 export function configure(global?: any) {
     if (!global) {
@@ -33,6 +33,7 @@ export function configure(global?: any) {
             return (<any>require).config(confing) || require;
         };
     }
+
 
     global.kernel = {
         get root() {

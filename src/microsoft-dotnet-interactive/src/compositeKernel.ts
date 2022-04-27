@@ -20,7 +20,7 @@ export class CompositeKernel extends Kernel {
     }
 
     get childKernels() {
-        return Array.from(this._namesTokernelMap.values());
+        return [...this._kernelToNamesMap.keys()];
     }
 
     get host(): KernelHost | null {
@@ -32,7 +32,7 @@ export class CompositeKernel extends Kernel {
         if (this._host) {
             this._host.addKernelInfo(this, { localName: this.name.toLowerCase(), aliases: [], supportedDirectives: [], supportedKernelCommands: [] });
 
-            for (let kernel of this._kernelToNamesMap.keys()) {
+            for (let kernel of this.childKernels) {
                 let aliases = [];
                 for (let name of this._kernelToNamesMap.get(kernel)!) {
                     if (name !== kernel.name) {

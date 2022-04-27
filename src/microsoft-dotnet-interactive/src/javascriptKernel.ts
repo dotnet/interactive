@@ -4,13 +4,19 @@
 import * as contracts from "./contracts";
 import { ConsoleCapture } from "./consoleCapture";
 import * as kernel from "./kernel";
+import { Logger } from "./logger";
 
 export class JavascriptKernel extends kernel.Kernel {
+    private suppressedLocals: Set<string>;
 
     constructor() {
         super("javascript");
-        this.registerCommandHandler({ commandType: contracts.SubmitCodeType, handle: this.handleSubmitCode });
+        this.suppressedLocals = new Set<string>(this.allLocalVariableNames());
+        this.registerCommandHandler({ commandType: contracts.SubmitCodeType, handle: invocation => this.handleSubmitCode(invocation) });
+        this.registerCommandHandler({ commandType: contracts.RequestValueInfosType, handle: invocation => this.handleRequestValueInfos(invocation) });
+        this.registerCommandHandler({ commandType: contracts.RequestValueType, handle: invocation => this.handleRequestValue(invocation) });
     }
+
     private async handleSubmitCode(invocation: kernel.IKernelCommandInvocation): Promise<void> {
         const submitCode = <contracts.SubmitCode>invocation.commandEnvelope.command;
         const code = submitCode.code;
@@ -24,8 +30,8 @@ export class JavascriptKernel extends kernel.Kernel {
             const AsyncFunction = eval(`Object.getPrototypeOf(async function(){}).constructor`);
             const evaluator = AsyncFunction("console", code);
             result = await evaluator(capture);
-            const formattedValue = formatValue(result);
-            if (formattedValue) {
+            if (result !== undefined) {
+                const formattedValue = formatValue(result, 'application/json');
                 const event: contracts.ReturnValueProduced = {
                     formattedValues: [formattedValue]
                 };
@@ -43,21 +49,57 @@ export class JavascriptKernel extends kernel.Kernel {
             }
         }
     }
+
+    private handleRequestValueInfos(invocation: kernel.IKernelCommandInvocation): Promise<void> {
+        const valueInfos: contracts.KernelValueInfo[] = this.allLocalVariableNames().filter(v => !this.suppressedLocals.has(v)).map(v => ({ name: v }));
+        const event: contracts.ValueInfosProduced = {
+            valueInfos
+        };
+        invocation.context.publish({ eventType: contracts.ValueInfosProducedType, event, command: invocation.commandEnvelope });
+        return Promise.resolve();
+    }
+
+    private handleRequestValue(invocation: kernel.IKernelCommandInvocation): Promise<void> {
+        const requestValue = <contracts.RequestValue>invocation.commandEnvelope.command;
+        const rawValue = this.getLocalVariable(requestValue.name);
+        const formattedValue = formatValue(rawValue, requestValue.mimeType || 'application/json');
+        Logger.default.info(`returning ${JSON.stringify(formattedValue)} for ${requestValue.name}`);
+        const event: contracts.ValueProduced = {
+            name: requestValue.name,
+            formattedValue
+        };
+        invocation.context.publish({ eventType: contracts.ValueProducedType, event, command: invocation.commandEnvelope });
+        return Promise.resolve();
+    }
+
+    private allLocalVariableNames(): string[] {
+        const result: string[] = [];
+        for (const key in globalThis) {
+            if (typeof (<any>globalThis)[key] !== 'function') {
+                result.push(key);
+            }
+        }
+
+        return result;
+    }
+
+    private getLocalVariable(name: string): any {
+        return (<any>globalThis)[name];
+    }
 }
 
-export function formatValue(arg: any): contracts.FormattedValue | undefined {
-    if (arg === undefined) {
-        return undefined;
-    }
-    let mimeType: string;
+export function formatValue(arg: any, mimeType: string): contracts.FormattedValue {
     let value: string;
 
-    if (typeof arg !== 'object' && !Array.isArray(arg)) {
-        mimeType = 'text/plain';
-        value = arg.toString();
-    } else {
-        mimeType = 'application/json';
-        value = JSON.stringify(arg);
+    switch (mimeType) {
+        case 'text/plain':
+            value = arg?.toString() || 'undefined';
+            break;
+        case 'application/json':
+            value = JSON.stringify(arg);
+            break;
+        default:
+            throw new Error(`unsupported mime type: ${mimeType}`);
     }
 
     return {

@@ -162,3 +162,36 @@ export class Kernel {
         }
     }
 }
+
+export function submitCommandAndGetResult<TEvent extends contracts.KernelEvent>(kernel: Kernel, commandEnvelope: contracts.KernelCommandEnvelope, expectedEventType: contracts.KernelEventType): Promise<TEvent> {
+    return new Promise<TEvent>(async (resolve, reject) => {
+        let handled = false;
+        const disposable = kernel.subscribeToKernelEvents(eventEnvelope => {
+            if (eventEnvelope.command?.token === commandEnvelope.token) {
+                switch (eventEnvelope.eventType) {
+                    case contracts.CommandFailedType:
+                        if (!handled) {
+                            handled = true;
+                            let err = <contracts.CommandFailed>eventEnvelope.event;
+                            reject(err);
+                        }
+                        break;
+                    case contracts.CommandSucceededType:
+                        if (!handled) {
+                            handled = true;
+                            reject('Command was handled before reporting expected result.');
+                        }
+                        break;
+                    default:
+                        if (eventEnvelope.eventType === expectedEventType) {
+                            handled = true;
+                            let event = <TEvent>eventEnvelope.event;
+                            resolve(event);
+                        }
+                        break;
+                }
+            }
+        });
+        kernel.send(commandEnvelope).then(() => disposable.dispose()).catch(() => disposable.dispose());
+    });
+}

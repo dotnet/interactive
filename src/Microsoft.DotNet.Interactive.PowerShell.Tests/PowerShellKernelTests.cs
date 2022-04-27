@@ -240,5 +240,26 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                 e => e.Should().BeOfType<CommandSucceeded>()
             );
         }
+
+        [Fact]
+        public async Task RequestValueInfos_only_returns_user_defined_values()
+        {
+            using var kernel = CreateKernel(Language.PowerShell);
+            await kernel.SendAsync(new SubmitCode("$theAnswer = 42"));
+
+            var result = await kernel.SendAsync(new RequestValueInfos(kernel.Name));
+            var events = result.KernelEvents.ToSubscribedList();
+            events
+                .Should()
+                .ContainSingle<ValueInfosProduced>()
+                .Which
+                .ValueInfos
+                .Should()
+                .ContainSingle()
+                .Which
+                .Name
+                .Should()
+                .Be("theAnswer");
+        }
     }
 }

@@ -117,8 +117,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public IReadOnlyCollection<KernelValueInfo> GetValueInfos() =>
             ScriptState?.Variables
-                       .Select(v => new KernelValueInfo(v.Name, v.Type))
-                       .Distinct()
+                       .GroupBy(v => v.Name)
+                       .Select(g => new KernelValueInfo(g.Key, g.Last().Type))
                        .ToArray() ??
             Array.Empty<KernelValueInfo>();
 

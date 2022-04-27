@@ -144,8 +144,7 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
             if (isNotNull(this.childProcess)) {
                 try {
                     // send the command
-                    this.childProcess.stdin.write(str);
-                    this.childProcess.stdin.write('\n');
+                    this.childProcess.stdin.write(str + '\n');
 
                     // Start ping the timer
                     // ====================

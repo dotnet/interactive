@@ -38,5 +38,19 @@ namespace Microsoft.DotNet.Interactive.CSharp.Tests
             variableCountBeforeEvaluation.Should().Be(0);
             variableCountAfterEvaluation.Should().Be(1);
         }
+
+        [Fact]
+        public async Task GetValueInfos_only_returns_non_shadowed_values()
+        {
+            using var kernel = new CSharpKernel();
+
+            await kernel.SendAsync(new SubmitCode("var x = 1;"));
+            await kernel.SendAsync(new SubmitCode("var x = \"two\";"));
+
+            var valueInfos = kernel.GetValueInfos();
+            valueInfos
+                .Should()
+                .ContainSingle(v => v.Name == "x");
+        }
     }
 }
