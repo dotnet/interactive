@@ -459,8 +459,6 @@ Microsoft.DotNet.Interactive.Connection
     .ctor()
     public System.IO.FileSystemInfo Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
     public System.Void Write(System.Text.Json.Utf8JsonWriter writer, System.IO.FileSystemInfo value, System.Text.Json.JsonSerializerOptions options)
-  public abstract class IInputTextStream, System.IDisposable, System.IObservable<System.String>
-    public System.Boolean IsStarted { get;}
   public abstract class IKernelCommandAndEventReceiver
     public System.Collections.Generic.IAsyncEnumerable<CommandOrEvent> CommandsAndEventsAsync(System.Threading.CancellationToken cancellationToken)
   public abstract class IKernelCommandAndEventSender
@@ -494,11 +492,10 @@ Microsoft.DotNet.Interactive.Connection
   public abstract class KernelCommandAndEventReceiverBase, IKernelCommandAndEventReceiver
     public System.Collections.Generic.IAsyncEnumerable<CommandOrEvent> CommandsAndEventsAsync(System.Threading.CancellationToken cancellationToken)
     protected System.Threading.Tasks.Task<CommandOrEvent> ReadCommandOrEventAsync(System.Threading.CancellationToken cancellationToken)
-  public class KernelCommandAndEventTextReaderReceiver : KernelCommandAndEventDeserializingReceiverBase, IKernelCommandAndEventReceiver
-    .ctor(System.IO.TextReader reader)
+  public class KernelCommandAndEventTextStreamReceiver : KernelCommandAndEventDeserializingReceiverBase, IKernelCommandAndEventReceiver
+    .ctor(System.IO.TextReader reader, System.String name = null)
     protected System.Threading.Tasks.Task<System.String> ReadMessageAsync(System.Threading.CancellationToken cancellationToken)
   public class KernelCommandAndEventTextStreamSender, IKernelCommandAndEventSender
-    public static System.String Delimiter { get;}
     .ctor(System.IO.TextWriter writer, System.Uri remoteHostUri)
     public System.Uri RemoteHostUri { get;}
     public System.Threading.Tasks.Task SendAsync(Microsoft.DotNet.Interactive.Commands.KernelCommand kernelCommand, System.Threading.CancellationToken cancellationToken)
