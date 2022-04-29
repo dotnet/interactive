@@ -62,7 +62,7 @@ type FSharpScript(?additionalArgs: string[], ?quiet: bool, ?langVersion: LangVer
     /// <param name="line">The 1-based line index</param>
     /// <param name="column">The 0-based column index</param>
     member _.GetCompletionItems(text: string, line: int, column: int) =
-        async {
+        task {
             let parseResults, checkResults, _projectResults = fsi.ParseAndCheckInteraction(text)
             let lineText = text.Split('\n').[line - 1]
             let partialName = QuickParse.GetPartialLongNameEx(lineText, column - 1)

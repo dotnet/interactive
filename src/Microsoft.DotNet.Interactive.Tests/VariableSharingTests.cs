@@ -296,8 +296,7 @@ x")]
             compositeKernel.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), "javascript");
             
             var valueName = "input";
-
-            // FIX: (CSharpKernel_can_prompt_for_input_from_JavaScript_via_a_ProxyKernel) the newline is causing the value to get overwritten
+          
             var submitCode = new SubmitCode($@"
 #!value --name {valueName} --from-value @input:input-please
 ");
@@ -313,8 +312,6 @@ x")]
                 .BeTrue();
 
             inputValue.Should().Be("hello!");
-
-            throw new NotImplementedException();
         }
 
         private async Task<(CompositeKernel, FakeKernel)> CreateCompositeKernelWithJavaScriptProxyKernel()

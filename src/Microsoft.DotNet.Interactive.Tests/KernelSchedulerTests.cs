@@ -113,6 +113,42 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
+        public async Task Deferred_work_in_progress_is_allowed_to_complete_when_the_work_that_triggered_it_is_cancelled()
+        {
+            using var scheduler = new KernelScheduler<int, int>();
+            var cts = new CancellationTokenSource();
+
+            var deferredOperations = new[] { 1, 2, 3 };
+            var completedDeferredOperations = new List<int>();
+
+            scheduler.RegisterDeferredOperationSource(
+                (_, _) => deferredOperations, 
+              async i =>
+              {
+                  if (!cts.IsCancellationRequested)
+                  {
+                      cts.Cancel();
+                  }
+
+                  await Task.Delay(100);
+                  completedDeferredOperations.Add(i);
+                  return i;
+              });
+
+            var run = () => scheduler.RunAsync(4, Task.FromResult, cancellationToken: cts.Token);
+
+            run.Invoking(async r => await r())
+               .Should()
+               .Throw<OperationCanceledException>();
+
+            await Task.Delay(1000);
+            
+            completedDeferredOperations
+                .Should()
+                .BeEquivalentTo(deferredOperations);
+        }
+
+        [Fact]
         public void disposing_scheduler_prevents_later_scheduled_work_from_executing()
         {
             using var scheduler = new KernelScheduler<int, int>();

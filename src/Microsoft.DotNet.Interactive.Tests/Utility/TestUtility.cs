@@ -24,7 +24,6 @@ using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.Tests.Utility
 {
-    [DebuggerStepThrough]
     public static class AssertionExtensions
     {
         public static GenericCollectionAssertions<T> AllSatisfy<T>(

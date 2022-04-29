@@ -466,6 +466,29 @@ let x = 123 // with some intervening code
         }
 
         [Fact]
+        public void Whitespace_only_nodes_do_not_generate_separate_SubmitCode_commands()
+        {
+            using var kernel = new CompositeKernel
+            {
+                new FakeKernel("one"),
+                new FakeKernel("two")
+            };
+
+            kernel.DefaultKernelName = "two";
+
+            var commands = kernel.SubmissionParser.SplitSubmission(
+                new SubmitCode(@"
+
+#!one
+
+#!two
+
+"));
+
+            commands.Should().NotContain(c => c is SubmitCode);
+        }
+
+        [Fact]
         public void ChooseKernelDirective_parserResults_are_available_in_the_split_commands()
         {
             using var kernel = new CompositeKernel

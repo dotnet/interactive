@@ -47,7 +47,17 @@ namespace Microsoft.DotNet.Interactive.Parsing
             SplitSubmission(
                 submitCode,
                 submitCode.Code,
-                (languageNode, parent, kernelNameNode) => new SubmitCode(languageNode, submitCode.SubmissionType, parent, kernelNameNode));
+                (languageNode, parent, kernelNameNode) =>
+                {
+                    if (!string.IsNullOrWhiteSpace(languageNode.Text))
+                    {
+                        return new SubmitCode(languageNode, submitCode.SubmissionType, parent, kernelNameNode);
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                });
 
         public IReadOnlyList<KernelCommand> SplitSubmission(RequestDiagnostics requestDiagnostics)
         {
@@ -177,8 +187,12 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         else
                         {
                             var command = createCommand(languageNode, originalCommand, lastKernelNameNode);
-                            command.KernelChooserParseResult = lastKernelNameNode?.GetDirectiveParseResult();
-                            commands.Add(command);
+
+                            if (command is { })
+                            {
+                                command.KernelChooserParseResult = lastKernelNameNode?.GetDirectiveParseResult();
+                                commands.Add(command);
+                            }
                         }
                     }
                         break;

@@ -153,7 +153,7 @@ type FSharpKernel () as this =
         }
 
     let getCompletionItem (declarationItem: DeclarationListItem) =
-        async {
+        task {
             let kind = getKindString declarationItem.Glyph
             let filterText = getFilterText declarationItem
             let! documentation = getDocumentation declarationItem
@@ -188,7 +188,7 @@ type FSharpKernel () as this =
         }
 
     let handleSubmitCode (codeSubmission: SubmitCode) (context: KernelInvocationContext) =
-        async {
+        task {
             let codeSubmissionReceived = CodeSubmissionReceived(codeSubmission)
             context.Publish(codeSubmissionReceived)
             let tokenSource = cancellationTokenSource
@@ -234,12 +234,12 @@ type FSharpKernel () as this =
         }
 
     let handleRequestCompletions (requestCompletions: RequestCompletions) (context: KernelInvocationContext) =
-        async {
+        task {
             let! declarationItems = script.Value.GetCompletionItems(requestCompletions.Code, requestCompletions.LinePosition.Line + 1, requestCompletions.LinePosition.Character)
             let! completionItems =
                 declarationItems
                 |> Array.map getCompletionItem
-                |> Async.Sequential
+                |> Task.WhenAll
             context.Publish(CompletionsProduced(completionItems, requestCompletions))
         }
 
@@ -359,7 +359,7 @@ type FSharpKernel () as this =
         }
    
     let handleRequestDiagnostics (requestDiagnostics: RequestDiagnostics) (context: KernelInvocationContext) =
-        async {
+        task {
             let _parseResults, checkFileResults, _checkProjectResults = script.Value.Fsi.ParseAndCheckInteraction(requestDiagnostics.Code)
             let errors = checkFileResults.Diagnostics
             let diagnostics = errors |> Array.map getDiagnostic |> fun x -> x.ToImmutableArray()
@@ -412,16 +412,16 @@ type FSharpKernel () as this =
     member _.PackageRestoreContext = _packageRestoreContext.Value
 
     interface IKernelCommandHandler<RequestCompletions> with
-        member this.HandleAsync(command: RequestCompletions, context: KernelInvocationContext) = handleRequestCompletions command context |> Async.StartAsTask :> Task
+        member this.HandleAsync(command: RequestCompletions, context: KernelInvocationContext) = handleRequestCompletions command context
 
     interface IKernelCommandHandler<RequestDiagnostics> with
-        member this.HandleAsync(command: RequestDiagnostics, context: KernelInvocationContext) = handleRequestDiagnostics command context |> Async.StartAsTask :> Task
+        member this.HandleAsync(command: RequestDiagnostics, context: KernelInvocationContext) = handleRequestDiagnostics command context 
 
     interface IKernelCommandHandler<RequestHoverText> with
         member this.HandleAsync(command: RequestHoverText, context: KernelInvocationContext) = handleRequestHoverText command context |> Async.StartAsTask :> Task
 
     interface IKernelCommandHandler<SubmitCode> with
-        member this.HandleAsync(command: SubmitCode, context: KernelInvocationContext) = handleSubmitCode command context |> Async.StartAsTask :> Task
+        member this.HandleAsync(command: SubmitCode, context: KernelInvocationContext) = handleSubmitCode command context
 
     interface IKernelCommandHandler<ChangeWorkingDirectory> with
         member this.HandleAsync(command: ChangeWorkingDirectory, context: KernelInvocationContext) = handleChangeWorkingDirectory command context |> Async.StartAsTask :> Task

@@ -659,30 +659,33 @@ $${languageSpecificCode}
         }
 
         [Theory]
-        [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
+        [InlineData(Language.CSharp)]
         public async Task RequestCompletions_prevents_RequestDiagnostics_from_producing_events(Language language)
         {
             var kernel = CreateKernel(language);
-            
+
+            await kernel.SubmitCodeAsync(" ");
+
             MarkupTestFile.GetLineAndColumn("Console.$$", out var output, out var line, out var column);
             
             var requestDiagnosticsCommand = new RequestDiagnostics(output);
 
             var requestCompletionsCommand = new RequestCompletions(output, new LinePosition(line,column));
+
             var results = await Task.WhenAll(
                 kernel.SendAsync(requestCompletionsCommand),
-                kernel.SendAsync(requestDiagnosticsCommand)
-            );
+                kernel.SendAsync(requestDiagnosticsCommand));
 
             var events = results.SelectMany(r => r.KernelEvents.ToSubscribedList()).ToList();
 
             events.Select(e => e.GetType())
-                .Where(t => t == typeof(CommandSucceeded)).Should()
-                .HaveCount(2);
+                  .Where(t => t == typeof(CommandSucceeded))
+                  .Should()
+                  .HaveCount(2);
 
             events.Should()
-                .NotContain(e => e.GetType() == typeof(DiagnosticsProduced) && e.Command == requestDiagnosticsCommand);
+                  .NotContain(e => e.GetType() == typeof(DiagnosticsProduced) && e.Command == requestDiagnosticsCommand);
         }
 
         [Theory]

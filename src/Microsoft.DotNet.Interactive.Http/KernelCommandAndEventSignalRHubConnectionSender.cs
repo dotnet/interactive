@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.Http
 
         public async Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
         {
-            // FIX: remove this one as this is for backward compatibility
+            // TODO: remove this one as this is for backward compatibility
             await _hubConnection.SendAsync("submitCommand", KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)), cancellationToken: cancellationToken);
 
             await _hubConnection.SendAsync("kernelCommandFromServer", KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)), cancellationToken: cancellationToken);

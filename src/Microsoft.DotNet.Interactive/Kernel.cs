@@ -290,7 +290,7 @@ namespace Microsoft.DotNet.Interactive
             TrySetHandler(command, context);
             await command.InvokeAsync(context);
         }
-        
+
         public async Task<KernelCommandResult> SendAsync(
             KernelCommand command,
             CancellationToken cancellationToken)
@@ -301,6 +301,8 @@ namespace Microsoft.DotNet.Interactive
             }
 
             command.ShouldPublishCompletionEvent ??= true;
+
+            await Task.Yield();
 
             var context = KernelInvocationContext.Establish(command);
 
@@ -432,8 +434,10 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private async Task RunOnFastPath(KernelInvocationContext context,
-            KernelCommand command, CancellationToken cancellationToken)
+        private async Task RunOnFastPath(
+            KernelInvocationContext context,
+            KernelCommand command, 
+            CancellationToken cancellationToken)
         {
             await RunDeferredCommandsAsync(context);
 
