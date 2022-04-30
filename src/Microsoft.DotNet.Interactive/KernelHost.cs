@@ -103,7 +103,7 @@ namespace Microsoft.DotNet.Interactive
                 TaskScheduler.Default);
 
             await _defaultSender.SendAsync(
-                new KernelReady(), 
+                new KernelReady(),
                 _cancellationTokenSource.Token);
 
             async Task ReceiverLoop()

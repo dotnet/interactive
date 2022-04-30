@@ -6,11 +6,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
-using System.Linq;
 using FluentAssertions;
 using System.Reflection;
 using System.Text.Json;
-using Pocket.For.Xunit;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
@@ -608,7 +606,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             }
         }
 
-        [LogToPocketLogger(@"c:\temp\text.log")]
         public class MimeTypeSettings : FormatterTestBase
         {
             [Theory]

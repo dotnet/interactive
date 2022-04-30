@@ -3,11 +3,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Management.Automation.Internal;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -16,10 +14,12 @@ using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
 using Pocket;
+using Pocket.For.Xunit;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
+    [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
     public class VariableSharingTests : IDisposable
     {
         private readonly CompositeDisposable _disposables = new();
@@ -229,7 +229,7 @@ x")]
                 await next(command, context);
             });
 
-            await compositeKernel.SubmitCodeAsync("var csharpVariable = 123;");
+            await compositeKernel.SubmitCodeAsync("int csharpVariable = 123;");
 
             var submitCode = new SubmitCode(@"
 #!javascript

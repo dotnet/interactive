@@ -3,7 +3,6 @@
 
 using System;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.CommandLine.NamingConventionBinder;
 using System.Linq;
 using System.Reactive.Linq;
@@ -18,6 +17,7 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
+using Pocket.For.Xunit;
 using Xunit;
 using Xunit.Abstractions;
 using DiagnosticsProduced = Microsoft.DotNet.Interactive.Events.DiagnosticsProduced;
@@ -26,6 +26,7 @@ using DiagnosticsProduced = Microsoft.DotNet.Interactive.Events.DiagnosticsProdu
 #pragma warning disable 8524
 namespace Microsoft.DotNet.Interactive.Tests
 {
+    [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
     public sealed class LanguageKernelTests : LanguageKernelTestBase
     {
         public LanguageKernelTests(ITestOutputHelper output) : base(output)
@@ -663,29 +664,21 @@ $${languageSpecificCode}
         [InlineData(Language.CSharp)]
         public async Task RequestCompletions_prevents_RequestDiagnostics_from_producing_events(Language language)
         {
-            var kernel = CreateKernel(language);
-
-            await kernel.SubmitCodeAsync(" ");
+            using var kernel = CreateKernel(language);
 
             MarkupTestFile.GetLineAndColumn("Console.$$", out var output, out var line, out var column);
-            
+
             var requestDiagnosticsCommand = new RequestDiagnostics(output);
 
-            var requestCompletionsCommand = new RequestCompletions(output, new LinePosition(line,column));
+            var requestCompletionsCommand = new RequestCompletions(output, new LinePosition(line, column));
 
-            var results = await Task.WhenAll(
-                kernel.SendAsync(requestCompletionsCommand),
-                kernel.SendAsync(requestDiagnosticsCommand));
+            // var results = await Task.WhenAll(
+            var diagnosticsResultTask = kernel.SendAsync(requestDiagnosticsCommand);
+            var completionResult = await kernel.SendAsync(requestCompletionsCommand);
 
-            var events = results.SelectMany(r => r.KernelEvents.ToSubscribedList()).ToList();
+            var diagnosticsResult = await diagnosticsResultTask;
 
-            events.Select(e => e.GetType())
-                  .Where(t => t == typeof(CommandSucceeded))
-                  .Should()
-                  .HaveCount(2);
-
-            events.Should()
-                  .NotContain(e => e.GetType() == typeof(DiagnosticsProduced) && e.Command == requestDiagnosticsCommand);
+            diagnosticsResult.KernelEvents.ToSubscribedList().Should().NotContain(e => e is DiagnosticsProduced);
         }
 
         [Theory]

@@ -110,7 +110,7 @@ namespace Microsoft.DotNet.Interactive
                 }
                 catch (Exception e)
                 {
-                    Log.Error(e);
+                    Log.Error("while executing {operation}", e, operation);
                 }
                 finally
                 {

@@ -9,7 +9,6 @@ using System.CommandLine.Parsing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -22,6 +21,11 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.ValueSharing;
+using static Pocket.Logger<Microsoft.DotNet.Interactive.Kernel>;
+using Pocket;
+using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
+using Disposable = System.Reactive.Disposables.Disposable;
+using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -455,11 +459,33 @@ namespace Microsoft.DotNet.Interactive
                 }, cancellationToken);
         }
 
-        private async Task RunDeferredCommandsAsync(KernelInvocationContext context) =>
-            await SendAsync(
-                new AnonymousKernelCommand((_, _) => Task.CompletedTask,
-                                           context.HandlingKernel.Name,
-                                           context.Command), context.CancellationToken);
+        private async Task RunDeferredCommandsAsync(KernelInvocationContext context)
+        {
+            try
+            {
+                await SendAsync(
+                    new UndeferScheduledCommands(
+                        context.HandlingKernel.Name,
+                        context.Command), context.CancellationToken);
+            }
+            catch (TaskCanceledException)
+            {
+            }
+        }
+
+        private class UndeferScheduledCommands : KernelCommand
+        {
+            public UndeferScheduledCommands(string targetKernelName, KernelCommand parent) : base(targetKernelName, parent)
+            {
+                Handler = (_, _) =>
+                {
+                    Log.Info("Undeferring commands ahead of {command}", Parent);
+                    return Task.CompletedTask;
+                };
+            }
+
+            public override string ToString() => $"Undefer commands ahead of {Parent}";
+        }
 
         internal async Task<KernelCommandResult> InvokePipelineAndCommandHandler(KernelCommand command)
         {
