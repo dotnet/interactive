@@ -85,6 +85,8 @@ namespace Microsoft.DotNet.Interactive
 
         private void ScheduledOperationRunLoop(object _)
         {
+            ExecutionContext.SuppressFlow();
+
             foreach (var operation in _topLevelScheduledOperations.GetConsumingEnumerable(_schedulerDisposalSource.Token))
             {
                 _currentTopLevelOperation.Value = operation;
