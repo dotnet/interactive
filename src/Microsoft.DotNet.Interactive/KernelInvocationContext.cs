@@ -81,30 +81,27 @@ namespace Microsoft.DotNet.Interactive
 
         public void Complete(KernelCommand command)
         {
-            lock (_current)
+            if (CommandEqualityComparer.Instance.Equals(command, Command))
             {
-                if (CommandEqualityComparer.Instance.Equals(command, Command))
+                Publish(new CommandSucceeded(command));
+                if (!_events.IsDisposed)
+                {
+                    _events.OnCompleted();
+                }
+
+                IsComplete = true;
+            }
+            else
+            {
+                if (command.ShouldPublishCompletionEvent == true)
                 {
                     Publish(new CommandSucceeded(command));
-                    if (!_events.IsDisposed)
-                    {
-                        _events.OnCompleted();
-                    }
-
-                    IsComplete = true;
                 }
-                else
-                {
-                    if (command.ShouldPublishCompletionEvent == true)
-                    {
-                        Publish(new CommandSucceeded(command));
-                    }
 
-                    if (_childCommands.TryGetValue(command, out var events) &&
-                        !events.IsDisposed)
-                    {
-                        events.OnCompleted();
-                    }
+                if (_childCommands.TryGetValue(command, out var events) &&
+                    !events.IsDisposed)
+                {
+                    events.OnCompleted();
                 }
             }
         }
@@ -208,49 +205,46 @@ namespace Microsoft.DotNet.Interactive
 
         public static KernelInvocationContext Establish(KernelCommand command)
         {
-            lock (_current)
+            if (_current.Value is null)
             {
-                if (_current.Value is null)
+                var context = new KernelInvocationContext(command);
+
+                _current.Value = context;
+            }
+            else if (_current.Value.IsComplete)
+            {
+                // FIX: (Establish) 27 tests covering this... is it consistent?
+
+                var context = new KernelInvocationContext(command);
+
+                _current.Value = context;
+            }
+            else
+            {
+                if (!CommandEqualityComparer.Instance.Equals(_current.Value.Command, command))
                 {
-                    var context = new KernelInvocationContext(command);
+                    if (command.Parent is null)
+                    {
+                        command.Parent = _current.Value.Command;
+                    }
 
-                    _current.Value = context;
-                }
-                else if (_current.Value.IsComplete)
-                {
-                    // FIX: (Establish) 27 tests covering this... is it consistent?
+                    _current.Value._childCommands.GetOrAdd(command, c =>
+                    {
+                        var replaySubject = new ReplaySubject<KernelEvent>();
 
-                    var context = new KernelInvocationContext(command);
+                        var subscription = replaySubject
+                                           .Where(e => e is not CommandSucceeded and not CommandFailed)
+                                           .Subscribe(e => _current.Value._events.OnNext(e));
 
-                    _current.Value = context;
+                        _current.Value._disposables.Add(subscription);
+                        _current.Value._disposables.Add(replaySubject);
+
+                        return replaySubject;
+                    });
                 }
                 else
                 {
-                    if (!CommandEqualityComparer.Instance.Equals(_current.Value.Command, command))
-                    {
-                        if (command.Parent is null)
-                        {
-                            command.Parent = _current.Value.Command;
-                        }
-
-                        _current.Value._childCommands.GetOrAdd(command, c =>
-                        {
-                            var replaySubject = new ReplaySubject<KernelEvent>();
-
-                            var subscription = replaySubject
-                                               .Where(e => e is not CommandSucceeded and not CommandFailed)
-                                               .Subscribe(e => _current.Value._events.OnNext(e));
-
-                            _current.Value._disposables.Add(subscription);
-                            _current.Value._disposables.Add(replaySubject);
-
-                            return replaySubject;
-                        });
-                    }
-                    else
-                    {
-                        // FIX: (Establish) 
-                    }
+                    // FIX: (Establish) 
                 }
             }
 
@@ -263,35 +257,32 @@ namespace Microsoft.DotNet.Interactive
 
         public ValueTask DisposeAsync()
         {
-            lock (_current)
+            if (_current.Value is { } active)
             {
-                if (_current.Value is { } active)
+                if (_current.Value == this)
                 {
-                    if (_current.Value == this)
-                    {
-                        _current.Value = null;
-                    }
-
-                    if (_onCompleteActions.Count > 0)
-                    {
-                        Task.Run(async () =>
-                            {
-                                foreach (var action in _onCompleteActions)
-                                {
-                                    await action.Invoke(this);
-                                }
-                            })
-                            .Wait();
-                    }
-
-                    active.Complete(Command);
-
-                    _disposables.Dispose();
+                    _current.Value = null;
                 }
 
-                // This method is not async because it would prevent the setting of _current.Value to null from flowing up to the caller.
-                return new ValueTask(Task.CompletedTask);
+                if (_onCompleteActions.Count > 0)
+                {
+                    Task.Run(async () =>
+                        {
+                            foreach (var action in _onCompleteActions)
+                            {
+                                await action.Invoke(this);
+                            }
+                        })
+                        .Wait();
+                }
+
+                active.Complete(Command);
+
+                _disposables.Dispose();
             }
+
+            // This method is not async because it would prevent the setting of _current.Value to null from flowing up to the caller.
+            return new ValueTask(Task.CompletedTask);
         }
 
         internal void CancelWithSuccess()
