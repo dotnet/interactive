@@ -208,11 +208,11 @@ public class KernelInfoTests
         {
             using var localCompositeKernel = new CompositeKernel();
             
-            var csharpKernel = new CSharpKernel();
+            var remoteCsharpKernel = new CSharpKernel();
             
             using var remoteCompositeKernel = new CompositeKernel
             {
-                csharpKernel
+                remoteCsharpKernel
             };
 
             ConnectHost.ConnectInProcessHost(
@@ -231,11 +231,17 @@ public class KernelInfoTests
                 new RequestKernelInfo(remoteKernelUri));
 
             proxyKernel
+                .KernelInfo
+                .LocalName
+                .Should()
+                .Be("csharp");
+
+            proxyKernel
                   .KernelInfo
                   .SupportedKernelCommands
                   .Select(c => c.Name)
                   .Should()
-                  .Contain(csharpKernel.KernelInfo.SupportedKernelCommands.Select(c => c.Name));
+                  .Contain(remoteCsharpKernel.KernelInfo.SupportedKernelCommands.Select(c => c.Name));
         }
     }
 
