@@ -415,11 +415,11 @@ namespace Microsoft.DotNet.Interactive
                             break;
                     }
                 }
+            }
 
-                if (currentCommandOwnsContext)
-                {
-                    await context.DisposeAsync();
-                }
+            if (currentCommandOwnsContext)
+            {
+                await context.DisposeAsync();
             }
 
             return context.ResultFor(command);
