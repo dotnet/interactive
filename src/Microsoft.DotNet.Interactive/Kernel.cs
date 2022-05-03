@@ -306,8 +306,6 @@ namespace Microsoft.DotNet.Interactive
 
             command.ShouldPublishCompletionEvent ??= true;
 
-            await Task.Yield();
-
             var context = KernelInvocationContext.Establish(command);
 
             // only subscribe for the root command 
