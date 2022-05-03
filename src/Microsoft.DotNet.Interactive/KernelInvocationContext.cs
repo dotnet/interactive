@@ -228,7 +228,7 @@ namespace Microsoft.DotNet.Interactive
                         command.Parent = _current.Value.Command;
                     }
 
-                    _current.Value._childCommands.GetOrAdd(command, c =>
+                    _current.Value._childCommands.GetOrAdd(command, _ =>
                     {
                         var replaySubject = new ReplaySubject<KernelEvent>();
 

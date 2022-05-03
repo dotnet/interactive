@@ -50,7 +50,6 @@ namespace Microsoft.DotNet.Interactive
         private KernelInvocationContext _inFlightContext;
         private int _countOfLanguageServiceCommandsInFlight = 0;
         private readonly KernelInfo _kernelInfo;
-        private readonly object _lockObj = new();
 
         protected Kernel(
             string name,
@@ -302,32 +301,29 @@ namespace Microsoft.DotNet.Interactive
             CancellationToken cancellationToken)
         {
             using var disposable = new SerialDisposable();
+
             KernelInvocationContext context = null;
-            bool currentCommandOwnsContext;
 
-            lock (_lockObj)
+            if (command is null)
             {
-                if (command is null)
+                throw new ArgumentNullException(nameof(command));
+            }
+
+            command.ShouldPublishCompletionEvent ??= true;
+
+            context = KernelInvocationContext.Establish(command);
+
+            // only subscribe for the root command 
+            var currentCommandOwnsContext = CommandEqualityComparer.Instance.Equals(context.Command, command);
+
+            if (currentCommandOwnsContext)
+            {
+                disposable.Disposable = context.KernelEvents.Subscribe(PublishEvent);
+
+                if (cancellationToken != CancellationToken.None &&
+                    cancellationToken != default)
                 {
-                    throw new ArgumentNullException(nameof(command));
-                }
-
-                command.ShouldPublishCompletionEvent ??= true;
-
-                context = KernelInvocationContext.Establish(command);
-
-                // only subscribe for the root command 
-                currentCommandOwnsContext = CommandEqualityComparer.Instance.Equals(context.Command, command);
-
-                if (currentCommandOwnsContext)
-                {
-                    disposable.Disposable = context.KernelEvents.Subscribe(PublishEvent);
-
-                    if (cancellationToken != CancellationToken.None &&
-                        cancellationToken != default)
-                    {
-                        cancellationToken.Register(() => { context.Cancel(); });
-                    }
+                    cancellationToken.Register(context.Cancel);
                 }
             }
 
@@ -348,7 +344,10 @@ namespace Microsoft.DotNet.Interactive
                         case Cancel cancel:
                             cancel.SchedulingScope = SchedulingScope;
                             cancel.TargetKernelName = Name;
-                            Scheduler.CancelCurrentOperation((inflight) => { context.Publish(new CommandCancelled(cancel, inflight)); });
+                            Scheduler.CancelCurrentOperation(inflight =>
+                            {
+                                context.Publish(new CommandCancelled(cancel, inflight));
+                            });
                             await InvokePipelineAndCommandHandler(cancel);
                             break;
 
@@ -372,6 +371,7 @@ namespace Microsoft.DotNet.Interactive
                             _inFlightContext = null;
                         }
                             break;
+
                         case RequestHoverText _:
                         case RequestCompletions _:
                         case RequestSignatureHelp _:
@@ -387,6 +387,16 @@ namespace Microsoft.DotNet.Interactive
 
                             Interlocked.Decrement(ref _countOfLanguageServiceCommandsInFlight);
                         }
+                            break;
+
+                        case DisplayError _:
+                        case DisplayValue _:
+                        case RequestKernelInfo _:
+                        case RequestValue _:
+                        case RequestValueInfos _:
+                        case UpdateDisplayedValue _:
+
+                            await RunOnFastPath(context, c, cancellationToken);
                             break;
 
                         default:
