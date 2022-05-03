@@ -150,15 +150,9 @@ namespace Microsoft.DotNet.Interactive
 
         private void TryCancel()
         {
-            try
+            if (!_cancellationTokenSource.IsCancellationRequested)
             {
-                if (!_cancellationTokenSource.IsCancellationRequested)
-                {
-                    _cancellationTokenSource.Cancel();
-                }
-            }
-            catch (ObjectDisposedException)
-            {
+                _cancellationTokenSource.Cancel();
             }
         }
 
@@ -210,8 +204,16 @@ namespace Microsoft.DotNet.Interactive
 
         public static KernelInvocationContext Establish(KernelCommand command)
         {
-            if (_current.Value is null || _current.Value.IsComplete)
+            if (_current.Value is null)
             {
+                var context = new KernelInvocationContext(command);
+
+                _current.Value = context;
+            }
+            else if (_current.Value.IsComplete)
+            {
+                // FIX: (Establish) 27 tests covering this... is it consistent?
+
                 var context = new KernelInvocationContext(command);
 
                 _current.Value = context;
@@ -230,14 +232,18 @@ namespace Microsoft.DotNet.Interactive
                         var replaySubject = new ReplaySubject<KernelEvent>();
 
                         var subscription = replaySubject
-                            .Where(e => e is not CommandSucceeded and not CommandFailed)
-                            .Subscribe(e => _current.Value._events.OnNext(e));
+                                           .Where(e => e is not CommandSucceeded and not CommandFailed)
+                                           .Subscribe(e => _current.Value._events.OnNext(e));
 
                         _current.Value._disposables.Add(subscription);
                         _current.Value._disposables.Add(replaySubject);
 
                         return replaySubject;
                     });
+                }
+                else
+                {
+                    // FIX: (Establish) 
                 }
             }
 
