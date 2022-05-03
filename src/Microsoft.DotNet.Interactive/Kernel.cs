@@ -9,6 +9,7 @@ using System.CommandLine.Parsing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -49,6 +50,7 @@ namespace Microsoft.DotNet.Interactive
         private KernelInvocationContext _inFlightContext;
         private int _countOfLanguageServiceCommandsInFlight = 0;
         private readonly KernelInfo _kernelInfo;
+        private readonly object _lockObj = new();
 
         protected Kernel(
             string name,
@@ -299,122 +301,114 @@ namespace Microsoft.DotNet.Interactive
             KernelCommand command,
             CancellationToken cancellationToken)
         {
-            if (command is null)
+            using var disposable = new SerialDisposable();
+            KernelInvocationContext context = null;
+            bool currentCommandOwnsContext;
+
+            lock (_lockObj)
             {
-                throw new ArgumentNullException(nameof(command));
-            }
-
-            command.ShouldPublishCompletionEvent ??= true;
-
-            var context = KernelInvocationContext.Establish(command);
-
-            // only subscribe for the root command 
-            var currentCommandOwnsContext = CommandEqualityComparer.Instance.Equals(context.Command, command);
-
-            IDisposable disposable;
-
-            if (currentCommandOwnsContext)
-            {
-                disposable = context.KernelEvents.Subscribe(PublishEvent);
-
-                if (cancellationToken != CancellationToken.None &&
-                    cancellationToken != default)
+                if (command is null)
                 {
-                    cancellationToken.Register(() =>
+                    throw new ArgumentNullException(nameof(command));
+                }
+
+                command.ShouldPublishCompletionEvent ??= true;
+
+                context = KernelInvocationContext.Establish(command);
+
+                // only subscribe for the root command 
+                currentCommandOwnsContext = CommandEqualityComparer.Instance.Equals(context.Command, command);
+
+                if (currentCommandOwnsContext)
+                {
+                    disposable.Disposable = context.KernelEvents.Subscribe(PublishEvent);
+
+                    if (cancellationToken != CancellationToken.None &&
+                        cancellationToken != default)
                     {
-                        context.Cancel();
-                    });
+                        cancellationToken.Register(() => { context.Cancel(); });
+                    }
                 }
             }
-            else
-            {
-                disposable = Disposable.Empty;
-            }
 
-            using (disposable)
+            if (TryPreprocessCommands(command, context, out var commands))
             {
-                if (TryPreprocessCommands(command, context, out var commands))
+                SetHandlingKernel(command, context);
+          
+                foreach (var c in commands)
                 {
-                    SetHandlingKernel(command, context);
-
-                    foreach (var c in commands)
+                    switch (c)
                     {
-                        switch (c)
+                        case Quit quit:
+                            quit.SchedulingScope = SchedulingScope;
+                            quit.TargetKernelName = Name;
+                            await InvokePipelineAndCommandHandler(quit);
+                            break;
+
+                        case Cancel cancel:
+                            cancel.SchedulingScope = SchedulingScope;
+                            cancel.TargetKernelName = Name;
+                            Scheduler.CancelCurrentOperation((inflight) => { context.Publish(new CommandCancelled(cancel, inflight)); });
+                            await InvokePipelineAndCommandHandler(cancel);
+                            break;
+
+                        case RequestDiagnostics _:
                         {
-                            case Quit quit:
-                                quit.SchedulingScope = SchedulingScope;
-                                quit.TargetKernelName = Name;
-                                await InvokePipelineAndCommandHandler(quit);
-                                break;
+                            if (_countOfLanguageServiceCommandsInFlight > 0)
+                            {
+                                context.CancelWithSuccess();
+                                return context.Result;
+                            }
 
-                            case Cancel cancel:
-                                cancel.SchedulingScope = SchedulingScope;
-                                cancel.TargetKernelName = Name;
-                                Scheduler.CancelCurrentOperation((inflight) =>
-                                {
-                                    context.Publish(new CommandCancelled(cancel, inflight));
-                                });
-                                await InvokePipelineAndCommandHandler(cancel);
-                                break;
+                            if (_inFlightContext is { } inflight)
+                            {
+                                inflight.Complete(inflight.Command);
+                            }
 
-                            case RequestDiagnostics _:
-                                {
-                                    if (_countOfLanguageServiceCommandsInFlight > 0)
-                                    {
-                                        context.CancelWithSuccess();
-                                        return context.Result;
-                                    }
+                            _inFlightContext = context;
 
-                                    if (_inFlightContext is { } inflight)
-                                    {
-                                        inflight.Complete(inflight.Command);
-                                    }
+                            await RunOnFastPath(context, c, cancellationToken);
 
-                                    _inFlightContext = context;
-
-                                    await RunOnFastPath(context, c, cancellationToken);
-
-                                    _inFlightContext = null;
-                                }
-                                break;
-                            case RequestHoverText _:
-                            case RequestCompletions _:
-                            case RequestSignatureHelp _:
-                                {
-                                    if (_inFlightContext is { } inflight)
-                                    {
-                                        inflight.CancelWithSuccess();
-                                    }
-
-                                    Interlocked.Increment(ref _countOfLanguageServiceCommandsInFlight);
-
-                                    await RunOnFastPath(context, c, cancellationToken);
-
-                                    Interlocked.Decrement(ref _countOfLanguageServiceCommandsInFlight);
-                                }
-                                break;
-
-                            default:
-                                await Scheduler.RunAsync(
-                                    c,
-                                    InvokePipelineAndCommandHandler,
-                                    c.SchedulingScope.ToString(),
-                                    cancellationToken: cancellationToken)
-                                    .ContinueWith(t =>
-                                    {
-                                        if (t.IsCanceled)
-                                        {
-                                            context.Cancel();
-                                        }
-                                    }, cancellationToken);
-                                break;
+                            _inFlightContext = null;
                         }
-                    }
+                            break;
+                        case RequestHoverText _:
+                        case RequestCompletions _:
+                        case RequestSignatureHelp _:
+                        {
+                            if (_inFlightContext is { } inflight)
+                            {
+                                inflight.CancelWithSuccess();
+                            }
 
-                    if (currentCommandOwnsContext)
-                    {
-                        await context.DisposeAsync();
+                            Interlocked.Increment(ref _countOfLanguageServiceCommandsInFlight);
+
+                            await RunOnFastPath(context, c, cancellationToken);
+
+                            Interlocked.Decrement(ref _countOfLanguageServiceCommandsInFlight);
+                        }
+                            break;
+
+                        default:
+                            await Scheduler.RunAsync(
+                                               c,
+                                               InvokePipelineAndCommandHandler,
+                                               c.SchedulingScope.ToString(),
+                                               cancellationToken: cancellationToken)
+                                           .ContinueWith(t =>
+                                           {
+                                               if (t.IsCanceled)
+                                               {
+                                                   context.Cancel();
+                                               }
+                                           }, cancellationToken);
+                            break;
                     }
+                }
+
+                if (currentCommandOwnsContext)
+                {
+                    await context.DisposeAsync();
                 }
             }
 
