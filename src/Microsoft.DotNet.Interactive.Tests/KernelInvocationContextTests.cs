@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             KernelCommand commandInTask2 = null;
 
-            await Task.Run(async () =>
+            await Task.Run(() =>
             {
                 using (var x = KernelInvocationContext.Establish(new SubmitCode("")))
                 {
@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 }
             });
 
-            await Task.Run(async () =>
+            await Task.Run(() =>
             {
                 using (KernelInvocationContext.Establish(new SubmitCode("")))
                 {
@@ -131,7 +131,7 @@ error
         }
 
         [Fact]
-        public async Task When_Fail_is_called_CommandFailed_is_published()
+        public void When_Fail_is_called_CommandFailed_is_published()
         {
             var command = new SubmitCode("123");
 
@@ -146,7 +146,7 @@ error
         }
 
         [Fact]
-        public async Task When_Fail_is_called_CommandHandled_is_not_published()
+        public void When_Fail_is_called_CommandHandled_is_not_published()
         {
             var command = new SubmitCode("123");
 
@@ -161,7 +161,7 @@ error
         }
 
         [Fact]
-        public async Task When_Complete_is_called_then_CommandHandled_is_published()
+        public void When_Complete_is_called_then_CommandHandled_is_published()
         {
             var command = new SubmitCode("123");
 
@@ -176,7 +176,7 @@ error
         }
 
         [Fact]
-        public async Task When_Complete_is_called_then_CommandFailed_is_not_published()
+        public void When_Complete_is_called_then_CommandFailed_is_not_published()
         {
             var command = new SubmitCode("123");
 
@@ -191,7 +191,7 @@ error
         }
 
         [Fact]
-        public async Task When_Complete_is_called_then_no_further_events_are_published()
+        public void When_Complete_is_called_then_no_further_events_are_published()
         {
             var command = new SubmitCode("123");
 
@@ -207,7 +207,7 @@ error
         }
 
         [Fact]
-        public async Task When_Fail_is_called_then_no_further_events_are_published()
+        public void When_Fail_is_called_then_no_further_events_are_published()
         {
             var command = new SubmitCode("123");
 
@@ -223,7 +223,7 @@ error
         }
 
         [Fact]
-        public async Task When_multiple_commands_are_active_then_context_does_not_publish_CommandHandled_until_all_are_complete()
+        public void When_multiple_commands_are_active_then_context_does_not_publish_CommandHandled_until_all_are_complete()
         {
             var outerSubmitCode = new SubmitCode("abc");
             using var outer = KernelInvocationContext.Establish(outerSubmitCode);
@@ -239,7 +239,7 @@ error
         }
 
         [Fact]
-        public async Task When_outer_context_is_completed_then_inner_commands_can_no_longer_be_used_to_publish_events()
+        public void When_outer_context_is_completed_then_inner_commands_can_no_longer_be_used_to_publish_events()
         {
             using var outer = KernelInvocationContext.Establish(new SubmitCode("abc"));
 
@@ -254,7 +254,7 @@ error
         }
 
         [Fact]
-        public async Task When_inner_context_is_completed_then_no_further_events_can_be_published_for_it()
+        public void When_inner_context_is_completed_then_no_further_events_can_be_published_for_it()
         {
             using var outer = KernelInvocationContext.Establish(new SubmitCode("abc"));
 
@@ -271,7 +271,7 @@ error
         }
 
         [Fact]
-        public async Task After_disposal_Current_is_null()
+        public void After_disposal_Current_is_null()
         {
             var context = KernelInvocationContext.Establish(new SubmitCode("123"));
             
@@ -281,7 +281,7 @@ error
         }
 
         [Fact]
-        public async Task When_inner_context_fails_then_CommandFailed_is_published_for_outer_command()
+        public void When_inner_context_fails_then_CommandFailed_is_published_for_outer_command()
         {
             using var outer = KernelInvocationContext.Establish(new SubmitCode("abc"));
 
@@ -301,7 +301,7 @@ error
         }
 
         [Fact]
-        public async Task When_inner_context_fails_then_no_further_events_can_be_published()
+        public void When_inner_context_fails_then_no_further_events_can_be_published()
         {
             var command = new SubmitCode("abc");
             using var outer = KernelInvocationContext.Establish(command);
