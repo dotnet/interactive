@@ -237,7 +237,7 @@ Microsoft.DotNet.Interactive
     public System.Collections.Generic.ICollection<KernelCommandInfo> SupportedKernelCommands { get; set;}
     public System.Uri Uri { get; set;}
     public System.String ToString()
-  public class KernelInvocationContext, System.IAsyncDisposable
+  public class KernelInvocationContext, System.IDisposable
     public static KernelInvocationContext Current { get;}
     public static KernelInvocationContext Establish(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public System.Threading.CancellationToken CancellationToken { get;}
@@ -247,9 +247,9 @@ Microsoft.DotNet.Interactive
     public System.IObservable<Microsoft.DotNet.Interactive.Events.KernelEvent> KernelEvents { get;}
     public KernelCommandResult Result { get;}
     public System.Void Complete(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
-    public System.Threading.Tasks.ValueTask DisposeAsync()
+    public System.Void Dispose()
     public System.Void Fail(Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Exception exception = null, System.String message = null)
-    public System.Void OnComplete(System.Func<KernelInvocationContext,System.Threading.Tasks.Task> onComplete)
+    public System.Void OnComplete(System.Action<KernelInvocationContext> onComplete)
     public System.Void Publish(Microsoft.DotNet.Interactive.Events.KernelEvent event)
     public System.Threading.Tasks.Task ScheduleAsync(System.Func<KernelInvocationContext,System.Threading.Tasks.Task> func)
   public static class KernelInvocationContextExtensions
