@@ -137,7 +137,7 @@ type FSharpKernel () as this =
         else Some text
 
     let getDocumentation (declarationItem: DeclarationListItem) =
-        async {
+        task {
             match declarationItem.Description with
             | ToolTipText(elements) ->
                 return
@@ -182,7 +182,7 @@ type FSharpKernel () as this =
         Diagnostic(linePositionSpan, severity, errorId, error.Message)
 
     let handleChangeWorkingDirectory (changeDirectory: ChangeWorkingDirectory) (context: KernelInvocationContext) =
-        async {
+        task {
             this.workingDirectory <- changeDirectory.WorkingDirectory;
             return Task.CompletedTask;
         }
@@ -244,7 +244,7 @@ type FSharpKernel () as this =
         }
 
     let handleRequestHoverText (requestHoverText: RequestHoverText) (context: KernelInvocationContext) =
-        async {
+        task {
             let parse, check, _ctx = script.Value.Fsi.ParseAndCheckInteraction(requestHoverText.Code)
 
             let res = FsAutoComplete.ParseAndCheckResults(parse, check, EntityCache())
@@ -418,13 +418,13 @@ type FSharpKernel () as this =
         member this.HandleAsync(command: RequestDiagnostics, context: KernelInvocationContext) = handleRequestDiagnostics command context 
 
     interface IKernelCommandHandler<RequestHoverText> with
-        member this.HandleAsync(command: RequestHoverText, context: KernelInvocationContext) = handleRequestHoverText command context |> Async.StartAsTask :> Task
+        member this.HandleAsync(command: RequestHoverText, context: KernelInvocationContext) = handleRequestHoverText command context 
 
     interface IKernelCommandHandler<SubmitCode> with
         member this.HandleAsync(command: SubmitCode, context: KernelInvocationContext) = handleSubmitCode command context
 
     interface IKernelCommandHandler<ChangeWorkingDirectory> with
-        member this.HandleAsync(command: ChangeWorkingDirectory, context: KernelInvocationContext) = handleChangeWorkingDirectory command context |> Async.StartAsTask :> Task
+        member this.HandleAsync(command: ChangeWorkingDirectory, context: KernelInvocationContext) = handleChangeWorkingDirectory command context 
 
     interface ISupportNuget with
         member _.TryAddRestoreSource(source: string) =
@@ -476,7 +476,7 @@ type FSharpKernel () as this =
 
     interface IExtensibleKernel with
         member this.LoadExtensionsFromDirectoryAsync(directory:DirectoryInfo, context:KernelInvocationContext) =
-            async {
+            task {
                 do! extensionLoader.LoadFromDirectoryAsync(directory, this, context) |> Async.AwaitTask
                 do! scriptExtensionLoader.LoadFromDirectoryAsync(directory, this, context) |> Async.AwaitTask
-            } |> Async.StartAsTask :> Task
+            }
