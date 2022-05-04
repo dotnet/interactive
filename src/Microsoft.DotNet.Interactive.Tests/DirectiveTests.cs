@@ -198,8 +198,6 @@ i");
                     c.OnComplete(context =>
                     {
                         context.Display("goodbye!");
-
-                        return Task.CompletedTask;
                     });
 
                     return Task.CompletedTask;

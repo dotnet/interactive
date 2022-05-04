@@ -140,8 +140,6 @@ using static {typeof(TopLevelMethods).FullName};
                                             PlainTextFormatter.MimeType,
                                             $"Wall time: {elapsed.TotalMilliseconds}ms")
                                     }));
-
-                            return Task.CompletedTask;
                         });
 
                         return Task.CompletedTask;

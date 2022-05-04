@@ -17,17 +17,17 @@ using CompositeDisposable = Pocket.CompositeDisposable;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public class KernelInvocationContext : IAsyncDisposable
+    public class KernelInvocationContext : IDisposable
     {
         private static readonly AsyncLocal<KernelInvocationContext> _current = new();
 
         private readonly ReplaySubject<KernelEvent> _events = new();
 
-        private readonly ConcurrentDictionary<KernelCommand, ReplaySubject<KernelEvent>> _childCommands = new (new CommandEqualityComparer());
+        private readonly ConcurrentDictionary<KernelCommand, ReplaySubject<KernelEvent>> _childCommands = new(new CommandEqualityComparer());
 
         private readonly CompositeDisposable _disposables = new();
 
-        private readonly List<Func<KernelInvocationContext, Task>> _onCompleteActions = new();
+        private List<Action<KernelInvocationContext>> _onCompleteActions;
 
         private readonly CancellationTokenSource _cancellationTokenSource;
 
@@ -81,6 +81,12 @@ namespace Microsoft.DotNet.Interactive
 
         public void Complete(KernelCommand command)
         {
+            // FIX: (Fail) make this atomic / dedupe with Fail
+            if (IsComplete)
+            {
+                return;
+            }
+
             if (CommandEqualityComparer.Instance.Equals(command, Command))
             {
                 Publish(new CommandSucceeded(command));
@@ -106,22 +112,12 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        internal void Cancel()
-        {
-            if (!IsComplete)
-            {
-                TryCancel();
-                Fail(
-                    Command,
-                    new OperationCanceledException($"Command :{Command} cancelled."));
-            }
-        }
-
         public void Fail(
             KernelCommand command,
             Exception exception = null,
             string message = null)
         {
+            // FIX: (Fail) make this atomic / dedupe with Complete
             if (IsComplete)
             {
                 return;
@@ -149,16 +145,34 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private void TryCancel()
+        internal void Cancel()
         {
-            if (!_cancellationTokenSource.IsCancellationRequested)
+            if (!IsComplete)
             {
-                _cancellationTokenSource.Cancel();
+                TryCancel();
+                Fail(
+                    Command,
+                    new OperationCanceledException($"Command :{Command} cancelled."));
             }
         }
 
-        public void OnComplete(Func<KernelInvocationContext, Task> onComplete)
+        private void TryCancel()
         {
+            if (!IsComplete)
+            {
+                if (!_cancellationTokenSource.IsCancellationRequested)
+                {
+                    _cancellationTokenSource.Cancel();
+                }
+            }
+        }
+
+        public void OnComplete(Action<KernelInvocationContext> onComplete)
+        {
+            if (_onCompleteActions is null)
+            {
+                _onCompleteActions = new();
+            }
             _onCompleteActions.Add(onComplete);
         }
 
@@ -242,10 +256,6 @@ namespace Microsoft.DotNet.Interactive
                         return replaySubject;
                     });
                 }
-                else
-                {
-                    // FIX: (Establish) 
-                }
             }
 
             return _current.Value;
@@ -255,34 +265,26 @@ namespace Microsoft.DotNet.Interactive
 
         public Kernel HandlingKernel { get; internal set; }
 
-        public ValueTask DisposeAsync()
+        public void Dispose()
         {
-            if (_current.Value is { } active)
+            if (_current.Value == this)
             {
-                if (_current.Value == this)
-                {
-                    _current.Value = null;
-                }
-
-                if (_onCompleteActions.Count > 0)
-                {
-                    Task.Run(async () =>
-                        {
-                            foreach (var action in _onCompleteActions)
-                            {
-                                await action.Invoke(this);
-                            }
-                        })
-                        .Wait();
-                }
-
-                active.Complete(Command);
-
-                _disposables.Dispose();
+                _current.Value = null;
             }
 
-            // This method is not async because it would prevent the setting of _current.Value to null from flowing up to the caller.
-            return new ValueTask(Task.CompletedTask);
+            if (_onCompleteActions?.Count > 0)
+            {
+                foreach (var action in _onCompleteActions)
+                {
+                    action.Invoke(this);
+                }
+
+                _onCompleteActions.Clear();
+            }
+
+            Complete(Command);
+
+            _disposables.Dispose();
         }
 
         internal void CancelWithSuccess()

@@ -419,7 +419,7 @@ namespace Microsoft.DotNet.Interactive
 
             if (currentCommandOwnsContext)
             {
-                await context.DisposeAsync();
+                context.Dispose();
             }
 
             return context.ResultFor(command);

@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             await Task.Run(async () =>
             {
-                await using (var x = KernelInvocationContext.Establish(new SubmitCode("")))
+                using (var x = KernelInvocationContext.Establish(new SubmitCode("")))
                 {
                     barrier.SignalAndWait(1000);
                     commandInTask1 = KernelInvocationContext.Current.Command;
@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             await Task.Run(async () =>
             {
-                await using (KernelInvocationContext.Establish(new SubmitCode("")))
+                using (KernelInvocationContext.Establish(new SubmitCode("")))
                 {
                     barrier.SignalAndWait(1000);
                     commandInTask2 = KernelInvocationContext.Current.Command;
@@ -135,7 +135,7 @@ error
         {
             var command = new SubmitCode("123");
 
-            await using var context = KernelInvocationContext.Establish(command);
+            using var context = KernelInvocationContext.Establish(command);
 
             var events = context.KernelEvents.ToSubscribedList();
 
@@ -150,7 +150,7 @@ error
         {
             var command = new SubmitCode("123");
 
-            await using var context = KernelInvocationContext.Establish(command);
+            using var context = KernelInvocationContext.Establish(command);
 
             var events = context.KernelEvents.ToSubscribedList();
 
@@ -165,7 +165,7 @@ error
         {
             var command = new SubmitCode("123");
 
-            await using var context = KernelInvocationContext.Establish(command);
+            using var context = KernelInvocationContext.Establish(command);
 
             var events = context.KernelEvents.ToSubscribedList();
 
@@ -180,7 +180,7 @@ error
         {
             var command = new SubmitCode("123");
 
-            await using var context = KernelInvocationContext.Establish(command);
+            using var context = KernelInvocationContext.Establish(command);
 
             var events = context.KernelEvents.ToSubscribedList();
 
@@ -195,7 +195,7 @@ error
         {
             var command = new SubmitCode("123");
 
-            await using var context = KernelInvocationContext.Establish(command);
+            using var context = KernelInvocationContext.Establish(command);
 
             var events = context.KernelEvents.ToSubscribedList();
 
@@ -211,7 +211,7 @@ error
         {
             var command = new SubmitCode("123");
 
-            await using var context = KernelInvocationContext.Establish(command);
+            using var context = KernelInvocationContext.Establish(command);
 
             var events = context.KernelEvents.ToSubscribedList();
 
@@ -226,12 +226,12 @@ error
         public async Task When_multiple_commands_are_active_then_context_does_not_publish_CommandHandled_until_all_are_complete()
         {
             var outerSubmitCode = new SubmitCode("abc");
-            await using var outer = KernelInvocationContext.Establish(outerSubmitCode);
+            using var outer = KernelInvocationContext.Establish(outerSubmitCode);
 
             var events = outer.KernelEvents.ToSubscribedList();
 
             var innerSubmitCode = new SubmitCode("def");
-            await using var inner = KernelInvocationContext.Establish(innerSubmitCode);
+            using var inner = KernelInvocationContext.Establish(innerSubmitCode);
 
             inner.Complete(innerSubmitCode);
 
@@ -241,11 +241,11 @@ error
         [Fact]
         public async Task When_outer_context_is_completed_then_inner_commands_can_no_longer_be_used_to_publish_events()
         {
-            await using var outer = KernelInvocationContext.Establish(new SubmitCode("abc"));
+            using var outer = KernelInvocationContext.Establish(new SubmitCode("abc"));
 
             var events = outer.KernelEvents.ToSubscribedList();
 
-            await using var inner = KernelInvocationContext.Establish(new SubmitCode("def"));
+            using var inner = KernelInvocationContext.Establish(new SubmitCode("def"));
 
             outer.Complete(outer.Command);
             inner.Publish(new ErrorProduced("oops!", inner.Command));
@@ -256,12 +256,12 @@ error
         [Fact]
         public async Task When_inner_context_is_completed_then_no_further_events_can_be_published_for_it()
         {
-            await using var outer = KernelInvocationContext.Establish(new SubmitCode("abc"));
+            using var outer = KernelInvocationContext.Establish(new SubmitCode("abc"));
 
             var events = outer.KernelEvents.ToSubscribedList();
 
             var innerSubmitCode = new SubmitCode("def");
-            await using var inner = KernelInvocationContext.Establish(innerSubmitCode);
+            using var inner = KernelInvocationContext.Establish(innerSubmitCode);
 
             inner.Complete(innerSubmitCode);
 
@@ -274,13 +274,8 @@ error
         public async Task After_disposal_Current_is_null()
         {
             var context = KernelInvocationContext.Establish(new SubmitCode("123"));
-
-            context.OnComplete(async invocationContext =>
-            {
-                await Task.Delay(10);
-            });
-
-            await context.DisposeAsync();
+            
+            context.Dispose();
 
             KernelInvocationContext.Current.Should().BeNull();
         }
@@ -288,12 +283,12 @@ error
         [Fact]
         public async Task When_inner_context_fails_then_CommandFailed_is_published_for_outer_command()
         {
-            await using var outer = KernelInvocationContext.Establish(new SubmitCode("abc"));
+            using var outer = KernelInvocationContext.Establish(new SubmitCode("abc"));
 
             var events = outer.KernelEvents.ToSubscribedList();
 
             var innerCommand = new SubmitCode("def");
-            await using var inner = KernelInvocationContext.Establish(innerCommand);
+            using var inner = KernelInvocationContext.Establish(innerCommand);
 
             inner.Fail(innerCommand);
 
@@ -309,12 +304,12 @@ error
         public async Task When_inner_context_fails_then_no_further_events_can_be_published()
         {
             var command = new SubmitCode("abc");
-            await using var outer = KernelInvocationContext.Establish(command);
+            using var outer = KernelInvocationContext.Establish(command);
 
             var events = outer.KernelEvents.ToSubscribedList();
 
             var innerCommand = new SubmitCode("def");
-            await using var inner = KernelInvocationContext.Establish(innerCommand);
+            using var inner = KernelInvocationContext.Establish(innerCommand);
 
             inner.Fail(innerCommand);
             inner.Publish(new DisplayedValueProduced("oops!", command));
