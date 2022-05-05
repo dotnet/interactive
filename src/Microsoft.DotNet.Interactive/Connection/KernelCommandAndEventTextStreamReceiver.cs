@@ -25,7 +25,7 @@ public class KernelCommandAndEventTextStreamReceiver : KernelCommandAndEventDese
 
 #if true
         var cts = new CancellationTokenSource();
-
+        
         var completedTask = await Task.WhenAny(
                                 readlineTask,
                                 cancellationToken.CancellationAsync(cts.Token));
@@ -55,20 +55,19 @@ internal static class TaskHacks
         this CancellationToken cancellationToken,
         CancellationToken cancellationToken2)
     {
-        try
+        await Task.Run(() =>
         {
-            await Task.Run(() =>
+            try
             {
-                return WaitHandle.WaitAny(new[]
+                WaitHandle.WaitAny(new[]
                 {
                     cancellationToken.WaitHandle,
                     cancellationToken2.WaitHandle,
                 });
-            });
-        }
-        catch
-        {
-        }
+            }
+            catch
+            {
+            }
+        });
     }
-    
 }

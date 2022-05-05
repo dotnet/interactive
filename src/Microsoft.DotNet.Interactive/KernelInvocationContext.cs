@@ -31,12 +31,26 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly CancellationTokenSource _cancellationTokenSource;
 
+        // FIX: (KernelInvocationContext) 
+        private static int _instanceCount = 0;
+        public static int InstanceCount => _instanceCount;
+
         private KernelInvocationContext(KernelCommand command)
         {
             var operation = new OperationLogger(
                 operationName: command.ToString(),
-                args: new object[] { ("KernelCommand", command) },
-                exitArgs: () => new[] { ("KernelCommand", (object)command) },
+                args: new object[]
+                {
+                    ("KernelCommand", command),
+                    (nameof(InstanceCount), _instanceCount),
+                    ("AsyncContext.Id", AsyncContext.Id)
+                },
+                exitArgs: () => new[]
+                {
+                    ("KernelCommand", (object)command),
+                    (nameof(InstanceCount), _instanceCount),
+                    ("AsyncContext.Id", AsyncContext.Id)
+                },
                 category: nameof(KernelInvocationContext),
                 logOnStart: true);
 
@@ -56,6 +70,9 @@ namespace Microsoft.DotNet.Interactive
                     c.Error.Subscribe(s => this.DisplayStandardError(s, command))
                 };
             }));
+            
+            Interlocked.Increment(ref _instanceCount);
+            _disposables.Add(() => Interlocked.Decrement(ref _instanceCount));
 
             _disposables.Add(operation);
         }

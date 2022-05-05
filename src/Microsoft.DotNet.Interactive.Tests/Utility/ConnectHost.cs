@@ -4,9 +4,6 @@
 using System;
 using System.IO;
 using Microsoft.DotNet.Interactive.Connection;
-using Microsoft.DotNet.Interactive.Tests.Connection;
-using Pocket;
-using static Pocket.Logger;
 
 namespace Microsoft.DotNet.Interactive.Tests.Utility;
 
@@ -46,12 +43,7 @@ public static class ConnectHost
 
         var localWriter = new StreamWriter(localToRemoteStream);
         var remoteWriter = new StreamWriter(remoteToLocalStream);
-
-        Log.Info($"Created {nameof(localReader)} ({localReader.GetHashCode()})");
-        Log.Info($"Created {nameof(remoteReader)} ({remoteReader.GetHashCode()})");
-        Log.Info($"Created {nameof(localWriter)} ({localWriter.GetHashCode()})");
-        Log.Info($"Created {nameof(remoteWriter)} ({remoteWriter.GetHashCode()})");
-
+        
         var localInnerReceiver = new KernelCommandAndEventTextStreamReceiver(
             localReader);
         var remoteInnerReceiver = new KernelCommandAndEventTextStreamReceiver(

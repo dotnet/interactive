@@ -8,7 +8,6 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Tasks;
 using Pocket;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 using Disposable = System.Reactive.Disposables.Disposable;
@@ -33,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.Connection
             await foreach (var commandOrEvent in _source.CommandsAndEventsAsync(cancellationToken))
             {
                 var childBlockingCollections = _childReceivers.Select(c => c.ReceivedCommandsAndEvents).ToArray();
-
+                
                 if (childBlockingCollections.Length > 0)
                 {
                     foreach (var blockingCollection in childBlockingCollections)
@@ -88,13 +87,31 @@ namespace Microsoft.DotNet.Interactive.Connection
                 {
                     using var op = _log.OnEnterAndExit();
 
-                    await Task.Yield();
+                    // await Task.Yield();
 
-                    var commandOrEvent = ReceivedCommandsAndEvents.Take(cancellationToken);
+                    CommandOrEvent commandOrEvent;
+
+                    try
+                    {
+                        if (ReceivedCommandsAndEvents.TryTake(out commandOrEvent, 200))
+                        {
+                        }
+                    }
+                    catch
+                    {
+                        yield break;
+                    }
 
                     op.Trace("ReceivedCommandsAndEvents.Take", commandOrEvent);
 
-                    yield return commandOrEvent;
+                    if (commandOrEvent is { })
+                    {
+                        yield return commandOrEvent;
+                    }
+                    else
+                    {
+                       // yield break;
+                    }
                 }
             }
         }

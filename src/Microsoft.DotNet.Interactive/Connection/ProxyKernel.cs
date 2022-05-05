@@ -140,14 +140,16 @@ namespace Microsoft.DotNet.Interactive.Connection
                         _inflight.Remove(token);
                         pending.completionSource.TrySetResult(cf);
                         break;
+
                     case CommandSucceeded cs when pending.command.IsEquivalentTo(kernelEvent.Command):
                         _inflight.Remove(token);
                         pending.completionSource.TrySetResult(cs);
                         break;
+
                     default:
                         if (pending.executionContext is { } ec)
                         {
-                            ExecutionContext.Run(ec, _ => pending.invocationContext.Publish(kernelEvent), null);
+                           ExecutionContext.Run(ec, _ => pending.invocationContext.Publish(kernelEvent), null);
                         }
                         else
                         {
