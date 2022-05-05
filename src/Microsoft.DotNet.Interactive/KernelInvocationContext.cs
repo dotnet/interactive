@@ -81,35 +81,7 @@ namespace Microsoft.DotNet.Interactive
 
         public void Complete(KernelCommand command)
         {
-            // FIX: (Fail) make this atomic / dedupe with Fail
-            if (IsComplete)
-            {
-                return;
-            }
-
-            if (CommandEqualityComparer.Instance.Equals(command, Command))
-            {
-                Publish(new CommandSucceeded(command));
-                if (!_events.IsDisposed)
-                {
-                    _events.OnCompleted();
-                }
-
-                IsComplete = true;
-            }
-            else
-            {
-                if (command.ShouldPublishCompletionEvent == true)
-                {
-                    Publish(new CommandSucceeded(command));
-                }
-
-                if (_childCommands.TryGetValue(command, out var events) &&
-                    !events.IsDisposed)
-                {
-                    events.OnCompleted();
-                }
-            }
+            SucceedOrFail(true, command);
         }
 
         public void Fail(
@@ -117,32 +89,7 @@ namespace Microsoft.DotNet.Interactive
             Exception exception = null,
             string message = null)
         {
-            // FIX: (Fail) make this atomic / dedupe with Complete
-            if (IsComplete)
-            {
-                return;
-            }
-
-            if (command is { ShouldPublishCompletionEvent: true } && 
-                !CommandEqualityComparer.Instance.Equals(command, Command))
-            {
-                Publish(new CommandFailed(exception, command, message));
-
-                if (_childCommands.TryGetValue(command, out var events) &&
-                    !events.IsDisposed)
-                {
-                    events.OnCompleted();
-                }
-            }
-            else
-            {
-                Publish(new CommandFailed(exception, Command, message));
-                _events.OnCompleted();
-
-                TryCancel();
-
-                IsComplete = true;
-            }
+            SucceedOrFail(false, command, exception, message);
         }
 
         internal void Cancel()
@@ -153,6 +100,99 @@ namespace Microsoft.DotNet.Interactive
                 Fail(
                     Command,
                     new OperationCanceledException($"Command :{Command} cancelled."));
+            }
+        }
+
+        private readonly object _lockObj = new();
+
+        private void SucceedOrFail(
+            bool succeed,
+            KernelCommand command,
+            Exception exception = null,
+            string message = null)
+        {
+            // FIX: (SucceedOrFail) 
+
+            lock (_lockObj)
+            {
+                if (IsComplete)
+                {
+                    return;
+                }
+
+                var shouldComplete = CommandEqualityComparer.Instance.Equals(command, Command);
+
+                if (shouldComplete != command.ShouldPublishCompletionEvent)
+                {
+                    
+                }
+
+                if (_current.Value != this)
+                {
+                    
+                }
+                else
+                {
+                    
+                }
+
+
+
+                if (succeed)
+                {
+                    if (shouldComplete)
+                    {
+                        Publish(new CommandSucceeded(command));
+                        if (!_events.IsDisposed)
+                        {
+                            _events.OnCompleted();
+                        }
+                    }
+                    else
+                    {
+                        if (command.ShouldPublishCompletionEvent == true)
+                        {
+                            Publish(new CommandSucceeded(command));
+                        }
+
+                        if (_childCommands.TryGetValue(command, out var events) &&
+                            !events.IsDisposed)
+                        {
+                            events.OnCompleted();
+                        }
+                    }
+                }
+                else
+                {
+                    if (shouldComplete)
+                    {
+                        Publish(new CommandFailed(exception, Command, message));
+
+                        _events.OnCompleted();
+
+                        TryCancel();
+                    }
+                    else if (command is not { ShouldPublishCompletionEvent: true })
+                    {
+                        Publish(new CommandFailed(exception, Command, message));
+
+                        _events.OnCompleted();
+
+                        TryCancel();
+                    }
+                    else
+                    {
+                        Publish(new CommandFailed(exception, command, message));
+
+                        if (_childCommands.TryGetValue(command, out var events) &&
+                            !events.IsDisposed)
+                        {
+                            events.OnCompleted();
+                        }
+                    }
+                }
+
+                IsComplete = shouldComplete;
             }
         }
 
