@@ -53,11 +53,9 @@ public static class ConnectHost
         Log.Info($"Created {nameof(remoteWriter)} ({remoteWriter.GetHashCode()})");
 
         var localInnerReceiver = new KernelCommandAndEventTextStreamReceiver(
-            localReader,
-            "local reader");
+            localReader);
         var remoteInnerReceiver = new KernelCommandAndEventTextStreamReceiver(
-            remoteReader,
-            "remote reader");
+            remoteReader);
 
         var localReceiver = new MultiplexingKernelCommandAndEventReceiver(localInnerReceiver);
         var remoteReceiver = new MultiplexingKernelCommandAndEventReceiver(remoteInnerReceiver);
