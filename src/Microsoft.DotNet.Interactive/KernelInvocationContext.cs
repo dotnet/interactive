@@ -219,16 +219,8 @@ namespace Microsoft.DotNet.Interactive
 
         public static KernelInvocationContext Establish(KernelCommand command)
         {
-            if (_current.Value is null)
+            if (_current.Value is null || _current.Value.IsComplete)
             {
-                var context = new KernelInvocationContext(command);
-
-                _current.Value = context;
-            }
-            else if (_current.Value.IsComplete)
-            {
-                // FIX: (Establish) 27 tests covering this... is it consistent?
-
                 var context = new KernelInvocationContext(command);
 
                 _current.Value = context;
