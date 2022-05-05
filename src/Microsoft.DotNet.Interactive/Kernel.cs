@@ -475,15 +475,16 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private class UndeferScheduledCommands : KernelCommand
+        private class UndeferScheduledCommands : AnonymousKernelCommand
         {
-            public UndeferScheduledCommands(string targetKernelName, KernelCommand parent) : base(targetKernelName, parent)
+            public UndeferScheduledCommands(
+                string targetKernelName, 
+                KernelCommand parent) : base((_, _) =>
             {
-                Handler = (_, _) =>
-                {
-                    Log.Info("Undeferring commands ahead of {command}", Parent);
-                    return Task.CompletedTask;
-                };
+                Log.Info("Undeferring commands ahead of {command}", parent);
+                return Task.CompletedTask;
+            }, targetKernelName: targetKernelName, parent: parent)
+            {
             }
 
             public override string ToString() => $"Undefer commands ahead of {Parent}";
