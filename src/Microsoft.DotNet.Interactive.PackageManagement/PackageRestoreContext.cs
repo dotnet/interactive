@@ -150,7 +150,7 @@ namespace Microsoft.DotNet.Interactive
 
             if (!string.IsNullOrWhiteSpace(packageName) &&              // Name not empty
                 !string.IsNullOrWhiteSpace(packageVersion) &&           // Version not empty
-                Char.IsDigit(packageVersion.Trim()[0]))                 // Version starts with a number
+                char.IsDigit(packageVersion.Trim()[0]))                 // Version starts with a number
             {
                 try
                 {
@@ -300,7 +300,6 @@ namespace Microsoft.DotNet.Interactive
                     _requestedRestoreSources.TryRemove(s, out _);
                     _resolvedRestoreSources.TryAdd(s, s);
                 }
-
 
                 packageRestoreResult =
                     new PackageRestoreResult(

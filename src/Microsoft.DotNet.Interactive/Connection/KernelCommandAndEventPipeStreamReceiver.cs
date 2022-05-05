@@ -5,7 +5,6 @@ using System;
 using System.IO.Pipes;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
