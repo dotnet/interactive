@@ -120,33 +120,27 @@ namespace Microsoft.DotNet.Interactive
                     return;
                 }
 
-                var shouldComplete = CommandEqualityComparer.Instance.Equals(command, Command);
+                var completingMainCommand = CommandEqualityComparer.Instance.Equals(command, Command);
 
-                if (shouldComplete != command.ShouldPublishCompletionEvent)
+                if (_childCommands.TryGetValue(Command, out var events))
                 {
-                    
+
                 }
 
-                if (_current.Value != this)
+                switch (shouldComplete: completingMainCommand, isCurrent: _current.Value == this)
                 {
-                    
+                    case (true, true): break;
+                    case (true, false): break;
+                    case (false, true): break;
+                    case (false, false): break;
                 }
-                else
-                {
-                    
-                }
-
-
 
                 if (succeed)
                 {
-                    if (shouldComplete)
+                    if (completingMainCommand)
                     {
-                        Publish(new CommandSucceeded(command));
-                        if (!_events.IsDisposed)
-                        {
-                            _events.OnCompleted();
-                        }
+                        Publish(new CommandSucceeded(Command));
+                        StopPublishingMainCommandEvents();
                     }
                     else
                     {
@@ -155,44 +149,36 @@ namespace Microsoft.DotNet.Interactive
                             Publish(new CommandSucceeded(command));
                         }
 
-                        if (_childCommands.TryGetValue(command, out var events) &&
-                            !events.IsDisposed)
-                        {
-                            events.OnCompleted();
-                        }
+                        StopPublishingChildCommandEvents();
                     }
                 }
                 else
                 {
-                    if (shouldComplete)
-                    {
-                        Publish(new CommandFailed(exception, Command, message));
+                    Publish(new CommandFailed(exception, Command, message));
 
-                        _events.OnCompleted();
+                    StopPublishingMainCommandEvents();
 
-                        TryCancel();
-                    }
-                    else if (command is not { ShouldPublishCompletionEvent: true })
-                    {
-                        Publish(new CommandFailed(exception, Command, message));
-
-                        _events.OnCompleted();
-
-                        TryCancel();
-                    }
-                    else
-                    {
-                        Publish(new CommandFailed(exception, command, message));
-
-                        if (_childCommands.TryGetValue(command, out var events) &&
-                            !events.IsDisposed)
-                        {
-                            events.OnCompleted();
-                        }
-                    }
+                    TryCancel();
                 }
 
-                IsComplete = shouldComplete;
+                IsComplete = completingMainCommand;
+            }
+
+            void StopPublishingMainCommandEvents()
+            {
+                if (!_events.IsDisposed)
+                {
+                    _events.OnCompleted();
+                }
+            }
+
+            void StopPublishingChildCommandEvents()
+            {
+                if (_childCommands.TryGetValue(command, out var events) &&
+                    !events.IsDisposed)
+                {
+                    events.OnCompleted();
+                }
             }
         }
 

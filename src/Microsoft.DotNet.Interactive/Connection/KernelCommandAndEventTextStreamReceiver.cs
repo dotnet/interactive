@@ -32,30 +32,22 @@ public class KernelCommandAndEventTextStreamReceiver : KernelCommandAndEventDese
         var readlineTask = _reader.ReadLineAsync();
 
 #if true
-        try
+        var cts = new CancellationTokenSource();
+
+        var completedTask = await Task.WhenAny(
+                                readlineTask,
+                                cancellationToken.CancellationAsync(cts.Token));
+
+        cts.Cancel();
+
+        if (completedTask == readlineTask)
         {
-            var cts = new CancellationTokenSource();
+            var message = await readlineTask;
 
-            var completedTask = await Task.WhenAny(
-                                    readlineTask,
-                                    cancellationToken.CancellationAsync(cts.Token));
-
-            cts.Cancel();
-
-            if (completedTask == readlineTask)
+            if (message is { })
             {
-                var message = await readlineTask;
-
-                if (message is{})
-                {
-                    return message;
-                }
+                return message;
             }
-
-        }
-        catch (Exception exception)
-        {
-           
         }
 
         return null;
@@ -82,7 +74,7 @@ internal static class TaskHacks
                 });
             });
         }
-        catch (Exception exception)
+        catch
         {
         }
     }
