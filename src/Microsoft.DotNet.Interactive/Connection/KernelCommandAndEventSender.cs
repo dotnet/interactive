@@ -56,7 +56,9 @@ public class KernelCommandAndEventSender : IKernelCommandAndEventSender
 
     public Uri RemoteHostUri { get; }
 
-    public static KernelCommandAndEventSender FromNamedPipe(PipeStream pipeStream, Uri remoteHostUri)
+    public static KernelCommandAndEventSender FromNamedPipe(
+        PipeStream pipeStream, 
+        Uri remoteHostUri)
     {
         return new KernelCommandAndEventSender((json, token) =>
         {
@@ -65,7 +67,9 @@ public class KernelCommandAndEventSender : IKernelCommandAndEventSender
         }, remoteHostUri);
     }
 
-    public static KernelCommandAndEventSender FromTextWriter(TextWriter writer, Uri remoteHostUri)
+    public static KernelCommandAndEventSender FromTextWriter(
+        TextWriter writer, 
+        Uri remoteHostUri)
     {
         writer.NewLine = "\n";
 
@@ -76,7 +80,9 @@ public class KernelCommandAndEventSender : IKernelCommandAndEventSender
         }, remoteHostUri);
     }
 
-    public static KernelCommandAndEventSender FromObserver(IObserver<string> observer, Uri remoteHostUri)
+    public static KernelCommandAndEventSender FromObserver(
+        IObserver<string> observer, 
+        Uri remoteHostUri)
     {
         return new(observer, remoteHostUri);
     }

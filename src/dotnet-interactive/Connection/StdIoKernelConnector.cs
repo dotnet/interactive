@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.App.Connection;
 
 public class StdIoKernelConnector : IKernelConnector, IDisposable
 {
-    private ObservableCommandAndEventReceiver? _receiver;
+    private KernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventSender? _sender;
     private Process? _process;
     private Uri? _remoteHostUri;
@@ -82,7 +82,7 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
             _process.BeginErrorReadLine();
             _remoteHostUri = KernelHost.CreateHostUriForProcessId(_process.Id);
 
-            _receiver = ObservableCommandAndEventReceiver.FromObservable(stdOutObservable);
+            _receiver = KernelCommandAndEventReceiver.FromObservable(stdOutObservable);
 
             bool kernelReadyReceived = false;
             _receiver.Select(coe => coe.Event)
@@ -137,8 +137,6 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
 
             proxyKernel.RegisterForDisposal(_refCountDisposable!.GetDisposable());
         }
-
-        proxyKernel.EnsureStarted();
 
         return proxyKernel;
     }

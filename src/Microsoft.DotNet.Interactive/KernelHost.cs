@@ -5,6 +5,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Reactive;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
@@ -15,101 +16,56 @@ namespace Microsoft.DotNet.Interactive
     public class KernelHost : IDisposable
     {
         private readonly CancellationTokenSource _cancellationTokenSource = new ();
+        private readonly TaskCompletionSource<Unit> _disposed = new();
         private readonly CompositeKernel _kernel;
         private readonly IKernelCommandAndEventSender _defaultSender;
-        private readonly MultiplexingKernelCommandAndEventReceiver? _defaultReceiver;
-        private readonly IKernelCommandAndEventReceiver2? _receiver2;
-        private Task<Task>? _receiverLoop;
+        private readonly IKernelCommandAndEventReceiver _receiver;
         private IDisposable? _kernelEventSubscription;
         private readonly IKernelConnector _defaultConnector;
 
         internal KernelHost(
             CompositeKernel kernel,
-            IKernelCommandAndEventSender defaultSender,
-            MultiplexingKernelCommandAndEventReceiver defaultReceiver,
-            Uri hostUri)
-        {
-            Uri = hostUri ?? throw new ArgumentNullException(nameof(hostUri));
-            _kernel = kernel;
-            _defaultSender = defaultSender;
-            _defaultReceiver = defaultReceiver;
-            _defaultConnector = new DefaultKernelConnector(
-                _defaultSender, 
-                _defaultReceiver);
-            _kernel.SetHost(this);
-        }
-
-        internal KernelHost(
-            CompositeKernel kernel,
             IKernelCommandAndEventSender sender,
-            IKernelCommandAndEventReceiver2 receiver,
+            IKernelCommandAndEventReceiver receiver,
             Uri hostUri)
         {
             Uri = hostUri ?? throw new ArgumentNullException(nameof(hostUri));
             _kernel = kernel;
             _defaultSender = sender;
-            _receiver2 = receiver;
+            _receiver = receiver;
             _defaultConnector = new DefaultKernelConnector(
                 _defaultSender,
-                _receiver2);
+                _receiver);
             _kernel.SetHost(this);
         }
 
         private class DefaultKernelConnector : IKernelConnector
         {
             private readonly IKernelCommandAndEventSender _sender;
-            private readonly MultiplexingKernelCommandAndEventReceiver? _receiver;
-            private readonly IKernelCommandAndEventReceiver2? _receiver2;
+            private readonly IKernelCommandAndEventReceiver? _receiver;
 
             public DefaultKernelConnector(
                 IKernelCommandAndEventSender sender,
-                MultiplexingKernelCommandAndEventReceiver receiver)
+                IKernelCommandAndEventReceiver receiver)
             {
                 _sender = sender;
                 _receiver = receiver;
             }
 
-            public DefaultKernelConnector(
-                IKernelCommandAndEventSender sender,
-                IKernelCommandAndEventReceiver2 receiver)
-            {
-                _sender = sender;
-                _receiver2 = receiver;
-            }
-
             public Task<Kernel> CreateKernelAsync(string kernelName)
             {
-                ProxyKernel proxy;
-
-                if (_receiver is not null)
-                {
-                    proxy = new ProxyKernel(
-                        kernelName,
-                        _sender,
-                        _receiver.CreateChildReceiver(), new Uri(_sender.RemoteHostUri, kernelName));
-                }
-                else
-                {
-                    proxy = new ProxyKernel(
-                        kernelName,
-                        _sender,
-                        _receiver2,
-                        new Uri(_sender.RemoteHostUri, kernelName));
-                }
-
-                proxy.EnsureStarted();
-
+                var proxy = new ProxyKernel(
+                    kernelName,
+                    _sender,
+                    _receiver,
+                    new Uri(_sender.RemoteHostUri, kernelName));
+                
                 return Task.FromResult<Kernel>(proxy);
             }
         }
 
         public async Task ConnectAsync()
         {
-            if (_receiverLoop is { })
-            {
-                throw new InvalidOperationException("The host is already connected.");
-            }
-
             _kernelEventSubscription = _kernel.KernelEvents.Subscribe(e =>
             {
                 if (e is ReturnValueProduced { Value: DisplayedValue })
@@ -134,43 +90,17 @@ namespace Microsoft.DotNet.Interactive
                 var _ = _defaultSender.SendAsync(e, _cancellationTokenSource.Token);
             });
 
-            if (_defaultReceiver is not null)
+            _receiver.Subscribe(commandOrEvent =>
             {
-                _receiverLoop = Task.Factory.StartNew(
-                    ReceiverLoop,
-                    _cancellationTokenSource.Token,
-                    TaskCreationOptions.LongRunning,
-                    TaskScheduler.Default);
-
-                async Task ReceiverLoop()
+                if (commandOrEvent.IsParseError)
                 {
-                    await foreach (var commandOrEvent in _defaultReceiver.CommandsAndEventsAsync(_cancellationTokenSource.Token))
-                    {
-                        if (commandOrEvent.IsParseError)
-                        {
-                            var _ = _defaultSender.SendAsync(commandOrEvent.Event, _cancellationTokenSource.Token);
-                        }
-                        else if (commandOrEvent.Command is { })
-                        {
-                            var _ = _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
-                        }
-                    }
+                    var _ = _defaultSender.SendAsync(commandOrEvent.Event, _cancellationTokenSource.Token);
                 }
-            }
-            else if (_receiver2 is not null)
-            {
-                _receiver2.Subscribe(commandOrEvent =>
+                else if (commandOrEvent.Command is { })
                 {
-                    if (commandOrEvent.IsParseError)
-                    {
-                        var _ = _defaultSender.SendAsync(commandOrEvent.Event, _cancellationTokenSource.Token);
-                    }
-                    else if (commandOrEvent.Command is { })
-                    {
-                        var _ = _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
-                    }
-                });
-            }
+                    var _ = _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
+                }
+            });
 
             await _defaultSender.SendAsync(
                 new KernelReady(),
@@ -181,10 +111,7 @@ namespace Microsoft.DotNet.Interactive
         {
             await ConnectAsync();
 
-            if (_receiverLoop is not null)
-            {
-                await _receiverLoop;
-            }
+            await _disposed.Task;
         }
 
         public void Dispose()
@@ -196,6 +123,8 @@ namespace Microsoft.DotNet.Interactive
                 _cancellationTokenSource.Cancel();
                 _cancellationTokenSource.Dispose();
             }
+
+            _disposed.TrySetResult(Unit.Default);
         }
 
         public Uri Uri { get; }
@@ -221,8 +150,6 @@ namespace Microsoft.DotNet.Interactive
             }
 
             _kernel.Add(proxyKernel);
-
-            proxyKernel.EnsureStarted();
 
             return proxyKernel;
         }

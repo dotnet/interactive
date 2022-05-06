@@ -439,7 +439,7 @@ public static class CommandLineParser
                         Console.Out,
                         KernelHost.CreateHostUri("stdio"));
 
-                    var receiver = ObservableCommandAndEventReceiver.FromTextReader(Console.In);
+                    var receiver = KernelCommandAndEventReceiver.FromTextReader(Console.In);
 
                     var host = kernel.UseHost(
                         sender,

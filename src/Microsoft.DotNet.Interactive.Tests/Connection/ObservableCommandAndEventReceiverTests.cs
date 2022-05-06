@@ -37,7 +37,7 @@ public class ObservableCommandAndEventReceiverTests : IDisposable
 
         queue.Enqueue(new CommandOrEvent(new RequestKernelInfo("csharp")));
 
-        using var receiver = new ObservableCommandAndEventReceiver(_ => queue.Dequeue());
+        using var receiver = new KernelCommandAndEventReceiver(_ => queue.Dequeue());
 
         queue.Should().NotBeEmpty();
     }
@@ -53,7 +53,7 @@ public class ObservableCommandAndEventReceiverTests : IDisposable
             _messageQueue.Add(new CommandOrEvent(new SubmitCode(i.ToString())));
         }
 
-        using var receiver = new ObservableCommandAndEventReceiver(_ =>
+        using var receiver = new KernelCommandAndEventReceiver(_ =>
         {
             var commandOrEvent = _messageQueue.Take();
             readCount++;
@@ -89,7 +89,7 @@ public class ObservableCommandAndEventReceiverTests : IDisposable
             _messageQueue.Add(new CommandOrEvent(new SubmitCode("")));
         }
 
-        using var receiver = new ObservableCommandAndEventReceiver(t =>
+        using var receiver = new KernelCommandAndEventReceiver(t =>
         {
             var commandOrEvent = _messageQueue.Take(t);
             readCount++;
@@ -116,7 +116,7 @@ public class ObservableCommandAndEventReceiverTests : IDisposable
     {
         var count = 0;
 
-        using var receiver = new ObservableCommandAndEventReceiver(t =>
+        using var receiver = new KernelCommandAndEventReceiver(t =>
         {
             Thread.Sleep(50);
 
@@ -137,7 +137,7 @@ public class ObservableCommandAndEventReceiverTests : IDisposable
     {
         var count = 0;
 
-        using var receiver = new ObservableCommandAndEventReceiver(t =>
+        using var receiver = new KernelCommandAndEventReceiver(t =>
         {
             Thread.Sleep(5);
 

@@ -3,17 +3,16 @@
 
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Connection
+namespace Microsoft.DotNet.Interactive.Connection;
+
+public interface IKernelCommandEnvelope
 {
-    public interface IKernelCommandEnvelope
-    {
-        KernelCommand Command { get; }
+    KernelCommand Command { get; }
 
-        string CommandType { get; }
+    string CommandType { get; }
 
-        string Token { get; }
+    string Token { get; }
 
-        // TODO: (CommandId) rename this 
-        string CommandId { get; }
-    }
+    // TODO: (CommandId) rename this 
+    string CommandId { get; }
 }

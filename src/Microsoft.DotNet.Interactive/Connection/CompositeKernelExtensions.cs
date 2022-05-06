@@ -10,16 +10,7 @@ public static class CompositeKernelExtensions
     public static KernelHost UseHost(
         this CompositeKernel kernel,
         IKernelCommandAndEventSender sender,
-        MultiplexingKernelCommandAndEventReceiver receiver,
-        Uri hostUri)
-    {
-        return new KernelHost(kernel, sender, receiver, hostUri);
-    }
-    
-    public static KernelHost UseHost(
-        this CompositeKernel kernel,
-        IKernelCommandAndEventSender sender,
-        IKernelCommandAndEventReceiver2 receiver,
+        IKernelCommandAndEventReceiver receiver,
         Uri hostUri)
     {
         return new KernelHost(kernel, sender, receiver, hostUri);

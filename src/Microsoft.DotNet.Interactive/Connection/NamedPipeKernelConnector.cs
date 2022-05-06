@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.Connection;
 
 public class NamedPipeKernelConnector : IKernelConnector, IDisposable
 {
-    private ObservableCommandAndEventReceiver? _receiver;
+    private KernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventSender? _sender;
     private NamedPipeClientStream? _clientStream;
     private RefCountDisposable? _refCountDisposable = null;
@@ -48,7 +48,7 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
 
             _clientStream.ReadMode = PipeTransmissionMode.Message;
          
-            _receiver = ObservableCommandAndEventReceiver.FromNamedPipe(_clientStream);
+            _receiver = KernelCommandAndEventReceiver.FromNamedPipe(_clientStream);
             _sender = KernelCommandAndEventSender.FromNamedPipe(
                 _clientStream,
                 RemoteHostUri);
@@ -82,8 +82,6 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
         await _sender!.SendAsync(
             new RequestKernelInfo(destinationUri),
             CancellationToken.None);
-
-        proxyKernel.EnsureStarted();
 
         return proxyKernel;
     }

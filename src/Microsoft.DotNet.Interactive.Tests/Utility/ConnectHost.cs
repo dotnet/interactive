@@ -53,8 +53,8 @@ public static class ConnectHost
             remoteWriter,
             localHostUri);
 
-        var localReceiver = ObservableCommandAndEventReceiver.FromTextReader(localReader);
-        var remoteReceiver = ObservableCommandAndEventReceiver.FromTextReader(remoteReader);
+        var localReceiver = KernelCommandAndEventReceiver.FromTextReader(localReader);
+        var remoteReceiver = KernelCommandAndEventReceiver.FromTextReader(remoteReader);
 
         var localHost = localCompositeKernel.UseHost(
             localToRemoteSender,
@@ -100,8 +100,8 @@ public static class ConnectHost
         var localSenderSubject = new Subject<string>();
         var remoteSenderSubject = new Subject<string>();
 
-        var localReceiver = ObservableCommandAndEventReceiver.FromObservable(remoteSenderSubject);
-        var remoteReceiver = ObservableCommandAndEventReceiver.FromObservable(localSenderSubject);
+        var localReceiver = KernelCommandAndEventReceiver.FromObservable(remoteSenderSubject);
+        var remoteReceiver = KernelCommandAndEventReceiver.FromObservable(localSenderSubject);
 
         var localToRemoteSender = KernelCommandAndEventSender.FromObserver(
             localSenderSubject,

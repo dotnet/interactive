@@ -4,16 +4,15 @@
 using System.CommandLine;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.App.CommandLine
+namespace Microsoft.DotNet.Interactive.App.CommandLine;
+
+internal static class KernelHostLauncher
 {
-    internal static class KernelHostLauncher{
-        public static async Task<int> Do(StartupOptions startupOptions, KernelHost kernelHost, IConsole console)
-        {
-            var disposable = Program.StartToolLogging(startupOptions);
-            await kernelHost.ConnectAndWaitAsync();
-            disposable.Dispose();
-            return 0;
-        }
+    public static async Task<int> Do(StartupOptions startupOptions, KernelHost kernelHost, IConsole console)
+    {
+        var disposable = Program.StartToolLogging(startupOptions);
+        await kernelHost.ConnectAndWaitAsync();
+        disposable.Dispose();
+        return 0;
     }
-  
 }
