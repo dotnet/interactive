@@ -13,8 +13,9 @@ namespace Microsoft.DotNet.Interactive.Connection
 {
     public sealed class ProxyKernel : Kernel
     {
-        private readonly IKernelCommandAndEventReceiver _receiver;
         private readonly IKernelCommandAndEventSender _sender;
+        private readonly IKernelCommandAndEventReceiver _receiver;
+        private readonly IKernelCommandAndEventReceiver2 _receiver2;
         private readonly CancellationTokenSource _cancellationTokenSource = new();
         private ExecutionContext _executionContext;
 
@@ -32,6 +33,31 @@ namespace Microsoft.DotNet.Interactive.Connection
             Uri remoteUri = null) : base(name)
         {
             _receiver = receiver ?? throw new ArgumentNullException(nameof(receiver));
+            _sender = sender ?? throw new ArgumentNullException(nameof(sender));
+
+            if (remoteUri is not null)
+            {
+                _remoteUri = remoteUri;
+            }
+            else if (sender.RemoteHostUri is { } remoteHostUri)
+            {
+                _remoteUri = new(remoteHostUri, name);
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(remoteUri));
+            }
+
+            KernelInfo.RemoteUri = _remoteUri;
+        }
+        
+        public ProxyKernel(
+            string name,
+            IKernelCommandAndEventSender sender,
+            IKernelCommandAndEventReceiver2 receiver,
+            Uri remoteUri = null) : base(name)
+        {
+            _receiver2 = receiver ?? throw new ArgumentNullException(nameof(receiver));
             _sender = sender ?? throw new ArgumentNullException(nameof(sender));
 
             if (remoteUri is not null)

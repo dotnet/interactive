@@ -18,6 +18,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly CompositeKernel _kernel;
         private readonly IKernelCommandAndEventSender _defaultSender;
         private readonly MultiplexingKernelCommandAndEventReceiver _defaultReceiver;
+        private readonly IKernelCommandAndEventReceiver2 _receiver2;
         private Task<Task>? _receiverLoop;
         private IDisposable? _kernelEventSubscription;
         private readonly IKernelConnector _defaultConnector;
@@ -38,26 +39,64 @@ namespace Microsoft.DotNet.Interactive
             _kernel.SetHost(this);
         }
 
+        internal KernelHost(
+            CompositeKernel kernel,
+            IKernelCommandAndEventSender sender,
+            IKernelCommandAndEventReceiver2 receiver,
+            Uri hostUri)
+        {
+            Uri = hostUri ?? throw new ArgumentNullException(nameof(hostUri));
+            _kernel = kernel;
+            _defaultSender = sender;
+            _receiver2 = receiver;
+            _defaultConnector = new DefaultKernelConnector(
+                _defaultSender,
+                _receiver2);
+            _kernel.SetHost(this);
+        }
+
         private class DefaultKernelConnector : IKernelConnector
         {
-            private readonly IKernelCommandAndEventSender _defaultSender;
-            private readonly MultiplexingKernelCommandAndEventReceiver _defaultReceiver;
+            private readonly IKernelCommandAndEventSender _sender;
+            private readonly MultiplexingKernelCommandAndEventReceiver _receiver;
+            private readonly IKernelCommandAndEventReceiver2 _receiver2;
 
             public DefaultKernelConnector(
-                IKernelCommandAndEventSender defaultSender,
-                MultiplexingKernelCommandAndEventReceiver defaultReceiver)
+                IKernelCommandAndEventSender sender,
+                MultiplexingKernelCommandAndEventReceiver receiver)
             {
-                _defaultSender = defaultSender;
-                _defaultReceiver = defaultReceiver;
+                _sender = sender;
+                _receiver = receiver;
+            }
+
+            public DefaultKernelConnector(
+                IKernelCommandAndEventSender sender,
+                IKernelCommandAndEventReceiver2 receiver)
+            {
+                _sender = sender;
+                _receiver2 = receiver;
             }
 
             public Task<Kernel> CreateKernelAsync(string kernelName)
             {
-                var proxy = new ProxyKernel(
-                    kernelName,
-                    _defaultReceiver.CreateChildReceiver(),
-                    _defaultSender,
-                    new Uri(_defaultSender.RemoteHostUri, kernelName));
+                ProxyKernel proxy;
+
+                if (_receiver is { })
+                {
+                    proxy = new ProxyKernel(
+                        kernelName,
+                        _receiver.CreateChildReceiver(),
+                        _sender,
+                        new Uri(_sender.RemoteHostUri, kernelName));
+                }
+                else
+                {
+                    proxy = new ProxyKernel(
+                        kernelName,
+                        _sender,
+                        _receiver2,
+                        new Uri(_sender.RemoteHostUri, kernelName));
+                }
 
                 proxy.EnsureStarted();
 
@@ -96,19 +135,32 @@ namespace Microsoft.DotNet.Interactive
                 var _ = _defaultSender.SendAsync(e, _cancellationTokenSource.Token);
             });
 
-            _receiverLoop = Task.Factory.StartNew(
-                ReceiverLoop, 
-                _cancellationTokenSource.Token,
-                TaskCreationOptions.LongRunning,
-                TaskScheduler.Default);
-
-            await _defaultSender.SendAsync(
-                new KernelReady(),
-                _cancellationTokenSource.Token);
-
-            async Task ReceiverLoop()
+            if (_defaultReceiver is { })
             {
-                await foreach (var commandOrEvent in _defaultReceiver.CommandsAndEventsAsync(_cancellationTokenSource.Token))
+                _receiverLoop = Task.Factory.StartNew(
+                    ReceiverLoop,
+                    _cancellationTokenSource.Token,
+                    TaskCreationOptions.LongRunning,
+                    TaskScheduler.Default);
+
+                async Task ReceiverLoop()
+                {
+                    await foreach (var commandOrEvent in _defaultReceiver.CommandsAndEventsAsync(_cancellationTokenSource.Token))
+                    {
+                        if (commandOrEvent.IsParseError)
+                        {
+                            var _ = _defaultSender.SendAsync(commandOrEvent.Event, _cancellationTokenSource.Token);
+                        }
+                        else if (commandOrEvent.Command is { })
+                        {
+                            var _ = _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                _receiver2.Subscribe(commandOrEvent =>
                 {
                     if (commandOrEvent.IsParseError)
                     {
@@ -116,10 +168,14 @@ namespace Microsoft.DotNet.Interactive
                     }
                     else if (commandOrEvent.Command is { })
                     {
-                        var _ = Task.Run(() => _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token));
+                        var _ = _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
                     }
-                }
+                });
             }
+
+            await _defaultSender.SendAsync(
+                new KernelReady(),
+                _cancellationTokenSource.Token);
         }
 
         public async Task ConnectAndWaitAsync()
@@ -147,6 +203,11 @@ namespace Microsoft.DotNet.Interactive
             Uri remoteKernelUri,
             string[]? aliases = null)
         {
+            if (kernelConnector is null)
+            {
+                throw new ArgumentNullException(nameof(kernelConnector));
+            }
+
             var proxyKernel = (ProxyKernel)await kernelConnector.CreateKernelAsync(localName);
 
             proxyKernel.KernelInfo.RemoteUri = remoteKernelUri;

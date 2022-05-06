@@ -19,12 +19,22 @@ public class KernelCommandAndEventTextStreamReceiver : KernelCommandAndEventDese
 
     protected override async Task<string> ReadMessageAsync(CancellationToken cancellationToken)
     {
+        return await _reader.ReadLineAsync(cancellationToken);
+    }
+}
+
+internal static class TextReaderExtensions
+{
+    public static async Task<string> ReadLineAsync(
+        this TextReader textReader, 
+        CancellationToken cancellationToken)
+    {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var readlineTask = _reader.ReadLineAsync();
+        var readlineTask = textReader.ReadLineAsync();
 
         var cts = new CancellationTokenSource();
-        
+
         var completedTask = await Task.WhenAny(
                                 readlineTask,
                                 cancellationToken.CancellationAsync(cts.Token));

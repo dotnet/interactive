@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.Tests.Utility;
@@ -11,7 +12,8 @@ public static class ConnectHost
 {
     public static CompositeKernel ConnectInProcessHost(
         this CompositeKernel localCompositeKernel,
-        Uri uri = null)
+        Uri uri = null,
+        bool useNewReceiver = false)
     {
         CompositeKernel remoteCompositeKernel = new();
 
@@ -21,37 +23,37 @@ public static class ConnectHost
             localCompositeKernel,
             remoteCompositeKernel,
             uri ?? new Uri("kernel://local/"),
-            new Uri("kernel://remote/"));
+            new Uri("kernel://remote/"),
+            useNewReceiver);
 
         return localCompositeKernel;
     }
-    
+
     public static void ConnectInProcessHost(
         CompositeKernel localCompositeKernel,
         CompositeKernel remoteCompositeKernel,
         Uri localHostUri = null,
-        Uri remoteHostUri = null)
+        Uri remoteHostUri = null,
+        bool useNewReceiver = false)
     {
         localHostUri ??= new("kernel://local");
         remoteHostUri ??= new("kernel://remote");
 
-        var remoteToLocalStream = new TestConsoleStream();
         var localToRemoteStream = new TestConsoleStream();
+        localCompositeKernel.RegisterForDisposal(localToRemoteStream);
+        var remoteToLocalStream = new TestConsoleStream();
+        remoteCompositeKernel.RegisterForDisposal(remoteToLocalStream);
 
         var localReader = new StreamReader(remoteToLocalStream);
+        localCompositeKernel.RegisterForDisposal(localReader);
         var remoteReader = new StreamReader(localToRemoteStream);
+        remoteCompositeKernel.RegisterForDisposal(remoteReader);
 
         var localWriter = new StreamWriter(localToRemoteStream);
+        localCompositeKernel.RegisterForDisposal(localWriter);
         var remoteWriter = new StreamWriter(remoteToLocalStream);
+        remoteCompositeKernel.RegisterForDisposal(remoteWriter);
         
-        var localInnerReceiver = new KernelCommandAndEventTextStreamReceiver(
-            localReader);
-        var remoteInnerReceiver = new KernelCommandAndEventTextStreamReceiver(
-            remoteReader);
-
-        var localReceiver = new MultiplexingKernelCommandAndEventReceiver(localInnerReceiver);
-        var remoteReceiver = new MultiplexingKernelCommandAndEventReceiver(remoteInnerReceiver);
-
         var localToRemoteSender = new KernelCommandAndEventTextStreamSender(
             localWriter,
             remoteHostUri);
@@ -59,25 +61,58 @@ public static class ConnectHost
             remoteWriter,
             localHostUri);
 
-        var localHost = localCompositeKernel.UseHost(
-            localToRemoteSender,
-            localReceiver,
-            localHostUri);
+        KernelHost localHost;
+        KernelHost remoteHost;
 
-        var remoteHost = remoteCompositeKernel.UseHost(
-            remoteToLocalSender,
-            remoteReceiver,
-            remoteHostUri);
+        if (!useNewReceiver)
+        {
+            var localInnerReceiver = new KernelCommandAndEventTextStreamReceiver(
+                localReader);
+            var remoteInnerReceiver = new KernelCommandAndEventTextStreamReceiver(
+                remoteReader);
 
-        var _ = localHost.ConnectAsync();
-        var __ = remoteHost.ConnectAsync();
+            var localReceiver = new MultiplexingKernelCommandAndEventReceiver(localInnerReceiver);
+            var remoteReceiver = new MultiplexingKernelCommandAndEventReceiver(remoteInnerReceiver);
+
+            localHost = localCompositeKernel.UseHost(
+                localToRemoteSender,
+                localReceiver,
+                localHostUri);
+
+            remoteHost = remoteCompositeKernel.UseHost(
+                remoteToLocalSender,
+                remoteReceiver,
+                remoteHostUri);
+
+            localCompositeKernel.RegisterForDisposal(localReceiver);
+            remoteCompositeKernel.RegisterForDisposal(remoteReceiver);
+        }
+        else
+        {
+            var localReceiver = new CommandAndEventReciever(null);
+            localCompositeKernel.RegisterForDisposal(localReceiver);
+            var remoteReceiver = new CommandAndEventReciever(null);
+            remoteCompositeKernel.RegisterForDisposal(remoteReceiver);
+
+            localHost = localCompositeKernel.UseHost(
+                localToRemoteSender,
+                localReceiver,
+                localHostUri);
+
+            remoteHost = remoteCompositeKernel.UseHost(
+                remoteToLocalSender,
+                remoteReceiver,
+                remoteHostUri);
+        }
+
+        Task.Run(async () =>
+        {
+            await localHost.ConnectAsync();
+            await remoteHost.ConnectAsync();
+        }).Wait();
 
         localCompositeKernel.RegisterForDisposal(localHost);
-        localCompositeKernel.RegisterForDisposal(localReceiver);
-        localCompositeKernel.RegisterForDisposal(remoteToLocalStream);
         remoteCompositeKernel.RegisterForDisposal(remoteHost);
-        remoteCompositeKernel.RegisterForDisposal(remoteReceiver);
-        localCompositeKernel.RegisterForDisposal(localToRemoteStream);
     }
 
     private class TestConsoleStream : Stream

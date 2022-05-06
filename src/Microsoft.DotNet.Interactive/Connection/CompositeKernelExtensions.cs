@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Connection;
 
@@ -15,5 +14,14 @@ public static class CompositeKernelExtensions
         Uri hostUri)
     {
         return new KernelHost(kernel, defaultSender, defaultReceiver, hostUri);
+    }
+    
+    public static KernelHost UseHost(
+        this CompositeKernel kernel,
+        IKernelCommandAndEventSender sender,
+        IKernelCommandAndEventReceiver2 receiver,
+        Uri hostUri)
+    {
+        return new KernelHost(kernel, sender, receiver, hostUri);
     }
 }
