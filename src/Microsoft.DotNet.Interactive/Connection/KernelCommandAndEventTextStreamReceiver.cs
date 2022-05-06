@@ -23,7 +23,6 @@ public class KernelCommandAndEventTextStreamReceiver : KernelCommandAndEventDese
 
         var readlineTask = _reader.ReadLineAsync();
 
-#if true
         var cts = new CancellationTokenSource();
         
         var completedTask = await Task.WhenAny(
@@ -43,9 +42,6 @@ public class KernelCommandAndEventTextStreamReceiver : KernelCommandAndEventDese
         }
 
         return null;
-#else
-        return await readlineTask;
-#endif
     }
 }
 
