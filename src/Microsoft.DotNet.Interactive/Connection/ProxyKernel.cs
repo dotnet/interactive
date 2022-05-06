@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
@@ -75,15 +76,35 @@ namespace Microsoft.DotNet.Interactive.Connection
 
             KernelInfo.RemoteUri = _remoteUri;
         }
-        
+
         public void EnsureStarted()
         {
             if (Interlocked.CompareExchange(ref _started, 1, 0) == 1)
             {
                 return;
             }
-            
-            Task.Run(ReceiveAndPublishCommandsAndEvents);
+
+            if (_receiver is not null)
+            {
+                Task.Run(ReceiveAndPublishCommandsAndEvents);
+            }
+            else
+            {
+                var observable = _receiver2.Publish();
+
+                var subscription = observable.Subscribe(coe =>
+                {
+                    if (coe.Event is { } e)
+                    {
+                        DelegatePublication(e);
+                    }
+                });
+
+                var d = observable.Connect();
+
+                RegisterForDisposal(subscription);
+                RegisterForDisposal(d);
+            }
         }
 
         private async Task ReceiveAndPublishCommandsAndEvents()

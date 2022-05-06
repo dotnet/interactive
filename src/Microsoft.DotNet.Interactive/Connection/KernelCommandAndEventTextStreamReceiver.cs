@@ -26,7 +26,7 @@ public class KernelCommandAndEventTextStreamReceiver : KernelCommandAndEventDese
 internal static class TextReaderExtensions
 {
     public static async Task<string> ReadLineAsync(
-        this TextReader textReader, 
+        this TextReader textReader,
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -53,11 +53,8 @@ internal static class TextReaderExtensions
 
         return null;
     }
-}
 
-internal static class TaskHacks
-{
-    public static async Task CancellationAsync(
+    private static async Task CancellationAsync(
         this CancellationToken cancellationToken,
         CancellationToken cancellationToken2)
     {

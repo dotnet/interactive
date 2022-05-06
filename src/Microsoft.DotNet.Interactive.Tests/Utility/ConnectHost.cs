@@ -12,8 +12,7 @@ public static class ConnectHost
 {
     public static CompositeKernel ConnectInProcessHost(
         this CompositeKernel localCompositeKernel,
-        Uri uri = null,
-        bool useNewReceiver = false)
+        Uri uri = null)
     {
         CompositeKernel remoteCompositeKernel = new();
 
@@ -24,7 +23,25 @@ public static class ConnectHost
             remoteCompositeKernel,
             uri ?? new Uri("kernel://local/"),
             new Uri("kernel://remote/"),
-            useNewReceiver);
+            false);
+
+        return localCompositeKernel;
+    }
+
+    public static CompositeKernel ConnectInProcessHost2(
+        this CompositeKernel localCompositeKernel,
+        Uri uri = null)
+    {
+        CompositeKernel remoteCompositeKernel = new();
+
+        localCompositeKernel.RegisterForDisposal(remoteCompositeKernel);
+
+        ConnectInProcessHost(
+            localCompositeKernel,
+            remoteCompositeKernel,
+            uri ?? new Uri("kernel://local/"),
+            new Uri("kernel://remote/"),
+            true);
 
         return localCompositeKernel;
     }
@@ -64,7 +81,7 @@ public static class ConnectHost
         KernelHost localHost;
         KernelHost remoteHost;
 
-        if (!useNewReceiver)
+        if (false)
         {
             var localInnerReceiver = new KernelCommandAndEventTextStreamReceiver(
                 localReader);
@@ -89,9 +106,9 @@ public static class ConnectHost
         }
         else
         {
-            var localReceiver = new CommandAndEventReciever(null);
+            var localReceiver = CommandAndEventReceiver.FromTextReader(localReader);
             localCompositeKernel.RegisterForDisposal(localReceiver);
-            var remoteReceiver = new CommandAndEventReciever(null);
+            var remoteReceiver = CommandAndEventReceiver.FromTextReader(remoteReader);
             remoteCompositeKernel.RegisterForDisposal(remoteReceiver);
 
             localHost = localCompositeKernel.UseHost(

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.IO;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -16,7 +17,7 @@ public interface IKernelCommandAndEventReceiver2 : IObservable<CommandOrEvent>
 
 public delegate CommandOrEvent ReadMessage(CancellationToken cancellationToken = default);
 
-public class CommandAndEventReciever : IKernelCommandAndEventReceiver2, IDisposable
+public class CommandAndEventReceiver : IKernelCommandAndEventReceiver2, IDisposable
 {
     private readonly ReadMessage _readMessage;
     private readonly Subject<CommandOrEvent> _subject = new();
@@ -24,9 +25,9 @@ public class CommandAndEventReciever : IKernelCommandAndEventReceiver2, IDisposa
     private readonly CompositeDisposable _disposables = new();
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     
-    public CommandAndEventReciever(ReadMessage readMessage)
+    public CommandAndEventReceiver(ReadMessage readMessage)
     {
-        _readMessage = readMessage;
+        _readMessage = readMessage ?? throw new ArgumentNullException(nameof(readMessage));
 
         _disposables.Add(Disposable.Create(() => _cancellationTokenSource.Cancel()));
 
@@ -39,7 +40,7 @@ public class CommandAndEventReciever : IKernelCommandAndEventReceiver2, IDisposa
                                                 .Subscribe(observer);
 
                                         var thread = new Thread(ReaderLoop);
-                                        thread.Name = $"{nameof(CommandAndEventReciever)} loop ({GetHashCode()})";
+                                        thread.Name = $"{nameof(CommandAndEventReceiver)} loop ({GetHashCode()})";
 
                                         thread.Start();
 
@@ -47,6 +48,18 @@ public class CommandAndEventReciever : IKernelCommandAndEventReceiver2, IDisposa
                                     }))
                                 .Publish()
                                 .RefCount();
+    }
+
+    public static CommandAndEventReceiver FromTextReader(TextReader reader)
+    {
+        return new CommandAndEventReceiver(token =>
+        {
+            var json = reader.ReadLine();
+
+            var commandOrEvent = Serializer.DeserializeCommandOrEvent(json);
+
+            return commandOrEvent;
+        });
     }
 
     private void ReaderLoop()
@@ -57,7 +70,10 @@ public class CommandAndEventReciever : IKernelCommandAndEventReceiver2, IDisposa
             {
                 var message = _readMessage(_cancellationTokenSource.Token);
 
-                _subject.OnNext(message);
+                if (message is not null)
+                {
+                    _subject.OnNext(message);
+                }
             }
         }
         catch

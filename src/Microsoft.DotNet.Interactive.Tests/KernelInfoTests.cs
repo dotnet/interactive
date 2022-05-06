@@ -104,7 +104,8 @@ public class KernelInfoTests
 
             ConnectHost.ConnectInProcessHost(
                 localCompositeKernel,
-                remoteCompositeKernel);
+                remoteCompositeKernel,
+                useNewReceiver: true);
 
             await localCompositeKernel
                   .Host
@@ -132,9 +133,7 @@ public class KernelInfoTests
                 new CSharpKernel()
             };
 
-            localCompositeKernel.ConnectInProcessHost(
-                new Uri("kernel://local/"),
-                useNewReceiver: true);
+            localCompositeKernel.ConnectInProcessHost2(new Uri("kernel://local/"));
 
             var result = await localCompositeKernel.SendAsync(new RequestKernelInfo());
 
@@ -220,7 +219,8 @@ public class KernelInfoTests
 
             ConnectHost.ConnectInProcessHost(
                 localCompositeKernel,
-                remoteCompositeKernel);
+                remoteCompositeKernel,
+                useNewReceiver: true);
 
             var remoteKernelUri = new Uri("kernel://remote/csharp");
 

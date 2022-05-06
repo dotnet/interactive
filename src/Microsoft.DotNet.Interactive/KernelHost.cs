@@ -81,7 +81,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 ProxyKernel proxy;
 
-                if (_receiver is { })
+                if (_receiver is not null)
                 {
                     proxy = new ProxyKernel(
                         kernelName,
@@ -135,7 +135,7 @@ namespace Microsoft.DotNet.Interactive
                 var _ = _defaultSender.SendAsync(e, _cancellationTokenSource.Token);
             });
 
-            if (_defaultReceiver is { })
+            if (_defaultReceiver is not null)
             {
                 _receiverLoop = Task.Factory.StartNew(
                     ReceiverLoop,
