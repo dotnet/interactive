@@ -21,7 +21,7 @@ public class ObservableCommandAndEventReceiver : IKernelCommandAndEventReceiver2
     private readonly IObservable<CommandOrEvent> _observable;
     private readonly CompositeDisposable _disposables = new();
     private CancellationTokenSource _cancellationTokenSource;
-    
+
     public ObservableCommandAndEventReceiver(ReadMessage readMessage)
     {
         _readMessage = readMessage ?? throw new ArgumentNullException(nameof(readMessage));
@@ -46,7 +46,7 @@ public class ObservableCommandAndEventReceiver : IKernelCommandAndEventReceiver2
                                         return Disposable.Create(() =>
                                         {
                                             TryCancelCancellationToken();
-                                            
+
                                             subscription.Dispose();
                                         });
                                     }))
@@ -54,7 +54,7 @@ public class ObservableCommandAndEventReceiver : IKernelCommandAndEventReceiver2
                                 .RefCount();
     }
 
-    private ObservableCommandAndEventReceiver(IObservable<string> messages) => 
+    private ObservableCommandAndEventReceiver(IObservable<string> messages) =>
         _observable = messages.ObserveOn(new EventLoopScheduler())
                               .Select(Serializer.DeserializeCommandOrEvent);
 
@@ -101,17 +101,15 @@ public class ObservableCommandAndEventReceiver : IKernelCommandAndEventReceiver2
         _disposables.Dispose();
     }
 
-    public static ObservableCommandAndEventReceiver FromObservable(IObservable<string> messages) => 
-        new (messages);
+    public static ObservableCommandAndEventReceiver FromObservable(IObservable<string> messages) =>
+        new(messages);
 
     public static ObservableCommandAndEventReceiver FromTextReader(TextReader reader) =>
         new(_ =>
         {
-            string json;
-
             try
             {
-                json = reader.ReadLine();
+                var json = reader.ReadLine();
 
                 var commandOrEvent = Serializer.DeserializeCommandOrEvent(json);
 
@@ -121,7 +119,7 @@ public class ObservableCommandAndEventReceiver : IKernelCommandAndEventReceiver2
             {
                 return null;
             }
-            catch (Exception ex)
+            catch
             {
                 return null;
             }

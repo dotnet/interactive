@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.App.Connection;
 public class StdIoKernelConnector : IKernelConnector, IDisposable
 {
     private ObservableCommandAndEventReceiver? _receiver;
-    private KernelCommandAndEventTextStreamSender? _sender;
+    private KernelCommandAndEventSender? _sender;
     private Process? _process;
     private Uri? _remoteHostUri;
     private RefCountDisposable? _refCountDisposable = null;
@@ -90,7 +90,7 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
                                    .Take(1)
                                    .Subscribe(e => kernelReadyReceived = true);
 
-            _sender = new KernelCommandAndEventTextStreamSender(
+            _sender = KernelCommandAndEventSender.FromTextWriter(
                 _process.StandardInput,
                 _remoteHostUri);
 

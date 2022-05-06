@@ -14,7 +14,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests.Connection;
 
-public class KernelCommandAndEventTextStreamSenderTests
+public class KernelCommandAndEventSenderTests
 {
     [Fact]
     public async Task when_a_KernelEvent_is_sent_it_writes_a_KernelEventEnvelope()
@@ -22,7 +22,7 @@ public class KernelCommandAndEventTextStreamSenderTests
         var kernelEvent = new CommandSucceeded(new SubmitCode("x=1"));
         var buffer = new StringBuilder();
 
-        var sender = new KernelCommandAndEventTextStreamSender(new StringWriter(buffer), KernelHost.CreateHostUri("test"));
+        var sender = KernelCommandAndEventSender.FromTextWriter(new StringWriter(buffer), KernelHost.CreateHostUri("test"));
         await sender.SendAsync(kernelEvent,CancellationToken.None);
 
         var envelopeMessage = buffer.ToString();
@@ -37,7 +37,7 @@ public class KernelCommandAndEventTextStreamSenderTests
         var kernelCommand = new SubmitCode("x=1");
         var buffer = new StringBuilder();
 
-        var sender = new KernelCommandAndEventTextStreamSender(new StringWriter(buffer), KernelHost.CreateHostUri("test"));
+        var sender = KernelCommandAndEventSender.FromTextWriter(new StringWriter(buffer), KernelHost.CreateHostUri("test"));
         await sender.SendAsync(kernelCommand,CancellationToken.None);
 
         var envelopeMessage = buffer.ToString();

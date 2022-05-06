@@ -61,7 +61,7 @@ public class KernelInfoTests
                 new FakeKernel("fsharp")
             };
 
-            ConnectHost.ConnectInProcessHost(
+            ConnectHost.ConnectInProcessHost2(
                 localCompositeKernel,
                 remoteCompositeKernel);
 
@@ -102,7 +102,7 @@ public class KernelInfoTests
                 new FakeKernel("remote-fake")
             };
 
-            ConnectHost.ConnectInProcessHost(
+            ConnectHost.ConnectInProcessHost2(
                 localCompositeKernel,
                 remoteCompositeKernel);
 
@@ -132,7 +132,7 @@ public class KernelInfoTests
                 new CSharpKernel()
             };
 
-            localCompositeKernel.ConnectInProcessHost2(new Uri("kernel://local/"));
+            localCompositeKernel.ConnectInProcessHost(new Uri("kernel://local/"));
 
             var result = await localCompositeKernel.SendAsync(new RequestKernelInfo());
 
@@ -159,7 +159,7 @@ public class KernelInfoTests
                 new FakeKernel("python")
             };
 
-            ConnectHost.ConnectInProcessHost(
+            ConnectHost.ConnectInProcessHost2(
                 localCompositeKernel,
                 remoteCompositeKernel);
 
@@ -187,7 +187,7 @@ public class KernelInfoTests
                 new FakeKernel("python")
             };
 
-            ConnectHost.ConnectInProcessHost(
+            ConnectHost.ConnectInProcessHost2(
                 localCompositeKernel,
                 remoteCompositeKernel);
 
@@ -215,7 +215,7 @@ public class KernelInfoTests
                 remoteCsharpKernel
             };
 
-            ConnectHost.ConnectInProcessHost(
+            ConnectHost.ConnectInProcessHost2(
                 localCompositeKernel,
                 remoteCompositeKernel);
 

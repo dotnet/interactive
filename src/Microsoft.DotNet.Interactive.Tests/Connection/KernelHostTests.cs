@@ -23,7 +23,7 @@ public class KernelHostTests : IDisposable
     public void When_kernel_is_added_to_hosted_CompositeKernel_then_origin_URI_is_set()
     {
         using var composite = new CompositeKernel();
-        composite.ConnectInProcessHost2();
+        composite.ConnectInProcessHost();
 
         var kernel = new FakeKernel("fake");
 
@@ -40,7 +40,7 @@ public class KernelHostTests : IDisposable
         using var localCompositeKernel = new CompositeKernel("LOCAL");
         using var remoteCompositeKernel = new CompositeKernel("REMOTE");
 
-        ConnectHost.ConnectInProcessHost(
+        ConnectHost.ConnectInProcessHost2(
             localCompositeKernel,
             remoteCompositeKernel);
 

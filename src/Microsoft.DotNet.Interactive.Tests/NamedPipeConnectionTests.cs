@@ -64,7 +64,7 @@ public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
             PipeTransmissionMode.Message,
             PipeOptions.Asynchronous);
 
-        var sender = new KernelCommandAndEventPipeStreamSender(
+        var sender = KernelCommandAndEventSender.FromNamedPipe(
             serverStream,
             new Uri("kernel://remote"));
 

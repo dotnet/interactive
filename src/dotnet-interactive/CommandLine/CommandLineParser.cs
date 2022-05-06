@@ -435,7 +435,7 @@ public static class CommandLineParser
 
                     kernel = kernel.UseQuitCommand();
 
-                    var sender = new KernelCommandAndEventTextStreamSender(
+                    var sender = KernelCommandAndEventSender.FromTextWriter(
                         Console.Out,
                         KernelHost.CreateHostUri("stdio"));
 

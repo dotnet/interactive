@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 
@@ -10,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility;
 
 public static class ConnectHost
 {
-    public static CompositeKernel ConnectInProcessHost2(
+    public static CompositeKernel ConnectInProcessHost(
         this CompositeKernel localCompositeKernel,
         Uri uri = null)
     {
@@ -18,7 +19,7 @@ public static class ConnectHost
 
         localCompositeKernel.RegisterForDisposal(remoteCompositeKernel);
 
-        ConnectInProcessHost(
+        ConnectInProcessHost2(
             localCompositeKernel,
             remoteCompositeKernel,
             uri ?? new Uri("kernel://local/"),
@@ -44,11 +45,11 @@ public static class ConnectHost
 
         var localWriter = new StreamWriter(localToRemoteStream);
         var remoteWriter = new StreamWriter(remoteToLocalStream);
-        
-        var localToRemoteSender = new KernelCommandAndEventTextStreamSender(
+
+        var localToRemoteSender = KernelCommandAndEventSender.FromTextWriter(
             localWriter,
             remoteHostUri);
-        var remoteToLocalSender = new KernelCommandAndEventTextStreamSender(
+        var remoteToLocalSender = KernelCommandAndEventSender.FromTextWriter(
             remoteWriter,
             localHostUri);
 
@@ -85,6 +86,51 @@ public static class ConnectHost
 
         localCompositeKernel.RegisterForDisposal(localToRemoteStream);
         remoteCompositeKernel.RegisterForDisposal(remoteToLocalStream);
+    }
+
+    public static void ConnectInProcessHost2(
+        CompositeKernel localCompositeKernel,
+        CompositeKernel remoteCompositeKernel,
+        Uri localHostUri = null,
+        Uri remoteHostUri = null)
+    {
+        localHostUri ??= new("kernel://local");
+        remoteHostUri ??= new("kernel://remote");
+
+        var localSenderSubject = new Subject<string>();
+        var remoteSenderSubject = new Subject<string>();
+
+        var localReceiver = ObservableCommandAndEventReceiver.FromObservable(remoteSenderSubject);
+        var remoteReceiver = ObservableCommandAndEventReceiver.FromObservable(localSenderSubject);
+
+        var localToRemoteSender = KernelCommandAndEventSender.FromObserver(
+            localSenderSubject,
+            remoteHostUri);
+        var remoteToLocalSender = KernelCommandAndEventSender.FromObserver(
+            remoteSenderSubject,
+            localHostUri);
+
+        var localHost = localCompositeKernel.UseHost(
+            localToRemoteSender,
+            localReceiver,
+            localHostUri);
+
+        var remoteHost = remoteCompositeKernel.UseHost(
+            remoteToLocalSender,
+            remoteReceiver,
+            remoteHostUri);
+
+        Task.Run(async () =>
+        {
+            await localHost.ConnectAsync();
+            await remoteHost.ConnectAsync();
+        }).Wait();
+
+        localCompositeKernel.RegisterForDisposal(localHost);
+        remoteCompositeKernel.RegisterForDisposal(remoteHost);
+        
+        localCompositeKernel.RegisterForDisposal(localReceiver);
+        remoteCompositeKernel.RegisterForDisposal(remoteReceiver);
     }
 
     private class TestConsoleStream : Stream

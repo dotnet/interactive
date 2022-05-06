@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 }
             };
 
-            ConnectHost.ConnectInProcessHost(
+            ConnectHost.ConnectInProcessHost2(
                 localCompositeKernel,
                 remoteCompositeKernel);
 
@@ -99,7 +99,7 @@ Console.WriteLine(1);";
                 }
             };
 
-            ConnectHost.ConnectInProcessHost(
+            ConnectHost.ConnectInProcessHost2(
                 localCompositeKernel,
                 remoteCompositeKernel);
 

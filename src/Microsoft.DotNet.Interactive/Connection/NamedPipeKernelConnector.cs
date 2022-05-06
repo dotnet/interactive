@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Connection;
 public class NamedPipeKernelConnector : IKernelConnector, IDisposable
 {
     private ObservableCommandAndEventReceiver? _receiver;
-    private KernelCommandAndEventPipeStreamSender? _sender;
+    private KernelCommandAndEventSender? _sender;
     private NamedPipeClientStream? _clientStream;
     private RefCountDisposable? _refCountDisposable = null;
 
@@ -49,7 +49,7 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
             _clientStream.ReadMode = PipeTransmissionMode.Message;
          
             _receiver = ObservableCommandAndEventReceiver.FromNamedPipe(_clientStream);
-            _sender = new KernelCommandAndEventPipeStreamSender(
+            _sender = KernelCommandAndEventSender.FromNamedPipe(
                 _clientStream,
                 RemoteHostUri);
 
