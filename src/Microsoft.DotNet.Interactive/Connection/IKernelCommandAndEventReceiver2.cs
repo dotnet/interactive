@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using System.IO.Pipes;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -17,7 +18,7 @@ public interface IKernelCommandAndEventReceiver2 : IObservable<CommandOrEvent>
 
 public delegate CommandOrEvent ReadMessage(CancellationToken cancellationToken = default);
 
-public class CommandAndEventReceiver : IKernelCommandAndEventReceiver2, IDisposable
+public class ObservableCommandAndEventReceiver : IKernelCommandAndEventReceiver2, IDisposable
 {
     private readonly ReadMessage _readMessage;
     private readonly Subject<CommandOrEvent> _subject = new();
@@ -25,11 +26,23 @@ public class CommandAndEventReceiver : IKernelCommandAndEventReceiver2, IDisposa
     private readonly CompositeDisposable _disposables = new();
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     
-    public CommandAndEventReceiver(ReadMessage readMessage)
+    public ObservableCommandAndEventReceiver(ReadMessage readMessage)
     {
         _readMessage = readMessage ?? throw new ArgumentNullException(nameof(readMessage));
 
-        _disposables.Add(Disposable.Create(() => _cancellationTokenSource.Cancel()));
+        _disposables.Add(Disposable.Create(() =>
+        {
+            if (!_cancellationTokenSource.IsCancellationRequested)
+            {
+                try
+                {
+                    _cancellationTokenSource.Cancel();
+                }
+                catch
+                {
+                }
+            }
+        }));
 
         _observable = Observable.Defer(
                                     () => Observable.Create<CommandOrEvent>(observer =>
@@ -40,7 +53,7 @@ public class CommandAndEventReceiver : IKernelCommandAndEventReceiver2, IDisposa
                                                 .Subscribe(observer);
 
                                         var thread = new Thread(ReaderLoop);
-                                        thread.Name = $"{nameof(CommandAndEventReceiver)} loop ({GetHashCode()})";
+                                        thread.Name = $"{nameof(ObservableCommandAndEventReceiver)} loop ({GetHashCode()})";
 
                                         thread.Start();
 
@@ -50,9 +63,8 @@ public class CommandAndEventReceiver : IKernelCommandAndEventReceiver2, IDisposa
                                 .RefCount();
     }
 
-    public static CommandAndEventReceiver FromTextReader(TextReader reader)
-    {
-        return new CommandAndEventReceiver(token =>
+    public static ObservableCommandAndEventReceiver FromTextReader(TextReader reader) =>
+        new(_ =>
         {
             var json = reader.ReadLine();
 
@@ -60,7 +72,16 @@ public class CommandAndEventReceiver : IKernelCommandAndEventReceiver2, IDisposa
 
             return commandOrEvent;
         });
-    }
+
+    public static ObservableCommandAndEventReceiver FromNamedPipe(NamedPipeClientStream stream) =>
+        new(token =>
+        {
+            var json = stream.ReadMessageAsync(token).GetAwaiter().GetResult();
+
+            var commandOrEvent = Serializer.DeserializeCommandOrEvent(json);
+
+            return commandOrEvent;
+        });
 
     private void ReaderLoop()
     {

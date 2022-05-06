@@ -29,8 +29,8 @@ namespace Microsoft.DotNet.Interactive.Connection
 
         public ProxyKernel(
             string name,
-            IKernelCommandAndEventReceiver receiver,
             IKernelCommandAndEventSender sender,
+            IKernelCommandAndEventReceiver receiver,
             Uri remoteUri = null) : base(name)
         {
             _receiver = receiver ?? throw new ArgumentNullException(nameof(receiver));

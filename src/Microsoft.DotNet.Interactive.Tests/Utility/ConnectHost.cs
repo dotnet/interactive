@@ -60,9 +60,9 @@ public static class ConnectHost
             remoteWriter,
             localHostUri);
 
-        var localReceiver = CommandAndEventReceiver.FromTextReader(localReader);
+        var localReceiver = ObservableCommandAndEventReceiver.FromTextReader(localReader);
         localCompositeKernel.RegisterForDisposal(localReceiver);
-        var remoteReceiver = CommandAndEventReceiver.FromTextReader(remoteReader);
+        var remoteReceiver = ObservableCommandAndEventReceiver.FromTextReader(remoteReader);
         remoteCompositeKernel.RegisterForDisposal(remoteReceiver);
 
         var localHost = localCompositeKernel.UseHost(

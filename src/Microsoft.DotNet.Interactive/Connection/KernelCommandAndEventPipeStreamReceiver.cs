@@ -6,20 +6,19 @@ using System.IO.Pipes;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.Connection
+namespace Microsoft.DotNet.Interactive.Connection;
+
+public class KernelCommandAndEventPipeStreamReceiver : KernelCommandAndEventDeserializingReceiverBase
 {
-    public class KernelCommandAndEventPipeStreamReceiver : KernelCommandAndEventDeserializingReceiverBase
+    private readonly PipeStream _stream;
+
+    public KernelCommandAndEventPipeStreamReceiver(PipeStream stream)
     {
-        private readonly PipeStream _stream;
+        _stream = stream ?? throw new ArgumentNullException(nameof(stream));
+    }
 
-        public KernelCommandAndEventPipeStreamReceiver(PipeStream stream)
-        {
-            _stream = stream ?? throw new ArgumentNullException(nameof(stream));
-        }
-
-        protected override Task<string> ReadMessageAsync(CancellationToken cancellationToken)
-        {
-            return _stream.ReadMessageAsync(cancellationToken);
-        }
+    protected override Task<string> ReadMessageAsync(CancellationToken cancellationToken)
+    {
+        return _stream.ReadMessageAsync(cancellationToken);
     }
 }

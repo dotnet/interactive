@@ -85,9 +85,8 @@ namespace Microsoft.DotNet.Interactive
                 {
                     proxy = new ProxyKernel(
                         kernelName,
-                        _receiver.CreateChildReceiver(),
                         _sender,
-                        new Uri(_sender.RemoteHostUri, kernelName));
+                        _receiver.CreateChildReceiver(), new Uri(_sender.RemoteHostUri, kernelName));
                 }
                 else
                 {

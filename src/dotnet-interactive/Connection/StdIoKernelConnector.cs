@@ -86,8 +86,8 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
 
             proxyKernel = new ProxyKernel(
                 kernelName,
-                _receiver,
                 _sender,
+                _receiver, 
                 new Uri(_remoteHostUri, kernelName));
             
             proxyKernel.RegisterForDisposal(_refCountDisposable);
@@ -135,9 +135,8 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
         {
             proxyKernel = new ProxyKernel(
                 kernelName,
-                _receiver.CreateChildReceiver(),
                 _sender,
-                new Uri(_remoteHostUri!, kernelName));
+                _receiver.CreateChildReceiver(), new Uri(_remoteHostUri!, kernelName));
 
             proxyKernel.RegisterForDisposal(_refCountDisposable!.GetDisposable());
         }
