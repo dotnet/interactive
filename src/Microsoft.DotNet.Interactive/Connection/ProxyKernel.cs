@@ -15,7 +15,6 @@ public sealed class ProxyKernel : Kernel
 {
     private readonly IKernelCommandAndEventSender _sender;
     private readonly IKernelCommandAndEventReceiver _receiver;
-    private readonly CancellationTokenSource _cancellationTokenSource = new();
     private ExecutionContext _executionContext;
 
     private readonly Dictionary<string, (KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<KernelEvent> completionSource, KernelInvocationContext

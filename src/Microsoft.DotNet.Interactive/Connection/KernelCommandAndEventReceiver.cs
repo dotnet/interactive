@@ -9,6 +9,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Connection;
 
@@ -33,7 +34,7 @@ public class KernelCommandAndEventReceiver : IKernelCommandAndEventReceiver, IDi
 
                                         var subscription =
                                             _subject
-                                                .ObserveOn(new EventLoopScheduler())
+                                                .ObserveOn(TaskPoolScheduler.Default)
                                                 .Subscribe(observer);
 
                                         var thread = new Thread(ReaderLoop);

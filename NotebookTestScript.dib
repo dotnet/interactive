@@ -107,18 +107,42 @@ Console.Error.Write("\x1b[0m");
 
 #!markdown
 
-# vscode kernel
+# vscode kernel and user input prompts
 This cell should prompt the user for input
 
 #!csharp
 
-var input = await GetInputAsync("give me data");
+var input = await Microsoft.DotNet.Interactive.Kernel.GetInputAsync("give me data");
 input
 
 #!fsharp
 
-let input = GetInputAsync "give me data" false |> Async.RunSynchronously
+let input = task  {
+                    let x = Microsoft.DotNet.Interactive.Kernel.GetInputAsync ("give me data")
+                    return x
+                  }
 input
+
+#!markdown
+
+This should prompt you for input.
+
+#!fsharp
+
+#!value --from-value @input:wat --name value_from_input
+
+#!markdown
+
+This should output the thing you typed into the prompt.
+
+#!fsharp
+
+#!share --from value value_from_input
+value_from_input
+
+#!markdown
+
+Now check the variable explorer. Is the value there in the `#!value` kernel?
 
 #!markdown
 
@@ -211,13 +235,3 @@ using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 
 var _ = Kernel.Root.SendAsync(new SendEditableCode("fsharp","#!share --from csharp x\nx"));
-
-#!fsharp
-
-#!share --from csharp x
-x
-
-#!fsharp
-
-#!share --from csharp x
-x
