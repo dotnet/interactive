@@ -17,8 +17,8 @@ namespace Microsoft.DotNet.Interactive
         private readonly CancellationTokenSource _cancellationTokenSource = new ();
         private readonly CompositeKernel _kernel;
         private readonly IKernelCommandAndEventSender _defaultSender;
-        private readonly MultiplexingKernelCommandAndEventReceiver _defaultReceiver;
-        private readonly IKernelCommandAndEventReceiver2 _receiver2;
+        private readonly MultiplexingKernelCommandAndEventReceiver? _defaultReceiver;
+        private readonly IKernelCommandAndEventReceiver2? _receiver2;
         private Task<Task>? _receiverLoop;
         private IDisposable? _kernelEventSubscription;
         private readonly IKernelConnector _defaultConnector;
@@ -58,8 +58,8 @@ namespace Microsoft.DotNet.Interactive
         private class DefaultKernelConnector : IKernelConnector
         {
             private readonly IKernelCommandAndEventSender _sender;
-            private readonly MultiplexingKernelCommandAndEventReceiver _receiver;
-            private readonly IKernelCommandAndEventReceiver2 _receiver2;
+            private readonly MultiplexingKernelCommandAndEventReceiver? _receiver;
+            private readonly IKernelCommandAndEventReceiver2? _receiver2;
 
             public DefaultKernelConnector(
                 IKernelCommandAndEventSender sender,
@@ -158,7 +158,7 @@ namespace Microsoft.DotNet.Interactive
                     }
                 }
             }
-            else
+            else if (_receiver2 is not null)
             {
                 _receiver2.Subscribe(commandOrEvent =>
                 {

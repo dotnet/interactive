@@ -42,7 +42,7 @@ public class ObservableCommandAndEventReceiverTests : IDisposable
     }
 
     [Fact]
-    public async Task When_there_are_multiple_subscribers_there_are_no_concurrent_reads_from_underlying_source()
+    public void When_there_are_multiple_subscribers_there_are_no_concurrent_reads_from_underlying_source()
     {
         int readCount = 0;
 

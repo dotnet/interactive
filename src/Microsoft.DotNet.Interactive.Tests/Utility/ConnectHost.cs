@@ -10,24 +10,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility;
 
 public static class ConnectHost
 {
-    public static CompositeKernel ConnectInProcessHost(
-        this CompositeKernel localCompositeKernel,
-        Uri uri = null)
-    {
-        CompositeKernel remoteCompositeKernel = new();
-
-        localCompositeKernel.RegisterForDisposal(remoteCompositeKernel);
-
-        ConnectInProcessHost(
-            localCompositeKernel,
-            remoteCompositeKernel,
-            uri ?? new Uri("kernel://local/"),
-            new Uri("kernel://remote/"),
-            false);
-
-        return localCompositeKernel;
-    }
-
     public static CompositeKernel ConnectInProcessHost2(
         this CompositeKernel localCompositeKernel,
         Uri uri = null)
@@ -51,7 +33,7 @@ public static class ConnectHost
         CompositeKernel remoteCompositeKernel,
         Uri localHostUri = null,
         Uri remoteHostUri = null,
-        bool useNewReceiver = false)
+        bool useNewReceiver = true)
     {
         localHostUri ??= new("kernel://local");
         remoteHostUri ??= new("kernel://remote");
@@ -81,7 +63,7 @@ public static class ConnectHost
         KernelHost localHost;
         KernelHost remoteHost;
 
-        if (false)
+        if (!useNewReceiver)
         {
             var localInnerReceiver = new KernelCommandAndEventTextStreamReceiver(
                 localReader);

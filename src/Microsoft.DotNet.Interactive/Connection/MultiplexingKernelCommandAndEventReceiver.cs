@@ -8,6 +8,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 using Pocket;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 using Disposable = System.Reactive.Disposables.Disposable;
@@ -87,7 +88,7 @@ namespace Microsoft.DotNet.Interactive.Connection
                 {
                     using var op = _log.OnEnterAndExit();
 
-                    // await Task.Yield();
+                    await Task.Yield();
 
                     CommandOrEvent commandOrEvent;
 
