@@ -130,7 +130,8 @@ namespace Microsoft.DotNet.Interactive.Tests
                       cts.Cancel();
                   }
 
-                  await Task.Delay(100);
+                  await Task.Delay(50);
+
                   completedDeferredOperations.Add(i);
                   return i;
               });

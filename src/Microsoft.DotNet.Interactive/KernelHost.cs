@@ -98,6 +98,7 @@ namespace Microsoft.DotNet.Interactive
                 }
                 else if (commandOrEvent.Command is { })
                 {
+                    // this needs to be dispatched this way so that it does not block the current thread, which we see in certain bidirectional command scenarios (RequestInput sent by the SubmissionParser during magic command token interpolation) in stdio mode only (i.e. System.Console.In implementation details), and it has proven non-reproducible in tests.
                     var _ = Task.Run(() => _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token));
                 }
             });

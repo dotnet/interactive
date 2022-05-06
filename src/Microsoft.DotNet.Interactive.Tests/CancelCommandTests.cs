@@ -158,7 +158,6 @@ while(!cancellationToken.IsCancellationRequested){
                 {
                     var resultForCommandToCancel = kernel.SendAsync(commandToCancel);
 
-                    // FIX: (can_cancel_user_loop_using_CancellationToken) experiment to see if the unawaited and following command are racing inside SendAsync prior to scheduling
                     await Task.Delay(200);
 
                     await kernel.SendAsync(cancelCommand).Timeout(10.Seconds());

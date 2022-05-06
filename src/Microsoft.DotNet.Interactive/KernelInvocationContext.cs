@@ -30,26 +30,18 @@ namespace Microsoft.DotNet.Interactive
         private List<Action<KernelInvocationContext>> _onCompleteActions;
 
         private readonly CancellationTokenSource _cancellationTokenSource;
-
-        // FIX: (KernelInvocationContext) 
-        private static int _instanceCount = 0;
-        public static int InstanceCount => _instanceCount;
-
+        
         private KernelInvocationContext(KernelCommand command)
         {
             var operation = new OperationLogger(
                 operationName: command.ToString(),
                 args: new object[]
                 {
-                    ("KernelCommand", command),
-                    (nameof(InstanceCount), _instanceCount),
-                    ("AsyncContext.Id", AsyncContext.Id)
+                    ("KernelCommand", command)
                 },
                 exitArgs: () => new[]
                 {
-                    ("KernelCommand", (object)command),
-                    (nameof(InstanceCount), _instanceCount),
-                    ("AsyncContext.Id", AsyncContext.Id)
+                    ("KernelCommand", (object)command)
                 },
                 category: nameof(KernelInvocationContext),
                 logOnStart: true);
@@ -70,10 +62,7 @@ namespace Microsoft.DotNet.Interactive
                     c.Error.Subscribe(s => this.DisplayStandardError(s, command))
                 };
             }));
-            
-            Interlocked.Increment(ref _instanceCount);
-            _disposables.Add(() => Interlocked.Decrement(ref _instanceCount));
-
+        
             _disposables.Add(operation);
         }
 
@@ -128,8 +117,6 @@ namespace Microsoft.DotNet.Interactive
             Exception exception = null,
             string message = null)
         {
-            // FIX: (SucceedOrFail) 
-
             lock (_lockObj)
             {
                 if (IsComplete)
@@ -138,20 +125,7 @@ namespace Microsoft.DotNet.Interactive
                 }
 
                 var completingMainCommand = CommandEqualityComparer.Instance.Equals(command, Command);
-
-                if (_childCommands.TryGetValue(Command, out var events))
-                {
-
-                }
-
-                switch (shouldComplete: completingMainCommand, isCurrent: _current.Value == this)
-                {
-                    case (true, true): break;
-                    case (true, false): break;
-                    case (false, true): break;
-                    case (false, false): break;
-                }
-
+                
                 if (succeed)
                 {
                     if (completingMainCommand)
