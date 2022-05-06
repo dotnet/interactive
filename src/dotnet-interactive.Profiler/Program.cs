@@ -105,7 +105,6 @@ Console.Write(""value three"")", "fsharp");
                         .UseNugetDirective()
                         .UseKernelHelpers()
                         .UseWho()
-                        .UseDefaultNamespaces()
                         .UseMathAndLaTeX()
                 }
                 .UseDefaultMagicCommands();

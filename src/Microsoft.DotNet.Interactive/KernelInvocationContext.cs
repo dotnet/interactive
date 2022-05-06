@@ -17,26 +17,32 @@ using CompositeDisposable = Pocket.CompositeDisposable;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public class KernelInvocationContext : IAsyncDisposable
+    public class KernelInvocationContext : IDisposable
     {
         private static readonly AsyncLocal<KernelInvocationContext> _current = new();
 
         private readonly ReplaySubject<KernelEvent> _events = new();
 
-        private readonly ConcurrentDictionary<KernelCommand, ReplaySubject<KernelEvent>> _childCommands = new (new CommandEqualityComparer());
+        private readonly ConcurrentDictionary<KernelCommand, ReplaySubject<KernelEvent>> _childCommands = new(new CommandEqualityComparer());
 
         private readonly CompositeDisposable _disposables = new();
 
-        private readonly List<Func<KernelInvocationContext, Task>> _onCompleteActions = new();
+        private List<Action<KernelInvocationContext>> _onCompleteActions;
 
         private readonly CancellationTokenSource _cancellationTokenSource;
-
+        
         private KernelInvocationContext(KernelCommand command)
         {
             var operation = new OperationLogger(
                 operationName: command.ToString(),
-                args: new object[] { ("KernelCommand", command) },
-                exitArgs: () => new[] { ("KernelCommand", (object)command) },
+                args: new object[]
+                {
+                    ("KernelCommand", command)
+                },
+                exitArgs: () => new[]
+                {
+                    ("KernelCommand", (object)command)
+                },
                 category: nameof(KernelInvocationContext),
                 logOnStart: true);
 
@@ -56,7 +62,7 @@ namespace Microsoft.DotNet.Interactive
                     c.Error.Subscribe(s => this.DisplayStandardError(s, command))
                 };
             }));
-
+        
             _disposables.Add(operation);
         }
 
@@ -81,28 +87,15 @@ namespace Microsoft.DotNet.Interactive
 
         public void Complete(KernelCommand command)
         {
-            if (CommandEqualityComparer.Instance.Equals(command, Command))
-            {
-                Publish(new CommandSucceeded(command));
-                if (!_events.IsDisposed)
-                {
-                    _events.OnCompleted();
-                }
-                IsComplete = true;
-            }
-            else
-            {
-                if (command.ShouldPublishCompletionEvent == true)
-                {
-                    Publish(new CommandSucceeded(command));
-                }
+            SucceedOrFail(true, command);
+        }
 
-                if (_childCommands.TryGetValue(command, out var events) && 
-                    !events.IsDisposed)
-                {
-                    events.OnCompleted();
-                }
-            }
+        public void Fail(
+            KernelCommand command,
+            Exception exception = null,
+            string message = null)
+        {
+            SucceedOrFail(false, command, exception, message);
         }
 
         internal void Cancel()
@@ -116,54 +109,96 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public void Fail(
+        private readonly object _lockObj = new();
+
+        private void SucceedOrFail(
+            bool succeed,
             KernelCommand command,
             Exception exception = null,
             string message = null)
         {
-            if (IsComplete)
+            lock (_lockObj)
             {
-                return;
+                if (IsComplete)
+                {
+                    return;
+                }
+
+                var completingMainCommand = CommandEqualityComparer.Instance.Equals(command, Command);
+                
+                if (succeed)
+                {
+                    if (completingMainCommand)
+                    {
+                        Publish(new CommandSucceeded(Command));
+                        StopPublishingMainCommandEvents();
+                    }
+                    else
+                    {
+                        if (command.ShouldPublishCompletionEvent == true)
+                        {
+                            Publish(new CommandSucceeded(command));
+                        }
+
+                        StopPublishingChildCommandEvents();
+                    }
+                }
+                else
+                {
+                    if (!completingMainCommand && command.ShouldPublishCompletionEvent == true)
+                    {
+                        Publish(new CommandFailed(exception, command, message));
+
+                        StopPublishingChildCommandEvents();
+                    }
+                    else
+                    {
+                        Publish(new CommandFailed(exception, Command, message));
+
+                        StopPublishingMainCommandEvents();
+
+                        TryCancel();
+                    }
+                }
+
+                IsComplete = completingMainCommand;
             }
 
-            if (command is { ShouldPublishCompletionEvent: true } && 
-                !CommandEqualityComparer.Instance.Equals(command, Command))
+            void StopPublishingMainCommandEvents()
             {
-                Publish(new CommandFailed(exception, command, message));
+                if (!_events.IsDisposed)
+                {
+                    _events.OnCompleted();
+                }
+            }
 
+            void StopPublishingChildCommandEvents()
+            {
                 if (_childCommands.TryGetValue(command, out var events) &&
                     !events.IsDisposed)
                 {
                     events.OnCompleted();
                 }
             }
-            else
-            {
-                Publish(new CommandFailed(exception, Command, message));
-                _events.OnCompleted();
-
-                TryCancel();
-
-                IsComplete = true;
-            }
         }
 
         private void TryCancel()
         {
-            try
+            if (!IsComplete)
             {
                 if (!_cancellationTokenSource.IsCancellationRequested)
                 {
                     _cancellationTokenSource.Cancel();
                 }
             }
-            catch (ObjectDisposedException)
-            {
-            }
         }
 
-        public void OnComplete(Func<KernelInvocationContext, Task> onComplete)
+        public void OnComplete(Action<KernelInvocationContext> onComplete)
         {
+            if (_onCompleteActions is null)
+            {
+                _onCompleteActions = new();
+            }
             _onCompleteActions.Add(onComplete);
         }
 
@@ -225,13 +260,13 @@ namespace Microsoft.DotNet.Interactive
                         command.Parent = _current.Value.Command;
                     }
 
-                    _current.Value._childCommands.GetOrAdd(command, c =>
+                    _current.Value._childCommands.GetOrAdd(command, _ =>
                     {
                         var replaySubject = new ReplaySubject<KernelEvent>();
 
                         var subscription = replaySubject
-                            .Where(e => e is not CommandSucceeded and not CommandFailed)
-                            .Subscribe(e => _current.Value._events.OnNext(e));
+                                           .Where(e => e is not CommandSucceeded and not CommandFailed)
+                                           .Subscribe(e => _current.Value._events.OnNext(e));
 
                         _current.Value._disposables.Add(subscription);
                         _current.Value._disposables.Add(replaySubject);
@@ -248,34 +283,26 @@ namespace Microsoft.DotNet.Interactive
 
         public Kernel HandlingKernel { get; internal set; }
 
-        public ValueTask DisposeAsync()
+        public void Dispose()
         {
-            if (_current.Value is { } active)
+            if (_current.Value == this)
             {
-                if (_current.Value == this)
-                {
-                    _current.Value = null;
-                }
-
-                if (_onCompleteActions.Count > 0)
-                {
-                    Task.Run(async () =>
-                        {
-                            foreach (var action in _onCompleteActions)
-                            {
-                                await action.Invoke(this);
-                            }
-                        })
-                        .Wait();
-                }
-
-                active.Complete(Command);
-
-                _disposables.Dispose();
+                _current.Value = null;
             }
 
-            // This method is not async because it would prevent the setting of _current.Value to null from flowing up to the caller.
-            return new ValueTask(Task.CompletedTask);
+            if (_onCompleteActions?.Count > 0)
+            {
+                foreach (var action in _onCompleteActions)
+                {
+                    action.Invoke(this);
+                }
+
+                _onCompleteActions.Clear();
+            }
+
+            Complete(Command);
+
+            _disposables.Dispose();
         }
 
         internal void CancelWithSuccess()

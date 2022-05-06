@@ -7,12 +7,13 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 
-namespace Microsoft.DotNet.Interactive.Connection
-{
-    public abstract class KernelClientBase
-    {
-        public abstract IObservable<KernelEvent> KernelEvents { get; }
+namespace Microsoft.DotNet.Interactive.Connection;
 
-        public abstract Task SendAsync(KernelCommand command, string token = null);
-    }
+public abstract class KernelClientBase
+{
+    // TODO: (KernelClientBase) delete this
+
+    public abstract IObservable<KernelEvent> KernelEvents { get; }
+
+    public abstract Task SendAsync(KernelCommand command, string token = null);
 }

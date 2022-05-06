@@ -7,14 +7,13 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 
-namespace Microsoft.DotNet.Interactive.Connection
+namespace Microsoft.DotNet.Interactive.Connection;
+
+public interface IKernelCommandAndEventSender
 {
-    public interface IKernelCommandAndEventSender
-    {
-        Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken);
+    Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken);
 
-        Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken);
+    Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken);
 
-        Uri RemoteHostUri { get; }
-    }
+    Uri RemoteHostUri { get; }
 }

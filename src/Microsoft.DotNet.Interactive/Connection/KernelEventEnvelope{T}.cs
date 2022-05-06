@@ -3,18 +3,16 @@
 
 using Microsoft.DotNet.Interactive.Events;
 
-namespace Microsoft.DotNet.Interactive.Server
+namespace Microsoft.DotNet.Interactive.Connection;
+
+public class KernelEventEnvelope<T> : KernelEventEnvelope where T : KernelEvent
 {
-    public class KernelEventEnvelope<T> : KernelEventEnvelope
-        where T : KernelEvent
+    public KernelEventEnvelope(T @event) : base(@event)
     {
-        public KernelEventEnvelope(T @event) : base(@event)
-        {
-            Event = @event;
-        }
-
-        public T Event { get; }
-
-        public override string EventType => typeof(T).Name;
+        Event = @event;
     }
+
+    public T Event { get; }
+
+    public override string EventType => typeof(T).Name;
 }

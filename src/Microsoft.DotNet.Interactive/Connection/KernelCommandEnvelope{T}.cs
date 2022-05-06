@@ -3,18 +3,16 @@
 
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Server
+namespace Microsoft.DotNet.Interactive.Connection;
+
+public class KernelCommandEnvelope<T> : KernelCommandEnvelope where T : KernelCommand
 {
-    public class KernelCommandEnvelope<T> : KernelCommandEnvelope
-        where T : KernelCommand
+    public KernelCommandEnvelope(T command) : base(command)
     {
-        public KernelCommandEnvelope(T command) : base(command)
-        {
-            Command = command;
-        }
-
-        public T Command { get; }
-
-        public override string CommandType => typeof(T).Name;
+        Command = command;
     }
+
+    public T Command { get; }
+
+    public override string CommandType => typeof(T).Name;
 }

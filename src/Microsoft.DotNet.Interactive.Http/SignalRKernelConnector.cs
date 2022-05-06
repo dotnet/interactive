@@ -3,6 +3,7 @@
 
 using System;
 using System.Reactive.Disposables;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.DotNet.Interactive.Connection;
@@ -30,12 +31,26 @@ public class SignalRKernelConnector : IKernelConnector
 
         await hubConnection.SendAsync("connect");
 
-        var receiver = new KernelCommandAndEventSignalRHubConnectionReceiver(hubConnection);
+        var subject = new Subject<string>();
+
+        var disposables = new CompositeDisposable
+        {
+            hubConnection.On<string>("kernelCommandFromRemote", e => subject.OnNext(e)),
+            hubConnection.On<string>("kernelEventFromRemote", e => subject.OnNext(e)),
+            hubConnection.On<string>("kernelEvent", e => subject.OnNext(e)),
+        };
+
+        var receiver = KernelCommandAndEventReceiver.FromObservable(subject);
+        
         var sender = new KernelCommandAndEventSignalRHubConnectionSender(hubConnection);
-        var proxyKernel = new ProxyKernel(kernelName, receiver, sender, new Uri(HubUrl, kernelName));
 
-        proxyKernel.EnsureStarted();
-
+        var proxyKernel = new ProxyKernel(
+            kernelName, 
+            sender, 
+            receiver, 
+            new Uri(HubUrl, kernelName));
+        
+        proxyKernel.RegisterForDisposal(disposables);
         proxyKernel.RegisterForDisposal(receiver);
         proxyKernel.RegisterForDisposal(Disposable.Create(async () => await hubConnection.DisposeAsync()));
 

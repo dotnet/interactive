@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive.Http
 {
@@ -25,10 +24,8 @@ namespace Microsoft.DotNet.Interactive.Http
 
         public async Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
         {
-            // FIX: remove this one as this is for backward compatibility
-            await _hubConnection.SendAsync("submitCommand", KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)), cancellationToken: cancellationToken);
-
-            await _hubConnection.SendAsync("kernelCommandFromServer", KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)), cancellationToken: cancellationToken);
+            await _hubConnection.SendAsync("kernelCommandFromServer", KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)),
+                                           cancellationToken: cancellationToken);
         }
 
         public async Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)

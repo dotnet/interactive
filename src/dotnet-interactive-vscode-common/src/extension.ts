@@ -135,10 +135,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
     function configureKernel(compositeKernel: CompositeKernel, notebookUri: vscodeLike.Uri) {
         compositeKernel.registerCommandHandler({
-            commandType: contracts.GetInputType, handle: async (commandInvocation) => {
-                const getInput = <contracts.GetInput>commandInvocation.commandEnvelope.command;
-                const prompt = getInput.prompt;
-                const password = getInput.isPassword;
+            commandType: contracts.RequestInputType, handle: async (commandInvocation) => {
+                const requestInput = <contracts.RequestInput>commandInvocation.commandEnvelope.command;
+                const prompt = requestInput.prompt;
+                const password = requestInput.isPassword;
                 const value = await vscode.window.showInputBox({ prompt, password });
                 commandInvocation.context.publish({
                     eventType: contracts.InputProducedType,

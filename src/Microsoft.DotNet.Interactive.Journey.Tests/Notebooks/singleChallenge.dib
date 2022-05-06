@@ -1,6 +1,6 @@
 #!csharp
 
-#r "nuget: Interactive.Journey"
+#r {journey_dll_path}
 
 #!csharp
 

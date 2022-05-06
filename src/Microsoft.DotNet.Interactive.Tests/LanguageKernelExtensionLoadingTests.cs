@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var kernel = CreateKernel(language);
 
-            await using var context = KernelInvocationContext.Establish(new SubmitCode(""));
+            using var context = KernelInvocationContext.Establish(new SubmitCode(""));
 
             using var events = context.KernelEvents.ToSubscribedList();
 
@@ -78,7 +78,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 dllDir);
 
             var kernel = CreateKernel(language);
-            await using var context = KernelInvocationContext.Establish(new SubmitCode(""));
+            using var context = KernelInvocationContext.Establish(new SubmitCode(""));
 
             using var events = context.KernelEvents.ToSubscribedList();
 

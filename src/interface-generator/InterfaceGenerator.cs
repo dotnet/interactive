@@ -71,11 +71,10 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 
         };
 
-        private static IEnumerable<Type> CoreAssemblyTypes = GetTypesFromClosure(typeof(KernelCommand).Assembly);
-        private static IEnumerable<Type> CSharpProjectKernelAssemblyTypes = GetTypesFromClosure(typeof(CSharpProjectKernel).Assembly);
-        private static IEnumerable<Type> VSCodeAssemblyTypes = typeof(VSCodeInteractiveHost).Assembly.ExportedTypes;
-
-        private static IEnumerable<Type> AllAssemblyTypes = CoreAssemblyTypes.Concat(CSharpProjectKernelAssemblyTypes).Concat(VSCodeAssemblyTypes).Distinct();
+        private static readonly IEnumerable<Type> CoreAssemblyTypes = GetTypesFromClosure(typeof(KernelCommand).Assembly);
+        private static readonly IEnumerable<Type> CSharpProjectKernelAssemblyTypes = GetTypesFromClosure(typeof(CSharpProjectKernel).Assembly);
+        private static readonly IEnumerable<Type> VSCodeAssemblyTypes = typeof(VSCodeClientKernelExtension).Assembly.ExportedTypes;
+        private static readonly IEnumerable<Type> AllAssemblyTypes = CoreAssemblyTypes.Concat(CSharpProjectKernelAssemblyTypes).Concat(VSCodeAssemblyTypes).Distinct();
             
         private static IEnumerable<Type> GetTypesFromClosure(Assembly rootAssembly)
         {

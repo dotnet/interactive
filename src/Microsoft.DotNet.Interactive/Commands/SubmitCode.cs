@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive.Commands
             }
         }
 
-        public string Code { get; }
+        public string Code { get; internal set; }
 
         public SubmissionType SubmissionType { get; }
 

@@ -3,7 +3,6 @@
 
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
 namespace System
 {

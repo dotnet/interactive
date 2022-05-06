@@ -36,6 +36,7 @@ export function registerVariableExplorer(context: vscode.ExtensionContext, clien
 
                     return <[string, string]>[displayLanguage, k.name];
                 }));
+
                 const kernelDisplayValues = [...availableKernelDisplayNamesToLanguageNames.keys()];
                 const selectedKernelName = await vscode.window.showQuickPick(kernelDisplayValues, { title: `Share value [${variableInfo.valueName}] from [${variableInfo.kernelName}] to ...` });
                 if (selectedKernelName) {
@@ -164,19 +165,22 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                 }
             });
 
-            for (const kernel of client.kernel.childKernels) {
+            const kernelNames = [...client.kernel.childKernels.map(k => k.name)];
+            kernelNames.push('value');
+
+            for (const name of kernelNames) {
                 try {
-                    const valueInfos = await client.requestValueInfos(kernel.name);
+                    const valueInfos = await client.requestValueInfos(name);
                     for (const valueInfo of valueInfos.valueInfos) {
                         try {
-                            const value = await client.requestValue(valueInfo.name, kernel.name);
+                            const value = await client.requestValue(valueInfo.name, name);
                             const valueName = value.name;
                             const valueValue = value.formattedValue.value;
-                            const commandUrl = `command:dotnet-interactive.shareValueTo?${encodeURIComponent(JSON.stringify({ valueName, kernelName: kernel.name }))}`;
+                            const commandUrl = `command:dotnet-interactive.shareValueTo?${encodeURIComponent(JSON.stringify({ valueName, kernelName: name }))}`;
                             rows.push({
                                 name: valueName,
                                 value: valueValue,
-                                kernel: `#!${kernel.name}`,
+                                kernel: `#!${name}`,
                                 link: commandUrl,
                             });
                         } catch (e) {

@@ -4,16 +4,15 @@
 using System.Runtime.InteropServices;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Tests.Utility
+namespace Microsoft.DotNet.Interactive.Tests.Utility;
+
+public sealed class WindowsFact : FactAttribute
 {
-    public sealed class WindowsFact : FactAttribute
+    public WindowsFact()
     {
-        public WindowsFact()
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                Skip = "Only supported on Windows";
-            }
+            Skip = "Only supported on Windows";
         }
     }
 }

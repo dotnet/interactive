@@ -2,11 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Connection;
 
-internal static class KernelCommandAndEventSenderExtensions
-{
-}
+public delegate CommandOrEvent ReadCommandOrEvent(CancellationToken cancellationToken = default);

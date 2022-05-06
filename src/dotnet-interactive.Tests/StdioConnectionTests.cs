@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -38,7 +39,7 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
         }
 
         var connector = new StdIoKernelConnector(
-            command.ToArray(), 
+            command.ToArray(),
             _configuration.WorkingDirectory);
 
         RegisterForDisposal(connector);
@@ -50,21 +51,35 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
     {
         var toolPath = new FileInfo(typeof(Program).Assembly.Location);
 
+        var args = new List<string>
+        {
+            $"\"{toolPath.FullName}\"",
+            "stdio",
+            "--default-kernel",
+            "csharp",
+        };
+
+#if DEBUG
+        if (Environment.GetEnvironmentVariable("POCKETLOGGER_LOG_PATH") is { } logPath)
+        {
+            var fileInfo = new FileInfo(logPath);
+            var proxiedLogPath = Path.Combine(fileInfo.DirectoryName, $"proxied.{fileInfo.Name}");
+
+            args.Add("--verbose");
+            args.Add("--log-path");
+            args.Add(proxiedLogPath);
+        }
+#endif
+
         return new StdioConnectionTestConfiguration
         {
             Command = Dotnet.Path.FullName,
-            Args = new []
-            {
-                $"\"{toolPath.FullName}\"",
-                "stdio",
-                "--default-kernel",
-                "csharp",
-            },
+            Args = args.ToArray(),
             WorkingDirectory = toolPath.Directory
         };
     }
 
-    [Fact] 
+    [Fact]
     public async Task stdio_server_encoding_is_utf_8()
     {
         using var localCompositeKernel = new CompositeKernel

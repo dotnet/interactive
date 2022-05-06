@@ -12,6 +12,7 @@ Microsoft.DotNet.Interactive
     .ctor(Kernel kernel)
     public System.CommandLine.Option<System.IO.FileInfo> FromFileOption { get;}
     public System.CommandLine.Option<System.Uri> FromUrlOption { get;}
+    public System.CommandLine.Option<System.String> FromValueOption { get;}
     public System.CommandLine.Option<System.String> MimeTypeOption { get;}
     public System.CommandLine.Option<System.String> NameOption { get;}
     protected System.Threading.Tasks.Task Handle(KernelInvocationContext kernelInvocationContext, System.CommandLine.Invocation.InvocationContext commandLineInvocationContext)
@@ -31,6 +32,7 @@ Microsoft.DotNet.Interactive
      Kernel GetHandlingKernel(Microsoft.DotNet.Interactive.Commands.KernelCommand command, KernelInvocationContext context)
     public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.RequestKernelInfo command, KernelInvocationContext context)
     public System.Threading.Tasks.Task LoadExtensionsFromDirectoryAsync(System.IO.DirectoryInfo directory, KernelInvocationContext context)
+    public System.Void SetDefaultTargetKernelNameForCommand(System.Type commandType, System.String kernelName)
     protected System.Void SetHandlingKernel(Microsoft.DotNet.Interactive.Commands.KernelCommand command, KernelInvocationContext context)
   public class DataDictionaryConverter : JsonConverter<System.Collections.Generic.IDictionary<System.String,System.Object>>
     .ctor()
@@ -107,6 +109,8 @@ Microsoft.DotNet.Interactive
     public static Kernel Root { get;}
     public static System.Void CSS(System.String content)
     public static DisplayedValue display(System.Object value, System.String[] mimeTypes)
+    public static System.Threading.Tasks.Task<System.String> GetInputAsync(System.String prompt = )
+    public static System.Threading.Tasks.Task<System.String> GetPasswordAsync(System.String prompt = )
     public static Microsoft.AspNetCore.Html.IHtmlContent HTML(System.String content)
     public static System.Void Javascript(System.String scriptContent)
     public ChooseKernelDirective ChooseKernelDirective { get;}
@@ -233,7 +237,7 @@ Microsoft.DotNet.Interactive
     public System.Collections.Generic.ICollection<KernelCommandInfo> SupportedKernelCommands { get; set;}
     public System.Uri Uri { get; set;}
     public System.String ToString()
-  public class KernelInvocationContext, System.IAsyncDisposable
+  public class KernelInvocationContext, System.IDisposable
     public static KernelInvocationContext Current { get;}
     public static KernelInvocationContext Establish(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public System.Threading.CancellationToken CancellationToken { get;}
@@ -243,9 +247,9 @@ Microsoft.DotNet.Interactive
     public System.IObservable<Microsoft.DotNet.Interactive.Events.KernelEvent> KernelEvents { get;}
     public KernelCommandResult Result { get;}
     public System.Void Complete(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
-    public System.Threading.Tasks.ValueTask DisposeAsync()
+    public System.Void Dispose()
     public System.Void Fail(Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Exception exception = null, System.String message = null)
-    public System.Void OnComplete(System.Func<KernelInvocationContext,System.Threading.Tasks.Task> onComplete)
+    public System.Void OnComplete(System.Action<KernelInvocationContext> onComplete)
     public System.Void Publish(Microsoft.DotNet.Interactive.Events.KernelEvent event)
     public System.Threading.Tasks.Task ScheduleAsync(System.Func<KernelInvocationContext,System.Threading.Tasks.Task> func)
   public static class KernelInvocationContextExtensions
@@ -398,6 +402,10 @@ Microsoft.DotNet.Interactive.Commands
     public System.String Code { get;}
   public class RequestHoverText : LanguageServiceCommand
     .ctor(System.String code, Microsoft.DotNet.Interactive.LinePosition linePosition, System.String targetKernelName = null)
+  public class RequestInput : KernelCommand
+    .ctor(System.String prompt, System.Boolean isPassword = False, System.String targetKernelName = null)
+    public System.Boolean IsPassword { get;}
+    public System.String Prompt { get;}
   public class RequestKernelInfo : KernelCommand
     .ctor(System.String targetKernelName = null)
     .ctor(System.Uri destinationUri)
@@ -427,10 +435,6 @@ Microsoft.DotNet.Interactive.Commands
     public System.String ValueId { get;}
     public System.Threading.Tasks.Task InvokeAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context)
 Microsoft.DotNet.Interactive.Connection
-  public class CommandAndEventObservableReceiver : KernelCommandAndEventDeserializingReceiverBase, IKernelCommandAndEventReceiver, System.IDisposable
-    .ctor(System.IObservable<System.String> serializedCommandAndEventEnvelopes)
-    public System.Void Dispose()
-    protected System.Threading.Tasks.Task<System.String> ReadMessageAsync(System.Threading.CancellationToken cancellationToken)
   public class CommandOrEvent
     .ctor(Microsoft.DotNet.Interactive.Commands.KernelCommand kernelCommand)
     .ctor(Microsoft.DotNet.Interactive.Events.KernelEvent kernelEvent, System.Boolean isParseError = False)
@@ -439,7 +443,7 @@ Microsoft.DotNet.Interactive.Connection
     public System.Boolean IsParseError { get;}
     public System.String ToString()
   public static class CompositeKernelExtensions
-    public static Microsoft.DotNet.Interactive.KernelHost UseHost(IKernelCommandAndEventSender defaultSender, MultiplexingKernelCommandAndEventReceiver defaultReceiver, System.Uri hostUri)
+    public static Microsoft.DotNet.Interactive.KernelHost UseHost(IKernelCommandAndEventSender sender, IKernelCommandAndEventReceiver receiver, System.Uri hostUri)
   public abstract class ConnectKernelCommand : System.CommandLine.Command, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
     public System.String ConnectedKernelDescription { get; set;}
     public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> ConnectKernelAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context, System.CommandLine.Invocation.InvocationContext commandLineContext)
@@ -447,45 +451,77 @@ Microsoft.DotNet.Interactive.Connection
     .ctor()
     public System.CommandLine.Option<System.String> PipeNameOption { get;}
     public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> ConnectKernelAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context, System.CommandLine.Invocation.InvocationContext commandLineContext)
-  public abstract class IKernelCommandAndEventReceiver
-    public System.Collections.Generic.IAsyncEnumerable<CommandOrEvent> CommandsAndEventsAsync(System.Threading.CancellationToken cancellationToken)
+  public class FileSystemInfoJsonConverter : Microsoft.DotNet.Interactive.JsonConverter<System.IO.FileSystemInfo>
+    .ctor()
+    public System.IO.FileSystemInfo Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+    public System.Void Write(System.Text.Json.Utf8JsonWriter writer, System.IO.FileSystemInfo value, System.Text.Json.JsonSerializerOptions options)
+  public abstract class IKernelCommandAndEventReceiver, System.IObservable<CommandOrEvent>
   public abstract class IKernelCommandAndEventSender
     public System.Uri RemoteHostUri { get;}
     public System.Threading.Tasks.Task SendAsync(Microsoft.DotNet.Interactive.Commands.KernelCommand kernelCommand, System.Threading.CancellationToken cancellationToken)
     public System.Threading.Tasks.Task SendAsync(Microsoft.DotNet.Interactive.Events.KernelEvent kernelEvent, System.Threading.CancellationToken cancellationToken)
+  public abstract class IKernelCommandEnvelope
+    public Microsoft.DotNet.Interactive.Commands.KernelCommand Command { get;}
+    public System.String CommandId { get;}
+    public System.String CommandType { get;}
+    public System.String Token { get;}
   public abstract class IKernelConnector
     public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> CreateKernelAsync(System.String kernelName)
+  public abstract class IKernelEventEnvelope
+    public Microsoft.DotNet.Interactive.Events.KernelEvent Event { get;}
+    public System.String EventType { get;}
   public abstract class KernelClientBase
     public System.IObservable<Microsoft.DotNet.Interactive.Events.KernelEvent> KernelEvents { get;}
     public System.Threading.Tasks.Task SendAsync(Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.String token = null)
-  public abstract class KernelCommandAndEventDeserializingReceiverBase : KernelCommandAndEventReceiverBase, IKernelCommandAndEventReceiver
-    protected System.Threading.Tasks.Task<CommandOrEvent> ReadCommandOrEventAsync(System.Threading.CancellationToken cancellationToken)
-    protected System.Threading.Tasks.Task<System.String> ReadMessageAsync(System.Threading.CancellationToken cancellationToken)
-  public class KernelCommandAndEventPipeStreamReceiver : KernelCommandAndEventDeserializingReceiverBase, IKernelCommandAndEventReceiver
-    .ctor(System.IO.Pipes.PipeStream stream)
-    protected System.Threading.Tasks.Task<System.String> ReadMessageAsync(System.Threading.CancellationToken cancellationToken)
-  public class KernelCommandAndEventPipeStreamSender, IKernelCommandAndEventSender
-    .ctor(System.IO.Pipes.PipeStream pipeStream, System.Uri remoteHostUri)
-    public System.Uri RemoteHostUri { get;}
-    public System.Threading.Tasks.Task SendAsync(Microsoft.DotNet.Interactive.Commands.KernelCommand kernelCommand, System.Threading.CancellationToken cancellationToken)
-    public System.Threading.Tasks.Task SendAsync(Microsoft.DotNet.Interactive.Events.KernelEvent kernelEvent, System.Threading.CancellationToken cancellationToken)
-  public abstract class KernelCommandAndEventReceiverBase, IKernelCommandAndEventReceiver
-    public System.Collections.Generic.IAsyncEnumerable<CommandOrEvent> CommandsAndEventsAsync(System.Threading.CancellationToken cancellationToken)
-    protected System.Threading.Tasks.Task<CommandOrEvent> ReadCommandOrEventAsync(System.Threading.CancellationToken cancellationToken)
-  public class KernelCommandAndEventTextReaderReceiver : KernelCommandAndEventDeserializingReceiverBase, IKernelCommandAndEventReceiver
-    .ctor(System.IO.TextReader reader)
-    protected System.Threading.Tasks.Task<System.String> ReadMessageAsync(System.Threading.CancellationToken cancellationToken)
-  public class KernelCommandAndEventTextStreamSender, IKernelCommandAndEventSender
-    public static System.String Delimiter { get;}
-    .ctor(System.IO.TextWriter writer, System.Uri remoteHostUri)
-    public System.Uri RemoteHostUri { get;}
-    public System.Threading.Tasks.Task SendAsync(Microsoft.DotNet.Interactive.Commands.KernelCommand kernelCommand, System.Threading.CancellationToken cancellationToken)
-    public System.Threading.Tasks.Task SendAsync(Microsoft.DotNet.Interactive.Events.KernelEvent kernelEvent, System.Threading.CancellationToken cancellationToken)
-  public class MultiplexingKernelCommandAndEventReceiver, IKernelCommandAndEventReceiver, System.IDisposable
-    .ctor(IKernelCommandAndEventReceiver source)
-    public System.Collections.Generic.IAsyncEnumerable<CommandOrEvent> CommandsAndEventsAsync(System.Threading.CancellationToken cancellationToken)
-    public IKernelCommandAndEventReceiver CreateChildReceiver()
+  public class KernelCommandAndEventReceiver, IKernelCommandAndEventReceiver, System.IDisposable, System.IObservable<CommandOrEvent>
+    public static KernelCommandAndEventReceiver FromNamedPipe(System.IO.Pipes.PipeStream stream)
+    public static KernelCommandAndEventReceiver FromObservable(System.IObservable<System.String> messages)
+    public static KernelCommandAndEventReceiver FromTextReader(System.IO.TextReader reader)
+    .ctor(ReadCommandOrEvent readCommandOrEvent)
     public System.Void Dispose()
+    public System.IDisposable Subscribe(System.IObserver<CommandOrEvent> observer)
+  public class KernelCommandAndEventSender, IKernelCommandAndEventSender
+    public static KernelCommandAndEventSender FromNamedPipe(System.IO.Pipes.PipeStream pipeStream, System.Uri remoteHostUri)
+    public static KernelCommandAndEventSender FromObserver(System.IObserver<System.String> observer, System.Uri remoteHostUri)
+    public static KernelCommandAndEventSender FromTextWriter(System.IO.TextWriter writer, System.Uri remoteHostUri)
+    .ctor(System.IObserver<System.String> observer, System.Uri remoteHostUri)
+    .ctor(System.Func<System.String,System.Threading.CancellationToken,System.Threading.Tasks.Task> sendAsync, System.Uri remoteHostUri)
+    public System.Uri RemoteHostUri { get;}
+    public System.Threading.Tasks.Task SendAsync(Microsoft.DotNet.Interactive.Commands.KernelCommand kernelCommand, System.Threading.CancellationToken cancellationToken)
+    public System.Threading.Tasks.Task SendAsync(Microsoft.DotNet.Interactive.Events.KernelEvent kernelEvent, System.Threading.CancellationToken cancellationToken)
+  public abstract class KernelCommandEnvelope, IKernelCommandEnvelope
+    public static IKernelCommandEnvelope Create(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
+    public static IKernelCommandEnvelope Deserialize(System.String json)
+    public static IKernelCommandEnvelope Deserialize(System.Text.Json.JsonElement json)
+    public static System.Void RegisterCommand<T>()
+    public static System.Void RegisterCommand(System.Type commandType)
+    public static System.Void RegisterDefaults()
+    public static System.String Serialize(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
+    public static System.String Serialize(IKernelCommandEnvelope envelope)
+    public System.String CommandId { get;}
+    public System.String CommandType { get;}
+    public System.String Token { get;}
+  public class KernelCommandEnvelope<T> : KernelCommandEnvelope, IKernelCommandEnvelope
+    .ctor(T command)
+    public T Command { get;}
+    public System.String CommandType { get;}
+  public abstract class KernelEventEnvelope, IKernelEventEnvelope
+    public static IKernelEventEnvelope Create(Microsoft.DotNet.Interactive.Events.KernelEvent event)
+    public static IKernelEventEnvelope Deserialize(System.String json)
+    public static IKernelEventEnvelope Deserialize(System.Text.Json.JsonElement jsonObject)
+    public static IKernelEventEnvelope DeserializeWithCommand(System.String json, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
+    public static IKernelEventEnvelope DeserializeWithCommand(System.Text.Json.JsonElement jsonObject, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
+    public static System.Void RegisterDefaults()
+    public static System.Void RegisterEvent<TEvent>()
+    public static System.Void RegisterEvent(System.Type eventType)
+    public static System.String Serialize(Microsoft.DotNet.Interactive.Events.KernelEvent event)
+    public static System.String Serialize(IKernelEventEnvelope eventEnvelope)
+    public System.String CommandType { get;}
+    public System.String EventType { get;}
+  public class KernelEventEnvelope<T> : KernelEventEnvelope, IKernelEventEnvelope
+    .ctor(T event)
+    public T Event { get;}
+    public System.String EventType { get;}
   public class NamedPipeKernelConnector, IKernelConnector, System.IDisposable
     .ctor(System.String pipeName)
     public System.String PipeName { get;}
@@ -493,10 +529,14 @@ Microsoft.DotNet.Interactive.Connection
     public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> CreateKernelAsync(System.String localName)
     public System.Void Dispose()
   public class ProxyKernel : Microsoft.DotNet.Interactive.Kernel, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValue>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValueInfos>, System.IDisposable
-    .ctor(System.String name, IKernelCommandAndEventReceiver receiver, IKernelCommandAndEventSender sender, System.Uri remoteUri = null)
-    public System.Void EnsureStarted()
+    .ctor(System.String name, IKernelCommandAndEventSender sender, IKernelCommandAndEventReceiver receiver, System.Uri remoteUri = null)
     public Microsoft.DotNet.Interactive.ValueSharing.IKernelValueDeclarer GetValueDeclarer()
     public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.RequestKernelInfo command, Microsoft.DotNet.Interactive.KernelInvocationContext context)
+  public delegate ReadCommandOrEvent : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable
+    .ctor(System.Object object, System.IntPtr method)
+    public System.IAsyncResult BeginInvoke(System.Threading.CancellationToken cancellationToken, System.AsyncCallback callback, System.Object object)
+    public CommandOrEvent EndInvoke(System.IAsyncResult result)
+    public CommandOrEvent Invoke(System.Threading.CancellationToken cancellationToken = null)
 Microsoft.DotNet.Interactive.Events
   public class CodeSubmissionReceived : KernelEvent
     .ctor(Microsoft.DotNet.Interactive.Commands.SubmitCode command)
@@ -561,6 +601,9 @@ Microsoft.DotNet.Interactive.Events
     public Microsoft.DotNet.Interactive.LinePositionSpan LinePositionSpan { get;}
   public class IncompleteCodeSubmissionReceived : KernelEvent
     .ctor(Microsoft.DotNet.Interactive.Commands.SubmitCode submitCode)
+  public class InputProduced : KernelEvent
+    .ctor(System.String value, Microsoft.DotNet.Interactive.Commands.RequestInput command)
+    public System.String Value { get;}
   public enum InsertTextFormat : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
     PlainText=1
     Snippet=2
@@ -689,54 +732,6 @@ Microsoft.DotNet.Interactive.Parsing
     public Microsoft.CodeAnalysis.Text.TextSpan Span { get;}
     public System.String ToString()
   public class TriviaToken : SyntaxToken
-Microsoft.DotNet.Interactive.Server
-  public class FileSystemInfoJsonConverter : Microsoft.DotNet.Interactive.JsonConverter<System.IO.FileSystemInfo>
-    .ctor()
-    public System.IO.FileSystemInfo Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
-    public System.Void Write(System.Text.Json.Utf8JsonWriter writer, System.IO.FileSystemInfo value, System.Text.Json.JsonSerializerOptions options)
-  public abstract class IInputTextStream, System.IDisposable, System.IObservable<System.String>
-    public System.Boolean IsStarted { get;}
-  public abstract class IKernelCommandEnvelope
-    public Microsoft.DotNet.Interactive.Commands.KernelCommand Command { get;}
-    public System.String CommandId { get;}
-    public System.String CommandType { get;}
-    public System.String Token { get;}
-  public abstract class IKernelEventEnvelope
-    public Microsoft.DotNet.Interactive.Events.KernelEvent Event { get;}
-    public System.String EventType { get;}
-  public abstract class KernelCommandEnvelope, IKernelCommandEnvelope
-    public static IKernelCommandEnvelope Create(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
-    public static IKernelCommandEnvelope Deserialize(System.String json)
-    public static IKernelCommandEnvelope Deserialize(System.Text.Json.JsonElement json)
-    public static System.Void RegisterCommand<T>()
-    public static System.Void RegisterCommand(System.Type commandType)
-    public static System.Void RegisterDefaults()
-    public static System.String Serialize(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
-    public static System.String Serialize(IKernelCommandEnvelope envelope)
-    public System.String CommandId { get;}
-    public System.String CommandType { get;}
-    public System.String Token { get;}
-  public class KernelCommandEnvelope<T> : KernelCommandEnvelope, IKernelCommandEnvelope
-    .ctor(T command)
-    public T Command { get;}
-    public System.String CommandType { get;}
-  public abstract class KernelEventEnvelope, IKernelEventEnvelope
-    public static IKernelEventEnvelope Create(Microsoft.DotNet.Interactive.Events.KernelEvent event)
-    public static IKernelEventEnvelope Deserialize(System.String json)
-    public static IKernelEventEnvelope Deserialize(System.Text.Json.JsonElement jsonObject)
-    public static IKernelEventEnvelope DeserializeWithCommand(System.String json, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
-    public static IKernelEventEnvelope DeserializeWithCommand(System.Text.Json.JsonElement jsonObject, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
-    public static System.Void RegisterDefaults()
-    public static System.Void RegisterEvent<TEvent>()
-    public static System.Void RegisterEvent(System.Type eventType)
-    public static System.String Serialize(Microsoft.DotNet.Interactive.Events.KernelEvent event)
-    public static System.String Serialize(IKernelEventEnvelope eventEnvelope)
-    public System.String CommandType { get;}
-    public System.String EventType { get;}
-  public class KernelEventEnvelope<T> : KernelEventEnvelope, IKernelEventEnvelope
-    .ctor(T event)
-    public T Event { get;}
-    public System.String EventType { get;}
 Microsoft.DotNet.Interactive.Utility
   public class AddPackageResult : CommandLineResult
     .ctor(System.Int32 exitCode, System.Collections.Generic.IReadOnlyCollection<System.String> output = null, System.Collections.Generic.IReadOnlyCollection<System.String> error = null)

@@ -3,7 +3,7 @@
 
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Server;
+using Microsoft.DotNet.Interactive.Connection;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests.Connection

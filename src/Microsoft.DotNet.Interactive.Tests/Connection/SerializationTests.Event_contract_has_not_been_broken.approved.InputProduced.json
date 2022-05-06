@@ -6,9 +6,9 @@
   "command": {
     "token": "the-token",
     "id": "command-id",
-    "commandType": "GetInput",
+    "commandType": "RequestInput",
     "command": {
-      "prompt": "",
+      "prompt": "Input?",
       "isPassword": false,
       "targetKernelName": "vscode",
       "originUri": null,

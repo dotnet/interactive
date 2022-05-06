@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 using FluentAssertions;
@@ -55,23 +56,26 @@ while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested
                     .LogCommandsToPocketLogger()
                     .LogEventsToPocketLogger();
 
+                // make sure the deferred commands are flushed
+                await kernel.SubmitCodeAsync(" ");
+
                 var commandToCancel = new SubmitCode(@"
 using Microsoft.DotNet.Interactive;
 
 while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested){ await Task.Delay(10); }",
-                targetKernelName: "csharp");
+                                                     targetKernelName: "csharp");
                 var followingCommand = new SubmitCode("1");
                 try
                 {
-
                     var _ = kernel.SendAsync(commandToCancel);
                     await kernel.SendAsync(new Cancel()).Timeout(10.Seconds());
 
-                    await kernel.SendAsync(followingCommand).Timeout(10.Seconds());
+                    var result = await kernel.SendAsync(followingCommand).Timeout(10.Seconds());
 
-                    KernelEvents
-                        .Should()
-                        .ContainSingle<CommandSucceeded>(c => c.Command == followingCommand);
+                    result.KernelEvents
+                          .ToSubscribedList()
+                          .Should()
+                          .ContainSingle<CommandSucceeded>();
                     break;
                 }
                 catch (TimeoutException)
@@ -140,9 +144,8 @@ while(!cancellationToken.IsCancellationRequested){
             // todo: this test is flaky and timeouts in CI
             while (true)
             {
-
                 using var kernel = CreateKernel();
-
+                
                 var cancelCommand = new Cancel();
 
                 var commandToCancel = new SubmitCode(@"
@@ -153,8 +156,9 @@ while(!cancellationToken.IsCancellationRequested){
 }", targetKernelName: "csharp");
                 try
                 {
-
                     var resultForCommandToCancel = kernel.SendAsync(commandToCancel);
+
+                    await Task.Delay(200);
 
                     await kernel.SendAsync(cancelCommand).Timeout(10.Seconds());
 
@@ -162,7 +166,8 @@ while(!cancellationToken.IsCancellationRequested){
 
                     var submitCodeEvents = result.KernelEvents.ToSubscribedList();
 
-                    submitCodeEvents.Should()
+                    submitCodeEvents
+                        .Should()
                         .ContainSingle<CommandFailed>()
                         .Which
                         .Command

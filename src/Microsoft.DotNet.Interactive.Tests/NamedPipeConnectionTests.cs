@@ -23,15 +23,15 @@ public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
     {
     }
 
-    protected override async Task<IKernelConnector> CreateConnectorAsync()
+    protected override Task<IKernelConnector> CreateConnectorAsync()
     {
-        await CreateRemoteKernelTopologyAsync(_pipeName);
+        CreateRemoteKernelTopology(_pipeName);
 
         var connector = new NamedPipeKernelConnector(_pipeName);
         
         RegisterForDisposal(connector);
 
-        return connector;
+        return Task.FromResult<IKernelConnector>(connector);
     }
 
     protected override SubmitCode CreateConnectCommand(string localKernelName)
@@ -45,7 +45,7 @@ public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
     }
 
     [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
-    private Task<IDisposable> CreateRemoteKernelTopologyAsync(string pipeName)
+    private void CreateRemoteKernelTopology(string pipeName)
     {
         var remoteCompositeKernel = new CompositeKernel
         {
@@ -64,16 +64,15 @@ public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
             PipeTransmissionMode.Message,
             PipeOptions.Asynchronous);
 
-        var sender = new KernelCommandAndEventPipeStreamSender(
+        var sender = KernelCommandAndEventSender.FromNamedPipe(
             serverStream,
             new Uri("kernel://remote"));
 
-        var receiver = new MultiplexingKernelCommandAndEventReceiver
-(new KernelCommandAndEventPipeStreamReceiver(serverStream));
+        var receiver = KernelCommandAndEventReceiver.FromNamedPipe(serverStream);
 
         var host = remoteCompositeKernel.UseHost(sender, receiver, new Uri("kernel://local"));
 
-        Task.Run(() =>
+        var _ = Task.Run(() =>
         {
             // required as waiting connection on named pipe server will block
             serverStream.WaitForConnection();
@@ -83,7 +82,5 @@ public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
         RegisterForDisposal(host);
         RegisterForDisposal(receiver);
         RegisterForDisposal(serverStream);
-
-        return Task.FromResult<IDisposable>(host);
     }
 }

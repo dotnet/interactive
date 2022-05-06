@@ -15,6 +15,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Journey.Tests
 {
+
     public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
     {
         [Fact]

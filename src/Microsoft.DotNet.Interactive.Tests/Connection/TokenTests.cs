@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Xunit;
@@ -33,14 +32,14 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
         }
 
         [Fact]
-        public async Task When_created_in_the_same_context_then_child_commands_having_the_same_parent_also_have_the_same_token()
+        public void When_created_in_the_same_context_then_child_commands_having_the_same_parent_also_have_the_same_token()
         {
             var parentCommand = new SubmitCode("123");
 
             string token1 = null;
             string token2 = null;
 
-            await using (KernelInvocationContext.Establish(parentCommand))
+            using (KernelInvocationContext.Establish(parentCommand))
             {
                 token1 = new SubmitCode("456").GetOrCreateToken();
                 token2 = new SubmitCode("456").GetOrCreateToken();
@@ -50,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
         }
 
         [Fact]
-        public async Task When_resent_then_child_commands_having_the_same_parent_have_repeatable_tokens()
+        public void When_resent_then_child_commands_having_the_same_parent_have_repeatable_tokens()
         {
             var parentCommand = new SubmitCode("123");
             parentCommand.SetToken("the-token");
@@ -58,12 +57,12 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
             string token1 = null;
             string token2 = null;
 
-            await using (KernelInvocationContext.Establish(parentCommand))
+            using (KernelInvocationContext.Establish(parentCommand))
             {
                 token1 = new SubmitCode("456").GetOrCreateToken();
             }
 
-            await using (KernelInvocationContext.Establish(parentCommand))
+            using (KernelInvocationContext.Establish(parentCommand))
             {
                 token2 = new SubmitCode("456").GetOrCreateToken();
             }

@@ -72,6 +72,7 @@ namespace Microsoft.DotNet.Interactive
             };
         }
 
+        [DebuggerStepThrough]
         public static Task<KernelCommandResult> SendAsync(
             this Kernel kernel,
             KernelCommand command)

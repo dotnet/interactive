@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             var fileContents = "1,2,3";
 
             var filePath = Path.GetTempFileName();
-            File.WriteAllText(filePath, fileContents);
+            await File.WriteAllTextAsync(filePath, fileContents);
 
             await kernel.SubmitCodeAsync(string.Format(code, filePath));
 
@@ -134,6 +134,32 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
+        public async Task It_can_store_user_input()
+        {
+            using var kernel = CreateKernel();
+            
+            kernel.RegisterCommandHandler<RequestInput>((requestInput, context) =>
+            {
+                context.Publish(new InputProduced("hello!", requestInput));
+                return Task.CompletedTask;
+            });
+
+            kernel.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), kernel.Name);
+            await kernel.SubmitCodeAsync("#!value --name hi --from-value @input:input-please");
+
+            var keyValueStoreKernel = (ISupportGetValue)kernel.FindKernel("value");
+
+            keyValueStoreKernel.TryGetValue("hi", out object retrievedValue);
+
+            retrievedValue
+                .Should()
+                .BeOfType<string>()
+                .Which
+                .Should()
+                .Be("hello!");
+        }
+
+        [Fact]
         public async Task from_file_and_from_url_options_are_mutually_exclusive()
         {
             using var kernel = CreateKernel();
@@ -148,6 +174,61 @@ namespace Microsoft.DotNet.Interactive.Tests
                   .Message
                   .Should()
                   .Be("The --from-url and --from-file options cannot be used together.");
+        }
+
+        [Fact]
+        public async Task from_file_and_from_value_options_are_mutually_exclusive()
+        {
+            using var kernel = CreateKernel();
+
+            var result = await kernel.SubmitCodeAsync("#!value --name hi --from-file filename.txt --from-value x");
+
+            result.KernelEvents
+                  .ToSubscribedList()
+                  .Should()
+                  .ContainSingle<CommandFailed>()
+                  .Which
+                  .Message
+                  .Should()
+                  .Be("The --from-value and --from-file options cannot be used together.");
+        }
+
+        [Fact]
+        public async Task from_url_and_from_value_options_are_mutually_exclusive()
+        {
+            using var kernel = CreateKernel();
+
+            var result = await kernel.SubmitCodeAsync("#!value --name hi --from-url http://bing.com --from-value x");
+
+            result.KernelEvents
+                  .ToSubscribedList()
+                  .Should()
+                  .ContainSingle<CommandFailed>()
+                  .Which
+                  .Message
+                  .Should()
+                  .Be("The --from-url and --from-value options cannot be used together.");
+        }
+
+        [Fact]
+        public async Task Share_into_the_value_kernel_is_not_supported_and_stores_the_directive_text_literally()
+        {
+            using var kernel = CreateKernel();
+
+            var result = await kernel.SubmitCodeAsync(@"
+#!value --name x
+#!share --from fsharp f
+");
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should().NotContainErrors();
+
+            var valueKernel = (KeyValueStoreKernel)kernel.FindKernel("value");
+
+            valueKernel.TryGetValue<string>("x", out var x).Should().BeTrue();
+
+            x.Should().Be("#!share --from fsharp f");
         }
 
         [Fact]

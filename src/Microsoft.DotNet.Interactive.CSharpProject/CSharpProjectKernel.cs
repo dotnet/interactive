@@ -12,7 +12,7 @@ using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
 using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Server;
+using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject
 {

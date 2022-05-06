@@ -11,13 +11,13 @@ export const ChangeWorkingDirectoryType = "ChangeWorkingDirectory";
 export const CompileProjectType = "CompileProject";
 export const DisplayErrorType = "DisplayError";
 export const DisplayValueType = "DisplayValue";
-export const GetInputType = "GetInput";
 export const OpenDocumentType = "OpenDocument";
 export const OpenProjectType = "OpenProject";
 export const QuitType = "Quit";
 export const RequestCompletionsType = "RequestCompletions";
 export const RequestDiagnosticsType = "RequestDiagnostics";
 export const RequestHoverTextType = "RequestHoverText";
+export const RequestInputType = "RequestInput";
 export const RequestKernelInfoType = "RequestKernelInfo";
 export const RequestSignatureHelpType = "RequestSignatureHelp";
 export const RequestValueType = "RequestValue";
@@ -33,13 +33,13 @@ export type KernelCommandType =
     | typeof CompileProjectType
     | typeof DisplayErrorType
     | typeof DisplayValueType
-    | typeof GetInputType
     | typeof OpenDocumentType
     | typeof OpenProjectType
     | typeof QuitType
     | typeof RequestCompletionsType
     | typeof RequestDiagnosticsType
     | typeof RequestHoverTextType
+    | typeof RequestInputType
     | typeof RequestKernelInfoType
     | typeof RequestSignatureHelpType
     | typeof RequestValueType
@@ -77,11 +77,6 @@ export interface DisplayValue extends KernelCommand {
     valueId: string;
 }
 
-export interface GetInput extends KernelCommand {
-    prompt: string;
-    isPassword: boolean;
-}
-
 export interface OpenDocument extends KernelCommand {
     relativeFilePath: string;
     regionName?: string;
@@ -107,6 +102,11 @@ export interface RequestDiagnostics extends KernelCommand {
 }
 
 export interface RequestHoverText extends LanguageServiceCommand {
+}
+
+export interface RequestInput extends KernelCommand {
+    prompt: string;
+    isPassword: boolean;
 }
 
 export interface RequestKernelInfo extends KernelCommand {

@@ -4,7 +4,7 @@
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.DotNet.Interactive.Server;
+using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.Http
 {

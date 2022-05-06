@@ -8,207 +8,207 @@ using System.Linq.Expressions;
 using System.Text.Json;
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Server
+namespace Microsoft.DotNet.Interactive.Connection;
+
+public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
 {
-    public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
+    private static readonly ConcurrentDictionary<Type, Func<KernelCommand, IKernelCommandEnvelope>> _envelopeFactories =
+        new();
+
+    private static ConcurrentDictionary<string, Type> _envelopeTypesByCommandTypeName;
+
+    private static ConcurrentDictionary<string, Type> _commandTypesByCommandTypeName;
+
+    static KernelCommandEnvelope()
     {
-        private static readonly ConcurrentDictionary<Type, Func<KernelCommand, IKernelCommandEnvelope>> _envelopeFactories =
-            new();
+        RegisterDefaults();
+    }
 
-        private static ConcurrentDictionary<string, Type> _envelopeTypesByCommandTypeName;
+    internal static Type CommandTypeByName(string name) => _commandTypesByCommandTypeName[name];
 
-        private static ConcurrentDictionary<string, Type> _commandTypesByCommandTypeName;
+    private readonly KernelCommand _command;
 
-        static KernelCommandEnvelope()
-        {
-            RegisterDefaults();
-        }
+    protected KernelCommandEnvelope(KernelCommand command)
+    {
+        _command = command ?? throw new ArgumentNullException(nameof(command));
+    }
 
-        internal static Type CommandTypeByName(string name) => _commandTypesByCommandTypeName[name];
+    public abstract string CommandType { get; }
 
-        private readonly KernelCommand _command;
+    public string Token => _command.GetOrCreateToken();
 
-        protected KernelCommandEnvelope(KernelCommand command)
-        {
-            _command = command ?? throw new ArgumentNullException(nameof(command));
-        }
-
-        public abstract string CommandType { get; }
-
-        public string Token => _command.GetOrCreateToken();
-
-        public string CommandId => _command.GetOrCreateId();
+    public string CommandId => _command.GetOrCreateId();
         
-        KernelCommand IKernelCommandEnvelope.Command => _command;
+    KernelCommand IKernelCommandEnvelope.Command => _command;
 
-        public static void RegisterCommand<T>() where T : KernelCommand
+    public static void RegisterCommand<T>() where T : KernelCommand
+    {
+        var commandType = typeof(T);
+        RegisterCommand(commandType);
+    }
+
+    public static void RegisterCommand(Type commandType)
+    {
+        var commandTypeName = commandType.Name;
+        var commandEnvelopeType = typeof(KernelCommandEnvelope<>).MakeGenericType(commandType);
+        _envelopeTypesByCommandTypeName[commandTypeName] = commandEnvelopeType;
+        _commandTypesByCommandTypeName[commandTypeName] = commandType;
+    }
+
+    public static void RegisterDefaults()
+    {
+        _envelopeTypesByCommandTypeName = new ConcurrentDictionary<string, Type>
         {
-            var commandType = typeof(T);
-            RegisterCommand(commandType);
+            [nameof(AddPackage)] = typeof(KernelCommandEnvelope<AddPackage>),
+            [nameof(ChangeWorkingDirectory)] = typeof(KernelCommandEnvelope<ChangeWorkingDirectory>),
+            [nameof(DisplayError)] = typeof(KernelCommandEnvelope<DisplayError>),
+            [nameof(DisplayValue)] = typeof(KernelCommandEnvelope<DisplayValue>),
+            [nameof(RequestCompletions)] = typeof(KernelCommandEnvelope<RequestCompletions>),
+            [nameof(RequestDiagnostics)] = typeof(KernelCommandEnvelope<RequestDiagnostics>),
+            [nameof(RequestHoverText)] = typeof(KernelCommandEnvelope<RequestHoverText>),
+            [nameof(RequestSignatureHelp)] = typeof(KernelCommandEnvelope<RequestSignatureHelp>),
+            [nameof(SendEditableCode)] = typeof(KernelCommandEnvelope<SendEditableCode>),
+            [nameof(SubmitCode)] = typeof(KernelCommandEnvelope<SubmitCode>),
+            [nameof(UpdateDisplayedValue)] = typeof(KernelCommandEnvelope<UpdateDisplayedValue>),
+            [nameof(Quit)] = typeof(KernelCommandEnvelope<Quit>),
+            [nameof(Cancel)] = typeof(KernelCommandEnvelope<Cancel>),
+            [nameof(RequestInput)] = typeof(KernelCommandEnvelope<RequestInput>),
+            [nameof(RequestValue)] = typeof(KernelCommandEnvelope<RequestValue>),
+            [nameof(RequestValueInfos)] = typeof(KernelCommandEnvelope<RequestValueInfos>)
+        };
+
+        _commandTypesByCommandTypeName = new ConcurrentDictionary<string, Type>(_envelopeTypesByCommandTypeName
+                                                                                    .ToDictionary(
+                                                                                        pair => pair.Key,
+                                                                                        pair => pair.Value.GetGenericArguments()[0]));
+    }
+
+    public static IKernelCommandEnvelope Create(KernelCommand command)
+    {
+        var envelopeType = _envelopeTypesByCommandTypeName.GetOrAdd(
+            command.GetType().Name,
+            commandTypeName =>
+            {
+                var commandType = command.GetType();
+
+                var commandEnvelopeType = typeof(KernelCommandEnvelope<>).MakeGenericType(commandType);
+
+                _commandTypesByCommandTypeName[commandTypeName] = commandType;
+
+                return commandEnvelopeType;
+            });
+
+        var factory = _envelopeFactories.GetOrAdd(
+            command.GetType(),
+            commandType =>
+            {
+                var constructor = envelopeType.GetConstructors().Single();
+
+                var commandParameter = Expression.Parameter(
+                    typeof(KernelCommand),
+                    "c");
+
+                var newExpression = Expression.New(
+                    constructor,
+                    Expression.Convert(commandParameter, commandType));
+
+                var expression = Expression.Lambda<Func<KernelCommand, IKernelCommandEnvelope>>(
+                    newExpression,
+                    commandParameter);
+
+                return expression.Compile();
+            });
+
+        var envelope = factory(command);
+
+        return envelope;
+    }
+
+    public static IKernelCommandEnvelope Deserialize(string json)
+    {
+        var jsonObject = JsonDocument.Parse(json);
+
+        return Deserialize(jsonObject.RootElement);
+    }
+
+    public static IKernelCommandEnvelope Deserialize(JsonElement json)
+    {
+        var commandTypeJson = string.Empty;
+        string commandJson;
+        var commandToken = string.Empty;
+        var commandId = string.Empty;
+
+        if (json.TryGetProperty(nameof(SerializationModel.commandType), out var commandTypeProperty))
+        {
+            commandTypeJson = commandTypeProperty.GetString();
         }
 
-        public static void RegisterCommand(Type commandType)
+        // restore the command id
+        if (json.TryGetProperty(nameof(SerializationModel.id), out var commandIdProperty))
         {
-            var commandTypeName = commandType.Name;
-            var commandEnvelopeType = typeof(KernelCommandEnvelope<>).MakeGenericType(commandType);
-            _envelopeTypesByCommandTypeName[commandTypeName] = commandEnvelopeType;
-            _commandTypesByCommandTypeName[commandTypeName] = commandType;
+            commandId = commandIdProperty.GetString();
         }
 
-        public static void RegisterDefaults()
+        if (string.IsNullOrWhiteSpace(commandTypeJson))
         {
-            _envelopeTypesByCommandTypeName = new ConcurrentDictionary<string, Type>
-            {
-                [nameof(AddPackage)] = typeof(KernelCommandEnvelope<AddPackage>),
-                [nameof(ChangeWorkingDirectory)] = typeof(KernelCommandEnvelope<ChangeWorkingDirectory>),
-                [nameof(DisplayError)] = typeof(KernelCommandEnvelope<DisplayError>),
-                [nameof(DisplayValue)] = typeof(KernelCommandEnvelope<DisplayValue>),
-                [nameof(RequestCompletions)] = typeof(KernelCommandEnvelope<RequestCompletions>),
-                [nameof(RequestDiagnostics)] = typeof(KernelCommandEnvelope<RequestDiagnostics>),
-                [nameof(RequestHoverText)] = typeof(KernelCommandEnvelope<RequestHoverText>),
-                [nameof(RequestSignatureHelp)] = typeof(KernelCommandEnvelope<RequestSignatureHelp>),
-                [nameof(SendEditableCode)] = typeof(KernelCommandEnvelope<SendEditableCode>),
-                [nameof(SubmitCode)] = typeof(KernelCommandEnvelope<SubmitCode>),
-                [nameof(UpdateDisplayedValue)] = typeof(KernelCommandEnvelope<UpdateDisplayedValue>),
-                [nameof(Quit)] = typeof(KernelCommandEnvelope<Quit>),
-                [nameof(Cancel)] = typeof(KernelCommandEnvelope<Cancel>),
-                [nameof(RequestValue)] = typeof(KernelCommandEnvelope<RequestValue>),
-                [nameof(RequestValueInfos)] = typeof(KernelCommandEnvelope<RequestValueInfos>)
-            };
-
-            _commandTypesByCommandTypeName = new ConcurrentDictionary<string, Type>(_envelopeTypesByCommandTypeName
-                .ToDictionary(
-                    pair => pair.Key,
-                    pair => pair.Value.GetGenericArguments()[0]));
+            return null;
         }
 
-        public static IKernelCommandEnvelope Create(KernelCommand command)
+        var commandType = CommandTypeByName(commandTypeJson);
+        if (json.TryGetProperty(nameof(SerializationModel.command), out var commandJsonProperty))
         {
-            var envelopeType = _envelopeTypesByCommandTypeName.GetOrAdd(
-                command.GetType().Name,
-                commandTypeName =>
-                {
-                    var commandType = command.GetType();
-
-                    var commandEnvelopeType = typeof(KernelCommandEnvelope<>).MakeGenericType(commandType);
-
-                    _commandTypesByCommandTypeName[commandTypeName] = commandType;
-
-                    return commandEnvelopeType;
-                });
-
-            var factory = _envelopeFactories.GetOrAdd(
-                command.GetType(),
-                commandType =>
-                {
-                    var constructor = envelopeType.GetConstructors().Single();
-
-                    var commandParameter = Expression.Parameter(
-                        typeof(KernelCommand),
-                        "c");
-
-                    var newExpression = Expression.New(
-                        constructor,
-                        Expression.Convert(commandParameter, commandType));
-
-                    var expression = Expression.Lambda<Func<KernelCommand, IKernelCommandEnvelope>>(
-                        newExpression,
-                        commandParameter);
-
-                    return expression.Compile();
-                });
-
-            var envelope = factory(command);
-
-            return envelope;
+            commandJson = commandJsonProperty.GetRawText();
+        }
+        else
+        {
+            return null;
         }
 
-        public static IKernelCommandEnvelope Deserialize(string json)
+        var command = (KernelCommand)JsonSerializer.Deserialize(commandJson, commandType, Serializer.JsonSerializerOptions);
+        if (commandId is not null)
         {
-            var jsonObject = JsonDocument.Parse(json);
-
-            return Deserialize(jsonObject.RootElement);
+            command.SetId(commandId);
         }
 
-        public static IKernelCommandEnvelope Deserialize(JsonElement json)
+        // restore the command token
+        if (json.TryGetProperty(nameof(SerializationModel.token), out var tokenProperty))
         {
-            var commandTypeJson = string.Empty;
-            string commandJson;
-            var commandToken = string.Empty;
-            var commandId = string.Empty;
-
-            if (json.TryGetProperty(nameof(SerializationModel.commandType), out var commandTypeProperty))
-            {
-                commandTypeJson = commandTypeProperty.GetString();
-            }
-
-            // restore the command id
-            if (json.TryGetProperty(nameof(SerializationModel.id), out var commandIdProperty))
-            {
-                commandId = commandIdProperty.GetString();
-            }
-
-            if (string.IsNullOrWhiteSpace(commandTypeJson))
-            {
-                return null;
-            }
-
-            var commandType = CommandTypeByName(commandTypeJson);
-            if (json.TryGetProperty(nameof(SerializationModel.command), out var commandJsonProperty))
-            {
-                commandJson = commandJsonProperty.GetRawText();
-            }
-            else
-            {
-                return null;
-            }
-
-            var command = (KernelCommand)JsonSerializer.Deserialize(commandJson, commandType, Serializer.JsonSerializerOptions);
-            if (commandId is not null)
-            {
-                command.SetId(commandId);
-            }
-
-            // restore the command token
-            if (json.TryGetProperty(nameof(SerializationModel.token), out var tokenProperty))
-            {
-                commandToken = tokenProperty.GetString();
-            }
+            commandToken = tokenProperty.GetString();
+        }
             
-            if (commandToken is not null)
-            {
-                command.SetToken(commandToken);
-            }
-
-            return Create(command);
-        }
-
-        public static string Serialize(KernelCommand command) => Serialize(Create(command));
-
-        public static string Serialize(IKernelCommandEnvelope envelope)
+        if (commandToken is not null)
         {
-            var serializationModel = new SerializationModel
-            {
-                command = envelope.Command,
-                commandType = envelope.CommandType,
-                token = envelope.Token,
-                id = envelope.CommandId
-            };
-
-            return JsonSerializer.Serialize(
-                serializationModel,
-                Serializer.JsonSerializerOptions);
+            command.SetToken(commandToken);
         }
 
-        internal class SerializationModel
+        return Create(command);
+    }
+
+    public static string Serialize(KernelCommand command) => Serialize(Create(command));
+
+    public static string Serialize(IKernelCommandEnvelope envelope)
+    {
+        var serializationModel = new SerializationModel
         {
-            public string token { get; set; }
+            command = envelope.Command,
+            commandType = envelope.CommandType,
+            token = envelope.Token,
+            id = envelope.CommandId
+        };
 
-            public string id { get; set; }
+        return JsonSerializer.Serialize(
+            serializationModel,
+            Serializer.JsonSerializerOptions);
+    }
 
-            public string commandType { get; set; }
+    internal class SerializationModel
+    {
+        public string token { get; set; }
 
-            public object command { get; set; }
-        }
+        public string id { get; set; }
+
+        public string commandType { get; set; }
+
+        public object command { get; set; }
     }
 }

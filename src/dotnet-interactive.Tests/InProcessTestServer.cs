@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.DotNet.Interactive.App.CommandLine;
-using Microsoft.DotNet.Interactive.Server;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.DotNet.Interactive.App.Tests

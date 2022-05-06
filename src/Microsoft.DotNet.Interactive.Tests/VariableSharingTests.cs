@@ -14,10 +14,12 @@ using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
 using Pocket;
+using Pocket.For.Xunit;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
+    [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
     public class VariableSharingTests : IDisposable
     {
         private readonly CompositeDisposable _disposables = new();
@@ -76,6 +78,12 @@ x")]
             using var kernel = CreateKernel();
 
             using var events = kernel.KernelEvents.ToSubscribedList();
+
+
+            await kernel.SendAsync(new SubmitCode("",targetKernelName:"fsharp"));
+            events.Should().NotContainErrors();
+
+
 
             await kernel.SubmitCodeAsync($"{from}\n{codeToWrite}");
 
@@ -221,7 +229,7 @@ x")]
                 await next(command, context);
             });
 
-            await compositeKernel.SubmitCodeAsync("var csharpVariable = 123;");
+            await compositeKernel.SubmitCodeAsync("int csharpVariable = 123;");
 
             var submitCode = new SubmitCode(@"
 #!javascript
@@ -271,6 +279,41 @@ x")]
             jsVariable.Should().Be(123);
         }
 
+        [Fact]
+        public async Task CSharpKernel_can_prompt_for_input_from_JavaScript_via_a_ProxyKernel()
+        {
+            var (compositeKernel, jsKernel) = await CreateCompositeKernelWithJavaScriptProxyKernel();
+
+            var valueKernel = new KeyValueStoreKernel().UseValueSharing();
+            compositeKernel.Add(valueKernel);
+
+            jsKernel.RegisterCommandHandler<RequestInput>((cmd, context) =>
+            {
+                context.Publish(new InputProduced("hello!", cmd));
+                return Task.CompletedTask;
+            });
+
+            compositeKernel.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), "javascript");
+            
+            var valueName = "input";
+          
+            var submitCode = new SubmitCode($@"
+#!value --name {valueName} --from-value @input:input-please
+");
+            var result = await compositeKernel.SendAsync(submitCode);
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should().NotContainErrors();
+
+            valueKernel
+                .TryGetValue<string>(valueName, out var inputValue)
+                .Should()
+                .BeTrue();
+
+            inputValue.Should().Be("hello!");
+        }
+
         private async Task<(CompositeKernel, FakeKernel)> CreateCompositeKernelWithJavaScriptProxyKernel()
         {
             var localCompositeKernel = new CompositeKernel
@@ -283,7 +326,7 @@ x")]
             var remoteKernel = new FakeKernel("remote-javascript");
             remoteCompositeKernel.Add(remoteKernel);
 
-            ConnectHost.ConnectInProcessHost(
+            ConnectHost.ConnectInProcessHost2(
                 localCompositeKernel,
                 remoteCompositeKernel);
 
@@ -315,7 +358,6 @@ x")]
                 new FSharpKernel()
                     .UseNugetDirective()
                     .UseKernelHelpers()
-                    .UseDefaultNamespaces() 
                     .UseValueSharing(),
                 new PowerShellKernel()
                     .UseValueSharing()

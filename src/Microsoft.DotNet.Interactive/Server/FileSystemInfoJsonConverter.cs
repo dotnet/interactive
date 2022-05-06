@@ -5,7 +5,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 
-namespace Microsoft.DotNet.Interactive.Server
+namespace Microsoft.DotNet.Interactive.Connection
 {
     public class FileSystemInfoJsonConverter : JsonConverter<FileSystemInfo>
     {

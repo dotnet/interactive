@@ -34,15 +34,17 @@ namespace Microsoft.DotNet.Interactive
                 {
                     var filePath = result.Tokens.Single().Value;
 
-                    var fromUrlResult = result.FindResultFor(FromUrlOption);
-
-                    if (fromUrlResult is { })
+                    if (SetErrorIfAlsoUsed(FromUrlOption, result))
                     {
-                        result.ErrorMessage =
-                            $"The {fromUrlResult.Token.Value} and {((OptionResult)result.Parent).Token.Value} options cannot be used together.";
                         return null;
                     }
-                    else if (!File.Exists(filePath))
+                    
+                    if (SetErrorIfAlsoUsed(FromValueOption, result))
+                    {
+                        return null;
+                    }
+
+                    if (!File.Exists(filePath))
                     {
                         result.ErrorMessage = LocalizationResources.Instance.FileDoesNotExist(filePath);
                         return null;
@@ -51,6 +53,19 @@ namespace Microsoft.DotNet.Interactive
                     {
                         return new FileInfo(filePath);
                     }
+                });
+
+            FromValueOption = new Option<string>(
+                "--from-value",
+                description: "Specifies a value to be stored directly. Specifying @input:value allows you to prompt the user for this value.",
+                parseArgument: result =>
+                {
+                    if (SetErrorIfAlsoUsed(FromUrlOption, result))
+                    {
+                        return null;
+                    }
+
+                    return result.Tokens.Single().Value;
                 });
 
             MimeTypeOption = new Option<string>(
@@ -64,10 +79,26 @@ namespace Microsoft.DotNet.Interactive
                     "text/csv"
                 });
 
-            Add(NameOption);
-            Add(FromUrlOption);
             Add(FromFileOption);
+            Add(FromUrlOption);
+            Add(FromValueOption);
             Add(MimeTypeOption);
+            Add(NameOption);
+
+            bool SetErrorIfAlsoUsed(Option otherOption, ArgumentResult result)
+            {
+                var otherOptionResult = result.FindResultFor(otherOption);
+
+                if (otherOptionResult is { })
+                {
+                    result.ErrorMessage =
+                        $"The {otherOptionResult.Token.Value} and {((OptionResult)result.Parent).Token.Value} options cannot be used together.";
+
+                    return true;
+                }
+
+                return false;
+            }
         }
 
         protected override async Task Handle(KernelInvocationContext kernelInvocationContext,
@@ -87,6 +118,8 @@ namespace Microsoft.DotNet.Interactive
 
         public Option<FileInfo> FromFileOption { get; }
 
+        public Option<string> FromValueOption { get; }
+
         public Option<string> NameOption { get; }
 
         internal class ValueDirectiveOptions
@@ -97,6 +130,7 @@ namespace Microsoft.DotNet.Interactive
                     Name = parseResult.GetValueForOption(directive.NameOption),
                     FromFile = parseResult.GetValueForOption(directive.FromFileOption),
                     FromUrl = parseResult.GetValueForOption(directive.FromUrlOption),
+                    FromValue = parseResult.GetValueForOption(directive.FromValueOption),
                     MimeType = parseResult.GetValueForOption(directive.MimeTypeOption),
                 };
 
@@ -105,6 +139,8 @@ namespace Microsoft.DotNet.Interactive
             public FileInfo FromFile { get; init; }
 
             public Uri FromUrl { get; init; }
+
+            public string FromValue { get; set; }
 
             public string MimeType { get; init; }
         }

@@ -14,10 +14,9 @@ using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Server;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
-using Microsoft.DotNet.Interactive.VSCode;
 using Pocket;
 using Xunit;
 using Xunit.Abstractions;
@@ -31,9 +30,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
         public SerializationTests(ITestOutputHelper output)
         {
             _output = output;
-
-            KernelCommandEnvelope.RegisterCommand<GetInput>();
-            KernelEventEnvelope.RegisterEvent<InputProduced>();
         }
 
         [Theory]
@@ -121,50 +117,32 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
         public void All_command_types_are_tested_for_round_trip_serialization()
         {
             var interactiveCommands = typeof(Kernel)
-                .Assembly
-                .ExportedTypes
-                .Concrete()
-                .DerivedFrom(typeof(KernelCommand));
-
-            var vscodeCommands = typeof(VSCodeClientKernelsExtension)
-                .Assembly
-                .ExportedTypes
-                .Concrete()
-                .DerivedFrom(typeof(KernelCommand));
-
-
-            var commandTypes = interactiveCommands.Concat(vscodeCommands);
+                                      .Assembly
+                                      .ExportedTypes
+                                      .Concrete()
+                                      .DerivedFrom(typeof(KernelCommand));
 
             Commands()
                 .Select(e => e[0].GetType())
                 .Distinct()
                 .Should()
-                .BeEquivalentTo(commandTypes);
+                .BeEquivalentTo(interactiveCommands);
         }
 
         [Fact]
         public void All_event_types_are_tested_for_round_trip_serialization()
         {
-
             var interactiveEvents = typeof(Kernel)
                 .Assembly
                 .ExportedTypes
                 .Concrete()
                 .DerivedFrom(typeof(KernelEvent));
-            
-            var vscodeEvents = typeof(VSCodeClientKernelsExtension)
-                .Assembly
-                .ExportedTypes
-                .Concrete()
-                .DerivedFrom(typeof(KernelEvent));
-
-            var eventTypes = interactiveEvents.Concat(vscodeEvents);
 
             Events()
                 .Select(e => e[0].GetType())
                 .Distinct()
                 .Should()
-                .BeEquivalentTo(eventTypes);
+                .BeEquivalentTo(interactiveEvents);
         }
 
         public static IEnumerable<object[]> Commands()
@@ -219,7 +197,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
 
                 yield return new RequestValue("a", "csharp", HtmlFormatter.MimeType);
 
-                yield return new GetInput(prompt:"provide answer", isPassword: true, targetKernelName: "vscode");
+                yield return new RequestInput(prompt:"provide answer", isPassword: true, targetKernelName: "vscode");
             }
         }
 
@@ -391,7 +369,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
 
                 yield return new CommandCancelled( new Cancel() ,new SubmitCode("var value = 1;", "csharp"));
 
-                yield return new InputProduced("user input", new GetInput(targetKernelName: "vscode"));
+                yield return new InputProduced("user input", new RequestInput("Input?", targetKernelName: "vscode"));
             }
         }
 

@@ -7,15 +7,15 @@ using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Commands;
 
+[DebuggerStepThrough]
 public class RequestKernelInfo : KernelCommand
 {
-    [DebuggerStepThrough]
     [JsonConstructor]
     public RequestKernelInfo(string targetKernelName = null) : base(targetKernelName)
     {
     }
 
-    public RequestKernelInfo(Uri destinationUri) 
+    public RequestKernelInfo(Uri destinationUri)
     {
         DestinationUri = destinationUri;
     }

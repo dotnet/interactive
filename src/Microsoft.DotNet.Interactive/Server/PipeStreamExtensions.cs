@@ -5,29 +5,34 @@ using System;
 using System.Buffers;
 using System.IO;
 using System.IO.Pipes;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.Server
+namespace Microsoft.DotNet.Interactive.Connection
 {
     internal static class PipeStreamExtensions
     {
         public static async Task<string> ReadMessageAsync(
-            this PipeStream stream, 
+            this PipeStream stream,
             CancellationToken cancellationToken)
         {
             var buffer = ArrayPool<byte>.Shared.Rent(4096);
             try
             {
+                await Task.Yield();
+
                 var byteMemory = new Memory<byte>(buffer);
 #if !NETSTANDARD2_0
+
                 await using var ms = new MemoryStream();
+
                 do
                 {
                     var readBytes = await stream.ReadAsync(byteMemory, cancellationToken);
                     await ms.WriteAsync(byteMemory[..readBytes], cancellationToken);
-                }
-                while (!stream.IsMessageComplete);
+                } while (!cancellationToken.IsCancellationRequested &&
+                         !stream.IsMessageComplete);
 #else
                 using var ms = new MemoryStream();
                 do
@@ -35,10 +40,11 @@ namespace Microsoft.DotNet.Interactive.Server
                     var readBytes = await stream.ReadAsync(buffer, 0, (int)buffer.Length, cancellationToken);
                     await ms.WriteAsync(buffer, 0, readBytes, cancellationToken);
                 }
-                while (!stream.IsMessageComplete);
+                while (!cancellationToken.IsCancellationRequested && 
+                       !stream.IsMessageComplete);
 #endif
 
-                return System.Text.Encoding.Default.GetString(ms.ToArray());
+                return Encoding.Default.GetString(ms.ToArray());
             }
             finally
             {

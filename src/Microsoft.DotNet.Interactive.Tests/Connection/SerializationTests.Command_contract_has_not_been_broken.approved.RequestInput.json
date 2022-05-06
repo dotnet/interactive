@@ -1,7 +1,7 @@
 {
   "token": "the-token",
   "id": "command-id",
-  "commandType": "GetInput",
+  "commandType": "RequestInput",
   "command": {
     "prompt": "provide answer",
     "isPassword": true,

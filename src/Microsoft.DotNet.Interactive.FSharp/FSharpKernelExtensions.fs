@@ -14,44 +14,42 @@ open Microsoft.DotNet.Interactive.Formatting
 [<AbstractClass; Extension; Sealed>]
 type FSharpKernelExtensions private () =
     
-    static let referenceFromType (typ: Type) = sprintf "#r \"%s\"" (typ.Assembly.Location.Replace("\\", "/"))
-    static let openNamespaceOrType (whatToOpen: string) = sprintf "open %s" whatToOpen
+    static let referenceAssemblyContaining (typ: Type) = sprintf "#r \"%s\"" (typ.Assembly.Location.Replace("\\", "/"))
+    static let openNamespaceContaining (typ: Type) = sprintf "open %s" typ.Namespace
+    static let openType (typ: Type) = sprintf "open type %s.%s" typ.Namespace typ.Name
 
     [<Extension>]
     static member UseDefaultFormatting(kernel: FSharpKernel) =
         let code = 
             [
-                referenceFromType typeof<IHtmlContent>
-                referenceFromType typeof<Kernel>
-                referenceFromType typeof<FSharpKernelHelpers.IMarker>
-                referenceFromType typeof<Formatter>
+                referenceAssemblyContaining typeof<IHtmlContent>
+                referenceAssemblyContaining typeof<Kernel>
+                referenceAssemblyContaining typeof<FSharpKernelHelpers.IMarker>
+                referenceAssemblyContaining typeof<Formatter>
 
-                openNamespaceOrType typeof<System.Console>.Namespace
-                openNamespaceOrType typeof<System.IO.File>.Namespace
-                openNamespaceOrType typeof<System.Text.StringBuilder>.Namespace
-                openNamespaceOrType typeof<Formatter>.Namespace
+                openNamespaceContaining typeof<System.Console>
+                openNamespaceContaining typeof<System.IO.File>
+                openNamespaceContaining typeof<System.Text.StringBuilder>
+                openNamespaceContaining typeof<Formatter>
             ] |> String.concat Environment.NewLine
 
         kernel.DeferCommand(SubmitCode code)
-        kernel
-
-    [<Extension>]
-    static member UseDefaultNamespaces(kernel: FSharpKernel) =
-        // F# has its own views on what namespaces are open by default in its scripting model
         kernel
 
     [<Extension>]
     static member UseKernelHelpers(kernel: FSharpKernel) =
         let code = 
             [
-                referenceFromType typeof<FSharpKernelHelpers.IMarker>
+                referenceAssemblyContaining typeof<FSharpKernelHelpers.IMarker>
                 
                 // opens Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers
                 //    note this has some AutoOpen content inside
-                openNamespaceOrType (typeof<FSharpKernelHelpers.IMarker>.Namespace)
-                
+                openNamespaceContaining typeof<FSharpKernelHelpers.IMarker>
+               
+                referenceAssemblyContaining typeof<Kernel>
+                openType typeof<Kernel>
+
             ] |> String.concat Environment.NewLine
 
         kernel.DeferCommand(SubmitCode code)
         kernel
-

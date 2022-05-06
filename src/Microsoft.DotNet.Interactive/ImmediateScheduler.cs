@@ -8,7 +8,9 @@ namespace Microsoft.DotNet.Interactive
 {
     internal class ImmediateScheduler<T, TResult> : IKernelScheduler<T, TResult>
     {
-        public async Task<TResult> RunAsync(T value, KernelSchedulerDelegate<T, TResult> onExecuteAsync, string scope = "default",
+        public async Task<TResult> RunAsync(
+            T value, KernelSchedulerDelegate<T, TResult> onExecuteAsync, 
+            string scope = "default",
             CancellationToken cancellationToken = default)
         {
             return await onExecuteAsync(value);

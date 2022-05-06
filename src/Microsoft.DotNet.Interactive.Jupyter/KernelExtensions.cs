@@ -17,7 +17,6 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Utility;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
@@ -41,23 +40,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             var command = new SubmitCode($@"
 #r ""{typeof(TopLevelMethods).Assembly.Location.Replace("\\", "/")}""
 using static {typeof(TopLevelMethods).FullName};
-using static {typeof(JupyterInteractiveHost).FullName};
-");
-
-            kernel.DeferCommand(command);
-            return kernel;
-        }
-
-        public static FSharpKernel UseJupyterHelpers(
-            this FSharpKernel kernel)
-        {
-            var command = new SubmitCode($@"
-#r ""{typeof(TopLevelMethods).Assembly.Location.Replace("\\", "/")}""
-
-[<AutoOpen>]
-module JupyterTopLevelModule =
-    let GetInputAsync ( prompt : string ) ( isPassword : bool) = 
-        {typeof(JupyterInteractiveHost).FullName}.{nameof(JupyterInteractiveHost.GetInputAsync)}( prompt, isPassword ) |> Async.AwaitTask
 ");
 
             kernel.DeferCommand(command);
@@ -158,8 +140,6 @@ module JupyterTopLevelModule =
                                             PlainTextFormatter.MimeType,
                                             $"Wall time: {elapsed.TotalMilliseconds}ms")
                                     }));
-
-                            return Task.CompletedTask;
                         });
 
                         return Task.CompletedTask;

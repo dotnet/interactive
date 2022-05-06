@@ -112,8 +112,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .UseNugetDirective()
                 .UseKernelHelpers()
                 .UseValueSharing()
-                .UseWho()
-                .UseDefaultNamespaces();
+                .UseWho();
 
             if (openTestingNamespaces)
             {

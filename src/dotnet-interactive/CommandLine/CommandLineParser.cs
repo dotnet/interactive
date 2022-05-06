@@ -113,11 +113,6 @@ public static class CommandLineParser
         // Setup first time use notice sentinel.
         firstTimeUseNoticeSentinel ??= new FirstTimeUseNoticeSentinel(VersionSensor.Version().AssemblyInformationalVersion);
 
-        var clearTextProperties = new[]
-        {
-            "frontend"
-        };
-
         // Setup telemetry.
         telemetry ??= new Telemetry.Telemetry(
             VersionSensor.Version().AssemblyInformationalVersion,
@@ -126,11 +121,9 @@ public static class CommandLineParser
 
         var filter = new TelemetryFilter(
             Sha256Hasher.HashWithNormalizedCasing,
-            clearTextProperties,
+            new[] { "frontend" },
             (commandResult, directives, entryItems) =>
             {
-                    
-
                 // add frontend
                 var frontendTelemetryAdded = false;
 
@@ -170,12 +163,15 @@ public static class CommandLineParser
                     }
                 }
 
-                if(!frontendTelemetryAdded){
+                if (!frontendTelemetryAdded)
+                {
                     var frontendName = Environment.GetEnvironmentVariable("DOTNET_INTERACTIVE_FRONTEND_NAME");
-                    if(string.IsNullOrWhiteSpace(frontendName)){
+                    if (string.IsNullOrWhiteSpace(frontendName))
+                    {
                         frontendName = "unknown";
                     }
-                    entryItems.Add(new KeyValuePair<string, string>("frontend", frontendName));                    
+
+                    entryItems.Add(new KeyValuePair<string, string>("frontend", frontendName));
                 }
             });
 
@@ -279,28 +275,9 @@ public static class CommandLineParser
                 var frontendEnvironment = new HtmlNotebookFrontendEnvironment();
                 var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
 
-                kernel.Add(
-                    new JavaScriptKernel(),
-                    new[] { "js" });
+                await new JupyterClientKernelExtension().OnLoadAsync(kernel);
 
                 services.AddKernel(kernel);
-
-                kernel.VisitSubkernels(k =>
-                {
-                    switch (k)
-                    {
-                        case CSharpKernel csharpKernel:
-                            csharpKernel.UseJupyterHelpers();
-                            break;
-                        case FSharpKernel fsharpKernel:
-                            fsharpKernel.UseJupyterHelpers();
-                            break;
-                        case PowerShellKernel powerShellKernel:
-                            powerShellKernel.UseJupyterHelpers();
-                            break;
-                    }
-                });
-
 
                 var clientSideKernelClient = new SignalRBackchannelKernelClient();
 
@@ -449,21 +426,29 @@ public static class CommandLineParser
                         ? new HtmlNotebookFrontendEnvironment()
                         : new BrowserFrontendEnvironment();
 
-                    var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
+                    var kernel = CreateKernel(
+                        options.DefaultKernel, 
+                        frontendEnvironment, 
+                        startupOptions);
 
                     services.AddKernel(kernel);
 
                     kernel = kernel.UseQuitCommand();
 
+                    var sender = KernelCommandAndEventSender.FromTextWriter(
+                        Console.Out,
+                        KernelHost.CreateHostUri("stdio"));
+
+                    var receiver = KernelCommandAndEventReceiver.FromTextReader(Console.In);
+
                     var host = kernel.UseHost(
-                        new KernelCommandAndEventTextStreamSender(
-                            Console.Out,
-                            KernelHost.CreateHostUri("stdio")),
-                        new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventTextReaderReceiver(Console.In)), KernelHost.CreateHostUriForCurrentProcessId());
+                        sender,
+                        receiver,
+                        KernelHost.CreateHostUriForCurrentProcessId());
 
                     if (isVSCode)
                     {
-                        var vscodeSetup = new VSCodeClientKernelsExtension();
+                        var vscodeSetup = new VSCodeClientKernelExtension();
                         await vscodeSetup.OnLoadAsync(kernel);
                     }
                        
@@ -589,7 +574,6 @@ public static class CommandLineParser
                 .UseNugetDirective()
                 .UseKernelHelpers()
                 .UseWho()
-                .UseDefaultNamespaces()
                 .UseMathAndLaTeX()
                 .UseValueSharing(),
             new[] { "f#", "F#" });
@@ -599,7 +583,6 @@ public static class CommandLineParser
                 .UseProfiles()
                 .UseValueSharing(),
             new[] { "powershell" });
-
 
         compositeKernel.Add(
             new HtmlKernel());

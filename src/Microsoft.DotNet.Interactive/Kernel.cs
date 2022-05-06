@@ -22,6 +22,11 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.ValueSharing;
+using static Pocket.Logger<Microsoft.DotNet.Interactive.Kernel>;
+using Pocket;
+using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
+using Disposable = System.Reactive.Disposables.Disposable;
+using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -290,11 +295,15 @@ namespace Microsoft.DotNet.Interactive
             TrySetHandler(command, context);
             await command.InvokeAsync(context);
         }
-        
+
         public async Task<KernelCommandResult> SendAsync(
             KernelCommand command,
             CancellationToken cancellationToken)
         {
+            using var disposable = new SerialDisposable();
+
+            KernelInvocationContext context = null;
+
             if (command is null)
             {
                 throw new ArgumentNullException(nameof(command));
@@ -302,116 +311,115 @@ namespace Microsoft.DotNet.Interactive
 
             command.ShouldPublishCompletionEvent ??= true;
 
-            var context = KernelInvocationContext.Establish(command);
+            context = KernelInvocationContext.Establish(command);
 
             // only subscribe for the root command 
             var currentCommandOwnsContext = CommandEqualityComparer.Instance.Equals(context.Command, command);
 
-            IDisposable disposable;
-
             if (currentCommandOwnsContext)
             {
-                disposable = context.KernelEvents.Subscribe(PublishEvent);
+                disposable.Disposable = context.KernelEvents.Subscribe(PublishEvent);
 
                 if (cancellationToken != CancellationToken.None &&
                     cancellationToken != default)
                 {
-                    cancellationToken.Register(() =>
-                    {
-                        context.Cancel();
-                    });
+                    cancellationToken.Register(context.Cancel);
                 }
             }
-            else
-            {
-                disposable = Disposable.Empty;
-            }
 
-            using (disposable)
+            if (TryPreprocessCommands(command, context, out var commands))
             {
-                if (TryPreprocessCommands(command, context, out var commands))
+                SetHandlingKernel(command, context);
+          
+                foreach (var c in commands)
                 {
-                    SetHandlingKernel(command, context);
-
-                    foreach (var c in commands)
+                    switch (c)
                     {
-                        switch (c)
+                        case Quit quit:
+                            quit.SchedulingScope = SchedulingScope;
+                            quit.TargetKernelName = Name;
+                            await InvokePipelineAndCommandHandler(quit);
+                            break;
+
+                        case Cancel cancel:
+                            cancel.SchedulingScope = SchedulingScope;
+                            cancel.TargetKernelName = Name;
+                            Scheduler.CancelCurrentOperation(inflight =>
+                            {
+                                context.Publish(new CommandCancelled(cancel, inflight));
+                            });
+                            await InvokePipelineAndCommandHandler(cancel);
+                            break;
+
+                        case RequestDiagnostics _:
                         {
-                            case Quit quit:
-                                quit.SchedulingScope = SchedulingScope;
-                                quit.TargetKernelName = Name;
-                                await InvokePipelineAndCommandHandler(quit);
-                                break;
+                            if (_countOfLanguageServiceCommandsInFlight > 0)
+                            {
+                                context.CancelWithSuccess();
+                                return context.Result;
+                            }
 
-                            case Cancel cancel:
-                                cancel.SchedulingScope = SchedulingScope;
-                                cancel.TargetKernelName = Name;
-                                Scheduler.CancelCurrentOperation((inflight) =>
-                                {
-                                    context.Publish(new CommandCancelled(cancel, inflight));
-                                });
-                                await InvokePipelineAndCommandHandler(cancel);
-                                break;
+                            if (_inFlightContext is { } inflight)
+                            {
+                                inflight.Complete(inflight.Command);
+                            }
 
-                            case RequestDiagnostics _:
-                                {
-                                    if (_countOfLanguageServiceCommandsInFlight > 0)
-                                    {
-                                        context.CancelWithSuccess();
-                                        return context.Result;
-                                    }
+                            _inFlightContext = context;
 
-                                    if (_inFlightContext is { } inflight)
-                                    {
-                                        inflight.Complete(inflight.Command);
-                                    }
+                            await RunOnFastPath(context, c, cancellationToken);
 
-                                    _inFlightContext = context;
-
-                                    await RunOnFastPath(context, c, cancellationToken);
-
-                                    _inFlightContext = null;
-                                }
-                                break;
-                            case RequestHoverText _:
-                            case RequestCompletions _:
-                            case RequestSignatureHelp _:
-                                {
-                                    if (_inFlightContext is { } inflight)
-                                    {
-                                        inflight.CancelWithSuccess();
-                                    }
-
-                                    Interlocked.Increment(ref _countOfLanguageServiceCommandsInFlight);
-
-                                    await RunOnFastPath(context, c, cancellationToken);
-
-                                    Interlocked.Decrement(ref _countOfLanguageServiceCommandsInFlight);
-                                }
-                                break;
-
-                            default:
-                                await Scheduler.RunAsync(
-                                    c,
-                                    InvokePipelineAndCommandHandler,
-                                    c.SchedulingScope.ToString(),
-                                    cancellationToken: cancellationToken)
-                                    .ContinueWith(t =>
-                                    {
-                                        if (t.IsCanceled)
-                                        {
-                                            context.Cancel();
-                                        }
-                                    }, cancellationToken);
-                                break;
+                            _inFlightContext = null;
                         }
-                    }
+                            break;
 
-                    if (currentCommandOwnsContext)
-                    {
-                        await context.DisposeAsync();
+                        case RequestHoverText _:
+                        case RequestCompletions _:
+                        case RequestSignatureHelp _:
+                        {
+                            if (_inFlightContext is { } inflight)
+                            {
+                                inflight.CancelWithSuccess();
+                            }
+
+                            Interlocked.Increment(ref _countOfLanguageServiceCommandsInFlight);
+
+                            await RunOnFastPath(context, c, cancellationToken);
+
+                            Interlocked.Decrement(ref _countOfLanguageServiceCommandsInFlight);
+                        }
+                            break;
+
+                        case DisplayError _:
+                        case DisplayValue _:
+                        case RequestKernelInfo _:
+                        case RequestValue _:
+                        case RequestValueInfos _:
+                        case UpdateDisplayedValue _:
+
+                            await RunOnFastPath(context, c, cancellationToken);
+                            break;
+
+                        default:
+                            await Scheduler.RunAsync(
+                                               c,
+                                               InvokePipelineAndCommandHandler,
+                                               c.SchedulingScope.ToString(),
+                                               cancellationToken: cancellationToken)
+                                           .ContinueWith(t =>
+                                           {
+                                               if (t.IsCanceled)
+                                               {
+                                                   context.Cancel();
+                                               }
+                                           }, cancellationToken);
+                            break;
                     }
                 }
+            }
+
+            if (currentCommandOwnsContext)
+            {
+                context.Dispose();
             }
 
             return context.ResultFor(command);
@@ -432,8 +440,10 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private async Task RunOnFastPath(KernelInvocationContext context,
-            KernelCommand command, CancellationToken cancellationToken)
+        private async Task RunOnFastPath(
+            KernelInvocationContext context,
+            KernelCommand command, 
+            CancellationToken cancellationToken)
         {
             await RunDeferredCommandsAsync(context);
 
@@ -451,11 +461,34 @@ namespace Microsoft.DotNet.Interactive
                 }, cancellationToken);
         }
 
-        private async Task RunDeferredCommandsAsync(KernelInvocationContext context) =>
-            await SendAsync(
-                new AnonymousKernelCommand((_, _) => Task.CompletedTask,
-                                           context.HandlingKernel.Name,
-                                           context.Command), context.CancellationToken);
+        private async Task RunDeferredCommandsAsync(KernelInvocationContext context)
+        {
+            try
+            {
+                await SendAsync(
+                    new UndeferScheduledCommands(
+                        context.HandlingKernel.Name,
+                        context.Command), context.CancellationToken);
+            }
+            catch (TaskCanceledException)
+            {
+            }
+        }
+
+        private class UndeferScheduledCommands : AnonymousKernelCommand
+        {
+            public UndeferScheduledCommands(
+                string targetKernelName, 
+                KernelCommand parent) : base((_, _) =>
+            {
+                Log.Info("Undeferring commands ahead of {command}", parent);
+                return Task.CompletedTask;
+            }, targetKernelName: targetKernelName, parent: parent)
+            {
+            }
+
+            public override string ToString() => $"Undefer commands ahead of {Parent}";
+        }
 
         internal async Task<KernelCommandResult> InvokePipelineAndCommandHandler(KernelCommand command)
         {
