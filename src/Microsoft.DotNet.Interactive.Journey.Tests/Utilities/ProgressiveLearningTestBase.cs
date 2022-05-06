@@ -57,6 +57,7 @@ namespace Microsoft.DotNet.Interactive.Journey.Tests.Utilities
             var newFilePath = Path.Combine(_tempPath, $"{testName??"patched"}_{notebookName}");
 
             File.WriteAllText(newFilePath, newNotebookContent);
+
             return newFilePath;
         }
     }

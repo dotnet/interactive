@@ -60,49 +60,20 @@ public static class ConnectHost
             remoteWriter,
             localHostUri);
 
-        KernelHost localHost;
-        KernelHost remoteHost;
+        var localReceiver = CommandAndEventReceiver.FromTextReader(localReader);
+        localCompositeKernel.RegisterForDisposal(localReceiver);
+        var remoteReceiver = CommandAndEventReceiver.FromTextReader(remoteReader);
+        remoteCompositeKernel.RegisterForDisposal(remoteReceiver);
 
-        if (!useNewReceiver)
-        {
-            var localInnerReceiver = new KernelCommandAndEventTextStreamReceiver(
-                localReader);
-            var remoteInnerReceiver = new KernelCommandAndEventTextStreamReceiver(
-                remoteReader);
+        var localHost = localCompositeKernel.UseHost(
+            localToRemoteSender,
+            localReceiver,
+            localHostUri);
 
-            var localReceiver = new MultiplexingKernelCommandAndEventReceiver(localInnerReceiver);
-            var remoteReceiver = new MultiplexingKernelCommandAndEventReceiver(remoteInnerReceiver);
-
-            localHost = localCompositeKernel.UseHost(
-                localToRemoteSender,
-                localReceiver,
-                localHostUri);
-
-            remoteHost = remoteCompositeKernel.UseHost(
-                remoteToLocalSender,
-                remoteReceiver,
-                remoteHostUri);
-
-            localCompositeKernel.RegisterForDisposal(localReceiver);
-            remoteCompositeKernel.RegisterForDisposal(remoteReceiver);
-        }
-        else
-        {
-            var localReceiver = CommandAndEventReceiver.FromTextReader(localReader);
-            localCompositeKernel.RegisterForDisposal(localReceiver);
-            var remoteReceiver = CommandAndEventReceiver.FromTextReader(remoteReader);
-            remoteCompositeKernel.RegisterForDisposal(remoteReceiver);
-
-            localHost = localCompositeKernel.UseHost(
-                localToRemoteSender,
-                localReceiver,
-                localHostUri);
-
-            remoteHost = remoteCompositeKernel.UseHost(
-                remoteToLocalSender,
-                remoteReceiver,
-                remoteHostUri);
-        }
+        var remoteHost = remoteCompositeKernel.UseHost(
+            remoteToLocalSender,
+            remoteReceiver,
+            remoteHostUri);
 
         Task.Run(async () =>
         {
