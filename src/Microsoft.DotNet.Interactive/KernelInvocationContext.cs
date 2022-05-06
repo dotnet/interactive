@@ -171,11 +171,20 @@ namespace Microsoft.DotNet.Interactive
                 }
                 else
                 {
-                    Publish(new CommandFailed(exception, Command, message));
+                    if (!completingMainCommand && command.ShouldPublishCompletionEvent == true)
+                    {
+                        Publish(new CommandFailed(exception, command, message));
 
-                    StopPublishingMainCommandEvents();
+                        StopPublishingChildCommandEvents();
+                    }
+                    else
+                    {
+                        Publish(new CommandFailed(exception, Command, message));
 
-                    TryCancel();
+                        StopPublishingMainCommandEvents();
+
+                        TryCancel();
+                    }
                 }
 
                 IsComplete = completingMainCommand;
