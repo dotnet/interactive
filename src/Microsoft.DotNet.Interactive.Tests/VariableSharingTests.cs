@@ -328,8 +328,7 @@ x")]
 
             ConnectHost.ConnectInProcessHost(
                 localCompositeKernel,
-                remoteCompositeKernel,
-                useNewReceiver: true);
+                remoteCompositeKernel);
 
             var remoteKernelUri = new Uri("kernel://remote/remote-javascript");
             var javascriptKernel =

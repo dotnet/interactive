@@ -9,11 +9,11 @@ public static class CompositeKernelExtensions
 {
     public static KernelHost UseHost(
         this CompositeKernel kernel,
-        IKernelCommandAndEventSender defaultSender,
-        MultiplexingKernelCommandAndEventReceiver defaultReceiver,
+        IKernelCommandAndEventSender sender,
+        MultiplexingKernelCommandAndEventReceiver receiver,
         Uri hostUri)
     {
-        return new KernelHost(kernel, defaultSender, defaultReceiver, hostUri);
+        return new KernelHost(kernel, sender, receiver, hostUri);
     }
     
     public static KernelHost UseHost(

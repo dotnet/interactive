@@ -65,6 +65,7 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
             var fileInfo = new FileInfo(logPath);
             var proxiedLogPath = Path.Combine(fileInfo.DirectoryName, $"proxied.{fileInfo.Name}");
 
+            args.Add("--verbose");
             args.Add("--log-path");
             args.Add(proxiedLogPath);
         }

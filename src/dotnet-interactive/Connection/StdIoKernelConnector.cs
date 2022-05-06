@@ -8,8 +8,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
@@ -20,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.App.Connection;
 
 public class StdIoKernelConnector : IKernelConnector, IDisposable
 {
-    private MultiplexingKernelCommandAndEventReceiver? _receiver;
+    private ObservableCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventTextStreamSender? _sender;
     private Process? _process;
     private Uri? _remoteHostUri;
@@ -60,6 +61,14 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
                 EnableRaisingEvents = true
             };
 
+            var stdOutObservable = new Subject<string>();
+            _process.OutputDataReceived += (_, args) =>
+            {
+                if (!string.IsNullOrWhiteSpace(args.Data))
+                {
+                    stdOutObservable.OnNext(args.Data);
+                }
+            };
             var stdErr = new StringBuilder();
             _process.ErrorDataReceived += (_, args) =>
             {
@@ -69,11 +78,18 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
             await Task.Yield();
 
             _process.Start();
+            _process.BeginOutputReadLine();
             _process.BeginErrorReadLine();
             _remoteHostUri = KernelHost.CreateHostUriForProcessId(_process.Id);
 
-            _receiver = new MultiplexingKernelCommandAndEventReceiver(
-                new KernelCommandAndEventTextStreamReceiver(_process.StandardOutput));
+            _receiver = ObservableCommandAndEventReceiver.FromObservable(stdOutObservable);
+
+            bool kernelReadyReceived = false;
+            _receiver.Select(coe => coe.Event)
+                                   .OfType<KernelReady>()
+                                   .Take(1)
+                                   .Subscribe(e => kernelReadyReceived = true);
+
             _sender = new KernelCommandAndEventTextStreamSender(
                 _process.StandardInput,
                 _remoteHostUri);
@@ -81,54 +97,34 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
             _refCountDisposable = new RefCountDisposable(new CompositeDisposable
             {
                 KillRemoteKernelProcess,
-                () => _receiver.Dispose()
+                _receiver.Dispose
             });
 
             proxyKernel = new ProxyKernel(
                 kernelName,
                 _sender,
-                _receiver, 
+                _receiver,
                 new Uri(_remoteHostUri, kernelName));
-            
+
             proxyKernel.RegisterForDisposal(_refCountDisposable);
 
-            var checkReady = Task.Run(async () =>
+            while (!kernelReadyReceived)
             {
-                await foreach (var commandOrEvent in _receiver.CommandsAndEventsAsync(CancellationToken.None))
+                await Task.Delay(200);
+
+                if (_process.HasExited)
                 {
-                    if (commandOrEvent.Event is KernelReady)
+                    if (_process.ExitCode != 0)
                     {
-                        return;
+                        var stdErrString = stdErr.ToString()
+                                                 .Split(new[] { '\r', '\n' },
+                                                        StringSplitOptions.RemoveEmptyEntries);
+
+                        throw new CommandLineInvocationException(
+                            new CommandLineResult(_process.ExitCode,
+                                                  error: stdErrString));
                     }
                 }
-            });
-
-            var checkProcessError = Task.Run(async () =>
-            {
-                while (!checkReady.IsCompleted)
-                {
-                    await Task.Delay(200);
-
-                    if (_process.HasExited)
-                    {
-                        if (_process.ExitCode != 0)
-                        {
-                            var stdErrString = stdErr.ToString()
-                                                     .Split(new[] { '\r', '\n' },
-                                                            StringSplitOptions.RemoveEmptyEntries);
-
-                            throw new CommandLineInvocationException(
-                                new CommandLineResult(_process.ExitCode,
-                                                      error: stdErrString));
-                        }
-                    }
-                }
-            });
-
-            if (await Task.WhenAny(checkProcessError, checkReady) == checkProcessError &&
-                checkProcessError.Exception is { } ex)
-            {
-                throw ex;
             }
         }
         else
@@ -136,7 +132,8 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
             proxyKernel = new ProxyKernel(
                 kernelName,
                 _sender,
-                _receiver.CreateChildReceiver(), new Uri(_remoteHostUri!, kernelName));
+                _receiver,
+                new Uri(_remoteHostUri!, kernelName));
 
             proxyKernel.RegisterForDisposal(_refCountDisposable!.GetDisposable());
         }

@@ -426,17 +426,25 @@ public static class CommandLineParser
                         ? new HtmlNotebookFrontendEnvironment()
                         : new BrowserFrontendEnvironment();
 
-                    var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
+                    var kernel = CreateKernel(
+                        options.DefaultKernel, 
+                        frontendEnvironment, 
+                        startupOptions);
 
                     services.AddKernel(kernel);
 
                     kernel = kernel.UseQuitCommand();
 
+                    var sender = new KernelCommandAndEventTextStreamSender(
+                        Console.Out,
+                        KernelHost.CreateHostUri("stdio"));
+
+                    var receiver = ObservableCommandAndEventReceiver.FromTextReader(Console.In);
+
                     var host = kernel.UseHost(
-                        new KernelCommandAndEventTextStreamSender(
-                            Console.Out,
-                            KernelHost.CreateHostUri("stdio")),
-                        new MultiplexingKernelCommandAndEventReceiver(new KernelCommandAndEventTextStreamReceiver(Console.In)), KernelHost.CreateHostUriForCurrentProcessId());
+                        sender,
+                        receiver,
+                        KernelHost.CreateHostUriForCurrentProcessId());
 
                     if (isVSCode)
                     {

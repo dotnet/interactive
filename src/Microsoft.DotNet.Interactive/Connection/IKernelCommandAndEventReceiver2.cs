@@ -12,10 +12,6 @@ using System.Threading;
 
 namespace Microsoft.DotNet.Interactive.Connection;
 
-public interface IKernelCommandAndEventReceiver2 : IObservable<CommandOrEvent>
-{
-}
-
 public delegate CommandOrEvent ReadMessage(CancellationToken cancellationToken = default);
 
 public class ObservableCommandAndEventReceiver : IKernelCommandAndEventReceiver2, IDisposable
@@ -24,29 +20,19 @@ public class ObservableCommandAndEventReceiver : IKernelCommandAndEventReceiver2
     private readonly Subject<CommandOrEvent> _subject = new();
     private readonly IObservable<CommandOrEvent> _observable;
     private readonly CompositeDisposable _disposables = new();
-    private readonly CancellationTokenSource _cancellationTokenSource = new();
+    private CancellationTokenSource _cancellationTokenSource;
     
     public ObservableCommandAndEventReceiver(ReadMessage readMessage)
     {
         _readMessage = readMessage ?? throw new ArgumentNullException(nameof(readMessage));
 
-        _disposables.Add(Disposable.Create(() =>
-        {
-            if (!_cancellationTokenSource.IsCancellationRequested)
-            {
-                try
-                {
-                    _cancellationTokenSource.Cancel();
-                }
-                catch
-                {
-                }
-            }
-        }));
+        _disposables.Add(Disposable.Create(TryCancelCancellationToken));
 
         _observable = Observable.Defer(
                                     () => Observable.Create<CommandOrEvent>(observer =>
                                     {
+                                        _cancellationTokenSource = new();
+
                                         var subscription =
                                             _subject
                                                 .ObserveOn(new EventLoopScheduler())
@@ -57,31 +43,20 @@ public class ObservableCommandAndEventReceiver : IKernelCommandAndEventReceiver2
 
                                         thread.Start();
 
-                                        return subscription;
+                                        return Disposable.Create(() =>
+                                        {
+                                            TryCancelCancellationToken();
+                                            
+                                            subscription.Dispose();
+                                        });
                                     }))
                                 .Publish()
                                 .RefCount();
     }
 
-    public static ObservableCommandAndEventReceiver FromTextReader(TextReader reader) =>
-        new(_ =>
-        {
-            var json = reader.ReadLine();
-
-            var commandOrEvent = Serializer.DeserializeCommandOrEvent(json);
-
-            return commandOrEvent;
-        });
-
-    public static ObservableCommandAndEventReceiver FromNamedPipe(NamedPipeClientStream stream) =>
-        new(token =>
-        {
-            var json = stream.ReadMessageAsync(token).GetAwaiter().GetResult();
-
-            var commandOrEvent = Serializer.DeserializeCommandOrEvent(json);
-
-            return commandOrEvent;
-        });
+    private ObservableCommandAndEventReceiver(IObservable<string> messages) => 
+        _observable = messages.ObserveOn(new EventLoopScheduler())
+                              .Select(Serializer.DeserializeCommandOrEvent);
 
     private void ReaderLoop()
     {
@@ -107,8 +82,65 @@ public class ObservableCommandAndEventReceiver : IKernelCommandAndEventReceiver2
         return _observable.Subscribe(observer);
     }
 
+    private void TryCancelCancellationToken()
+    {
+        if (_cancellationTokenSource is { Token: { CanBeCanceled: true } } cts)
+        {
+            try
+            {
+                cts.Cancel();
+            }
+            catch
+            {
+            }
+        }
+    }
+
     public void Dispose()
     {
         _disposables.Dispose();
     }
+
+    public static ObservableCommandAndEventReceiver FromObservable(IObservable<string> messages) => 
+        new (messages);
+
+    public static ObservableCommandAndEventReceiver FromTextReader(TextReader reader) =>
+        new(_ =>
+        {
+            string json;
+
+            try
+            {
+                json = reader.ReadLine();
+
+                var commandOrEvent = Serializer.DeserializeCommandOrEvent(json);
+
+                return commandOrEvent;
+            }
+            catch (ObjectDisposedException)
+            {
+                return null;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        });
+
+    public static ObservableCommandAndEventReceiver FromNamedPipe(NamedPipeClientStream stream) =>
+        new(token =>
+        {
+            if (stream.CanRead)
+            {
+                var json = stream.ReadMessageAsync(token).GetAwaiter().GetResult();
+
+                var commandOrEvent = Serializer.DeserializeCommandOrEvent(json);
+
+                return commandOrEvent;
+            }
+            else
+            {
+                return null;
+            }
+        });
 }

@@ -180,7 +180,11 @@ namespace Microsoft.DotNet.Interactive
         public async Task ConnectAndWaitAsync()
         {
             await ConnectAsync();
-            await _receiverLoop!;
+
+            if (_receiverLoop is not null)
+            {
+                await _receiverLoop;
+            }
         }
 
         public void Dispose()

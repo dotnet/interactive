@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
@@ -108,5 +109,51 @@ public class ObservableCommandAndEventReceiverTests : IDisposable
         await Task.Delay(100);
 
         readCount.Should().Be(readCountAfterEmptied);
+    }
+
+    [Fact]
+    public void New_subscriptions_can_be_made_after_all_subscribers_have_unsubscribed()
+    {
+        var count = 0;
+
+        using var receiver = new ObservableCommandAndEventReceiver(t =>
+        {
+            Thread.Sleep(50);
+
+            var commandOrEvent = new CommandOrEvent(new SubmitCode($"{++count}"));
+
+            return commandOrEvent;
+        });
+
+        var _ = receiver.Take(4).ToEnumerable().Count();
+
+        var took = receiver.Take(4).ToEnumerable().Count();
+
+        took.Should().Be(4);
+    }
+
+    [Fact]
+    public async Task When_all_subscribers_are_unsubscribed_then_receiver_stop_reading()
+    {
+        var count = 0;
+
+        using var receiver = new ObservableCommandAndEventReceiver(t =>
+        {
+            Thread.Sleep(5);
+
+            var commandOrEvent = new CommandOrEvent(new SubmitCode($"{count++}"));
+
+            return commandOrEvent;
+        });
+
+        var t = receiver.Take(4).ToEnumerable().Count();
+
+        await Task.Delay(50);
+
+        var countAfterDispose = count;
+
+        await Task.Delay(50);
+
+        count.Should().Be(countAfterDispose);
     }
 }

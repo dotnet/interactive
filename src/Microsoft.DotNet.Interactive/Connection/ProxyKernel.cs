@@ -75,6 +75,16 @@ namespace Microsoft.DotNet.Interactive.Connection
             }
 
             KernelInfo.RemoteUri = _remoteUri;
+
+            var subscription = _receiver2.Subscribe(coe =>
+            {
+                if (coe.Event is { } e)
+                {
+                    DelegatePublication(e);
+                }
+            });
+
+            RegisterForDisposal(subscription);
         }
 
         public void EnsureStarted()
@@ -87,23 +97,6 @@ namespace Microsoft.DotNet.Interactive.Connection
             if (_receiver is not null)
             {
                 Task.Run(ReceiveAndPublishCommandsAndEvents);
-            }
-            else
-            {
-                var observable = _receiver2.Publish();
-
-                var subscription = observable.Subscribe(coe =>
-                {
-                    if (coe.Event is { } e)
-                    {
-                        DelegatePublication(e);
-                    }
-                });
-
-                var d = observable.Connect();
-
-                RegisterForDisposal(subscription);
-                RegisterForDisposal(d);
             }
         }
 

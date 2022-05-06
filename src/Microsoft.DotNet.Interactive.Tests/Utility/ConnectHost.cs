@@ -22,8 +22,7 @@ public static class ConnectHost
             localCompositeKernel,
             remoteCompositeKernel,
             uri ?? new Uri("kernel://local/"),
-            new Uri("kernel://remote/"),
-            true);
+            new Uri("kernel://remote/"));
 
         return localCompositeKernel;
     }
@@ -32,26 +31,19 @@ public static class ConnectHost
         CompositeKernel localCompositeKernel,
         CompositeKernel remoteCompositeKernel,
         Uri localHostUri = null,
-        Uri remoteHostUri = null,
-        bool useNewReceiver = true)
+        Uri remoteHostUri = null)
     {
         localHostUri ??= new("kernel://local");
         remoteHostUri ??= new("kernel://remote");
 
         var localToRemoteStream = new TestConsoleStream();
-        localCompositeKernel.RegisterForDisposal(localToRemoteStream);
         var remoteToLocalStream = new TestConsoleStream();
-        remoteCompositeKernel.RegisterForDisposal(remoteToLocalStream);
 
         var localReader = new StreamReader(remoteToLocalStream);
-        localCompositeKernel.RegisterForDisposal(localReader);
         var remoteReader = new StreamReader(localToRemoteStream);
-        remoteCompositeKernel.RegisterForDisposal(remoteReader);
 
         var localWriter = new StreamWriter(localToRemoteStream);
-        localCompositeKernel.RegisterForDisposal(localWriter);
         var remoteWriter = new StreamWriter(remoteToLocalStream);
-        remoteCompositeKernel.RegisterForDisposal(remoteWriter);
         
         var localToRemoteSender = new KernelCommandAndEventTextStreamSender(
             localWriter,
@@ -61,9 +53,7 @@ public static class ConnectHost
             localHostUri);
 
         var localReceiver = ObservableCommandAndEventReceiver.FromTextReader(localReader);
-        localCompositeKernel.RegisterForDisposal(localReceiver);
         var remoteReceiver = ObservableCommandAndEventReceiver.FromTextReader(remoteReader);
-        remoteCompositeKernel.RegisterForDisposal(remoteReceiver);
 
         var localHost = localCompositeKernel.UseHost(
             localToRemoteSender,
@@ -83,6 +73,18 @@ public static class ConnectHost
 
         localCompositeKernel.RegisterForDisposal(localHost);
         remoteCompositeKernel.RegisterForDisposal(remoteHost);
+        
+        localCompositeKernel.RegisterForDisposal(localReceiver);
+        remoteCompositeKernel.RegisterForDisposal(remoteReceiver);
+
+        localCompositeKernel.RegisterForDisposal(localWriter);
+        remoteCompositeKernel.RegisterForDisposal(remoteWriter);
+
+        localCompositeKernel.RegisterForDisposal(localReader);
+        remoteCompositeKernel.RegisterForDisposal(remoteReader);
+
+        localCompositeKernel.RegisterForDisposal(localToRemoteStream);
+        remoteCompositeKernel.RegisterForDisposal(remoteToLocalStream);
     }
 
     private class TestConsoleStream : Stream

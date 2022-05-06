@@ -104,8 +104,7 @@ public class KernelInfoTests
 
             ConnectHost.ConnectInProcessHost(
                 localCompositeKernel,
-                remoteCompositeKernel,
-                useNewReceiver: true);
+                remoteCompositeKernel);
 
             await localCompositeKernel
                   .Host
@@ -162,8 +161,7 @@ public class KernelInfoTests
 
             ConnectHost.ConnectInProcessHost(
                 localCompositeKernel,
-                remoteCompositeKernel,
-                useNewReceiver: true);
+                remoteCompositeKernel);
 
             var proxyKernel = await localCompositeKernel
                                     .Host
@@ -219,8 +217,7 @@ public class KernelInfoTests
 
             ConnectHost.ConnectInProcessHost(
                 localCompositeKernel,
-                remoteCompositeKernel,
-                useNewReceiver: true);
+                remoteCompositeKernel);
 
             var remoteKernelUri = new Uri("kernel://remote/csharp");
 
