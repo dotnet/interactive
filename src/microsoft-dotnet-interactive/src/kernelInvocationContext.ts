@@ -19,7 +19,12 @@ export class KernelInvocationContext implements Disposable {
         if (!current || current._isComplete) {
             KernelInvocationContext._current = new KernelInvocationContext(kernelCommandInvocation);
         } else {
-            current._childCommands.push(kernelCommandInvocation);
+            if (!areCommandsTheSame(kernelCommandInvocation, current._commandEnvelope)) {
+                const found = current._childCommands.includes(kernelCommandInvocation);
+                if (!found) {
+                    current._childCommands.push(kernelCommandInvocation);
+                }
+            }
         }
 
         return KernelInvocationContext._current!;
