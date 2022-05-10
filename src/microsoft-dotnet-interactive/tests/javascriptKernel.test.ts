@@ -6,6 +6,7 @@ import { describe } from "mocha";
 import * as contracts from "../src/contracts";
 import { JavascriptKernel } from "../src/javascriptKernel";
 import { Logger } from "../src/logger";
+import { Guid } from "../src/tokenGenerator";
 
 describe("javascriptKernel", () => {
 
@@ -39,19 +40,19 @@ describe("javascriptKernel", () => {
         const events: contracts.KernelEventEnvelope[] = [];
         const kernel = new JavascriptKernel();
         kernel.subscribeToKernelEvents((e) => events.push(e));
-
-        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "theAnswer = 42;" } });
+        const valueName = `value_${Guid.create().toString().replace(/-/g, "_")}`; //?
+        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: `${valueName} = 42;` } });
         await kernel.send({ commandType: contracts.RequestValueInfosType, command: <contracts.RequestValueInfos>{} });
-        expect((<contracts.ValueInfosProduced>events.find(e => e.eventType === contracts.ValueInfosProducedType)!.event).valueInfos).to.deep.equal([{ name: 'theAnswer' }]);
+        expect((<contracts.ValueInfosProduced>events.find(e => e.eventType === contracts.ValueInfosProducedType)!.event).valueInfos).to.deep.equal([{ name: `${valueName}` }]);
     });
 
     it("returns values from RequestValue", async () => {
         const events: contracts.KernelEventEnvelope[] = [];
         const kernel = new JavascriptKernel();
         kernel.subscribeToKernelEvents((e) => events.push(e));
-
-        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "theAnswer = 42;" } });
-        await kernel.send({ commandType: contracts.RequestValueType, command: <contracts.RequestValue>{ name: "theAnswer" } });
+        const valueName = `value_${Guid.create().toString().replace(/-/g, "_")}`; //?
+        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: `${valueName} = 42;` } });
+        await kernel.send({ commandType: contracts.RequestValueType, command: <contracts.RequestValue>{ name: `${valueName}` } });
         expect((<contracts.ValueProduced>events.find(e => e.eventType === contracts.ValueProducedType)!.event).formattedValue).to.deep.equal({ mimeType: 'application/json', value: '42' });
     });
 
