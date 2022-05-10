@@ -139,7 +139,7 @@ export class DotNetNotebookKernel {
             try {
                 const startTime = Date.now();
                 executionTask.start(startTime);
-                executionTask.clearOutput(cell);
+                await executionTask.clearOutput(cell);
                 const controllerErrors: vscodeLike.NotebookCellOutput[] = [];
 
                 function outputObserver(outputs: Array<vscodeLike.NotebookCellOutput>) {
