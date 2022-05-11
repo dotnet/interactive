@@ -6,6 +6,7 @@ import { describe } from "mocha";
 import { IKernelEventObserver } from "../src/kernel";
 import { KernelInvocationContext } from "../src/kernelInvocationContext";
 import * as contracts from "../src/contracts";
+import { Guid } from "../src/tokenGenerator";
 
 describe("dotnet-interactive", () => {
 
@@ -32,7 +33,8 @@ describe("dotnet-interactive", () => {
             };
             return {
                 commandType: contracts.SubmitCodeType,
-                command: command
+                command: command,
+                token: Guid.create().toString()
             };
         }
         let commadnEnvelope = makeSubmitCode("123");
@@ -47,6 +49,22 @@ describe("dotnet-interactive", () => {
 
             expect(ew.events.length).to.eql(1);
             expect(ew.events[0].eventType).to.eql(contracts.CommandSucceededType);
+        });
+
+        it("is established only once for same command", async () => {
+            let context = use(KernelInvocationContext.establish(commadnEnvelope));
+            let secondContext = use(KernelInvocationContext.establish(commadnEnvelope));
+
+            expect(context).to.equal(secondContext);
+            expect(context.command).to.equal(secondContext.command);
+        });
+
+        it("is appends child comamnds", async () => {
+            let context = use(KernelInvocationContext.establish(commadnEnvelope));
+            let secondContext = use(KernelInvocationContext.establish(makeSubmitCode("456")));
+
+            expect(context).to.equal(secondContext);
+            expect(context.command).to.equal(secondContext.command);
         });
 
         it("does not publish CommandFailed when Complete is called", async () => {
