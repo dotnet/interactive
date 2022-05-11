@@ -215,6 +215,6 @@ export function submitCommandAndGetResult<TEvent extends contracts.KernelEvent>(
                 }
             }
         });
-        kernel.send(commandEnvelope).then(() => disposable.dispose()).catch(() => disposable.dispose());
+        kernel.send(commandEnvelope).finally(() => disposable.dispose());
     });
 }
