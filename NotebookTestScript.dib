@@ -118,10 +118,9 @@ input
 #!fsharp
 
 let input = task  {
-                    let x = Microsoft.DotNet.Interactive.Kernel.GetInputAsync ("give me data")
-                    return x
-                  }
-input
+                    return! Microsoft.DotNet.Interactive.Kernel.GetInputAsync ("give me data")
+                  } 
+input.Result
 
 #!markdown
 
