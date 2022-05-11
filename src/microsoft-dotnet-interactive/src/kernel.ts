@@ -7,6 +7,7 @@ import * as contracts from "./contracts";
 import { Logger } from "./logger";
 import { CompositeKernel } from "./compositeKernel";
 import { KernelCommandScheduler } from "./kernelCommandScheduler";
+import { PromiseCompletionSource } from "./genericChannel";
 
 export interface IKernelCommandInvocation {
     commandEnvelope: contracts.KernelCommandEnvelope;
@@ -186,35 +187,48 @@ export class Kernel {
     }
 }
 
-export function submitCommandAndGetResult<TEvent extends contracts.KernelEvent>(kernel: Kernel, commandEnvelope: contracts.KernelCommandEnvelope, expectedEventType: contracts.KernelEventType): Promise<TEvent> {
-    return new Promise<TEvent>(async (resolve, reject) => {
-        let handled = false;
-        const disposable = kernel.subscribeToKernelEvents(eventEnvelope => {
-            if (eventEnvelope.command?.token === commandEnvelope.token) {
-                switch (eventEnvelope.eventType) {
-                    case contracts.CommandFailedType:
+export async function submitCommandAndGetResult<TEvent extends contracts.KernelEvent>(kernel: Kernel, commandEnvelope: contracts.KernelCommandEnvelope, expectedEventType: contracts.KernelEventType): Promise<TEvent> {
+    let r = new PromiseCompletionSource<TEvent>();
+    let handled = false;
+    let disposable = kernel.subscribeToKernelEvents(eventEnvelope => {
+        console.log(eventEnvelope);
+        if (eventEnvelope.command?.token === commandEnvelope.token) {
+            switch (eventEnvelope.eventType) {//?
+                case contracts.CommandFailedType:
+                    if (!handled) {
+                        handled = true;
+                        let err = <contracts.CommandFailed>eventEnvelope.event;
+                        r.reject(err);
+
+                    }
+                    break;
+                case contracts.CommandSucceededType:
+                    if (eventEnvelope.command?.commandType === commandEnvelope.commandType) {
                         if (!handled) {
                             handled = true;
-                            let err = <contracts.CommandFailed>eventEnvelope.event;
-                            reject(err);
+                            r.reject('Command was handled before reporting expected result.');
                         }
                         break;
-                    case contracts.CommandSucceededType:
-                        if (!handled) {
-                            handled = true;
-                            reject('Command was handled before reporting expected result.');
-                        }
-                        break;
-                    default:
-                        if (eventEnvelope.eventType === expectedEventType) {
-                            handled = true;
-                            let event = <TEvent>eventEnvelope.event;
-                            resolve(event);
-                        }
-                        break;
-                }
+                    } else {
+                        eventEnvelope.command;//?
+                    }
+                default:
+                    if (eventEnvelope.eventType === expectedEventType) {
+                        handled = true;
+                        let event = <TEvent>eventEnvelope.event;//?
+                        r.resolve(event);
+                    }
+                    break;
             }
-        });
-        kernel.send(commandEnvelope).finally(() => disposable.dispose());
+        }
     });
+
+    try {
+        await kernel.send(commandEnvelope);
+    }
+    finally {
+        disposable.dispose();
+    }
+
+    return r.promise;
 }
