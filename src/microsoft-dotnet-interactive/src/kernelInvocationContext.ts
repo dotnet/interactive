@@ -2,11 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { CommandSucceeded, CommandSucceededType, CommandFailed, CommandFailedType, KernelCommandEnvelope, KernelCommand, KernelEventEnvelope, Disposable } from "./contracts";
+import { PromiseCompletionSource } from "./genericChannel";
 import { IKernelEventObserver, Kernel } from "./kernel";
 import { TokenGenerator } from "./tokenGenerator";
 
 
 export class KernelInvocationContext implements Disposable {
+    public get promise(): void | PromiseLike<void> {
+        return this.completionSource.promise;
+    }
     private static _current: KernelInvocationContext | null = null;
     private readonly _commandEnvelope: KernelCommandEnvelope;
     private readonly _childCommands: KernelCommandEnvelope[] = [];
@@ -14,6 +18,7 @@ export class KernelInvocationContext implements Disposable {
     private readonly _eventObservers: Map<string, IKernelEventObserver> = new Map();
     private _isComplete = false;
     public handlingKernel: Kernel | null = null;
+    private completionSource = new PromiseCompletionSource<void>();
     static establish(kernelCommandInvocation: KernelCommandEnvelope): KernelInvocationContext {
         let current = KernelInvocationContext._current;
         if (!current || current._isComplete) {
@@ -56,7 +61,7 @@ export class KernelInvocationContext implements Disposable {
                 event: succeeded
             };
             this.internalPublish(eventEnvelope);
-
+            this.completionSource.resolve();
             // TODO: C# version has completion callbacks - do we need these?
             // if (!_events.IsDisposed)
             // {
@@ -83,6 +88,7 @@ export class KernelInvocationContext implements Disposable {
         };
 
         this.internalPublish(eventEnvelope);
+        this.completionSource.resolve();
     }
 
     publish(kernelEvent: KernelEventEnvelope) {

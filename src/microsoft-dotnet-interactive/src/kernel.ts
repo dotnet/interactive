@@ -6,6 +6,7 @@ import { Guid, TokenGenerator } from "./tokenGenerator";
 import * as contracts from "./contracts";
 import { Logger } from "./logger";
 import { CompositeKernel } from "./compositeKernel";
+import { KernelCommandScheduler } from "./kernelCommandScheduler";
 
 export interface IKernelCommandInvocation {
     commandEnvelope: contracts.KernelCommandEnvelope;
@@ -27,8 +28,24 @@ export class Kernel {
     private readonly _tokenGenerator: TokenGenerator = new TokenGenerator();
     public rootKernel: Kernel = this;
     public parentKernel: CompositeKernel | null = null;
+    private _scheduler?: KernelCommandScheduler | null = null;
 
     constructor(readonly name: string) {
+    }
+
+    private getScheduler(): KernelCommandScheduler {
+        let parentScheduler = this.parentKernel?.getScheduler();
+        if (parentScheduler) {
+            return parentScheduler;
+        }
+        else {
+            if (!this._scheduler) {
+                this._scheduler = new KernelCommandScheduler((commandEnvelope) => {
+                    return this.executeCommand(commandEnvelope);
+                });
+            }
+            return this._scheduler;
+        }
     }
 
     private ensureCommandTokenAndId(commandEnvelope: contracts.KernelCommandEnvelope) {
@@ -67,6 +84,12 @@ export class Kernel {
     // nothing is ever going to look at the promise we return here.
     async send(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         this.ensureCommandTokenAndId(commandEnvelope);
+        let context = KernelInvocationContext.establish(commandEnvelope);
+        this.getScheduler().schedule(commandEnvelope);
+        return context.promise;
+    }
+
+    private async executeCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         let context = KernelInvocationContext.establish(commandEnvelope);
         let isRootCommand = areCommandsTheSame(context.commandEnvelope, commandEnvelope);
         let contextEventsSubscription: contracts.Disposable | null = null;
