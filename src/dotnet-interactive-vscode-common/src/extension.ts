@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import * as azdata from 'azdata';
 import * as vscodeLike from './interfaces/vscode-like';
 import { ClientMapper } from './clientMapper';
 import { MessageClient } from './messageClient';
@@ -25,7 +26,7 @@ import * as notebookSerializers from '../notebookSerializers';
 import * as versionSpecificFunctions from '../versionSpecificFunctions';
 import { ErrorOutputCreator } from './interactiveClient';
 
-import { isInsidersBuild } from './vscodeUtilities';
+import { isAzureDataStudio, isInsidersBuild } from './vscodeUtilities';
 import { getDotNetMetadata, withDotNetCellMetadata } from './ipynbUtilities';
 import fetch from 'node-fetch';
 import { CompositeKernel } from './dotnet-interactive/compositeKernel';
@@ -139,7 +140,16 @@ export async function activate(context: vscode.ExtensionContext) {
                 const requestInput = <contracts.RequestInput>commandInvocation.commandEnvelope.command;
                 const prompt = requestInput.prompt;
                 const password = requestInput.isPassword;
-                const value = await vscode.window.showInputBox({ prompt, password });
+                const isConnectionString = requestInput.isConnectionString;
+                let value: string | undefined;
+                if (isAzureDataStudio(context) && isConnectionString) {
+                    let connection = await azdata.connection.openConnectionDialog();
+                    if (connection) {
+                        value = await azdata.connection.getConnectionString(connection.connectionId, true);
+                    }
+                } else {
+                    value = await vscode.window.showInputBox({ prompt, password });
+                }
                 commandInvocation.context.publish({
                     eventType: contracts.InputProducedType,
                     event: {
