@@ -4,7 +4,8 @@
 import { expect } from "chai";
 import { describe } from "mocha";
 import * as contracts from "../src/contracts";
-import { IKernelCommandInvocation, Kernel } from "../src/kernel";
+import { JavascriptKernel } from "../src/javascriptKernel";
+import { IKernelCommandInvocation, Kernel, submitCommandAndGetResult } from "../src/kernel";
 import { Logger } from "../src/logger";
 
 interface CustomCommand1 extends contracts.KernelCommand {
@@ -117,6 +118,13 @@ describe("dotnet-interactive", () => {
             expect(handlerInvocations.length).to.be.equal(0);
 
             expect(events.find(e => e.eventType === contracts.CommandFailedType)).is.not.null;
+        });
+
+        it("can submit a command and wait for a specific event", async () => {
+            let kernel = new JavascriptKernel();
+            const command: contracts.SubmitCode = { code: "return 1+1;" };
+            let event = await submitCommandAndGetResult<contracts.ReturnValueProduced>(kernel, { commandType: contracts.SubmitCodeType, command: command }, contracts.ReturnValueProducedType);
+            expect(event.formattedValues[0].value).to.equal("2");
         });
     });
 });

@@ -121,7 +121,7 @@ export class Kernel {
 
     handleCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
-            let context = KernelInvocationContext.establish(commandEnvelope);
+            let context = KernelInvocationContext.establish(commandEnvelope);//?
             context.handlingKernel = this;
             let isRootCommand = areCommandsTheSame(context.commandEnvelope, commandEnvelope);
 
@@ -191,31 +191,28 @@ export async function submitCommandAndGetResult<TEvent extends contracts.KernelE
     let completionSource = new PromiseCompletionSource<TEvent>();
     let handled = false;
     let disposable = kernel.subscribeToKernelEvents(eventEnvelope => {
-        console.log(eventEnvelope);
         if (eventEnvelope.command?.token === commandEnvelope.token) {
-            switch (eventEnvelope.eventType) {//?
+            switch (eventEnvelope.eventType) {
                 case contracts.CommandFailedType:
                     if (!handled) {
                         handled = true;
-                        let err = <contracts.CommandFailed>eventEnvelope.event;
+                        let err = <contracts.CommandFailed>eventEnvelope.event;//?
                         completionSource.reject(err);
-
                     }
                     break;
                 case contracts.CommandSucceededType:
-                    if (eventEnvelope.command?.commandType === commandEnvelope.commandType) {
-                        if (!handled) {
+                    if (areCommandsTheSame(eventEnvelope.command!, commandEnvelope)
+                        && (eventEnvelope.command?.id === commandEnvelope.id)) {
+                        if (!handled) {//? ($ ? eventEnvelope : {})
                             handled = true;
                             completionSource.reject('Command was handled before reporting expected result.');
                         }
                         break;
-                    } else {
-                        eventEnvelope.command;//?
                     }
                 default:
                     if (eventEnvelope.eventType === expectedEventType) {
                         handled = true;
-                        let event = <TEvent>eventEnvelope.event;//?
+                        let event = <TEvent>eventEnvelope.event;//? ($ ? eventEnvelope : {})
                         completionSource.resolve(event);
                     }
                     break;
