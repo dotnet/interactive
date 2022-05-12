@@ -5,7 +5,10 @@
         "relativeFilePath": "./Program.cs",
         "regionNames": [
           "some-region"
-        ]
+        ],
+        "regionsContent": {
+          "some-region": ""
+        }
       }
     ]
   },
