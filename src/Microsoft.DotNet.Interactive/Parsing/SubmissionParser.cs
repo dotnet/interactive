@@ -363,14 +363,21 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 var result = _kernel.RootKernel.SendAsync(inputRequest).GetAwaiter().GetResult();
 
                 var events = result.KernelEvents.ToEnumerable().ToArray();
-                var valueProduced = events.OfType<InputProduced>().SingleOrDefault();
-
-                if (valueProduced is { })
+                var errorProduced = events.OfType<ErrorProduced>().SingleOrDefault();
+                if (errorProduced is { })
                 {
-                    replacementTokens = new[] { valueProduced.Value };
+                    errorMessage = errorProduced.Message;
+                    return false;
                 }
-
-                return true;
+                else
+                {
+                    var valueProduced = events.OfType<InputProduced>().SingleOrDefault();
+                    if (valueProduced is { })
+                    {
+                        replacementTokens = new[] { valueProduced.Value };
+                    }
+                    return true;
+                }
             }
             else
             {

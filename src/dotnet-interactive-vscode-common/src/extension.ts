@@ -150,13 +150,23 @@ export async function activate(context: vscode.ExtensionContext) {
                 } else {
                     value = await vscode.window.showInputBox({ prompt, password });
                 }
-                commandInvocation.context.publish({
-                    eventType: contracts.InputProducedType,
-                    event: {
-                        value
-                    },
-                    command: commandInvocation.commandEnvelope,
-                });
+                if (!value) {
+                    commandInvocation.context.publish({
+                        eventType: contracts.ErrorProducedType,
+                        event: {
+                            message: 'No input was provided.'
+                        },
+                        command: commandInvocation.commandEnvelope,
+                    });
+                } else {
+                    commandInvocation.context.publish({
+                        eventType: contracts.InputProducedType,
+                        event: {
+                            value
+                        },
+                        command: commandInvocation.commandEnvelope,
+                    });
+                }
             }
         });
 
