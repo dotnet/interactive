@@ -188,7 +188,7 @@ export class Kernel {
 }
 
 export async function submitCommandAndGetResult<TEvent extends contracts.KernelEvent>(kernel: Kernel, commandEnvelope: contracts.KernelCommandEnvelope, expectedEventType: contracts.KernelEventType): Promise<TEvent> {
-    let r = new PromiseCompletionSource<TEvent>();
+    let completionSource = new PromiseCompletionSource<TEvent>();
     let handled = false;
     let disposable = kernel.subscribeToKernelEvents(eventEnvelope => {
         console.log(eventEnvelope);
@@ -198,7 +198,7 @@ export async function submitCommandAndGetResult<TEvent extends contracts.KernelE
                     if (!handled) {
                         handled = true;
                         let err = <contracts.CommandFailed>eventEnvelope.event;
-                        r.reject(err);
+                        completionSource.reject(err);
 
                     }
                     break;
@@ -206,7 +206,7 @@ export async function submitCommandAndGetResult<TEvent extends contracts.KernelE
                     if (eventEnvelope.command?.commandType === commandEnvelope.commandType) {
                         if (!handled) {
                             handled = true;
-                            r.reject('Command was handled before reporting expected result.');
+                            completionSource.reject('Command was handled before reporting expected result.');
                         }
                         break;
                     } else {
@@ -216,7 +216,7 @@ export async function submitCommandAndGetResult<TEvent extends contracts.KernelE
                     if (eventEnvelope.eventType === expectedEventType) {
                         handled = true;
                         let event = <TEvent>eventEnvelope.event;//?
-                        r.resolve(event);
+                        completionSource.resolve(event);
                     }
                     break;
             }
@@ -230,5 +230,5 @@ export async function submitCommandAndGetResult<TEvent extends contracts.KernelE
         disposable.dispose();
     }
 
-    return r.promise;
+    return completionSource.promise;
 }
