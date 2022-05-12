@@ -143,10 +143,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 const isConnectionString = requestInput.isConnectionString;
                 let value: string | undefined;
                 if (isAzureDataStudio(context) && isConnectionString) {
-                    let connection = await azdata.connection.openConnectionDialog();
-                    if (connection) {
-                        value = await azdata.connection.getConnectionString(connection.connectionId, true);
-                    }
+                    value = await versionSpecificFunctions.getSqlConnectionString();
                 } else {
                     value = await vscode.window.showInputBox({ prompt, password });
                 }

@@ -3,6 +3,7 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
+import * as azdata from 'azdata';
 import * as fs from 'fs';
 
 export function getPreloads(extensionPath: string): vscode.Uri[] {
@@ -27,4 +28,13 @@ export function getPreloads(extensionPath: string): vscode.Uri[] {
     }
 
     return preloads;
+}
+
+export async function getSqlConnectionString(): Promise<string | undefined> {
+    let connection = await azdata.connection.openConnectionDialog();
+    let result: string | undefined;
+    if (connection) {
+        result = await azdata.connection.getConnectionString(connection.connectionId, true);
+    }
+    return result;
 }
