@@ -3,27 +3,27 @@
 
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject
+namespace Microsoft.DotNet.Interactive.CSharpProject;
+
+public class ProjectItem
 {
-    public class ProjectItem
+    private readonly RelativeFilePath _relativeFilePath;
+    public string RelativeFilePath => _relativeFilePath.ToString();
+
+    public IReadOnlyList<string> RegionNames { get; }
+    public IReadOnlyDictionary<string, string> RegionsContent { get; }
+
+    public ProjectItem(RelativeFilePath relativeFilePath, IReadOnlyList<string> regionNames, IReadOnlyDictionary<string,string> regionsContent)
     {
-        private readonly RelativeFilePath _relativeFilePath;
-        public string RelativeFilePath => _relativeFilePath.ToString();
+        _relativeFilePath = relativeFilePath;
+        RegionNames = regionNames;
+        RegionsContent = regionsContent;
+    }
 
-        public IReadOnlyList<string> RegionNames { get; }
-
-        public ProjectItem(RelativeFilePath relativeFilePath, IReadOnlyList<string> regionNames)
-        {
-            _relativeFilePath = relativeFilePath;
-            RegionNames = regionNames;
-        }
-
-        [JsonConstructor]
-        public ProjectItem(string relativeFilePath, IReadOnlyList<string> regionNames)
-            : this(new RelativeFilePath(relativeFilePath), regionNames)
-        {
-        }
+    [JsonConstructor]
+    public ProjectItem(string relativeFilePath, IReadOnlyList<string> regionNames, IReadOnlyDictionary<string, string> regionsContent)
+        : this(new RelativeFilePath(relativeFilePath), regionNames, regionsContent)
+    {
     }
 }

@@ -200,7 +200,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
                     })),
                     new[]
                     {
-                        new ProjectItem("./Program.cs", new[] { "some-region" })
+                        new ProjectItem("./Program.cs", new[] { "some-region" }, new Dictionary<string, string>{["some-region"] = string.Empty})
                     });
             }
         }
