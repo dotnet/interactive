@@ -2,11 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { CommandSucceeded, CommandSucceededType, CommandFailed, CommandFailedType, KernelCommandEnvelope, KernelCommand, KernelEventEnvelope, Disposable } from "./contracts";
+import { PromiseCompletionSource } from "./genericChannel";
 import { IKernelEventObserver, Kernel } from "./kernel";
 import { TokenGenerator } from "./tokenGenerator";
 
 
 export class KernelInvocationContext implements Disposable {
+    public get promise(): void | PromiseLike<void> {
+        return this.completionSource.promise;
+    }
     private static _current: KernelInvocationContext | null = null;
     private readonly _commandEnvelope: KernelCommandEnvelope;
     private readonly _childCommands: KernelCommandEnvelope[] = [];
@@ -14,12 +18,18 @@ export class KernelInvocationContext implements Disposable {
     private readonly _eventObservers: Map<string, IKernelEventObserver> = new Map();
     private _isComplete = false;
     public handlingKernel: Kernel | null = null;
+    private completionSource = new PromiseCompletionSource<void>();
     static establish(kernelCommandInvocation: KernelCommandEnvelope): KernelInvocationContext {
         let current = KernelInvocationContext._current;
         if (!current || current._isComplete) {
             KernelInvocationContext._current = new KernelInvocationContext(kernelCommandInvocation);
         } else {
-            current._childCommands.push(kernelCommandInvocation);
+            if (!areCommandsTheSame(kernelCommandInvocation, current._commandEnvelope)) {
+                const found = current._childCommands.includes(kernelCommandInvocation);
+                if (!found) {
+                    current._childCommands.push(kernelCommandInvocation);
+                }
+            }
         }
 
         return KernelInvocationContext._current!;
@@ -43,20 +53,21 @@ export class KernelInvocationContext implements Disposable {
     }
     complete(command: KernelCommandEnvelope) {
         if (command === this._commandEnvelope) {
+            this._isComplete = true;
             let succeeded: CommandSucceeded = {};
             let eventEnvelope: KernelEventEnvelope = {
                 command: this._commandEnvelope,
                 eventType: CommandSucceededType,
                 event: succeeded
             };
-            this.publish(eventEnvelope);
-
+            this.internalPublish(eventEnvelope);
+            this.completionSource.resolve();
             // TODO: C# version has completion callbacks - do we need these?
             // if (!_events.IsDisposed)
             // {
             //     _events.OnCompleted();
             // }
-            this._isComplete = true;
+
         }
         else {
             let pos = this._childCommands.indexOf(command);
@@ -68,6 +79,7 @@ export class KernelInvocationContext implements Disposable {
         // TODO:
         // The C# code accepts a message and/or an exception. Do we need to add support
         // for exceptions? (The TS CommandFailed interface doesn't have a place for it right now.)
+        this._isComplete = true;
         let failed: CommandFailed = { message: message ?? "Command Failed" };
         let eventEnvelope: KernelEventEnvelope = {
             command: this._commandEnvelope,
@@ -75,24 +87,31 @@ export class KernelInvocationContext implements Disposable {
             event: failed
         };
 
-        this.publish(eventEnvelope);
-        this._isComplete = true;
+        this.internalPublish(eventEnvelope);
+        this.completionSource.resolve();
     }
 
     publish(kernelEvent: KernelEventEnvelope) {
         if (!this._isComplete) {
-            let command = kernelEvent.command;
-            if (command === null ||
-                areCommandsTheSame(command!, this._commandEnvelope) ||
-                this._childCommands.includes(command!)) {
-                this._eventObservers.forEach((observer) => {
-                    observer(kernelEvent);
-                });
-            }
+            this.internalPublish(kernelEvent);
+        }
+    }
+
+    private internalPublish(kernelEvent: KernelEventEnvelope) {
+        let command = kernelEvent.command;
+        if (command === null ||
+            areCommandsTheSame(command!, this._commandEnvelope) ||
+            this._childCommands.includes(command!)) {
+            this._eventObservers.forEach((observer) => {
+                observer(kernelEvent);
+            });
         }
     }
 
     dispose() {
+        if (!this._isComplete) {
+            this.complete(this._commandEnvelope);
+        }
         KernelInvocationContext._current = null;
     }
 }
