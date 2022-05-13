@@ -139,9 +139,8 @@ export async function activate(context: vscode.ExtensionContext) {
                 const requestInput = <contracts.RequestInput>commandInvocation.commandEnvelope.command;
                 const prompt = requestInput.prompt;
                 const password = requestInput.isPassword;
-                const isConnectionString = requestInput.isConnectionString;
                 let value: string | undefined;
-                if (isAzureDataStudio(context) && isConnectionString) {
+                if (isAzureDataStudio(context) && requestInput.inputType === contracts.InputType.ConnectionString) {
                     value = await versionSpecificFunctions.getSqlConnectionString();
                 } else {
                     value = await vscode.window.showInputBox({ prompt, password });
