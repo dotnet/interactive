@@ -7,6 +7,7 @@ import * as contracts from "./contracts";
 import { Logger } from "./logger";
 import { CompositeKernel } from "./compositeKernel";
 import { KernelCommandScheduler } from "./kernelCommandScheduler";
+import { PromiseCompletionSource } from "./genericChannel";
 
 export interface IKernelCommandInvocation {
     commandEnvelope: contracts.KernelCommandEnvelope;
@@ -120,7 +121,7 @@ export class Kernel {
 
     handleCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
-            let context = KernelInvocationContext.establish(commandEnvelope);
+            let context = KernelInvocationContext.establish(commandEnvelope);//?
             context.handlingKernel = this;
             let isRootCommand = areCommandsTheSame(context.commandEnvelope, commandEnvelope);
 
@@ -186,35 +187,45 @@ export class Kernel {
     }
 }
 
-export function submitCommandAndGetResult<TEvent extends contracts.KernelEvent>(kernel: Kernel, commandEnvelope: contracts.KernelCommandEnvelope, expectedEventType: contracts.KernelEventType): Promise<TEvent> {
-    return new Promise<TEvent>(async (resolve, reject) => {
-        let handled = false;
-        const disposable = kernel.subscribeToKernelEvents(eventEnvelope => {
-            if (eventEnvelope.command?.token === commandEnvelope.token) {
-                switch (eventEnvelope.eventType) {
-                    case contracts.CommandFailedType:
-                        if (!handled) {
+export async function submitCommandAndGetResult<TEvent extends contracts.KernelEvent>(kernel: Kernel, commandEnvelope: contracts.KernelCommandEnvelope, expectedEventType: contracts.KernelEventType): Promise<TEvent> {
+    let completionSource = new PromiseCompletionSource<TEvent>();
+    let handled = false;
+    let disposable = kernel.subscribeToKernelEvents(eventEnvelope => {
+        if (eventEnvelope.command?.token === commandEnvelope.token) {
+            switch (eventEnvelope.eventType) {
+                case contracts.CommandFailedType:
+                    if (!handled) {
+                        handled = true;
+                        let err = <contracts.CommandFailed>eventEnvelope.event;//?
+                        completionSource.reject(err);
+                    }
+                    break;
+                case contracts.CommandSucceededType:
+                    if (areCommandsTheSame(eventEnvelope.command!, commandEnvelope)
+                        && (eventEnvelope.command?.id === commandEnvelope.id)) {
+                        if (!handled) {//? ($ ? eventEnvelope : {})
                             handled = true;
-                            let err = <contracts.CommandFailed>eventEnvelope.event;
-                            reject(err);
+                            completionSource.reject('Command was handled before reporting expected result.');
                         }
                         break;
-                    case contracts.CommandSucceededType:
-                        if (!handled) {
-                            handled = true;
-                            reject('Command was handled before reporting expected result.');
-                        }
-                        break;
-                    default:
-                        if (eventEnvelope.eventType === expectedEventType) {
-                            handled = true;
-                            let event = <TEvent>eventEnvelope.event;
-                            resolve(event);
-                        }
-                        break;
-                }
+                    }
+                default:
+                    if (eventEnvelope.eventType === expectedEventType) {
+                        handled = true;
+                        let event = <TEvent>eventEnvelope.event;//? ($ ? eventEnvelope : {})
+                        completionSource.resolve(event);
+                    }
+                    break;
             }
-        });
-        kernel.send(commandEnvelope).finally(() => disposable.dispose());
+        }
     });
+
+    try {
+        await kernel.send(commandEnvelope);
+    }
+    finally {
+        disposable.dispose();
+    }
+
+    return completionSource.promise;
 }

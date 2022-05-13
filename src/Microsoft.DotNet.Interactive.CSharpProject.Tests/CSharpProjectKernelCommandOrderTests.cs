@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
@@ -52,6 +53,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
 #endregion
 
 #region region-two
+var a = 2;
 #endregion
 "),
             })));
@@ -64,9 +66,9 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
                 .Should()
                 .BeEquivalentTo(new[]
                 {
-                    new ProjectItem("./FileWithNoRegions.cs", Array.Empty<string>()),
-                    new ProjectItem("./FileWithOneRegion.cs", new[] { "only-region" }),
-                    new ProjectItem("./FileWithTwoRegions.cs", new[] { "region-one", "region-two" }),
+                    new ProjectItem("./FileWithNoRegions.cs", Array.Empty<string>(), new Dictionary<string, string>()),
+                    new ProjectItem("./FileWithOneRegion.cs", new[] { "only-region" }, new Dictionary<string, string>{[ "only-region"]= string.Empty}),
+                    new ProjectItem("./FileWithTwoRegions.cs", new[] { "region-one", "region-two" },new Dictionary<string, string>{[ "region-one"]= string.Empty,[ "region-two"]= "var a = 2;"}),
                 });
         }
 

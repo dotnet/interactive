@@ -478,6 +478,7 @@ export interface ProjectFile {
 export interface ProjectItem {
     relativeFilePath: string;
     regionNames: Array<string>;
+    regionsContent: { [key: string]: string; };
 }
 
 export enum RequestType {

@@ -41,7 +41,7 @@ export class JavascriptKernel extends kernel.Kernel {
             capture.dispose();
             capture = undefined;
 
-            throw e;
+            throw e;//?
         }
         finally {
             if (capture) {
