@@ -30,5 +30,5 @@ export function getPreloads(extensionPath: string): vscode.Uri[] {
 }
 
 export async function getSqlConnectionString(): Promise<string | undefined> {
-    throw new Error('This method is not supported for VS Code.');
+    throw new Error('This functionality is not supported for VS Code.');
 }
