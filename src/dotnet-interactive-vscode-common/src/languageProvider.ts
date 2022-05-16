@@ -27,7 +27,7 @@ export class CompletionItemProvider implements vscode.CompletionItemProvider {
             }
             const completionItems: Array<vscode.CompletionItem> = [];
             for (const item of result.completions) {
-                const insertText: string | vscode.SnippetString = item.insertTextFormat === 'snippet' ? new vscode.SnippetString(item.insertText) : item.insertText;
+                const insertText: string | vscode.SnippetString = item.insertTextFormat === 'Snippet' ? new vscode.SnippetString(item.insertText) : item.insertText;
                 const vscodeItem: vscode.CompletionItem = {
                     label: item.displayText,
                     documentation: item.documentation,

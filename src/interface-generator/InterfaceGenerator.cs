@@ -272,7 +272,7 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
             builder.AppendLine($"export enum {type.Name} {{");
             foreach (var name in type.GetEnumNames())
             {
-                builder.AppendLine($"    {name} = \"{name.ToLowerInvariant()}\",");
+                builder.AppendLine($"    {name} = \"{name}\",");
             }
 
             builder.AppendLine("}");

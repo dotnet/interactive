@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.Documents.ParserServer
                 Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             };
             JsonSerializerOptions.Converters.Add(new ByteArrayConverter());
-            JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+            JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             JsonSerializerOptions.Converters.Add(new NotebookCellOutputConverter());
             JsonSerializerOptions.Converters.Add(new NotebookParseRequestConverter());
             JsonSerializerOptions.Converters.Add(new NotebookParseResponseConverter());

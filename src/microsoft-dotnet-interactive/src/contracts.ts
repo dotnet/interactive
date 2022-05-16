@@ -27,7 +27,7 @@ export const SubmitCodeType = "SubmitCode";
 export const UpdateDisplayedValueType = "UpdateDisplayedValue";
 
 export type KernelCommandType =
-    typeof AddPackageType
+      typeof AddPackageType
     | typeof CancelType
     | typeof ChangeWorkingDirectoryType
     | typeof CompileProjectType
@@ -102,11 +102,6 @@ export interface RequestDiagnostics extends KernelCommand {
 }
 
 export interface RequestHoverText extends LanguageServiceCommand {
-}
-
-export enum InputType {
-    DirectInput = "directInput",
-    ConnectionString = "connectionString"
 }
 
 export interface RequestInput extends KernelCommand {
@@ -230,7 +225,7 @@ export const ValueProducedType = "ValueProduced";
 export const WorkingDirectoryChangedType = "WorkingDirectoryChanged";
 
 export type KernelEventType =
-    typeof AssemblyProducedType
+      typeof AssemblyProducedType
     | typeof CodeSubmissionReceivedType
     | typeof CommandCancelledType
     | typeof CommandFailedType
@@ -394,8 +389,8 @@ export interface CompletionItem {
 }
 
 export enum InsertTextFormat {
-    PlainText = "plaintext",
-    Snippet = "snippet",
+    PlainText = "PlainText",
+    Snippet = "Snippet",
 }
 
 export interface Diagnostic {
@@ -406,10 +401,10 @@ export interface Diagnostic {
 }
 
 export enum DiagnosticSeverity {
-    Hidden = "hidden",
-    Info = "info",
-    Warning = "warning",
-    Error = "error",
+    Hidden = "Hidden",
+    Info = "Info",
+    Warning = "Warning",
+    Error = "Error",
 }
 
 export interface LinePositionSpan {
@@ -423,13 +418,18 @@ export interface LinePosition {
 }
 
 export enum DocumentSerializationType {
-    Dib = "dib",
-    Ipynb = "ipynb",
+    Dib = "Dib",
+    Ipynb = "Ipynb",
 }
 
 export interface FormattedValue {
     mimeType: string;
     value: string;
+}
+
+export enum InputType {
+    DirectInput = "DirectInput",
+    ConnectionString = "ConnectionString",
 }
 
 export interface InteractiveDocument {
@@ -487,8 +487,8 @@ export interface ProjectItem {
 }
 
 export enum RequestType {
-    Parse = "parse",
-    Serialize = "serialize",
+    Parse = "Parse",
+    Serialize = "Serialize",
 }
 
 export interface ResolvedPackageReference extends PackageReference {
@@ -509,8 +509,8 @@ export interface ParameterInformation {
 }
 
 export enum SubmissionType {
-    Run = "run",
-    Diagnose = "diagnose",
+    Run = "Run",
+    Diagnose = "Diagnose",
 }
 
 export interface KernelEventEnvelope {
