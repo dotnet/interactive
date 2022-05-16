@@ -9,6 +9,7 @@ import { notebookCellLanguages, getSimpleLanguage, notebookCellChanged } from '.
 import { convertToRange, toVsCodeDiagnostic } from './vscodeUtilities';
 import { getDiagnosticCollection } from './diagnostics';
 import { provideSignatureHelp } from './languageServices/signatureHelp';
+import { InsertTextFormat } from './dotnet-interactive';
 
 export class CompletionItemProvider implements vscode.CompletionItemProvider {
     static readonly triggerCharacters = ['.'];
@@ -27,7 +28,7 @@ export class CompletionItemProvider implements vscode.CompletionItemProvider {
             }
             const completionItems: Array<vscode.CompletionItem> = [];
             for (const item of result.completions) {
-                const insertText: string | vscode.SnippetString = item.insertTextFormat === 'Snippet' ? new vscode.SnippetString(item.insertText) : item.insertText;
+                const insertText: string | vscode.SnippetString = item.insertTextFormat === InsertTextFormat.Snippet ? new vscode.SnippetString(item.insertText) : item.insertText;
                 const vscodeItem: vscode.CompletionItem = {
                     label: item.displayText,
                     documentation: item.documentation,
