@@ -25,7 +25,7 @@ import * as notebookSerializers from '../notebookSerializers';
 import * as versionSpecificFunctions from '../versionSpecificFunctions';
 import { ErrorOutputCreator } from './interactiveClient';
 
-import { isAzureDataStudio, isInsidersBuild } from './vscodeUtilities';
+import { isInsidersBuild } from './vscodeUtilities';
 import { getDotNetMetadata, withDotNetCellMetadata } from './ipynbUtilities';
 import fetch from 'node-fetch';
 import { CompositeKernel } from './dotnet-interactive/compositeKernel';
@@ -140,8 +140,8 @@ export async function activate(context: vscode.ExtensionContext) {
                 const prompt = requestInput.prompt;
                 const password = requestInput.isPassword;
                 let value: string | undefined;
-                if (isAzureDataStudio(context) && requestInput.inputType === contracts.InputType.ConnectionString) {
-                    value = await versionSpecificFunctions.getSqlConnectionString();
+                if (requestInput.inputType === contracts.InputType.ConnectionString) {
+                    value = await versionSpecificFunctions.getConnectionString(prompt, password);
                 } else {
                     value = await vscode.window.showInputBox({ prompt, password });
                 }

@@ -30,7 +30,7 @@ export function getPreloads(extensionPath: string): vscode.Uri[] {
     return preloads;
 }
 
-export async function getSqlConnectionString(): Promise<string | undefined> {
+export async function getConnectionString(prompt: string, isPassword: boolean): Promise<string | undefined> {
     let connection = await azdata.connection.openConnectionDialog();
     let result: string | undefined;
     if (connection) {
