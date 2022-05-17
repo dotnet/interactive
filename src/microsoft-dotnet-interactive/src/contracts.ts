@@ -105,9 +105,9 @@ export interface RequestHoverText extends LanguageServiceCommand {
 }
 
 export interface RequestInput extends KernelCommand {
+    inputName: string;
     prompt: string;
     isPassword: boolean;
-    inputType: InputType;
 }
 
 export interface RequestKernelInfo extends KernelCommand {
@@ -425,11 +425,6 @@ export enum DocumentSerializationType {
 export interface FormattedValue {
     mimeType: string;
     value: string;
-}
-
-export enum InputType {
-    DirectInput = "directInput",
-    ConnectionString = "connectionString",
 }
 
 export interface InteractiveDocument {

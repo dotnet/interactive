@@ -3,25 +3,18 @@
 
 namespace Microsoft.DotNet.Interactive.Commands;
 
-public enum InputType
-{
-    DirectInput,
-    ConnectionString
-}
-
 public class RequestInput : KernelCommand
 {
-    public RequestInput(string prompt, bool isPassword = false, InputType inputType = InputType.DirectInput, string targetKernelName = null)
+    public RequestInput(string inputName, string prompt, bool isPassword = false, string targetKernelName = null)
         : base(targetKernelName)
     {
+        InputName = inputName;
         Prompt = prompt;
         IsPassword = isPassword;
-        InputType = inputType;
     }
 
+    public string InputName { get; }
     public string Prompt { get; }
 
     public bool IsPassword { get; }
-
-    public InputType InputType { get; }
 }

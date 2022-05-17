@@ -30,11 +30,15 @@ export function getPreloads(extensionPath: string): vscode.Uri[] {
     return preloads;
 }
 
-export async function getConnectionString(prompt: string, isPassword: boolean): Promise<string | undefined> {
-    let connection = await azdata.connection.openConnectionDialog();
+export async function handleRequestInput(inputName: string, prompt: string, isPassword: boolean): Promise<string | undefined> {
     let result: string | undefined;
-    if (connection) {
-        result = await azdata.connection.getConnectionString(connection.connectionId, true);
+    if (inputName === 'connectionString') {
+        let connection = await azdata.connection.openConnectionDialog();
+        if (connection) {
+            result = await azdata.connection.getConnectionString(connection.connectionId, true);
+        }
+    } else {
+        result = await vscode.window.showInputBox({ prompt, password: isPassword });
     }
     return result;
 }

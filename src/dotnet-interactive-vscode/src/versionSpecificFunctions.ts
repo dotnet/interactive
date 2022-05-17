@@ -29,8 +29,7 @@ export function getPreloads(extensionPath: string): vscode.Uri[] {
     return preloads;
 }
 
-// VS Code has no connection dialog, so just use the default input box
-export async function getConnectionString(prompt: string, isPassword: boolean): Promise<string | undefined> {
-    var value = await vscode.window.showInputBox({ prompt, password: isPassword });
-    return value;
+export async function handleRequestInput(inputName: string, prompt: string, isPassword: boolean): Promise<string | undefined> {
+    var result = await vscode.window.showInputBox({ prompt, password: isPassword });
+    return result;
 }

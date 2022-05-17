@@ -159,7 +159,7 @@ Console.WriteLine(1);";
 
             compositeKernel.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), "one");
 
-            var command = new RequestInput("Input please!");
+            var command = new RequestInput("testInput", "Input please!");
 
             await compositeKernel.SendAsync(command);
 

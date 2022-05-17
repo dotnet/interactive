@@ -356,10 +356,9 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     ? (_kernel.Name, parts[0])
                     : (parts[0], parts[1]);
 
-            if (targetKernelName is "input" or "password" or "connectionString")
+            if (targetKernelName is "input" or "password")
             {
-                var inputType = targetKernelName == "connectionString" ? InputType.ConnectionString : InputType.DirectInput;
-                var inputRequest = new RequestInput($"Please enter a value for field \"{valueName}\".", isPassword: targetKernelName == "password", inputType: inputType);
+                var inputRequest = new RequestInput(valueName, $"Please enter a value for field \"{valueName}\".", isPassword: targetKernelName == "password");
 
                 var result = _kernel.RootKernel.SendAsync(inputRequest).GetAwaiter().GetResult();
 
