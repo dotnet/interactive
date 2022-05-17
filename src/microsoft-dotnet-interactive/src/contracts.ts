@@ -389,8 +389,8 @@ export interface CompletionItem {
 }
 
 export enum InsertTextFormat {
-    PlainText = "PlainText",
-    Snippet = "Snippet",
+    PlainText = "plainText",
+    Snippet = "snippet",
 }
 
 export interface Diagnostic {
@@ -401,10 +401,10 @@ export interface Diagnostic {
 }
 
 export enum DiagnosticSeverity {
-    Hidden = "Hidden",
-    Info = "Info",
-    Warning = "Warning",
-    Error = "Error",
+    Hidden = "hidden",
+    Info = "info",
+    Warning = "warning",
+    Error = "error",
 }
 
 export interface LinePositionSpan {
@@ -418,8 +418,8 @@ export interface LinePosition {
 }
 
 export enum DocumentSerializationType {
-    Dib = "Dib",
-    Ipynb = "Ipynb",
+    Dib = "dib",
+    Ipynb = "ipynb",
 }
 
 export interface FormattedValue {
@@ -428,8 +428,8 @@ export interface FormattedValue {
 }
 
 export enum InputType {
-    DirectInput = "DirectInput",
-    ConnectionString = "ConnectionString",
+    DirectInput = "directInput",
+    ConnectionString = "connectionString",
 }
 
 export interface InteractiveDocument {
@@ -487,8 +487,8 @@ export interface ProjectItem {
 }
 
 export enum RequestType {
-    Parse = "Parse",
-    Serialize = "Serialize",
+    Parse = "parse",
+    Serialize = "serialize",
 }
 
 export interface ResolvedPackageReference extends PackageReference {
@@ -509,8 +509,8 @@ export interface ParameterInformation {
 }
 
 export enum SubmissionType {
-    Run = "Run",
-    Diagnose = "Diagnose",
+    Run = "run",
+    Diagnose = "diagnose",
 }
 
 export interface KernelEventEnvelope {

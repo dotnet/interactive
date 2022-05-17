@@ -3,11 +3,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Threading;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharpProject;
 using Microsoft.DotNet.Interactive.CSharpProject.Commands;
@@ -266,13 +268,23 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
                        : propertyName;
         }
 
+        private static string ConvertToCamelCase(string titleCaseInput)
+        {
+            if (string.IsNullOrEmpty(titleCaseInput) || titleCaseInput.Length == 1)
+            {
+                return titleCaseInput?.ToLowerInvariant();
+            }
+            var camelCaseInput = Char.ToLowerInvariant(titleCaseInput[0]) + titleCaseInput[1..];
+            return camelCaseInput;
+        }
+
         private static void GenerateEnum(StringBuilder builder, Type type)
         {
             builder.AppendLine();
             builder.AppendLine($"export enum {type.Name} {{");
             foreach (var name in type.GetEnumNames())
             {
-                builder.AppendLine($"    {name} = \"{name}\",");
+                builder.AppendLine($"    {name} = \"{ConvertToCamelCase(name)}\",");
             }
 
             builder.AppendLine("}");
