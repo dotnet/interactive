@@ -39,8 +39,12 @@ type FSharpKernel () as this =
     static let lockObj = Object();
 
     let createScript () =
-        // work around ref/impl type resolution; see https://github.com/dotnet/fsharp/issues/10496
-        lock lockObj (fun () -> new FSharpScript(additionalArgs=[|"/langversion:preview"; "/usesdkrefs-"|]))
+        let additionalArgs = [|
+            "/langversion:preview"
+            "/usesdkrefs-" // work around ref/impl type resolution; see https://github.com/dotnet/fsharp/issues/10496
+            "--multiemit-" // work around inability to reference types defined in this assembly; see https://github.com/dotnet/fsharp/issues/13197
+            |]
+        lock lockObj (fun () -> new FSharpScript(additionalArgs=additionalArgs))
 
     let script = lazy createScript ()
 
