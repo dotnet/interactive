@@ -8,11 +8,9 @@
   "author": "Microsoft Corporation",
   "license": "MIT",
   "enabledApiProposals": [
-    "notebookContentProvider",
     "notebookCellExecutionState",
     "notebookControllerKind",
     "notebookDebugOptions",
-    "notebookDeprecated",
     "notebookEditor",
     "notebookEditorDecorationType",
     "notebookEditorEdit",
