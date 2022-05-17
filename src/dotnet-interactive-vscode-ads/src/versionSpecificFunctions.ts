@@ -32,7 +32,7 @@ export function getPreloads(extensionPath: string): vscode.Uri[] {
 
 export async function handleRequestInput(inputName: string, prompt: string, isPassword: boolean): Promise<string | undefined> {
     let result: string | undefined;
-    if (inputName === 'connectionString') {
+    if (inputName === 'connectionString' && !isPassword) {
         let connection = await azdata.connection.openConnectionDialog();
         if (connection) {
             result = await azdata.connection.getConnectionString(connection.connectionId, true);
