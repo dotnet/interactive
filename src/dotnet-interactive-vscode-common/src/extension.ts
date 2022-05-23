@@ -137,10 +137,10 @@ export async function activate(context: vscode.ExtensionContext) {
         compositeKernel.registerCommandHandler({
             commandType: contracts.RequestInputType, handle: async (commandInvocation) => {
                 const requestInput = <contracts.RequestInput>commandInvocation.commandEnvelope.command;
-                const inputName = requestInput.inputName;
+                const inputDescriptor = requestInput.inputDescriptor;
                 const prompt = requestInput.prompt;
                 const password = requestInput.isPassword;
-                let value = await versionSpecificFunctions.handleRequestInput(prompt, password, inputName);
+                let value = await versionSpecificFunctions.handleRequestInput(prompt, password, inputDescriptor);
                 if (!value) {
                     commandInvocation.context.publish({
                         eventType: contracts.ErrorProducedType,

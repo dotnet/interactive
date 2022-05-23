@@ -6,6 +6,7 @@
     "prompt": "provide answer",
     "isPassword": true,
     "targetKernelName": "vscode",
+    "inputDescriptor": null,
     "originUri": null,
     "destinationUri": null
   }

@@ -11,6 +11,7 @@
       "prompt": "Input?",
       "isPassword": false,
       "targetKernelName": "vscode",
+      "inputDescriptor": null,
       "originUri": null,
       "destinationUri": null
     }

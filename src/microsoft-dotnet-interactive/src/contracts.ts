@@ -27,7 +27,7 @@ export const SubmitCodeType = "SubmitCode";
 export const UpdateDisplayedValueType = "UpdateDisplayedValue";
 
 export type KernelCommandType =
-      typeof AddPackageType
+    typeof AddPackageType
     | typeof CancelType
     | typeof ChangeWorkingDirectoryType
     | typeof CompileProjectType
@@ -107,7 +107,7 @@ export interface RequestHoverText extends LanguageServiceCommand {
 export interface RequestInput extends KernelCommand {
     prompt: string;
     isPassword: boolean;
-    inputName: string;
+    inputDescriptor: string;
 }
 
 export interface RequestKernelInfo extends KernelCommand {
@@ -225,7 +225,7 @@ export const ValueProducedType = "ValueProduced";
 export const WorkingDirectoryChangedType = "WorkingDirectoryChanged";
 
 export type KernelEventType =
-      typeof AssemblyProducedType
+    typeof AssemblyProducedType
     | typeof CodeSubmissionReceivedType
     | typeof CommandCancelledType
     | typeof CommandFailedType
