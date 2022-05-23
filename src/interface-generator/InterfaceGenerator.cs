@@ -270,10 +270,15 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 
         private static string ConvertToCamelCase(string titleCaseInput)
         {
-            if (string.IsNullOrEmpty(titleCaseInput) || titleCaseInput.Length == 1)
+            if (string.IsNullOrEmpty(titleCaseInput))
             {
-                return titleCaseInput?.ToLowerInvariant();
+                return titleCaseInput;
             }
+            else if (titleCaseInput.Length == 1)
+            {
+                return titleCaseInput.ToLowerInvariant();
+            }
+
             var camelCaseInput = Char.ToLowerInvariant(titleCaseInput[0]) + titleCaseInput[1..];
             return camelCaseInput;
         }
