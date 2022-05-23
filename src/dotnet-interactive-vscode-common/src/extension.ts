@@ -140,7 +140,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 const inputName = requestInput.inputName;
                 const prompt = requestInput.prompt;
                 const password = requestInput.isPassword;
-                let value = await versionSpecificFunctions.handleRequestInput(inputName, prompt, password);
+                let value = await versionSpecificFunctions.handleRequestInput(prompt, password, inputName);
                 if (!value) {
                     commandInvocation.context.publish({
                         eventType: contracts.ErrorProducedType,

@@ -29,7 +29,7 @@ export function getPreloads(extensionPath: string): vscode.Uri[] {
     return preloads;
 }
 
-export async function handleRequestInput(inputName: string, prompt: string, isPassword: boolean): Promise<string | undefined> {
+export async function handleRequestInput(prompt: string, isPassword: boolean, inputName?: string): Promise<string | undefined> {
     var result = await vscode.window.showInputBox({ prompt, password: isPassword });
     return result;
 }
