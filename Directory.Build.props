@@ -16,7 +16,7 @@
 
   <PropertyGroup>
     <SystemReactiveVersion>5.0.0</SystemReactiveVersion>
-    <MicrosoftCodeAnalysisCommonVersion>4.1.0</MicrosoftCodeAnalysisCommonVersion>
+    <MicrosoftCodeAnalysisCommonVersion>4.2.0</MicrosoftCodeAnalysisCommonVersion>
   </PropertyGroup>
 
   <PropertyGroup>
