@@ -109,8 +109,8 @@ Microsoft.DotNet.Interactive
     public static Kernel Root { get;}
     public static System.Void CSS(System.String content)
     public static DisplayedValue display(System.Object value, System.String[] mimeTypes)
-    public static System.Threading.Tasks.Task<System.String> GetInputAsync(System.String prompt = )
-    public static System.Threading.Tasks.Task<System.String> GetPasswordAsync(System.String prompt = )
+    public static System.Threading.Tasks.Task<System.String> GetInputAsync(System.String prompt = , System.String inputDescriptor = )
+    public static System.Threading.Tasks.Task<System.String> GetPasswordAsync(System.String prompt = , System.String inputDescriptor = )
     public static Microsoft.AspNetCore.Html.IHtmlContent HTML(System.String content)
     public static System.Void Javascript(System.String scriptContent)
     public ChooseKernelDirective ChooseKernelDirective { get;}
@@ -403,7 +403,8 @@ Microsoft.DotNet.Interactive.Commands
   public class RequestHoverText : LanguageServiceCommand
     .ctor(System.String code, Microsoft.DotNet.Interactive.LinePosition linePosition, System.String targetKernelName = null)
   public class RequestInput : KernelCommand
-    .ctor(System.String prompt, System.Boolean isPassword = False, System.String targetKernelName = null)
+    .ctor(System.String prompt, System.Boolean isPassword = False, System.String targetKernelName = null, System.String inputDescriptor = null)
+    public System.String InputDescriptor { get;}
     public System.Boolean IsPassword { get;}
     public System.String Prompt { get;}
   public class RequestKernelInfo : KernelCommand
