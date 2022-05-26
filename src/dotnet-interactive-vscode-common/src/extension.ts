@@ -140,13 +140,17 @@ export async function activate(context: vscode.ExtensionContext) {
                 const prompt = requestInput.prompt;
                 const password = requestInput.isPassword;
                 const value = await vscode.window.showInputBox({ prompt, password });
-                commandInvocation.context.publish({
-                    eventType: contracts.InputProducedType,
-                    event: {
-                        value
-                    },
-                    command: commandInvocation.commandEnvelope,
-                });
+                if (!value) {
+                    commandInvocation.context.fail('Input request cancelled');
+                } else {
+                    commandInvocation.context.publish({
+                        eventType: contracts.InputProducedType,
+                        event: {
+                            value
+                        },
+                        command: commandInvocation.commandEnvelope,
+                    });
+                }
             }
         });
 
