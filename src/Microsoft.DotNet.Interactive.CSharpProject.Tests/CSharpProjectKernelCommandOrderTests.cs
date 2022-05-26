@@ -534,14 +534,13 @@ public class Program
                 .Which
                 .Diagnostics
                 .Should()
-                .BeEquivalentTo(new[]
-                {
+                .ContainEquivalentOf(
                     new Diagnostic(
                         new LinePositionSpan(new LinePosition(0, 10), new LinePosition(0, 28)),
                         CodeAnalysis.DiagnosticSeverity.Error,
                         "CS0029",
                         "(1,11): error CS0029: Cannot implicitly convert type 'string' to 'int'")
-                });
+                );
         }
 
         [Fact]
@@ -575,7 +574,7 @@ public class Program
                 .Which
                 .Diagnostics
                 .Should()
-                .BeEmpty();
+                .NotContain(d => d.Severity == CodeAnalysis.DiagnosticSeverity.Error);
         }
 
         [Fact]
@@ -606,14 +605,60 @@ public class Program
                 .Which
                 .Diagnostics
                 .Should()
-                .BeEquivalentTo(new[]
-                {
+                .ContainEquivalentOf(
                     new Diagnostic(
                         new LinePositionSpan(new LinePosition(0, 10), new LinePosition(0, 15)),
                         CodeAnalysis.DiagnosticSeverity.Error,
                         "CS0029",
                         "(1,11): error CS0029: Cannot implicitly convert type 'string' to 'int'")
-                });
+                );
+        }
+
+        [Fact]
+        public async Task project_files_are_case_insensitive()
+        {
+            var kernel = new CSharpProjectKernel("csharp");
+
+            // the console project defaults to a file named `Program.cs` so by specifying `program.cs` we're
+            // effectively adding a duplicate file
+            await kernel.SendAsync(new OpenProject(new Project(new[] { new ProjectFile("program.cs", @"using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Globalization;
+using System.Text.RegularExpressions;
+
+namespace Program
+{
+  class Program
+  {
+    static void Main(string[] args)
+    {
+      #region controller
+
+      #endregion
+    }
+  }
+}") })));
+            await kernel.SendAsync(new OpenDocument("./program.cs", regionName: "controller"));
+            await kernel.SendAsync(new SubmitCode("var a = 123;"));
+            var kernelResult = await kernel.SendAsync(new CompileProject());
+            var kernelEvents = kernelResult.KernelEvents.ToSubscribedList();
+
+            using var _ = new AssertionScope();
+
+            kernelEvents
+                .Should()
+                .NotContainErrors();
+
+            kernelEvents
+                .Should()
+                .ContainSingle<AssemblyProduced>()
+                .Which
+                .Assembly
+                .Value
+                .Should()
+                .NotBeNullOrWhiteSpace();
         }
     }
 }
