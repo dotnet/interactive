@@ -79,11 +79,11 @@ public class CSharpProjectKernel : Kernel
     {
         ThrowIfProjectIsNotOpened();
 
-        var file = _workspace.Files.SingleOrDefault(f => f.Name == command.RelativeFilePath);
+        var file = _workspace.Files.SingleOrDefault(f => string.Compare(f.Name, command.RelativeFilePath, StringComparison.OrdinalIgnoreCase) == 0);
         if (file is null)
         {
             // check for a region-less buffer instead
-            var buffer = _workspace.Buffers.SingleOrDefault(b => b.Id.FileName == command.RelativeFilePath && b.Id.RegionName is null);
+            var buffer = _workspace.Buffers.SingleOrDefault(b => string.Compare(b.Id.FileName, command.RelativeFilePath, StringComparison.OrdinalIgnoreCase) == 0 && b.Id.RegionName is null);
             if (buffer is { })
             {
                 // create a temporary file with the buffer's content
@@ -106,7 +106,7 @@ public class CSharpProjectKernel : Kernel
         {
             var extractor = new BufferFromRegionExtractor();
             _workspace = extractor.Extract(_workspace.Files);
-            _buffer = _workspace.Buffers.SingleOrDefault(b => b.Id.FileName == command.RelativeFilePath && b.Id.RegionName == command.RegionName);
+            _buffer = _workspace.Buffers.SingleOrDefault(b => string.Compare(b.Id.FileName, command.RelativeFilePath, StringComparison.OrdinalIgnoreCase) == 0 && b.Id.RegionName == command.RegionName);
             if (_buffer is null)
             {
                 throw new Exception($"Region '{command.RegionName}' not found in file '{command.RelativeFilePath}'");
@@ -266,14 +266,14 @@ public class CSharpProjectKernel : Kernel
         }
 
         if (result.Features.TryGetValue(nameof(ProjectDiagnostics), out var candidateProjectDiagnostics) &&
-            candidateDiagnostics is ProjectDiagnostics projectDiags)
+            candidateProjectDiagnostics is ProjectDiagnostics projectDiags)
         {
             projectDiagnostics = projectDiags;
         }
 
         var allDiagnostics = diagnostics.Concat(projectDiagnostics);
 
-        var finalDiagnostics = diagnostics.Select(d => new Diagnostic(new LinePositionSpan(GetLinePositionFromPosition(code, d.Start), GetLinePositionFromPosition(code, d.End)), d.Severity, d.Id, d.Message));
+        var finalDiagnostics = allDiagnostics.Select(d => new Diagnostic(new LinePositionSpan(GetLinePositionFromPosition(code, d.Start), GetLinePositionFromPosition(code, d.End)), d.Severity, d.Id, d.Message));
 
         return finalDiagnostics;
     }
