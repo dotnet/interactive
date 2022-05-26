@@ -51,6 +51,12 @@ namespace Microsoft.DotNet.Interactive
 
             var results = await Root.SendAsync(command, CancellationToken.None);
 
+            var failedEvent = await results.KernelEvents.OfType<CommandFailed>().FirstOrDefaultAsync();
+            if (failedEvent is { })
+            {
+                throw new Exception(failedEvent.Message);
+            }
+
             var inputProduced = await results.KernelEvents
                                              .OfType<InputProduced>()
                                              .FirstOrDefaultAsync();
