@@ -50,6 +50,14 @@ Once any of those release definitions are invoked, the new extension will appear
 
 The publish/verification script is located in this repo at [`eng/publish/PublishVSCodeExtension.ps1`](eng/publish/PublishVSCodeExtension.ps1).
 
+### Publish token for VS Code Marketplace
+
+The variable group [`dotnet-interactive-api-keys`](https://dev.azure.com/dnceng/internal/_apps/hub/ms.vss-distributed-task.hub-library?itemType=VariableGroups&view=VariableGroupView&variableGroupId=107&path=dotnet-interactive-api-keys) contains the secret `vscode-marketplace-dotnet-tools-publish-token` which holds the PAT used to upload the `.vsix` to the VS Code Marketplace.  If this PAT needs to be regenerated:
+
+1. Download the latest `vsm.mac.pat` package from `https://dev.azure.com/devdiv/OnlineServices/_artifacts/feed/vsmarketplace`
+2. From a `pwsh` prompt run `dotnet tool install --global --add-source "$env:USERPROFILE\Downloads" vsm.mac.pat`
+3. Run `vsmpat generate`.  You'll be prompted to login through a web browser and 8-10 seconds later the PAT will appear on the console.
+
 ### Rolling back to an older version of the VS Code Extension
 
 To roll back to a previous build, you'll need to:
