@@ -140,15 +140,9 @@ export async function activate(context: vscode.ExtensionContext) {
                 const inputDescriptor = requestInput.inputDescriptor;
                 const prompt = requestInput.prompt;
                 const password = requestInput.isPassword;
-                let value = await versionSpecificFunctions.handleRequestInput(prompt, password, inputDescriptor);
+                const value = await versionSpecificFunctions.handleRequestInput(prompt, password, inputDescriptor);
                 if (!value) {
-                    commandInvocation.context.publish({
-                        eventType: contracts.ErrorProducedType,
-                        event: {
-                            message: 'No input was provided.'
-                        },
-                        command: commandInvocation.commandEnvelope,
-                    });
+                    commandInvocation.context.fail('Input request cancelled');
                 } else {
                     commandInvocation.context.publish({
                         eventType: contracts.InputProducedType,

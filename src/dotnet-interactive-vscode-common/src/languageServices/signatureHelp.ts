@@ -3,15 +3,15 @@
 
 import { ClientMapper } from './../clientMapper';
 import { PositionLike } from './interfaces';
-import { Document } from '../interfaces/vscode-like';
 
 import * as contracts from '../dotnet-interactive/contracts';
 import { debounceAndReject } from '../utilities';
+import { Uri } from '../interfaces/vscode-like';
 
-export function provideSignatureHelp(clientMapper: ClientMapper, language: string, document: Document, position: PositionLike, languageServiceDelay: number, token?: string | undefined): Promise<contracts.SignatureHelpProduced> {
-    return debounceAndReject(`sighelp-${document.uri.toString()}`, languageServiceDelay, async () => {
-        const client = await clientMapper.getOrAddClient(document.notebook?.uri || document.uri);
-        const sigHelp = await client.signatureHelp(language, document.getText(), position.line, position.character, token);
+export function provideSignatureHelp(clientMapper: ClientMapper, language: string, documentUri: Uri, documentText: string, position: PositionLike, languageServiceDelay: number, token?: string | undefined): Promise<contracts.SignatureHelpProduced> {
+    return debounceAndReject(`sighelp-${documentUri.toString()}`, languageServiceDelay, async () => {
+        const client = await clientMapper.getOrAddClient(documentUri);
+        const sigHelp = await client.signatureHelp(language, documentText, position.line, position.character, token);
         return sigHelp;
     });
 }

@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject
                 }
 
                 return f.ToSourceFile();
-            });
+            }, StringComparer.OrdinalIgnoreCase);
 
             var buffers = new List<Buffer>();
             foreach (var sourceBuffer in source.Buffers)

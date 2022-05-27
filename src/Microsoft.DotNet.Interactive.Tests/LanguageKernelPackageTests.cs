@@ -681,7 +681,7 @@ using NodaTime.Extensions;");
             var events = kernel.KernelEvents.ToSubscribedList();
 
             await kernel.SubmitCodeAsync(@"
-#r ""nuget:Microsoft.DotNet.PlatformAbstractions""
+#r ""nuget:System.Text.Json""
 ");
             // It should work, no errors and the latest requested package should be added
             events.Should()
@@ -689,8 +689,8 @@ using NodaTime.Extensions;");
 
             events.OfType<PackageAdded>()
                   .Should()
-                  .ContainSingle(e => e.PackageReference.PackageName == "Microsoft.DotNet.PlatformAbstractions" &&
-                                      e.PackageReference.PackageVersion != "1.0.3");
+                  .ContainSingle(e => e.PackageReference.PackageName == "System.Text.Json" &&
+                                      e.PackageReference.PackageVersion != "5.0.2");
         }
 
         [Theory]

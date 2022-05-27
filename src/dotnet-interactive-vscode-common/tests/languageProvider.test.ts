@@ -43,20 +43,17 @@ describe('LanguageProvider tests', () => {
             ]
         }));
         const clientMapper = new ClientMapper(config);
-        clientMapper.getOrAddClient(createUri('test/path'));
+        const uri = createUri('test/path');
+        clientMapper.getOrAddClient(uri);
 
         const code = 'Math.';
-        const document = {
-            uri: createUri('test/path'),
-            getText: () => code
-        };
         const position = {
             line: 0,
             character: 5
         };
 
         // perform the completion request
-        const completion = await provideCompletion(clientMapper, 'csharp', document, position, 0, token);
+        const completion = await provideCompletion(clientMapper, 'csharp', uri, code, position, 0, token);
         expect(completion).to.deep.equal({
             linePositionSpan: null,
             completions: [
@@ -110,17 +107,14 @@ describe('LanguageProvider tests', () => {
         clientMapper.getOrAddClient(createUri('test/path'));
 
         const code = 'var x = 1234;';
-        const document = {
-            uri: createUri('test/path'),
-            getText: () => code,
-        };
+        const uri = createUri('test/path');
         const position = {
             line: 0,
             character: 10
         };
 
         // perform the hover request
-        const hover = await provideHover(clientMapper, 'csharp', document, position, 0, token);
+        const hover = await provideHover(clientMapper, 'csharp', uri, code, position, 0, token);
         expect(hover).to.deep.equal({
             contents: 'readonly struct System.Int32',
             isMarkdown: true,
@@ -178,17 +172,14 @@ describe('LanguageProvider tests', () => {
         clientMapper.getOrAddClient(createUri('test/path'));
 
         const code = 'Console.WriteLine(true';
-        const document = {
-            uri: createUri('test/path'),
-            getText: () => code,
-        };
+        const uri = createUri('test/path');
         const position = {
             line: 0,
             character: 22
         };
 
         // perform the sig help request
-        const sigHelp = await provideSignatureHelp(clientMapper, 'csharp', document, position, 0, token);
+        const sigHelp = await provideSignatureHelp(clientMapper, 'csharp', uri, code, position, 0, token);
         expect(sigHelp).to.deep.equal({
             activeParameter: 0,
             activeSignature: 0,
