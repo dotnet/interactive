@@ -12,11 +12,9 @@
     "notebookControllerKind",
     "notebookDebugOptions",
     "notebookEditor",
-    "notebookEditorDecorationType",
     "notebookEditorEdit",
     "notebookMessaging",
-    "notebookMime",
-    "textDocumentNotebook"
+    "notebookMime"
   ],
   "preview": true,
   "//version": "The version '42.42.42' is auto-set during CI package creation.",

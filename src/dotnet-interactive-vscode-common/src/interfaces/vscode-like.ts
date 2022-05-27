@@ -36,12 +36,6 @@ export interface Uri {
     toString: () => string;
 }
 
-export interface Document {
-    uri: Uri;
-    getText: { (): string };
-    notebook?: NotebookDocument | undefined;
-}
-
 export interface NotebookCell {
     cellKind: NotebookCellKind;
     document: Document;

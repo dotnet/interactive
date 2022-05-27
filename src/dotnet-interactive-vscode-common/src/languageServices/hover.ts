@@ -3,13 +3,13 @@
 
 import { ClientMapper } from './../clientMapper';
 import { HoverResult, PositionLike } from './interfaces';
-import { Document } from '../interfaces/vscode-like';
+import { Uri } from '../interfaces/vscode-like';
 import { debounceAndReject } from '../utilities';
 
-export function provideHover(clientMapper: ClientMapper, language: string, document: Document, position: PositionLike, languageServiceDelay: number, token?: string | undefined): Promise<HoverResult> {
-    return debounceAndReject(`hover-${document.uri.toString()}`, languageServiceDelay, async () => {
-        const client = await clientMapper.getOrAddClient(document.notebook?.uri || document.uri);
-        const hoverText = await client.hover(language, document.getText(), position.line, position.character, token);
+export function provideHover(clientMapper: ClientMapper, language: string, documentUri: Uri, documentText: string, position: PositionLike, languageServiceDelay: number, token?: string | undefined): Promise<HoverResult> {
+    return debounceAndReject(`hover-${documentUri.toString()}`, languageServiceDelay, async () => {
+        const client = await clientMapper.getOrAddClient(documentUri);
+        const hoverText = await client.hover(language, documentText, position.line, position.character, token);
         const content = hoverText.content.sort((a, b) => mimeTypeToPriority(a.mimeType) - mimeTypeToPriority(b.mimeType))[0];
         const hoverResult = {
             contents: content.value,
