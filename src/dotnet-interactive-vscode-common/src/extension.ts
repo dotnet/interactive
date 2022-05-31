@@ -161,13 +161,11 @@ export async function activate(context: vscode.ExtensionContext) {
                 const contents = addCell.code;
                 const notebookDocument = vscode.workspace.notebookDocuments.find(notebook => notebook.uri.toString() === notebookUri.toString());
                 if (notebookDocument) {
-                    const edit = new vscode.WorkspaceEdit();
                     const range = new vscode.NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount);
                     const cellKind = languageToCellKind(language);
                     const notebookCellLanguage = getNotebookSpecificLanguage(language);
                     const newCell = new vscode.NotebookCellData(cellKind, contents, notebookCellLanguage);
-                    edit.replaceNotebookCells(notebookDocument.uri, range, [newCell]);
-                    const succeeded = await vscode.workspace.applyEdit(edit);
+                    const succeeded = versionSpecificFunctions.replaceNotebookCells(notebookDocument.uri, range, [newCell]);
                     if (!succeeded) {
                         throw new Error(`Unable to add cell to notebook '${notebookUri.toString()}'.`);
                     }
@@ -193,7 +191,7 @@ export async function activate(context: vscode.ExtensionContext) {
     diagnosticsChannel.appendLine(`Extension started for VS Code ${hostVersionSuffix}.`);
     const languageServiceDelay = config.get<number>('languageServiceDelay') || 500; // fall back to something reasonable
 
-    const preloads = versionSpecificFunctions.getPreloads(context.extensionPath);
+    const preloads = getPreloads(context.extensionPath);
 
     ////////////////////////////////////////////////////////////////////////////////
     const launchOptions = await getInteractiveLaunchOptions();
@@ -260,6 +258,30 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
+}
+
+function getPreloads(extensionPath: string): vscode.Uri[] {
+    const preloads: vscode.Uri[] = [];
+    const errors: string[] = [];
+    const apiFiles: string[] = [
+        'kernelApiBootstrapper.js'
+    ];
+
+    for (const apiFile of apiFiles) {
+        const apiFileUri = vscode.Uri.file(path.join(extensionPath, 'resources', apiFile));
+        if (fs.existsSync(apiFileUri.fsPath)) {
+            preloads.push(apiFileUri);
+        } else {
+            errors.push(`Unable to find API file expected at  ${apiFileUri.fsPath}`);
+        }
+    }
+
+    if (errors.length > 0) {
+        const error = errors.join("\n");
+        throw new Error(error);
+    }
+
+    return preloads;
 }
 
 function createErrorOutput(message: string, outputId?: string): vscodeLike.NotebookCellOutput {
@@ -371,9 +393,7 @@ async function updateNotebookCellLanguageInMetadata(candidateNotebookCellDocumen
             const dotnetMetadata = getDotNetMetadata(cell.metadata);
             if (dotnetMetadata.language !== cellLanguage) {
                 const newMetadata = withDotNetCellMetadata(cell.metadata, cellLanguage);
-                const edit = new vscode.WorkspaceEdit();
-                edit.replaceNotebookCellMetadata(notebook.uri, cell.index, newMetadata);
-                await vscode.workspace.applyEdit(edit);
+                const _succeeded = await versionSpecificFunctions.replaceNotebookCellMetadata(notebook.uri, cell.index, newMetadata);
             }
         }
     }

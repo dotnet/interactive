@@ -7,6 +7,7 @@ import { ClientMapper } from './clientMapper';
 import * as contracts from './dotnet-interactive/contracts';
 import { getNotebookSpecificLanguage } from './interactiveNotebook';
 import { VariableGridRow } from './dotnet-interactive/webview/variableGridInterfaces';
+import * as versionSpecificFunctions from '../versionSpecificFunctions';
 
 // creates a map of, e.g.:
 //   "dotnet-interactive.csharp" => "C# (.NET Interactive)""
@@ -22,7 +23,7 @@ export function registerVariableExplorer(context: vscode.ExtensionContext, clien
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.shareValueTo', async (variableInfo: { kernelName: string, valueName: string } | undefined) => {
         if (variableInfo && vscode.window.activeNotebookEditor) {
-            const client = await clientMapper.tryGetClient(vscode.window.activeNotebookEditor.document.uri);
+            const client = await clientMapper.tryGetClient(versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor).uri);
             if (client) {
                 // creates a map of _only_ the available languages in this notebook, e.g.:
                 //   "C# (.NET Interactive)" => "dotnet-interactive.csharp"
@@ -151,8 +152,8 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
         this.currentNotebookSubscription?.dispose();
         this.currentNotebookSubscription = undefined;
         if (vscode.window.activeNotebookEditor) {
-            const document = vscode.window.activeNotebookEditor.document;
-            const client = await this.clientMapper.getOrAddClient(document.uri);
+            const notebook = versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
+            const client = await this.clientMapper.getOrAddClient(notebook.uri);
             this.currentNotebookSubscription = client.channel.subscribeToKernelEvents(eventEnvelope => {
                 switch (eventEnvelope.eventType) {
                     case contracts.CommandSucceededType:

@@ -103,11 +103,11 @@ export class DotNetNotebookKernel {
     private commonControllerInit(controller: vscode.NotebookController) {
         controller.supportedLanguages = notebookCellLanguages;
         this.disposables.push(controller.onDidReceiveMessage(e => {
-            const documentUri = e.editor.document.uri;
-            const documentUriString = documentUri.toString();
+            const notebookUri = e.editor.notebook.uri;
+            const notebookUriString = notebookUri.toString();
 
             if (e.message.envelope) {
-                let messageHandler = this.uriMessageHandlerMap.get(documentUriString);
+                let messageHandler = this.uriMessageHandlerMap.get(notebookUriString);
                 if (messageHandler) {
                     const envelope = <contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope><any>(e.message.envelope);
                     if (messageHandler.waitingOnMessages) {
@@ -122,8 +122,8 @@ export class DotNetNotebookKernel {
 
             switch (e.message.preloadCommand) {
                 case '#!connect':
-                    this.config.clientMapper.getOrAddClient(documentUri).then(() => {
-                        notebookMessageHandler.hashBangConnect(this.config.clientMapper, this.uriMessageHandlerMap, (arg) => controller.postMessage(arg), documentUri);
+                    this.config.clientMapper.getOrAddClient(notebookUri).then(() => {
+                        notebookMessageHandler.hashBangConnect(this.config.clientMapper, this.uriMessageHandlerMap, (arg) => controller.postMessage(arg), notebookUri);
                     });
                     break;
             }
@@ -270,9 +270,10 @@ function generateVsCodeNotebookCellOutputItem(data: Uint8Array, mime: string, st
 }
 
 async function updateDocumentKernelspecMetadata(document: vscode.NotebookDocument): Promise<void> {
-    const edit = new vscode.WorkspaceEdit();
     const documentKernelMetadata = withDotNetKernelMetadata(document.metadata);
-    edit.replaceNotebookMetadata(document.uri, documentKernelMetadata);
+    const notebookEdit = vscode.NotebookEdit.updateNotebookMetadata(documentKernelMetadata);
+    const edit = new vscode.WorkspaceEdit();
+    edit.set(document.uri, [notebookEdit]);
     await vscode.workspace.applyEdit(edit);
 }
 

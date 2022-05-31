@@ -1,30 +1,29 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import * as path from 'path';
 import * as vscode from 'vscode';
-import * as fs from 'fs';
 
-export function getPreloads(extensionPath: string): vscode.Uri[] {
-    const preloads: vscode.Uri[] = [];
-    const errors: string[] = [];
-    const apiFiles: string[] = [
-        'kernelApiBootstrapper.js'
-    ];
+export function getNotebookDocumentFromEditor(notebookEditor: vscode.NotebookEditor): vscode.NotebookDocument {
+    return notebookEditor.document;
+}
 
-    for (const apiFile of apiFiles) {
-        const apiFileUri = vscode.Uri.file(path.join(extensionPath, 'resources', apiFile));
-        if (fs.existsSync(apiFileUri.fsPath)) {
-            preloads.push(apiFileUri);
-        } else {
-            errors.push(`Unable to find API file expected at  ${apiFileUri.fsPath}`);
-        }
-    }
+export async function replaceNotebookCells(notebookUri: vscode.Uri, range: vscode.NotebookRange, cells: vscode.NotebookCellData[]): Promise<boolean> {
+    const edit = new vscode.WorkspaceEdit();
+    edit.replaceNotebookCells(notebookUri, range, cells);
+    const succeeded = await vscode.workspace.applyEdit(edit);
+    return succeeded;
+}
 
-    if (errors.length > 0) {
-        const error = errors.join("\n");
-        throw new Error(error);
-    }
+export async function replaceNotebookCellMetadata(notebookUri: vscode.Uri, cellIndex: number, newCellMetadata: { [key: string]: any }): Promise<boolean> {
+    const edit = new vscode.WorkspaceEdit();
+    edit.replaceNotebookCellMetadata(notebookUri, cellIndex, newCellMetadata);
+    const succeeded = await vscode.workspace.applyEdit(edit);
+    return succeeded;
+}
 
-    return preloads;
+export async function replaceNotebookMetadata(notebookUri: vscode.Uri, documentMetadata: { [key: string]: any }): Promise<boolean> {
+    const edit = new vscode.WorkspaceEdit();
+    edit.replaceNotebookMetadata(notebookUri, documentMetadata);
+    const succeeded = await vscode.workspace.applyEdit(edit);
+    return succeeded;
 }
