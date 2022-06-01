@@ -404,7 +404,7 @@ Microsoft.DotNet.Interactive.Commands
     .ctor(System.String code, Microsoft.DotNet.Interactive.LinePosition linePosition, System.String targetKernelName = null)
   public class RequestInput : KernelCommand
     .ctor(System.String prompt, System.Boolean isPassword = False, System.String targetKernelName = null, System.String inputType = null)
-    public System.String inputType { get;}
+    public System.String InputType { get;}
     public System.Boolean IsPassword { get;}
     public System.String Prompt { get;}
   public class RequestKernelInfo : KernelCommand
