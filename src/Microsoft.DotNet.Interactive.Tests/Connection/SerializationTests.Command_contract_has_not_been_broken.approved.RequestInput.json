@@ -5,7 +5,7 @@
   "command": {
     "prompt": "provide answer",
     "isPassword": true,
-    "inputDescriptor": null,
+    "inputType": null,
     "targetKernelName": "vscode",
     "originUri": null,
     "destinationUri": null

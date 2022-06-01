@@ -10,7 +10,7 @@
     "command": {
       "prompt": "Input?",
       "isPassword": false,
-      "inputDescriptor": null,
+      "inputType": null,
       "targetKernelName": "vscode",
       "originUri": null,
       "destinationUri": null
