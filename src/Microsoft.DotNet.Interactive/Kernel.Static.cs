@@ -35,19 +35,19 @@ namespace Microsoft.DotNet.Interactive
         /// </summary>
         /// <param name="prompt">The prompt to show.</param>
         /// <returns>The user input value.</returns>
-        public static async Task<string> GetInputAsync(string prompt = "", string inputDescriptor = "")
+        public static async Task<string> GetInputAsync(string prompt = "", string inputType = "")
         {
-            return await GetInputAsync(prompt, false, inputDescriptor);
+            return await GetInputAsync(prompt, false, inputType);
         }
         
-        public static async Task<string> GetPasswordAsync(string prompt = "", string inputDescriptor = "")
+        public static async Task<string> GetPasswordAsync(string prompt = "", string inputType = "")
         {
-            return await GetInputAsync(prompt, true, inputDescriptor);
+            return await GetInputAsync(prompt, true, inputType);
         }
 
-        private static async Task<string> GetInputAsync(string prompt, bool isPassword, string inputDescriptor)
+        private static async Task<string> GetInputAsync(string prompt, bool isPassword, string inputType)
         {
-            var command = new RequestInput(prompt, isPassword, null, inputDescriptor);
+            var command = new RequestInput(prompt, isPassword, null, inputType);
 
             var results = await Root.SendAsync(command, CancellationToken.None);
 

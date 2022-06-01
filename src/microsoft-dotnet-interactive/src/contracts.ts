@@ -107,7 +107,7 @@ export interface RequestHoverText extends LanguageServiceCommand {
 export interface RequestInput extends KernelCommand {
     prompt: string;
     isPassword: boolean;
-    inputDescriptor: string;
+    inputType: string;
 }
 
 export interface RequestKernelInfo extends KernelCommand {
