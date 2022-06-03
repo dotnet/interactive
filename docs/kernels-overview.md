@@ -24,7 +24,7 @@ Console.WriteLine("Hi!");
 
 This submission will actually be broken into two commands, a `SubmitCode` for the `Console.WriteLine` call as well as an internal `DirectiveCommand` for the `#!time` magic command. 
 
-When this splitting occurs, the API still only returns a single terminating `CommandSucceeded` or `CommandFailed` event. Programmtically, you don't need to be concerned with whether a submission is going be split, but understanding this mechanism can be helpful, for example when implementing your own middleware behaviors.
+When this splitting occurs, the API still only returns a single terminating `CommandSucceeded` or `CommandFailed` event. Programmatically, you don't need to be concerned with whether a submission is going be split, but understanding this mechanism can be helpful, for example when implementing your own middleware behaviors.
 
 You can see some additional examples of command and event interactions in the following diagram, illustrating different kinds of output as well as the behavior of a middleware component (for the `#!time` magic command) augmenting the behavior of a code submission by emitting an additional `DisplayedValueProduced` event.
 
@@ -51,7 +51,7 @@ The work of routing these commands is done by the `CompositeKernel` class, which
 
 ![image](https://user-images.githubusercontent.com/547415/85328679-ff97a600-b485-11ea-839c-ebc65b0f6472.png)
 
-Note that while the composite configuration is the defaut when using the `dotnet-interactive` tool via Visual Studio Code or Jupyter, the .NET Interactive [NuGet packages](../README.md#Packages) let you create other configurations. For example, you might provide a single-language embedded scripting experience using the C# kernel by itself, or you might provide multiple F# kernels each preconfigured to run code on a different processor.
+Note that while the composite configuration is the default when using the `dotnet-interactive` tool via Visual Studio Code or Jupyter, the .NET Interactive [NuGet packages](../README.md#Packages) let you create other configurations. For example, you might provide a single-language embedded scripting experience using the C# kernel by itself, or you might provide multiple F# kernels each preconfigured to run code on a different processor.
 
 ## Middleware
 
