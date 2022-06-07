@@ -268,7 +268,6 @@ Microsoft.DotNet.Interactive.Formatting
     .ctor()
     public System.Void Add(System.String selector, System.ValueTuple<System.String,System.String> properties)
     public System.Collections.IEnumerator GetEnumerator()
-    public System.Collections.Generic.IDictionary<System.String,System.Object> LinkAndApplyClass(System.String class)
     public System.Void SetContent(System.Object[] args)
   public abstract class TypeFormatter<T>, ITypeFormatter<T>, ITypeFormatter
     public System.String MimeType { get;}

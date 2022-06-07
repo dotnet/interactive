@@ -4,7 +4,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using Microsoft.AspNetCore.Html;
 
 namespace Microsoft.DotNet.Interactive.Formatting
@@ -144,14 +143,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 _css.GetOrAdd(selector, _ => new())
                     .AddRange(properties);
-            }
-
-            public IDictionary<string, object> LinkAndApplyClass(string @class)
-            {  
-                return new HtmlAttributeDependency(this)
-                {
-                    ["class"] = @class
-                };
             }
 
             internal class HtmlAttributeDependency : HtmlAttributes
