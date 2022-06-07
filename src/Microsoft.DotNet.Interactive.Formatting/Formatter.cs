@@ -518,25 +518,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
             if (!_typesThatHaveBeenCheckedForFormatters.ContainsKey(actualType))
             {
                 var foundFormatter = false;
-                var customAttributes = actualType.GetCustomAttributes(typeof(TypeFormatterSourceAttribute));
+                var customAttributes = actualType.GetCustomAttributes<TypeFormatterSourceAttribute>().ToArray();
 
-                foreach (var attribute in customAttributes)
+                if (customAttributes.Length > 0)
                 {
-                    if (attribute is TypeFormatterSourceAttribute formatterSourceAttribute)
-                    {
-                        if (Activator.CreateInstance(formatterSourceAttribute.FormatterSourceType) is not ITypeFormatterSource source)
-                        {
-                            throw new InvalidOperationException($"The formatter source specified on '{actualType}' does not implement {nameof(ITypeFormatterSource)}");
-                        }
-
-                        var formatters = source.CreateTypeFormatters();
-
-                        foreach (var formatter in formatters)
-                        {
-                            _defaultTypeFormatters.Push(formatter);
-                            foundFormatter = true;
-                        }
-                    }
+                    foundFormatter = TryRegisterFromWellKnownFormatterSources(customAttributes);
+                }
+                else
+                {
+                    foundFormatter = TryRegisterFromConventionBasedFormatterSources();
                 }
 
                 _typesThatHaveBeenCheckedForFormatters.TryAdd(actualType, foundFormatter);
@@ -557,6 +547,94 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
 
             return GetPreferredFormatterFor(actualType, preferredMimeType);
+
+            bool TryRegisterFromWellKnownFormatterSources(TypeFormatterSourceAttribute[] customAttributes)
+            {
+                bool foundFormatter = false;
+
+                foreach (var formatterSourceAttribute in customAttributes)
+                {
+                    if (Activator.CreateInstance(formatterSourceAttribute.FormatterSourceType) is not ITypeFormatterSource source)
+                    {
+                        throw new InvalidOperationException($"The formatter source specified on '{actualType}' does not implement {nameof(ITypeFormatterSource)}");
+                    }
+
+                    var formatters = source.CreateTypeFormatters();
+
+                    foreach (var formatter in formatters)
+                    {
+                        _defaultTypeFormatters.Push(formatter);
+                        foundFormatter = true;
+                    }
+                }
+
+                return foundFormatter;
+            }
+
+            bool TryRegisterFromConventionBasedFormatterSources()
+            {
+                bool foundFormatter = false;
+                var attributesByConvention = actualType.GetCustomAttributes(true).Where(a => a.GetType().Name == nameof(TypeFormatterSourceAttribute));
+
+                foreach (var attr in attributesByConvention)
+                {
+                    if (TryGetPropertyValue<object>(attr, nameof(TypeFormatterSourceAttribute.FormatterSourceType), out var prop) &&
+                        prop is Type formatterSourceType)
+                    {
+                        var formatterSource = Activator.CreateInstance(formatterSourceType);
+
+                        if (formatterSource.GetType()
+                                           .GetMethod(nameof(ITypeFormatterSource.CreateTypeFormatters))
+                                           .Invoke(formatterSource, null) is IEnumerable formatters)
+                        {
+                            foreach (var formatterByConvention in formatters)
+                            {
+                                if (TryGetPropertyValue<string>(formatterByConvention, nameof(ITypeFormatter.MimeType), out var mimeTyp))
+                                {
+                                    MethodInfo formatMethod = formatterByConvention.GetType().GetMethod(nameof(ITypeFormatter.Format));
+
+                                    var formatterExpr = Expression.Constant(formatterByConvention);
+
+                                    var valueToFormatExpr = Expression.Parameter(typeof(object));
+
+                                    var writerExpr = Expression.Parameter(typeof(TextWriter));
+
+                                    var methodCallExpression = Expression.Call(
+                                        formatterExpr,
+                                        formatMethod,
+                                        new[]
+                                        {
+                                            valueToFormatExpr,
+                                            writerExpr
+                                        });
+
+                                    var formatExpr = Expression.Lambda<Func<object, TextWriter, bool>>(
+                                                                   methodCallExpression,
+                                                                   valueToFormatExpr,
+                                                                   writerExpr)
+                                                               .Compile();
+
+                                    if (!TryGetPropertyValue(formatterByConvention, nameof(ITypeFormatter.Type), out Type formattedType))
+                                    {
+                                        formattedType = actualType;
+                                    }
+
+                                    var formatter = new AnonymousTypeFormatter<object>(
+                                        (value, context) => formatExpr(value, context.Writer), 
+                                        mimeTyp, 
+                                        formattedType);
+
+                                    _defaultTypeFormatters.Push(formatter);
+
+                                    foundFormatter = true;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return foundFormatter;
+            }
         }
 
         internal static ITypeFormatter TryInferPreferredFormatter(Type actualType, string mimeType, IEnumerable<ITypeFormatter> formatters)
@@ -598,9 +676,28 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         private static IReadOnlyCollection<T> ReadOnlyMemoryToArray<T>(ReadOnlyMemory<T> mem) => mem.Span.ToArray();
 
-        internal static readonly MethodInfo FormatReadOnlyMemoryMethod = 
+        internal static readonly MethodInfo FormatReadOnlyMemoryMethod =
             typeof(Formatter)
-            .GetMethods(BindingFlags.NonPublic | BindingFlags.Static)
-            .Single(m => m.Name == nameof(ReadOnlyMemoryToArray));
+                .GetMethods(BindingFlags.NonPublic | BindingFlags.Static)
+                .Single(m => m.Name == nameof(ReadOnlyMemoryToArray));
+
+        private static bool TryGetPropertyValue<T>(object fromObject, string propertyName, out T value)
+        {
+            if (fromObject.GetType().GetProperty(propertyName) is { } propInfo &&
+                propInfo.GetGetMethod() is { } getMethod)
+            {
+                object valueObj = getMethod.Invoke(fromObject, null);
+
+                if (valueObj is T valueT)
+                {
+                    value = valueT;
+
+                    return true;
+                }
+            }
+
+            value = default;
+            return false;
+        }
     }
 }

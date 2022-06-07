@@ -3,14 +3,13 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting;
+
+public interface ITypeFormatter
 {
-    public interface ITypeFormatter
-    {
-        string MimeType { get; }
+    string MimeType { get; }
 
-        Type Type { get; }
+    Type Type { get; }
 
-        bool Format(object instance, FormatContext context);
-    }
+    bool Format(object instance, FormatContext context);
 }
