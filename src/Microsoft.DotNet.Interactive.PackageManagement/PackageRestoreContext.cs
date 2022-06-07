@@ -242,8 +242,7 @@ namespace Microsoft.DotNet.Interactive
                 ".csx", 
                 packageManagerTextLines, 
                 reportError, 
-                executionTfm, 
-                timeout: 60000);
+                executionTfm);
         }
 
         public async Task<PackageRestoreResult> RestoreAsync()
