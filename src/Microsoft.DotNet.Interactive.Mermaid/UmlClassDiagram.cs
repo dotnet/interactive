@@ -11,26 +11,19 @@ namespace Microsoft.DotNet.Interactive.Mermaid;
 public class UmlClassDiagram
 {
     private readonly Type _type;
-    private UmlClassDiagramConfiguration? _classDiagramConfiguration;
+    private readonly UmlClassDiagramConfiguration _classDiagramConfiguration;
     private readonly MermaidMarkdown _markDown;
 
-    public UmlClassDiagram(Type type, UmlClassDiagramConfiguration? classDiagramConfiguration)
+    public UmlClassDiagram(Type type, UmlClassDiagramConfiguration? classDiagramConfiguration = null)
     {
         _type = type;
-        _classDiagramConfiguration = classDiagramConfiguration;
+        _classDiagramConfiguration = classDiagramConfiguration ?? new UmlClassDiagramConfiguration();
         _markDown = ToClassDiagram(_type, _classDiagramConfiguration);
     }
 
     public MermaidMarkdown ToMarkdown()
     {
         return _markDown;
-    }
-
-    public UmlClassDiagram WithGraphDepth(int graphDepth)
-    {
-        _classDiagramConfiguration ??= new UmlClassDiagramConfiguration();
-        _classDiagramConfiguration = _classDiagramConfiguration  with { GraphDepth = graphDepth };
-        return this;
     }
 
     internal static MermaidMarkdown ToClassDiagram(Type type, UmlClassDiagramConfiguration? configuration = null)

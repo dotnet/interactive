@@ -243,8 +243,8 @@ typeof(List<string>).ToUmlClassDiagram().Display();
     [Fact]
     public void can_configure_UmlClassDiagram()
     {
-        var diagram = typeof(List<Dictionary<string, object>>).ToUmlClassDiagram()
-            .WithGraphDepth(1).ToMarkdown();
+        var diagram = typeof(List<Dictionary<string, object>>).ToUmlClassDiagram(new UmlClassDiagramConfiguration(1))
+           .ToMarkdown();
 
         diagram.ToString().Should()
             .NotContain(
