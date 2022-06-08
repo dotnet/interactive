@@ -9,9 +9,8 @@ Microsoft.DotNet.Interactive.Mermaid
     .ctor(System.String value)
     public System.String ToString()
   public class UmlClassDiagram
-    .ctor(System.Type type, UmlClassDiagramConfiguration classDiagramConfiguration)
+    .ctor(System.Type type, UmlClassDiagramConfiguration classDiagramConfiguration = null)
     public MermaidMarkdown ToMarkdown()
-    public UmlClassDiagram WithGraphDepth(System.Int32 graphDepth)
   public class UmlClassDiagramConfiguration, System.IEquatable<UmlClassDiagramConfiguration>
     public static System.Boolean op_Equality(UmlClassDiagramConfiguration left, UmlClassDiagramConfiguration right)
     public static System.Boolean op_Inequality(UmlClassDiagramConfiguration left, UmlClassDiagramConfiguration right)
