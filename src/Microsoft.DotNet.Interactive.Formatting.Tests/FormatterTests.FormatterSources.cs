@@ -37,6 +37,34 @@ public sealed partial class FormatterTests
             formatted.Should().Be($"Hello from {typeof(ConventionBased.FormatterSource)} using MIME type {mimeType}");
         }
 
+        [Fact]
+        public void Formatter_sources_are_still_registered_after_formatters_are_reset()
+        {
+            var obj = new TypeWithCustomFormatter();
+
+            var formattedBefore = obj.ToDisplayString("text/html");
+
+            Formatter.ResetToDefault();
+
+            var formattedAfter = obj.ToDisplayString("text/html");
+
+            formattedAfter.Should().Be(formattedBefore);
+        }
+
+        [Fact]
+        public void Convention_based_formatter_sources_are_still_registered_after_formatters_are_reset()
+        {
+            var obj = new TypeWithConventionBasedFormatter();
+
+            var formattedBefore = obj.ToDisplayString("text/html");
+
+            Formatter.ResetToDefault();
+
+            var formattedAfter = obj.ToDisplayString("text/html");
+
+            formattedAfter.Should().Be(formattedBefore);
+        }
+
         [TypeFormatterSource(typeof(CustomFormatterSource))]
         private class TypeWithCustomFormatter
         {
