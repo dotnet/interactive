@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Reflection;
+using Pocket;
 
 #nullable enable
 
@@ -23,10 +24,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         internal ITypeFormatter GetOrCreateFormatterForType(Type type, bool includeInternals)
         {
+            using var _ = Disposable.Create(() => Console.WriteLine($"Leaving FormatterMapByType.{nameof(GetOrCreateFormatterForType)} for type {type.Name}"));
+            Console.WriteLine($"Entering FormatterMapByType.{nameof(GetOrCreateFormatterForType)} for type {type.Name}");
+
             return
                 _formatters.GetOrAdd((type, includeInternals),
                                      tup =>
                                      {
+                                         using var _ = Disposable.Create(() => Console.WriteLine($"Leaving FormatterMapByType.{nameof(GetOrCreateFormatterForType)}.Add for key ({tup.type.Name},{tup.flag})"));
+                                         Console.WriteLine($"Entering FormatterMapByType.{nameof(GetOrCreateFormatterForType)}.Add for for key ({tup.type.Name},{tup.flag})");
                                          return
                                              (ITypeFormatter)
                                              _genericDef

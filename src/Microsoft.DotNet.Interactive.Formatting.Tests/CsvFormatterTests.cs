@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 StringProperty = "hello there!",
                 IntProperty = 456,
                 BoolProperty = true,
-                UriProperty = new Uri("https://example.com/something?query=string")
+                UriProperty = new Uri("https://example.com/geometry?query=string")
             },
         };
 

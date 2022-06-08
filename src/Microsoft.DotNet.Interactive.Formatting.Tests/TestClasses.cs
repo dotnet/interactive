@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
@@ -72,6 +73,75 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         public Node[] NodesArray { get; set; }
 
         internal string InternalId => Id;
+    }
+
+    public class LinkedListNode
+    {
+        public LinkedListNode Next { get; set; }
+    }
+
+    public sealed class FeatureCollection : IEnumerable<IFeature>
+    {
+        private readonly List<IFeature> _features = new();
+        public void Add(IFeature feature)
+        {
+            _features.Add(feature);
+        }
+        
+        public IEnumerator<IFeature> GetEnumerator()
+        {
+            return _features.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable) _features).GetEnumerator();
+        }
+    }
+
+    public interface IFeature
+    {
+        Geometry Geometry { get; set; }
+    }
+
+    public class Feature : IFeature
+    {
+        private CustomGeometry _geometry;
+
+        public Geometry Geometry
+        {
+            get => _geometry;
+            set => _geometry = value as CustomGeometry;
+        }
+    }
+
+    public abstract class Geometry
+    {
+
+    }
+
+    public class CustomGeometry : Geometry
+    {
+
+    }
+    public class GeometryCollection : Geometry, IEnumerable<Geometry>
+    {
+        private readonly List<Geometry> _list = new();
+
+        public void Add(Geometry geometry)
+        {
+            _list.Add(geometry);
+        }
+
+        public IEnumerator<Geometry> GetEnumerator()
+        {
+            return _list.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable) _list).GetEnumerator();
+        }
     }
 
     public class SomethingWithLotsOfProperties

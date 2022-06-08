@@ -12,6 +12,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.CSharp;
+using Pocket;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -45,6 +46,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         internal static FormatDelegate<T> CreateFormatDelegate<T>(MemberInfo[] forMembers)
         {
+            using var _ = Disposable.Create(() => Console.WriteLine($"Leaving {nameof(CreateFormatDelegate)} for type {typeof(T).Name}"));
+            Console.WriteLine($"Entering {nameof(CreateFormatDelegate)} for type {typeof(T).Name}");
             var accessors = forMembers.GetMemberAccessors<T>().ToArray();
 
             if (Formatter<T>.TypeIsValueTuple || 

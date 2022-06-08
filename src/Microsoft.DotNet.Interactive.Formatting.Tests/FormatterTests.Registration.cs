@@ -204,7 +204,7 @@ public sealed partial class FormatterTests
                     .Should()
                     .Be("hello");
 
-            // The object formatter is chosen for something not supporting 'IComparable'
+            // The object formatter is chosen for geometry not supporting 'IComparable'
             // Note System.Type doesn't support IComparable.
             typeof(int).ToDisplayString(mimeType)
                        .Should()
@@ -237,7 +237,7 @@ public sealed partial class FormatterTests
                  .Should()
                  .Be("hello again!");
 
-            // The object formatter is chosen for something not supporting 'IComparable'
+            // The object formatter is chosen for geometry not supporting 'IComparable'
             // Note System.Type doesn't support IComparable.
             typeof(int).ToDisplayString(mimeType)
                        .Should()
