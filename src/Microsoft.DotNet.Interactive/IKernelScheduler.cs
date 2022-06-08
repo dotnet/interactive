@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive
     {
         Task<TResult> RunAsync(
             T value,
-            KernelSchedulerDelegate<T,TResult> onExecuteAsync,
+            KernelSchedulerDelegate<T, TResult> onExecuteAsync,
             string scope = "default",
             CancellationToken cancellationToken = default);
     }

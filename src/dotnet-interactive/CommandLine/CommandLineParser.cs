@@ -30,6 +30,7 @@ using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Jupyter.Formatting;
+using Microsoft.DotNet.Interactive.Mermaid;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.DotNet.Interactive.VSCode;
@@ -590,6 +591,10 @@ public static class CommandLineParser
         compositeKernel.Add(
             new KeyValueStoreKernel()
                 .UseWho());
+
+
+        compositeKernel.Add(
+            new MermaidKernel());
 
         var kernel = compositeKernel
             .UseDefaultMagicCommands()
