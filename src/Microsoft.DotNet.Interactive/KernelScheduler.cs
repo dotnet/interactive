@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Pocket;
 
 namespace Microsoft.DotNet.Interactive
@@ -22,7 +23,7 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly BlockingCollection<ScheduledOperation> _topLevelScheduledOperations = new();
         private ScheduledOperation _currentlyRunningOperation;
-        
+
         public KernelScheduler()
         {
             _runLoopTask = Task.Factory.StartNew(
@@ -233,7 +234,7 @@ namespace Microsoft.DotNet.Interactive
 
         private class ScheduledOperation
         {
-            private readonly KernelSchedulerDelegate<T,TResult> _onExecuteAsync;
+            private readonly KernelSchedulerDelegate<T, TResult> _onExecuteAsync;
 
             public ScheduledOperation(
                 T value,
