@@ -73,6 +73,73 @@ var a = 2;
         }
 
         [Fact]
+        public async Task OpenProject_overrides_previously_loaded_project()
+        {
+            var kernel = new CSharpProjectKernel("csharp");
+            await kernel.SendAsync(new OpenProject(new Project(new[]
+            {
+                new ProjectFile("program.cs", @"
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Globalization;
+using System.Text.RegularExpressions;
+namespace Program {
+    class Program {
+        static void Main(string[] args){
+            #region controller
+
+            #endregion
+        }
+    }
+}")
+            })));
+            
+            var result = await kernel.SendAsync(new OpenDocument("program.cs", "controller"));
+            var kernelEvents = result.KernelEvents.ToSubscribedList();
+            
+            kernelEvents
+                .Should()
+                .ContainSingle<DocumentOpened>()
+                .Which
+                .Content
+                .Should()
+                .BeNullOrWhiteSpace();
+
+            await kernel.SendAsync(new OpenProject(new Project(new[]
+            {
+                new ProjectFile("program.cs", @"
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Globalization;
+using System.Text.RegularExpressions;
+namespace Program {
+    class Program {
+        static void Main(string[] args){
+            #region controller
+            Console.WriteLine(123);
+            #endregion
+        }
+    }
+}")
+            })));
+
+            result = await kernel.SendAsync(new OpenDocument("program.cs", "controller"));
+            kernelEvents = result.KernelEvents.ToSubscribedList();
+
+            kernelEvents
+                .Should()
+                .ContainSingle<DocumentOpened>()
+                .Which
+                .Content
+                .Should()
+                .Contain("Console.WriteLine(123);");            
+        }
+
+        [Fact]
         public async Task OpenDocument_with_an_existing_file_path_succeeds()
         {
             var kernel = new CSharpProjectKernel("csharp");
