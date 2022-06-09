@@ -9,6 +9,7 @@ import { notebookCellLanguages, getSimpleLanguage, notebookCellChanged } from '.
 import { convertToRange, toVsCodeDiagnostic } from './vscodeUtilities';
 import { getDiagnosticCollection } from './diagnostics';
 import { provideSignatureHelp } from './languageServices/signatureHelp';
+import * as versionSpecificFunctions from '../versionSpecificFunctions';
 
 function getNotebookUriFromCellDocument(cellDocument: vscode.TextDocument): vscode.Uri | undefined {
     const notebookDocument = vscode.workspace.notebookDocuments.find(notebook => notebook.getCells().some(cell => cell.document === cellDocument));
@@ -153,8 +154,9 @@ export function registerLanguageProviders(clientMapper: ClientMapper, languageSe
     disposables.push(vscode.languages.registerHoverProvider(languages, new HoverProvider(clientMapper, languageServiceDelay)));
     disposables.push(vscode.languages.registerSignatureHelpProvider(languages, new SignatureHelpProvider(clientMapper, languageServiceDelay), ...SignatureHelpProvider.triggerCharacters));
     disposables.push(vscode.workspace.onDidChangeTextDocument(e => {
-        if (vscode.languages.match(notebookCellLanguages, e.document)) {
-            const cells = vscode.window.activeNotebookEditor?.document.getCells();
+        if (vscode.languages.match(notebookCellLanguages, e.document) &&
+            vscode.window.activeNotebookEditor) {
+            const cells = versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor).getCells();
             const cell = cells?.find(cell => cell.document === e.document);
             if (cell) {
                 const documentUri = getNotebookUriFromCellDocument(e.document);

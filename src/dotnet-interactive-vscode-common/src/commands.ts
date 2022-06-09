@@ -16,6 +16,7 @@ import { ReportChannel } from './interfaces/vscode-like';
 import { jupyterViewType } from './interactiveNotebook';
 import { NotebookParserServer } from './notebookParserServer';
 import { PromiseCompletionSource } from './dotnet-interactive/genericChannel';
+import * as versionSpecificFunctions from '../versionSpecificFunctions';
 
 export function registerAcquisitionCommands(context: vscode.ExtensionContext, diagnosticChannel: ReportChannel) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
@@ -102,38 +103,38 @@ export function registerAcquisitionCommands(context: vscode.ExtensionContext, di
 
 export function registerKernelCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
 
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.restartCurrentNotebookKernel', async (document?: vscode.NotebookDocument | undefined) => {
-        if (!document) {
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.restartCurrentNotebookKernel', async (notebook?: vscode.NotebookDocument | undefined) => {
+        if (!notebook) {
             if (!vscode.window.activeNotebookEditor) {
                 // no notebook to operate on
                 return;
             }
 
-            document = vscode.window.activeNotebookEditor.document;
+            notebook = versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
         }
 
-        if (document) {
-            await vscode.commands.executeCommand('dotnet-interactive.stopCurrentNotebookKernel', document);
-            const _client = await clientMapper.getOrAddClient(document.uri);
+        if (notebook) {
+            await vscode.commands.executeCommand('dotnet-interactive.stopCurrentNotebookKernel', notebook);
+            const _client = await clientMapper.getOrAddClient(notebook.uri);
         }
     }));
 
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.stopCurrentNotebookKernel', async (document?: vscode.NotebookDocument | undefined) => {
-        if (!document) {
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.stopCurrentNotebookKernel', async (notebook?: vscode.NotebookDocument | undefined) => {
+        if (!notebook) {
             if (!vscode.window.activeNotebookEditor) {
                 // no notebook to operate on
                 return;
             }
 
-            document = vscode.window.activeNotebookEditor.document;
+            notebook = versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
         }
 
-        if (document) {
-            for (const cell of document.getCells()) {
+        if (notebook) {
+            for (const cell of notebook.getCells()) {
                 notebookControllers.endExecution(cell, false);
             }
 
-            clientMapper.closeClient(document.uri);
+            clientMapper.closeClient(notebook.uri);
         }
     }));
 
@@ -233,10 +234,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
         // - https://github.com/microsoft/vscode-jupyter/issues/6187
         // - https://github.com/microsoft/vscode-jupyter/issues/5622
         // In the meantime, the metadata can be set again to ensure it's persisted.
-        const edit = new vscode.WorkspaceEdit();
-        edit.replaceNotebookMetadata(notebook.uri, documentMetadata);
-        await vscode.workspace.applyEdit(edit);
-
+        const _succeeded = await versionSpecificFunctions.replaceNotebookMetadata(notebook.uri, documentMetadata);
         const _editor = await vscode.window.showNotebookDocument(notebook);
     }
 
@@ -281,12 +279,12 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
                     return;
                 }
 
-                const { document } = vscode.window.activeNotebookEditor;
-                const notebook = toNotebookDocument(document);
+                const notebook = versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
+                const interactiveDocument = toNotebookDocument(notebook);
                 const uriPath = uri.toString();
                 const extension = path.extname(uriPath);
                 const documentType = extensionToDocumentType(extension);
-                const buffer = await parserServer.serializeNotebook(documentType, eol, notebook);
+                const buffer = await parserServer.serializeNotebook(documentType, eol, interactiveDocument);
                 await vscode.workspace.fs.writeFile(uri, buffer);
                 switch (path.extname(uriPath)) {
                     case '.dib':

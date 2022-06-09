@@ -103,7 +103,7 @@ export class DotNetNotebookKernel {
     private commonControllerInit(controller: vscode.NotebookController) {
         controller.supportedLanguages = notebookCellLanguages;
         this.disposables.push(controller.onDidReceiveMessage(e => {
-            const documentUri = e.editor.document.uri;
+            const documentUri = e.editor.notebook.uri;
             const documentUriString = documentUri.toString();
 
             if (e.message.envelope) {
