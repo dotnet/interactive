@@ -312,6 +312,7 @@ f();"));
         [Theory]
         [InlineData("input()", "", "input-value")]
         [InlineData("input(\"User: \")", "User: ", "user name")]
+        [InlineData("await Microsoft.DotNet.Interactive.Kernel.GetInputAsync(\"User: \")", "User: ", "user name")]
         public async Task sends_InputRequest_message_when_submission_requests_user_input_in_csharp(string code, string prompt, string expectedDisplayValue)
         {
             var scheduler = CreateScheduler();
@@ -426,7 +427,7 @@ f();"));
             var errorMessage = string.Join("\n", traceback);
             errorMessage
                   .Should()
-                  .StartWith("System.NotSupportedException: Input request is not supported");
+                  .StartWith("System.NotSupportedException: Input prompt is not supported");
         }
 
         [Fact]
@@ -450,7 +451,7 @@ f();"));
             var errorMessage = string.Join("\n", traceback);
             errorMessage
                 .Should()
-                .StartWith("System.NotSupportedException: Password request is not supported.");
+                .StartWith("System.NotSupportedException: Password prompt is not supported.");
         }
 
         [Fact]

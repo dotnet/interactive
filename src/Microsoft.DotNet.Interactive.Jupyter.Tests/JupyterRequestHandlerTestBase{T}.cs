@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 {
     public abstract class JupyterRequestHandlerTestBase : IDisposable
     {
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        private readonly CompositeDisposable _disposables = new();
         private readonly CSharpKernel _cSharpKernel;
         private readonly FSharpKernel _fSharpKernel;
         private readonly PowerShellKernel _psKernel;
@@ -47,10 +47,11 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                     _cSharpKernel,
                     _fSharpKernel,
                     _psKernel,
-                    new HtmlKernel(),
-                    new JavaScriptKernel()
+                    new HtmlKernel()
                 }
                 .UseDefaultMagicCommands();
+
+            new JupyterClientKernelExtension().OnLoadAsync(_compositeKernel);
 
             SetKernelLanguage(Language.CSharp);
 

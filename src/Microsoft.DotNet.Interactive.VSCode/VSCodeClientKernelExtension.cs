@@ -2,9 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.ValueSharing;
 
 namespace Microsoft.DotNet.Interactive.VSCode;
@@ -34,15 +34,15 @@ public class VSCodeClientKernelExtension : IKernelExtension
 
             root.VisitSubkernels(subkernel =>
             {
-                if (subkernel is PowerShell.PowerShellKernel powerShellKernel)
+                if (subkernel is PowerShellKernel powerShellKernel)
                 {
-                    powerShellKernel.ReadInput = (prompt) =>
+                    powerShellKernel.ReadInput = prompt =>
                     {
                         var result = Kernel.GetInputAsync(prompt).GetAwaiter().GetResult();
                         return result;
                     };
 
-                    powerShellKernel.ReadPassword = (prompt) =>
+                    powerShellKernel.ReadPassword = prompt =>
                     {
                         var result = Kernel.GetPasswordAsync(prompt).GetAwaiter().GetResult();
                         return new PasswordString(result);

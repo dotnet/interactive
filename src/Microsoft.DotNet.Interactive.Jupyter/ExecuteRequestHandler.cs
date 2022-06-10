@@ -33,8 +33,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             string targetKernelName = context.GetLanguage();
 
             _executionCount = executeRequest.Silent ? _executionCount : Interlocked.Increment(ref _executionCount);
-            
-            FrontendEnvironment.AllowStandardInput = executeRequest.AllowStdin;
 
             var executeInputPayload = new ExecuteInput(executeRequest.Code, _executionCount);
             context.JupyterMessageSender.Send(executeInputPayload);

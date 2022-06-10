@@ -7,8 +7,6 @@ namespace Microsoft.DotNet.Interactive
 {
     public abstract class FrontendEnvironment
     {
-        public bool AllowStandardInput { get; set; }
-
         public virtual Task ExecuteClientScript(string code, KernelInvocationContext context)
         {
             var scriptContent = new ScriptContent(code);
