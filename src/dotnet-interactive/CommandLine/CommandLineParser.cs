@@ -605,6 +605,12 @@ public static class CommandLineParser
         kernel.AddKernelConnector(new ConnectSignalRCommand());
         kernel.AddKernelConnector(new ConnectStdIoCommand());
 
+        if (kernel.FindKernel("csharp") is CSharpKernel csharpKernel)
+        {
+            csharpKernel.DeferCommand(new SubmitCode($"#r \"{typeof(MermaidKernel).Assembly.Location}\""));
+            csharpKernel.DeferCommand(new SubmitCode($"using {typeof(UmlClassDiagram).Namespace};"));
+        }
+
         if (startupOptions.Verbose)
         {
             kernel.LogEventsToPocketLogger();
