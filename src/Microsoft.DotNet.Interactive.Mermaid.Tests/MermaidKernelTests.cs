@@ -1,18 +1,13 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Assent;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using HtmlAgilityPack;
-using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -56,30 +51,6 @@ public class MermaidKernelTests
 
         renderTarget.Should().NotBeNull();
     }
-
-    [Fact]
-    public void registers_html_formatter_for_UmlClassDiagram()
-    {
-        var explorer = typeof(List<string>).ToUmlClassDiagram();
-        var formatted = explorer.ToDisplayString(HtmlFormatter.MimeType);
-        var markdown = explorer.ToMarkdown().ToString();
-
-        var doc = new HtmlDocument();
-        doc.LoadHtml(formatted.FixedGuid().FixedCacheBuster());
-        var scriptNode = doc.DocumentNode.SelectSingleNode("//div/script");
-        var renderTarget = doc.DocumentNode.SelectSingleNode("//div[@id='00000000000000000000000000000000']");
-
-        using var _ = new AssertionScope();
-
-        scriptNode.Should().NotBeNull();
-        scriptNode.InnerText.Should()
-            .Contain(markdown);
-        scriptNode.InnerText.Should()
-            .Contain("(['mermaidUri'], (mermaid) => {");
-
-        renderTarget.Should().NotBeNull();
-    }
-
 
     [Fact]
     public async Task mermaid_kernel_handles_SubmitCode()
@@ -182,73 +153,4 @@ public class MermaidKernelTests
         style.Should().Be(" width:200px;  height:250px; ");
 
     }
-
-    [Fact]
-    public async Task can_use_extension_methods_from_the_kernel_extension()
-    {
-        var kernel = new CompositeKernel
-        {
-            new CSharpKernel(),
-            new MermaidKernel()
-        };
-
-        await kernel.SendAsync(new SubmitCode($@"#r ""{typeof(MermaidKernel).Assembly.Location}""", "csharp"));
-
-        var result = await kernel.SendAsync(new SubmitCode(@"
-using System;
-
-typeof(List<string>).ToUmlClassDiagram().Display();
-", "csharp"));
-
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().NotContainErrors();
-    }
-
-    [Fact]
-    public void can_generate_class_diagram_from_type()
-    {
-        var diagram = typeof(JsonElement).ToUmlClassDiagram().ToMarkdown();
-
-        this.Assent(diagram.ToString());
-    }
-
-    [Fact]
-    public void can_generate_class_diagram_from_generic_type()
-    {
-        var diagram = typeof(List<Dictionary<string, object>>).ToUmlClassDiagram().ToMarkdown();
-
-        this.Assent(diagram.ToString());
-    }
-
-
-    [Fact]
-    public void can_generate_class_diagram_to_a_specified_depth()
-    {
-        var diagram = typeof(List<Dictionary<string, object>>).ToUmlClassDiagram(new UmlClassDiagramConfiguration(1));
-
-        diagram.ToString().Should()
-            .NotContain(
-                "ICollection~Dictionary<String, Object>~ --|> IEnumerable~Dictionary<String, Object>~ : Inheritance");
-    }
-
-    [Fact]
-    public void can_generate_UmlClassDiagram_from_type()
-    {
-        var diagram = typeof(List<Dictionary<string, object>>).ToUmlClassDiagram().ToMarkdown();
-
-        this.Assent(diagram.ToString());
-    }
-
-    [Fact]
-    public void can_configure_UmlClassDiagram()
-    {
-        var diagram = typeof(List<Dictionary<string, object>>).ToUmlClassDiagram(new UmlClassDiagramConfiguration(1))
-           .ToMarkdown();
-
-        diagram.ToString().Should()
-            .NotContain(
-                "ICollection~Dictionary<String, Object>~ --|> IEnumerable~Dictionary<String, Object>~ : Inheritance");
-    }
-
 }

@@ -8,25 +8,3 @@ Microsoft.DotNet.Interactive.Mermaid
   public class MermaidMarkdown
     .ctor(System.String value)
     public System.String ToString()
-  public class UmlClassDiagram
-    .ctor(System.Type type, UmlClassDiagramConfiguration classDiagramConfiguration = null)
-    public MermaidMarkdown ToMarkdown()
-  public class UmlClassDiagramConfiguration, System.IEquatable<UmlClassDiagramConfiguration>
-    public static System.Boolean op_Equality(UmlClassDiagramConfiguration left, UmlClassDiagramConfiguration right)
-    public static System.Boolean op_Inequality(UmlClassDiagramConfiguration left, UmlClassDiagramConfiguration right)
-    .ctor(System.Int32 GraphDepth = 1)
-    public System.Int32 GraphDepth { get; set;}
-    public UmlClassDiagramConfiguration <Clone>$()
-    public System.Void Deconstruct(ref System.Int32& GraphDepth)
-    public System.Boolean Equals(System.Object obj)
-    public System.Boolean Equals(UmlClassDiagramConfiguration other)
-    protected System.Type get_EqualityContract()
-    public System.Int32 GetHashCode()
-    protected System.Boolean PrintMembers(System.Text.StringBuilder builder)
-    public System.String ToString()
-  public class UmlClassDiagramFormatter, Microsoft.DotNet.Interactive.Formatting.ITypeFormatterSource
-    .ctor()
-    public System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Formatting.ITypeFormatter> CreateTypeFormatters()
-System
-  public static class MermaidTypeExtension
-    public static Microsoft.DotNet.Interactive.Mermaid.UmlClassDiagram ToUmlClassDiagram(Microsoft.DotNet.Interactive.Mermaid.UmlClassDiagramConfiguration configuration = null)

@@ -605,6 +605,7 @@ public static class CommandLineParser
         kernel.AddKernelConnector(new ConnectSignalRCommand());
         kernel.AddKernelConnector(new ConnectStdIoCommand());
 
+
         if (startupOptions.Verbose)
         {
             kernel.LogEventsToPocketLogger();
