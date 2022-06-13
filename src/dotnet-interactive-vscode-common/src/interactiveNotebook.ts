@@ -14,6 +14,7 @@ export const notebookCellLanguages: Array<string> = [
     'dotnet-interactive.fsharp',
     'dotnet-interactive.html',
     'dotnet-interactive.javascript',
+    'dotnet-interactive.mermaid',
     'dotnet-interactive.pwsh',
     'dotnet-interactive.sql',
     'dotnet-interactive.kql',
