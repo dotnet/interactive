@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
@@ -51,7 +52,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                 }
                 .UseDefaultMagicCommands();
 
-            new JupyterClientKernelExtension().OnLoadAsync(_compositeKernel);
+            Task.Run(() => new JupyterClientKernelExtension().OnLoadAsync(_compositeKernel)).Wait();
 
             SetKernelLanguage(Language.CSharp);
 
