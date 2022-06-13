@@ -15,6 +15,17 @@ describe("compositeKernel", () => {
         Logger.configure("test", () => { });
     });
 
+    it("the first kernel is set as the default", () => {
+        const kernel = new CompositeKernel("composite-kernel");
+        expect(kernel.defaultKernelName).to.be.undefined;
+
+        kernel.add(new Kernel("javascript"));
+        expect(kernel.defaultKernelName).to.equal("javascript");
+
+        kernel.add(new Kernel("perl"));
+        expect(kernel.defaultKernelName).to.equal("javascript");
+    });
+
     it("can have child kernels", () => {
         const kernel = new CompositeKernel("composite-kernel");
         kernel.add(new Kernel("javascript"));

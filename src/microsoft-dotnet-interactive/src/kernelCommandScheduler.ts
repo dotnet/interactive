@@ -1,44 +1,62 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import * as contracts from "./contracts";
 import { PromiseCompletionSource } from "./genericChannel";
 
-interface SchedulerOperation {
-    commandEnvelope: contracts.KernelCommandEnvelope;
+interface SchedulerOperation<T> {
+    value: T;
+    executor: (value: T) => Promise<void>;
     promiseCompletionSource: PromiseCompletionSource<void>;
 }
 
-export class KernelCommandScheduler {
-    private operationQueue: Array<SchedulerOperation> = [];
+export class KernelCommandScheduler<T> {
+    private operationQueue: Array<SchedulerOperation<T>> = [];
+    private inFlightOperation?: SchedulerOperation<T>;
 
-    constructor(private readonly executor: (commandEnvelope: contracts.KernelCommandEnvelope) => Promise<void>) {
+    constructor() {
     }
 
-    schedule(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
-        const promiseCompletionSource = new PromiseCompletionSource<void>();
+    runAsync(value: T, executor: (value: T) => Promise<void>): Promise<void> {
         const operation = {
-            commandEnvelope,
-            promiseCompletionSource,
+            value,
+            executor,
+            promiseCompletionSource: new PromiseCompletionSource<void>(),
         };
+
+        if (this.inFlightOperation) {
+            // invoke immediately
+            return operation.executor(operation.value)
+                .then(() => {
+                    operation.promiseCompletionSource.resolve();
+                })
+                .catch(e => {
+                    operation.promiseCompletionSource.reject(e);
+                });
+        }
+
         this.operationQueue.push(operation);
         if (this.operationQueue.length === 1) {
             this.executeNextCommand();
         }
 
-        return promiseCompletionSource.promise;
+        return operation.promiseCompletionSource.promise;
     }
 
     private executeNextCommand(): void {
-        const nextOperation = this.operationQueue.shift();
+        const nextOperation = this.operationQueue.length > 0 ? this.operationQueue[0] : undefined;
         if (nextOperation) {
-            this.executor(nextOperation.commandEnvelope)
+            this.inFlightOperation = nextOperation;
+            nextOperation.executor(nextOperation.value)
                 .then(() => {
+                    this.inFlightOperation = undefined;
                     nextOperation.promiseCompletionSource.resolve();
-                    this.executeNextCommand();
                 })
                 .catch(e => {
+                    this.inFlightOperation = undefined;
                     nextOperation.promiseCompletionSource.reject(e);
+                })
+                .finally(() => {
+                    this.operationQueue.shift();
                     this.executeNextCommand();
                 });
         }

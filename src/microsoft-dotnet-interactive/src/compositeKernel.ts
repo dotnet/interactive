@@ -49,6 +49,11 @@ export class CompositeKernel extends Kernel {
             throw new Error("kernel cannot be null or undefined");
         }
 
+        if (!this.defaultKernelName) {
+            // default to first kernel
+            this.defaultKernelName = kernel.name;
+        }
+
         kernel.parentKernel = this;
         kernel.rootKernel = this.rootKernel;
         kernel.subscribeToKernelEvents(event => {
@@ -79,6 +84,10 @@ export class CompositeKernel extends Kernel {
     }
 
     findKernelByName(kernelName: string): Kernel | undefined {
+        if (kernelName.toLowerCase() === this.name.toLowerCase()) {
+            return this;
+        }
+
         return this._namesTokernelMap.get(kernelName.toLowerCase());
     }
 
@@ -98,9 +107,9 @@ export class CompositeKernel extends Kernel {
     }
 
     getTargetKernel(command: contracts.KernelCommand): Kernel | undefined {
-        let targetKernelName = command.targetKernelName ?? this.defaultKernelName;
+        let targetKernelName = command.targetKernelName ?? this.defaultKernelName ?? this.name;
 
-        let kernel = targetKernelName === undefined ? this : this.findKernelByName(targetKernelName);
+        let kernel = this.findKernelByName(targetKernelName);
         return kernel;
     }
 }
