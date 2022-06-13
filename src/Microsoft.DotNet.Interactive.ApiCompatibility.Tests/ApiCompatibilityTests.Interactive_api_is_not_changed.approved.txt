@@ -72,7 +72,6 @@ Microsoft.DotNet.Interactive
     public System.String MimeType { get;}
     public System.String Value { get;}
   public abstract class FrontendEnvironment
-    public System.Boolean AllowStandardInput { get; set;}
     public System.Threading.Tasks.Task ExecuteClientScript(System.String code, KernelInvocationContext context)
   public class HtmlKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValue>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValueInfos>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
     .ctor()

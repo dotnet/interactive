@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
@@ -14,7 +15,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 {
     public abstract class JupyterRequestHandlerTestBase : IDisposable
     {
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        private readonly CompositeDisposable _disposables = new();
         private readonly CSharpKernel _cSharpKernel;
         private readonly FSharpKernel _fSharpKernel;
         private readonly PowerShellKernel _psKernel;
@@ -47,10 +48,11 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                     _cSharpKernel,
                     _fSharpKernel,
                     _psKernel,
-                    new HtmlKernel(),
-                    new JavaScriptKernel()
+                    new HtmlKernel()
                 }
                 .UseDefaultMagicCommands();
+
+            Task.Run(() => new JupyterClientKernelExtension().OnLoadAsync(_compositeKernel)).Wait(5000);
 
             SetKernelLanguage(Language.CSharp);
 

@@ -5,6 +5,7 @@
     <LangVersion>latest</LangVersion>
     <AssetTargetFallback>portable-net45+win8+wp8+wpa81</AssetTargetFallback>
     <NoWarn>$(NoWarn);8002</NoWarn><!-- Assent isn't strongly signed -->
+    <NoWarn>$(NoWarn);VSTHRD002</NoWarn><!-- Ignore: Synchronously waiting on tasks or awaiters may cause deadlocks. -->
     <NoWarn>$(NoWarn);VSTHRD003</NoWarn><!-- Ignore: Avoid awaiting foreign Tasks -->
     <NoWarn>$(NoWarn);VSTHRD200</NoWarn><!-- Ignore: Use "Async" suffix for async methods -->
   </PropertyGroup>
