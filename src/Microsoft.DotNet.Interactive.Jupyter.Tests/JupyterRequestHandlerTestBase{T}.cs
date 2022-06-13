@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                 }
                 .UseDefaultMagicCommands();
 
-            Task.Run(() => new JupyterClientKernelExtension().OnLoadAsync(_compositeKernel)).Wait();
+            Task.Run(() => new JupyterClientKernelExtension().OnLoadAsync(_compositeKernel)).Wait(5000);
 
             SetKernelLanguage(Language.CSharp);
 
