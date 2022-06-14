@@ -60,9 +60,7 @@ public class MermaidKernelTests
             new MermaidKernel()
         };
 
-        var result = await kernel.SubmitCodeAsync(@"
-#!mermaid
-    graph TD
+        var result = await kernel.SubmitCodeAsync(@"graph TD
     A[Client] --> B[Load Balancer]
     B --> C[Server1]
     B --> D[Server2]
