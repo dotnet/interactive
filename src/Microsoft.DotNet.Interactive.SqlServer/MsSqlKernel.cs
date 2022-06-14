@@ -100,7 +100,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         protected override void StoreQueryResults(IReadOnlyCollection<TabularDataResource> results, ParseResult commandKernelChooserParseResult)
         {
             var chooser = ChooseKernelDirective;
-            var name = commandKernelChooserParseResult.GetValueForOption(chooser.NameOption);
+            var name = commandKernelChooserParseResult?.GetValueForOption(chooser.NameOption);
             if (!string.IsNullOrWhiteSpace(name))
             {
                 QueryResults[name] = results;
