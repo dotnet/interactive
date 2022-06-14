@@ -29,24 +29,17 @@ export class Kernel {
     private readonly _tokenGenerator: TokenGenerator = new TokenGenerator();
     public rootKernel: Kernel = this;
     public parentKernel: CompositeKernel | null = null;
-    private _scheduler?: KernelCommandScheduler | null = null;
+    private _scheduler?: KernelCommandScheduler<contracts.KernelCommandEnvelope> | null = null;
 
     constructor(readonly name: string) {
     }
 
-    private getScheduler(): KernelCommandScheduler {
-        let parentScheduler = this.parentKernel?.getScheduler();
-        if (parentScheduler) {
-            return parentScheduler;
+    private getScheduler(): KernelCommandScheduler<contracts.KernelCommandEnvelope> {
+        if (!this._scheduler) {
+            this._scheduler = this.parentKernel?.getScheduler() ?? new KernelCommandScheduler<contracts.KernelCommandEnvelope>();
         }
-        else {
-            if (!this._scheduler) {
-                this._scheduler = new KernelCommandScheduler((commandEnvelope) => {
-                    return this.executeCommand(commandEnvelope);
-                });
-            }
-            return this._scheduler;
-        }
+
+        return this._scheduler;
     }
 
     private ensureCommandTokenAndId(commandEnvelope: contracts.KernelCommandEnvelope) {
@@ -86,7 +79,7 @@ export class Kernel {
     async send(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         this.ensureCommandTokenAndId(commandEnvelope);
         let context = KernelInvocationContext.establish(commandEnvelope);
-        this.getScheduler().schedule(commandEnvelope);
+        this.getScheduler().runAsync(commandEnvelope, (value) => this.executeCommand(value));
         return context.promise;
     }
 

@@ -87,6 +87,7 @@ describe('TextMate grammar tests', async () => {
             '#!js',
             '#!markdown',
             '#!md',
+            '#!mermaid',
             '#!powershell',
             '#!pwsh',
             '#!sql',
@@ -148,6 +149,12 @@ describe('TextMate grammar tests', async () => {
                 {
                     tokenText: '#!md',
                     scopes: ['source.dotnet-interactive', 'language.switch.markdown']
+                }
+            ],
+            [
+                {
+                    tokenText: '#!mermaid',
+                    scopes: ['source.dotnet-interactive', 'language.switch.mermaid']
                 }
             ],
             [
@@ -235,6 +242,7 @@ describe('TextMate grammar tests', async () => {
         ['html', 'html'],
         ['javascript', 'javascript'],
         ['markdown', 'markdown'],
+        ['mermaid', 'mermaid'],
         ['powershell', 'powershell'],
         ['sql', 'sql'],
         ['sql-adventureworks', 'sql'],

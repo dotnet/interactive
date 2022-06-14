@@ -108,6 +108,11 @@ export class KernelInvocationContext implements Disposable {
         }
     }
 
+    isParentOfCommand(commandEnvelope: KernelCommandEnvelope): boolean {
+        const childFound = this._childCommands.includes(commandEnvelope);
+        return childFound;
+    }
+
     dispose() {
         if (!this._isComplete) {
             this.complete(this._commandEnvelope);

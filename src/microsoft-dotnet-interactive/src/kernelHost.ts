@@ -13,15 +13,12 @@ export class KernelHost {
     private readonly _uriToKernel = new Map<string, Kernel>();
     private readonly _kernelToKernelInfo = new Map<Kernel, contracts.KernelInfo>();
     private readonly _uri: string;
-    private readonly _scheduler: KernelCommandScheduler;
+    private readonly _scheduler: KernelCommandScheduler<contracts.KernelCommandEnvelope>;
 
     constructor(private readonly _kernel: CompositeKernel, private readonly _channel: contracts.KernelCommandAndEventChannel, hostUri: string) {
         this._uri = hostUri || "kernel://vscode";
         this._kernel.host = this;
-        this._scheduler = new KernelCommandScheduler(commandEnvelope => {
-            const kernel = this.getKernel(commandEnvelope);
-            return kernel.send(commandEnvelope);
-        });
+        this._scheduler = new KernelCommandScheduler<contracts.KernelCommandEnvelope>();
     }
 
     public tryGetKernelByRemoteUri(remoteUri: string): Kernel | undefined {
@@ -106,7 +103,10 @@ export class KernelHost {
     public connect() {
         this._channel.setCommandHandler((kernelCommandEnvelope: contracts.KernelCommandEnvelope) => {
             // fire and forget this one
-            this._scheduler.schedule(kernelCommandEnvelope);
+            this._scheduler.runAsync(kernelCommandEnvelope, commandEnvelope => {
+                const kernel = this.getKernel(commandEnvelope);
+                return kernel.send(commandEnvelope);
+            });
             return Promise.resolve();
         });
 
