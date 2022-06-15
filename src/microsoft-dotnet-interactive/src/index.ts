@@ -7,7 +7,7 @@ export * from './contracts';
 export * from './genericChannel';
 export * from './javascriptKernel';
 export * from './kernel';
-export * from './kernelCommandScheduler';
+export * from './kernelScheduler';
 export * from './kernelHost';
 export * from './kernelInvocationContext';
 export * from './logger';

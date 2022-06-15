@@ -9,7 +9,7 @@ interface SchedulerOperation<T> {
     promiseCompletionSource: PromiseCompletionSource<void>;
 }
 
-export class KernelCommandScheduler<T> {
+export class KernelScheduler<T> {
     private operationQueue: Array<SchedulerOperation<T>> = [];
     private inFlightOperation?: SchedulerOperation<T>;
 
