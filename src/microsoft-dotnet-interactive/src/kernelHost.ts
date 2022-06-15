@@ -6,19 +6,19 @@ import * as contracts from './contracts';
 import { Kernel } from './kernel';
 import { ProxyKernel } from './proxyKernel';
 import { Logger } from './logger';
-import { KernelCommandScheduler } from './kernelCommandScheduler';
+import { KernelScheduler } from './kernelScheduler';
 
 export class KernelHost {
     private readonly _remoteUriToKernel = new Map<string, Kernel>();
     private readonly _uriToKernel = new Map<string, Kernel>();
     private readonly _kernelToKernelInfo = new Map<Kernel, contracts.KernelInfo>();
     private readonly _uri: string;
-    private readonly _scheduler: KernelCommandScheduler<contracts.KernelCommandEnvelope>;
+    private readonly _scheduler: KernelScheduler<contracts.KernelCommandEnvelope>;
 
     constructor(private readonly _kernel: CompositeKernel, private readonly _channel: contracts.KernelCommandAndEventChannel, hostUri: string) {
         this._uri = hostUri || "kernel://vscode";
         this._kernel.host = this;
-        this._scheduler = new KernelCommandScheduler<contracts.KernelCommandEnvelope>();
+        this._scheduler = new KernelScheduler<contracts.KernelCommandEnvelope>();
     }
 
     public tryGetKernelByRemoteUri(remoteUri: string): Kernel | undefined {

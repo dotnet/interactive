@@ -6,7 +6,7 @@ import { Guid, TokenGenerator } from "./tokenGenerator";
 import * as contracts from "./contracts";
 import { Logger } from "./logger";
 import { CompositeKernel } from "./compositeKernel";
-import { KernelCommandScheduler } from "./kernelCommandScheduler";
+import { KernelScheduler } from "./kernelScheduler";
 import { PromiseCompletionSource } from "./genericChannel";
 
 export interface IKernelCommandInvocation {
@@ -29,14 +29,14 @@ export class Kernel {
     private readonly _tokenGenerator: TokenGenerator = new TokenGenerator();
     public rootKernel: Kernel = this;
     public parentKernel: CompositeKernel | null = null;
-    private _scheduler?: KernelCommandScheduler<contracts.KernelCommandEnvelope> | null = null;
+    private _scheduler?: KernelScheduler<contracts.KernelCommandEnvelope> | null = null;
 
     constructor(readonly name: string) {
     }
 
-    private getScheduler(): KernelCommandScheduler<contracts.KernelCommandEnvelope> {
+    private getScheduler(): KernelScheduler<contracts.KernelCommandEnvelope> {
         if (!this._scheduler) {
-            this._scheduler = this.parentKernel?.getScheduler() ?? new KernelCommandScheduler<contracts.KernelCommandEnvelope>();
+            this._scheduler = this.parentKernel?.getScheduler() ?? new KernelScheduler<contracts.KernelCommandEnvelope>();
         }
 
         return this._scheduler;
