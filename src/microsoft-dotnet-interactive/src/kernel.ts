@@ -24,6 +24,8 @@ export interface IKernelEventObserver {
 }
 
 export class Kernel {
+    private _kernelInfo: contracts.KernelInfo;
+
     private _commandHandlers = new Map<string, IKernelCommandHandler>();
     private readonly _eventObservers: { [token: string]: contracts.KernelEventEnvelopeObserver } = {};
     private readonly _tokenGenerator: TokenGenerator = new TokenGenerator();
@@ -31,7 +33,36 @@ export class Kernel {
     public parentKernel: CompositeKernel | null = null;
     private _scheduler?: KernelScheduler<contracts.KernelCommandEnvelope> | null = null;
 
-    constructor(readonly name: string) {
+    public get kernelInfo(): contracts.KernelInfo {
+        return this._kernelInfo;
+    }
+
+    constructor(readonly name: string, languageName?: string, languageVersion?: string) {
+        this._kernelInfo = {
+            localName: name,
+            languageName: languageName,
+            aliases: [],
+            languageVersion: languageVersion,
+            supportedDirectives: [],
+            supportedKernelCommands: []
+        };
+
+        this.registerCommandHandler({
+            commandType: contracts.RequestKernelInfoType, handle: async invocation => {
+                await this.handleRequestKernelInfo(invocation);
+            }
+        });
+    }
+
+    protected async handleRequestKernelInfo(invocation: IKernelCommandInvocation): Promise<void> {
+        const eventEnvelope: contracts.KernelEventEnvelope = {
+            eventType: contracts.KernelInfoProducedType,
+            command: invocation.commandEnvelope,
+            event: <contracts.KernelInfoProduced>{ kernelInfo: this._kernelInfo }
+        };//?
+
+        invocation.context.publish(eventEnvelope);
+        return Promise.resolve();
     }
 
     private getScheduler(): KernelScheduler<contracts.KernelCommandEnvelope> {
@@ -43,6 +74,7 @@ export class Kernel {
     }
 
     private ensureCommandTokenAndId(commandEnvelope: contracts.KernelCommandEnvelope) {
+        commandEnvelope;//?
         if (!commandEnvelope.token) {
             let nextToken = this._tokenGenerator.GetNewToken();
             if (KernelInvocationContext.current?.commandEnvelope) {
@@ -159,15 +191,35 @@ export class Kernel {
         };
     }
 
+    protected canHandle(commandEnvelope: contracts.KernelCommandEnvelope) {
+        if (commandEnvelope.command.targetKernelName && commandEnvelope.command.targetKernelName !== this.name) {
+            return false;
+
+        }
+
+        if (commandEnvelope.command.destinationUri) {
+            if (this.kernelInfo.uri !== commandEnvelope.command.destinationUri) {
+                return false;
+            }
+        }
+
+        return this.supportsCommand(commandEnvelope.commandType);
+    }
+
+    supportsCommand(commandType: contracts.KernelCommandType): boolean {
+        return this._commandHandlers.has(commandType);
+    }
+
     registerCommandHandler(handler: IKernelCommandHandler): void {
         // When a registration already existed, we want to overwrite it because we want users to
         // be able to develop handlers iteratively, and it would be unhelpful for handler registration
         // for any particular command to be cumulative.
         this._commandHandlers.set(handler.commandType, handler);
+        this._kernelInfo.supportedKernelCommands = Array.from(this._commandHandlers.keys()).map(commandName => ({ name: commandName }));
     }
 
-    getTargetKernel(command: contracts.KernelCommand): Kernel | undefined {
-        let targetKernelName = command.targetKernelName ?? this.name;
+    getHandlingKernel(commandEnvelope: contracts.KernelCommandEnvelope): Kernel | undefined {
+        let targetKernelName = commandEnvelope.command.targetKernelName ?? this.name;
         return targetKernelName === this.name ? this : undefined;
     }
 

@@ -8,10 +8,10 @@ import { IKernelCommandHandler, IKernelCommandInvocation, Kernel } from "./kerne
 
 export class ProxyKernel extends Kernel {
 
-    constructor(readonly name: string, private readonly channel: contracts.KernelCommandAndEventChannel) {
+    constructor(override readonly name: string, private readonly channel: contracts.KernelCommandAndEventChannel) {
         super(name);
     }
-    getCommandHandler(commandType: contracts.KernelCommandType): IKernelCommandHandler | undefined {
+    override getCommandHandler(commandType: contracts.KernelCommandType): IKernelCommandHandler | undefined {
         return {
             commandType,
             handle: (invocation) => {
