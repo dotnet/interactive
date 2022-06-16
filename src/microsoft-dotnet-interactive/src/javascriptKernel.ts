@@ -10,7 +10,7 @@ export class JavascriptKernel extends kernel.Kernel {
     private suppressedLocals: Set<string>;
 
     constructor(name?: string) {
-        super(name ?? "javascript", "javascript");
+        super(name ?? "javascript", "Javascript");
         this.suppressedLocals = new Set<string>(this.allLocalVariableNames());
         this.registerCommandHandler({ commandType: contracts.SubmitCodeType, handle: invocation => this.handleSubmitCode(invocation) });
         this.registerCommandHandler({ commandType: contracts.RequestValueInfosType, handle: invocation => this.handleRequestValueInfos(invocation) });
