@@ -26,7 +26,7 @@ describe("kernelInfo", () => {
             expect(kernelInfos.length).to.equal(2);
             expect(kernelInfos).to.deep.equal([{
                 aliases: ['child1Js'],
-                languageName: 'javascript',
+                languageName: 'Javascript',
                 languageVersion: undefined,
                 localName: 'child1',
                 supportedDirectives: [],
@@ -38,7 +38,7 @@ describe("kernelInfo", () => {
             },
             {
                 aliases: ['child2Js'],
-                languageName: 'javascript',
+                languageName: 'Javascript',
                 languageVersion: undefined,
                 localName: 'child2',
                 supportedDirectives: [],
@@ -97,7 +97,7 @@ describe("kernelInfo", () => {
             await kernel.send({ commandType: contracts.RequestKernelInfoType, command: {} });
             sub.dispose();
             const kernelInfoProduced = <contracts.KernelInfoProduced>events.find(e => e.eventType === contracts.KernelInfoProducedType)?.event;
-            expect(kernelInfoProduced?.kernelInfo.languageName).to.equal("javascript");
+            expect(kernelInfoProduced?.kernelInfo.languageName).to.equal("Javascript");
 
         });
 
