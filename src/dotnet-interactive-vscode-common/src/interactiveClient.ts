@@ -83,6 +83,8 @@ export class InteractiveClient {
         this._kernelHost.createProxyKernelOnDefaultConnector({ localName: 'csharp', aliases: ['c#', 'C#'], supportedDirectives: [], supportedKernelCommands: [] });
         this._kernelHost.createProxyKernelOnDefaultConnector({ localName: 'fsharp', aliases: ['fs', 'F#'], supportedDirectives: [], supportedKernelCommands: [] });
         this._kernelHost.createProxyKernelOnDefaultConnector({ localName: 'pwsh', aliases: ['powershell'], supportedDirectives: [], supportedKernelCommands: [] });
+        this._kernelHost.createProxyKernelOnDefaultConnector({ localName: 'mermaid', aliases: [], supportedDirectives: [], supportedKernelCommands: [] });
+
         this._kernelHost.connect();
     }
 
