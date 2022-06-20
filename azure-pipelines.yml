@@ -26,6 +26,10 @@ variables:
     value: $(Build.SourcesDirectory)/artifacts/.trydotnet/packages
   - name: NodeJSVersion
     value: '16.13.0'
+  - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+    - name: _DotNetValidationArtifactsCategory
+      value: .NETCoreValidation
+    - group: DotNet-Interactive-SDLValidation-Params
 
 stages:
 - stage: build
@@ -79,9 +83,6 @@ stages:
           - name: _BuildArgs
             value: /p:SignType=$(_SignType)
         steps:
-        - script: git config --global core.longpaths true
-          displayName: Enable `git clean` to handle long paths
-
         - checkout: self
           clean: true
 
@@ -375,6 +376,20 @@ stages:
       enableSymbolValidation: false
       # SourceLink improperly looks for generated files.  See https://github.com/dotnet/arcade/issues/3069
       enableSourceLinkValidation: false
+      # Enable SDL validation, passing through values from the 'DotNet-FSharp-SDLValidation-Params' group.
+      SDLValidationParameters:
+        enable: true
+        params: >-
+          -SourceToolsList @("policheck","credscan")
+          -TsaInstanceURL $(_TsaInstanceURL)
+          -TsaProjectName $(_TsaProjectName)
+          -TsaNotificationEmail $(_TsaNotificationEmail)
+          -TsaCodebaseAdmin $(_TsaCodebaseAdmin)
+          -TsaBugAreaPath $(_TsaBugAreaPath)
+          -TsaIterationPath $(_TsaIterationPath)
+          -TsaRepositoryName "Interactive"
+          -TsaCodebaseName "Interactive-GitHub"
+          -TsaPublish $True
 
 #---------------------------------------------------------------------------------------------------------------------#
 #                                                    NPM Publish                                                      #
