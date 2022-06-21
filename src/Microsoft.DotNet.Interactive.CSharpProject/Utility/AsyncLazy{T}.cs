@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Utility;
 
-public class AsyncLazy<T>
+internal class AsyncLazy<T>
 {
     private readonly Lazy<Task<T>> _lazy;
 

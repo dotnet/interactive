@@ -21,6 +21,7 @@
   <ItemGroup>
     <!--<Compile Include="..\Microsoft.DotNet.Interactive\Utility\DisposableDirectory.cs" Link="%28Recipes%29\DisposableDirectory.cs" />-->
     <Compile Include="..\Microsoft.DotNet.Interactive.CSharpProject\(Recipes)\JsonSerializationExtensions.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.CSharpProject\Utility\AsyncLazy{T}.cs" Link="Utility\AsyncLazy{T}.cs" />
   </ItemGroup>
 
    <ItemGroup>
