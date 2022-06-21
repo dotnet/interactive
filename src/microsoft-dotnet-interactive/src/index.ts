@@ -12,5 +12,5 @@ export * from './kernelHost';
 export * from './kernelInvocationContext';
 export * from './logger';
 export * from './proxyKernel';
-//export * from './tokenGenerator';
-//export * from './utilities';
+export * from './tokenGenerator';
+export * from './utilities';
