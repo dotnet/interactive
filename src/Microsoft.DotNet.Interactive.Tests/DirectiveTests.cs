@@ -163,6 +163,33 @@ i");
             await kernel.SubmitCodeAsync("#!x\n123");
 
             events.Should().NotContain(e => e is ReturnValueProduced);
+            events.Last().Should().BeOfType<CommandFailed>();
+        }
+
+        [Theory] // https://github.com/dotnet/interactive/issues/2085
+        [InlineData("[|#!unknown|]\n123")]
+        [InlineData("// first line\n[|#!unknown|]\n123")]
+        public async Task Unrecognized_directives_result_in_errors(
+            string markedUpCode)
+        {
+            MarkupTestFile.GetPositionAndSpan(markedUpCode, out var code, out  var _, out var span);
+            var expectedPos = new LinePositionSpan(new LinePosition());
+
+            using var kernel = new CSharpKernel();
+
+            var events = kernel.KernelEvents.ToSubscribedList();
+
+            await kernel.SubmitCodeAsync(code);
+
+            events.Should().NotContain(e => e is ReturnValueProduced);
+            events.Should()
+                  .ContainSingle<DiagnosticsProduced>()
+                  .Which
+                  .Diagnostics
+                  .Should()
+                  .Contain(d => d.LinePositionSpan == expectedPos)
+                ;
+            events.Last().Should().BeOfType<CommandFailed>();
         }
 
         [Fact]

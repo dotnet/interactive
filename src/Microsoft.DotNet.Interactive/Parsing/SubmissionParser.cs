@@ -102,10 +102,17 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         {
                             if (directiveNode.IsUnknownActionDirective())
                             {
+                                // commands.Add(new AnonymousKernelCommand((c, context) =>
+                                // {
+                                //     var linePositionSpan = new LinePositionSpan(directiveNode.GetDiagnostics().Start, directiveNode.Span.End);
+                                //     var diagnostic = new Interactive.Diagnostic(linePositionSpan);
+                                //     var diagnosticsProduced = new DiagnosticsProduced(new[] { diagnostic }, c);
+                                //     context.Publish(diagnosticsProduced);
+                                //     return Task.CompletedTask;
+                                // }));
+
                                 var command = createCommand(directiveNode, originalCommand, lastKernelNameNode);
-
                                 command.KernelChooserParseResult = lastKernelNameNode?.GetDirectiveParseResult();
-
                                 commands.Add(command);
                             }
                             else
@@ -116,13 +123,14 @@ namespace Microsoft.DotNet.Interactive.Parsing
                                     {
                                         var message =
                                             string.Join(Environment.NewLine,
-                                                parseResult.Errors
-                                                    .Select(e => e.ToString()));
+                                                        parseResult.Errors
+                                                                   .Select(e => e.ToString()));
 
                                         context.Fail(originalCommand, message: message);
                                         return Task.CompletedTask;
                                     }, parent: originalCommand));
                             }
+
                             break;
                         }
 
