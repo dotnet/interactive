@@ -40,7 +40,7 @@ public class KernelHostTests : IDisposable
         using var localCompositeKernel = new CompositeKernel("LOCAL");
         using var remoteCompositeKernel = new CompositeKernel("REMOTE");
 
-        ConnectHost.ConnectInProcessHost2(
+        ConnectHost.ConnectInProcessHost(
             localCompositeKernel,
             remoteCompositeKernel);
 

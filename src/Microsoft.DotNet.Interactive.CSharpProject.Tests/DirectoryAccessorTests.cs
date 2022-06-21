@@ -5,7 +5,6 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 using Microsoft.DotNet.PlatformAbstractions;
 using Xunit;
 using static Microsoft.DotNet.PlatformAbstractions.RuntimeEnvironment;
@@ -154,7 +153,6 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
             directory.WriteAllText("./some-file.txt", "updated text");
 
             directory.ReadAllText("./some-file.txt").Should().Be("updated text");
-            
         }
 
         [Fact]

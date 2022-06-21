@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 }
             };
 
-            ConnectHost.ConnectInProcessHost2(
+            ConnectHost.ConnectInProcessHost(
                 localCompositeKernel,
                 remoteCompositeKernel);
 
@@ -99,7 +99,7 @@ Console.WriteLine(1);";
                 }
             };
 
-            ConnectHost.ConnectInProcessHost2(
+            ConnectHost.ConnectInProcessHost(
                 localCompositeKernel,
                 remoteCompositeKernel);
 
@@ -119,7 +119,6 @@ Console.WriteLine(1);";
             var command = new SubmitCode(code);
             var result = await localCompositeKernel.SendAsync(command);
             var events = result.KernelEvents.ToSubscribedList();
-            events.Should().NotContainErrors();
 
             handledCommands.Should()
                            .ContainSingle<SubmitCode>()

@@ -19,7 +19,7 @@ public static class ConnectHost
 
         localCompositeKernel.RegisterForDisposal(remoteCompositeKernel);
 
-        ConnectInProcessHost2(
+        ConnectInProcessHost(
             localCompositeKernel,
             remoteCompositeKernel,
             uri ?? new Uri("kernel://local/"),
@@ -27,68 +27,8 @@ public static class ConnectHost
 
         return localCompositeKernel;
     }
-
+    
     public static void ConnectInProcessHost(
-        CompositeKernel localCompositeKernel,
-        CompositeKernel remoteCompositeKernel,
-        Uri localHostUri = null,
-        Uri remoteHostUri = null)
-    {
-        localHostUri ??= new("kernel://local");
-        remoteHostUri ??= new("kernel://remote");
-
-        var localToRemoteStream = new TestConsoleStream();
-        var remoteToLocalStream = new TestConsoleStream();
-
-        var localReader = new StreamReader(remoteToLocalStream);
-        var remoteReader = new StreamReader(localToRemoteStream);
-
-        var localWriter = new StreamWriter(localToRemoteStream);
-        var remoteWriter = new StreamWriter(remoteToLocalStream);
-
-        var localToRemoteSender = KernelCommandAndEventSender.FromTextWriter(
-            localWriter,
-            remoteHostUri);
-        var remoteToLocalSender = KernelCommandAndEventSender.FromTextWriter(
-            remoteWriter,
-            localHostUri);
-
-        var localReceiver = KernelCommandAndEventReceiver.FromTextReader(localReader);
-        var remoteReceiver = KernelCommandAndEventReceiver.FromTextReader(remoteReader);
-
-        var localHost = localCompositeKernel.UseHost(
-            localToRemoteSender,
-            localReceiver,
-            localHostUri);
-
-        var remoteHost = remoteCompositeKernel.UseHost(
-            remoteToLocalSender,
-            remoteReceiver,
-            remoteHostUri);
-
-        Task.Run(async () =>
-        {
-            await localHost.ConnectAsync();
-            await remoteHost.ConnectAsync();
-        }).Wait();
-
-        localCompositeKernel.RegisterForDisposal(localHost);
-        remoteCompositeKernel.RegisterForDisposal(remoteHost);
-        
-        localCompositeKernel.RegisterForDisposal(localReceiver);
-        remoteCompositeKernel.RegisterForDisposal(remoteReceiver);
-
-        localCompositeKernel.RegisterForDisposal(localWriter);
-        remoteCompositeKernel.RegisterForDisposal(remoteWriter);
-
-        localCompositeKernel.RegisterForDisposal(localReader);
-        remoteCompositeKernel.RegisterForDisposal(remoteReader);
-
-        localCompositeKernel.RegisterForDisposal(localToRemoteStream);
-        remoteCompositeKernel.RegisterForDisposal(remoteToLocalStream);
-    }
-
-    public static void ConnectInProcessHost2(
         CompositeKernel localCompositeKernel,
         CompositeKernel remoteCompositeKernel,
         Uri localHostUri = null,
