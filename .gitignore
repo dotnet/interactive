@@ -387,3 +387,5 @@ src/Microsoft.DotNet.Interactive.Js/dist/
 .idea/
 
 src/Microsoft.DotNet.Interactive.ExtensionLab.Tests/DataFrameKernelExtensionTests.it_registers_formatters.received.json
+
+src/microsoft-dotnet-interactive/lib/
