@@ -74,10 +74,18 @@ export class JavascriptKernel extends kernel.Kernel {
 
     private allLocalVariableNames(): string[] {
         const result: string[] = [];
-        for (const key in globalThis) {
-            if (typeof (<any>globalThis)[key] !== 'function') {
-                result.push(key);
+        try {
+            for (const key in globalThis) {
+                try {
+                    if (typeof (<any>globalThis)[key] !== 'function') {
+                        result.push(key);
+                    }
+                } catch (e) {
+                    Logger.default.error(`error getting value for ${key} : ${e}`);
+                }
             }
+        } catch (e) {
+            Logger.default.error(`error scanning globla variables : ${e}`);
         }
 
         return result;
