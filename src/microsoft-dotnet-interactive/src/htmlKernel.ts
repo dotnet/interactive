@@ -6,8 +6,8 @@ import { PromiseCompletionSource } from "./genericChannel";
 import * as kernel from "./kernel";
 
 export class HtmlKernel extends kernel.Kernel {
-    constructor(kernelName?: string, private readonly htmlFragmentProcessor?: (htmlFragment: string) => Promise<void>) {
-        super(kernelName ?? "html", "html");
+    constructor(kernelName?: string, private readonly htmlFragmentProcessor?: (htmlFragment: string) => Promise<void>, languageName?: string, languageVersion?: string) {
+        super(kernelName ?? "html", languageName ?? "HTML");
         if (!this.htmlFragmentProcessor) {
             this.htmlFragmentProcessor = domHtmlFragmentProcessor;
         }
