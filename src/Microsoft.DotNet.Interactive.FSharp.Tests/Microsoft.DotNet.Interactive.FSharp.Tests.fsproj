@@ -15,9 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="FSharp.Core.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Compile Include="HtmlFormatterTests.fs" />
     <Compile Include="KernelTests.fs" />
   </ItemGroup>
