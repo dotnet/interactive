@@ -64,7 +64,6 @@ export function domHtmlFragmentProcessor(htmlFragment: string, configuration?: {
                     container.id;//?
                     if (element?.id === container.id) {//?
                         completionPromise.resolve();
-                        completionPromise.resolve();
                         mutationObserver.disconnect();
 
                         return;
