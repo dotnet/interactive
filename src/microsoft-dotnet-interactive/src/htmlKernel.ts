@@ -21,7 +21,7 @@ export class HtmlKernel extends kernel.Kernel {
         invocation.context.publish({ eventType: contracts.CodeSubmissionReceivedType, event: { code }, command: invocation.commandEnvelope });
 
         if (!this.htmlFragmentProcessor) {
-            throw new Error("No html fragment processor registered");
+            throw new Error("No HTML fragment processor registered");
         }
 
         try {
