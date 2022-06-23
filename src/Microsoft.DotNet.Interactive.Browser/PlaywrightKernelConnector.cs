@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.Browser;
 
 public class PlaywrightKernelConnector : IKernelConnector
 {
-    public async Task<Kernel> CreateKernelAsync(string kernelName)
+    public Task<Kernel> CreateKernelAsync(string kernelName)
     {
         var disposables = new CompositeDisposable();
 
@@ -30,6 +30,7 @@ public class PlaywrightKernelConnector : IKernelConnector
             {
                 Channel = browserChannel
             };
+
             if (Debugger.IsAttached)
             {
                 options.Headless = false;
@@ -37,9 +38,7 @@ public class PlaywrightKernelConnector : IKernelConnector
 
             var browser = await playwright.Chromium.LaunchAsync(options);
 
-            var context = await browser.NewContextAsync(new BrowserNewContextOptions
-            {
-            });
+            var context = await browser.NewContextAsync();
 
             var page = await context.NewPageAsync();
 
@@ -57,7 +56,7 @@ public class PlaywrightKernelConnector : IKernelConnector
 
         proxy.RegisterForDisposal(disposables);
 
-        return proxy;
+        return Task.FromResult<Kernel>(proxy);
     }
 
     private class PlaywrightSenderAndReceiver : IKernelCommandAndEventSender, IKernelCommandAndEventReceiver
