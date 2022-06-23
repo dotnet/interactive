@@ -82,11 +82,9 @@ public class PlaywrightKernelConnector : IKernelConnector
 
             var commandJson = KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(command));
 
-            // FIX: (SendAsync) remove logging
-            var result = await page.EvaluateAsync(@"(commandJson) => {
-    console.log(commandJson);
+            await page.EvaluateAsync(@"(commandJson) => {
     const command = JSON.parse(commandJson);
-    dotnetInteractive.kernel.root.findKernelByName('javascript').send(command);
+    sendKernelCommand(command);
 }", commandJson);
         }
 

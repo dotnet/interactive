@@ -1,1 +1,1 @@
-export declare function setup(): void;
+export declare function setup(global?: any): void;

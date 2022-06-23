@@ -50,11 +50,11 @@ public class JavaScriptTests
 
         var events = result.KernelEvents.ToSubscribedList();
 
-        events.Should().ContainSingle<StandardOutputValueProduced>()
+        events.Should().ContainSingle<DisplayedValueProduced>()
               .Which
               .FormattedValues
               .Should()
-              .ContainSingle(v => v.MimeType == "application/json" &&
+              .ContainSingle(v => v.MimeType == "text/plain" &&
                                   v.Value == "123");
     }
 
