@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -10,7 +9,7 @@ using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Connection;
 
-internal static class Serializer
+public static class Serializer
 {
     static Serializer()
     {
@@ -35,33 +34,22 @@ internal static class Serializer
             return null;
         }
 
-        try
+        var jsonObject = JsonDocument.Parse(json).RootElement;
+
+        return DeserializeCommandOrEvent(jsonObject);
+    }
+
+    public static CommandOrEvent DeserializeCommandOrEvent(JsonElement jsonObject)
+    {
+        if (IsEventEnvelope(jsonObject))
         {
-            var jsonObject = JsonDocument.Parse(json).RootElement;
-
-            if (IsEventEnvelope(jsonObject))
-            {
-                var kernelEventEnvelope = KernelEventEnvelope.Deserialize(jsonObject);
-                return new CommandOrEvent(kernelEventEnvelope.Event);
-            }
-
-            if (IsCommandEnvelope(jsonObject))
-            {
-                var kernelCommandEnvelope = KernelCommandEnvelope.Deserialize(jsonObject);
-
-                return new CommandOrEvent(kernelCommandEnvelope.Command);
-            }
-
-            var kernelEvent = new DiagnosticLogEntryProduced(
-                $"Expected {nameof(KernelCommandEnvelope)} or {nameof(KernelEventEnvelope)} but received: \n{json}", KernelCommand.None);
-
-            return new CommandOrEvent(kernelEvent, true);
+            var kernelEventEnvelope = KernelEventEnvelope.Deserialize(jsonObject);
+            return new CommandOrEvent(kernelEventEnvelope.Event);
         }
-        catch (Exception ex)
+        else
         {
-            var kernelEvent = new DiagnosticLogEntryProduced(
-                $"Error while parsing Envelope: {json} \n{ex.Message}", KernelCommand.None);
-            return new CommandOrEvent(kernelEvent, true);
+            var kernelCommandEnvelope = KernelCommandEnvelope.Deserialize(jsonObject);
+            return new CommandOrEvent(kernelCommandEnvelope.Command);
         }
     }
 

@@ -4,7 +4,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Utility;
+namespace Microsoft.DotNet.Interactive.Utility;
 
 internal class AsyncLazy<T>
 {

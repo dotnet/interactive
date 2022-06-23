@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+    
+ <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageDescription>Support for dotnet-interactive</PackageDescription>
+    <PackageTags>dotnet-interactive JavaScript</PackageTags>
+    <IncludeBuildOutput>true</IncludeBuildOutput>
+  </PropertyGroup>
+    
+ <ItemGroup>
+   <Compile Include="..\Microsoft.DotNet.Interactive.CSharpProject\%28Recipes%29\AsyncLazy{T}.cs" Link="%28Recipes%29\AsyncLazy{T}.cs" />
+ </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="microsoft.playwright" Version="1.22.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="%28Recipes%29\" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <EmbeddedResource Include="..\microsoft-dotnet-interactive\lib\dotnet-interactive.js" />
+  </ItemGroup>
+
+</Project>
