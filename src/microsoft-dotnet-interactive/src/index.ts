@@ -13,5 +13,6 @@ export * from './kernelInvocationContext';
 export * from './kernelScheduler';
 export * from './logger';
 export * from './proxyKernel';
+export * from './setup';
 export * from './tokenGenerator';
 export * from './utilities';
