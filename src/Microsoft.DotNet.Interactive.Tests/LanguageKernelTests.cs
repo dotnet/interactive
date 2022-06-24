@@ -881,7 +881,7 @@ $${languageSpecificCode}
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task it_aggregates_multiple_submissions(Language language)
-        {
+        {   
             var kernel = CreateKernel(language);
 
             var source = language switch
