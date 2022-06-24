@@ -89,53 +89,60 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
         // only load this once
         const apiFileUri = this.webview.asWebviewUri(vscode.Uri.file(path.join(this.extensionPath, 'resources', 'variableGrid.js')));
         const html = `
-        <style>
-            table, th, td {
-                border-collapse: collapse;
-                border: 1px solid var(--vscode-quickInputList-focusBackground);
-            }
-            table {
-                width: 100%;
-            }
-            th {
-                color: var(--vscode-quickInputList-focusForeground);
-                background-color: var(--vscode-quickInputList-focusBackground);
-            }
-            td {
-                text-align: left;
-            }
+        <html>
+            <head>
+                <meta charset="utf-8">
+            </head>
+            <body>
+                <style>
+                    table, th, td {
+                        border-collapse: collapse;
+                        border: 1px solid var(--vscode-quickInputList-focusBackground);
+                    }
+                    table {
+                        width: 100%;
+                    }
+                    th {
+                        color: var(--vscode-quickInputList-focusForeground);
+                        background-color: var(--vscode-quickInputList-focusBackground);
+                    }
+                    td {
+                        text-align: left;
+                    }
 
-            input {
-                background-color: var(--vscode-settings-textInputBackground);
-                border: var(--vscode-settings-textInputBorder);
-                color: var(--vscode-settings-textInputForeground);
-            }
-            button {
-                background-color: var(--vscode-button-background);
-                border: var(--vscode-button-border);
-                color: var(--vscode-button-foreground);
-            }
-            button[hover] {
-                background-color: var(--vscode-button-hoverBackground);
-            }
+                    input {
+                        background-color: var(--vscode-settings-textInputBackground);
+                        border: var(--vscode-settings-textInputBorder);
+                        color: var(--vscode-settings-textInputForeground);
+                    }
+                    button {
+                        background-color: var(--vscode-button-background);
+                        border: var(--vscode-button-border);
+                        color: var(--vscode-button-foreground);
+                    }
+                    button[hover] {
+                        background-color: var(--vscode-button-hoverBackground);
+                    }
 
-            .name-column {
-                width: 20%;
-            }
-            .value-column {
-            }
-            .kernel-column {
-                width: 20%;
-            }
-            .share-column {
-                width: 10%;
-            }
-        </style>
-        <script defer type="text/javascript" src="${apiFileUri.toString()}"></script>
-        <label for="filter">Filter</label>
-        <input id="filter" type="text" />
-        <button id="clear">Clear</button>
-        <div id="content"></div>
+                    .name-column {
+                        width: 20%;
+                    }
+                    .value-column {
+                    }
+                    .kernel-column {
+                        width: 20%;
+                    }
+                    .share-column {
+                        width: 10%;
+                    }
+                </style>
+                <script defer type="text/javascript" src="${apiFileUri.toString()}"></script>
+                <label for="filter">Filter</label>
+                <input id="filter" type="text" />
+                <button id="clear">Clear</button>
+                <div id="content"></div>
+            </body>
+        </html>
         `;
         this.webview.html = html;
         this.refresh();
