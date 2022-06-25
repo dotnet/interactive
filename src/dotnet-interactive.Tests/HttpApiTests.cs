@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             _disposables.Dispose();
         }
 
-        private async Task<InProcessTestServer> GetServer(Language defaultLanguage = Language.CSharp, Action<IServiceCollection> servicesSetup = null, string command = "http", int port = 4242)
+        private async Task<InProcessTestServer> GetServer(Language defaultLanguage = Language.CSharp, Action<IServiceCollection> servicesSetup = null, string command = "stdio", int port = 4242)
         {
             var newServer =
                 await InProcessTestServer.StartServer(
@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             return newServer;
         }
 
-        [Fact]
+        [Fact(Skip = "Revisit jupyter integration")]
         public async Task discovery_route_is_not_registered_without_JupyterFrontedEnvironment()
         {
             var server = await GetServer();
