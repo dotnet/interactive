@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests.Instrumentation
         [Fact]
         public async Task It_Emits_Right_Format_With_Sentinels_Around_JSONAsync()
         {
-            using (var output = await ConsoleOutput.Capture())
+            using (var output = await Utility.ConsoleOutput.Capture())
             {
                 InstrumentationEmitter.EmitProgramState(programStateJson);
                 output.StandardOutput.Should().MatchEquivalentOf($"{ InstrumentationEmitter.Sentinel}*{InstrumentationEmitter.Sentinel}");

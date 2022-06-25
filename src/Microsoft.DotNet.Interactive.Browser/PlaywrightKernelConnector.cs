@@ -20,25 +20,17 @@ public class PlaywrightKernelConnector : IKernelConnector
     {
         var disposables = new CompositeDisposable();
 
-        var browserChannel = "msedge";
+        string? browserChannel = null;
 
         var _page = new AsyncLazy<IPage>(async () =>
         {
             var playwright = await Playwright.Playwright.CreateAsync();
 
-            var options = new BrowserTypeLaunchOptions
-            {
-                Channel = browserChannel
-            };
+            var launch = await LaunchBrowserAsync(playwright);
 
-            if (Debugger.IsAttached)
-            {
-                options.Headless = false;
-            }
+            browserChannel = launch.Options.Channel;
 
-            var browser = await playwright.Chromium.LaunchAsync(options);
-
-            var context = await browser.NewContextAsync();
+            var context = await launch.Browser.NewContextAsync();
 
             var page = await context.NewPageAsync();
 
@@ -59,13 +51,62 @@ public class PlaywrightKernelConnector : IKernelConnector
         return Task.FromResult<Kernel>(proxy);
     }
 
+    private static async Task<BrowserLaunch> LaunchBrowserAsync(IPlaywright playwright)
+    {
+        return await TryLaunch("msedge") ??
+               await TryLaunch("chrome") ??
+               await TryLaunch("chromium", true) ??
+               throw new Exception("Unable to launch browser.");
+
+        async Task<BrowserLaunch?> TryLaunch(string channel, bool acquire = false)
+        {
+            if (acquire)
+            {
+                var stdOut = new StringBuilder();
+                var stdErr = new StringBuilder();
+
+                using var console = ConsoleOutput.Subscribe(c => new CompositeDisposable
+                {
+                    c.Out.Subscribe(s => stdOut.Append(s)),
+                    c.Error.Subscribe(s => stdErr.Append(s))
+                });
+
+                var exitCode = Program.Main(new[] { "install", channel });
+                if (exitCode != 0)
+                {
+                    var message = $"Playwright browser acquisition failed with exit code {exitCode}.\n{stdOut}\n{stdErr}";
+                    throw new Exception(message);
+                }
+            }
+
+            var options = new BrowserTypeLaunchOptions
+            {
+                Channel = channel,
+                Headless = !Debugger.IsAttached
+            };
+
+            try
+            {
+                var browser = await playwright.Chromium.LaunchAsync(options);
+                return new(browser, options);
+            }
+            catch (Exception)
+            {
+            }
+
+            return null;
+        }
+    }
+
+    private record BrowserLaunch(IBrowser Browser, BrowserTypeLaunchOptions Options);
+
     private class PlaywrightSenderAndReceiver : IKernelCommandAndEventSender, IKernelCommandAndEventReceiver
     {
         private readonly AsyncLazy<IPage> _page;
         private bool _remoteKernelIsLoaded;
         private readonly Subject<CommandOrEvent> _commandsAndEvents = new();
 
-        public PlaywrightSenderAndReceiver(AsyncLazy<IPage> page, string browserChannel)
+        public PlaywrightSenderAndReceiver(AsyncLazy<IPage> page, string? browserChannel = "browser")
         {
             _page = page;
             RemoteHostUri = new($"kernel://{browserChannel}/");
@@ -97,7 +138,7 @@ public class PlaywrightKernelConnector : IKernelConnector
 
         private async Task EnsureRemoteKernelIsLoadedAsync()
         {
-            if (_remoteKernelIsLoaded)  
+            if (_remoteKernelIsLoaded)
             {
                 return;
             }
@@ -113,7 +154,7 @@ public class PlaywrightKernelConnector : IKernelConnector
             }
 
             var page = await _page.ValueAsync();
-            await page.ExposeFunctionAsync("publishCommandOrEvent", (JsonElement  json) =>
+            await page.ExposeFunctionAsync("publishCommandOrEvent", (JsonElement json) =>
             {
                 var commandOrEvent = Serializer.DeserializeCommandOrEvent(json);
 

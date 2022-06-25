@@ -503,6 +503,7 @@ Microsoft.DotNet.Interactive.Connection
     public static System.Void RegisterDefaults()
     public static System.String Serialize(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public static System.String Serialize(IKernelCommandEnvelope envelope)
+    public static System.Text.Json.JsonElement SerializeToJsonElement(IKernelCommandEnvelope envelope)
     public System.String CommandId { get;}
     public System.String CommandType { get;}
     public System.String Token { get;}
@@ -542,6 +543,10 @@ Microsoft.DotNet.Interactive.Connection
     public System.IAsyncResult BeginInvoke(System.Threading.CancellationToken cancellationToken, System.AsyncCallback callback, System.Object object)
     public CommandOrEvent EndInvoke(System.IAsyncResult result)
     public CommandOrEvent Invoke(System.Threading.CancellationToken cancellationToken = null)
+  public static class Serializer
+    public static System.Text.Json.JsonSerializerOptions JsonSerializerOptions { get;}
+    public static CommandOrEvent DeserializeCommandOrEvent(System.String json)
+    public static CommandOrEvent DeserializeCommandOrEvent(System.Text.Json.JsonElement jsonObject)
 Microsoft.DotNet.Interactive.Events
   public class CodeSubmissionReceived : KernelEvent
     .ctor(Microsoft.DotNet.Interactive.Commands.SubmitCode command)
@@ -761,6 +766,22 @@ Microsoft.DotNet.Interactive.Utility
     public System.Int32 ExitCode { get;}
     public System.Collections.Generic.IReadOnlyCollection<System.String> Output { get;}
     public System.Void ThrowOnFailure(System.String message = null)
+  public static class ConsoleOutput
+    public static System.IDisposable Subscribe(System.Func<ObservableConsole,System.IDisposable> subscribe)
+   class ObservableConsole, System.IEquatable<ObservableConsole>
+    public static System.Boolean op_Equality(ObservableConsole left, ObservableConsole right)
+    public static System.Boolean op_Inequality(ObservableConsole left, ObservableConsole right)
+    .ctor(System.IObservable<System.String> Out, System.IObservable<System.String> Error)
+    public System.IObservable<System.String> Error { get; set;}
+    public System.IObservable<System.String> Out { get; set;}
+    public ObservableConsole <Clone>$()
+    public System.Void Deconstruct(ref System.IObservable<System.String> Out, ref System.IObservable<System.String> Error)
+    public System.Boolean Equals(System.Object obj)
+    public System.Boolean Equals(ObservableConsole other)
+    protected System.Type get_EqualityContract()
+    public System.Int32 GetHashCode()
+    protected System.Boolean PrintMembers(System.Text.StringBuilder builder)
+    public System.String ToString()
   public static class DirectoryUtility
     public static System.IO.DirectoryInfo EnsureExists()
   public class DisposableDirectory, System.IDisposable
