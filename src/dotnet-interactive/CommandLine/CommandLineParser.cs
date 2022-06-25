@@ -199,7 +199,6 @@ public static class CommandLineParser
         rootCommand.AddCommand(Jupyter());
         rootCommand.AddCommand(StdIO());
         rootCommand.AddCommand(NotebookParser());
-        rootCommand.AddCommand(HttpServer());
 
         return new CommandLineBuilder(rootCommand)
             .UseDefaults()
@@ -301,64 +300,6 @@ public static class CommandLineParser
                 var jupyterInstallCommand = new JupyterInstallCommand(console, new JupyterKernelSpecInstaller(console), httpPortRange, path);
                 return jupyterInstallCommand.InvokeAsync();
             }
-        }
-
-        Command HttpServer()
-        {
-            var httpPortOption = new Option<HttpPort>(
-                "--http-port",
-                description: "Specifies the port on which to enable HTTP services",
-                parseArgument: result =>
-                {
-                    if (result.Tokens.Count == 0)
-                    {
-                        return HttpPort.Auto;
-                    }
-
-                    var source = result.Tokens[0].Value;
-
-                    if (source == "*")
-                    {
-                        return HttpPort.Auto;
-                    }
-
-                    if (!int.TryParse(source, out var portNumber))
-                    {
-                        result.ErrorMessage = "Must specify a port number or *.";
-                        return null;
-                    }
-
-                    return new HttpPort(portNumber);
-                },
-                isDefault: true);
-
-            var httpCommand = new Command("http", "Starts dotnet-interactive with kernel functionality exposed over http")
-            {
-                defaultKernelOption,
-                httpPortOption
-            };
-
-            httpCommand.Handler = CommandHandler.Create<StartupOptions, KernelHttpOptions, IConsole, InvocationContext>(
-                (startupOptions, options, console, context) =>
-                {
-                    var frontendEnvironment = new BrowserFrontendEnvironment();
-                    var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
-
-                    kernel.Add(
-                        new JavaScriptKernel(),
-                        new[] { "js" });
-
-                    services.AddKernel(kernel)
-                        .AddSingleton(new SignalRBackchannelKernelClient());
-
-                    onServerStarted ??= () =>
-                    {
-                        console.Out.WriteLine("Application started. Press Ctrl+C to shut down.");
-                    };
-                    return startHttp(startupOptions, console, startServer, context);
-                });
-
-            return httpCommand;
         }
 
         Command StdIO()

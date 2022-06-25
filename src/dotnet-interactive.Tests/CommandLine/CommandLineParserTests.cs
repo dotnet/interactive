@@ -222,35 +222,6 @@ public class CommandLineParserTests : IDisposable
     }
 
     [Fact]
-    public async Task http_command_enables_http_api_by_default()
-    {
-        await _parser.InvokeAsync("http");
-
-        _startOptions.EnableHttpApi.Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task http_command_uses_default_port()
-    {
-        await _parser.InvokeAsync($"http");
-
-        using var scope = new AssertionScope();
-        _startOptions.HttpPort.Should().NotBeNull();
-        _startOptions.HttpPort.IsAuto.Should().BeTrue();
-    }
-
-    [Fact]
-    public void http_command__does_not_parse_http_port_range_option()
-    {
-        var result = _parser.Parse("http --http-port-range 6000-10000");
-
-        result.Errors
-            .Select(e => e.Message)
-            .Should()
-            .Contain(errorMessage => errorMessage == "Unrecognized command or argument '--http-port-range'.");
-    }
-
-    [Fact]
     public async Task jupyter_command_returns_error_if_connection_file_path_is_not_passed()
     {
         var testConsole = new TestConsole();
