@@ -15,6 +15,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <NewtonsoftJsonVersion>13.0.1 </NewtonsoftJsonVersion>
     <SystemReactiveVersion>5.0.0</SystemReactiveVersion>
     <MicrosoftCodeAnalysisCommonVersion>4.2.0</MicrosoftCodeAnalysisCommonVersion>
   </PropertyGroup>

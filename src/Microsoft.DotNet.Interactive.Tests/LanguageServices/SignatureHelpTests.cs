@@ -183,7 +183,7 @@ public class SampleClass
         {
             using var kernel = CreateKernel(Language.CSharp);
 
-            await SubmitCode(kernel, "#r \"nuget: Newtonsoft.Json, 12.0.3\"");
+            await SubmitCode(kernel, "#r \"nuget: Newtonsoft.Json, 13.0.1\"");
 
             // The following line forces the assembly and the doc comments to be loaded
             await SubmitCode(kernel, "var _unused = Newtonsoft.Json.JsonConvert.Null;");
@@ -207,7 +207,7 @@ public class SampleClass
         {
             using var kernel = CreateKernel(Language.CSharp);
 
-            await SubmitCode(kernel, "#r \"nuget: Newtonsoft.Json, 12.0.3\"");
+            await SubmitCode(kernel, "#r \"nuget: Newtonsoft.Json, 13.0.1\"");
 
             var markupCode = "Newtonsoft.Json.JsonConvert.DeserializeObject($$";
 
