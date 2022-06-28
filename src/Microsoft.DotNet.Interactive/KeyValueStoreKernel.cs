@@ -71,6 +71,8 @@ namespace Microsoft.DotNet.Interactive
             await StoreValueAsync(command, context, options, value);
         }
 
+        internal override bool AcceptsUnknownDirectives => true;
+
         internal async Task TryStoreValueFromOptionsAsync(
             KernelInvocationContext context,
             ValueDirectiveOptions options)
@@ -122,7 +124,7 @@ namespace Microsoft.DotNet.Interactive
                 {
                     UndoSetValue();
                     context.Fail(command,
-                        message: "The --from-file option cannot be used in combination with a content submission.");
+                                 message: "The --from-file option cannot be used in combination with a content submission.");
                 }
                 
             }
@@ -132,7 +134,7 @@ namespace Microsoft.DotNet.Interactive
                 {
                     UndoSetValue();
                     context.Fail(command,
-                        message: "The --from-url option cannot be used in combination with a content submission.");
+                                 message: "The --from-url option cannot be used in combination with a content submission.");
                 }
             }
             else

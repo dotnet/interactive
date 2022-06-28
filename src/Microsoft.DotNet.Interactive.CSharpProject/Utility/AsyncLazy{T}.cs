@@ -17,7 +17,9 @@ internal class AsyncLazy<T>
             throw new ArgumentNullException(nameof(initialize));
         }
 
+#pragma warning disable VSTHRD011 // Use AsyncLazy<T>
         _lazy = new Lazy<Task<T>>(initialize);
+#pragma warning restore VSTHRD011 // Use AsyncLazy<T>
     }
 
     public Task<T> ValueAsync() => _lazy.Value;

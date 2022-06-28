@@ -100,17 +100,33 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                         if (parseResult.Errors.Any())
                         {
-                            if (directiveNode.IsUnknownActionDirective())
-                            {
-                                // commands.Add(new AnonymousKernelCommand((c, context) =>
-                                // {
-                                //     var linePositionSpan = new LinePositionSpan(directiveNode.GetDiagnostics().Start, directiveNode.Span.End);
-                                //     var diagnostic = new Interactive.Diagnostic(linePositionSpan);
-                                //     var diagnosticsProduced = new DiagnosticsProduced(new[] { diagnostic }, c);
-                                //     context.Publish(diagnosticsProduced);
-                                //     return Task.CompletedTask;
-                                // }));
+                            bool accept = false;
+                            AnonymousKernelCommand sendExtraDiagnostics = null;
 
+                            if (directiveNode is ActionDirectiveNode adn)
+                            {
+                                if (IsUnknownDirective(adn) && (adn.IsCompilerDirective || AcceptUnknownDirective(adn)))
+                                {
+                                    accept = true;
+                                }
+                                else
+                                {
+                                    sendExtraDiagnostics = new((c, context) =>
+                                    {
+                                        var diagnostic = new Interactive.Diagnostic(
+                                            adn.GetLinePositionSpan(),
+                                            CodeAnalysis.DiagnosticSeverity.Error,
+                                            "NI0001", // FIX: (SplitSubmission) what code should this be?
+                                            "Unrecognized magic command");
+                                        var diagnosticsProduced = new DiagnosticsProduced(new[] { diagnostic }, c);
+                                        context.Publish(diagnosticsProduced);
+                                        return Task.CompletedTask;
+                                    });
+                                }
+                            }
+
+                            if (accept)
+                            {
                                 var command = createCommand(directiveNode, originalCommand, lastKernelNameNode);
                                 command.KernelChooserParseResult = lastKernelNameNode?.GetDirectiveParseResult();
                                 commands.Add(command);
@@ -118,6 +134,12 @@ namespace Microsoft.DotNet.Interactive.Parsing
                             else
                             {
                                 commands.Clear();
+
+                                if (sendExtraDiagnostics is {})
+                                {
+                                    commands.Add(sendExtraDiagnostics);
+                                }
+
                                 commands.Add(
                                     new AnonymousKernelCommand((_, context) =>
                                     {
@@ -271,6 +293,21 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 }
 
                 return false;
+            }
+
+            static bool IsUnknownDirective(ActionDirectiveNode adn) =>
+                adn.GetDirectiveParseResult().Errors.All(e => e.SymbolResult?.Symbol is RootCommand);
+
+            bool AcceptUnknownDirective(ActionDirectiveNode node)
+            {
+                var kernel = _kernel switch
+                {
+                    // The parent kernel is the one where a directive would be defined, and therefore the one that should decide whether to accept this submission. 
+                    CompositeKernel composite => composite.FindKernel(node.ParentKernelName),
+                    _ => _kernel
+                };
+
+                return kernel.AcceptsUnknownDirectives;
             }
         }
 
