@@ -785,7 +785,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .Data
                 .Should()
                 .ContainKey("text/html")
-                .WhichValue
+                .WhoseValue
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(
                     new object[]
@@ -1033,7 +1033,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public void serialized_code_cells_with_default_jupyter_kernel_language_dont_have_language_specifier()
         {
-            var cells = new List<InteractiveDocumentElement>()
+            var cells = new List<InteractiveDocumentElement>
             {
                 new InteractiveDocumentElement("csharp", "var x = 1;")
             };
@@ -1084,7 +1084,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         {
             var cells = new List<InteractiveDocumentElement>()
             {
-                new InteractiveDocumentElement("csharp", "var x = 1;\nvar y = 2;")
+                new("csharp", "var x = 1;\nvar y = 2;")
             };
             var notebook = new InteractiveDocument(cells);
             var serialized = SerializeJupyter(notebook, "\n");

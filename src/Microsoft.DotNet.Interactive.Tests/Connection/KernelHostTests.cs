@@ -52,7 +52,7 @@ public class KernelHostTests : IDisposable
                                  .ConnectProxyKernelOnDefaultConnectorAsync(
                                      "fsharp",
                                      remoteKernelUri))
-            .Should().NotThrow();
+            .Should().NotThrowAsync();
     }
         
     public void Dispose() => _disposables.Dispose();

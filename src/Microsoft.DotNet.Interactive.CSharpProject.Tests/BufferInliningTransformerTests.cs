@@ -17,11 +17,11 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
     public class BufferInliningTransformerTests
     {
         [Fact]
-        public void When_workspace_is_null_then_the_transformer_throw_exception()
+        public async Task When_workspace_is_null_then_the_transformer_throw_exception()
         {
             var processor = new BufferInliningTransformer();
             Func<Task> extraction = () => processor.TransformAsync(null);
-            extraction.Should().Throw<ArgumentNullException>();
+            await extraction.Should().ThrowAsync<ArgumentNullException>();
         }
 
         [Fact]

@@ -38,8 +38,8 @@
     <PackageReference Include="System.Linq.Async" Version="5.0.0" />
     <PackageReference Include="Assent" Version="1.7.0" />
     <PackageReference Include="Serilog.Sinks.RollingFileAlternate" Version="2.0.9" />
-    <PackageReference Include="FluentAssertions" Version="5.10.3" />
-    <PackageReference Include="FluentAssertions.Json" Version="5.5.0" />
+    <PackageReference Include="FluentAssertions" Version="6.7.0" />
+    <PackageReference Include="FluentAssertions.Json" Version="6.1.0" />
     <PackageReference Include="Nerdbank.Streams" Version="2.7.74" />
     <PackageReference Include="Pocket.Disposable" Version="1.1.0">
       <PrivateAssets>all</PrivateAssets>

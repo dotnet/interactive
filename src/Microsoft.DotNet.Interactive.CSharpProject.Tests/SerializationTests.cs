@@ -85,7 +85,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
                 .BeEquivalentToRespectingRuntimeTypes(
                     originalEnvelope,
                     o => o.Excluding(envelope => envelope.Event.Command.Properties)
-                          .Excluding(envelope => ignoredProperties.Contains($"{envelope.SelectedMemberInfo.DeclaringType.Name}.{envelope.SelectedMemberInfo.Name}"))
+                          .Excluding(memberInfo => ignoredProperties.Contains($"{memberInfo.DeclaringType.Name}.{memberInfo.Name}"))
                     );
         }
 

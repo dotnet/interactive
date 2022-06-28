@@ -78,7 +78,7 @@ namespace RoslynRecorder
             var (newAugmentation, newLocations) = await InstrumentationLineMapper.MapLineLocationsRelativeToViewportAsync(augmentation, locations, document, viewport);
 
             var linePositions = newAugmentation.Data.Values.Select(state => state.CurrentFilePosition.Line);
-            var expectedLinePositions = spans.Values.Select(span => span.First().Start.Line);
+            var expectedLinePositions = spans.Values.Select(span => (long)(span.First().Start.Line));
             linePositions.Should().Equal(expectedLinePositions);
         }
 
