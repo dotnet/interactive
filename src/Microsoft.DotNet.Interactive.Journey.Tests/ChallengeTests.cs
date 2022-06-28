@@ -188,7 +188,7 @@ namespace Microsoft.DotNet.Interactive.Journey.Tests
 
             await kernel.SubmitCodeAsync("1 + 1");
 
-            challenge.CurrentEvaluation.RuleEvaluations.First().Reason.Should().Be("Expected value to be 10, but found 3.");
+            challenge.CurrentEvaluation.RuleEvaluations.First().Reason.Should().Be("Expected value to be 10, but found 3 (difference of -7).");
         }
 
         [Fact]

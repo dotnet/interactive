@@ -79,7 +79,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
                 .BeEquivalentToRespectingRuntimeTypes(
                     originalEnvelope,
                     o => o.Excluding(envelope => envelope.Event.Command.Properties)
-                          .Excluding(envelope => ignoredProperties.Contains($"{envelope.SelectedMemberInfo.DeclaringType.Name}.{envelope.SelectedMemberInfo.Name}"))
+                        .Excluding(info => ignoredProperties.Contains($"{info.DeclaringType.Name}.{info.Name}"))
                     );
         }
 

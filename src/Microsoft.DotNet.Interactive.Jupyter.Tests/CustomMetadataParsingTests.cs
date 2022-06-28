@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
             var metadata = MetadataExtensions.DeserializeMetadataFromJsonString(rawMetadataJson);
             metadata.Should()
                 .ContainKey("dotnet_interactive")
-                .WhichValue
+                .WhoseValue
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata("fsharp"));
         }
@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
             var metadata = MetadataExtensions.DeserializeMetadataFromJsonString(rawMetadataJson);
             metadata.Should()
                 .ContainKey("dotnet_interactive")
-                .WhichValue
+                .WhoseValue
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata() );
         }

@@ -1089,7 +1089,7 @@ System.Threading.Thread.Sleep(1000);
 
             var diff = events[1].Timestamp - events[0].Timestamp;
 
-            diff.Should().BeCloseTo(1.Seconds(), precision: 500);
+            diff.Should().BeCloseTo(1.Seconds(), precision: 0.5.Seconds());
             events
                 .Select(e => e.Value as DisplayedValueProduced)
                 .SelectMany(e => e.FormattedValues.Select(v => v.Value))

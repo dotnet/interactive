@@ -40,9 +40,9 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
         public async Task It_propagates_exception()
         {
             var producer = new PipelineStep<int>(() => throw new InvalidOperationException());
-            producer.Awaiting(p => p.GetLatestAsync())
+            await producer.Awaiting(p => p.GetLatestAsync())
                 .Should()
-                .Throw<InvalidOperationException>();
+                .ThrowAsync<InvalidOperationException>();
 
         }
 
@@ -60,9 +60,9 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
                 return Task.FromResult(next);
             });
 
-            producer.Awaiting(p => p.GetLatestAsync())
+            await producer.Awaiting(p => p.GetLatestAsync())
                 .Should()
-                .Throw<InvalidOperationException>();
+                .ThrowAsync<InvalidOperationException>();
 
             var value = await producer.GetLatestAsync();
             value.Should().Be(2);
@@ -150,7 +150,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
 
 
 
-            values.Should().BeEquivalentTo(2, 2);
+            values.Should().BeEquivalentTo(new []{2, 2});
 
             // var values = await Task.WhenAll(firstConsumer, secondConsumer);
             // values.Should().HaveCount(2).And.OnlyContain(i => i == 2);

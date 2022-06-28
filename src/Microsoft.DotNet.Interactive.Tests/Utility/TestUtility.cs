@@ -95,7 +95,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             return new AndConstraint<GenericCollectionAssertions<T>>(assertions);
         }
 
-        public static AndConstraint<StringCollectionAssertions> BeEquivalentSequenceTo(
+        public static AndConstraint<StringCollectionAssertions<IEnumerable<string>>> BeEquivalentSequenceTo(
             this StringCollectionAssertions assertions,
             params string[] expectedValues)
         {

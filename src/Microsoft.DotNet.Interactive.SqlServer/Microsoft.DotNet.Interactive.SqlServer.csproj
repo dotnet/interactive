@@ -29,7 +29,7 @@
      <PrivateAssets>all</PrivateAssets>
      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
    </PackageReference>
-   <PackageReference Include="StreamJsonRpc" Version="2.8.28" />
+   <PackageReference Include="StreamJsonRpc" Version="2.11.35" />
  </ItemGroup>
 
   <ItemGroup>

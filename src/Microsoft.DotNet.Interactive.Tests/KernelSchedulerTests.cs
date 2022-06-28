@@ -138,9 +138,9 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var run = () => scheduler.RunAsync(4, Task.FromResult, cancellationToken: cts.Token);
 
-            run.Invoking(async r => await r())
-               .Should()
-               .Throw<OperationCanceledException>();
+            await run.Invoking(async r => await r())
+                .Should()
+                .ThrowAsync<OperationCanceledException>();
 
             await Task.Delay(1000);
             
@@ -245,7 +245,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             work.Invoking(async w => await w)
                 .Should()
-                .Throw<OperationCanceledException>();
+                .ThrowAsync<OperationCanceledException>();
         }
 
         [Fact]
@@ -267,7 +267,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             work.Invoking(async w => await w)
                 .Should()
-                .Throw<OperationCanceledException>();
+                .ThrowAsync<OperationCanceledException>();
         }
 
         [Fact]
@@ -330,7 +330,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             work.Invoking(async w => await w)
                 .Should()
-                .Throw<DataMisalignedException>();
+                .ThrowAsync<DataMisalignedException>();
         }
 
         [Fact]
@@ -430,7 +430,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var xs = await Task.WhenAll(tasks);
 
-            xs.Should().BeEquivalentTo(0, 1, 2, 3, 4);
+            xs.Should().BeEquivalentTo(new []{0, 1, 2, 3, 4});
         }
 
         [Fact]
