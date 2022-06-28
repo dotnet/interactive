@@ -138,7 +138,7 @@ type KernelTests() =
             ]
             |> Array.find (fun x -> x.DisplayText = "average")
 
-        completionItem.Documentation.Should().Equals("Returns the average of the elements in the list.")
+        completionItem.Documentation.Should().Be("Returns the average of the elements in the list.", null)
         
     [<Fact>]
     member _.``Completion items that need double backticks have the right display in tools but insert with the backticks``() =
