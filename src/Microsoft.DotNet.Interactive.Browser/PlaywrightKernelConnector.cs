@@ -53,15 +53,18 @@ public class PlaywrightKernelConnector : IKernelConnector
 
     private static async Task<BrowserLaunch> LaunchBrowserAsync(IPlaywright playwright)
     {
-        return await TryLaunch("msedge") ??
-               await TryLaunch("chrome") ??
-               await TryLaunch("chromium", true) ??
-               throw new Exception("Unable to launch browser.");
+        return
+            await TryLaunch("chrome") ??
+            await TryLaunch("msedge") ??
+            await TryLaunch("chromium", true) ??
+            throw new Exception("Unable to launch browser.");
 
         async Task<BrowserLaunch?> TryLaunch(string channel, bool acquire = false)
         {
             if (acquire)
             {
+                Console.WriteLine($"Attempting to install headless browser: {channel}");
+
                 var stdOut = new StringBuilder();
                 var stdErr = new StringBuilder();
 
@@ -75,6 +78,7 @@ public class PlaywrightKernelConnector : IKernelConnector
                 if (exitCode != 0)
                 {
                     var message = $"Playwright browser acquisition failed with exit code {exitCode}.\n{stdOut}\n{stdErr}";
+                    Console.WriteLine(message);
                     throw new Exception(message);
                 }
             }
@@ -87,11 +91,13 @@ public class PlaywrightKernelConnector : IKernelConnector
 
             try
             {
+                Console.WriteLine($"Launching headless browser {channel}");
                 var browser = await playwright.Chromium.LaunchAsync(options);
                 return new(browser, options);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine($"Exception while launching headless browser {channel}:\n{ex}");
             }
 
             return null;
