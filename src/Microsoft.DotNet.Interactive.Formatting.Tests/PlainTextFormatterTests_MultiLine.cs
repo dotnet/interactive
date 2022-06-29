@@ -6,18 +6,23 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
-using FluentAssertions;
 using System.Linq;
+using System.Numerics;
+using FluentAssertions;
 using FluentAssertions.Extensions;
 using Xunit;
-using System.Numerics;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
-public class PlainTextFormatterTests : FormatterTestBase
+public class PlainTextFormatterTests_MultiLine : FormatterTestBase
 {
     public class Objects : FormatterTestBase
     {
+        public Objects()
+        {
+            PlainTextFormatter.UseMultiLineFormatting = true;
+        }
+
         [Fact]
         public void Null_references_are_indicated()
         {
@@ -47,7 +52,29 @@ public class PlainTextFormatterTests : FormatterTestBase
             formatter.Format(new Dummy.DummyClassWithManyProperties(), writer);
 
             var s = writer.ToString();
-            s.Should().Be("{ Dummy.DummyClassWithManyProperties: X1: 1, X2: 2, X3: 3, X4: 4, X5: 5, X6: 6, X7: 7, X8: 8, X9: 9, X10: 10, X11: 11, X12: 12, X13: 13, X14: 14, X15: 15, X16: 16, X17: 17, X18: 18, X19: 19, X20: 20, .. }");
+            s.Should().Be(
+@"Dummy.DummyClassWithManyProperties
+    X1: 1
+    X2: 2
+    X3: 3
+    X4: 4
+    X5: 5
+    X6: 6
+    X7: 7
+    X8: 8
+    X9: 9
+    X10: 10
+    X11: 11
+    X12: 12
+    X13: 13
+    X14: 14
+    X15: 15
+    X16: 16
+    X17: 17
+    X18: 18
+    X19: 19
+    X20: 20
+    ...");
         }
 
         [Fact]
@@ -176,7 +203,7 @@ public class PlainTextFormatterTests : FormatterTestBase
 
             var formatter = PlainTextFormatter.GetPreferredFormatterFor<ExpandoObject>();
 
-            var expandoString = ((object) expando).ToDisplayString(formatter);
+            var expandoString = ((object)expando).ToDisplayString(formatter);
 
             expandoString.Should().Be("{ Name: socks, Parts: <null> }");
         }
@@ -308,7 +335,7 @@ public class PlainTextFormatterTests : FormatterTestBase
 
             formatted.Should().Be("( 123, Hello, [ 1, 2, 3 ] )");
         }
-            
+
         [Fact]
         public void ValueTuple_values_are_formatted()
         {
@@ -366,6 +393,11 @@ public class PlainTextFormatterTests : FormatterTestBase
 
     public class Sequences : FormatterTestBase
     {
+        public Sequences()
+        {
+            PlainTextFormatter.UseMultiLineFormatting = true;
+        }
+
         [Fact]
         public void Formatter_truncates_expansion_of_ICollection()
         {
@@ -577,7 +609,7 @@ public class PlainTextFormatterTests : FormatterTestBase
         public void Strings_with_escaped_sequences_are_preserved()
         {
             var formatter = PlainTextFormatter.GetPreferredFormatterFor(typeof(string));
-                
+
             var value = "hola! \n \t \" \" ' ' the joy of escapes! and    white  space  ";
 
             var writer = new StringWriter();

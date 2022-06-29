@@ -13,285 +13,303 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.CSharp;
 
-namespace Microsoft.DotNet.Interactive.Formatting
-{
-    public static class PlainTextFormatter
-    {
-        static PlainTextFormatter()
-        {
-            Formatter.Clearing += Initialize;
+namespace Microsoft.DotNet.Interactive.Formatting;
 
-            void Initialize() => MaxProperties = DefaultMaxProperties;
+public static class PlainTextFormatter
+{
+    static PlainTextFormatter()
+    {
+        Formatter.Clearing += Initialize;
+
+        void Initialize() => MaxProperties = DefaultMaxProperties;
+    }
+
+    public static ITypeFormatter GetPreferredFormatterFor(Type type) =>
+        Formatter.GetPreferredFormatterFor(type, MimeType);
+
+    public static ITypeFormatter GetPreferredFormatterFor<T>() =>
+        GetPreferredFormatterFor(typeof(T));
+
+    public const string MimeType = "text/plain";
+
+    /// <summary>
+    ///   Indicates the maximum number of properties to show in the default plaintext display of arbitrary objects.
+    ///   If set to zero no properties are shown.
+    /// </summary>
+    public static int MaxProperties { get; set; } = DefaultMaxProperties;
+
+    internal const int DefaultMaxProperties = 20;
+
+    internal static ITypeFormatter GetDefaultFormatterForAnyObject(Type type, bool includeInternals = false) =>
+        FormattersForAnyObject.GetOrCreateFormatterForType(type, includeInternals);
+
+    internal static FormatDelegate<T> CreateFormatDelegate<T>(MemberInfo[] forMembers)
+    {
+        var accessors = forMembers.GetMemberAccessors<T>().ToArray();
+
+        if (Formatter<T>.TypeIsValueTuple || 
+            Formatter<T>.TypeIsTuple)
+        {
+            return FormatAnyTuple;
         }
 
-        public static ITypeFormatter GetPreferredFormatterFor(Type type) =>
-            Formatter.GetPreferredFormatterFor(type, MimeType);
-
-        public static ITypeFormatter GetPreferredFormatterFor<T>() =>
-            GetPreferredFormatterFor(typeof(T));
-
-        public const string MimeType = "text/plain";
-
-        /// <summary>
-        ///   Indicates the maximum number of properties to show in the default plaintext display of arbitrary objects.
-        ///   If set to zero no properties are shown.
-        /// </summary>
-        public static int MaxProperties { get; set; } = DefaultMaxProperties;
-
-        internal const int DefaultMaxProperties = 20;
-
-        internal static ITypeFormatter GetDefaultFormatterForAnyObject(Type type, bool includeInternals = false) =>
-            FormattersForAnyObject.GetOrCreateFormatterForType(type, includeInternals);
-
-        internal static FormatDelegate<T> CreateFormatDelegate<T>(MemberInfo[] forMembers)
+        if (Formatter<T>.TypeIsException)
         {
-            var accessors = forMembers.GetMemberAccessors<T>().ToArray();
-
-            if (Formatter<T>.TypeIsValueTuple || 
-                Formatter<T>.TypeIsTuple)
+            // filter out internal values from the Data dictionary, since they're intended to be surfaced in other ways
+            var dataAccessor = accessors.SingleOrDefault(a => a.Member.Name == "Data");
+            if (dataAccessor is not null)
             {
-                return FormatAnyTuple;
+                var originalGetData = dataAccessor.Getter;
+                dataAccessor.Getter = e => ((IDictionary) originalGetData(e))
+                                           .Cast<DictionaryEntry>()
+                                           .ToDictionary(de => de.Key, de => de.Value);
             }
 
-            if (Formatter<T>.TypeIsException)
+            // replace the default stack trace with the full stack trace when present
+            var stackTraceAccessor = accessors.SingleOrDefault(a => a.Member.Name == "StackTrace");
+            if (stackTraceAccessor is not null)
             {
-                // filter out internal values from the Data dictionary, since they're intended to be surfaced in other ways
-                var dataAccessor = accessors.SingleOrDefault(a => a.Member.Name == "Data");
-                if (dataAccessor is not null)
+                stackTraceAccessor.Getter = e =>
                 {
-                    var originalGetData = dataAccessor.Getter;
-                    dataAccessor.Getter = e => ((IDictionary) originalGetData(e))
-                                               .Cast<DictionaryEntry>()
-                                               .ToDictionary(de => de.Key, de => de.Value);
-                }
+                    var ex = e as Exception;
 
-                // replace the default stack trace with the full stack trace when present
-                var stackTraceAccessor = accessors.SingleOrDefault(a => a.Member.Name == "StackTrace");
-                if (stackTraceAccessor is not null)
-                {
-                    stackTraceAccessor.Getter = e =>
-                    {
-                        var ex = e as Exception;
-
-                        return ex.StackTrace;
-                    };
-                }
-            }
-
-            if (typeof(T).IsEnum)
-            {
-                return (enumValue, context) =>
-                {
-                    context.Writer.Write(enumValue.ToString());
-                    return true;
+                    return ex.StackTrace;
                 };
             }
-
-            return FormatObject;
-
-            bool FormatObject(T target, FormatContext context)
-            {
-                var writer = context.Writer;
-
-                var reducedAccessors = accessors.Take(Math.Max(0, MaxProperties)).ToArray();
-
-                // If we haven't got any members to show, just resort to ToString()
-                if (reducedAccessors.Length == 0)
-                {
-                    // Write using `ToString()`
-                    writer.Write(target);
-                    return true;
-                }
-
-                Formatter.SingleLinePlainTextFormatter.WriteStartObject(writer);
-
-                if (!Formatter<T>.TypeIsAnonymous)
-                {
-                    // Write using `ToString()`
-                    writer.Write(target);
-                    Formatter.SingleLinePlainTextFormatter.WriteEndHeader(writer);
-                }
-
-                for (var i = 0; i < reducedAccessors.Length; i++)
-                {
-                    var accessor = reducedAccessors[i];
-
-                    object value = accessor.GetValueOrException(target);
-
-                    Formatter.SingleLinePlainTextFormatter.WriteStartProperty(writer);
-                    writer.Write(accessor.Member.Name);
-                    Formatter.SingleLinePlainTextFormatter.WriteNameValueDelimiter(writer);
-                    value.FormatTo(context);
-                    Formatter.SingleLinePlainTextFormatter.WriteEndProperty(writer);
-
-                    if (i < accessors.Length - 1)
-                    {
-                        Formatter.SingleLinePlainTextFormatter.WritePropertyDelimiter(writer);
-                    }
-                }
-                if (reducedAccessors.Length < accessors.Length)
-                {
-                    Formatter.SingleLinePlainTextFormatter.WriteElidedPropertiesMarker(writer);
-                }
-
-                Formatter.SingleLinePlainTextFormatter.WriteEndObject(writer);
-                return true;
-            }
-
-            bool FormatAnyTuple(T target, FormatContext context)
-            {
-                var writer = context.Writer;
-
-                Formatter.SingleLinePlainTextFormatter.WriteStartTuple(writer);
-
-                for (var i = 0; i < accessors.Length; i++)
-                {
-                    var value = accessors[i].GetValueOrException(target);
-
-                    value.FormatTo(context);
-
-                    Formatter.SingleLinePlainTextFormatter.WriteEndProperty(writer);
-
-                    if (i < accessors.Length - 1)
-                    {
-                        Formatter.SingleLinePlainTextFormatter.WritePropertyDelimiter(writer);
-                    }
-                }
-
-                Formatter.SingleLinePlainTextFormatter.WriteEndTuple(writer);
-                return true;
-            }
         }
 
-        internal static FormatterMapByType FormattersForAnyObject =
-            new(typeof(PlainTextFormatter<>), nameof(PlainTextFormatter<object>.CreateForAnyObject));
-
-        internal static FormatterMapByType FormattersForAnyEnumerable =
-            new(typeof(PlainTextFormatter<>), nameof(PlainTextFormatter<object>.CreateForAnyEnumerable));
-
-        internal static ITypeFormatter[] DefaultFormatters =
+        if (typeof(T).IsEnum)
         {
-            new PlainTextFormatter<ExpandoObject>((expando, context) =>
+            return (enumValue, context) =>
             {
-                var singleLineFormatter = new SingleLinePlainTextFormatter();
-                singleLineFormatter.WriteStartObject(context.Writer);
-                var pairs = expando.ToArray();
-                var length = pairs.Length;
-                for (var i = 0; i < length; i++)
+                context.Writer.Write(enumValue.ToString());
+                return true;
+            };
+        }
+
+        return FormatObject;
+
+        bool FormatObject(T target, FormatContext context)
+        {
+            var writer = context.Writer;
+
+            var reducedAccessors = accessors.Take(Math.Max(0, MaxProperties)).ToArray();
+
+            // If we haven't got any members to show, just resort to ToString()
+            if (reducedAccessors.Length == 0)
+            {
+                // Write using `ToString()`
+                writer.Write(target);
+                return true;
+            }
+
+            Default.WriteStartObject(writer);
+
+            if (!Formatter<T>.TypeIsAnonymous)
+            {
+                // Write using `ToString()`
+                writer.Write(target);
+                Default.WriteEndHeader(writer);
+            }
+
+            for (var i = 0; i < reducedAccessors.Length; i++)
+            {
+                var accessor = reducedAccessors[i];
+
+                object value = accessor.GetValueOrException(target);
+
+                Default.WriteStartProperty(writer);
+                writer.Write(accessor.Member.Name);
+                Default.WriteNameValueDelimiter(writer);
+                value.FormatTo(context);
+                Default.WriteEndProperty(writer);
+
+                if (i < accessors.Length - 1)
                 {
-                    var pair = pairs[i];
-                    context.Writer.Write(pair.Key);
-                    singleLineFormatter.WriteNameValueDelimiter(context.Writer);
-                    pair.Value.FormatTo(context);
-
-                    if (i < length - 1)
-                    {
-                        singleLineFormatter.WritePropertyDelimiter(context.Writer);
-                    }
+                    Default.WritePropertyDelimiter(writer);
                 }
-
-                singleLineFormatter.WriteEndObject(context.Writer);
-                return true;
-            }),
-
-            new PlainTextFormatter<IHtmlContent>((view, context) =>
+            }
+            if (reducedAccessors.Length < accessors.Length)
             {
-                view.WriteTo(context.Writer, HtmlEncoder.Default);
-                return true;
-            }),
+                Default.WriteElidedPropertiesMarker(writer);
+            }
 
-            new PlainTextFormatter<KeyValuePair<string, object>>((pair, context) =>
+            Default.WriteEndObject(writer);
+            return true;
+        }
+
+        bool FormatAnyTuple(T target, FormatContext context)
+        {
+            var writer = context.Writer;
+
+            Default.WriteStartTuple(writer);
+
+            for (var i = 0; i < accessors.Length; i++)
             {
-                var singleLineFormatter = new SingleLinePlainTextFormatter();
+                var value = accessors[i].GetValueOrException(target);
+
+                value.FormatTo(context);
+
+                Default.WriteEndProperty(writer);
+
+                if (i < accessors.Length - 1)
+                {
+                    Default.WritePropertyDelimiter(writer);
+                }
+            }
+
+            Default.WriteEndTuple(writer);
+            return true;
+        }
+    }
+
+    internal static FormatterMapByType FormattersForAnyObject =
+        new(typeof(PlainTextFormatter<>), nameof(PlainTextFormatter<object>.CreateForAnyObject));
+
+    internal static FormatterMapByType FormattersForAnyEnumerable =
+        new(typeof(PlainTextFormatter<>), nameof(PlainTextFormatter<object>.CreateForAnyEnumerable));
+
+    internal static ITypeFormatter[] DefaultFormatters =
+    {
+        new PlainTextFormatter<ExpandoObject>((expando, context) =>
+        {
+            var singleLineFormatter = new SingleLinePlainTextFormatter();
+            singleLineFormatter.WriteStartObject(context.Writer);
+            var pairs = expando.ToArray();
+            var length = pairs.Length;
+            for (var i = 0; i < length; i++)
+            {
+                var pair = pairs[i];
                 context.Writer.Write(pair.Key);
                 singleLineFormatter.WriteNameValueDelimiter(context.Writer);
                 pair.Value.FormatTo(context);
-                return true;
-            }),
 
-            new PlainTextFormatter<ReadOnlyMemory<char>>((memory, context) => 
-            {
-                context.Writer.Write(memory.Span.ToString()); 
-                return true;
-            }),
-
-            new PlainTextFormatter<Type>((type, context) =>
-            {
-                if (type.IsAnonymous())
+                if (i < length - 1)
                 {
-                    context.Writer.Write("(anonymous)");
-                    return true;
+                    singleLineFormatter.WritePropertyDelimiter(context.Writer);
                 }
+            }
 
-                type.WriteCSharpDeclarationTo(context.Writer);
-                return true;
-            }),
+            singleLineFormatter.WriteEndObject(context.Writer);
+            return true;
+        }),
 
-            new PlainTextFormatter<DateTime>((value, context) =>
+        new PlainTextFormatter<IHtmlContent>((view, context) =>
+        {
+            view.WriteTo(context.Writer, HtmlEncoder.Default);
+            return true;
+        }),
+
+        new PlainTextFormatter<KeyValuePair<string, object>>((pair, context) =>
+        {
+            var singleLineFormatter = new SingleLinePlainTextFormatter();
+            context.Writer.Write(pair.Key);
+            singleLineFormatter.WriteNameValueDelimiter(context.Writer);
+            pair.Value.FormatTo(context);
+            return true;
+        }),
+
+        new PlainTextFormatter<ReadOnlyMemory<char>>((memory, context) => 
+        {
+            context.Writer.Write(memory.Span.ToString()); 
+            return true;
+        }),
+
+        new PlainTextFormatter<Type>((type, context) =>
+        {
+            if (type.IsAnonymous())
             {
-                context.Writer.Write(value.ToString("u"));
+                context.Writer.Write("(anonymous)");
                 return true;
-            }),
+            }
 
-            new PlainTextFormatter<DateTimeOffset>((value, context) =>
-            {
-                context.Writer.Write(value.ToString("u"));
-                return true;
-            }),
+            type.WriteCSharpDeclarationTo(context.Writer);
+            return true;
+        }),
 
-            new AnonymousTypeFormatter<object>(type: typeof(ReadOnlyMemory<>),
-                                               mimeType: PlainTextFormatter.MimeType,
-                                               format: ( obj, context) =>
-                                               {
-                                                   var actualType = obj.GetType();
-                                                   var toArray = Formatter.FormatReadOnlyMemoryMethod.MakeGenericMethod
-                                                       (actualType.GetGenericArguments());
+        new PlainTextFormatter<DateTime>((value, context) =>
+        {
+            context.Writer.Write(value.ToString("u"));
+            return true;
+        }),
 
-                                                   var array = toArray.Invoke(null, new[] { obj });
+        new PlainTextFormatter<DateTimeOffset>((value, context) =>
+        {
+            context.Writer.Write(value.ToString("u"));
+            return true;
+        }),
 
-                                                   array.FormatTo(context, PlainTextFormatter.MimeType);
+        new AnonymousTypeFormatter<object>(type: typeof(ReadOnlyMemory<>),
+                                           mimeType: MimeType,
+                                           format: ( obj, context) =>
+                                           {
+                                               var actualType = obj.GetType();
+                                               var toArray = Formatter.FormatReadOnlyMemoryMethod.MakeGenericMethod
+                                                   (actualType.GetGenericArguments());
+
+                                               var array = toArray.Invoke(null, new[] { obj });
+
+                                               array.FormatTo(context, PlainTextFormatter.MimeType);
                         
-                                                   return true;
-                                               }),
+                                               return true;
+                                           }),
 
-            new PlainTextFormatter<JsonElement>((obj, context) =>
+        new PlainTextFormatter<JsonElement>((obj, context) =>
+        {
+            context.Writer.Write(obj);
+            return true;
+        }),
+
+        // Fallback for IEnumerable
+        new PlainTextFormatter<IEnumerable>((obj, context) =>
+        {
+            if (obj is null)
             {
-                context.Writer.Write(obj);
+                context.Writer.Write(Formatter.NullString);
                 return true;
-            }),
+            }
+            var type = obj.GetType();
+            var formatter = FormattersForAnyEnumerable.GetOrCreateFormatterForType(type, false);
+            return formatter.Format(obj, context);
+        }),
 
-            // Fallback for IEnumerable
-            new PlainTextFormatter<IEnumerable>((obj, context) =>
-            {
-                if (obj is null)
-                {
-                    context.Writer.Write(Formatter.NullString);
-                    return true;
-                }
-                var type = obj.GetType();
-                var formatter = PlainTextFormatter.FormattersForAnyEnumerable.GetOrCreateFormatterForType(type, false);
-                return formatter.Format(obj, context);
-            }),
+        // BigInteger should be displayed as plain text
+        new PlainTextFormatter<BigInteger>((value, context) =>
+        {
+            value.FormatTo(context, PlainTextFormatter.MimeType);
+            return true;
+        }),
 
-            // BigInteger should be displayed as plain text
-            new PlainTextFormatter<BigInteger>((value, context) =>
+        // Fallback for any object
+        new PlainTextFormatter<object>((obj, context) =>
+        {
+            if (obj is null)
             {
-                value.FormatTo(context, PlainTextFormatter.MimeType);
+                context.Writer.Write(Formatter.NullString);
                 return true;
-            }),
+            }
+            var type = obj.GetType();
+            var formatter = GetDefaultFormatterForAnyObject(type);
+            return formatter.Format(obj, context);
+        })
+    };
 
-            // Fallback for any object
-            new PlainTextFormatter<object>((obj, context) =>
+    internal static IPlainTextFormatter Default = new SingleLinePlainTextFormatter();
+
+    public static bool UseMultiLineFormatting
+    {
+        // FIX: (UseMultiLineFormatting) delete and remove single line mode?
+        get => Default is MultiLinePlainTextFormatter;
+        set
+        {
+            if (value)
             {
-                if (obj is null)
-                {
-                    context.Writer.Write(Formatter.NullString);
-                    return true;
-                }
-                var type = obj.GetType();
-                var formatter = PlainTextFormatter.GetDefaultFormatterForAnyObject(type);
-                return formatter.Format(obj, context);
-            })
-        };
+                Default = new MultiLinePlainTextFormatter();
+            }
+            else
+            {
+                Default = new SingleLinePlainTextFormatter();
+            }
+        }
     }
 }

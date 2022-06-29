@@ -65,6 +65,24 @@ public sealed partial class FormatterTests
             formattedAfter.Should().Be(formattedBefore);
         }
 
+        [Fact]
+        public void Convention_based_formatters_can_invoke_other_formatters_by_passing_objects_to_supplied_TextWriter()
+        {
+            
+
+            // TODO (Convention_based_formatters_can_invoke_other_formatters_by_passing_objects_to_supplied_TextWriter) write test
+            throw new NotImplementedException();
+        }
+
+        [Fact]
+        public void Convention_based_formatters_can_be_registered_for_non_owned_types()
+        {
+            
+
+            // TODO (Convention_based_formatters_can_be_registered_for_non_owned_types) write test
+            throw new NotImplementedException();
+        }
+
         [TypeFormatterSource(typeof(CustomFormatterSource))]
         private class TypeWithCustomFormatter
         {
