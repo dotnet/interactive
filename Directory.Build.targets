@@ -8,7 +8,7 @@
   Not doing this in each project because duplicate PackageReferences causes an Arcade build failure.
   -->
   <ItemGroup Condition="($(MSBuildProjectName.EndsWith('.Tests')) OR $(MSBuildProjectName.EndsWith('.IntegrationTests'))) AND '$(DisableArcade)' == '1'">
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3" />
   </ItemGroup>
@@ -25,8 +25,8 @@
     FSharp.Compiler.Service: https://dev.azure.com/dnceng/internal/_release?view=mine&_a=releases&definitionId=98
 
     -->
-    <PackageReference Update="FSharp.Core" Version="6.0.1" />
-    <PackageReference Update="FSharp.Compiler.Service" Version="41.0.1" />
+    <PackageReference Update="FSharp.Core" Version="6.0.4" />
+    <PackageReference Update="FSharp.Compiler.Service" Version="41.0.4" />
   </ItemGroup>
 
 </Project>

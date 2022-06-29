@@ -1320,5 +1320,21 @@ System.Threading.Thread.Sleep(1000);
             succeeded.Should().BeTrue();
             x.Should().Be("hello");
         }
+
+        [Fact]
+        public async Task FSharp_can_set_an_array_value_with_SetValueAsync()
+        {
+            var kernel = CreateKernel(Language.FSharp);
+            var languageKernel = kernel.ChildKernels.OfType<ISupportSetClrValue>().Single();
+
+            await languageKernel.SetValueAsync("x", new int[] { 42 });
+
+            var succeeded = ((ISupportGetValue)languageKernel).TryGetValue("x", out int[] x);
+
+            using var _ = new AssertionScope();
+
+            succeeded.Should().BeTrue();
+            x.Should().BeEquivalentTo(new int[] { 42 });
+        }
     }
 }
