@@ -44,8 +44,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         internal static TextWriter CreateWriter() => new StringWriter(CultureInfo.InvariantCulture);
 
-        internal static IPlainTextFormatter SingleLinePlainTextFormatter = new SingleLinePlainTextFormatter();
-
         /// <summary>
         /// Gets or sets the limit to the number of items that will be written out in detail from an IEnumerable sequence.
         /// </summary>
@@ -362,7 +360,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 return;
             }
 
-            SingleLinePlainTextFormatter.WriteStartSequence(writer);
+            PlainTextFormatter.Default.WriteStartSequence(writer);
 
             listExpansionLimit ??= Formatter<T>.ListExpansionLimit;
 
@@ -376,10 +374,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     // write out another item in the list
                     if (i > 0)
                     {
-                        SingleLinePlainTextFormatter.WriteSequenceDelimiter(writer);
+                        PlainTextFormatter.Default.WriteSequenceDelimiter(writer);
                     }
 
-                    SingleLinePlainTextFormatter.WriteStartSequenceItem(writer);
+                    PlainTextFormatter.Default.WriteStartSequenceItem(writer);
 
                     item.FormatTo(context);
                 }
@@ -397,7 +395,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 writer.Write("more)");
             }
 
-            SingleLinePlainTextFormatter.WriteEndSequence(writer);
+            PlainTextFormatter.Default.WriteEndSequence(writer);
         }
 
         /// <summary>

@@ -3,23 +3,22 @@
 
 using System.IO;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting;
+
+internal interface IPlainTextFormatter
 {
-    internal interface IPlainTextFormatter
-    {
-        void WriteStartProperty(TextWriter writer);
-        void WriteEndProperty(TextWriter writer);
-        void WriteStartObject(TextWriter writer);
-        void WriteEndObject(TextWriter writer);
-        void WriteStartSequence(TextWriter writer);
-        void WriteEndSequence(TextWriter writer);
-        void WriteStartTuple(TextWriter writer);
-        void WriteEndTuple(TextWriter writer);
-        void WriteNameValueDelimiter(TextWriter writer);
-        void WritePropertyDelimiter(TextWriter writer);
-        void WriteElidedPropertiesMarker(TextWriter writer);
-        void WriteSequenceDelimiter(TextWriter writer);
-        void WriteEndHeader(TextWriter writer);
-        void WriteStartSequenceItem(TextWriter writer);
-    }
+    void WriteStartProperty(TextWriter writer);
+    void WriteEndProperty(TextWriter writer);
+    void WriteStartObject(TextWriter writer);
+    void WriteEndObject(TextWriter writer);
+    void WriteStartSequence(TextWriter writer);
+    void WriteEndSequence(TextWriter writer);
+    void WriteStartTuple(TextWriter writer);
+    void WriteEndTuple(TextWriter writer);
+    void WriteNameValueDelimiter(TextWriter writer);
+    void WritePropertyDelimiter(TextWriter writer);
+    void WriteElidedPropertiesMarker(TextWriter writer);
+    void WriteSequenceDelimiter(TextWriter writer);
+    void WriteEndHeader(TextWriter writer);
+    void WriteStartSequenceItem(TextWriter writer);
 }
