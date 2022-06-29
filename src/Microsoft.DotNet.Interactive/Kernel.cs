@@ -853,6 +853,8 @@ namespace Microsoft.DotNet.Interactive
 
         public virtual ChooseKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= new(this);
 
+        internal virtual bool AcceptsUnknownDirectives => false;
+
         public bool SupportsCommand(KernelCommand command)
         {
             if (command.Handler is not null)

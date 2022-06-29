@@ -163,6 +163,39 @@ i");
             await kernel.SubmitCodeAsync("#!x\n123");
 
             events.Should().NotContain(e => e is ReturnValueProduced);
+            events.Last().Should().BeOfType<CommandFailed>();
+        }
+
+        [Theory] // https://github.com/dotnet/interactive/issues/2085
+        [InlineData("[|#!unknown|]\n123")]
+        [InlineData("// first line\n[|#!unknown|]\n123")]
+        public async Task Unrecognized_directives_result_in_errors(string markedUpCode)
+        {
+            MarkupTestFile.GetPositionAndSpan(markedUpCode, out var code, out var pos, out var span);
+            MarkupTestFile.GetLine(markedUpCode, span.Value.Start, out var line);
+            var startPos = new LinePosition(line, span.Value.Start);
+            var endPos = new LinePosition(line, span.Value.End + 1);
+
+            var expectedPos = new LinePositionSpan(startPos, endPos);
+
+            using var kernel = new CSharpKernel();
+
+            var events = kernel.KernelEvents.ToSubscribedList();
+
+            await kernel.SubmitCodeAsync(code);
+
+            events.Should().NotContain(e => e is ReturnValueProduced);
+            events.Should()
+                  .ContainSingle<DiagnosticsProduced>()
+                  .Which
+                  .Diagnostics
+                  .Should()
+                  .ContainSingle()
+                  .Which
+                  .LinePositionSpan
+                  .Should()
+                  .BeEquivalentTo(expectedPos);
+            events.Last().Should().BeOfType<CommandFailed>();
         }
 
         [Fact]
@@ -211,31 +244,6 @@ i");
                 .Select(e => e.Value)
                 .Should()
                 .BeEquivalentSequenceTo("hello!", "goodbye!");
-        }
-
-        [Fact]
-        public async Task When_an_unrecognized_directive_is_encountered_it_is_forwarded_to_the_kernel_as_submitCode()
-        {
-            SubmitCode submitCommand = null;
-            using var kernel = new CompositeKernel
-            {
-                new FakeKernel("csharp")
-                {
-                    Handle = (command, context) =>
-                    {
-                        submitCommand = command as SubmitCode;
-                        return Task.CompletedTask;
-                    }
-                }
-            };
-
-            using var events = kernel.KernelEvents.ToSubscribedList();
-
-            await kernel.SubmitCodeAsync("#!undefinedDirective");
-            using var _ = new AssertionScope();
-            
-            submitCommand.Should().NotBeNull();
-            submitCommand.Code.Should().Be("#!undefinedDirective");
         }
 
         [Theory]

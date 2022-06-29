@@ -261,16 +261,24 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             }
         }
 
+        public static void GetLine(string code, int position, out int line)
+        {
+            line = 0;
+            for (var i = 0; i < position; i++)
+            {
+                switch (code[i])
+                {
+                    case '\n':
+                        line++;
+                        break;
+                }
+            }
+        }
+
         public static void GetPositionAndSpan(string input, out string output, out int? cursorPosition, out TextSpan? textSpan)
         {
             GetPositionAndSpans(input, out output, out cursorPosition, out ImmutableArray<TextSpan> spans);
-            textSpan = spans.Length == 0 ? null : (TextSpan?)spans.Single();
-        }
-
-        public static void GetPositionAndSpan(string input, out string output, out int? cursorPosition, out TextSpan textSpan)
-        {
-            GetPositionAndSpans(input, out output, out cursorPosition, out var spans);
-            textSpan = spans.Single();
+            textSpan = spans.Length == 0 ? null : spans.SingleOrDefault();
         }
 
         public static void GetSpans(string input, out string output, out ImmutableArray<TextSpan> spans)

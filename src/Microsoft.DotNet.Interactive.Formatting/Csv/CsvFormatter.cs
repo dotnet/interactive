@@ -44,16 +44,31 @@ namespace Microsoft.DotNet.Interactive.Formatting.Csv
 
         internal static string EscapeCsvValue(this string value)
         {
-            value = value
-                .Replace("\r", "\\r")
-                .Replace("\n", "\\n");
+            var input = value.AsMemory();
 
-            if (value.Contains(","))
+            value = value.Replace("\"", "\"\"");
+
+            if (ShouldBeWrappedInQuotes())
             {
-                return $"\"{value}\"";
+                value = $"\"{value}\"";
             }
 
             return value;
+
+            bool ShouldBeWrappedInQuotes()
+            {
+                for (var i = 0; i < input.Length; i++)
+                {
+                    var v = value[i];
+
+                    if (char.IsWhiteSpace(v))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
         }
     }
 

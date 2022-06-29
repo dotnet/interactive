@@ -326,7 +326,7 @@ x")]
             var remoteKernel = new FakeKernel("remote-javascript");
             remoteCompositeKernel.Add(remoteKernel);
 
-            ConnectHost.ConnectInProcessHost2(
+            ConnectHost.ConnectInProcessHost(
                 localCompositeKernel,
                 remoteCompositeKernel);
 

@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             {
                 var obj = new
                 {
-                    Property1 = "no comma here",
+                    Property1 = "no-comma-here",
                     Property2 = "this one, has a comma",
                     Property3 = 123,
                 };
@@ -53,16 +53,16 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 formatter.Format(obj, _writer);
 
-                _writer.ToString().SplitIntoLines()[1].Should().Be("no comma here,\"this one, has a comma\",123");
+                _writer.ToString().SplitIntoLines()[1].Should().Be("no-comma-here,\"this one, has a comma\",123");
             }
 
             [Fact]
-            public void Newlines_are_replaced()
+            public void Values_containing_newlines_are_wrapped_in_quotes()
             {
                 var obj = new
                 {
-                    Property1 = "with\r\ntwo\r\nnewlines",
-                    Property2 = "whit one newline at the end\r\n",
+                    Property1 = "with\r\ntwo\nnewlines",
+                    Property2 = "with one newline at the end\n",
                     Property3 = 123,
                 };
 
@@ -70,7 +70,23 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 formatter.Format(obj, _writer);
 
-                _writer.ToString().SplitIntoLines()[1].Should().Be("with\\r\\ntwo\\r\\nnewlines,whit one newline at the end\\r\\n,123");
+                _writer.ToString().Should().Contain("\"with\r\ntwo\nnewlines\",\"with one newline at the end\n\",123");
+            }
+
+            [Fact]
+            public void Double_quotes_are_replaced_with_two_double_quotes()
+            {
+                var obj = new
+                {
+                    Property1 = "this is one column value which includes a \" character",
+                    Property2 = 123,
+                };
+
+                var formatter = CsvFormatter.GetPreferredFormatterFor(obj.GetType());
+
+                formatter.Format(obj, _writer);
+
+                _writer.ToString().Should().Contain("\"this is one column value which includes a \"\" character\",123");
             }
 
             public void Dispose() => _writer?.Dispose();
@@ -101,6 +117,8 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 _formatter.Format(_objects.First(), _writer);
 
                 var lines = _writer.ToString().SplitIntoLines();
+
+                lines[1].Should().Be("2021-11-03T08:56:24.8079327,hi,123,False,https://example.com/");
             }
 
             public void Dispose() => _writer?.Dispose();

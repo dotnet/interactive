@@ -410,7 +410,6 @@ public class CommandLineParserTests : IDisposable
         options.DefaultKernel.Should().Be("csharp");
     }
 
-
     [Fact]
     public async Task stdio_command_does_not_enable_http_api_by_default()
     {
@@ -430,4 +429,9 @@ public class CommandLineParserTests : IDisposable
         options.DefaultKernel.Should().Be("bsharp");
     }
 
+    [Fact]
+    public void Parser_configuration_is_valid()
+    {
+        _parser.Configuration.ThrowIfInvalid();
+    }
 }
