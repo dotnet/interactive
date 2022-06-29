@@ -72,7 +72,7 @@ public abstract class DirectiveNode : LanguageNode
         return line;
     }
 
-    public LinePositionSpan GetLinePositionSpan()
+    internal LinePositionSpan GetLinePositionSpan()
     {
         var line = GetLine();
 
