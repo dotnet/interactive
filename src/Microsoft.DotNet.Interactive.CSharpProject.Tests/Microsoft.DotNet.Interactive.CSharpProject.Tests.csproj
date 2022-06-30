@@ -19,8 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Microsoft.DotNet.Interactive.CSharpProject\%28Recipes%29\AsyncLazy{T}.cs" Link="Utility\AsyncLazy{T}.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.CSharpProject\(Recipes)\JsonSerializationExtensions.cs" />
-    <Compile Include="..\Microsoft.DotNet.Interactive.CSharpProject\Utility\AsyncLazy{T}.cs" Link="Utility\AsyncLazy{T}.cs" />
   </ItemGroup>
 
    <ItemGroup>
