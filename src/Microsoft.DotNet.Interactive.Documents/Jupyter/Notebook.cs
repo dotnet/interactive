@@ -94,6 +94,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
                                                                      cellOutput.GetPropertyFromPath("data").GetRawText(), _serializerOptions)),
 
                                                          "stream" =>
+                                                             // FIX: (Parse) it looks like this is supposed to be a string[]
                                                              new TextElement(
                                                                  GetTextAsSingleString(cellOutput.GetPropertyFromPath("text"))),
 
@@ -162,17 +163,17 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             return string.Join("\n", textLines);
         }
 
-        public static void Write(InteractiveDocument interactive, Stream stream, string newline = "\n")
+        public static void Write(InteractiveDocument document, Stream stream, string newline = "\n")
         {
             using var writer = new StreamWriter(stream, Encoding, 1024, true);
-            Write(interactive, writer, newline);
+            Write(document, writer, newline);
             writer.Flush();
         }
 
-        public static string ToJupyterNotebookContent(this InteractiveDocument interactive, string newline = "\n")
+        public static string ToJupyterNotebookContent(this InteractiveDocument document, string newline = "\n")
         {
             var cells = new List<object>();
-            foreach (var element in interactive.Elements)
+            foreach (var element in document.Elements)
             {
                 switch (element.Language)
                 {
@@ -205,7 +206,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
                             {
                                 output_type = "stream",
                                 name = "stdout", // n.b., could also be `stderr`, but our representation (and VS Code) don't differentiate the two
-                                text = textOutput.Text,
+                                text = textOutput.Text.SplitIntoLines(),
                             },
                             _ => null
                         }).Where(x => x is not null);
@@ -264,9 +265,9 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             return content;
         }
 
-        public static void Write(InteractiveDocument interactive, TextWriter writer, string newline = "\n")
+        public static void Write(InteractiveDocument document, TextWriter writer, string newline = "\n")
         {
-            var content = interactive.ToJupyterNotebookContent(newline);
+            var content = document.ToJupyterNotebookContent(newline);
             writer.Write(content);
         }
 

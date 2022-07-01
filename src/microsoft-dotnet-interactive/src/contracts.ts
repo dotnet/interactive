@@ -149,6 +149,7 @@ export interface InteractiveDocumentOutputElement {
 }
 
 export interface TextElement extends InteractiveDocumentOutputElement {
+    name: string;
     text: string;
 }
 
