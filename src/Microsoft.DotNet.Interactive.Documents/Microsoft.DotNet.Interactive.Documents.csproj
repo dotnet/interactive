@@ -11,6 +11,7 @@
     <PackageDescription Condition="'$(PackageDescription)'==''">Notebooks support for .NET Interactive</PackageDescription>
     <PackageTags Condition="'$(PackageTags)'==''">interactive</PackageTags>
     <RootNamespace>Microsoft.DotNet.Interactive.Documents</RootNamespace>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

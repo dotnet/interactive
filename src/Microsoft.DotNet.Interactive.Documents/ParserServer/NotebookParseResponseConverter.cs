@@ -12,10 +12,10 @@ namespace Microsoft.DotNet.Interactive.Documents.ParserServer
         {
             EnsureStartObject(reader, typeToConvert);
 
-            string id = null;
-            InteractiveDocument document = null;
-            byte[] rawData = null;
-            string errorMessage = null;
+            string? id = null;
+            InteractiveDocument? document = null;
+            byte[]? rawData = null;
+            string? errorMessage = null;
 
             while (reader.Read())
             {

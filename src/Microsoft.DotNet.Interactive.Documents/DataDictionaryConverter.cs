@@ -7,13 +7,13 @@ using System.Text.Json;
 
 namespace Microsoft.DotNet.Interactive.Documents
 {
-    public class DataDictionaryConverter : JsonConverter<IDictionary<string, object>>
+    public class DataDictionaryConverter : JsonConverter<IDictionary<string, object?>>
     {
-        public override IDictionary<string, object> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override IDictionary<string, object?> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             EnsureStartObject(reader, typeToConvert);
 
-            var value = new Dictionary<string, object>();
+            var value = new Dictionary<string, object?>();
 
             while (reader.Read())
             {
@@ -32,9 +32,10 @@ namespace Microsoft.DotNet.Interactive.Documents
             throw new JsonException($"Cannot deserialize {typeToConvert.Name}");
         }
 
-        private static object GetValue(ref Utf8JsonReader reader, JsonSerializerOptions options)
+        private static object? GetValue(ref Utf8JsonReader reader, JsonSerializerOptions options)
         {
-            object itemValue;
+            object? itemValue;
+
             switch (reader.TokenType)
             {
                 case JsonTokenType.String:
@@ -67,7 +68,8 @@ namespace Microsoft.DotNet.Interactive.Documents
 
         private static object ParseArray(ref Utf8JsonReader reader, JsonSerializerOptions options)
         {
-            var values = new List<object>();
+            var values = new List<object?>();
+
             while (reader.Read())
             {
                 if (reader.TokenType == JsonTokenType.EndArray)

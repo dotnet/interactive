@@ -22,11 +22,11 @@ namespace Microsoft.DotNet.Interactive.Documents
             OnWrite(writer, value, options);
         }
 
-        protected virtual void OnWrite(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
+        protected virtual void OnWrite(Utf8JsonWriter writer, T? value, JsonSerializerOptions options)
         {
             var localOptions = new JsonSerializerOptions(options);
             localOptions.Converters.Remove(this);
-            JsonSerializer.Serialize(writer, value, value.GetType(), localOptions);
+            JsonSerializer.Serialize(writer, value, value?.GetType() ?? typeof(T), localOptions);
         }
     }
 }

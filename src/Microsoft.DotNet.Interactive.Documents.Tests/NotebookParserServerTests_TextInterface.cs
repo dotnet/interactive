@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .Should()
                 .BeEquivalentTo(new NotebookParseResponse(
                     "the-id",
-                    document: new InteractiveDocument(new List<InteractiveDocumentElement>()
+                    document: new InteractiveDocument(new List<InteractiveDocumentElement>
                     {
                         new InteractiveDocumentElement("csharp", "var x = 1;")
                     })));
