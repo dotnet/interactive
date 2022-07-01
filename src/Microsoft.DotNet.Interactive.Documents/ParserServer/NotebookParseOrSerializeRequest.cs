@@ -4,31 +4,31 @@
 using System;
 using System.Text.Json;
 
-namespace Microsoft.DotNet.Interactive.Documents.ParserServer
+namespace Microsoft.DotNet.Interactive.Documents.ParserServer;
+
+public abstract class NotebookParseOrSerializeRequest
 {
-    public abstract class NotebookParseOrSerializeRequest
+    public abstract RequestType Type { get; }
+    public string Id { get; }
+    public DocumentSerializationType SerializationType { get; }
+    public string DefaultLanguage { get; }
+
+    protected NotebookParseOrSerializeRequest(string id, DocumentSerializationType serializationType, string defaultLanguage)
     {
-        public abstract RequestType Type { get; }
-        public string Id { get; }
-        public DocumentSerializationType SerializationType { get; }
-        public string DefaultLanguage { get; }
+        Id = id;
+        SerializationType = serializationType;
+        DefaultLanguage = defaultLanguage;
+    }
 
-        protected NotebookParseOrSerializeRequest(string id, DocumentSerializationType serializationType, string defaultLanguage)
+    public static NotebookParseOrSerializeRequest FromJson(string json)
+    {
+        if (json == null)
         {
-            Id = id;
-            SerializationType = serializationType;
-            DefaultLanguage = defaultLanguage;
+            throw new ArgumentNullException(nameof(json));
         }
 
-        public static NotebookParseOrSerializeRequest FromJson(string json)
-        {
-            if (json == null)
-            {
-                throw new ArgumentNullException(nameof(json));
-            }
-
-            var request = JsonSerializer.Deserialize<NotebookParseOrSerializeRequest>(json, ParserServerSerializer.JsonSerializerOptions);
-            return request;
-        }
+        var request = JsonSerializer.Deserialize<NotebookParseOrSerializeRequest>(json, ParserServerSerializer.JsonSerializerOptions);
+            
+        return request ?? throw new InvalidOperationException();
     }
 }
