@@ -4,26 +4,25 @@
 using System;
 using System.Text.Json;
 
-namespace Microsoft.DotNet.Interactive.Documents.ParserServer
+namespace Microsoft.DotNet.Interactive.Documents.ParserServer;
+
+internal class ByteArrayConverter : JsonConverter<byte[]>
 {
-    public class ByteArrayConverter : JsonConverter<byte[]>
+    public override byte[] Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        public override byte[] Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        if (reader.TokenType == JsonTokenType.String)
         {
-            if (reader.TokenType == JsonTokenType.String)
-            {
-                var base64 = reader.GetString();
-                var data = Convert.FromBase64String(base64);
-                return data;
-            }
-
-            throw new JsonException("Not a base64 byte array");
+            var base64 = reader.GetString();
+            var data = Convert.FromBase64String(base64);
+            return data;
         }
 
-        public override void Write(Utf8JsonWriter writer, byte[] value, JsonSerializerOptions options)
-        {
-            var base64 = Convert.ToBase64String(value);
-            JsonSerializer.Serialize(writer, base64, options);
-        }
+        throw new JsonException("Not a base64 byte array");
+    }
+
+    public override void Write(Utf8JsonWriter writer, byte[] value, JsonSerializerOptions options)
+    {
+        var base64 = Convert.ToBase64String(value);
+        JsonSerializer.Serialize(writer, base64, options);
     }
 }
