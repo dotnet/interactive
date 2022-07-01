@@ -150,16 +150,16 @@ namespace Microsoft.DotNet.Interactive.Documents
             return content;
         }
 
-        public static void Write(InteractiveDocument interactiveDocument, Stream stream, string newline = "\n")
+        public static void Write(InteractiveDocument document, Stream stream, string newline = "\n")
         {
             using var writer = new StreamWriter(stream, Encoding, 1024, true);
-            Write(interactiveDocument, writer, newline);
+            Write(document, writer, newline);
             writer.Flush();
         }
 
-        public static void Write(InteractiveDocument interactiveDocument, TextWriter writer, string newline = "\n")
+        public static void Write(InteractiveDocument document, TextWriter writer, string newline = "\n")
         {
-            var content = interactiveDocument.ToCodeSubmissionContent(newline);
+            var content = document.ToCodeSubmissionContent(newline);
             writer.Write(content);
         }
     }

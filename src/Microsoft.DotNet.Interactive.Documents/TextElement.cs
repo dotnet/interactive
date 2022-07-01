@@ -5,11 +5,14 @@ namespace Microsoft.DotNet.Interactive.Documents
 {
     public class TextElement : InteractiveDocumentOutputElement
     {
-        public string Text { get; }
-
-        public TextElement(string text)
+        public TextElement(string text, string name = "stdout")
         {
             Text = text;
+            Name = name;
         }
+
+        public string Name { get; }
+
+        public string Text { get; }
     }
 }

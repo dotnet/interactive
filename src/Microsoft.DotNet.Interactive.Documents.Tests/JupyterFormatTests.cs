@@ -1132,7 +1132,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         {
             var cells = new List<InteractiveDocumentElement>
             {
-                new InteractiveDocumentElement("csharp", "//", new[]
+                new("csharp", "//", new[]
                 {
                     new TextElement("this is text")
                 })
@@ -1153,7 +1153,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     {
                         output_type = "stream",
                         name = "stdout",
-                        text = "this is text"
+                        text = new[] { "this is text" }
                     }
                 )));
         }
