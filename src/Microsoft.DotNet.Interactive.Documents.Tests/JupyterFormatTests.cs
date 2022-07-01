@@ -1101,9 +1101,9 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public void serialized_markdown_cells_have_appropriate_shape()
         {
-            var cells = new List<InteractiveDocumentElement>()
+            var cells = new List<InteractiveDocumentElement>
             {
-                new InteractiveDocumentElement("markdown", "This is `markdown`.\nThis is more `markdown`.")
+                new("markdown", "This is `markdown`.\nThis is more `markdown`.")
             };
             var notebook = new InteractiveDocument(cells);
             var serialized = SerializeJupyter(notebook, "\n");
@@ -1130,7 +1130,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public void text_cell_outputs_are_serialized()
         {
-            var cells = new List<InteractiveDocumentElement>()
+            var cells = new List<InteractiveDocumentElement>
             {
                 new InteractiveDocumentElement("csharp", "//", new[]
                 {

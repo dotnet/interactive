@@ -10,17 +10,15 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
 {
     public class NotebookCellOutputConverter : JsonConverter<InteractiveDocumentOutputElement>
     {
-        public static JsonSerializerOptions InternalOptions { get; set; }
-
         public override InteractiveDocumentOutputElement Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             EnsureStartObject(reader, typeToConvert);
             
-            IDictionary<string, object> data = null;
-            string text = null;
-            string errorName = null;
-            string errorValue = null;
-            IEnumerable<string> stackTrace = null;
+            IDictionary<string, object>? data = null;
+            string? text = null;
+            string? errorName = null;
+            string? errorValue = null;
+            IEnumerable<string>? stackTrace = null;
 
             while (reader.Read())
             {

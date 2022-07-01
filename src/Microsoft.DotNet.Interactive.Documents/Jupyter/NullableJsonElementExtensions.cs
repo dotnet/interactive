@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             return jsonElement?.GetRawText() ?? "{}";
         }
 
-        public static string GetString(this JsonElement? jsonElement)
+        public static string? GetString(this JsonElement? jsonElement)
         {
             return jsonElement?.GetString();
         }

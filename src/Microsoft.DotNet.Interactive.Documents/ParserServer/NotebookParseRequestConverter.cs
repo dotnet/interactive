@@ -13,12 +13,12 @@ namespace Microsoft.DotNet.Interactive.Documents.ParserServer
             EnsureStartObject(reader, typeToConvert);
 
             RequestType? type = null;
-            string id = null;
+            string? id = null;
             DocumentSerializationType? serializationType = null;
-            string defaultLanguage = null;
-            byte[] rawData = null;
-            string newLine = null;
-            InteractiveDocument document = null;
+            string? defaultLanguage = null;
+            byte[]? rawData = null;
+            string? newLine = null;
+            InteractiveDocument? document = null;
 
             while (reader.Read())
             {

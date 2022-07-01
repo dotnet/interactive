@@ -7,18 +7,21 @@ namespace Microsoft.DotNet.Interactive.Documents
 {
     public static class JsonElementExtensions
     {
-        public static JsonElement? GetPropertyFromPath(this JsonElement source, params string[] path)
+        public static JsonElement? GetPropertyFromPath(this JsonElement source, params string[]? path)
         {
             var current = source;
-            foreach (var propertyName in path)
+
+            if (path is { })
             {
-                if (!current.TryGetProperty(propertyName, out var propertyValue))
+                foreach (var propertyName in path)
                 {
-                    return null;
+                    if (!current.TryGetProperty(propertyName, out var propertyValue))
+                    {
+                        return null;
+                    }
+
+                    current = propertyValue;
                 }
-
-                current = propertyValue;
-
             }
 
             return current;

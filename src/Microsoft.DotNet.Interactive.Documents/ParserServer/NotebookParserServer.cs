@@ -38,8 +38,8 @@ namespace Microsoft.DotNet.Interactive.Documents.ParserServer
                 var line = await Input.ReadLineAsync();
                 if (line is not null)
                 {
-                    NotebookParserServerResponse response = null;
-                    string requestId = null;
+                    NotebookParserServerResponse? response = null;
+                    string? requestId = null;
                     try
                     {
                         var request = NotebookParseOrSerializeRequest.FromJson(line);

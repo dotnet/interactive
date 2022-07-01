@@ -5,13 +5,13 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.Documents
 {
-    public partial class InteractiveDocument
+    public class InteractiveDocument
     {
-        public IList<InteractiveDocumentElement> Elements { get; }
-
         public InteractiveDocument(IList<InteractiveDocumentElement> elements)
         {
             Elements = elements ?? new List<InteractiveDocumentElement>();
         }
+
+        public IList<InteractiveDocumentElement> Elements { get; }
     }
 }

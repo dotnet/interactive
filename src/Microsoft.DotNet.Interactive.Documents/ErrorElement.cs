@@ -5,15 +5,17 @@ namespace Microsoft.DotNet.Interactive.Documents
 {
     public class ErrorElement : InteractiveDocumentOutputElement
     {
-        public string ErrorName { get; }
-        public string ErrorValue { get; }
-        public string[] StackTrace { get; }
-
-        public ErrorElement(string errorName, string errorValue, string[] stackTrace)
+        public ErrorElement(string? errorName, string? errorValue, string[]? stackTrace)
         {
             ErrorName = errorName;
             ErrorValue = errorValue;
-            StackTrace = stackTrace;
+            StackTrace = stackTrace ?? new string[] { };
         }
+
+        public string? ErrorName { get; }
+
+        public string? ErrorValue { get; }
+
+        public string[] StackTrace { get; }
     }
 }

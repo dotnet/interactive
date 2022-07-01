@@ -3,17 +3,14 @@
 
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Documents.Jupyter
+namespace Microsoft.DotNet.Interactive.Documents.Jupyter;
+
+public class InputCellMetadata
 {
-
-    public class InputCellMetadata
+    public InputCellMetadata(string? language = null)
     {
-        [JsonPropertyName("language")]
-        public string Language { get; }
-
-        public InputCellMetadata(string language = null)
-        {
-            Language = language;
-        }
+        Language = language;
     }
+
+    [JsonPropertyName("language")] public string? Language { get; }
 }
