@@ -162,10 +162,10 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             return string.Join("\n", textLines);
         }
 
-        public static void Write(InteractiveDocument interactive, string newline, Stream stream)
+        public static void Write(InteractiveDocument interactive, Stream stream, string newline = "\n")
         {
             using var writer = new StreamWriter(stream, Encoding, 1024, true);
-            Write(interactive, newline, writer);
+            Write(interactive, writer, newline);
             writer.Flush();
         }
 
@@ -181,7 +181,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
                         {
                             cell_type = "markdown",
                             metadata = new { },
-                            source = AddTrailingNewlinesToAllButLast(StringExtensions.SplitIntoLines(element.Contents))
+                            source = AddTrailingNewlinesToAllButLast(element.Contents.SplitIntoLines())
                         });
                         break;
                     default:
@@ -264,7 +264,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             return content;
         }
 
-        public static void Write(InteractiveDocument interactive, string newline, TextWriter writer)
+        public static void Write(InteractiveDocument interactive, TextWriter writer, string newline = "\n")
         {
             var content = interactive.ToJupyterNotebookContent(newline);
             writer.Write(content);

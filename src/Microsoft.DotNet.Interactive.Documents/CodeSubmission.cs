@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.Documents
                 throw new ArgumentNullException(nameof(kernelNames));
             }
 
-            var lines = StringExtensions.SplitIntoLines(content);
+            var lines = content.SplitIntoLines();
 
             var elements = new List<InteractiveDocumentElement>();
             var currentLanguage = defaultLanguage;
@@ -131,7 +131,7 @@ namespace Microsoft.DotNet.Interactive.Documents
 
             foreach (var element in interactiveDocument.Elements)
             {
-                var elementLines = StringExtensions.SplitIntoLines(element.Contents).SkipWhile(l => l.Length == 0).ToList();
+                var elementLines = element.Contents.SplitIntoLines().SkipWhile(l => l.Length == 0).ToList();
                 while (elementLines.Count > 0 && elementLines[^1].Length == 0)
                 {
                     elementLines.RemoveAt(elementLines.Count - 1);
@@ -150,18 +150,17 @@ namespace Microsoft.DotNet.Interactive.Documents
             return content;
         }
 
-        public static void Write(InteractiveDocument interactiveDocument, string newline, Stream stream)
+        public static void Write(InteractiveDocument interactiveDocument, Stream stream, string newline = "\n")
         {
             using var writer = new StreamWriter(stream, Encoding, 1024, true);
-            Write(interactiveDocument, newline, writer);
+            Write(interactiveDocument, writer, newline);
             writer.Flush();
         }
 
-        public static void Write(InteractiveDocument interactiveDocument, string newline, TextWriter writer)
+        public static void Write(InteractiveDocument interactiveDocument, TextWriter writer, string newline = "\n")
         {
             var content = interactiveDocument.ToCodeSubmissionContent(newline);
             writer.Write(content);
         }
-        
     }
 }
