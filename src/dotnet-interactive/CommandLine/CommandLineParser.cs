@@ -533,7 +533,6 @@ public static class CommandLineParser
             new KeyValueStoreKernel()
                 .UseWho());
 
-
         compositeKernel.Add(
             new MermaidKernel());
 
@@ -545,7 +544,6 @@ public static class CommandLineParser
         kernel.AddKernelConnector(new ConnectNamedPipeCommand());
         kernel.AddKernelConnector(new ConnectSignalRCommand());
         kernel.AddKernelConnector(new ConnectStdIoCommand());
-
 
         if (startupOptions.Verbose)
         {
