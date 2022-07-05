@@ -174,6 +174,7 @@ describe('Miscellaneous tests', () => {
     it('cell text output shape can be detected', () => {
         // strongly typed to catch interface changes
         const text: TextElement = {
+            name: 'some name',
             text: 'some text'
         };
         expect(isTextOutput(text)).to.be.true;
