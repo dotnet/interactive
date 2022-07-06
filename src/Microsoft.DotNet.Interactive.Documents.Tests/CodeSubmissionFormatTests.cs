@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
     {
         public InteractiveDocument ParseDib(string content)
         {
-            return CodeSubmission.Parse(content, "csharp", KernelLanguageAliases);
+            return CodeSubmission.Parse(content, "csharp", KernelNames);
         }
 
         public string SerializeDib(InteractiveDocument interactive, string newLine)

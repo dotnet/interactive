@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             _serializerOptions.Converters.Add(new DataDictionaryConverter());
         }
 
-        public static InteractiveDocument Parse(string content, IReadOnlyCollection<KernelName> kernelNames)
+        public static InteractiveDocument Parse(string content, KernelNameCollection kernelNames)
         {
             if (kernelNames is null)
             {
@@ -35,20 +35,27 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             var kernelAliasesToNameMap = kernelNames.ToMapOfKernelNamesByAlias();
 
             var jupyter = JsonDocument.Parse(content).RootElement;
-            var notebookLanguage = jupyter.GetPropertyFromPath("metadata", "kernelspec", "language")?.GetString() ?? "C#";
+            var notebookLanguage = jupyter.GetPropertyFromPath("metadata", "kernelspec", "language")?.GetString();
+
             var defaultTargetKernelName = notebookLanguage switch
             {
                 "C#" => "csharp",
                 "F#" => "fsharp",
                 "PowerShell" => "pwsh",
-                _ => "csharp"
+                _ => kernelNames.DefaultKernelName ?? "csharp"
             };
 
             var cells = new List<InteractiveDocumentElement>();
 
             foreach (var cell in jupyter.GetPropertyFromPath("cells").EnumerateArray())
             {
-                switch (cell.GetPropertyFromPath("cell_type").GetString())
+                InteractiveDocumentElement? newCell = new();
+
+                var cell_type = cell.GetPropertyFromPath("cell_type").GetString();
+
+                var id = cell.GetPropertyFromPath("id")?.GetString();
+
+                switch (cell_type)
                 {
                     case "code":
                         //
@@ -56,6 +63,12 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
                         //
                         var cellMetadata = cell.GetPropertyFromPath("metadata", MetadataNamespace);
 
+                        var executionCount = cell.GetPropertyFromPath("execution_count").GetValueOrDefault() switch
+                        {
+                            {ValueKind:JsonValueKind.Number} n => n.GetInt32(),
+                            _ => 0
+                        };
+                        
                         var languageFromMetadata = cellMetadata?.GetPropertyFromPath("language").GetString();
 
                         var sourceLines = GetTextLines(cell.GetPropertyFromPath("source"));
@@ -76,8 +89,6 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
                         // gather cell outputs
                         //
 
-                        var outputs = new List<InteractiveDocumentOutputElement>();
-
                         if (cell.TryGetProperty("outputs", out var cellOutputs))
                         {
                             foreach (var outputElement in cellOutputs
@@ -87,7 +98,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
                             {
                                 if (outputElement is { })
                                 {
-                                    outputs.Add(outputElement);
+                                    newCell.Outputs.Add(outputElement);
                                 }
                                 else
                                 {
@@ -95,8 +106,10 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
                                 }
                             }
                         }
-
-                        cells.Add(new InteractiveDocumentElement(cellTargetKernelName, source, outputs));
+                        
+                        newCell.Language = cellTargetKernelName;
+                        newCell.Contents = source;
+                        newCell.ExecutionCount = executionCount;
 
                         InteractiveDocumentOutputElement? DeserializeOutputElement(JsonElement cellOutput)
                         {
@@ -132,10 +145,23 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
                         break;
 
                     case "markdown":
+                        
                         var markdown = GetTextAsSingleString(cell.GetPropertyFromPath("source"));
-                        cells.Add(new InteractiveDocumentElement("markdown", markdown));
+
+                        newCell = new InteractiveDocumentElement("markdown", markdown);
+
                         break;
+
+                    default:
+                        throw new ArgumentException($"Unrecognized cell_type: {cell_type}");
                 }
+
+                if (id is {} )
+                {
+                    newCell.Id = id;
+                }
+
+                cells.Add(newCell);
             }
 
             return new InteractiveDocument(cells);
@@ -143,8 +169,8 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
         }
 
         public static InteractiveDocument Read(
-            Stream stream, 
-            IReadOnlyCollection<KernelName> kernelNames)
+            Stream stream,
+            KernelNameCollection kernelNames)
         {
             using var reader = new StreamReader(stream, Encoding);
             var content = reader.ReadToEnd();
@@ -153,7 +179,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
 
         public static async Task<InteractiveDocument> ReadAsync(
             Stream stream,
-            IReadOnlyCollection<KernelName> kernelNames)
+            KernelNameCollection kernelNames)
         {
             using var reader = new StreamReader(stream, Encoding);
             var content = await reader.ReadToEndAsync();
@@ -215,8 +241,8 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
                                     language = element.Language
                                 }
                             },
-                            source = AddTrailingNewlinesToAllButLast(element.Contents.SplitIntoLines()),
-                            outputs = element.Outputs
+                            outputs = element.Outputs,
+                            source = AddTrailingNewlinesToAllButLast(element.Contents.SplitIntoLines())
                         };
                         break;
                 }

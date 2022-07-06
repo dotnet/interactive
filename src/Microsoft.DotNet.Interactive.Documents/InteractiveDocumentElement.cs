@@ -1,33 +1,38 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Documents
 {
     public class InteractiveDocumentElement
     {
+        [JsonConstructor]
+        public InteractiveDocumentElement()
+        {
+        }
+
         public InteractiveDocumentElement(
             string language,
             string contents,
-            IList<InteractiveDocumentOutputElement>? outputs = null)
+            IEnumerable<InteractiveDocumentOutputElement>? outputs = null)
         {
-            if (string.IsNullOrWhiteSpace(language))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(language));
-            }
-
-            Language = language;
             Contents = contents;
-            Outputs = outputs ?? new List<InteractiveDocumentOutputElement>();
+            Language = language;
+            Outputs = outputs is { }
+                          ? new(outputs)
+                          : new();
         }
 
-        public string Language { get; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string Id { get; set; }
 
-        public string Contents { get; }
+        public string Language { get; set; }
 
-        public IList<InteractiveDocumentOutputElement> Outputs { get; }
+        public string Contents { get; set; }
+
+        public List<InteractiveDocumentOutputElement> Outputs { get; } = new();
 
         public int ExecutionCount { get; set; }
 
