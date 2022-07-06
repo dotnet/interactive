@@ -28,5 +28,9 @@ namespace Microsoft.DotNet.Interactive.Documents
         public string Contents { get; }
 
         public IList<InteractiveDocumentOutputElement> Outputs { get; }
+
+        public int ExecutionCount { get; set; }
+
+        public Dictionary<string, object> Metadata { get; } = new();
     }
 }

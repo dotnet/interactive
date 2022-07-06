@@ -13,12 +13,12 @@
       ],
       "outputs": [
         {
-          "output_type": "execute_result",
+          "output_type": "display_data",
           "data": {
-            "text/html": "this is html"
-          },
-          "execution_count": 1,
-          "metadata": {}
+            "text/html": [
+              "<div>this is html</div>"
+            ]
+          }
         }
       ]
     },

@@ -8,7 +8,7 @@ using Microsoft.DotNet.Interactive.Documents.Jupyter;
 
 namespace Microsoft.DotNet.Interactive.Documents.ParserServer
 {
-    internal static class ParserServerSerializer
+    public static class ParserServerSerializer
     {
         static ParserServerSerializer()
         {
