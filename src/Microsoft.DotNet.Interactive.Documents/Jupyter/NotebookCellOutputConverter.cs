@@ -89,9 +89,6 @@ internal class NotebookCellOutputConverter : JsonConverter<InteractiveDocumentOu
         {
             case DisplayElement displayElement:
 
-                writer.WritePropertyName("output_type");
-                writer.WriteStringValue("display_data");
-
                 writer.WritePropertyName("data");
                 writer.WriteStartObject();
 
@@ -132,6 +129,9 @@ internal class NotebookCellOutputConverter : JsonConverter<InteractiveDocumentOu
                 }
 
                 writer.WriteEndObject();
+
+                writer.WritePropertyName("output_type");
+                writer.WriteStringValue("display_data");
                 break;
 
             case ErrorElement errorElement:

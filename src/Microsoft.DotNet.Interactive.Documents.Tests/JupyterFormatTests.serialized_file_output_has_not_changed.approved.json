@@ -8,18 +8,18 @@
           "language": "csharp"
         }
       },
-      "source": [
-        "// this is csharp"
-      ],
       "outputs": [
         {
-          "output_type": "display_data",
           "data": {
             "text/html": [
               "<div>this is html</div>"
             ]
-          }
+          },
+          "output_type": "display_data"
         }
+      ],
+      "source": [
+        "// this is csharp"
       ]
     },
     {

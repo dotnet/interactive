@@ -26,11 +26,11 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .UsingExtension("json")
                 .SetInteractive(Debugger.IsAttached);
 
-        public InteractiveDocument ParseJupyter(object jupyter)
+        public InteractiveDocument SerializeAndParse(object jupyter)
         {
             var content = JsonConvert.SerializeObject(jupyter);
 
-            return Notebook.Parse(content, KernelLanguageAliases);
+            return Notebook.Parse(content, KernelNames);
         }
 
         [Theory]
@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
+                        execution_count = 0,
                         metadata = new { },
                         source = "// this is the code"
                     }
@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 nbformat = 4,
                 nbformat_minor = 4
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
@@ -89,20 +89,20 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
+                        execution_count = 0,
                         metadata = new { },
                         source = "// this is assumed to be csharp"
                     },
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
+                        execution_count = 0,
                         metadata = new { },
                         source = "#!csharp\n// this is still assumed to be csharp"
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
@@ -137,14 +137,14 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 {
                     kernelspec = new
                     {
-                        display_name = $".NET (C#)",
+                        display_name = ".NET (C#)",
                         language = "C#",
-                        name = $".net-csharp"
+                        name = ".net-csharp"
                     },
                     language_info = new
                     {
                         file_extension = ".cs",
-                        mimetype = $"text/x-csharp",
+                        mimetype = "text/x-csharp",
                         name = "C#",
                         pygments_lexer = "C#",
                         version = "8.0"
@@ -153,7 +153,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 nbformat = 4,
                 nbformat_minor = 4
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -185,7 +185,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -205,7 +205,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
+                        execution_count = 0,
                         metadata = new { },
                         source = "#!csharp\n// this is the code"
                     }
@@ -214,14 +214,14 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 {
                     kernelspec = new
                     {
-                        display_name = $".NET (C#)",
+                        display_name = ".NET (C#)",
                         language = "C#",
-                        name = $".net-csharp"
+                        name = ".net-csharp"
                     },
                     language_info = new
                     {
                         file_extension = ".cs",
-                        mimetype = $"text/x-csharp",
+                        mimetype = "text/x-csharp",
                         name = "C#",
                         pygments_lexer = "csharp",
                         version = "8.0"
@@ -230,7 +230,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 nbformat = 4,
                 nbformat_minor = 4
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new object[]
@@ -270,7 +270,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     {
                         display_name = ".NET (C#)",
                         language = "C#",
-                        name = $".net-csharp"
+                        name = ".net-csharp"
                     },
                     language_info = new
                     {
@@ -284,7 +284,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 nbformat = 4,
                 nbformat_minor = 4
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -304,41 +304,41 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
+                        execution_count = 0,
                         metadata = new { },
                         source = "#!c#\n// this is csharp 1"
                     },
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
+                        execution_count = 0,
                         metadata = new { },
                         source = "#!C#\n// this is csharp 2"
                     },
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
+                        execution_count = 0,
                         metadata = new { },
                         source = "#!f#\n// this is fsharp 1"
                     },
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
+                        execution_count = 0,
                         metadata = new { },
                         source = "#!F#\n// this is fsharp 2"
                     },
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
+                        execution_count = 0,
                         metadata = new { },
                         source = "#!powershell\n# this is pwsh"
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
@@ -361,7 +361,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
+                        execution_count = 0,
                         metadata = new { },
                         source = "#!fsharp\n// this is the code"
                     }
@@ -370,14 +370,14 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 {
                     kernelspec = new
                     {
-                        display_name = $".NET (C#)",
+                        display_name = ".NET (C#)",
                         language = "C#",
-                        name = $".net-csharp"
+                        name = ".net-csharp"
                     },
                     language_info = new
                     {
                         file_extension = ".cs",
-                        mimetype = $"text/x-csharp",
+                        mimetype = "text/x-csharp",
                         name = "C#",
                         pygments_lexer = "csharp",
                         version = "8.0"
@@ -386,7 +386,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 nbformat = 4,
                 nbformat_minor = 4
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
@@ -405,7 +405,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
+                        execution_count = 0,
                         metadata = new { },
                         source = "// this is csharp\n#!fsharp\n// and this is fsharp"
                     }
@@ -414,14 +414,14 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 {
                     kernelspec = new
                     {
-                        display_name = $".NET (C#)",
+                        display_name = ".NET (C#)",
                         language = "C#",
-                        name = $".net-csharp"
+                        name = ".net-csharp"
                     },
                     language_info = new
                     {
                         file_extension = ".cs",
-                        mimetype = $"text/x-csharp",
+                        mimetype = "text/x-csharp",
                         name = "C#",
                         pygments_lexer = "csharp",
                         version = "8.0"
@@ -430,7 +430,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 nbformat = 4,
                 nbformat_minor = 4
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
@@ -449,7 +449,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
+                        execution_count = 0,
                         metadata = new { },
                         source = "#!probably-a-magic-command\n// but this is csharp"
                     }
@@ -458,14 +458,14 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 {
                     kernelspec = new
                     {
-                        display_name = $".NET (C#)",
+                        display_name = ".NET (C#)",
                         language = "C#",
-                        name = $".net-csharp"
+                        name = ".net-csharp"
                     },
                     language_info = new
                     {
                         file_extension = ".cs",
-                        mimetype = $"text/x-csharp",
+                        mimetype = "text/x-csharp",
                         name = "C#",
                         pygments_lexer = "csharp",
                         version = "8.0"
@@ -474,7 +474,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 nbformat = 4,
                 nbformat_minor = 4
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
@@ -498,7 +498,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
@@ -526,7 +526,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
@@ -545,7 +545,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
+                        execution_count = 0,
                         metadata = new { },
                         source = "line 1\nline 2\nline 3\n"
                     }
@@ -554,14 +554,14 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 {
                     kernelspec = new
                     {
-                        display_name = $".NET (C#)",
+                        display_name = ".NET (C#)",
                         language = "C#",
-                        name = $".net-csharp"
+                        name = ".net-csharp"
                     },
                     language_info = new
                     {
                         file_extension = ".cs",
-                        mimetype = $"text/x-csharp",
+                        mimetype = "text/x-csharp",
                         name = "C#",
                         pygments_lexer = "csharp",
                         version = "8.0"
@@ -570,7 +570,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 nbformat = 4,
                 nbformat_minor = 4
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
@@ -589,7 +589,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
+                        execution_count = 0,
                         metadata = new { },
                         source = new[]
                         {
@@ -607,7 +607,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     {
                         display_name = ".NET (C#)",
                         language = "C#",
-                        name = $".net-csharp"
+                        name = ".net-csharp"
                     },
                     language_info = new
                     {
@@ -621,7 +621,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 nbformat = 4,
                 nbformat_minor = 4
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
@@ -634,56 +634,10 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         public void file_without_cells_can_be_parsed()
         {
             var jupyter = new { };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .BeEmpty();
-        }
-
-        [Fact]
-        public void cell_without_cell_type_is_ignored_on_parse()
-        {
-            var jupyter = new
-            {
-                cells = new object[]
-                {
-                    new
-                    {
-                        cell_type = "code",
-                        source = new[]
-                        {
-                            "// line 1",
-                            "// line 2"
-                        }
-                    },
-                    new
-                    {
-                        not_a_cell_type = "code",
-                        source = new[]
-                        {
-                            "// line 3",
-                            "// line 4"
-                        }
-                    },
-                    new
-                    {
-                        cell_type = "code",
-                        source = new[]
-                        {
-                            "// line 5",
-                            "// line 6"
-                        }
-                    }
-                }
-            };
-            var notebook = ParseJupyter(jupyter);
-            notebook.Elements
-                .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new[]
-                {
-                    new InteractiveDocumentElement("csharp", "// line 1\n// line 2"),
-                    new InteractiveDocumentElement("csharp", "// line 5\n// line 6")
-                });
         }
 
         [Fact]
@@ -710,7 +664,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
@@ -736,7 +690,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
@@ -773,7 +727,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -832,7 +786,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -878,7 +832,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -920,7 +874,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -967,7 +921,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -997,7 +951,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -1232,7 +1186,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -1274,7 +1228,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -1351,7 +1305,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -1433,7 +1387,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -1471,20 +1425,35 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         }
 
         [Fact]
-        public async Task ipynb_can_be_round_tripped_through_read_and_write_without_the_content_changing()
+        public async Task ipynb_from_Jupyter_can_be_round_tripped_through_read_and_write_without_the_content_changing()
         {
-            var notebookFile = Path.Combine(
-                Path.GetDirectoryName(
-                    PathUtilities.PathToCurrentSourceFile()),
-                $"{nameof(JupyterFormatTests)}.{nameof(ipynb_can_be_round_tripped_through_read_and_write_without_the_content_changing)}.approved.json");
+            var path = GetNotebookFilePath(nameof(ipynb_from_Jupyter_can_be_round_tripped_through_read_and_write_without_the_content_changing));
 
+            this.Assent(await RoundTripIpynb(path), _assentConfiguration);
+        }
+
+        [Fact]
+        public async Task ipynb_from_VSCode_can_be_round_tripped_through_read_and_write_without_the_content_changing()
+        {
+            var path = GetNotebookFilePath(nameof(ipynb_from_VSCode_can_be_round_tripped_through_read_and_write_without_the_content_changing));
+
+            this.Assent(await RoundTripIpynb(path), _assentConfiguration);
+        }
+
+        private async Task<string> RoundTripIpynb(string notebookFile)
+        {
             var expectedContent = await File.ReadAllTextAsync(notebookFile);
 
-            var inputDoc = Notebook.Parse(expectedContent, KernelLanguageAliases);
+            var inputDoc = Notebook.Parse(expectedContent, KernelNames);
 
             var resultContent = inputDoc.ToJupyterNotebookContent();
-
-            this.Assent(resultContent, _assentConfiguration);
+            return resultContent;
         }
+
+        private string GetNotebookFilePath(string testName) =>
+            Path.Combine(
+                Path.GetDirectoryName(
+                    PathUtilities.PathToCurrentSourceFile()),
+                $"{nameof(JupyterFormatTests)}.{testName}.approved.json");
     }
 }

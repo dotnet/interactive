@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
@@ -14,15 +13,15 @@ namespace Microsoft.DotNet.Interactive.Documents.ParserServer
         public TextReader Input { get; }
         public TextWriter Output { get; }
 
-        public static IReadOnlyCollection<KernelName> WellKnownKernelNames = new KernelName[]
+        public static KernelNameCollection WellKnownKernelNames = new()
         {
-            new KernelName("csharp", new[] { "c#", "C#", "cs" }),
-            new KernelName("fsharp", new[] { "f#", "F#", "fs" }),
-            new KernelName("pwsh", new[] { "powershell" }),
-            new KernelName("javascript", new[] { "js" }),
-            new KernelName("html", Array.Empty<string>()),
-            new KernelName("sql", Array.Empty<string>()),
-            new KernelName("kql", Array.Empty<string>()),
+            new("csharp", new[] { "c#", "C#", "cs" }),
+            new("fsharp", new[] { "f#", "F#", "fs" }),
+            new("pwsh", new[] { "powershell" }),
+            new("javascript", new[] { "js" }),
+            new("html", Array.Empty<string>()),
+            new("sql", Array.Empty<string>()),
+            new("kql", Array.Empty<string>()),
         };
 
         public NotebookParserServer(TextReader input, TextWriter output)

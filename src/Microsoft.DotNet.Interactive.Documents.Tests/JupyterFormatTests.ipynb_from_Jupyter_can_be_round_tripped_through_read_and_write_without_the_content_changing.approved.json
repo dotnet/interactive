@@ -1,23 +1,27 @@
 {
  "cells": [
   {
+   "cell_type": "markdown",
+   "id": "e28c5c1b-ebd2-4b04-9a75-5c111646fc1f",
+   "metadata": {},
+   "source": [
+    "# A heading\n",
+    "\n",
+    "This is a Markdown cell"
+   ]
+  },
+  {
    "cell_type": "code",
    "execution_count": 1,
-   "metadata": {
-    "dotnet_interactive": {
-     "language": "csharp"
-    },
-    "vscode": {
-     "languageId": "dotnet-interactive.csharp"
-    }
-   },
+   "id": "a70f791b-e2bd-4784-a204-153311ef9e22",
+   "metadata": {},
    "outputs": [
     {
      "data": {
       "text/html": [
        "\r\n",
        "<div>\r\n",
-       "    <div id='dotnet-interactive-this-cell-73328.Microsoft.DotNet.Interactive.Http.HttpPort' style='display: none'>\r\n",
+       "    <div id='dotnet-interactive-this-cell-14060.Microsoft.DotNet.Interactive.Http.HttpPort' style='display: none'>\r\n",
        "        The below script needs to be able to find the current output cell; this is an easy method to get it.\r\n",
        "    </div>\r\n",
        "    <script type='text/javascript'>\r\n",
@@ -62,12 +66,12 @@
        "}\r\n",
        "\r\n",
        "function loadDotnetInteractiveApi() {\r\n",
-       "    probeAddresses([\"http://192.168.1.16:1001/\", \"http://100.64.233.241:1001/\", \"http://172.30.32.1:1001/\", \"http://172.20.112.1:1001/\", \"http://172.18.144.1:1001/\", \"http://172.24.64.1:1001/\", \"http://127.0.0.1:1001/\"])\r\n",
+       "    probeAddresses([\"http://192.168.1.16:1001/\", \"http://100.64.233.241:1001/\", \"http://172.30.32.1:1001/\", \"http://172.20.112.1:1001/\", \"http://172.19.32.1:1001/\", \"http://172.24.64.1:1001/\", \"http://127.0.0.1:1001/\"])\r\n",
        "        .then((root) => {\r\n",
        "        // use probing to find host url and api resources\r\n",
        "        // load interactive helpers and language services\r\n",
        "        let dotnetInteractiveRequire = require.config({\r\n",
-       "        context: '73328.Microsoft.DotNet.Interactive.Http.HttpPort',\r\n",
+       "        context: '14060.Microsoft.DotNet.Interactive.Http.HttpPort',\r\n",
        "                paths:\r\n",
        "            {\r\n",
        "                'dotnet-interactive': `${root}resources`\r\n",
@@ -142,14 +146,8 @@
   {
    "cell_type": "code",
    "execution_count": 2,
-   "metadata": {
-    "dotnet_interactive": {
-     "language": "csharp"
-    },
-    "vscode": {
-     "languageId": "dotnet-interactive.csharp"
-    }
-   },
+   "id": "fa84310c-0189-415c-b628-50a69b2ecd44",
+   "metadata": {},
    "outputs": [
     {
      "name": "stderr",
@@ -166,14 +164,8 @@
   {
    "cell_type": "code",
    "execution_count": 3,
-   "metadata": {
-    "dotnet_interactive": {
-     "language": "csharp"
-    },
-    "vscode": {
-     "languageId": "dotnet-interactive.csharp"
-    }
-   },
+   "id": "8e05dfb8-99a4-4ca1-9540-9615f7199018",
+   "metadata": {},
    "outputs": [
     {
      "ename": "Unhandled exception",
@@ -194,14 +186,8 @@
   {
    "cell_type": "code",
    "execution_count": 4,
-   "metadata": {
-    "dotnet_interactive": {
-     "language": "csharp"
-    },
-    "vscode": {
-     "languageId": "dotnet-interactive.csharp"
-    }
-   },
+   "id": "5fb03543-a4c3-4dd3-961d-fd3c6074c651",
+   "metadata": {},
    "outputs": [
     {
      "data": {
@@ -221,19 +207,15 @@
   {
    "cell_type": "code",
    "execution_count": 5,
-   "metadata": {
-    "dotnet_interactive": {
-     "language": "csharp"
-    },
-    "vscode": {
-     "languageId": "dotnet-interactive.csharp"
-    }
-   },
+   "id": "a119c408-31f9-4286-86bf-cc434a7762a4",
+   "metadata": {},
    "outputs": [
     {
      "data": {
       "text/html": [
-       "<div class=\"dni-plaintext\">An HTML display value</div>"
+       "<b>\n",
+       "    An HTML display value\n",
+       "</b>"
       ]
      },
      "metadata": {},
@@ -241,20 +223,16 @@
     }
    ],
    "source": [
-    "\"An HTML display value\".Display(\"text/html\");"
+    "@\"<b>\n",
+    "    An HTML display value\n",
+    "</b>\".DisplayAs(\"text/html\");"
    ]
   },
   {
    "cell_type": "code",
    "execution_count": 6,
-   "metadata": {
-    "dotnet_interactive": {
-     "language": "csharp"
-    },
-    "vscode": {
-     "languageId": "dotnet-interactive.csharp"
-    }
-   },
+   "id": "52ff47a2-2a22-4d7d-ac2f-06dd65c41d48",
+   "metadata": {},
    "outputs": [
     {
      "data": {
@@ -267,20 +245,14 @@
     }
    ],
    "source": [
-    "\"A plaintext display value\".Display(\"text/plain\");"
+    "\"A plaintext display value\".DisplayAs(\"text/plain\");"
    ]
   },
   {
    "cell_type": "code",
    "execution_count": 7,
-   "metadata": {
-    "dotnet_interactive": {
-     "language": "csharp"
-    },
-    "vscode": {
-     "languageId": "dotnet-interactive.csharp"
-    }
-   },
+   "id": "8feb3c15-4bb0-4fe1-89fe-a54c201cb6bd",
+   "metadata": {},
    "outputs": [
     {
      "data": {
@@ -294,7 +266,9 @@
     {
      "data": {
       "text/html": [
-       "<div class=\"dni-plaintext\">An HTML display value (in a multi-output cell)</div>"
+       "<b>\n",
+       "    An HTML display value (in a multi-output cell)\n",
+       "</b>"
       ]
      },
      "metadata": {},
@@ -302,9 +276,20 @@
     }
    ],
    "source": [
-    "\"A plaintext display value (in a multi-output cell)\".Display(\"text/plain\");\n",
-    "\"An HTML display value (in a multi-output cell)\".Display(\"text/html\");"
+    "\"A plaintext display value (in a multi-output cell)\".DisplayAs(\"text/plain\");\n",
+    "\n",
+    "@\"<b>\n",
+    "    An HTML display value (in a multi-output cell)\n",
+    "</b>\".DisplayAs(\"text/html\");"
    ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "8db2560d-1d3c-40d7-9e5f-6ea9799702c1",
+   "metadata": {},
+   "outputs": [],
+   "source": []
   }
  ],
  "metadata": {
@@ -322,5 +307,5 @@
   }
  },
  "nbformat": 4,
- "nbformat_minor": 4
+ "nbformat_minor": 5
 }
