@@ -88,10 +88,10 @@ namespace Microsoft.DotNet.Interactive.Documents.ParserServer
                             switch (request.SerializationType)
                             {
                                 case DocumentSerializationType.Dib:
-                                    CodeSubmission.Write(serialize.Document, resultStream, serialize.NewLine);
+                                    CodeSubmission.Write(serialize.Document, resultStream);
                                     break;
                                 case DocumentSerializationType.Ipynb:
-                                    Notebook.Write(serialize.Document, resultStream, serialize.NewLine);
+                                    Notebook.Write(serialize.Document, resultStream);
                                     break;
                                 default:
                                     throw new NotSupportedException($"Unable to serialize a interactive document of type '{request.SerializationType}'");

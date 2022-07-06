@@ -6,9 +6,9 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.Documents;
 
-public class DisplayElement : InteractiveDocumentOutputElement
+public class ReturnValueElement : InteractiveDocumentOutputElement
 {
-    public DisplayElement(IDictionary<string, object>? data)
+    public ReturnValueElement(IDictionary<string, object>? data)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
     }

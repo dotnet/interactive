@@ -53,8 +53,8 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
             serializeRequest.NewLine.Should().Be("\r\n");
             serializeRequest.Document.Should().BeEquivalentTo(new InteractiveDocument(new List<InteractiveDocumentElement>()
             {
-                new InteractiveDocumentElement("csharp", "var x = 1;"),
-                new InteractiveDocumentElement("fsharp", "let y = 2"),
+                new("csharp", "var x = 1;"),
+                new("fsharp", "let y = 2"),
             }));
         }
 
@@ -65,9 +65,9 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                                  .UsingExtension(".json")
                                  .SetInteractive(Debugger.IsAttached);
 
-            var response = new NotebookParseResponse("the-id", new InteractiveDocument(new List<InteractiveDocumentElement>()
+            var response = new NotebookParseResponse("the-id", new InteractiveDocument(new List<InteractiveDocumentElement>
             {
-                new InteractiveDocumentElement("csharp", "var x = 1;")
+                new("csharp", "var x = 1;")
             }));
 
             var json = response.ToJson();

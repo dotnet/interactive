@@ -6,9 +6,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Documents.ParserServer;
 
 namespace Microsoft.DotNet.Interactive.Documents.Jupyter
 {
@@ -45,6 +45,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             };
 
             var cells = new List<InteractiveDocumentElement>();
+
             foreach (var cell in jupyter.GetPropertyFromPath("cells").EnumerateArray())
             {
                 switch (cell.GetPropertyFromPath("cell_type").GetString())
@@ -59,7 +60,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
 
                         var sourceLines = GetTextLines(cell.GetPropertyFromPath("source"));
 
-                        var possibleTargetKernelName = sourceLines.Count > 0 && sourceLines[0].StartsWith("#!")
+                        var possibleTargetKernelName = sourceLines.Length > 0 && sourceLines[0].StartsWith("#!")
                                                        ? sourceLines[0].Substring(2)
                                                        : null;
 
@@ -79,44 +80,57 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
 
                         if (cell.TryGetProperty("outputs", out var cellOutputs))
                         {
-                            outputs.AddRange(cellOutputs
-                                             .EnumerateArray()
-                                             .Select<JsonElement, InteractiveDocumentOutputElement?>(cellOutput =>
-                                             {
-                                                 if (cellOutput.TryGetProperty("output_type", out var cellTypeProperty))
-                                                 {
-                                                     return cellTypeProperty.GetString() switch
-                                                     {
-                                                         // our concept of a interactive is heavily influenced by VS Code and they don't distinguish between execution results and displayed data
-                                                         "display_data" or "execute_result" =>
-                                                             new DisplayElement(
-                                                                 JsonSerializer.Deserialize<IDictionary<string, object>>(
-                                                                     cellOutput.GetPropertyFromPath("data").GetRawText(), _serializerOptions)),
-
-                                                         "stream" =>
-                                                             // FIX: (Parse) it looks like this is supposed to be a string[]
-                                                             new TextElement(
-                                                                 GetTextAsSingleString(cellOutput.GetPropertyFromPath("text"))),
-
-                                                         "error" =>
-                                                             new ErrorElement(
-                                                                 cellOutput.GetPropertyFromPath("ename").GetString(),
-                                                                 cellOutput.GetPropertyFromPath("evalue").GetString(),
-                                                                 cellOutput.GetPropertyFromPath("traceback").EnumerateArray()
-                                                                           .Select(s => s.GetString() ?? "").ToArray()),
-
-                                                         _ => null
-                                                     };
-                                                 }
-
-                                                 return null;
-                                             })
-                                             .Where(x => x is not null)
-                                             .ToArray()!);
+                            foreach (var outputElement in cellOutputs
+                                                          .EnumerateArray()
+                                                          .Select(DeserializeOutputElement)
+                                                          .ToArray())
+                            {
+                                if (outputElement is { })
+                                {
+                                    outputs.Add(outputElement);
+                                }
+                                else
+                                {
+                                    // FIX: (Parse) is this a thing?
+                                }
+                            }
                         }
 
                         cells.Add(new InteractiveDocumentElement(cellTargetKernelName, source, outputs));
+
+                        InteractiveDocumentOutputElement? DeserializeOutputElement(JsonElement cellOutput)
+                        {
+                            if (cellOutput.TryGetProperty("output_type", out var cellTypeProperty))
+                            {
+                                return cellTypeProperty.GetString() switch
+                                {
+                                    "display_data" =>
+                                        new DisplayElement(JsonSerializer.Deserialize<IDictionary<string, object>>(
+                                                               cellOutput.GetPropertyFromPath("data").GetRawText(), _serializerOptions)),
+
+                                    "execute_result" =>
+                                        new ReturnValueElement(JsonSerializer.Deserialize<IDictionary<string, object>>(
+                                                                   cellOutput.GetPropertyFromPath("data").GetRawText(), _serializerOptions)),
+
+                                    "stream" =>
+                                        new TextElement(
+                                            GetTextAsSingleString(cellOutput.GetPropertyFromPath("text"))),
+
+                                    "error" =>
+                                        new ErrorElement(cellOutput.GetPropertyFromPath("evalue").GetString(),
+                                                         cellOutput.GetPropertyFromPath("ename").GetString(), cellOutput.GetPropertyFromPath("traceback")
+                                                             .EnumerateArray()
+                                                             .Select(s => s.GetString() ?? "").ToArray()),
+
+                                    _ => null
+                                };
+                            }
+
+                            return null;
+                        }
+
                         break;
+
                     case "markdown":
                         var markdown = GetTextAsSingleString(cell.GetPropertyFromPath("source"));
                         cells.Add(new InteractiveDocumentElement("markdown", markdown));
@@ -125,6 +139,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             }
 
             return new InteractiveDocument(cells);
+
         }
 
         public static InteractiveDocument Read(
@@ -145,16 +160,16 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             return Parse(content, kernelNames);
         }
 
-        private static List<string> GetTextLines(JsonElement? jsonElement)
+        private static string[] GetTextLines(JsonElement? jsonElement)
         {
             var textLines = jsonElement?.ValueKind switch
             {
-                JsonValueKind.Array => jsonElement.EnumerateArray().Select(element => element.GetString()?.TrimNewline()),
+                JsonValueKind.Array => jsonElement.EnumerateArray().Select(element => element.GetString()?.TrimNewline()).ToArray(),
                 JsonValueKind.String => jsonElement.GetString()?.SplitIntoLines(),
                 _ => null
             } ?? Array.Empty<string>();
 
-            return textLines.ToList()!;
+            return textLines!;
         }
 
         private static string GetTextAsSingleString(JsonElement? jsonElement)
@@ -163,57 +178,36 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             return string.Join("\n", textLines);
         }
 
-        public static void Write(InteractiveDocument document, Stream stream, string newline = "\n")
+        public static void Write(InteractiveDocument document, Stream stream)
         {
             using var writer = new StreamWriter(stream, Encoding, 1024, true);
-            Write(document, writer, newline);
+            Write(document, writer);
             writer.Flush();
         }
 
-        public static string ToJupyterNotebookContent(this InteractiveDocument document, string newline = "\n")
+        public static string ToJupyterNotebookContent(this InteractiveDocument document)
         {
             var cells = new List<object>();
             foreach (var element in document.Elements)
             {
+                object? cell = null;
+
                 switch (element.Language)
                 {
                     case "markdown":
-                        cells.Add(new
+                        cell = new
                         {
                             cell_type = "markdown",
                             metadata = new { },
                             source = AddTrailingNewlinesToAllButLast(element.Contents.SplitIntoLines())
-                        });
+                        };
                         break;
+
                     default:
-                        var outputs = element.Outputs.Select<InteractiveDocumentOutputElement?, object?>(o => o switch
-                        {
-                            DisplayElement displayOutput => new
-                            {
-                                output_type = "execute_result",
-                                data = displayOutput.Data,
-                                execution_count = 1,
-                                metadata = new { }
-                            },
-                            ErrorElement errorOutput => new
-                            {
-                                output_type = "error",
-                                ename = errorOutput.ErrorName,
-                                evalue = errorOutput.ErrorValue,
-                                traceback = errorOutput.StackTrace
-                            },
-                            TextElement textOutput => new
-                            {
-                                output_type = "stream",
-                                name = "stdout", // n.b., could also be `stderr`, but our representation (and VS Code) don't differentiate the two
-                                text = textOutput.Text.SplitIntoLines(),
-                            },
-                            _ => null
-                        }).Where(x => x is not null);
-                        cells.Add(new
+                        cell = new
                         {
                             cell_type = "code",
-                            execution_count = 1,
+                            execution_count = element.ExecutionCount,
                             metadata = new
                             {
                                 dotnet_interactive = new
@@ -222,10 +216,12 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
                                 }
                             },
                             source = AddTrailingNewlinesToAllButLast(element.Contents.SplitIntoLines()),
-                            outputs
-                        });
+                            outputs = element.Outputs
+                        };
                         break;
                 }
+
+                cells.Add(cell);
             }
 
             var jupyter = new
@@ -251,23 +247,20 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
                 nbformat = 4,
                 nbformat_minor = 4
             };
-
-            // use single space indention as is common with .ipynb
-
-            var options = new JsonSerializerOptions(JsonSerializerDefaults.General)
+            
+            var options = new JsonSerializerOptions(ParserServerSerializer.JsonSerializerOptions)
             {
-                WriteIndented = true,
-                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                DictionaryKeyPolicy = JsonNamingPolicy.CamelCase
+                WriteIndented = true
             };
 
             var content = JsonSerializer.Serialize(jupyter, options);
+
             return content;
         }
 
-        public static void Write(InteractiveDocument document, TextWriter writer, string newline = "\n")
+        public static void Write(InteractiveDocument document, TextWriter writer)
         {
-            var content = document.ToJupyterNotebookContent(newline);
+            var content = document.ToJupyterNotebookContent();
             writer.Write(content);
         }
 

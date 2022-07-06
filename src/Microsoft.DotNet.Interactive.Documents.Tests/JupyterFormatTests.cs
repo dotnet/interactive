@@ -4,12 +4,15 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Threading.Tasks;
 using Assent;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using FluentAssertions.Json;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Microsoft.DotNet.Interactive.Utility;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -18,16 +21,16 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
 {
     public class JupyterFormatTests : DocumentFormatTestsBase
     {
+        private readonly Configuration _assentConfiguration =
+            new Configuration()
+                .UsingExtension("json")
+                .SetInteractive(Debugger.IsAttached);
+
         public InteractiveDocument ParseJupyter(object jupyter)
         {
             var content = JsonConvert.SerializeObject(jupyter);
-           
-            return Notebook.Parse(content, KernelLanguageAliases);
-        }
 
-        public string SerializeJupyter(InteractiveDocument interactive, string newLine)
-        {
-            return interactive.ToJupyterNotebookContent(newLine);
+            return Notebook.Parse(content, KernelLanguageAliases);
         }
 
         [Theory]
@@ -791,7 +794,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     new object[]
                     {
                         "line 1",
-                        new Dictionary<string, object>()
+                        new Dictionary<string, object>
                         {
                             { "the_answer", 42 }
                         }
@@ -817,10 +820,10 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         {
                             new
                             {
-                                output_type = "execute_result",
-                                not_data = new Dictionary<string, string>()
+                                output_type = "display_data",
+                                not_data = new Dictionary<string, string[]>
                                 {
-                                    { "text/html", "this is html" }
+                                    { "text/html", new[]{"<div>this is html</div>"} }
                                 },
                                 execution_count = 1,
                                 metadata = new { }
@@ -840,6 +843,52 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .Which
                 .Should()
                 .BeOfType<DisplayElement>()
+                .Which
+                .Data
+                .Should()
+                .BeEmpty();
+        }
+
+        [Fact]
+        public void execute_result_output_without_data_member_can_be_parsed()
+        {
+            var jupyter = new
+            {
+                cells = new object[]
+                {
+                    new
+                    {
+                        cell_type = "code",
+                        execution_count = 1,
+                        metadata = new { },
+                        source = "//",
+                        outputs = new object[]
+                        {
+                            new
+                            {
+                                output_type = "execute_result",
+                                not_data = new Dictionary<string, string[]>
+                                {
+                                    { "text/html", new[]{"<div>this is html</div>"} }
+                                },
+                                execution_count = 1,
+                                metadata = new { }
+                            }
+                        }
+                    }
+                }
+            };
+            var notebook = ParseJupyter(jupyter);
+            notebook.Elements
+                .Should()
+                .ContainSingle()
+                .Which
+                .Outputs
+                .Should()
+                .ContainSingle()
+                .Which
+                .Should()
+                .BeOfType<ReturnValueElement>()
                 .Which
                 .Data
                 .Should()
@@ -931,7 +980,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .BeOfType<ErrorElement>()
                 .Which
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new ErrorElement(null, null, new string[0]));
+                .BeEquivalentToRespectingRuntimeTypes(new ErrorElement(null, null));
         }
 
         [Fact]
@@ -961,7 +1010,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         public void serialized_notebook_has_appropriate_metadata()
         {
             var notebook = new InteractiveDocument(new List<InteractiveDocumentElement>());
-            var serialized = SerializeJupyter(notebook, "\n");
+            var serialized = notebook.ToJupyterNotebookContent();
             var jupyter = JToken.Parse(serialized);
 
             using var _ = new AssertionScope();
@@ -997,12 +1046,12 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public void serialized_code_cells_have_appropriate_shape()
         {
-            var cells = new List<InteractiveDocumentElement>()
+            var cells = new List<InteractiveDocumentElement>
             {
-                new InteractiveDocumentElement("csharp", "//")
+                new("csharp", "//")
             };
             var notebook = new InteractiveDocument(cells);
-            var serialized = SerializeJupyter(notebook,"\n");
+            var serialized = (string)notebook.ToJupyterNotebookContent();
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"]
                 .Should()
@@ -1013,7 +1062,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
+                        execution_count = 0,
                         metadata = new
                         {
                             dotnet_interactive = new
@@ -1035,10 +1084,10 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         {
             var cells = new List<InteractiveDocumentElement>
             {
-                new InteractiveDocumentElement("csharp", "var x = 1;")
+                new("csharp", "var x = 1;")
             };
             var notebook = new InteractiveDocument(cells);
-            var serialized = SerializeJupyter(notebook, "\n");
+            var serialized = notebook.ToJupyterNotebookContent();
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"][0]["source"]
                 .Should()
@@ -1051,19 +1100,19 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public void serialized_code_cells_with_non_default_jupyter_kernel_language_have_language_metadata_and_no_language_specifier()
         {
-            var cells = new List<InteractiveDocumentElement>()
+            var cells = new List<InteractiveDocumentElement>
             {
-                new InteractiveDocumentElement("fsharp", "let x = 1")
+                new("fsharp", "let x = 1") { ExecutionCount = 123 }
             };
             var notebook = new InteractiveDocument(cells);
-            var serialized = SerializeJupyter(notebook, "\n");
+            var serialized = notebook.ToJupyterNotebookContent();
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"][0]
                 .Should()
                 .BeEquivalentTo(JToken.Parse(JsonConvert.SerializeObject(new
                 {
                     cell_type = "code",
-                    execution_count = 1,
+                    execution_count = 123,
                     metadata = new
                     {
                         dotnet_interactive = new
@@ -1087,7 +1136,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 new("csharp", "var x = 1;\nvar y = 2;")
             };
             var notebook = new InteractiveDocument(cells);
-            var serialized = SerializeJupyter(notebook, "\n");
+            var serialized = notebook.ToJupyterNotebookContent();
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"][0]["source"]
                 .Should()
@@ -1106,7 +1155,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 new("markdown", "This is `markdown`.\nThis is more `markdown`.")
             };
             var notebook = new InteractiveDocument(cells);
-            var serialized = SerializeJupyter(notebook, "\n");
+            var serialized = notebook.ToJupyterNotebookContent();
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"]
                 .Should()
@@ -1138,7 +1187,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 })
             };
             var notebook = new InteractiveDocument(cells);
-            var serialized = SerializeJupyter(notebook, "\n");
+            var serialized = (string)notebook.ToJupyterNotebookContent();
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"]
                 .Should()
@@ -1241,18 +1290,18 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public void rich_cell_outputs_are_serialized()
         {
-            var cells = new List<InteractiveDocumentElement>()
+            var cells = new List<InteractiveDocumentElement>
             {
-                new InteractiveDocumentElement("csharp", "//", new[]
+                new("csharp", "//", new[]
                 {
                     new DisplayElement(new Dictionary<string, object>
                     {
-                        { "text/html", "this is html" }
+                        { "text/html", new[] { "<div>this is html</div>" } }
                     })
                 })
             };
             var notebook = new InteractiveDocument(cells);
-            var serialized = SerializeJupyter(notebook, "\n");
+            var serialized = (string)notebook.ToJupyterNotebookContent();
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"]
                 .Should()
@@ -1263,17 +1312,15 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .Which
                 .Should()
                 .BeEquivalentTo(JToken.Parse(JsonConvert.SerializeObject(
-                    new
-                    {
-                        output_type = "execute_result",
-                        data = new Dictionary<string, string>()
-                        {
-                            { "text/html", "this is html" }
-                        },
-                        execution_count = 1,
-                        metadata = new { }
-                    }
-                )));
+                                                 new
+                                                 {
+                                                     output_type = "display_data",
+                                                     data = new Dictionary<string, string[]>
+                                                     {
+                                                         { "text/html", new[] { "<div>this is html</div>" } }
+                                                     }
+                                                 }
+                                             )));
         }
 
         [Fact]
@@ -1294,9 +1341,9 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                             new
                             {
                                 output_type = "execute_result",
-                                data = new Dictionary<string, string>
+                                data = new Dictionary<string, string[]>
                                 {
-                                    { "text/html", "this is html" }
+                                    { "text/html", new[]{"<div>this is html</div>"} }
                                 },
                                 metadata = new{ }
                             }
@@ -1316,22 +1363,22 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new DisplayElement(new Dictionary<string, object>
                 {
-                    { "text/html", "this is html" }
+                    { "text/html", new[]{"<div>this is html</div>"} }
                 }));
         }
 
         [Fact]
         public void error_cell_outputs_are_serialized()
         {
-            var cells = new List<InteractiveDocumentElement>()
+            var cells = new List<InteractiveDocumentElement>
             {
-                new InteractiveDocumentElement("csharp", "//", new[]
+                new("csharp", "//", new[]
                 {
-                    new ErrorElement("e-name", "e-value", new[] { "at func1()", "at func2()" })
+                    new ErrorElement("e-value", "e-name", new[] { "at func1()", "at func2()" })
                 })
             };
             var notebook = new InteractiveDocument(cells);
-            var serialized = SerializeJupyter(notebook, "\n");
+            var serialized = (string)notebook.ToJupyterNotebookContent();
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"]
                 .Should()
@@ -1396,7 +1443,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new ErrorElement("e-name", "e-value", new[]
+                .BeEquivalentToRespectingRuntimeTypes(new ErrorElement("e-value", "e-name", new[]
                 {
                     "at func1()",
                     "at func2()"
@@ -1404,25 +1451,40 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         }
 
         [Fact]
-        public void serialize_entire_file_to_verify_indention()
+        public void serialized_file_output_has_not_changed()
         {
-            var configuration = new Configuration()
-                                 .UsingExtension("json")
-                                 .SetInteractive(Debugger.IsAttached);
-            var cells = new List<InteractiveDocumentElement>()
+            var cells = new List<InteractiveDocumentElement>
             {
-                new InteractiveDocumentElement("csharp", "// this is csharp", new[]
+                new("csharp", "// this is csharp", new[]
                 {
-                    new DisplayElement(new Dictionary<string, object>()
+                    new DisplayElement(new Dictionary<string, object>
                     {
-                        { "text/html", "this is html" }
+                        { "text/html", "<div>this is html</div>" }
                     })
-                }),
-                new InteractiveDocumentElement("markdown", "This is `markdown`.")
+                }) {ExecutionCount = 1},
+                new("markdown", "This is `markdown`.")
             };
             var notebook = new InteractiveDocument(cells);
-            var json = SerializeJupyter(notebook, "\n");
-            this.Assent(json, configuration);
+            var json = notebook.ToJupyterNotebookContent();
+
+            this.Assent(json, _assentConfiguration);
+        }
+
+        [Fact]
+        public async Task ipynb_can_be_round_tripped_through_read_and_write_without_the_content_changing()
+        {
+            var notebookFile = Path.Combine(
+                Path.GetDirectoryName(
+                    PathUtilities.PathToCurrentSourceFile()),
+                $"{nameof(JupyterFormatTests)}.{nameof(ipynb_can_be_round_tripped_through_read_and_write_without_the_content_changing)}.approved.json");
+
+            var expectedContent = await File.ReadAllTextAsync(notebookFile);
+
+            var inputDoc = Notebook.Parse(expectedContent, KernelLanguageAliases);
+
+            var resultContent = inputDoc.ToJupyterNotebookContent();
+
+            this.Assent(resultContent, _assentConfiguration);
         }
     }
 }

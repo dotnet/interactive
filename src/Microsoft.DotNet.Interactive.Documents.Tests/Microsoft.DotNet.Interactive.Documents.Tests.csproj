@@ -44,6 +44,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="JupyterFormatTests.ipynb_can_be_round_tripped_through_read_and_write_without_the_content_changing.approved.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="JupyterFormatTests.serialized_file_output_has_not_changed.approved.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Update="xunit.runner.visualstudio" Version="2.4.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

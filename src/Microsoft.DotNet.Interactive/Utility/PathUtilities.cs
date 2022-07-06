@@ -7,6 +7,7 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -673,6 +674,11 @@ namespace Microsoft.DotNet.Interactive.Utility
             }
 
             return hc;
+        }
+
+        public static string PathToCurrentSourceFile([CallerFilePath] string path = null)
+        {
+            return path;
         }
 
         public static string NormalizePathPrefix(string filePath, ImmutableArray<KeyValuePair<string, string>> pathMap)
