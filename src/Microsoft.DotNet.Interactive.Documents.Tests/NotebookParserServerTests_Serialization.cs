@@ -39,9 +39,10 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         public void NotebookSerializeRequest_deserialization_contract()
         {
             var requestJson = GetTestFileContents();
+            
             var request = NotebookParseOrSerializeRequest.FromJson(requestJson);
+            
             using var _ = new AssertionScope();
-
             request.Type.Should().Be(RequestType.Serialize);
             request.Id.Should().Be("the-id");
             request.SerializationType.Should().Be(DocumentSerializationType.Dib);
@@ -51,10 +52,10 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .BeOfType<NotebookSerializeRequest>();
             var serializeRequest = (NotebookSerializeRequest)request;
             serializeRequest.NewLine.Should().Be("\r\n");
-            serializeRequest.Document.Should().BeEquivalentTo(new InteractiveDocument(new List<InteractiveDocumentElement>()
+            serializeRequest.Document.Should().BeEquivalentTo(new InteractiveDocument(new List<InteractiveDocumentElement>
             {
-                new("csharp", "var x = 1;"),
-                new("fsharp", "let y = 2"),
+                new("var x = 1;", "csharp"),
+                new("let y = 2", "fsharp"),
             }));
         }
 
@@ -67,7 +68,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
 
             var response = new NotebookParseResponse("the-id", new InteractiveDocument(new List<InteractiveDocumentElement>
             {
-                new("csharp", "var x = 1;")
+                new("var x = 1;", "csharp")
             }));
 
             var json = response.ToJson();

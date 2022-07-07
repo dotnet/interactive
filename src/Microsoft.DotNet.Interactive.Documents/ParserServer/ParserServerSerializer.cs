@@ -21,9 +21,11 @@ namespace Microsoft.DotNet.Interactive.Documents.ParserServer
             };
             JsonSerializerOptions.Converters.Add(new ByteArrayConverter());
             JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
-            JsonSerializerOptions.Converters.Add(new NotebookCellOutputConverter());
+            JsonSerializerOptions.Converters.Add(new InteractiveDocumentElementConverter());
+            JsonSerializerOptions.Converters.Add(new InteractiveDocumentOutputElementConverter());
             JsonSerializerOptions.Converters.Add(new NotebookParseRequestConverter());
             JsonSerializerOptions.Converters.Add(new NotebookParseResponseConverter());
+            JsonSerializerOptions.Converters.Add(new DataDictionaryConverter());
         }
 
         public static JsonSerializerOptions JsonSerializerOptions { get; }

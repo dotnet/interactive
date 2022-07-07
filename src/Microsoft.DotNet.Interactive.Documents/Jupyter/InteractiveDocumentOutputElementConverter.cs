@@ -8,9 +8,12 @@ using System.Text.Json;
 
 namespace Microsoft.DotNet.Interactive.Documents.Jupyter;
 
-internal class NotebookCellOutputConverter : JsonConverter<InteractiveDocumentOutputElement>
+internal class InteractiveDocumentOutputElementConverter : JsonConverter<InteractiveDocumentOutputElement>
 {
-    public override InteractiveDocumentOutputElement Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override InteractiveDocumentOutputElement Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options)
     {
         EnsureStartObject(reader, typeToConvert);
 
@@ -18,6 +21,7 @@ internal class NotebookCellOutputConverter : JsonConverter<InteractiveDocumentOu
         string? text = null;
         string? errorName = null;
         string? errorValue = null;
+        string? outputType = null;
         IEnumerable<string>? stackTrace = null;
 
         while (reader.Read())
@@ -27,50 +31,55 @@ internal class NotebookCellOutputConverter : JsonConverter<InteractiveDocumentOu
                 switch (reader.GetString())
                 {
                     case "data":
-                        data = JsonSerializer.Deserialize<IDictionary<string, object>>(ref reader, options);
+                        data = reader.ReadDataDictionary(options);
+                        break;
+
+                    case "ename":
+                        errorName = reader.ReadString();
+                        break;
+
+                    case "evalue":
+                        errorValue = reader.ReadString();
+                        break;
+
+                    case "output_type":
+                        outputType = reader.ReadString();
+                        break;
+
+                    case "traceback":
+                        stackTrace = reader.ReadArray<string>(options);
                         break;
 
                     case "text":
-                        text = JsonSerializer.Deserialize<string>(ref reader, options);
+                        var lines = reader.ReadArray<string>(options);
+
+                        if (lines is not null)
+                        {
+                            text = string.Join("\n", lines);
+                        }
+
                         break;
 
-                    case "errorName":
-                        if (reader.Read() && reader.TokenType == JsonTokenType.String)
-                        {
-                            errorName = reader.GetString();
-                        }
-                        break;
-
-                    case "errorValue":
-                        if (reader.Read() && reader.TokenType == JsonTokenType.String)
-                        {
-                            errorValue = reader.GetString();
-                        }
-                        break;
-
-                    case "stackTrace":
-                        if (reader.Read() && reader.TokenType == JsonTokenType.StartArray)
-                        {
-                            stackTrace = JsonSerializer.Deserialize<string[]>(ref reader, options);
-                        }
+                    default:
+                        reader.Skip();
                         break;
                 }
             }
             else if (reader.TokenType == JsonTokenType.EndObject)
             {
-                if (text is not null)
+                switch (outputType)
                 {
-                    return new TextElement(text);
-                }
+                    case "display_data":
+                        return new DisplayElement(data ?? new Dictionary<string, object>());
 
-                if (data is not null)
-                {
-                    return new DisplayElement(data);
-                }
+                    case "error":
+                        return new ErrorElement(errorValue, errorName, stackTrace?.ToArray());
 
-                if (errorName is not null && errorValue is not null && stackTrace is not null)
-                {
-                    return new ErrorElement(errorValue, errorName, stackTrace.ToArray());
+                    case "execute_result":
+                        return new ReturnValueElement(data ?? new Dictionary<string, object>());
+
+                    case "stream":
+                        return new TextElement(text);
                 }
             }
         }
@@ -140,7 +149,7 @@ internal class NotebookCellOutputConverter : JsonConverter<InteractiveDocumentOu
 
                 writer.WritePropertyName("evalue");
                 writer.WriteStringValue(errorElement.ErrorValue);
-                
+
                 writer.WritePropertyName("output_type");
                 writer.WriteStringValue("error");
 
@@ -149,6 +158,7 @@ internal class NotebookCellOutputConverter : JsonConverter<InteractiveDocumentOu
                 {
                     writer.WriteStringValue(line);
                 }
+
                 writer.WriteEndArray();
 
                 break;
@@ -167,13 +177,14 @@ internal class NotebookCellOutputConverter : JsonConverter<InteractiveDocumentOu
 
                 writer.WritePropertyName("output_type");
                 writer.WriteStringValue("stream");
-                
+
                 writer.WriteStartArray("text");
 
                 foreach (var line in textElement.Text.SplitIntoLines())
                 {
                     writer.WriteStringValue(line);
                 }
+
                 writer.WriteEndArray();
 
                 break;

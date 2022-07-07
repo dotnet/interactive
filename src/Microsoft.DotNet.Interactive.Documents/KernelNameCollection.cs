@@ -3,6 +3,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.DotNet.Interactive.Documents;
 
@@ -10,6 +11,7 @@ public class KernelNameCollection : IReadOnlyCollection<KernelName>
 {
     private readonly List<KernelName> _kernelNames;
     private string? _defaultKernelName;
+    private Dictionary<string, KernelName> _mapOfKernelNamesByAlias;
 
     public KernelNameCollection()
     {
@@ -39,6 +41,25 @@ public class KernelNameCollection : IReadOnlyCollection<KernelName>
     public void Add(KernelName kernelName)
     {
         _kernelNames.Add(kernelName);
+        _mapOfKernelNamesByAlias = null;
+    }
+
+    public bool Contains(string name)
+    {
+        EnsureIndexIsCreated();
+
+        return _mapOfKernelNamesByAlias.ContainsKey(name);
+    }
+
+    private void EnsureIndexIsCreated()
+    {
+        if (_mapOfKernelNamesByAlias is null)
+        {
+            _mapOfKernelNamesByAlias =
+                _kernelNames
+                    .SelectMany(n => n.Aliases.Select(a => (name: n, alias: a)))
+                    .ToDictionary(x => x.alias, x => x.name);
+        }
     }
 
     public IEnumerator<KernelName> GetEnumerator()
@@ -49,5 +70,20 @@ public class KernelNameCollection : IReadOnlyCollection<KernelName>
     IEnumerator IEnumerable.GetEnumerator()
     {
         return ((IEnumerable)_kernelNames).GetEnumerator();
+    }
+
+    public KernelNameCollection Clone()
+    {
+        var clone = new KernelNameCollection(this);
+        clone._defaultKernelName = _defaultKernelName;
+        clone._mapOfKernelNamesByAlias = _mapOfKernelNamesByAlias;
+        return clone;
+    }
+
+    public bool TryGetByAlias(string alias, out KernelName name)
+    {
+        EnsureIndexIsCreated();
+
+        return _mapOfKernelNamesByAlias.TryGetValue(alias, out name);
     }
 }

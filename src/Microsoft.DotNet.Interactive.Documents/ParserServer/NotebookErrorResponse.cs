@@ -3,16 +3,15 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive.Documents.ParserServer
-{
-    public class NotebookErrorResponse : NotebookParserServerResponse
-    {
-        public string ErrorMessage { get; }
+namespace Microsoft.DotNet.Interactive.Documents.ParserServer;
 
-        public NotebookErrorResponse(string id, string errorMessage)
-            : base(id)
-        {
-            ErrorMessage = errorMessage ?? throw new ArgumentNullException(nameof(errorMessage));
-        }
+public class NotebookErrorResponse : NotebookParserServerResponse
+{
+    public NotebookErrorResponse(string id, string errorMessage)
+        : base(id)
+    {
+        ErrorMessage = errorMessage ?? throw new ArgumentNullException(nameof(errorMessage));
     }
+
+    public string ErrorMessage { get; }
 }

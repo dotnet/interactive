@@ -22,7 +22,9 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 serializationType,
                 defaultLanguage: "csharp",
                 rawData: Encoding.UTF8.GetBytes(contents));
+
             var response = NotebookParserServer.HandleRequest(request);
+            
             response
                 .Should()
                 .BeOfType<NotebookParseResponse>()
@@ -49,7 +51,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 newLine: "\n",
                 document: new InteractiveDocument(new List<InteractiveDocumentElement>()
                 {
-                    new InteractiveDocumentElement("csharp", "var x = 1;")
+                    new InteractiveDocumentElement("var x = 1;", "csharp")
                 })
             );
             var response = NotebookParserServer.HandleRequest(request);
