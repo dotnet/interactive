@@ -134,6 +134,9 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 
     function configureKernel(compositeKernel: CompositeKernel, notebookUri: vscodeLike.Uri) {
+        compositeKernel.setDefaultTargetKernelNameForCommand(contracts.RequestInputType, compositeKernel.name);
+        compositeKernel.setDefaultTargetKernelNameForCommand(contracts.SendEditableCodeType, compositeKernel.name);
+
         compositeKernel.registerCommandHandler({
             commandType: contracts.RequestInputType, handle: async (commandInvocation) => {
                 const requestInput = <contracts.RequestInput>commandInvocation.commandEnvelope.command;

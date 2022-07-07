@@ -159,4 +159,45 @@ describe("compositeKernel", () => {
         expect(goReturnValueProduced).not.to.be.undefined;
         expect(goReturnValueProduced.formattedValues[0].value).to.be.eq("21");
     });
+
+    it("routes commands to the appropriate kernels based on command type", async () => {
+        const events: contracts.KernelEventEnvelope[] = [];
+        const compositeKernel = new CompositeKernel("composite-kernel");
+        const python = new Kernel("python");
+        const go = new Kernel("go");
+        compositeKernel.add(python);
+        compositeKernel.add(go);
+
+        const CustomCommandType = "CustomCommand";
+        let handlingKernel: string | undefined = undefined;
+        python.registerCommandHandler({
+            commandType: CustomCommandType, handle: (invocation) => {
+                handlingKernel = invocation.context.handlingKernel?.name;
+                return Promise.resolve();
+            }
+        });
+
+        go.registerCommandHandler({
+            commandType: CustomCommandType, handle: (invocation) => {
+                handlingKernel = invocation.context.handlingKernel?.name;
+                return Promise.resolve();
+            }
+        });
+
+        compositeKernel.registerCommandHandler({
+            commandType: CustomCommandType, handle: (invocation) => {
+                handlingKernel = invocation.context.handlingKernel?.name;
+                return Promise.resolve();
+            }
+        });
+
+        compositeKernel.subscribeToKernelEvents(e => {
+            events.push(e);
+        });
+
+        compositeKernel.setDefaultTargetKernelNameForCommand(<contracts.KernelCommandType>CustomCommandType, compositeKernel.name);
+        await compositeKernel.send({ commandType: <contracts.KernelCommandType>CustomCommandType, command: {} });
+
+        expect(handlingKernel).to.be.eq(compositeKernel.name);
+    });
 });
