@@ -8,6 +8,7 @@ import { Logger } from "./logger";
 
 export class JavascriptKernel extends kernel.Kernel {
     private suppressedLocals: Set<string>;
+    private capture: ConsoleCapture;
 
     constructor(name?: string) {
         super(name ?? "javascript", "Javascript");
@@ -15,6 +16,8 @@ export class JavascriptKernel extends kernel.Kernel {
         this.registerCommandHandler({ commandType: contracts.SubmitCodeType, handle: invocation => this.handleSubmitCode(invocation) });
         this.registerCommandHandler({ commandType: contracts.RequestValueInfosType, handle: invocation => this.handleRequestValueInfos(invocation) });
         this.registerCommandHandler({ commandType: contracts.RequestValueType, handle: invocation => this.handleRequestValue(invocation) });
+
+        this.capture = new ConsoleCapture();
     }
 
     private async handleSubmitCode(invocation: kernel.IKernelCommandInvocation): Promise<void> {
@@ -23,13 +26,13 @@ export class JavascriptKernel extends kernel.Kernel {
 
         invocation.context.publish({ eventType: contracts.CodeSubmissionReceivedType, event: { code }, command: invocation.commandEnvelope });
 
-        let capture: contracts.Disposable | undefined = new ConsoleCapture(invocation.context);
+        this.capture.kernelInvocationContext = invocation.context;
         let result: any = undefined;
 
         try {
             const AsyncFunction = eval(`Object.getPrototypeOf(async function(){}).constructor`);
             const evaluator = AsyncFunction("console", code);
-            result = await evaluator(capture);
+            result = await evaluator(this.capture);
             if (result !== undefined) {
                 const formattedValue = formatValue(result, 'application/json');
                 const event: contracts.ReturnValueProduced = {
@@ -38,15 +41,10 @@ export class JavascriptKernel extends kernel.Kernel {
                 invocation.context.publish({ eventType: contracts.ReturnValueProducedType, event, command: invocation.commandEnvelope });
             }
         } catch (e) {
-            capture.dispose();
-            capture = undefined;
-
             throw e;//?
         }
         finally {
-            if (capture) {
-                capture.dispose();
-            }
+            this.capture.kernelInvocationContext = undefined;
         }
     }
 

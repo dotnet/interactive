@@ -4,9 +4,15 @@ import { KernelInvocationContext } from "./kernelInvocationContext";
 
 export class ConsoleCapture implements contracts.Disposable {
     private originalConsole: Console;
-    constructor(private kernelInvocationContext: KernelInvocationContext) {
+    private _kernelInvocationContext: KernelInvocationContext | undefined;
+
+    constructor() {
         this.originalConsole = console;
         console = <Console><any>this;
+    }
+
+    set kernelInvocationContext(value: KernelInvocationContext | undefined) {
+        this._kernelInvocationContext = value;
     }
 
     assert(value: any, message?: string, ...optionalParams: any[]): void {
@@ -89,32 +95,34 @@ export class ConsoleCapture implements contracts.Disposable {
     }
 
     private publishArgsAsEvents(...args: any[]) {
-        for (const arg of args) {
-            let mimeType: string;
-            let value: string;
-            if (typeof arg !== 'object' && !Array.isArray(arg)) {
-                mimeType = 'text/plain';
-                value = arg?.toString();
-            } else {
-                mimeType = 'application/json';
-                value = JSON.stringify(arg);
+        if (this._kernelInvocationContext) {
+            for (const arg of args) {
+                let mimeType: string;
+                let value: string;
+                if (typeof arg !== 'object' && !Array.isArray(arg)) {
+                    mimeType = 'text/plain';
+                    value = arg?.toString();
+                } else {
+                    mimeType = 'application/json';
+                    value = JSON.stringify(arg);
+                }
+
+                const displayedValue: contracts.DisplayedValueProduced = {
+                    formattedValues: [
+                        {
+                            mimeType,
+                            value,
+                        }
+                    ]
+                };
+                const eventEnvelope: contracts.KernelEventEnvelope = {
+                    eventType: contracts.DisplayedValueProducedType,
+                    event: displayedValue,
+                    command: this._kernelInvocationContext.commandEnvelope
+                };
+
+                this._kernelInvocationContext.publish(eventEnvelope);
             }
-
-            const displayedValue: contracts.DisplayedValueProduced = {
-                formattedValues: [
-                    {
-                        mimeType,
-                        value,
-                    }
-                ]
-            };
-            const eventEnvelope: contracts.KernelEventEnvelope = {
-                eventType: contracts.DisplayedValueProducedType,
-                event: displayedValue,
-                command: this.kernelInvocationContext.commandEnvelope
-            };
-
-            this.kernelInvocationContext.publish(eventEnvelope);
         }
     }
 }
