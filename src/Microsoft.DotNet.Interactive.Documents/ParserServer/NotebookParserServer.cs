@@ -3,14 +3,24 @@
 
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
 
 namespace Microsoft.DotNet.Interactive.Documents.ParserServer
 {
-    public class NotebookParserServer
+    public class NotebookParserServer : IDisposable
     {
+        private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+        public NotebookParserServer(TextReader input, TextWriter output)
+        {
+            Input = input ?? throw new ArgumentNullException(nameof(input));
+            Output = output ?? throw new ArgumentNullException(nameof(output));
+        }
+
         public TextReader Input { get; }
+
         public TextWriter Output { get; }
 
         public static KernelNameCollection WellKnownKernelNames = new()
@@ -19,20 +29,14 @@ namespace Microsoft.DotNet.Interactive.Documents.ParserServer
             new("fsharp", new[] { "f#", "F#", "fs" }),
             new("pwsh", new[] { "powershell" }),
             new("javascript", new[] { "js" }),
-            new("html", Array.Empty<string>()),
-            new("sql", Array.Empty<string>()),
-            new("kql", Array.Empty<string>()),
+            new("html"),
+            new("sql"),
+            new("kql"),
         };
-
-        public NotebookParserServer(TextReader input, TextWriter output)
-        {
-            Input = input ?? throw new ArgumentNullException(nameof(input));
-            Output = output ?? throw new ArgumentNullException(nameof(output));
-        }
-
+        
         public async Task RunAsync()
         {
-            while (true)
+            while (!_cancellationTokenSource.IsCancellationRequested)
             {
                 var line = await Input.ReadLineAsync();
                 if (line is not null)
@@ -109,5 +113,7 @@ namespace Microsoft.DotNet.Interactive.Documents.ParserServer
                 return new NotebookErrorResponse(request.Id, ex.ToString());
             }
         }
+
+        public void Dispose() => _cancellationTokenSource.Cancel();
     }
 }

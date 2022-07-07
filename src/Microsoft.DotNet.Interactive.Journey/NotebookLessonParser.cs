@@ -284,7 +284,7 @@ namespace Microsoft.DotNet.Interactive.Journey
 
             directive = match.Groups["directive"].Value;
             afterDirective = match.Groups["afterDirective"].Value;
-            remainingCell = new InteractiveDocumentElement(cell.Language, string.Join(Environment.NewLine, result.Skip(1)));
+            remainingCell = new InteractiveDocumentElement(string.Join(Environment.NewLine, result.Skip(1)), cell.Language);
             return true;
         }
     }

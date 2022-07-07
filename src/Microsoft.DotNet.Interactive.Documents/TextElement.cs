@@ -5,10 +5,10 @@ namespace Microsoft.DotNet.Interactive.Documents;
 
 public class TextElement : InteractiveDocumentOutputElement
 {
-    public TextElement(string text, string name = "stdout")
+    public TextElement(string? text, string? name = "stdout")
     {
-        Text = text;
-        Name = name;
+        Text = text ?? "";
+        Name = name ?? "stdout";
     }
 
     public string Name { get; }

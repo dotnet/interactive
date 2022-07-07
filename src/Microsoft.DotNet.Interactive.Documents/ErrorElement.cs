@@ -6,7 +6,7 @@ namespace Microsoft.DotNet.Interactive.Documents;
 public class ErrorElement : InteractiveDocumentOutputElement
 {
     public ErrorElement(
-        string errorValue,
+        string? errorValue = null,
         string? errorName = "Error",
         string[]? stackTrace = null)
     {

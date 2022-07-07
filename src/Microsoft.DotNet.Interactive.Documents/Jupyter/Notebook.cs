@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -15,157 +14,36 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
     public static class Notebook
     {
         public const string MetadataNamespace = "dotnet_interactive";
-        private static readonly JsonSerializerOptions _serializerOptions;
 
         public static Encoding Encoding => new UTF8Encoding(false);
 
-        static Notebook()
+        public static InteractiveDocument Parse(
+            string content,
+            KernelNameCollection? kernelNames = null)
         {
-            _serializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.General);
-            _serializerOptions.Converters.Add(new DataDictionaryConverter());
-        }
+            var document = new InteractiveDocument();
 
-        public static InteractiveDocument Parse(string content, KernelNameCollection kernelNames)
-        {
-            if (kernelNames is null)
+            var notebook = JsonDocument.Parse(content).RootElement;
+
+            var elements = notebook.GetProperty("cells").Deserialize<InteractiveDocumentElement[]>(ParserServerSerializer.JsonSerializerOptions);
+
+            if (elements is { })
             {
-                throw new ArgumentNullException(nameof(kernelNames));
+                document.Elements = elements;
             }
 
-            var kernelAliasesToNameMap = kernelNames.ToMapOfKernelNamesByAlias();
-
-            var jupyter = JsonDocument.Parse(content).RootElement;
-            var notebookLanguage = jupyter.GetPropertyFromPath("metadata", "kernelspec", "language")?.GetString();
-
-            var defaultTargetKernelName = notebookLanguage switch
+            if (notebook.TryGetProperty("metadata", out var metadataJson) && metadataJson.Deserialize<IDictionary<string, object>>(ParserServerSerializer.JsonSerializerOptions) is
+                    { } metadataDict)
             {
-                "C#" => "csharp",
-                "F#" => "fsharp",
-                "PowerShell" => "pwsh",
-                _ => kernelNames.DefaultKernelName ?? "csharp"
-            };
-
-            var cells = new List<InteractiveDocumentElement>();
-
-            foreach (var cell in jupyter.GetPropertyFromPath("cells").EnumerateArray())
-            {
-                InteractiveDocumentElement? newCell = new();
-
-                var cell_type = cell.GetPropertyFromPath("cell_type").GetString();
-
-                var id = cell.GetPropertyFromPath("id")?.GetString();
-
-                switch (cell_type)
-                {
-                    case "code":
-                        //
-                        // figure out cell language and content
-                        //
-                        var cellMetadata = cell.GetPropertyFromPath("metadata", MetadataNamespace);
-
-                        var executionCount = cell.GetPropertyFromPath("execution_count").GetValueOrDefault() switch
-                        {
-                            {ValueKind:JsonValueKind.Number} n => n.GetInt32(),
-                            _ => 0
-                        };
-                        
-                        var languageFromMetadata = cellMetadata?.GetPropertyFromPath("language").GetString();
-
-                        var sourceLines = GetTextLines(cell.GetPropertyFromPath("source"));
-
-                        var possibleTargetKernelName = sourceLines.Length > 0 && sourceLines[0].StartsWith("#!")
-                                                       ? sourceLines[0].Substring(2)
-                                                       : null;
-
-                        var (cellTargetKernelName, cellSourceLines) =
-                            possibleTargetKernelName is not null &&
-                            kernelAliasesToNameMap.TryGetValue(possibleTargetKernelName, out var targetKernelName)
-                                ? (targetKernelName, sourceLines.Skip(1))
-                                : (languageFromMetadata ?? defaultTargetKernelName, sourceLines);
-
-                        var source = string.Join("\n", cellSourceLines); // normalize all line endings to `\n`
-
-                        //
-                        // gather cell outputs
-                        //
-
-                        if (cell.TryGetProperty("outputs", out var cellOutputs))
-                        {
-                            foreach (var outputElement in cellOutputs
-                                                          .EnumerateArray()
-                                                          .Select(DeserializeOutputElement)
-                                                          .ToArray())
-                            {
-                                if (outputElement is { })
-                                {
-                                    newCell.Outputs.Add(outputElement);
-                                }
-                                else
-                                {
-                                    // FIX: (Parse) is this a thing?
-                                }
-                            }
-                        }
-                        
-                        newCell.Language = cellTargetKernelName;
-                        newCell.Contents = source;
-                        newCell.ExecutionCount = executionCount;
-
-                        InteractiveDocumentOutputElement? DeserializeOutputElement(JsonElement cellOutput)
-                        {
-                            if (cellOutput.TryGetProperty("output_type", out var cellTypeProperty))
-                            {
-                                return cellTypeProperty.GetString() switch
-                                {
-                                    "display_data" =>
-                                        new DisplayElement(JsonSerializer.Deserialize<IDictionary<string, object>>(
-                                                               cellOutput.GetPropertyFromPath("data").GetRawText(), _serializerOptions)),
-
-                                    "execute_result" =>
-                                        new ReturnValueElement(JsonSerializer.Deserialize<IDictionary<string, object>>(
-                                                                   cellOutput.GetPropertyFromPath("data").GetRawText(), _serializerOptions)),
-
-                                    "stream" =>
-                                        new TextElement(
-                                            GetTextAsSingleString(cellOutput.GetPropertyFromPath("text"))),
-
-                                    "error" =>
-                                        new ErrorElement(cellOutput.GetPropertyFromPath("evalue").GetString(),
-                                                         cellOutput.GetPropertyFromPath("ename").GetString(), cellOutput.GetPropertyFromPath("traceback")
-                                                             .EnumerateArray()
-                                                             .Select(s => s.GetString() ?? "").ToArray()),
-
-                                    _ => null
-                                };
-                            }
-
-                            return null;
-                        }
-
-                        break;
-
-                    case "markdown":
-                        
-                        var markdown = GetTextAsSingleString(cell.GetPropertyFromPath("source"));
-
-                        newCell = new InteractiveDocumentElement("markdown", markdown);
-
-                        break;
-
-                    default:
-                        throw new ArgumentException($"Unrecognized cell_type: {cell_type}");
-                }
-
-                if (id is {} )
-                {
-                    newCell.Id = id;
-                }
-
-                cells.Add(newCell);
+                document.Metadata = metadataDict;
             }
 
-            return new InteractiveDocument(cells);
+            if (kernelNames is { })
+            {
+                document.NormalizeElementLanguages(kernelNames);
+            }
 
+            return document;
         }
 
         public static InteractiveDocument Read(
@@ -184,24 +62,6 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             using var reader = new StreamReader(stream, Encoding);
             var content = await reader.ReadToEndAsync();
             return Parse(content, kernelNames);
-        }
-
-        private static string[] GetTextLines(JsonElement? jsonElement)
-        {
-            var textLines = jsonElement?.ValueKind switch
-            {
-                JsonValueKind.Array => jsonElement.EnumerateArray().Select(element => element.GetString()?.TrimNewline()).ToArray(),
-                JsonValueKind.String => jsonElement.GetString()?.SplitIntoLines(),
-                _ => null
-            } ?? Array.Empty<string>();
-
-            return textLines!;
-        }
-
-        private static string GetTextAsSingleString(JsonElement? jsonElement)
-        {
-            var textLines = GetTextLines(jsonElement);
-            return string.Join("\n", textLines);
         }
 
         public static void Write(InteractiveDocument document, Stream stream)
@@ -273,7 +133,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
                 nbformat = 4,
                 nbformat_minor = 4
             };
-            
+
             var options = new JsonSerializerOptions(ParserServerSerializer.JsonSerializerOptions)
             {
                 WriteIndented = true

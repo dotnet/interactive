@@ -11,14 +11,15 @@ namespace Microsoft.DotNet.Interactive.Documents
         [JsonConstructor]
         public InteractiveDocumentElement()
         {
+            Contents = "";
         }
 
         public InteractiveDocumentElement(
-            string language,
-            string contents,
+            string? contents = null,
+            string? language = null,
             IEnumerable<InteractiveDocumentOutputElement>? outputs = null)
         {
-            Contents = contents;
+            Contents = contents ?? "";
             Language = language;
             Outputs = outputs is { }
                           ? new(outputs)
@@ -26,9 +27,9 @@ namespace Microsoft.DotNet.Interactive.Documents
         }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string Id { get; set; }
+        public string? Id { get; set; }
 
-        public string Language { get; set; }
+        public string? Language { get; set; }
 
         public string Contents { get; set; }
 
@@ -36,6 +37,7 @@ namespace Microsoft.DotNet.Interactive.Documents
 
         public int ExecutionCount { get; set; }
 
-        public Dictionary<string, object> Metadata { get; } = new();
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public IDictionary<string, object>? Metadata { get; set; }
     }
 }

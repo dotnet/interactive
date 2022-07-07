@@ -8,7 +8,10 @@ namespace Microsoft.DotNet.Interactive.Documents.ParserServer;
 
 internal class NotebookParseRequestConverter : JsonConverter<NotebookParseOrSerializeRequest>
 {
-    public override NotebookParseOrSerializeRequest Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override NotebookParseOrSerializeRequest Read(
+        ref Utf8JsonReader reader, 
+        Type typeToConvert, 
+        JsonSerializerOptions options)
     {
         EnsureStartObject(reader, typeToConvert);
 
