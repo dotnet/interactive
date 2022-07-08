@@ -5,15 +5,17 @@ changelog:
     labels:
       - ignore-for-release
       - dependencies
+      - Area-Build & Infrastructure
   categories:
-    - title: Breaking Changes 🛠
+    - title: Breaking Changes 🧨
       labels:
-        - Semver-Major
-        - breaking-change
+        - "breaking change"
     - title: Exciting New Features 🎉
       labels:
-        - Semver-Minor
         - enhancement
+    - title: Bug fixes🛠️
+      labels:
+        - bug
     - title: Other Changes
       labels:
         - "*"
