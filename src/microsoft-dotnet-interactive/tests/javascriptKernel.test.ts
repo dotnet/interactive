@@ -122,4 +122,21 @@ describe("javascriptKernel", () => {
         expect(event.formattedValues[0].value).to.equal("12");
         expect(event.formattedValues[0].mimeType).to.equal("text/plain");
     });
+
+    it("redirected console is reused in subsequent submissions", async () => {
+        const events: contracts.KernelEventEnvelope[] = [];
+        const kernel = new JavascriptKernel();
+        kernel.subscribeToKernelEvents((e) => {
+            events.push(e);
+        });
+
+        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "hello = function () { console.log('hello'); };" } });
+        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "hello();" } });
+        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "hello();" } });
+        const writtenLines = events.filter(e => e.eventType === contracts.DisplayedValueProducedType).map(e => <contracts.DisplayedValueProduced>e.event).map(e => e.formattedValues[0].value);
+        expect(writtenLines).to.deep.equal([
+            "hello",
+            "hello",
+        ]);
+    });
 });
