@@ -11,7 +11,7 @@ public class KernelNameCollection : IReadOnlyCollection<KernelName>
 {
     private readonly List<KernelName> _kernelNames;
     private string? _defaultKernelName;
-    private Dictionary<string, KernelName> _mapOfKernelNamesByAlias;
+    private Dictionary<string, KernelName>? _mapOfKernelNamesByAlias;
 
     public KernelNameCollection()
     {
@@ -48,7 +48,7 @@ public class KernelNameCollection : IReadOnlyCollection<KernelName>
     {
         EnsureIndexIsCreated();
 
-        return _mapOfKernelNamesByAlias.ContainsKey(name);
+        return _mapOfKernelNamesByAlias!.ContainsKey(name);
     }
 
     private void EnsureIndexIsCreated()
@@ -74,9 +74,11 @@ public class KernelNameCollection : IReadOnlyCollection<KernelName>
 
     public KernelNameCollection Clone()
     {
-        var clone = new KernelNameCollection(this);
-        clone._defaultKernelName = _defaultKernelName;
-        clone._mapOfKernelNamesByAlias = _mapOfKernelNamesByAlias;
+        var clone = new KernelNameCollection(this)
+        {
+            _defaultKernelName = _defaultKernelName,
+            _mapOfKernelNamesByAlias = _mapOfKernelNamesByAlias
+        };
         return clone;
     }
 
@@ -84,6 +86,6 @@ public class KernelNameCollection : IReadOnlyCollection<KernelName>
     {
         EnsureIndexIsCreated();
 
-        return _mapOfKernelNamesByAlias.TryGetValue(alias, out name);
+        return _mapOfKernelNamesByAlias!.TryGetValue(alias, out name);
     }
 }

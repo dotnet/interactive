@@ -1,13 +1,15 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Documents;
 
-public class InteractiveDocument
+public class InteractiveDocument  : IEnumerable
 {
+    private IDictionary<string, object>? _metadata;
+
     public InteractiveDocument(IList<InteractiveDocumentElement>? elements = null)
     {
         Elements = elements ?? new List<InteractiveDocumentElement>();
@@ -15,10 +17,39 @@ public class InteractiveDocument
 
     public IList<InteractiveDocumentElement> Elements { get; set; }
 
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public IDictionary<string, object>? Metadata { get; set; }
+    public IDictionary<string, object> Metadata => 
+        _metadata ??= new Dictionary<string, object>();
+
+    public IEnumerator GetEnumerator() => Elements.GetEnumerator();
+
+    public void Add(InteractiveDocumentElement element) => Elements.Add(element);
 
     internal void NormalizeElementLanguages(KernelNameCollection kernelNames)
+    {
+        var notebookDefaultKernelName = GetNotebookDefaultKernelName(kernelNames);
+
+        foreach (var element in Elements)
+        {
+            if (element.InferredTargetKernelName is not null &&
+                kernelNames.TryGetByAlias(element.InferredTargetKernelName, out var byMagic))
+            {
+                element.Language = byMagic.Name;
+            }
+
+            if (element.Language is null)
+            {
+                element.Language = notebookDefaultKernelName;
+            }
+
+            if (element.Language is not null &&
+                kernelNames.TryGetByAlias(element.Language, out var n))
+            {
+                element.Language = n.Name;
+            }
+        }
+    }
+
+    internal string? GetNotebookDefaultKernelName(KernelNameCollection kernelNames)
     {
         string? notebookDefaultKernelName = null;
 
@@ -45,19 +76,6 @@ public class InteractiveDocument
             notebookDefaultKernelName = name.Name;
         }
 
-        foreach (var element in Elements)
-        {
-            if (element.Language is null)
-            {
-                element.Language = notebookDefaultKernelName;
-            }
-            else
-            {
-                if (kernelNames.TryGetByAlias(element.Language, out var n))
-                {
-                    element.Language = n.Name;
-                }
-            }
-        }
+        return notebookDefaultKernelName;
     }
 }

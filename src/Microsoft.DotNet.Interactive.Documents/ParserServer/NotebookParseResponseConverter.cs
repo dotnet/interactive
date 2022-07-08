@@ -8,7 +8,10 @@ namespace Microsoft.DotNet.Interactive.Documents.ParserServer;
 
 internal class NotebookParseResponseConverter : JsonConverter<NotebookParserServerResponse>
 {
-    public override NotebookParserServerResponse Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override NotebookParserServerResponse Read(
+        ref Utf8JsonReader reader, 
+        Type typeToConvert, 
+        JsonSerializerOptions options)
     {
         EnsureStartObject(reader, typeToConvert);
 
@@ -29,6 +32,7 @@ internal class NotebookParseResponseConverter : JsonConverter<NotebookParserServ
                             id = reader.GetString();
                         }
                         break;
+
                     case "document":
                         if (reader.Read() && reader.TokenType == JsonTokenType.StartObject)
                         {
@@ -42,11 +46,16 @@ internal class NotebookParseResponseConverter : JsonConverter<NotebookParserServ
                             rawData = JsonSerializer.Deserialize<byte[]>(ref reader, options);
                         }
                         break;
+
                     case "errorMessage":
                         if (reader.Read() && reader.TokenType == JsonTokenType.String)
                         {
                             errorMessage = reader.GetString();
                         }
+                        break;
+
+                    default: 
+                        reader.Skip();
                         break;
                 }
             }
@@ -54,7 +63,7 @@ internal class NotebookParseResponseConverter : JsonConverter<NotebookParserServ
             {
                 if (id is null)
                 {
-                    throw new JsonException("Missing properties on response object");
+                    throw new JsonException($"Missing required property 'id' when deserializing {typeof(NotebookParserServerResponse)}");
                 }
 
                 if (document is not null)
@@ -72,7 +81,7 @@ internal class NotebookParseResponseConverter : JsonConverter<NotebookParserServ
                     return new NotebookErrorResponse(id, errorMessage);
                 }
 
-                throw new JsonException($"Cannot deserialize {typeToConvert.Name} due to missing properties");
+                throw new JsonException($"Cannot deserialize {typeToConvert} due to missing properties");
             }
         }
 

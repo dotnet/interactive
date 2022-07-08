@@ -35,11 +35,13 @@ internal class NotebookParseRequestConverter : JsonConverter<NotebookParseOrSeri
                             type = JsonSerializer.Deserialize<RequestType>(ref reader, options);
                         }
                         break;
+
                     case "id":
                         if (reader.Read() && reader.TokenType == JsonTokenType.String)
                         {
                             id = reader.GetString();
                         }
+                    
                         break;
                     case "serializationType":
                         if (reader.Read() && reader.TokenType == JsonTokenType.String)
@@ -47,24 +49,28 @@ internal class NotebookParseRequestConverter : JsonConverter<NotebookParseOrSeri
                             serializationType = JsonSerializer.Deserialize<DocumentSerializationType>(ref reader, options);
                         }
                         break;
+
                     case "defaultLanguage":
                         if (reader.Read() && reader.TokenType == JsonTokenType.String)
                         {
                             defaultLanguage = reader.GetString();
                         }
                         break;
+
                     case "rawData":
                         if (reader.Read() && reader.TokenType == JsonTokenType.String)
                         {
                             rawData = JsonSerializer.Deserialize<byte[]>(ref reader, options);
                         }
                         break;
+
                     case "newLine":
                         if (reader.Read() && reader.TokenType == JsonTokenType.String)
                         {
                             newLine = reader.GetString();
                         }
                         break;
+
                     case "document":
                         if (reader.Read() && reader.TokenType == JsonTokenType.StartObject)
                         {
@@ -80,7 +86,7 @@ internal class NotebookParseRequestConverter : JsonConverter<NotebookParseOrSeri
                     serializationType is null ||
                     defaultLanguage is null)
                 {
-                    throw new JsonException("Missing properties on request object");
+                    throw new JsonException($"Missing required property 'id' when deserializing {typeof(NotebookParseOrSerializeRequest)}");
                 }
 
                 switch (type.GetValueOrDefault())
@@ -92,6 +98,7 @@ internal class NotebookParseRequestConverter : JsonConverter<NotebookParseOrSeri
                         }
 
                         return new NotebookParseRequest(id, serializationType.GetValueOrDefault(), defaultLanguage, rawData);
+
                     case RequestType.Serialize:
                         if (newLine is null ||
                             document is null)
@@ -100,6 +107,7 @@ internal class NotebookParseRequestConverter : JsonConverter<NotebookParseOrSeri
                         }
 
                         return new NotebookSerializeRequest(id, serializationType.GetValueOrDefault(), defaultLanguage, newLine, document);
+
                     default:
                         throw new JsonException($"Unsupported request type '{type}'");
                 }

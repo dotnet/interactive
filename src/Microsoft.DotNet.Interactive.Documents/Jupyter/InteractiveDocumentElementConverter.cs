@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using Microsoft.DotNet.Interactive.Documents.Utility;
 
 namespace Microsoft.DotNet.Interactive.Documents.Jupyter;
 
@@ -16,7 +17,7 @@ internal class InteractiveDocumentElementConverter : JsonConverter<InteractiveDo
         JsonSerializerOptions options)
     {
         InteractiveDocumentElement element = new();
-        string? possibleTargetKernelName = null;
+        string? inferredTargetKernelName = null;
 
         while (reader.Read())
         {
@@ -42,10 +43,11 @@ internal class InteractiveDocumentElementConverter : JsonConverter<InteractiveDo
                         break;
 
                     case "metadata":
-                        var dict = reader.ReadDataDictionary(options);
-                        element.Metadata = dict ?? new Dictionary<string, object>();
+                        var metadata = reader.ReadDataDictionary(options);
+                        element.Metadata ??= new Dictionary<string, object>();
+                        element.Metadata.MergeWith(metadata);
 
-                        if (element.Metadata.TryGetValue("dotnet_interactive", out var dotnet_interactive) &&
+                        if (element.Metadata?.TryGetValue("dotnet_interactive", out var dotnet_interactive) == true &&
                             dotnet_interactive is IDictionary<string, object> dotnet_interactive_dict &&
                             dotnet_interactive_dict.TryGetValue("language", out var languageStuff) &&
                             languageStuff is string language)
@@ -69,13 +71,22 @@ internal class InteractiveDocumentElementConverter : JsonConverter<InteractiveDo
                         break;
 
                     case "source":
-                        var lines = reader.ReadArray<string>(options) ?? Array.Empty<string>();
+                        var lines = reader.ReadArrayOrStringAsString();
 
-                        element.Contents = string.Join("\n", lines);
+                        if (lines is { })
+                        {
+                            element.Contents = lines;
 
-                        possibleTargetKernelName = lines.Length > 0 && lines[0].StartsWith("#!")
-                                                       ? lines[0].Substring(2)
-                                                       : null;
+                            if (lines.StartsWith("#!"))
+                            {
+                                var i = lines.IndexOfAny(new[] { ' ', '\n', '\r' });
+
+                                if (i > 0)
+                                {
+                                    inferredTargetKernelName = lines[2..i];
+                                }
+                            }
+                        }
 
                         break;
 
@@ -86,9 +97,9 @@ internal class InteractiveDocumentElementConverter : JsonConverter<InteractiveDo
             }
             else if (reader.TokenType == JsonTokenType.EndObject)
             {
-                if (possibleTargetKernelName is { })
+                if (inferredTargetKernelName is { })
                 {
-                    element.Language = possibleTargetKernelName;
+                    element.InferredTargetKernelName = inferredTargetKernelName;
                 }
 
                 return element;
@@ -98,26 +109,61 @@ internal class InteractiveDocumentElementConverter : JsonConverter<InteractiveDo
         throw new JsonException($"Cannot deserialize {typeToConvert.Name}");
     }
 
-    public override void Write(Utf8JsonWriter writer, InteractiveDocumentElement value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, InteractiveDocumentElement element, JsonSerializerOptions options)
     {
-        base.Write(writer, value, options);
-    }
+        writer.WriteStartObject();
 
-    private static string[] GetTextLines(JsonElement? jsonElement)
-    {
-        var textLines = jsonElement?.ValueKind switch
+        writer.WritePropertyName("cell_type");
+
+        if (element.Language == "markdown")
         {
-            JsonValueKind.Array => jsonElement.EnumerateArray().Select(element => element.GetString()?.TrimNewline()).ToArray(),
-            JsonValueKind.String => jsonElement.GetString()?.SplitIntoLines(),
-            _ => null
-        } ?? Array.Empty<string>();
+            writer.WriteStringValue("markdown");
+        }
+        else
+        {
+            writer.WriteStringValue("code");
 
-        return textLines!;
+            writer.WritePropertyName("execution_count");
+            writer.WriteNumberValue(element.ExecutionCount);
+        }
+
+        if (element.Metadata is null)
+        {
+            element.Metadata = new Dictionary<string, object>();
+        }
+
+        if (element.Language is not null && 
+            element.Language != "markdown")
+        {
+            element.Metadata.GetOrAdd("dotnet_interactive", 
+                                      _ => new Dictionary<string, object>())
+                ["language"] = element.Language;
+        }
+
+        writer.WritePropertyName("metadata");
+        JsonSerializer.Serialize(writer, element.Metadata, options);
+
+        writer.WritePropertyName("outputs");
+        JsonSerializer.Serialize(writer, element.Outputs, options);
+
+        writer.WritePropertyName("source");
+        var lines = EnsureTrailingNewlinesOnAllButLast(element.Contents.SplitIntoLines());
+        JsonSerializer.Serialize(writer, lines, options);
+
+        writer.WriteEndObject();
     }
 
-    private static string GetTextAsSingleString(JsonElement? jsonElement)
+    internal static string[] EnsureTrailingNewlinesOnAllButLast(string[] lines)
     {
-        var textLines = GetTextLines(jsonElement);
-        return string.Join("\n", textLines);
+        var result = lines.Select(l => l.EndsWith("\n")
+                                           ? l
+                                           : l + "\n").ToArray();
+
+        if (result.Length > 0)
+        {
+            result[^1] = lines.Last();
+        }
+
+        return result;
     }
 }

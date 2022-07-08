@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -37,7 +37,8 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .Should()
                 .BeEquivalentTo(new NotebookParseResponse(
                     "the-id",
-                    document: new InteractiveDocument(new List<InteractiveDocumentElement>
+                    document: new InteractiveDocument(
+                   new List<InteractiveDocumentElement>
                     {
                         new("var x = 1;", "csharp")
                     })));
@@ -58,9 +59,11 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 serializationType: DocumentSerializationType.Dib,
                 defaultLanguage: "csharp",
                 newLine: "\n",
-                document: new InteractiveDocument(new List<InteractiveDocumentElement>()
-                {
-                    new InteractiveDocumentElement("let y = 2", "fsharp")
+                document: new InteractiveDocument
+              (
+                   new List<InteractiveDocumentElement>
+                    {
+                    new("let y = 2", "fsharp")
                 }));
             var fullRequestText = string.Concat(
                 request1.ToJson(),
@@ -99,7 +102,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 rawData: Array.Empty<byte>());
 
             var requestJson = string.Concat(
-                "this is a request that can't be handled in any meaninful way, including returning an error",
+                "this is a request that can't be handled in any meaningful way, including returning an error",
                 "\n",
                 validRequest.ToJson(),
                 "\n");
@@ -151,7 +154,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 return collection.Current;
             }
 
-            throw new Exception("No more items");
+            throw new InvalidOperationException("No more items");
         }
     }
 }

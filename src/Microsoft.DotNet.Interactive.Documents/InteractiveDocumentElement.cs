@@ -39,5 +39,7 @@ namespace Microsoft.DotNet.Interactive.Documents
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public IDictionary<string, object>? Metadata { get; set; }
+
+        internal string? InferredTargetKernelName { get; set; }
     }
 }

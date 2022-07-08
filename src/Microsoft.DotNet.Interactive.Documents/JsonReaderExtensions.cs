@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 
@@ -25,6 +26,16 @@ internal static class JsonReaderExtensions
         JsonSerializerOptions options) =>
         JsonSerializer.Deserialize<IDictionary<string, object>>(ref reader, options);
 
+    internal static int? ReadInt32(this ref Utf8JsonReader reader)
+    {
+        if (reader.Read() && reader.TokenType == JsonTokenType.Number)
+        {
+            return reader.GetInt32();
+        }
+
+        return null;
+    }
+
     internal static string? ReadString(this ref Utf8JsonReader reader)
     {
         if (reader.Read() && reader.TokenType == JsonTokenType.String)
@@ -35,11 +46,38 @@ internal static class JsonReaderExtensions
         return null;
     }
 
-    internal static int? ReadInt32(this ref Utf8JsonReader reader)
+    internal static string[]? ReadArrayOrStringAsArray(
+        this ref Utf8JsonReader reader)
     {
-        if (reader.Read() && reader.TokenType == JsonTokenType.Number)
+        if (reader.Read())
         {
-            return reader.GetInt32();
+            return reader.TokenType switch
+            {
+                JsonTokenType.StartArray =>
+                    JsonSerializer.Deserialize<string[]>(ref reader),
+
+                JsonTokenType.String =>
+                    reader.GetString()?.SplitIntoLines()
+            } ?? Array.Empty<string>();
+        }
+
+        return null;
+    }
+
+    internal static string? ReadArrayOrStringAsString(
+        this ref Utf8JsonReader reader)
+    {
+        if (reader.Read())
+        {
+            switch (reader.TokenType)
+            {
+                case JsonTokenType.StartArray:
+                    var lines = JsonSerializer.Deserialize<string[]>(ref reader);
+                    return string.Join("\n", lines);
+
+                case JsonTokenType.String:
+                    return reader.GetString();
+            }
         }
 
         return null;

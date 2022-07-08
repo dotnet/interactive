@@ -293,11 +293,10 @@ var x = 1;
         [Fact]
         public void extra_blank_lines_are_removed_from_beginning_and_end_on_save()
         {
-            var cells = new List<InteractiveDocumentElement>()
+            var notebook = new InteractiveDocument
             {
-                new InteractiveDocumentElement("\n\n\n\n// this is csharp\n\n\n", "csharp")
+                new("\n\n\n\n// this is csharp\n\n\n", "csharp")
             };
-            var notebook = new InteractiveDocument(cells);
             var serialized = SerializeDib(notebook, "\n");
             var expectedLines = new[]
             {
@@ -315,13 +314,12 @@ var x = 1;
         [Fact]
         public void empty_cells_are_not_serialized()
         {
-            var cells = new List<InteractiveDocumentElement>()
+            var notebook = new InteractiveDocument
             {
                 new InteractiveDocumentElement("", "csharp"),
                 new InteractiveDocumentElement("// this is fsharp", "fsharp"),
                 new InteractiveDocumentElement("", "csharp")
             };
-            var notebook = new InteractiveDocument(cells);
             var serialized = SerializeDib(notebook, "\n");
             var expectedLines = new[]
             {

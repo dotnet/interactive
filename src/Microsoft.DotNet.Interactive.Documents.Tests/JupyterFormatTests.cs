@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Assent;
 using FluentAssertions;
@@ -450,7 +451,6 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     {
                         cell_type = "code",
                         execution_count = 0,
-                        metadata = new { },
                         source = new[] {"#!probably-a-magic-command\n// but this is csharp"}
                     }
                 },
@@ -585,6 +585,31 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 {
                     new InteractiveDocumentElement("line 1\nline 2\nline 3\nline 4", "csharp")
                 });
+        }
+
+        [Fact]
+        public void cells_can_specify_source_as_a_single_string()
+        {
+            var jupyter = new
+            {
+                cells = new object[]
+                {
+                    new
+                    {
+                        cell_type = "code",
+                        source = "line 1\nline 2\nline 3\n"
+                    }
+                },
+            };
+
+            var notebook = SerializeAndParse(jupyter);
+            
+            notebook.Elements
+                    .Should()
+                    .BeEquivalentToRespectingRuntimeTypes(new[]
+                    {
+                        new InteractiveDocumentElement("line 1\nline 2\nline 3\n", "csharp")
+                    });
         }
 
         [Fact]
@@ -923,8 +948,8 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public void serialized_notebook_has_appropriate_metadata()
         {
-            var notebook = new InteractiveDocument(new List<InteractiveDocumentElement>());
-            var serialized = notebook.ToJupyterNotebookContent();
+            var notebook = new InteractiveDocument();
+            var serialized = notebook.Serialize();
             var jupyter = JToken.Parse(serialized);
 
             using var _ = new AssertionScope();
@@ -965,7 +990,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 new("//", "csharp")
             };
             var notebook = new InteractiveDocument(cells);
-            var serialized = (string)notebook.ToJupyterNotebookContent();
+            var serialized = notebook.Serialize();
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"]
                 .Should()
@@ -1001,7 +1026,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 new("var x = 1;", "csharp")
             };
             var notebook = new InteractiveDocument(cells);
-            var serialized = notebook.ToJupyterNotebookContent();
+            var serialized = notebook.Serialize();
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"][0]["source"]
                 .Should()
@@ -1019,7 +1044,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 new("let x = 1", "fsharp") { ExecutionCount = 123 }
             };
             var notebook = new InteractiveDocument(cells);
-            var serialized = notebook.ToJupyterNotebookContent();
+            var serialized = notebook.Serialize();
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"][0]
                 .Should()
@@ -1050,7 +1075,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 new("var x = 1;\nvar y = 2;", "csharp")
             };
             var notebook = new InteractiveDocument(cells);
-            var serialized = notebook.ToJupyterNotebookContent();
+            var serialized = notebook.Serialize();
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"][0]["source"]
                 .Should()
@@ -1069,7 +1094,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 new("This is `markdown`.\nThis is more `markdown`.", "markdown")
             };
             var notebook = new InteractiveDocument(cells);
-            var serialized = notebook.ToJupyterNotebookContent();
+            var serialized = notebook.Serialize();
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"]
                 .Should()
@@ -1081,10 +1106,11 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     {
                         cell_type = "markdown",
                         metadata = new { },
+                        outputs = new InteractiveDocumentOutputElement[]{},
                         source = new[]
                         {
                             "This is `markdown`.\n",
-                            "This is more `markdown`.",
+                            "This is more `markdown`."
                         }
                     }
                 )));
@@ -1101,7 +1127,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 })
             };
             var notebook = new InteractiveDocument(cells);
-            var serialized = notebook.ToJupyterNotebookContent();
+            var serialized = notebook.Serialize();
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"]
                 .Should()
@@ -1119,6 +1145,44 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         text = new[] { "this is text" }
                     }
                 )));
+        }
+
+        [Fact]
+        public void text_cell_outputs_are_parsed_as_string()
+        {
+            var jupyter = new
+            {
+                cells = new object[]
+                {
+                    new
+                    {
+                        cell_type = "code",
+                        source = "//",
+                        outputs = new object[]
+                        {
+                            new
+                            {
+                                output_type = "stream",
+                                name = "stdout",
+                                text = "this is text"
+                            }
+                        }
+                    }
+                }
+            };
+
+            var notebook = SerializeAndParse(jupyter);
+            
+            notebook.Elements
+                    .Should()
+                    .ContainSingle()
+                    .Which
+                    .Outputs
+                    .Should()
+                    .ContainSingle()
+                    .Which
+                    .Should()
+                    .BeEquivalentToRespectingRuntimeTypes(new TextElement("this is text"));
         }
 
         [Fact]
@@ -1179,7 +1243,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 })
             };
             var notebook = new InteractiveDocument(cells);
-            var serialized = notebook.ToJupyterNotebookContent();
+            var serialized = notebook.Serialize();
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"]
                 .Should()
@@ -1256,7 +1320,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 })
             };
             var notebook = new InteractiveDocument(cells);
-            var serialized = (string)notebook.ToJupyterNotebookContent();
+            var serialized = (string)notebook.Serialize();
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"]
                 .Should()
@@ -1331,7 +1395,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public void serialized_file_output_has_not_changed()
         {
-            var cells = new List<InteractiveDocumentElement>
+            var notebook = new InteractiveDocument
             {
                 new("// this is csharp", "csharp", new[]
                 {
@@ -1339,11 +1403,13 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     {
                         { "text/html", "<div>this is html</div>" }
                     })
-                }) {ExecutionCount = 1},
+                }) { ExecutionCount = 1 },
                 new("This is `markdown`.", "markdown")
             };
-            var notebook = new InteractiveDocument(cells);
-            var json = notebook.ToJupyterNotebookContent();
+
+            var json = notebook
+                       .WithJupyterMetadataIfNotSet()
+                       .Serialize();
 
             this.Assent(json, _assentConfiguration);
         }
@@ -1351,7 +1417,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public async Task ipynb_from_Jupyter_can_be_round_tripped_through_read_and_write_without_the_content_changing()
         {
-            var path = GetNotebookFilePath(nameof(ipynb_from_Jupyter_can_be_round_tripped_through_read_and_write_without_the_content_changing));
+            var path = GetNotebookFilePath();
 
             this.Assent(await RoundTripIpynb(path), _assentConfiguration);
         }
@@ -1359,7 +1425,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public async Task ipynb_from_VSCode_can_be_round_tripped_through_read_and_write_without_the_content_changing()
         {
-            var path = GetNotebookFilePath(nameof(ipynb_from_VSCode_can_be_round_tripped_through_read_and_write_without_the_content_changing));
+            var path = GetNotebookFilePath();
 
             this.Assent(await RoundTripIpynb(path), _assentConfiguration);
         }
@@ -1370,11 +1436,12 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
 
             var inputDoc = Notebook.Parse(expectedContent, KernelNames);
 
-            var resultContent = inputDoc.ToJupyterNotebookContent();
+            var resultContent = inputDoc.Serialize(enforceJupyterMetadata: false);
+
             return resultContent;
         }
 
-        private string GetNotebookFilePath(string testName) =>
+        private string GetNotebookFilePath([CallerMemberName] string testName = null) =>
             Path.Combine(
                 Path.GetDirectoryName(
                     PathUtilities.PathToCurrentSourceFile()),

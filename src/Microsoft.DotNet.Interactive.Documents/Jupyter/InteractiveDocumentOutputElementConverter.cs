@@ -51,12 +51,7 @@ internal class InteractiveDocumentOutputElementConverter : JsonConverter<Interac
                         break;
 
                     case "text":
-                        var lines = reader.ReadArray<string>(options);
-
-                        if (lines is not null)
-                        {
-                            text = string.Join("\n", lines);
-                        }
+                        text = reader.ReadArrayOrStringAsString();
 
                         break;
 

@@ -49,9 +49,9 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 serializationType,
                 defaultLanguage: "csharp",
                 newLine: "\n",
-                document: new InteractiveDocument(new List<InteractiveDocumentElement>()
+                document: new InteractiveDocument(new List<InteractiveDocumentElement>
                 {
-                    new InteractiveDocumentElement("var x = 1;", "csharp")
+                    new("var x = 1;", "csharp")
                 })
             );
             var response = NotebookParserServer.HandleRequest(request);

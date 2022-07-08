@@ -32,6 +32,7 @@ namespace Microsoft.DotNet.Interactive.Documents.ParserServer
             new("html"),
             new("sql"),
             new("kql"),
+            new("value"),
         };
         
         public async Task RunAsync()

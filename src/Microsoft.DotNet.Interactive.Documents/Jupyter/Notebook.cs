@@ -1,44 +1,53 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Documents.ParserServer;
+using Microsoft.DotNet.Interactive.Documents.Json;
 
 namespace Microsoft.DotNet.Interactive.Documents.Jupyter
 {
     public static class Notebook
     {
+        static Notebook()
+        {
+            JsonSerializerOptions = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                Converters =
+                {
+                    new ByteArrayConverter(),
+                    new DataDictionaryConverter(),
+                    new InteractiveDocumentConverter(),
+                    new InteractiveDocumentElementConverter(),
+                    new InteractiveDocumentOutputElementConverter(),
+                    new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
+                }
+            };
+        }
+
+        public static JsonSerializerOptions JsonSerializerOptions { get; }
+
         public const string MetadataNamespace = "dotnet_interactive";
 
         public static Encoding Encoding => new UTF8Encoding(false);
 
         public static InteractiveDocument Parse(
-            string content,
+            string json,
             KernelNameCollection? kernelNames = null)
         {
-            var document = new InteractiveDocument();
+            var document = JsonSerializer.Deserialize<InteractiveDocument>(json, JsonSerializerOptions) ??
+                           throw new JsonException($"Unable to parse as {typeof(InteractiveDocument)}:\n\n{json}");
 
-            var notebook = JsonDocument.Parse(content).RootElement;
-
-            var elements = notebook.GetProperty("cells").Deserialize<InteractiveDocumentElement[]>(ParserServerSerializer.JsonSerializerOptions);
-
-            if (elements is { })
-            {
-                document.Elements = elements;
-            }
-
-            if (notebook.TryGetProperty("metadata", out var metadataJson) && metadataJson.Deserialize<IDictionary<string, object>>(ParserServerSerializer.JsonSerializerOptions) is
-                    { } metadataDict)
-            {
-                document.Metadata = metadataDict;
-            }
-
-            if (kernelNames is { })
+            if (kernelNames is not null)
             {
                 document.NormalizeElementLanguages(kernelNames);
             }
@@ -71,97 +80,30 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             writer.Flush();
         }
 
-        public static string ToJupyterNotebookContent(this InteractiveDocument document)
+        public static string Serialize(
+            this InteractiveDocument document,
+            bool enforceJupyterMetadata = true)
         {
-            var cells = new List<object>();
-            foreach (var element in document.Elements)
+            if (enforceJupyterMetadata)
             {
-                object? cell = null;
-
-                switch (element.Language)
-                {
-                    case "markdown":
-                        cell = new
-                        {
-                            cell_type = "markdown",
-                            metadata = new { },
-                            source = AddTrailingNewlinesToAllButLast(element.Contents.SplitIntoLines())
-                        };
-                        break;
-
-                    default:
-                        cell = new
-                        {
-                            cell_type = "code",
-                            execution_count = element.ExecutionCount,
-                            metadata = new
-                            {
-                                dotnet_interactive = new
-                                {
-                                    language = element.Language
-                                }
-                            },
-                            outputs = element.Outputs,
-                            source = AddTrailingNewlinesToAllButLast(element.Contents.SplitIntoLines())
-                        };
-                        break;
-                }
-
-                cells.Add(cell);
+                document.WithJupyterMetadataIfNotSet();
             }
 
-            var jupyter = new
-            {
-                cells,
-                metadata = new
-                {
-                    kernelspec = new
-                    {
-                        display_name = ".NET (C#)",
-                        language = "C#",
-                        name = ".net-csharp"
-                    },
-                    language_info = new
-                    {
-                        file_extension = ".cs",
-                        mimetype = "text/x-csharp",
-                        name = "C#",
-                        pygments_lexer = "csharp",
-                        version = "8.0"
-                    }
-                },
-                nbformat = 4,
-                nbformat_minor = 4
-            };
+            var json = JsonSerializer.Serialize(document, JsonSerializerOptions);
 
-            var options = new JsonSerializerOptions(ParserServerSerializer.JsonSerializerOptions)
-            {
-                WriteIndented = true
-            };
+            var singleSpaceIndentedJson =
+                Regex.Replace(
+                    json,
+                    "(^|\\G)( ){2}",
+                    " ", RegexOptions.Multiline);
 
-            var content = JsonSerializer.Serialize(jupyter, options);
-
-            return content;
+            return singleSpaceIndentedJson;
         }
 
         public static void Write(InteractiveDocument document, TextWriter writer)
         {
-            var content = document.ToJupyterNotebookContent();
+            var content = document.Serialize();
             writer.Write(content);
-        }
-
-        /// <summary>
-        /// Ensures each line _except the last_ ends with '\n'.
-        /// </summary>
-        private static IEnumerable<string> AddTrailingNewlinesToAllButLast(string[] lines)
-        {
-            var result = lines.Select(l => l.EndsWith("\n") ? l : l + "\n").ToList();
-            if (result.Count > 0)
-            {
-                result[^1] = lines.Last();
-            }
-
-            return result;
         }
     }
 }

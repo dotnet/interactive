@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 
-namespace Microsoft.DotNet.Interactive.Documents;
+namespace Microsoft.DotNet.Interactive.Documents.Json;
 
 internal class DataDictionaryConverter : JsonConverter<IDictionary<string, object?>>
 {
