@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.Documents;
 
-public class DisplayElement : InteractiveDocumentOutputElement
+public class DisplayElement : InteractiveDocumentOutputElement, IDataElement
 {
     public DisplayElement(IDictionary<string, object>? data)
     {

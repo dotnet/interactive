@@ -92,46 +92,7 @@ internal class InteractiveDocumentOutputElementConverter : JsonConverter<Interac
         {
             case DisplayElement displayElement:
 
-                writer.WritePropertyName("data");
-                writer.WriteStartObject();
-
-                foreach (var kvp in displayElement.Data)
-                {
-                    writer.WritePropertyName(kvp.Key);
-
-                    if (kvp.Key == "application/json")
-                    {
-                        // FIX: (Write) JSON
-                    }
-                    else
-                    {
-                        var value = kvp.Value;
-
-                        var lines = value switch
-                        {
-                            IEnumerable<string> enumerable => enumerable,
-                            string s => s.SplitIntoLines(),
-                            IEnumerable<object> os => os.Select(o => o switch
-                            {
-                                string s => s,
-                                _ => throw new ArgumentException($"Expected string but found {o.GetType()}")
-                            }),
-                            object o when o.GetType() == typeof(object) => new string[0],
-                            _ => throw new ArgumentException($"Expected IEnumerable<string> but received {kvp.Value.GetType()}")
-                        };
-
-                        writer.WriteStartArray();
-
-                        foreach (var line in lines)
-                        {
-                            writer.WriteStringValue(line);
-                        }
-
-                        writer.WriteEndArray();
-                    }
-                }
-
-                writer.WriteEndObject();
+                WriteData(displayElement);
 
                 writer.WritePropertyName("output_type");
                 writer.WriteStringValue("display_data");
@@ -158,6 +119,8 @@ internal class InteractiveDocumentOutputElementConverter : JsonConverter<Interac
                 break;
 
             case ReturnValueElement returnValueElement:
+
+                WriteData(returnValueElement);
 
                 writer.WritePropertyName("output_type");
                 writer.WriteStringValue("execute_result");
@@ -188,5 +151,49 @@ internal class InteractiveDocumentOutputElementConverter : JsonConverter<Interac
         }
 
         writer.WriteEndObject();
+
+        void WriteData(IDataElement displayElement)
+        {
+            writer.WritePropertyName("data");
+            writer.WriteStartObject();
+
+            foreach (var kvp in displayElement.Data)
+            {
+                writer.WritePropertyName(kvp.Key);
+
+                if (kvp.Key == "application/json")
+                {
+                    // FIX: (Write) JSON
+                }
+                else
+                {
+                    var value = kvp.Value;
+
+                    var lines = value switch
+                    {
+                        IEnumerable<string> enumerable => enumerable,
+                        string s => s.SplitIntoLines(),
+                        IEnumerable<object> os => os.Select(o => o switch
+                        {
+                            string s => s,
+                            _ => throw new ArgumentException($"Expected string but found {o.GetType()}")
+                        }),
+                        object o when o.GetType() == typeof(object) => new string[0],
+                        _ => throw new ArgumentException($"Expected IEnumerable<string> but received {kvp.Value.GetType()}")
+                    };
+
+                    writer.WriteStartArray();
+
+                    foreach (var line in lines)
+                    {
+                        writer.WriteStringValue(line);
+                    }
+
+                    writer.WriteEndArray();
+                }
+            }
+
+            writer.WriteEndObject();
+        }
     }
 }

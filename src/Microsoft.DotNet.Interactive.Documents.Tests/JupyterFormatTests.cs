@@ -1106,7 +1106,6 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     {
                         cell_type = "markdown",
                         metadata = new { },
-                        outputs = new InteractiveDocumentOutputElement[]{},
                         source = new[]
                         {
                             "This is `markdown`.\n",

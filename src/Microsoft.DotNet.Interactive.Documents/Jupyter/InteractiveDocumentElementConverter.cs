@@ -127,15 +127,21 @@ internal class InteractiveDocumentElementConverter : JsonConverter<InteractiveDo
             writer.WriteNumberValue(element.ExecutionCount);
         }
 
+        if (element.Id is { })
+        {
+            writer.WritePropertyName("id");
+            writer.WriteStringValue(element.Id);
+        }
+
         if (element.Metadata is null)
         {
             element.Metadata = new Dictionary<string, object>();
         }
 
-        if (element.Language is not null && 
+        if (element.Language is not null &&
             element.Language != "markdown")
         {
-            element.Metadata.GetOrAdd("dotnet_interactive", 
+            element.Metadata.GetOrAdd("dotnet_interactive",
                                       _ => new Dictionary<string, object>())
                 ["language"] = element.Language;
         }
@@ -143,13 +149,16 @@ internal class InteractiveDocumentElementConverter : JsonConverter<InteractiveDo
         writer.WritePropertyName("metadata");
         JsonSerializer.Serialize(writer, element.Metadata, options);
 
-        writer.WritePropertyName("outputs");
-        JsonSerializer.Serialize(writer, element.Outputs, options);
+        if (element.Language != "markdown")
+        {
+            writer.WritePropertyName("outputs");
+            JsonSerializer.Serialize(writer, element.Outputs, options);
+        }
 
         writer.WritePropertyName("source");
         var lines = EnsureTrailingNewlinesOnAllButLast(element.Contents.SplitIntoLines());
-        JsonSerializer.Serialize(writer, lines, options);
 
+        JsonSerializer.Serialize(writer, lines, options);
         writer.WriteEndObject();
     }
 
