@@ -5,7 +5,7 @@ changelog:
     labels:
       - ignore-for-release
       - dependencies
-      - "Area-Build & Infrastructure"
+      - Area-Build & Infrastructure
   categories:
     - title: Breaking Changes 🧨
       labels:
