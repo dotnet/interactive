@@ -901,29 +901,6 @@ Microsoft.DotNet.Interactive.Utility
     public static System.String DotnetUserProfileFolderPath { get;}
     public static System.String NugetCache { get;}
     public static System.String UserProfile { get;}
-  public static class PathUtilities
-    public static System.String ChangeExtension(System.String path, System.String extension)
-    public static System.String CombineAbsoluteAndRelativePaths(System.String root, System.String relativePath)
-    public static System.String CombinePathsUnchecked(System.String root, System.String relativePath)
-    public static System.String CombinePossiblyRelativeAndRelativePaths(System.String rootOpt, System.String relativePath)
-    public static System.Boolean ContainsPathComponent(System.String path, System.String component, System.Boolean ignoreCase)
-    public static System.String EnsureTrailingSeparator()
-    public static System.String GetDirectoryName(System.String path)
-    public static System.String GetExtension(System.String path)
-    public static System.String GetFileName(System.String path, System.Boolean includeExtension = True)
-    public static PathKind GetPathKind(System.String path)
-    public static System.String GetPathRoot(System.String path)
-    public static System.String GetRelativePath(System.String directory, System.String fullPath)
-    public static System.Boolean IsAbsolute(System.String path)
-    public static System.Boolean IsAnyDirectorySeparator(System.Char c)
-    public static System.Boolean IsChildPath(System.String parentPath, System.String childPath)
-    public static System.Boolean IsDirectorySeparator(System.Char c)
-    public static System.Boolean IsFilePath(System.String assemblyDisplayNameOrPath)
-    public static System.Boolean IsValidFilePath(System.String fullPath)
-    public static System.String NormalizePathPrefix(System.String filePath, System.Collections.Immutable.ImmutableArray<System.Collections.Generic.KeyValuePair<System.String,System.String>> pathMap)
-    public static System.Boolean PathsEqual(System.String path1, System.String path2)
-    public static System.String RemoveExtension(System.String path)
-    public static System.String TrimTrailingSeparators()
   public static class SourceUtilities
     public static System.Int32 ComputeReplacementStartPosition(System.String code, System.Int32 cursorPosition)
     public static System.Int32 GetCursorOffsetFromPosition(System.String code, Microsoft.DotNet.Interactive.LinePosition position)

@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.Utility
     // Contains path parsing utilities.
     // We need our own because System.IO.Path is insufficient for our purposes
     // For example we need to be able to work with invalid paths or paths containing wildcards
-    public static class PathUtilities
+    internal static class PathUtilities
     {
         // We consider '/' a directory separator on Unix like systems. 
         // On Windows both / and \ are equally accepted.
@@ -674,11 +674,6 @@ namespace Microsoft.DotNet.Interactive.Utility
             }
 
             return hc;
-        }
-
-        public static string PathToCurrentSourceFile([CallerFilePath] string path = null)
-        {
-            return path;
         }
 
         public static string NormalizePathPrefix(string filePath, ImmutableArray<KeyValuePair<string, string>> pathMap)

@@ -1,9 +1,9 @@
 Microsoft.DotNet.Interactive.Documents
   public static class CodeSubmission
     public static System.Text.Encoding Encoding { get;}
-    public static InteractiveDocument Parse(System.String content, System.String defaultLanguage, System.Collections.Generic.IReadOnlyCollection<KernelName> kernelNames)
-    public static InteractiveDocument Read(System.IO.Stream stream, System.String defaultLanguage, System.Collections.Generic.IReadOnlyCollection<KernelName> kernelNames)
-    public static System.Threading.Tasks.Task<InteractiveDocument> ReadAsync(System.IO.Stream stream, System.String defaultLanguage, System.Collections.Generic.IReadOnlyCollection<KernelName> kernelNames)
+    public static InteractiveDocument Parse(System.String content, System.String defaultLanguage, KernelNameCollection kernelNames)
+    public static InteractiveDocument Read(System.IO.Stream stream, System.String defaultLanguage, KernelNameCollection kernelNames)
+    public static System.Threading.Tasks.Task<InteractiveDocument> ReadAsync(System.IO.Stream stream, System.String defaultLanguage, KernelNameCollection kernelNames)
     public static System.String ToCodeSubmissionContent(System.String newline = 
 )
     public static System.Void Write(InteractiveDocument document, System.IO.Stream stream, System.String newline = 
@@ -14,18 +14,25 @@ Microsoft.DotNet.Interactive.Documents
     .ctor(System.Collections.Generic.IDictionary<System.String,System.Object> data)
     public System.Collections.Generic.IDictionary<System.String,System.Object> Data { get;}
   public class ErrorElement : InteractiveDocumentOutputElement
-    .ctor(System.String errorName, System.String errorValue, System.String[] stackTrace = null)
+    .ctor(System.String errorValue = null, System.String errorName = Error, System.String[] stackTrace = null)
     public System.String ErrorName { get;}
     public System.String ErrorValue { get;}
     public System.String[] StackTrace { get;}
-  public class InteractiveDocument
-    .ctor(System.Collections.Generic.IList<InteractiveDocumentElement> elements)
-    public System.Collections.Generic.IList<InteractiveDocumentElement> Elements { get;}
+  public class InteractiveDocument, System.Collections.IEnumerable
+    .ctor(System.Collections.Generic.IList<InteractiveDocumentElement> elements = null)
+    public System.Collections.Generic.IList<InteractiveDocumentElement> Elements { get; set;}
+    public System.Collections.Generic.IDictionary<System.String,System.Object> Metadata { get;}
+    public System.Void Add(InteractiveDocumentElement element)
+    public System.Collections.IEnumerator GetEnumerator()
   public class InteractiveDocumentElement
-    .ctor(System.String language, System.String contents, System.Collections.Generic.IList<InteractiveDocumentOutputElement> outputs = null)
-    public System.String Contents { get;}
-    public System.String Language { get;}
-    public System.Collections.Generic.IList<InteractiveDocumentOutputElement> Outputs { get;}
+    .ctor()
+    .ctor(System.String contents = null, System.String language = null, System.Collections.Generic.IEnumerable<InteractiveDocumentOutputElement> outputs = null)
+    public System.String Contents { get; set;}
+    public System.Int32 ExecutionCount { get; set;}
+    public System.String Id { get; set;}
+    public System.String Language { get; set;}
+    public System.Collections.Generic.IDictionary<System.String,System.Object> Metadata { get; set;}
+    public System.Collections.Generic.List<InteractiveDocumentOutputElement> Outputs { get;}
   public abstract class InteractiveDocumentOutputElement
   public static class JsonElementExtensions
     public static System.Nullable<System.Text.Json.JsonElement> GetPropertyFromPath(System.String[] path)
@@ -35,6 +42,19 @@ Microsoft.DotNet.Interactive.Documents
     public System.Collections.Generic.IReadOnlyCollection<System.String> Aliases { get;}
     public System.String Name { get;}
     public System.String ToString()
+  public class KernelNameCollection, System.Collections.Generic.IEnumerable<KernelName>, System.Collections.Generic.IReadOnlyCollection<KernelName>, System.Collections.IEnumerable
+    .ctor()
+    .ctor(System.Collections.Generic.IReadOnlyCollection<KernelName> kernelNames)
+    public System.Int32 Count { get;}
+    public System.String DefaultKernelName { get; set;}
+    public System.Void Add(KernelName kernelName)
+    public KernelNameCollection Clone()
+    public System.Boolean Contains(System.String name)
+    public System.Collections.Generic.IEnumerator<KernelName> GetEnumerator()
+    public System.Boolean TryGetByAlias(System.String alias, ref KernelName& name)
+  public class ReturnValueElement : InteractiveDocumentOutputElement
+    .ctor(System.Collections.Generic.IDictionary<System.String,System.Object> data)
+    public System.Collections.Generic.IDictionary<System.String,System.Object> Data { get;}
   public class TextElement : InteractiveDocumentOutputElement
     .ctor(System.String text, System.String name = stdout)
     public System.String Name { get;}
@@ -43,17 +63,17 @@ Microsoft.DotNet.Interactive.Documents.Jupyter
   public class InputCellMetadata
     .ctor(System.String language = null)
     public System.String Language { get;}
+  public static class InteractiveDocumentExtensions
+    public static Microsoft.DotNet.Interactive.Documents.InteractiveDocument WithJupyterMetadataIfNotSet()
   public static class Notebook
     public static System.Text.Encoding Encoding { get;}
-    public static Microsoft.DotNet.Interactive.Documents.InteractiveDocument Parse(System.String content, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Documents.KernelName> kernelNames)
-    public static Microsoft.DotNet.Interactive.Documents.InteractiveDocument Read(System.IO.Stream stream, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Documents.KernelName> kernelNames)
-    public static System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Documents.InteractiveDocument> ReadAsync(System.IO.Stream stream, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Documents.KernelName> kernelNames)
-    public static System.String ToJupyterNotebookContent(System.String newline = 
-)
-    public static System.Void Write(Microsoft.DotNet.Interactive.Documents.InteractiveDocument document, System.IO.Stream stream, System.String newline = 
-)
-    public static System.Void Write(Microsoft.DotNet.Interactive.Documents.InteractiveDocument document, System.IO.TextWriter writer, System.String newline = 
-)
+    public static System.Text.Json.JsonSerializerOptions JsonSerializerOptions { get;}
+    public static Microsoft.DotNet.Interactive.Documents.InteractiveDocument Parse(System.String json, Microsoft.DotNet.Interactive.Documents.KernelNameCollection kernelNames = null)
+    public static Microsoft.DotNet.Interactive.Documents.InteractiveDocument Read(System.IO.Stream stream, Microsoft.DotNet.Interactive.Documents.KernelNameCollection kernelNames)
+    public static System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Documents.InteractiveDocument> ReadAsync(System.IO.Stream stream, Microsoft.DotNet.Interactive.Documents.KernelNameCollection kernelNames)
+    public static System.String Serialize(System.Boolean enforceJupyterMetadata = True)
+    public static System.Void Write(Microsoft.DotNet.Interactive.Documents.InteractiveDocument document, System.IO.Stream stream)
+    public static System.Void Write(Microsoft.DotNet.Interactive.Documents.InteractiveDocument document, System.IO.TextWriter writer)
 Microsoft.DotNet.Interactive.Documents.ParserServer
   public enum DocumentSerializationType : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
     Dib=0
@@ -74,11 +94,12 @@ Microsoft.DotNet.Interactive.Documents.ParserServer
   public class NotebookParseResponse : NotebookParserServerResponse
     .ctor(System.String id, Microsoft.DotNet.Interactive.Documents.InteractiveDocument document)
     public Microsoft.DotNet.Interactive.Documents.InteractiveDocument Document { get;}
-  public class NotebookParserServer
+  public class NotebookParserServer, System.IDisposable
     public static NotebookParserServerResponse HandleRequest(NotebookParseOrSerializeRequest request)
     .ctor(System.IO.TextReader input, System.IO.TextWriter output)
     public System.IO.TextReader Input { get;}
     public System.IO.TextWriter Output { get;}
+    public System.Void Dispose()
     public System.Threading.Tasks.Task RunAsync()
   public static class NotebookParserServerExtensions
     public static System.String ToJson()
@@ -94,6 +115,8 @@ Microsoft.DotNet.Interactive.Documents.ParserServer
   public class NotebookSerializeResponse : NotebookParserServerResponse
     .ctor(System.String id, System.Byte[] rawData)
     public System.Byte[] RawData { get;}
+  public static class ParserServerSerializer
+    public static System.Text.Json.JsonSerializerOptions JsonSerializerOptions { get;}
   public enum RequestType : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
     Parse=0
     Serialize=1

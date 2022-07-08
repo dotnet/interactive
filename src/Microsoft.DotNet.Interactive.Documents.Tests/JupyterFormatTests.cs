@@ -1444,7 +1444,12 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         private string GetNotebookFilePath([CallerMemberName] string testName = null) =>
             Path.Combine(
                 Path.GetDirectoryName(
-                    PathUtilities.PathToCurrentSourceFile()),
+                    PathToCurrentSourceFile()),
                 $"{nameof(JupyterFormatTests)}.{testName}.approved.json");
+
+        private static string PathToCurrentSourceFile([CallerFilePath] string path = null)
+        {
+            return path;
+        }
     }
 }

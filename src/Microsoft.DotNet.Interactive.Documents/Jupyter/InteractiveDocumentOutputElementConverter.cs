@@ -52,7 +52,6 @@ internal class InteractiveDocumentOutputElementConverter : JsonConverter<Interac
 
                     case "text":
                         text = reader.ReadArrayOrStringAsString();
-
                         break;
 
                     default:
