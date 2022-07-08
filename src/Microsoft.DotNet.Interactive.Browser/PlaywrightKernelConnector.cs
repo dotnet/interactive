@@ -54,8 +54,8 @@ public class PlaywrightKernelConnector : IKernelConnector
     private static async Task<BrowserLaunch> LaunchBrowserAsync(IPlaywright playwright)
     {
         return
-            await TryLaunch("chrome") ??
             await TryLaunch("msedge") ??
+            await TryLaunch("chrome") ??
             await TryLaunch("chromium", true) ??
             throw new Exception("Unable to launch browser.");
 
@@ -79,7 +79,7 @@ public class PlaywrightKernelConnector : IKernelConnector
                 {
                     var message = $"Playwright browser acquisition failed with exit code {exitCode}.\n{stdOut}\n{stdErr}";
                     Console.WriteLine(message);
-                    throw new Exception(message);
+                    throw new PlaywrightException(message);
                 }
             }
 

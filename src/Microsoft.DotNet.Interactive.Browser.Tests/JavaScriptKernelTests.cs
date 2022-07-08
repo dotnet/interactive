@@ -21,7 +21,7 @@ public class JavaScriptTests
 
         var events = result.KernelEvents.ToSubscribedList();
 
-        events.Should().ContainSingle<CommandSucceeded>();
+        events.Should().NotContainErrors();
     }
 
     [Fact]

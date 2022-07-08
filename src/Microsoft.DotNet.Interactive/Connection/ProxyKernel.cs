@@ -106,7 +106,19 @@ public sealed class ProxyKernel : Kernel
         _inflight[token] = (command, _executionContext, completionSource, context);
 
         ExecutionContext.SuppressFlow();
-        var _ = _sender.SendAsync(command, context.CancellationToken);
+
+        var t = _sender.SendAsync(command, context.CancellationToken);
+        t.ContinueWith(task =>
+        {
+            if (!task.IsCompletedSuccessfully)
+            {
+                if (task.Exception is {} ex)
+                {
+                    completionSource.TrySetException(ex);
+                }
+            }
+        });
+
         return completionSource.Task.ContinueWith(te =>
         {
             command.TargetKernelName = targetKernelName;
