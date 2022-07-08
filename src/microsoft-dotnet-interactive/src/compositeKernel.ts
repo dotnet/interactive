@@ -11,6 +11,7 @@ export class CompositeKernel extends Kernel {
     private _host: KernelHost | null = null;
     private readonly _namesTokernelMap: Map<string, Kernel> = new Map();
     private readonly _kernelToNamesMap: Map<Kernel, Set<string>> = new Map();
+    private readonly _defaultKernelNamesByCommandType: Map<contracts.KernelCommandType, string> = new Map();
 
     defaultKernelName: string | undefined;
 
@@ -84,6 +85,10 @@ export class CompositeKernel extends Kernel {
         this.host?.addKernelInfo(kernel, kernel.kernelInfo);
     }
 
+    setDefaultTargetKernelNameForCommand(commandType: contracts.KernelCommandType, kernelName: string) {
+        this._defaultKernelNamesByCommandType.set(commandType, kernelName);
+    }
+
     findKernelByName(kernelName: string): Kernel | undefined {
         if (kernelName.toLowerCase() === this.name.toLowerCase()) {
             return this;
@@ -125,9 +130,14 @@ export class CompositeKernel extends Kernel {
     }
 
     override getHandlingKernel(commandEnvelope: contracts.KernelCommandEnvelope): Kernel | undefined {
+        const defaultTargetKernelName = this._defaultKernelNamesByCommandType.get(commandEnvelope.commandType);
+        if (defaultTargetKernelName) {
+            const kernel = this.findKernelByName(defaultTargetKernelName);
+            return kernel;
+        }
 
         if (commandEnvelope.command.destinationUri) {
-            let kernel = this.findKernelByUri(commandEnvelope.command.destinationUri);
+            const kernel = this.findKernelByUri(commandEnvelope.command.destinationUri);
             if (kernel) {
                 return kernel;
             }
@@ -138,9 +148,8 @@ export class CompositeKernel extends Kernel {
             }
         }
 
-        let targetKernelName = commandEnvelope.command.targetKernelName ?? this.defaultKernelName ?? this.name;
-
-        let kernel = this.findKernelByName(targetKernelName);
+        const targetKernelName = commandEnvelope.command.targetKernelName ?? this.defaultKernelName ?? this.name;
+        const kernel = this.findKernelByName(targetKernelName);
         return kernel;
     }
 }
