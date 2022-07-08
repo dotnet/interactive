@@ -57,7 +57,7 @@ public class PlaywrightKernelConnector : IKernelConnector
             await TryLaunch("msedge") ??
             await TryLaunch("chrome") ??
             await TryLaunch("chromium", true) ??
-            throw new Exception("Unable to launch browser.");
+            throw new PlaywrightException("Unable to launch browser.");
 
         async Task<BrowserLaunch?> TryLaunch(string channel, bool acquire = false)
         {
