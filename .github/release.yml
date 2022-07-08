@@ -4,8 +4,7 @@ changelog:
   exclude:
     labels:
       - ignore-for-release
-    authors:
-      - octocat
+      - dependencies
   categories:
     - title: Breaking Changes 🛠
       labels:
