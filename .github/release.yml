@@ -81,4 +81,4 @@ changelog:
         - Area-WebAssembly
     - title: Other Changes
       labels:
-        - *
+        - "*"
