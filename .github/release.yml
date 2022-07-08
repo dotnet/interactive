@@ -13,6 +13,7 @@ changelog:
     - title: Exciting New Features 🎉
       labels:
         - enhancement
+        - new feature
     - title: Bug fixes🛠️
       labels:
         - bug
