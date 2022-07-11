@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Interactive
 
         public PackageRestoreContext()
         {
-            _dependencyProvider = new DependencyProvider(AssemblyProbingPaths, NativeProbingRoots);
+            _dependencyProvider = new DependencyProvider(AssemblyProbingPaths, NativeProbingRoots, useResultsCache: true);
             AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
         }
 

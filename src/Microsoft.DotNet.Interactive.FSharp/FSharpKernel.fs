@@ -76,6 +76,7 @@ type FSharpKernel () as this =
         | FSharpGlyph.Struct -> WellKnownTags.Structure
         | FSharpGlyph.Typedef -> WellKnownTags.Class
         | FSharpGlyph.Type -> WellKnownTags.Class
+        | FSharpGlyph.TypeParameter -> WellKnownTags.TypeParameter
         | FSharpGlyph.Union -> WellKnownTags.Enum
         | FSharpGlyph.Variable -> WellKnownTags.Local
         | FSharpGlyph.ExtensionMethod -> WellKnownTags.ExtensionMethod
