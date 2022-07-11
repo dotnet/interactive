@@ -1,17 +1,31 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Pocket;
+using Pocket.For.Xunit;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Browser.Tests;
 
-public class JavaScriptTests
+[LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
+public class JavaScriptTests : IDisposable
 {
+    private readonly CompositeDisposable _disposables = new();
+
+    public JavaScriptTests(ITestOutputHelper output)
+    {
+        _disposables.Add(output.SubscribeToPocketLogger());
+    }
+
+    public void Dispose() => _disposables.Dispose();
+
     [Fact]
     public async Task It_can_execute_code()
     {

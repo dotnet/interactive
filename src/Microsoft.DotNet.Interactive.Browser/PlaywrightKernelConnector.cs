@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
-using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Text.Json;
@@ -11,6 +10,9 @@ using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.Playwright;
+using Pocket;
+using static Pocket.Logger<Microsoft.DotNet.Interactive.Browser.PlaywrightKernelConnector>;
+using CompositeDisposable = Pocket.CompositeDisposable;
 
 namespace Microsoft.DotNet.Interactive.Browser;
 
@@ -57,10 +59,12 @@ public class PlaywrightKernelConnector : IKernelConnector
             await TryLaunch("msedge") ??
             await TryLaunch("chrome") ??
             await TryLaunch("chromium", true) ??
-            throw new PlaywrightException("Unable to launch browser.");
+            throw new PlaywrightException("Unable to launch or acquire any of the configured browsers.");
 
         async Task<BrowserLaunch?> TryLaunch(string channel, bool acquire = false)
         {
+            using var activity = Log.OnEnterAndConfirmOnExit();
+
             if (acquire)
             {
                 Console.WriteLine($"Attempting to install headless browser: {channel}");
@@ -78,7 +82,9 @@ public class PlaywrightKernelConnector : IKernelConnector
                 if (exitCode != 0)
                 {
                     var message = $"Playwright browser acquisition failed with exit code {exitCode}.\n{stdOut}\n{stdErr}";
-                    Console.WriteLine(message);
+                    
+                    activity.Fail(message: message);
+                    
                     throw new PlaywrightException(message);
                 }
             }
@@ -91,13 +97,13 @@ public class PlaywrightKernelConnector : IKernelConnector
 
             try
             {
-                Console.WriteLine($"Launching headless browser {channel}");
+                activity.Info($"Launching headless browser {channel}");
                 var browser = await playwright.Chromium.LaunchAsync(options);
                 return new(browser, options);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception while launching headless browser {channel}:\n{ex}");
+                activity.Fail(ex, $"Exception while launching headless browser {channel}");
             }
 
             return null;
