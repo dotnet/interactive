@@ -13,7 +13,6 @@ using FluentAssertions.Execution;
 using FluentAssertions.Json;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Microsoft.DotNet.Interactive.Utility;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -1433,7 +1432,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         {
             var expectedContent = await File.ReadAllTextAsync(notebookFile);
 
-            var inputDoc = Notebook.Parse(expectedContent, KernelNames);
+            var inputDoc = Notebook.Parse(expectedContent);
 
             var resultContent = inputDoc.Serialize(enforceJupyterMetadata: false);
 

@@ -44,6 +44,7 @@ internal class InteractiveDocumentConverter : JsonConverter<InteractiveDocument>
                         break;
 
                     default:
+
                         reader.Skip();
                         break;
                 }

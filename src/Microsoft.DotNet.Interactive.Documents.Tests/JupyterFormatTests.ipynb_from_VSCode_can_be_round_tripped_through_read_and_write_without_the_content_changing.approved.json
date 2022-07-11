@@ -11,7 +11,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 0,
    "metadata": {
     "dotnet_interactive": {
      "language": "csharp"
@@ -35,7 +35,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 0,
    "metadata": {
     "dotnet_interactive": {
      "language": "csharp"
@@ -59,7 +59,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 0,
    "metadata": {
     "dotnet_interactive": {
      "language": "csharp"
@@ -113,7 +113,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 0,
    "metadata": {
     "dotnet_interactive": {
      "language": "csharp"
