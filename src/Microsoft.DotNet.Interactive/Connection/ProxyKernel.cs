@@ -110,7 +110,7 @@ public sealed class ProxyKernel : Kernel
         var t = _sender.SendAsync(command, context.CancellationToken);
         t.ContinueWith(task =>
         {
-            if (!task.IsCompletedSuccessfully)
+            if (!task.GetIsCompletedSuccessfully())
             {
                 if (task.Exception is {} ex)
                 {
