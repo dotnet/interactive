@@ -15,110 +15,110 @@ using Microsoft.DotNet.Interactive.Formatting;
 
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
-namespace Microsoft.DotNet.Interactive.ExtensionLab
+namespace Microsoft.DotNet.Interactive.ExtensionLab;
+
+public class InspectExtension : IKernelExtension
 {
-    public class InspectExtension : IKernelExtension
+    private const string InspectCommand = "inspect";
+    public Task OnLoadAsync(Kernel kernel)
     {
-        private const string INSPECT_COMMAND = "inspect";
-        public Task OnLoadAsync(Kernel kernel)
+        var inspect = new Command($"#!{InspectCommand}", "Inspect the following code in the submission")
         {
-            var inspect = new Command($"#!{INSPECT_COMMAND}", "Inspect the following code in the submission")
-            {
-                new Option<OptimizationLevel>(
-                        new [] {"-c", "--configuration"},
-                        getDefaultValue: () => OptimizationLevel.Debug,
-                        description: "Build configuration to use. Debug or Release."),
-                new Option<SourceCodeKind>(
-                        new [] {"-k", "--kind"},
-                        getDefaultValue: () => SourceCodeKind.Script,
-                        description: "Source code kind. Script or Regular."),
-            };
+            new Option<OptimizationLevel>(
+                new [] {"-c", "--configuration"},
+                getDefaultValue: () => OptimizationLevel.Debug,
+                description: "Build configuration to use. Debug or Release."),
+            new Option<SourceCodeKind>(
+                new [] {"-k", "--kind"},
+                getDefaultValue: () => SourceCodeKind.Script,
+                description: "Source code kind. Script or Regular."),
+        };
 
-            inspect.Handler = CommandHandler.Create((OptimizationLevel configuration, SourceCodeKind kind, Platform platform, KernelInvocationContext context) => Inspect(configuration, kind, platform, context));
+        inspect.Handler = CommandHandler.Create((OptimizationLevel configuration, SourceCodeKind kind, Platform platform, KernelInvocationContext context) => Inspect(configuration, kind, platform, context));
 
-            kernel.AddDirective(inspect);
+        kernel.AddDirective(inspect);
 
-            KernelInvocationContext.Current?.Display(
-                new HtmlString(@"<details><summary>Inspect code compilation details using the <code>#!inspect</code> magic command.</summary>
+        KernelInvocationContext.Current?.Display(
+            new HtmlString(@"<details><summary>Inspect code compilation details using the <code>#!inspect</code> magic command.</summary>
     <p>The <code>#!inspect</code> magic command allows you to see the C# decompilation, IL, and JIT Asm for the code in a C# cell.</p>
     <img src=""https://user-images.githubusercontent.com/547415/109560515-d5749a00-7a90-11eb-9fa3-51b737345bb4.png"" width=""75%"" />
     </details>"),
-                "text/html");
+            "text/html");
 
-            return Task.CompletedTask;
+        return Task.CompletedTask;
+    }
+
+    private void Inspect(OptimizationLevel configuration, SourceCodeKind kind, Platform platform, KernelInvocationContext context)
+    {
+        if (context.Command is not SubmitCode command)
+        {
+            return;
         }
 
-        private void Inspect(OptimizationLevel configuration, SourceCodeKind kind, Platform platform, KernelInvocationContext context)
+        // TODO: Is there a proper way of cleaning up code from the magic commands?
+        var code = Regex.Replace(command.Code, $"#!{InspectCommand}(.*)", "");
+
+        var options = new InspectionOptions
         {
-            if (context.Command is not SubmitCode command)
-            {
-                return;
-            }
+            CompilationLanguage = InspectionOptions.LanguageVersion.CSHARP_PREVIEW,
+            DecompilationLanguage = InspectionOptions.LanguageVersion.CSHARP_PREVIEW,
+            Kind = kind,
+            OptimizationLevel = configuration,
+            Platform = Platform.AnyCpu
+        };
 
-            // TODO: Is there a proper way of cleaning up code from the magic commands?
-            var code = Regex.Replace(command.Code, $"#!{INSPECT_COMMAND}(.*)", "");
+        var inspect = Inspector.Inspector.Create(options);
 
-            var options = new InspectionOptions
-            {
-                CompilationLanguage = InspectionOptions.LanguageVersion.CSHARP_PREVIEW,
-                DecompilationLanguage = InspectionOptions.LanguageVersion.CSHARP_PREVIEW,
-                Kind = kind,
-                OptimizationLevel = configuration,
-                Platform = Platform.AnyCpu
-            };
+        var result = inspect.Compile(code);
 
-            var inspect = Inspector.Inspector.Create(options);
-
-            var result = inspect.Compile(code);
-
-            if (!result.IsSuccess)
-            {
-		        var diagnostics = string.Join('\n', result.CompilationDiagnostics);
-                context.Fail(command, message: $"Uh-oh, something went wrong:\n {diagnostics}");
-                return;
-            }
-
-            var htmlResults = RenderResultInTabs(result.CSharpDecompilation, result.ILDecompilation, result.JitDecompilation);
-
-            context.Publish(
-                new DisplayedValueProduced(
-                    htmlResults,
-                    context.Command,
-                    new[]
-                    {
-                        new FormattedValue("text/html", htmlResults.ToString())
-                    }));
+        if (!result.IsSuccess)
+        {
+            var diagnostics = string.Join('\n', result.CompilationDiagnostics);
+            context.Fail(command, message: $"Uh-oh, something went wrong:\n {diagnostics}");
+            return;
         }
 
-        private static PocketView RenderResultInTabs(string cs, string il, string jit)
-        {
-            PocketView styles = style[type: "text/css"](GetCss());
+        var htmlResults = RenderResultInTabs(result.CSharpDecompilation, result.ILDecompilation, result.JitDecompilation);
 
-            var prismScripts = GetPrismJS();
-            var prismStyles = GetPrismCSS();
+        context.Publish(
+            new DisplayedValueProduced(
+                htmlResults,
+                context.Command,
+                new[]
+                {
+                    new FormattedValue("text/html", htmlResults.ToString())
+                }));
+    }
 
-            return div[@class: "tab-wrap"](prismStyles, styles,
-                input[type: "radio", name: "tabs", id: "tab1", @checked: "checked"],
-                div[@class:"tab-label-content", id:"tab1-content"](
-                  label[@for:"tab1"]("C#"),
-                  div[@class:"tab-content"](pre[@class: "code line-numbers"](code[@class: "language-csharp"](cs)))),
+    private static PocketView RenderResultInTabs(string cs, string il, string jit)
+    {
+        PocketView styles = style[type: "text/css"](GetCss());
 
-                input[type:"radio", name:"tabs", id:"tab2"],
-                div[@class:"tab-label-content", id:"tab2-content"](
-                  label[@for:"tab2"]("IL"),
-                  div[@class:"tab-content"](pre[@class: "code line-numbers"](code[@class: "language-cil"](il)))),
+        var prismScripts = GetPrismJS();
+        var prismStyles = GetPrismCSS();
 
-                input[type:"radio", name:"tabs", id:"tab3"],
-                div[@class:"tab-label-content", id:"tab3-content"](
-                  label[@for:"tab3"]("JIT Asm"),
-                  div[@class:"tab-content"](pre[@class: "code line-numbers"](code[@class: "language-nasm"](jit)))),
-                prismScripts
-            );
-        }
+        return div[@class: "tab-wrap"](prismStyles, styles,
+            input[type: "radio", name: "tabs", id: "tab1", @checked: "checked"],
+            div[@class:"tab-label-content", id:"tab1-content"](
+                label[@for:"tab1"]("C#"),
+                div[@class:"tab-content"](pre[@class: "code line-numbers"](code[@class: "language-csharp"](cs)))),
 
-        private static IHtmlContent GetPrismJS()
-        {
-            return new HtmlString(@"
+            input[type:"radio", name:"tabs", id:"tab2"],
+            div[@class:"tab-label-content", id:"tab2-content"](
+                label[@for:"tab2"]("IL"),
+                div[@class:"tab-content"](pre[@class: "code line-numbers"](code[@class: "language-cil"](il)))),
+
+            input[type:"radio", name:"tabs", id:"tab3"],
+            div[@class:"tab-label-content", id:"tab3-content"](
+                label[@for:"tab3"]("JIT Asm"),
+                div[@class:"tab-content"](pre[@class: "code line-numbers"](code[@class: "language-nasm"](jit)))),
+            prismScripts
+        );
+    }
+
+    private static IHtmlContent GetPrismJS()
+    {
+        return new HtmlString(@"
 <script src=""https://cdn.jsdelivr.net/npm/prismjs@1.21.0/prism.min.js""></script>
 <script src=""https://cdn.jsdelivr.net/npm/prismjs@1.21.0/plugins/match-braces/prism-match-braces.min.js""></script>
 <script src=""https://cdn.jsdelivr.net/npm/prismjs@1.21.0/plugins/line-numbers/prism-line-numbers.min.js""></script>
@@ -134,21 +134,21 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
     }
     document.addEventListener(""DOMContentLoaded"", Prism.highlightAll);
 </script>");
-        }
+    }
 
-        private static IHtmlContent GetPrismCSS()
-        {
-            return new HtmlString(@"
+    private static IHtmlContent GetPrismCSS()
+    {
+        return new HtmlString(@"
 <link href=""https://cdn.jsdelivr.net/npm/prismjs@1.21.0/themes/prism-coy.min.css"" rel=""stylesheet""/>
 <link href=""https://cdn.jsdelivr.net/npm/prismjs@1.21.0/plugins/match-braces/prism-match-braces.min.css"" rel=""stylesheet""/>
 <link href=""https://cdn.jsdelivr.net/npm/prismjs@1.21.0/plugins/line-numbers/prism-line-numbers.min.css"" rel=""stylesheet""/>
 <link href=""https://cdn.jsdelivr.net/npm/prismjs@1.21.0/plugins/line-highlight/prism-line-highlight.min.css"" rel=""stylesheet""/>");
-        }
+    }
 
-        private static IHtmlContent GetCss()
-        {
-            return new HtmlString(
-                @"
+    private static IHtmlContent GetCss()
+    {
+        return new HtmlString(
+            @"
                 /* Tabbed view */
                 .tab-wrap {
                     width: 100%;
@@ -214,6 +214,5 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 }
 
 ");
-        }
     }
 }
