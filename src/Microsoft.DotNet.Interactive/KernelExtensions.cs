@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -69,6 +69,25 @@ namespace Microsoft.DotNet.Interactive
                  .Select(d => d.Kernel)
                  .SingleOrDefault(),
                 _ => null
+            };
+        }
+
+        public static IEnumerable<Kernel> FindKernels(this Kernel kernel, Func<Kernel, bool> predicate)
+        {
+            var root = kernel
+                .RecurseWhileNotNull(k => k switch
+                {
+                    { } kb => kb.ParentKernel,
+                    _ => null
+                })
+                .LastOrDefault();
+
+            return root switch
+            {
+               
+                CompositeKernel c => c.ChildKernels.Where(predicate),
+                _ when predicate(kernel) => new[] { kernel },
+                _ => Enumerable.Empty<Kernel>()
             };
         }
 

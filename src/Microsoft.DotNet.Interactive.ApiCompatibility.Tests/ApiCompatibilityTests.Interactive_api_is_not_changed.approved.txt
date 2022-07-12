@@ -200,6 +200,7 @@ Microsoft.DotNet.Interactive
     .ctor(System.Exception innerException)
   public static class KernelExtensions
     public static Kernel FindKernel(System.String name)
+    public static System.Collections.Generic.IEnumerable<Kernel> FindKernels(System.Func<Kernel,System.Boolean> predicate)
     public static T LogCommandsToPocketLogger<T>()
     public static T LogEventsToPocketLogger<T>()
     public static System.Threading.Tasks.Task<KernelCommandResult> SendAsync(Microsoft.DotNet.Interactive.Commands.KernelCommand command)

@@ -12,44 +12,43 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
+namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests;
+
+public class DataFrameKernelExtensionTests : IDisposable
 {
-    public class DataFrameKernelExtensionTests : IDisposable
+
+    private readonly Configuration _configuration;
+
+    public DataFrameKernelExtensionTests()
     {
+        _configuration = new Configuration()
+            .SetInteractive(Debugger.IsAttached)
+            .UsingExtension("json");
+    }
 
-        private readonly Configuration _configuration;
+    [Fact]
+    public async Task it_registers_formatters()
+    {
+        using var kernel = new CompositeKernel();
 
-        public DataFrameKernelExtensionTests()
-        {
-            _configuration = new Configuration()
-                .SetInteractive(Debugger.IsAttached)
-                .UsingExtension("json");
-        }
+        var kernelExtension = new DataFrameKernelExtension();
 
-        [Fact]
-        public async Task it_registers_formatters()
-        {
-            using var kernel = new CompositeKernel();
+        await kernelExtension.OnLoadAsync(kernel);
 
-            var kernelExtension = new DataFrameKernelExtension();
-
-            await kernelExtension.OnLoadAsync(kernel);
-
-            var stream = @"id,name,color,deliciousness
+        var stream = @"id,name,color,deliciousness
 1,apple,green,10
 2,banana,yellow,11
 3,cherry,red,9000".ToStream();
 
-            var dataFrame = DataFrame.LoadCsv(stream);
+        var dataFrame = DataFrame.LoadCsv(stream);
 
-            var formatted = dataFrame.ToDisplayString(TabularDataResourceFormatter.MimeType);
+        var formatted = dataFrame.ToDisplayString(TabularDataResourceFormatter.MimeType);
 
-            this.Assent(formatted, _configuration);
-        }
+        this.Assent(formatted, _configuration);
+    }
 
-        public void Dispose()
-        {
-            Formatter.ResetToDefault();
-        }
+    public void Dispose()
+    {
+        Formatter.ResetToDefault();
     }
 }
