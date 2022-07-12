@@ -83,7 +83,7 @@ internal class InteractiveDocumentConverter : JsonConverter<InteractiveDocument>
         writer.WriteNumberValue(4);
 
         writer.WritePropertyName("nbformat_minor");
-        writer.WriteNumberValue(4);
+        writer.WriteNumberValue(5);
 
         writer.WriteEndObject();
     }

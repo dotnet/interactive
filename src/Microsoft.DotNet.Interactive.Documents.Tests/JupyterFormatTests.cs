@@ -99,7 +99,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         execution_count = 0,
                         source = new[]
                         {
-                            "#!csharp",
+                            "#!csharp\n",
                             "// this is still assumed to be csharp"
                         }
                     }
@@ -133,7 +133,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                                 language = "fsharp"
                             }
                         },
-                        source = new[] {"// this should be F#"}
+                        source = new[] { "// this should be F#" }
                     }
                 },
                 metadata = new
@@ -209,7 +209,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     {
                         cell_type = "code",
                         execution_count = 0,
-                        source = new[] {"#!csharp", "// this is the code"}
+                        source = new[] {"#!csharp\n", "// this is the code"}
                     }
                 },
                 metadata = new
@@ -263,7 +263,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         },
                         source = new[]
                         {
-                            "#!pwsh",
+                            "#!pwsh\n",
                             "# this is PowerShell and not F#"
                         }
                     }
@@ -310,27 +310,27 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     new
                     {
                         cell_type = "code",
-                        source = new[] { "#!c#", "// this is csharp 1" }
+                        source = new[] { "#!c#\n", "// this is csharp 1" }
                     },
                     new
                     {
                         cell_type = "code",
-                        source = new[] { "#!C#", "// this is csharp 2" }
+                        source = new[] { "#!C#\n", "// this is csharp 2" }
                     },
                     new
                     {
                         cell_type = "code",
-                        source = new[] { "#!f#", "// this is fsharp 1" }
+                        source = new[] { "#!f#\n", "// this is fsharp 1" }
                     },
                     new
                     {
                         cell_type = "code",
-                        source = new[] { "#!F#", "// this is fsharp 2" }
-                    },
+                        source = new[] { "#!F#\n", "// this is fsharp 2" }
+                    },  
                     new
                     {
                         cell_type = "code",
-                        source = new[] { "#!powershell", "# this is pwsh" }
+                        source = new[] { "#!powershell\n", "# this is pwsh" }
                     }
                 }
             };
@@ -360,7 +360,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     {
                         cell_type = "code",
                         execution_count = 0,
-                        source = new[] { "#!fsharp", "// this is the code" }
+                        source = new[] { "#!fsharp\n", "// this is the code" }
                     }
                 },
                 metadata = new
@@ -405,7 +405,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     {
                         cell_type = "code",
                         execution_count = 0,
-                        source = new[] {"// this is csharp", "#!fsharp", "// and this is fsharp"}
+                        source = new[] {"// this is csharp\n", "#!fsharp\n", "// and this is fsharp"}
                     }
                 },
                 metadata = new
@@ -519,7 +519,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         cell_type = "markdown",
                         source = new[]
                         {
-                            "This is `markdown`.",
+                            "This is `markdown`.\n",
                             "So is this."
                         }
                     }
@@ -548,9 +548,9 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         source = new[]
                         {
                             // all different newline styles are normalized to `\n`
-                            "line 1",
-                            "line 2",
-                            "line 3",
+                            "line 1\n",
+                            "line 2\n",
+                            "line 3\n",
                             "line 4",
                         }
                     }
@@ -978,7 +978,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
             jupyter["nbformat_minor"]
                 .ToObject<int>()
                 .Should()
-                .Be(4);
+                .BeGreaterOrEqualTo(4);
         }
 
         [Fact]
@@ -1204,7 +1204,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                                 name = "stdout",
                                 text = new[]
                                 {
-                                    "this is text",
+                                    "this is text\n",
                                     "so is this"
                                 }
                             }
@@ -1258,7 +1258,8 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                                                      data = new Dictionary<string, string[]>
                                                      {
                                                          { "text/html", new[] { "<div>this is html</div>" } }
-                                                     }
+                                                     },
+                                                     metadata = new{}
                                                  }
                                              )));
         }
@@ -1280,12 +1281,11 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         {
                             new
                             {
-                                output_type = "execute_result",
+                                output_type = "display_data",
                                 data = new Dictionary<string, string[]>
                                 {
                                     { "text/html", new[] { "<div>this is html</div>" } }
                                 },
-                                metadata = new { }
                             }
                         }
                     }
@@ -1389,29 +1389,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     "at func2()"
                 }));
         }
-
-        [Fact]
-        public void serialized_file_output_has_not_changed()
-        {
-            var notebook = new InteractiveDocument
-            {
-                new("// this is csharp", "csharp", new[]
-                {
-                    new DisplayElement(new Dictionary<string, object>
-                    {
-                        { "text/html", "<div>this is html</div>" }
-                    })
-                }) { ExecutionCount = 1 },
-                new("This is `markdown`.", "markdown")
-            };
-
-            var json = notebook
-                       .WithJupyterMetadataIfNotSet()
-                       .Serialize();
-
-            this.Assent(json, _assentConfiguration);
-        }
-
+        
         [Fact]
         public async Task ipynb_from_Jupyter_can_be_round_tripped_through_read_and_write_without_the_content_changing()
         {

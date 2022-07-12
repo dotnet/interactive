@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
 using Microsoft.DotNet.Interactive.Documents.Utility;
 
@@ -156,23 +155,10 @@ internal class InteractiveDocumentElementConverter : JsonConverter<InteractiveDo
         }
 
         writer.WritePropertyName("source");
-        var lines = EnsureTrailingNewlinesOnAllButLast(element.Contents.SplitIntoLines());
-
+        var lines = element.Contents.SplitIntoLines().EnsureTrailingNewlinesOnAllButLast();
         JsonSerializer.Serialize(writer, lines, options);
+
         writer.WriteEndObject();
     }
 
-    internal static string[] EnsureTrailingNewlinesOnAllButLast(string[] lines)
-    {
-        var result = lines.Select(l => l.EndsWith("\n")
-                                           ? l
-                                           : l + "\n").ToArray();
-
-        if (result.Length > 0)
-        {
-            result[^1] = lines.Last();
-        }
-
-        return result;
-    }
 }

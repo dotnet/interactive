@@ -146,6 +146,12 @@ export interface DisplayElement extends InteractiveDocumentOutputElement {
 }
 
 export interface InteractiveDocumentOutputElement {
+    metadata: { [key: string]: any; };
+}
+
+export interface ReturnValueElement extends InteractiveDocumentOutputElement {
+    data: { [key: string]: any; };
+    executionCount: number;
 }
 
 export interface TextElement extends InteractiveDocumentOutputElement {
@@ -429,12 +435,16 @@ export interface FormattedValue {
 
 export interface InteractiveDocument {
     elements: Array<InteractiveDocumentElement>;
+    metadata: { [key: string]: any; };
 }
 
 export interface InteractiveDocumentElement {
-    language: string;
+    id?: string;
+    language?: string;
     contents: string;
     outputs: Array<InteractiveDocumentOutputElement>;
+    executionCount: number;
+    metadata?: { [key: string]: any; };
 }
 
 export interface KernelInfo {

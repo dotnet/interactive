@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using Microsoft.DotNet.Interactive.Documents.Utility;
 
 namespace Microsoft.DotNet.Interactive.Documents.Jupyter;
 
@@ -19,9 +20,12 @@ internal class InteractiveDocumentOutputElementConverter : JsonConverter<Interac
 
         IDictionary<string, object>? data = null;
         string? text = null;
-        string? errorName = null;
+        string? name = null;
+        string? ename = null;
         string? errorValue = null;
         string? outputType = null;
+        int? executionCount = null;
+        IDictionary<string, object>? metadata = null;
         IEnumerable<string>? stackTrace = null;
 
         while (reader.Read())
@@ -35,11 +39,23 @@ internal class InteractiveDocumentOutputElementConverter : JsonConverter<Interac
                         break;
 
                     case "ename":
-                        errorName = reader.ReadString();
+                        ename = reader.ReadString();
                         break;
 
                     case "evalue":
                         errorValue = reader.ReadString();
+                        break;
+
+                    case "execution_count":
+                        executionCount = reader.ReadInt32();
+                        break;
+
+                    case "metadata":
+                        metadata = reader.ReadDataDictionary(options);
+                        break;
+
+                    case "name":
+                        name = reader.ReadString();
                         break;
 
                     case "output_type":
@@ -61,20 +77,47 @@ internal class InteractiveDocumentOutputElementConverter : JsonConverter<Interac
             }
             else if (reader.TokenType == JsonTokenType.EndObject)
             {
+                InteractiveDocumentOutputElement element;
+
                 switch (outputType)
                 {
                     case "display_data":
-                        return new DisplayElement(data ?? new Dictionary<string, object>());
+                        var displayElement = new DisplayElement(data ?? new Dictionary<string, object>());
+                        if (metadata is not null)
+                        {
+                            displayElement.Metadata.MergeWith(metadata);
+                        }
+                        element = displayElement;
+
+                        break;
 
                     case "error":
-                        return new ErrorElement(errorValue, errorName, stackTrace?.ToArray());
+                        element = new ErrorElement(errorValue, ename, stackTrace?.ToArray());
+                        break;
 
                     case "execute_result":
-                        return new ReturnValueElement(data ?? new Dictionary<string, object>());
+                        var returnValueElement = new ReturnValueElement(data ?? new Dictionary<string, object>())
+                        {
+                            ExecutionCount = executionCount ?? 0
+                        };
+                        
+                        if (metadata is not null)
+                        {
+                            returnValueElement.Metadata.MergeWith(metadata);
+                        }
+
+                        element = returnValueElement;
+                        break;
 
                     case "stream":
-                        return new TextElement(text);
+                        element = new TextElement(text);
+                        break;
+
+                    default:
+                        throw new JsonException($"Unrecognized output_type: '{outputType}'");
                 }
+
+                return element;
             }
         }
 
@@ -93,6 +136,9 @@ internal class InteractiveDocumentOutputElementConverter : JsonConverter<Interac
             case DisplayElement displayElement:
 
                 WriteData(displayElement);
+
+                writer.WritePropertyName("metadata");
+                JsonSerializer.Serialize(writer, displayElement.Metadata, options);
 
                 writer.WritePropertyName("output_type");
                 writer.WriteStringValue("display_data");
@@ -122,6 +168,9 @@ internal class InteractiveDocumentOutputElementConverter : JsonConverter<Interac
 
                 WriteData(returnValueElement);
 
+                writer.WritePropertyName("execution_count");
+                writer.WriteNumberValue(returnValueElement.ExecutionCount);
+
                 writer.WritePropertyName("output_type");
                 writer.WriteStringValue("execute_result");
 
@@ -136,8 +185,8 @@ internal class InteractiveDocumentOutputElementConverter : JsonConverter<Interac
                 writer.WriteStringValue("stream");
 
                 writer.WriteStartArray("text");
-
-                foreach (var line in textElement.Text.SplitIntoLines())
+                var text = textElement.Text.SplitIntoLines().EnsureTrailingNewlinesOnAllButLast();
+                foreach (var line in text)
                 {
                     writer.WriteStringValue(line);
                 }
@@ -172,7 +221,7 @@ internal class InteractiveDocumentOutputElementConverter : JsonConverter<Interac
                     var lines = value switch
                     {
                         IEnumerable<string> enumerable => enumerable,
-                        string s => s.SplitIntoLines(),
+                        string s => s.SplitIntoLines().EnsureTrailingNewlinesOnAllButLast(),
                         IEnumerable<object> os => os.Select(o => o switch
                         {
                             string s => s,

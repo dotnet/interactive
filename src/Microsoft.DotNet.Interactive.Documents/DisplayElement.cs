@@ -14,4 +14,6 @@ public class DisplayElement : InteractiveDocumentOutputElement, IDataElement
     }
 
     public IDictionary<string, object> Data { get; }
+
+    public IDictionary<string, object> Metadata { get; } = new Dictionary<string, object>();
 }

@@ -1,7 +1,6 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.Text.Json;
 
@@ -45,25 +44,7 @@ internal static class JsonReaderExtensions
 
         return null;
     }
-
-    internal static string[]? ReadArrayOrStringAsArray(
-        this ref Utf8JsonReader reader)
-    {
-        if (reader.Read())
-        {
-            return reader.TokenType switch
-            {
-                JsonTokenType.StartArray =>
-                    JsonSerializer.Deserialize<string[]>(ref reader),
-
-                JsonTokenType.String =>
-                    reader.GetString()?.SplitIntoLines()
-            } ?? Array.Empty<string>();
-        }
-
-        return null;
-    }
-
+    
     internal static string? ReadArrayOrStringAsString(
         this ref Utf8JsonReader reader)
     {
@@ -73,7 +54,7 @@ internal static class JsonReaderExtensions
             {
                 case JsonTokenType.StartArray:
                     var lines = JsonSerializer.Deserialize<string[]>(ref reader);
-                    return string.Join("\n", lines);
+                    return string.Join("", lines);
 
                 case JsonTokenType.String:
                     return reader.GetString();
