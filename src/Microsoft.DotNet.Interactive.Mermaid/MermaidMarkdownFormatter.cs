@@ -12,9 +12,10 @@ namespace Microsoft.DotNet.Interactive.Mermaid;
 
 internal class MermaidMarkdownFormatter : ITypeFormatterSource
 {
-    private static readonly Uri DefaultLibraryUri = new(@"https://cdn.jsdelivr.net/npm/mermaid@9.1.3/dist/mermaid.min.js", UriKind.Absolute);
-    private static readonly Uri RequireUri = new("https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js");
     private const string DefaultLibraryVersion = "9.1.3";
+    private static readonly Uri DefaultLibraryUri = new($@"https://cdn.jsdelivr.net/npm/mermaid@{DefaultLibraryVersion}/dist/mermaid.min.js", UriKind.Absolute);
+    private static readonly Uri RequireUri = new("https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js");
+    
     
     private static string? _cacheBuster;
     private static Uri? _libraryUri;
