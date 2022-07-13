@@ -12,6 +12,7 @@ using FluentAssertions;
 using FluentAssertions.Execution;
 using FluentAssertions.Json;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
+using Microsoft.DotNet.Interactive.Documents.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -1000,7 +1001,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     new
                     {
                         cell_type = "code",
-                        execution_count = 0,
+                        execution_count = (int?)null,
                         metadata = new
                         {
                             dotnet_interactive = new
@@ -1008,11 +1009,11 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                                 language = "csharp"
                             }
                         },
+                        outputs = Array.Empty<object>(),
                         source = new[]
                         {
                             "//"
                         },
-                        outputs = Array.Empty<object>()
                     }
                 )));
         }
@@ -1121,7 +1122,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
             {
                 new("//", "csharp", new[]
                 {
-                    new TextElement("this is text")
+                    new TextElement("this is text", "stdout")
                 })
             };
             var notebook = new InteractiveDocument(cells);
@@ -1180,7 +1181,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     .ContainSingle()
                     .Which
                     .Should()
-                    .BeEquivalentToRespectingRuntimeTypes(new TextElement("this is text"));
+                    .BeEquivalentToRespectingRuntimeTypes(new TextElement("this is text", "stdout"));
         }
 
         [Fact]
@@ -1224,7 +1225,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new TextElement("this is text\nso is this"));
+                .BeEquivalentToRespectingRuntimeTypes(new TextElement("this is text\nso is this", "stdout"));
         }
 
         [Fact]
@@ -1389,7 +1390,21 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     "at func2()"
                 }));
         }
-        
+
+        [Theory]
+        [InlineData("", new string[] {  })]
+        [InlineData("one", new[] { "one" })]
+        [InlineData("one\n", new[] { "one\n" })]
+        [InlineData("one\r\n", new[] { "one\r\n" })]
+        [InlineData("one\ntwo", new[] { "one\n", "two" })]
+        [InlineData("one\r\ntwo", new[] { "one\r\n", "two" })]
+        public void SplitIntoJupyterFileArray_performs_expected_split_for_ipynb_array_values(string input, string[] expected)
+        {
+            var lines = input.SplitIntoJupyterFileArray();
+
+            lines.Should().BeEquivalentTo(expected, c => c.WithStrictOrdering());
+        }
+
         [Fact]
         public async Task ipynb_from_Jupyter_can_be_round_tripped_through_read_and_write_without_the_content_changing()
         {
@@ -1409,10 +1424,19 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         private async Task<string> RoundTripIpynb(string notebookFile)
         {
             var expectedContent = await File.ReadAllTextAsync(notebookFile);
-
+            
             var inputDoc = Notebook.Parse(expectedContent);
 
             var resultContent = inputDoc.Serialize(enforceJupyterMetadata: false);
+
+            if (expectedContent.EndsWith("\r\n"))
+            {
+                resultContent += "\r\n";
+            }
+            else if (expectedContent.EndsWith("\n"))
+            {
+                resultContent += "\n";
+            }
 
             return resultContent;
         }

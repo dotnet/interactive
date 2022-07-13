@@ -5,9 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Microsoft.DotNet.Interactive.Documents;
+namespace Microsoft.DotNet.Interactive.Documents.Utility;
 
-public static class StringExtensions
+internal static class StringExtensions
 {
     internal static string[] SplitIntoLines(this string s)
     {
@@ -19,38 +19,29 @@ public static class StringExtensions
         return s.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
     }
 
-    public static IEnumerable<string>  SplitIntoLines2(this string  value)
+    internal static string[] SplitIntoJupyterFileArray(this string value)
     {
+        var lines = new List<string>();
 
+        int startLineIndex = 0;
 
-        foreach (var c in value)
+        // each substring ending in \n is its own array item
+        for (int i = 0; i < value.Length; i++)
         {
-            
-
-
-
-
-
-
+            if (value[i] == '\n')
+            {
+                lines.Add(value[startLineIndex..(i + 1)]);
+                startLineIndex = i + 1;
+            }
+        }
+        
+        // the remainder of the string, if any, is an additional array item
+        if (startLineIndex < value.Length)
+        {
+            lines.Add(value[startLineIndex..]);
         }
 
-
-        return value;
-    }
-
-    internal static string TrimNewline(this string s)
-    {
-        if (s.EndsWith("\r\n"))
-        {
-            return s[0..^2];
-        }
-
-        if (s.EndsWith("\n"))
-        {
-            return s[0..^1];
-        }
-
-        return s;
+        return lines.ToArray();
     }
 
     private static string[] RemoveLastElementIfEmpty(this string[] values)
@@ -63,7 +54,7 @@ public static class StringExtensions
         return values;
     }
 
-    internal static string[] EnsureTrailingNewlinesOnAllButLast(this string[] lines)
+    private static string[] EnsureTrailingNewlinesOnAllButLast(this string[] lines)
     {
         var result = lines
                      .RemoveLastElementIfEmpty()

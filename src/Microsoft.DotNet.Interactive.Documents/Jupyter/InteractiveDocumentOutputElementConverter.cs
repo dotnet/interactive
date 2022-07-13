@@ -110,7 +110,7 @@ internal class InteractiveDocumentOutputElementConverter : JsonConverter<Interac
                         break;
 
                     case "stream":
-                        element = new TextElement(text);
+                        element = new TextElement(text, name);
                         break;
 
                     default:
@@ -171,6 +171,9 @@ internal class InteractiveDocumentOutputElementConverter : JsonConverter<Interac
                 writer.WritePropertyName("execution_count");
                 writer.WriteNumberValue(returnValueElement.ExecutionCount);
 
+                writer.WritePropertyName("metadata");
+                JsonSerializer.Serialize(writer, returnValueElement.Metadata, options);
+
                 writer.WritePropertyName("output_type");
                 writer.WriteStringValue("execute_result");
 
@@ -185,7 +188,7 @@ internal class InteractiveDocumentOutputElementConverter : JsonConverter<Interac
                 writer.WriteStringValue("stream");
 
                 writer.WriteStartArray("text");
-                var text = textElement.Text.SplitIntoLines().EnsureTrailingNewlinesOnAllButLast();
+                var text = textElement.Text.SplitIntoJupyterFileArray();
                 foreach (var line in text)
                 {
                     writer.WriteStringValue(line);
@@ -221,7 +224,7 @@ internal class InteractiveDocumentOutputElementConverter : JsonConverter<Interac
                     var lines = value switch
                     {
                         IEnumerable<string> enumerable => enumerable,
-                        string s => s.SplitIntoLines().EnsureTrailingNewlinesOnAllButLast(),
+                        string s => s.SplitIntoJupyterFileArray(),
                         IEnumerable<object> os => os.Select(o => o switch
                         {
                             string s => s,

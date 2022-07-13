@@ -3,7 +3,7 @@
 
 namespace Microsoft.DotNet.Interactive.App.Tests
 {
-    static class  StringUtilities
+    static class StringUtilities
     {
         public static string EnforceNewLine(this string source)
         {

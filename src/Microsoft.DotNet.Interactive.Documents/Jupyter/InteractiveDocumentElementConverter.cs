@@ -123,7 +123,14 @@ internal class InteractiveDocumentElementConverter : JsonConverter<InteractiveDo
             writer.WriteStringValue("code");
 
             writer.WritePropertyName("execution_count");
-            writer.WriteNumberValue(element.ExecutionCount);
+            if (element.ExecutionCount > 0)
+            {
+                writer.WriteNumberValue(element.ExecutionCount);
+            }
+            else
+            {
+                writer.WriteNullValue();
+            }
         }
 
         if (element.Id is { })
@@ -155,7 +162,7 @@ internal class InteractiveDocumentElementConverter : JsonConverter<InteractiveDo
         }
 
         writer.WritePropertyName("source");
-        var lines = element.Contents.SplitIntoLines().EnsureTrailingNewlinesOnAllButLast();
+        var lines = element.Contents.SplitIntoJupyterFileArray();
         JsonSerializer.Serialize(writer, lines, options);
 
         writer.WriteEndObject();

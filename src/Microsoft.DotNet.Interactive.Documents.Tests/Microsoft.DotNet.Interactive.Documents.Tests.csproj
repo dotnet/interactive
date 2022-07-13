@@ -12,6 +12,10 @@
     <None Remove="TestResults\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Microsoft.DotNet.Interactive.Documents\Utility\StringExtension.cs" Link="Utility\StringExtension.cs" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
@@ -54,6 +58,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Utility\" />
   </ItemGroup>
 
 </Project>
