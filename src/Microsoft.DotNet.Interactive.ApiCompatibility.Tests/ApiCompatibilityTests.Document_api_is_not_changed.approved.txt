@@ -10,9 +10,10 @@ Microsoft.DotNet.Interactive.Documents
 )
     public static System.Void Write(InteractiveDocument document, System.IO.TextWriter writer, System.String newline = 
 )
-  public class DisplayElement : InteractiveDocumentOutputElement
+  public class DisplayElement : InteractiveDocumentOutputElement, IDataElement
     .ctor(System.Collections.Generic.IDictionary<System.String,System.Object> data)
     public System.Collections.Generic.IDictionary<System.String,System.Object> Data { get;}
+    public System.Collections.Generic.IDictionary<System.String,System.Object> Metadata { get;}
   public class ErrorElement : InteractiveDocumentOutputElement
     .ctor(System.String errorValue = null, System.String errorName = Error, System.String[] stackTrace = null)
     public System.String ErrorName { get;}
@@ -52,11 +53,13 @@ Microsoft.DotNet.Interactive.Documents
     public System.Boolean Contains(System.String name)
     public System.Collections.Generic.IEnumerator<KernelName> GetEnumerator()
     public System.Boolean TryGetByAlias(System.String alias, ref KernelName& name)
-  public class ReturnValueElement : InteractiveDocumentOutputElement
+  public class ReturnValueElement : InteractiveDocumentOutputElement, IDataElement
     .ctor(System.Collections.Generic.IDictionary<System.String,System.Object> data)
     public System.Collections.Generic.IDictionary<System.String,System.Object> Data { get;}
+    public System.Int32 ExecutionCount { get; set;}
+    public System.Collections.Generic.IDictionary<System.String,System.Object> Metadata { get;}
   public class TextElement : InteractiveDocumentOutputElement
-    .ctor(System.String text, System.String name = stdout)
+    .ctor(System.String text, System.String name)
     public System.String Name { get;}
     public System.String Text { get;}
 Microsoft.DotNet.Interactive.Documents.Jupyter

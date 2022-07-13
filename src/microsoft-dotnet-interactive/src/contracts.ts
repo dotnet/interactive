@@ -143,15 +143,16 @@ export interface KernelEvent {
 
 export interface DisplayElement extends InteractiveDocumentOutputElement {
     data: { [key: string]: any; };
+    metadata: { [key: string]: any; };
 }
 
 export interface InteractiveDocumentOutputElement {
-    metadata: { [key: string]: any; };
 }
 
 export interface ReturnValueElement extends InteractiveDocumentOutputElement {
     data: { [key: string]: any; };
     executionCount: number;
+    metadata: { [key: string]: any; };
 }
 
 export interface TextElement extends InteractiveDocumentOutputElement {
