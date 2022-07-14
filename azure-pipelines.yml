@@ -392,6 +392,7 @@ stages:
           -TsaRepositoryName "Interactive"
           -TsaCodebaseName "Interactive-GitHub"
           -TsaPublish $True
+          -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)/eng/policheck_exclusions.xml")
 
 #---------------------------------------------------------------------------------------------------------------------#
 #                                                    NPM Publish                                                      #
