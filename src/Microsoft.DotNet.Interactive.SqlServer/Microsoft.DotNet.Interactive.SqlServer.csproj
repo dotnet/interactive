@@ -20,6 +20,7 @@
  </ItemGroup>
 
  <ItemGroup>
+   <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
    <PackageReference Include="Microsoft.Data.SqlClient" Version="3.0.1" />
    <PackageReference Include="Humanizer" Version="2.8.26" />
    <PackageReference Include="Microsoft.Identity.Client" Version="4.35.1" />
