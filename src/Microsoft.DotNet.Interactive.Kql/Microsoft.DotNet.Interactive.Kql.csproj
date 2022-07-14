@@ -25,6 +25,7 @@
  </ItemGroup>
 
  <ItemGroup>
+   <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
    <PackageReference Include="Microsoft.Azure.Kusto.Data" Version="10.0.3" />
    <PackageReference Include="Microsoft.SqlToolsService" Version="3.0.0-release.163" />
    <PackageReference Include="StreamJsonRpc" Version="2.11.35" />
