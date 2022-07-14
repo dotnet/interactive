@@ -34,7 +34,7 @@ internal class InteractiveDocumentElementConverter : JsonConverter<InteractiveDo
                         break;
 
                     case "execution_count":
-                        element.ExecutionCount = reader.ReadInt32() ?? 0;
+                        element.ExecutionOrder = reader.ReadInt32() ?? 0;
                         break;
 
                     case "id":
@@ -123,9 +123,9 @@ internal class InteractiveDocumentElementConverter : JsonConverter<InteractiveDo
             writer.WriteStringValue("code");
 
             writer.WritePropertyName("execution_count");
-            if (element.ExecutionCount > 0)
+            if (element.ExecutionOrder > 0)
             {
-                writer.WriteNumberValue(element.ExecutionCount);
+                writer.WriteNumberValue(element.ExecutionOrder);
             }
             else
             {

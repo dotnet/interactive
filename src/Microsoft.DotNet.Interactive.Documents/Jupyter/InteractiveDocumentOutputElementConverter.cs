@@ -98,7 +98,7 @@ internal class InteractiveDocumentOutputElementConverter : JsonConverter<Interac
                     case "execute_result":
                         var returnValueElement = new ReturnValueElement(data ?? new Dictionary<string, object>())
                         {
-                            ExecutionCount = executionCount ?? 0
+                            ExecutionOrder = executionCount ?? 0
                         };
                         
                         if (metadata is not null)
@@ -169,7 +169,7 @@ internal class InteractiveDocumentOutputElementConverter : JsonConverter<Interac
                 WriteData(returnValueElement);
 
                 writer.WritePropertyName("execution_count");
-                writer.WriteNumberValue(returnValueElement.ExecutionCount);
+                writer.WriteNumberValue(returnValueElement.ExecutionOrder);
 
                 writer.WritePropertyName("metadata");
                 JsonSerializer.Serialize(writer, returnValueElement.Metadata, options);

@@ -29,7 +29,7 @@ Microsoft.DotNet.Interactive.Documents
     .ctor()
     .ctor(System.String contents = null, System.String language = null, System.Collections.Generic.IEnumerable<InteractiveDocumentOutputElement> outputs = null)
     public System.String Contents { get; set;}
-    public System.Int32 ExecutionCount { get; set;}
+    public System.Int32 ExecutionOrder { get; set;}
     public System.String Id { get; set;}
     public System.String Language { get; set;}
     public System.Collections.Generic.IDictionary<System.String,System.Object> Metadata { get; set;}
@@ -56,7 +56,7 @@ Microsoft.DotNet.Interactive.Documents
   public class ReturnValueElement : InteractiveDocumentOutputElement, IDataElement
     .ctor(System.Collections.Generic.IDictionary<System.String,System.Object> data)
     public System.Collections.Generic.IDictionary<System.String,System.Object> Data { get;}
-    public System.Int32 ExecutionCount { get; set;}
+    public System.Int32 ExecutionOrder { get; set;}
     public System.Collections.Generic.IDictionary<System.String,System.Object> Metadata { get;}
   public class TextElement : InteractiveDocumentOutputElement
     .ctor(System.String text, System.String name)

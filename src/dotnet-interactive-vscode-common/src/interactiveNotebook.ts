@@ -32,12 +32,12 @@ export function getSimpleLanguage(language: string): string {
     return language;
 }
 
-export function getNotebookSpecificLanguage(language: string): string {
-    if (!language.startsWith(notebookLanguagePrefix) && language !== 'markdown') {
+export function getNotebookSpecificLanguage(language?: string): string {
+    if (language && !language.startsWith(notebookLanguagePrefix) && language !== 'markdown') {
         return notebookLanguagePrefix + language;
     }
 
-    return language;
+    return language ?? "";
 }
 
 export function isDotnetInteractiveLanguage(language: string): boolean {
@@ -50,7 +50,7 @@ export function isJupyterNotebookViewType(viewType: string): boolean {
     return viewType === jupyterViewType;
 }
 
-export function languageToCellKind(language: string): NotebookCellKind {
+export function languageToCellKind(language?: string): NotebookCellKind {
     switch (language) {
         case 'markdown':
             return NotebookCellKind.Markup;

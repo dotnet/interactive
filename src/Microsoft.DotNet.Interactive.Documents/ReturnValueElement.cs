@@ -15,7 +15,7 @@ public class ReturnValueElement : InteractiveDocumentOutputElement, IDataElement
 
     public IDictionary<string, object> Data { get; }
     
-    public int ExecutionCount { get; set; }
+    public int ExecutionOrder { get; set; }
 
     public IDictionary<string, object> Metadata { get; } = new Dictionary<string, object>();
 }

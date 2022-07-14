@@ -166,7 +166,8 @@ describe('Miscellaneous tests', () => {
             data: {
                 'text/html': 'html',
                 'text/plain': 'text'
-            }
+            },
+            metadata: {}
         };
         expect(isDisplayOutput(display)).to.be.true;
     });

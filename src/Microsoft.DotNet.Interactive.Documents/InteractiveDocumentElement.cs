@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.Documents
 
         public List<InteractiveDocumentOutputElement> Outputs { get; } = new();
 
-        public int ExecutionCount { get; set; }
+        public int ExecutionOrder { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public IDictionary<string, object>? Metadata { get; set; }

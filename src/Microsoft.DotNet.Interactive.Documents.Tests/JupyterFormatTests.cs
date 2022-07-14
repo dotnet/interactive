@@ -1041,7 +1041,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         {
             var cells = new List<InteractiveDocumentElement>
             {
-                new("let x = 1", "fsharp") { ExecutionCount = 123 }
+                new("let x = 1", "fsharp") { ExecutionOrder = 123 }
             };
             var notebook = new InteractiveDocument(cells);
             var serialized = notebook.Serialize();

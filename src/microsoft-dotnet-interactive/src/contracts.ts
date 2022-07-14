@@ -151,7 +151,7 @@ export interface InteractiveDocumentOutputElement {
 
 export interface ReturnValueElement extends InteractiveDocumentOutputElement {
     data: { [key: string]: any; };
-    executionCount: number;
+    executionOrder: number;
     metadata: { [key: string]: any; };
 }
 
@@ -444,7 +444,7 @@ export interface InteractiveDocumentElement {
     language?: string;
     contents: string;
     outputs: Array<InteractiveDocumentOutputElement>;
-    executionCount: number;
+    executionOrder: number;
     metadata?: { [key: string]: any; };
 }
 
