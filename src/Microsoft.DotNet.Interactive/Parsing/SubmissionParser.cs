@@ -116,7 +116,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                                         var diagnostic = new Interactive.Diagnostic(
                                             adn.GetLinePositionSpan(),
                                             CodeAnalysis.DiagnosticSeverity.Error,
-                                            "NI0001", // FIX: (SplitSubmission) what code should this be?
+                                            "NI0001", // QUESTION: (SplitSubmission) what code should this be?
                                             "Unrecognized magic command");
                                         var diagnosticsProduced = new DiagnosticsProduced(new[] { diagnostic }, c);
                                         context.Publish(diagnosticsProduced);

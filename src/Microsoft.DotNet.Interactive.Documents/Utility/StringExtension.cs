@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Microsoft.DotNet.Interactive.Documents.Utility;
 
@@ -34,7 +33,7 @@ internal static class StringExtensions
                 startLineIndex = i + 1;
             }
         }
-        
+
         // the remainder of the string, if any, is an additional array item
         if (startLineIndex < value.Length)
         {
@@ -42,32 +41,5 @@ internal static class StringExtensions
         }
 
         return lines.ToArray();
-    }
-
-    private static string[] RemoveLastElementIfEmpty(this string[] values)
-    {
-        if (values.Length > 0 && values[^1] == "")
-        {
-            return values[..^1];
-        }
-
-        return values;
-    }
-
-    private static string[] EnsureTrailingNewlinesOnAllButLast(this string[] lines)
-    {
-        var result = lines
-                     .RemoveLastElementIfEmpty()
-                     .Select(l => l.EndsWith("\n")
-                                      ? l
-                                      : l + "\n")
-                     .ToArray();
-
-        if (result.Length > 0)
-        {
-            result[^1] = lines[^1];
-        }
-
-        return result;
     }
 }

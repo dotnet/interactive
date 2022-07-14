@@ -7,8 +7,8 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Connection;
+using Microsoft.DotNet.Interactive.Http.Utility;
 
 namespace Microsoft.DotNet.Interactive.Http;
 

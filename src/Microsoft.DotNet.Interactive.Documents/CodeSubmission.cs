@@ -31,10 +31,6 @@ namespace Microsoft.DotNet.Interactive.Documents
 
             var elements = new List<InteractiveDocumentElement>();
             var currentLanguage = defaultLanguage;
-            if (kernelNames.DefaultKernelName != defaultLanguage)
-            {
-                // FIX: (Parse) remove the defaultLanguage parameter
-            }
             var currentElementLines = new List<string>();
 
             InteractiveDocumentElement CreateElement(string elementLanguage, IEnumerable<string> elementLines)
