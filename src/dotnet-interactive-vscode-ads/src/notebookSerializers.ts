@@ -13,6 +13,7 @@ import { Eol } from './vscode-common/interfaces';
 function toInteractiveDocumentElement(cell: vscode.NotebookCellData): contracts.InteractiveDocumentElement {
     const outputs = cell.outputs || [];
     return {
+        executionOrder: cell.executionSummary?.executionOrder ?? 0,
         language: getSimpleLanguage(cell.languageId),
         contents: cell.value,
         outputs: outputs.map(vsCodeCellOutputToContractCellOutput)
@@ -29,7 +30,8 @@ async function deserializeNotebookByType(parserServer: NotebookParserServer, ser
 
 async function serializeNotebookByType(parserServer: NotebookParserServer, serializationType: contracts.DocumentSerializationType, eol: Eol, data: vscode.NotebookData): Promise<Uint8Array> {
     const interactiveDocument: contracts.InteractiveDocument = {
-        elements: data.cells.map(toInteractiveDocumentElement)
+        elements: data.cells.map(toInteractiveDocumentElement),
+        metadata: {}
     };
     const rawData = await parserServer.serializeNotebook(serializationType, eol, interactiveDocument);
     return rawData;
