@@ -887,14 +887,6 @@ Microsoft.DotNet.Interactive.Utility
     public System.Threading.Tasks.Task WriteLineAsync(System.String value)
     public System.Threading.Tasks.Task WriteLineAsync()
     public System.Collections.Generic.IEnumerable<System.String> Writes()
-  public enum PathKind : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
-    Empty=0
-    Relative=1
-    RelativeToCurrentDirectory=2
-    RelativeToCurrentParent=3
-    RelativeToCurrentRoot=4
-    RelativeToDriveDirectory=5
-    Absolute=6
   public static class Paths
     public static System.String DotnetHomePath { get;}
     public static System.String DotnetToolsPath { get;}

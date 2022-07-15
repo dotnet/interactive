@@ -35,8 +35,6 @@ Microsoft.DotNet.Interactive.Documents
     public System.Collections.Generic.IDictionary<System.String,System.Object> Metadata { get; set;}
     public System.Collections.Generic.List<InteractiveDocumentOutputElement> Outputs { get;}
   public abstract class InteractiveDocumentOutputElement
-  public static class JsonElementExtensions
-    public static System.Nullable<System.Text.Json.JsonElement> GetPropertyFromPath(System.String[] path)
   public class KernelName
     .ctor(System.String kernelName)
     .ctor(System.String name, System.Collections.Generic.IReadOnlyCollection<System.String> aliases)
