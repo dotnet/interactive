@@ -6,9 +6,11 @@ If you would like to build `dotnet-interactive` tool and its associated librarie
 
 ### Prerequisites
 
-This repo depends on symbolic links between directories. By default, Windows doesn't support this feature. To work around this scenario, please run the PowerShell script `<root>/src/ensure-symlinks.ps1` as an administrator. This usually only needs to be run once.
+- Windows
+  - Enable [developer mode](https://docs.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development).
+  - This repo depends on symbolic links between directories. By default, Windows doesn't support this feature. To work around this scenario, please run the PowerShell script `<root>/src/ensure-symlinks.ps1` as an administrator. This usually only needs to be run once.
 
-**N.b., using symbolic links in Windows requires the drive be formatted as NTFS.**
+    **N.b., using symbolic links in Windows requires the drive be formatted as NTFS.**
 
 This project depends on .NET 6.0. Before working on the project, check that the .NET prerequisites have been met:
 
