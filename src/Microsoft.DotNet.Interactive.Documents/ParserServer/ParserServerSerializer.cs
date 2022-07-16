@@ -4,28 +4,31 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.DotNet.Interactive.Documents.Jupyter;
+using Microsoft.DotNet.Interactive.Documents.Json;
 
-namespace Microsoft.DotNet.Interactive.Documents.ParserServer
+namespace Microsoft.DotNet.Interactive.Documents.ParserServer;
+
+public static class ParserServerSerializer
 {
-    internal static class ParserServerSerializer
+    static ParserServerSerializer()
     {
-        static ParserServerSerializer()
+        JsonSerializerOptions = new JsonSerializerOptions
         {
-            JsonSerializerOptions = new JsonSerializerOptions
+            WriteIndented = false,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            Converters =
             {
-                WriteIndented = false,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
-                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-            };
-            JsonSerializerOptions.Converters.Add(new ByteArrayConverter());
-            JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
-            JsonSerializerOptions.Converters.Add(new NotebookCellOutputConverter());
-            JsonSerializerOptions.Converters.Add(new NotebookParseRequestConverter());
-            JsonSerializerOptions.Converters.Add(new NotebookParseResponseConverter());
-        }
-
-        public static JsonSerializerOptions JsonSerializerOptions { get; }
+                new ByteArrayConverter(),
+                new DataDictionaryConverter(),
+                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
+                new InteractiveDocumentConverter(),
+                new NotebookParseRequestConverter(),
+                new NotebookParseResponseConverter(),
+            }
+        };
     }
+
+    public static JsonSerializerOptions JsonSerializerOptions { get; }
 }

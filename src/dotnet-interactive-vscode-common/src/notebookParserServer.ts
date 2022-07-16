@@ -31,6 +31,7 @@ export class NotebookParserServer {
                 if (notebookCells.length === 0) {
                     // ensure at least one cell
                     notebookCells.push({
+                        executionOrder: 0,
                         language: defaultNotebookCellLanguage,
                         contents: '',
                         outputs: [],

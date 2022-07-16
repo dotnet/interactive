@@ -100,14 +100,12 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             IJupyterMessageSender jupyterMessageSender)
         {
             var traceBack = new List<string>();
-            var ename = "Unhandled exception";
             var emsg = commandFailed.Message;
 
             switch (commandFailed.Exception)
             {
                 case CodeSubmissionCompilationErrorException _:
                     // The diagnostics have already been reported
-                    ename = "Cell not executed";
                     emsg = "compilation error";
                     break;
 
@@ -127,11 +125,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                     break;
             }
 
-            var errorContent = new Error(
-                eName: ename,
-                eValue: emsg,
-                traceback: traceBack
-            );
+            var errorContent = new Error(eValue: emsg, traceback: traceBack);
 
             // send on iopub
             jupyterMessageSender.Send(errorContent);

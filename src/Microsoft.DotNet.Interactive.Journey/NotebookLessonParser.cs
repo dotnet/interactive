@@ -68,12 +68,12 @@ namespace Microsoft.DotNet.Interactive.Journey
             return CodeSubmission.Parse(content, "csharp", GetKernelNames(kernel));
         }
 
-        private static List<KernelName> GetKernelNames(CompositeKernel? kernel)
+        private static KernelNameCollection GetKernelNames(CompositeKernel? kernel)
         {
-            List<KernelName> kernelNames = new();
-
             if (kernel is { })
             {
+                KernelNameCollection kernelNames = new();
+
                 var kernelChoosers = kernel.Directives.OfType<ChooseKernelDirective>();
 
                 foreach (var kernelChooser in kernelChoosers)
@@ -87,19 +87,21 @@ namespace Microsoft.DotNet.Interactive.Journey
                 {
                     kernelNames.Add(new KernelName("markdown", new[] { "md" }));
                 }
+
+                return kernelNames;
             }
             else
             {
-                kernelNames = new List<KernelName>
+                var names = new KernelNameCollection
                 {
                     new("csharp", new[] { "cs", "C#", "c#" }),
                     new("fsharp", new[] { "fs", "F#", "f#" }),
                     new("pwsh", new[] { "powershell" }),
-                    new("markdown", new[] { "md" }),
+                    new("markdown", new[] { "md" })
                 };
+                names.DefaultKernelName = "csharp";
+                return names;
             }
-
-            return kernelNames;
         }
 
         public static void Parse(InteractiveDocument document, out LessonDefinition lesson, out List<ChallengeDefinition> challenges)
@@ -282,7 +284,7 @@ namespace Microsoft.DotNet.Interactive.Journey
 
             directive = match.Groups["directive"].Value;
             afterDirective = match.Groups["afterDirective"].Value;
-            remainingCell = new InteractiveDocumentElement(cell.Language, string.Join(Environment.NewLine, result.Skip(1)));
+            remainingCell = new InteractiveDocumentElement(string.Join(Environment.NewLine, result.Skip(1)), cell.Language);
             return true;
         }
     }

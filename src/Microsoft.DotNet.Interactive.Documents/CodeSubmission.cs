@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.DotNet.Interactive.Documents.Utility;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,14 +20,14 @@ namespace Microsoft.DotNet.Interactive.Documents
         public static InteractiveDocument Parse(
             string content,
             string defaultLanguage,
-            IReadOnlyCollection<KernelName> kernelNames)
+            KernelNameCollection kernelNames)
         {
             if (kernelNames == null)
             {
                 throw new ArgumentNullException(nameof(kernelNames));
             }
 
-            var lines = StringExtensions.SplitIntoLines(content);
+            var lines = content.SplitIntoLines();
 
             var elements = new List<InteractiveDocumentElement>();
             var currentLanguage = defaultLanguage;
@@ -34,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.Documents
 
             InteractiveDocumentElement CreateElement(string elementLanguage, IEnumerable<string> elementLines)
             {
-                return new(elementLanguage, string.Join("\n", elementLines));
+                return new(string.Join("\n", elementLines), elementLanguage);
             }
 
             void AddElement()
@@ -56,29 +57,27 @@ namespace Microsoft.DotNet.Interactive.Documents
                     elements.Add(CreateElement(currentLanguage, currentElementLines));
                 }
             }
-
-            var splittingKernelNames = kernelNames.ToList();
-
-            // not a kernel language, but still a valid cell splitter
-            if (!splittingKernelNames.Exists(kn => kn.Name == "markdown"))
-            {
-                splittingKernelNames.Add(new KernelName("markdown", new[] { "md" }));
-            }            
             
-            var mapOfKernelNamesByAlias = splittingKernelNames.ToMapOfKernelNamesByAlias();
-
+            // not a kernel language, but still a valid cell splitter
+            if (!kernelNames.Contains("markdown"))
+            {
+                kernelNames = kernelNames.Clone();
+                kernelNames.Add(new KernelName("markdown", new[] { "md" }));
+            }            
+          
             foreach (var line in lines)
             {
                 if (line.StartsWith(InteractiveNotebookCellSpecifier))
                 {
                     var cellLanguage = line.Substring(InteractiveNotebookCellSpecifier.Length);
-                    if (mapOfKernelNamesByAlias.TryGetValue(cellLanguage, out cellLanguage))
+
+                    if (kernelNames.TryGetByAlias(cellLanguage, out var name))
                     {
                         // recognized language, finalize the current element
                         AddElement();
 
                         // start a new element
-                        currentLanguage = cellLanguage;
+                        currentLanguage = name.Name;
                         currentElementLines.Clear();
                     }
                     else
@@ -106,9 +105,9 @@ namespace Microsoft.DotNet.Interactive.Documents
         }
 
         public static InteractiveDocument Read(
-            Stream stream, 
+            Stream stream,
             string defaultLanguage,
-            IReadOnlyCollection<KernelName> kernelNames)
+            KernelNameCollection kernelNames)
         {
             using var reader = new StreamReader(stream, Encoding);
             var content = reader.ReadToEnd();
@@ -116,9 +115,9 @@ namespace Microsoft.DotNet.Interactive.Documents
         }
 
         public static async Task<InteractiveDocument> ReadAsync(
-            Stream stream, 
+            Stream stream,
             string defaultLanguage,
-            IReadOnlyCollection<KernelName> kernelNames) 
+            KernelNameCollection kernelNames)
         {
             using var reader = new StreamReader(stream, Encoding);
             var content = await reader.ReadToEndAsync();
@@ -131,7 +130,7 @@ namespace Microsoft.DotNet.Interactive.Documents
 
             foreach (var element in interactiveDocument.Elements)
             {
-                var elementLines = StringExtensions.SplitIntoLines(element.Contents).SkipWhile(l => l.Length == 0).ToList();
+                var elementLines = element.Contents.SplitIntoLines().SkipWhile(l => l.Length == 0).ToList();
                 while (elementLines.Count > 0 && elementLines[^1].Length == 0)
                 {
                     elementLines.RemoveAt(elementLines.Count - 1);
@@ -150,18 +149,17 @@ namespace Microsoft.DotNet.Interactive.Documents
             return content;
         }
 
-        public static void Write(InteractiveDocument interactiveDocument, string newline, Stream stream)
+        public static void Write(InteractiveDocument document, Stream stream, string newline = "\n")
         {
             using var writer = new StreamWriter(stream, Encoding, 1024, true);
-            Write(interactiveDocument, newline, writer);
+            Write(document, writer, newline);
             writer.Flush();
         }
 
-        public static void Write(InteractiveDocument interactiveDocument, string newline, TextWriter writer)
+        public static void Write(InteractiveDocument document, TextWriter writer, string newline = "\n")
         {
-            var content = interactiveDocument.ToCodeSubmissionContent(newline);
+            var content = document.ToCodeSubmissionContent(newline);
             writer.Write(content);
         }
-        
     }
 }

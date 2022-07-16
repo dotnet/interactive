@@ -27,6 +27,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\PathUtilities.cs" Link="Utility\PathUtilities.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Include="Servers\Roslyn\Instrumentation\InstrumentationEmitter.cs" />
   </ItemGroup>
 

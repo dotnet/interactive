@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
     {
         public InteractiveDocument ParseDib(string content)
         {
-            return CodeSubmission.Parse(content, "csharp", KernelLanguageAliases);
+            return CodeSubmission.Parse(content, "csharp", KernelNames);
         }
 
         public string SerializeDib(InteractiveDocument interactive, string newLine)
@@ -131,8 +131,8 @@ let y = 2");
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new InteractiveDocumentElement("csharp", "var x = 1;\nvar y = 2;"),
-                    new InteractiveDocumentElement("fsharp", "let x = 1\nlet y = 2")
+                    new InteractiveDocumentElement("var x = 1;\nvar y = 2;", "csharp"),
+                    new InteractiveDocumentElement("let x = 1\nlet y = 2", "fsharp")
                 });
         }
 
@@ -153,8 +153,8 @@ Get-Item
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new InteractiveDocumentElement("csharp", "//"),
-                    new InteractiveDocumentElement("pwsh", "Get-Item")
+                    new InteractiveDocumentElement("//", "csharp"),
+                    new InteractiveDocumentElement("Get-Item", "pwsh")
                 });
         }
 
@@ -189,8 +189,8 @@ Get-Item
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new InteractiveDocumentElement("csharp", "// first line of C#\n\n\n\n// last line of C#"),
-                    new InteractiveDocumentElement("fsharp", "// first line of F#\n\n\n\n// last line of F#")
+                    new InteractiveDocumentElement("// first line of C#\n\n\n\n// last line of C#", "csharp"),
+                    new InteractiveDocumentElement("// first line of F#\n\n\n\n// last line of F#", "fsharp")
                 });
         }
 
@@ -208,7 +208,7 @@ This is `markdown`.
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new InteractiveDocumentElement("markdown", "This is `markdown`.")
+                    new InteractiveDocumentElement("This is `markdown`.", "markdown")
                 });
         }
 
@@ -238,12 +238,12 @@ This is `markdown` with an alias.
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new InteractiveDocumentElement("csharp", "// this is csharp 1"),
-                    new InteractiveDocumentElement("csharp", "// this is csharp 2"),
-                    new InteractiveDocumentElement("fsharp", "// this is fsharp 1"),
-                    new InteractiveDocumentElement("fsharp", "// this is fsharp 2"),
-                    new InteractiveDocumentElement("pwsh", "# this is pwsh"),
-                    new InteractiveDocumentElement("markdown", "This is `markdown` with an alias.")
+                    new InteractiveDocumentElement("// this is csharp 1", "csharp"),
+                    new InteractiveDocumentElement("// this is csharp 2", "csharp"),
+                    new InteractiveDocumentElement("// this is fsharp 1", "fsharp"),
+                    new InteractiveDocumentElement("// this is fsharp 2", "fsharp"),
+                    new InteractiveDocumentElement("# this is pwsh", "pwsh"),
+                    new InteractiveDocumentElement("This is `markdown` with an alias.", "markdown")
                 });
         }
 
@@ -267,8 +267,8 @@ This is `markdown` with an alias.
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new InteractiveDocumentElement("csharp", "1+1"),
-                    new InteractiveDocumentElement("fsharp", "[1;2;3;4]\n|> List.sum")
+                    new InteractiveDocumentElement("1+1", "csharp"),
+                    new InteractiveDocumentElement("[1;2;3;4]\n|> List.sum", "fsharp")
                 });
         }
 
@@ -293,11 +293,10 @@ var x = 1;
         [Fact]
         public void extra_blank_lines_are_removed_from_beginning_and_end_on_save()
         {
-            var cells = new List<InteractiveDocumentElement>()
+            var notebook = new InteractiveDocument
             {
-                new InteractiveDocumentElement("csharp", "\n\n\n\n// this is csharp\n\n\n")
+                new("\n\n\n\n// this is csharp\n\n\n", "csharp")
             };
-            var notebook = new InteractiveDocument(cells);
             var serialized = SerializeDib(notebook, "\n");
             var expectedLines = new[]
             {
@@ -315,13 +314,12 @@ var x = 1;
         [Fact]
         public void empty_cells_are_not_serialized()
         {
-            var cells = new List<InteractiveDocumentElement>()
+            var notebook = new InteractiveDocument
             {
-                new InteractiveDocumentElement("csharp", ""),
-                new InteractiveDocumentElement("fsharp", "// this is fsharp"),
-                new InteractiveDocumentElement("csharp", "")
+                new InteractiveDocumentElement("", "csharp"),
+                new InteractiveDocumentElement("// this is fsharp", "fsharp"),
+                new InteractiveDocumentElement("", "csharp")
             };
-            var notebook = new InteractiveDocument(cells);
             var serialized = SerializeDib(notebook, "\n");
             var expectedLines = new[]
             {
@@ -343,9 +341,9 @@ var x = 1;
         {
             var cells = new List<InteractiveDocumentElement>()
             {
-                new InteractiveDocumentElement("csharp", $"// C# line 1{newline}// C# line 2"),
-                new InteractiveDocumentElement("fsharp", $"// F# line 1{newline}// F# line 2"),
-                new InteractiveDocumentElement("markdown", "This is `markdown`.")
+                new InteractiveDocumentElement($"// C# line 1{newline}// C# line 2", "csharp"),
+                new InteractiveDocumentElement($"// F# line 1{newline}// F# line 2", "fsharp"),
+                new InteractiveDocumentElement("This is `markdown`.", "markdown")
             };
             var notebook = new InteractiveDocument(cells);
             var serialized = SerializeDib(notebook, newline);

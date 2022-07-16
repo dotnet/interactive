@@ -2,28 +2,16 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
 
 namespace Microsoft.DotNet.Interactive.Documents.ParserServer
 {
-    public class NotebookParserServer
+    public class NotebookParserServer : IDisposable
     {
-        public TextReader Input { get; }
-        public TextWriter Output { get; }
-
-        public static IReadOnlyCollection<KernelName> WellKnownKernelNames = new KernelName[]
-        {
-            new KernelName("csharp", new[] { "c#", "C#", "cs" }),
-            new KernelName("fsharp", new[] { "f#", "F#", "fs" }),
-            new KernelName("pwsh", new[] { "powershell" }),
-            new KernelName("javascript", new[] { "js" }),
-            new KernelName("html", Array.Empty<string>()),
-            new KernelName("sql", Array.Empty<string>()),
-            new KernelName("kql", Array.Empty<string>()),
-        };
+        private readonly CancellationTokenSource _cancellationTokenSource = new();
 
         public NotebookParserServer(TextReader input, TextWriter output)
         {
@@ -31,15 +19,31 @@ namespace Microsoft.DotNet.Interactive.Documents.ParserServer
             Output = output ?? throw new ArgumentNullException(nameof(output));
         }
 
+        public TextReader Input { get; }
+
+        public TextWriter Output { get; }
+
+        public static KernelNameCollection WellKnownKernelNames = new()
+        {
+            new("csharp", new[] { "c#", "C#", "cs" }),
+            new("fsharp", new[] { "f#", "F#", "fs" }),
+            new("pwsh", new[] { "powershell" }),
+            new("javascript", new[] { "js" }),
+            new("html"),
+            new("sql"),
+            new("kql"),
+            new("value"),
+        };
+        
         public async Task RunAsync()
         {
-            while (true)
+            while (!_cancellationTokenSource.IsCancellationRequested)
             {
                 var line = await Input.ReadLineAsync();
                 if (line is not null)
                 {
-                    NotebookParserServerResponse response = null;
-                    string requestId = null;
+                    NotebookParserServerResponse? response = null;
+                    string? requestId = null;
                     try
                     {
                         var request = NotebookParseOrSerializeRequest.FromJson(line);
@@ -88,10 +92,10 @@ namespace Microsoft.DotNet.Interactive.Documents.ParserServer
                             switch (request.SerializationType)
                             {
                                 case DocumentSerializationType.Dib:
-                                    CodeSubmission.Write(serialize.Document, serialize.NewLine, resultStream);
+                                    CodeSubmission.Write(serialize.Document, resultStream);
                                     break;
                                 case DocumentSerializationType.Ipynb:
-                                    Notebook.Write(serialize.Document, serialize.NewLine, resultStream);
+                                    Notebook.Write(serialize.Document, resultStream);
                                     break;
                                 default:
                                     throw new NotSupportedException($"Unable to serialize a interactive document of type '{request.SerializationType}'");
@@ -110,5 +114,7 @@ namespace Microsoft.DotNet.Interactive.Documents.ParserServer
                 return new NotebookErrorResponse(request.Id, ex.ToString());
             }
         }
+
+        public void Dispose() => _cancellationTokenSource.Cancel();
     }
 }

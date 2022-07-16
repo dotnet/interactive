@@ -77,12 +77,14 @@ export function getEol(): Eol {
 
 export function toNotebookDocument(document: vscode.NotebookDocument): InteractiveDocument {
     return {
-        elements: document.getCells().map(toInteractiveDocumentElement)
+        elements: document.getCells().map(toInteractiveDocumentElement),
+        metadata: document.metadata
     };
 }
 
 export function toInteractiveDocumentElement(cell: vscode.NotebookCell): InteractiveDocumentElement {
     return {
+        executionOrder: cell.executionSummary?.executionOrder ?? 0,
         language: cell.kind === vscode.NotebookCellKind.Code
             ? getSimpleLanguage(cell.document.languageId)
             : 'markdown',
@@ -112,6 +114,7 @@ export function vsCodeCellOutputToContractCellOutput(output: vscode.NotebookCell
 
         const cellOutput: DisplayElement = {
             data,
+            metadata: {}
         };
 
         return cellOutput;

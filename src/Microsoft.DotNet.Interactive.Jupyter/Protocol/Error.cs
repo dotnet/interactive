@@ -18,9 +18,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
         [JsonPropertyName("traceback")]
         public IReadOnlyList<string> Traceback { get; } 
 
-        public Error(string eName, string eValue, IReadOnlyList<string> traceback = null)
+        public Error(string eValue, string eName = null, IReadOnlyList<string> traceback = null)
         {
-            EName = eName;
+            EName = eName ?? "Error";
             EValue = eValue;
             Traceback = traceback ?? new List<string>();
         }

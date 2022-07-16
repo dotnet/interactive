@@ -4,11 +4,15 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Assent;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using FluentAssertions.Json;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
+using Microsoft.DotNet.Interactive.Documents.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -18,16 +22,16 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
 {
     public class JupyterFormatTests : DocumentFormatTestsBase
     {
-        public InteractiveDocument ParseJupyter(object jupyter)
+        private readonly Configuration _assentConfiguration =
+            new Configuration()
+                .UsingExtension("json")
+                .SetInteractive(Debugger.IsAttached);
+
+        public InteractiveDocument SerializeAndParse(object jupyter)
         {
             var content = JsonConvert.SerializeObject(jupyter);
-           
-            return Notebook.Parse(content, KernelLanguageAliases);
-        }
 
-        public string SerializeJupyter(InteractiveDocument interactive, string newLine)
-        {
-            return interactive.ToJupyterNotebookContent(newLine);
+            return Notebook.Parse(content, KernelNames);
         }
 
         [Theory]
@@ -42,9 +46,8 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
-                        metadata = new { },
-                        source = "// this is the code"
+                        execution_count = 0,
+                        source = new[] { "// this is the code" }
                     }
                 },
                 metadata = new
@@ -67,12 +70,14 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 nbformat = 4,
                 nbformat_minor = 4
             };
-            var notebook = ParseJupyter(jupyter);
+
+            var notebook = SerializeAndParse(jupyter);
+
             notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new InteractiveDocumentElement(language, "// this is the code")
+                    new InteractiveDocumentElement("// this is the code", language)
                 });
         }
 
@@ -86,27 +91,29 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
-                        metadata = new { },
-                        source = "// this is assumed to be csharp"
+                        execution_count = 0,
+                        source = new[] { "// this is assumed to be csharp" }
                     },
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
-                        metadata = new { },
-                        source = "#!csharp\n// this is still assumed to be csharp"
+                        execution_count = 0,
+                        source = new[]
+                        {
+                            "#!csharp\n",
+                            "// this is still assumed to be csharp"
+                        }
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
-                .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new[]
-                {
-                    new InteractiveDocumentElement("csharp", "// this is assumed to be csharp"),
-                    new InteractiveDocumentElement("csharp", "// this is still assumed to be csharp")
-                });
+                    .Should()
+                    .BeEquivalentToRespectingRuntimeTypes(new[]
+                    {
+                        new InteractiveDocumentElement("// this is assumed to be csharp", "csharp"),
+                        new InteractiveDocumentElement("#!csharp\n// this is still assumed to be csharp", "csharp")
+                    });
         }
 
         [Fact]
@@ -127,21 +134,21 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                                 language = "fsharp"
                             }
                         },
-                        source = "// this should be F#"
+                        source = new[] { "// this should be F#" }
                     }
                 },
                 metadata = new
                 {
                     kernelspec = new
                     {
-                        display_name = $".NET (C#)",
+                        display_name = ".NET (C#)",
                         language = "C#",
-                        name = $".net-csharp"
+                        name = ".net-csharp"
                     },
                     language_info = new
                     {
                         file_extension = ".cs",
-                        mimetype = $"text/x-csharp",
+                        mimetype = "text/x-csharp",
                         name = "C#",
                         pygments_lexer = "C#",
                         version = "8.0"
@@ -150,7 +157,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 nbformat = 4,
                 nbformat_minor = 4
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -178,11 +185,11 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                                 language = "fsharp"
                             }
                         },
-                        source = "// this should be F#"
+                        source = new[] { "// this should be F#" }
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -202,23 +209,22 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
-                        metadata = new { },
-                        source = "#!csharp\n// this is the code"
+                        execution_count = 0,
+                        source = new[] {"#!csharp\n", "// this is the code"}
                     }
                 },
                 metadata = new
                 {
                     kernelspec = new
                     {
-                        display_name = $".NET (C#)",
+                        display_name = ".NET (C#)",
                         language = "C#",
-                        name = $".net-csharp"
+                        name = ".net-csharp"
                     },
                     language_info = new
                     {
                         file_extension = ".cs",
-                        mimetype = $"text/x-csharp",
+                        mimetype = "text/x-csharp",
                         name = "C#",
                         pygments_lexer = "csharp",
                         version = "8.0"
@@ -227,17 +233,19 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 nbformat = 4,
                 nbformat_minor = 4
             };
-            var notebook = ParseJupyter(jupyter);
+
+            var notebook = SerializeAndParse(jupyter);
+
             notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new object[]
                 {
-                    new InteractiveDocumentElement("csharp", "// this is the code")
+                    new InteractiveDocumentElement("#!csharp\n// this is the code", "csharp")
                 });
         }
 
         [Fact]
-        public void cell_language_specifier_takes_precedence_over_metadata_language()
+        public void kernel_chooser_magic_takes_precedence_over_metadata_language()
         {
             var jupyter = new
             {
@@ -256,7 +264,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         },
                         source = new[]
                         {
-                            "#!pwsh",
+                            "#!pwsh\n",
                             "# this is PowerShell and not F#"
                         }
                     }
@@ -267,7 +275,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     {
                         display_name = ".NET (C#)",
                         language = "C#",
-                        name = $".net-csharp"
+                        name = ".net-csharp"
                     },
                     language_info = new
                     {
@@ -281,7 +289,9 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 nbformat = 4,
                 nbformat_minor = 4
             };
-            var notebook = ParseJupyter(jupyter);
+
+            var notebook = SerializeAndParse(jupyter);
+
             notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -301,50 +311,42 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
-                        metadata = new { },
-                        source = "#!c#\n// this is csharp 1"
+                        source = new[] { "#!c#\n", "// this is csharp 1" }
                     },
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
-                        metadata = new { },
-                        source = "#!C#\n// this is csharp 2"
+                        source = new[] { "#!C#\n", "// this is csharp 2" }
                     },
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
-                        metadata = new { },
-                        source = "#!f#\n// this is fsharp 1"
+                        source = new[] { "#!f#\n", "// this is fsharp 1" }
                     },
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
-                        metadata = new { },
-                        source = "#!F#\n// this is fsharp 2"
-                    },
+                        source = new[] { "#!F#\n", "// this is fsharp 2" }
+                    },  
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
-                        metadata = new { },
-                        source = "#!powershell\n# this is pwsh"
+                        source = new[] { "#!powershell\n", "# this is pwsh" }
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+
+            var notebook = SerializeAndParse(jupyter);
+
             notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new InteractiveDocumentElement("csharp", "// this is csharp 1"),
-                    new InteractiveDocumentElement("csharp", "// this is csharp 2"),
-                    new InteractiveDocumentElement("fsharp", "// this is fsharp 1"),
-                    new InteractiveDocumentElement("fsharp", "// this is fsharp 2"),
-                    new InteractiveDocumentElement("pwsh", "# this is pwsh")
+                    new InteractiveDocumentElement("#!c#\n// this is csharp 1", "csharp"),
+                    new InteractiveDocumentElement("#!C#\n// this is csharp 2", "csharp"),
+                    new InteractiveDocumentElement("#!f#\n// this is fsharp 1", "fsharp"),
+                    new InteractiveDocumentElement("#!F#\n// this is fsharp 2", "fsharp"),
+                    new InteractiveDocumentElement("#!powershell\n# this is pwsh", "pwsh")
                 });
         }
 
@@ -358,244 +360,8 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
-                        metadata = new { },
-                        source = "#!fsharp\n// this is the code"
-                    }
-                },
-                metadata = new
-                {
-                    kernelspec = new
-                    {
-                        display_name = $".NET (C#)",
-                        language = "C#",
-                        name = $".net-csharp"
-                    },
-                    language_info = new
-                    {
-                        file_extension = ".cs",
-                        mimetype = $"text/x-csharp",
-                        name = "C#",
-                        pygments_lexer = "csharp",
-                        version = "8.0"
-                    }
-                },
-                nbformat = 4,
-                nbformat_minor = 4
-            };
-            var notebook = ParseJupyter(jupyter);
-            notebook.Elements
-                .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new[]
-                {
-                    new InteractiveDocumentElement("fsharp", "// this is the code")
-                });
-        }
-
-        [Fact]
-        public void parsed_cells_can_contain_polyglot_blobs_with_appropriate_default_language()
-        {
-            var jupyter = new
-            {
-                cells = new object[]
-                {
-                    new
-                    {
-                        cell_type = "code",
-                        execution_count = 1,
-                        metadata = new { },
-                        source = "// this is csharp\n#!fsharp\n// and this is fsharp"
-                    }
-                },
-                metadata = new
-                {
-                    kernelspec = new
-                    {
-                        display_name = $".NET (C#)",
-                        language = "C#",
-                        name = $".net-csharp"
-                    },
-                    language_info = new
-                    {
-                        file_extension = ".cs",
-                        mimetype = $"text/x-csharp",
-                        name = "C#",
-                        pygments_lexer = "csharp",
-                        version = "8.0"
-                    }
-                },
-                nbformat = 4,
-                nbformat_minor = 4
-            };
-            var notebook = ParseJupyter(jupyter);
-            notebook.Elements
-                .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new[]
-                {
-                    new InteractiveDocumentElement("csharp", "// this is csharp\n#!fsharp\n// and this is fsharp")
-                });
-        }
-
-        [Fact]
-        public void parsed_cells_create_non_language_specifier_first_lines_as_magic_commands()
-        {
-            var jupyter = new
-            {
-                cells = new object[]
-                {
-                    new
-                    {
-                        cell_type = "code",
-                        execution_count = 1,
-                        metadata = new { },
-                        source = "#!probably-a-magic-command\n// but this is csharp"
-                    }
-                },
-                metadata = new
-                {
-                    kernelspec = new
-                    {
-                        display_name = $".NET (C#)",
-                        language = "C#",
-                        name = $".net-csharp"
-                    },
-                    language_info = new
-                    {
-                        file_extension = ".cs",
-                        mimetype = $"text/x-csharp",
-                        name = "C#",
-                        pygments_lexer = "csharp",
-                        version = "8.0"
-                    }
-                },
-                nbformat = 4,
-                nbformat_minor = 4
-            };
-            var notebook = ParseJupyter(jupyter);
-            notebook.Elements
-                .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new[]
-                {
-                    new InteractiveDocumentElement("csharp", "#!probably-a-magic-command\n// but this is csharp")
-                });
-        }
-
-        [Fact]
-        public void markdown_cells_can_be_parsed_as_a_single_string()
-        {
-            var jupyter = new
-            {
-                cells = new object[]
-                {
-                    new
-                    {
-                        cell_type = "markdown",
-                        metadata = new { },
-                        source = "This is `markdown`."
-                    }
-                }
-            };
-            var notebook = ParseJupyter(jupyter);
-            notebook.Elements
-                .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new[]
-                {
-                    new InteractiveDocumentElement("markdown", "This is `markdown`.")
-                });
-        }
-
-        [Fact]
-        public void markdown_cells_can_be_parsed_as_a_string_array()
-        {
-            var jupyter = new
-            {
-                cells = new object[]
-                {
-                    new
-                    {
-                        cell_type = "markdown",
-                        metadata = new { },
-                        source = new[]
-                        {
-                            "This is `markdown`.",
-                            "So is this."
-                        }
-                    }
-                }
-            };
-            var notebook = ParseJupyter(jupyter);
-            notebook.Elements
-                .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new[]
-                {
-                    new InteractiveDocumentElement("markdown", "This is `markdown`.\nSo is this.")
-                });
-        }
-
-        [Fact]
-        public void cells_can_specify_source_as_a_single_string()
-        {
-            var jupyter = new
-            {
-                cells = new object[]
-                {
-                    new
-                    {
-                        cell_type = "code",
-                        execution_count = 1,
-                        metadata = new { },
-                        source = "line 1\nline 2\nline 3\n"
-                    }
-                },
-                metadata = new
-                {
-                    kernelspec = new
-                    {
-                        display_name = $".NET (C#)",
-                        language = "C#",
-                        name = $".net-csharp"
-                    },
-                    language_info = new
-                    {
-                        file_extension = ".cs",
-                        mimetype = $"text/x-csharp",
-                        name = "C#",
-                        pygments_lexer = "csharp",
-                        version = "8.0"
-                    }
-                },
-                nbformat = 4,
-                nbformat_minor = 4
-            };
-            var notebook = ParseJupyter(jupyter);
-            notebook.Elements
-                .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new[]
-                {
-                    new InteractiveDocumentElement("csharp", "line 1\nline 2\nline 3\n")
-                });
-        }
-
-        [Fact]
-        public void cells_can_specify_source_as_a_string_array()
-        {
-            var jupyter = new
-            {
-                cells = new object[]
-                {
-                    new
-                    {
-                        cell_type = "code",
-                        execution_count = 1,
-                        metadata = new { },
-                        source = new[]
-                        {
-                            // all different newline styles are normalized to `\n`
-                            "line 1",
-                            "line 2\r\n",
-                            "line 3\n",
-                            "line 4",
-                        }
+                        execution_count = 0,
+                        source = new[] { "#!fsharp\n", "// this is the code" }
                     }
                 },
                 metadata = new
@@ -604,7 +370,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     {
                         display_name = ".NET (C#)",
                         language = "C#",
-                        name = $".net-csharp"
+                        name = ".net-csharp"
                     },
                     language_info = new
                     {
@@ -618,27 +384,19 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 nbformat = 4,
                 nbformat_minor = 4
             };
-            var notebook = ParseJupyter(jupyter);
+
+            var notebook = SerializeAndParse(jupyter);
+
             notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new InteractiveDocumentElement("csharp", "line 1\nline 2\nline 3\nline 4")
+                    new InteractiveDocumentElement("#!fsharp\n// this is the code", "fsharp")
                 });
         }
 
         [Fact]
-        public void file_without_cells_can_be_parsed()
-        {
-            var jupyter = new { };
-            var notebook = ParseJupyter(jupyter);
-            notebook.Elements
-                .Should()
-                .BeEmpty();
-        }
-
-        [Fact]
-        public void cell_without_cell_type_is_ignored_on_parse()
+        public void parsed_cells_can_contain_polyglot_blobs_with_appropriate_default_language()
         {
             var jupyter = new
             {
@@ -647,40 +405,211 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     new
                     {
                         cell_type = "code",
-                        source = new[]
-                        {
-                            "// line 1",
-                            "// line 2"
-                        }
-                    },
-                    new
-                    {
-                        not_a_cell_type = "code",
-                        source = new[]
-                        {
-                            "// line 3",
-                            "// line 4"
-                        }
-                    },
-                    new
-                    {
-                        cell_type = "code",
-                        source = new[]
-                        {
-                            "// line 5",
-                            "// line 6"
-                        }
+                        execution_count = 0,
+                        source = new[] {"// this is csharp\n", "#!fsharp\n", "// and this is fsharp"}
                     }
-                }
+                },
+                metadata = new
+                {
+                    kernelspec = new
+                    {
+                        display_name = ".NET (C#)",
+                        language = "C#",
+                        name = ".net-csharp"
+                    },
+                    language_info = new
+                    {
+                        file_extension = ".cs",
+                        mimetype = "text/x-csharp",
+                        name = "C#",
+                        pygments_lexer = "csharp",
+                        version = "8.0"
+                    }
+                },
+                nbformat = 4,
+                nbformat_minor = 4
             };
-            var notebook = ParseJupyter(jupyter);
+
+            var notebook = SerializeAndParse(jupyter);
+
             notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new InteractiveDocumentElement("csharp", "// line 1\n// line 2"),
-                    new InteractiveDocumentElement("csharp", "// line 5\n// line 6")
+                    new InteractiveDocumentElement("// this is csharp\n#!fsharp\n// and this is fsharp", "csharp")
                 });
+        }
+
+        [Fact]
+        public void parsed_cells_create_non_language_specifier_first_lines_as_magic_commands()
+        {
+            var jupyter = new
+            {
+                cells = new object[]
+                {
+                    new
+                    {
+                        cell_type = "code",
+                        execution_count = 0,
+                        source = new[] {"#!probably-a-magic-command\n// but this is csharp"}
+                    }
+                },
+                metadata = new
+                {
+                    kernelspec = new
+                    {
+                        display_name = ".NET (C#)",
+                        language = "C#",
+                        name = ".net-csharp"
+                    },
+                    language_info = new
+                    {
+                        file_extension = ".cs",
+                        mimetype = "text/x-csharp",
+                        name = "C#",
+                        pygments_lexer = "csharp",
+                        version = "8.0"
+                    }
+                },
+                nbformat = 4,
+                nbformat_minor = 4
+            };
+
+            var notebook = SerializeAndParse(jupyter);
+
+            notebook.Elements
+                    .Should()
+                    .BeEquivalentToRespectingRuntimeTypes(new[]
+                    {
+                        new InteractiveDocumentElement("#!probably-a-magic-command\n// but this is csharp", "csharp")
+                    });
+        }
+
+        [Fact]
+        public void markdown_cells_can_be_parsed_as_a_single_string()
+        {
+            var jupyter = new
+            {
+                cells = new object[]
+                {
+                    new
+                    {
+                        cell_type = "markdown",
+                        source = new[] {"This is `markdown`."}
+                    }
+                }
+            };
+            var notebook = SerializeAndParse(jupyter);
+            notebook.Elements
+                .Should()
+                .BeEquivalentToRespectingRuntimeTypes(new[]
+                {
+                    new InteractiveDocumentElement("This is `markdown`.", "markdown")
+                });
+        }
+
+        [Fact]
+        public void markdown_cells_can_be_parsed_as_a_string_array()
+        {
+            var jupyter = new
+            {
+                cells = new object[]
+                {
+                    new
+                    {
+                        cell_type = "markdown",
+                        source = new[]
+                        {
+                            "This is `markdown`.\n",
+                            "So is this."
+                        }
+                    }
+                }
+            };
+            var notebook = SerializeAndParse(jupyter);
+            notebook.Elements
+                .Should()
+                .BeEquivalentToRespectingRuntimeTypes(new[]
+                {
+                    new InteractiveDocumentElement("This is `markdown`.\nSo is this.", "markdown")
+                });
+        }
+
+        [Fact]
+        public void cells_can_specify_source_as_a_string_array()
+        {
+            var jupyter = new
+            {
+                cells = new object[]
+                {
+                    new
+                    {
+                        cell_type = "code",
+                        execution_count = 0,
+                        source = new[]
+                        {
+                            // all different newline styles are normalized to `\n`
+                            "line 1\n",
+                            "line 2\n",
+                            "line 3\n",
+                            "line 4",
+                        }
+                    }
+                },
+                metadata = new
+                {
+                    kernelspec = new
+                    {
+                        display_name = ".NET (C#)",
+                        language = "C#",
+                        name = ".net-csharp"
+                    },
+                    language_info = new
+                    {
+                        file_extension = ".cs",
+                        mimetype = "text/x-csharp",
+                        name = "C#",
+                        pygments_lexer = "csharp",
+                        version = "8.0"
+                    }
+                },
+                nbformat = 4,
+                nbformat_minor = 4
+            };
+
+            var notebook = SerializeAndParse(jupyter);
+            
+            notebook.Elements
+                .Should()
+                .BeEquivalentToRespectingRuntimeTypes(new[]
+                {
+                    new InteractiveDocumentElement("line 1\nline 2\nline 3\nline 4", "csharp")
+                });
+        }
+
+        [Fact]
+        public void cells_can_specify_source_as_a_single_string()
+        {
+            var jupyter = new
+            {
+                cells = new object[]
+                {
+                    new
+                    {
+                        cell_type = "code",
+                        source = "line 1\nline 2\nline 3\n"
+                    }
+                },
+            };
+
+            var notebook = SerializeAndParse(jupyter);
+            
+            notebook.Elements
+                    .Should()
+                    .BeEquivalentToRespectingRuntimeTypes(new[]
+                    {
+                        new InteractiveDocumentElement("line 1\nline 2\nline 3\n", "csharp")
+                    });
         }
 
         [Fact]
@@ -707,13 +636,24 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+
+            var notebook = SerializeAndParse(jupyter);
+
             notebook.Elements
-                .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new[]
-                {
-                    new InteractiveDocumentElement("csharp", "// this is not really fsharp")
-                });
+                    .Should()
+                    .BeEquivalentToRespectingRuntimeTypes(new[]
+                    {
+                        new InteractiveDocumentElement("// this is not really fsharp", "csharp")
+                        {
+                            Metadata = new Dictionary<string, object>
+                            {
+                                ["dotnet_interactive"] = new Dictionary<string, object>
+                                {
+                                    ["not_a_language"] = "fsharp"
+                                }
+                            }
+                        }
+                    });
         }
 
         [Fact]
@@ -733,12 +673,12 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new InteractiveDocumentElement("csharp", "")
+                    new InteractiveDocumentElement(language: "csharp")
                 });
         }
 
@@ -754,8 +694,8 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         cell_type = "code",
                         execution_count = 1,
                         metadata = new { },
-                        source = "",
-                        outputs = new []
+                        source = new[] { "" },
+                        outputs = new[]
                         {
                             new
                             {
@@ -764,13 +704,13 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                                     { "text/html", new object[] { "line 1", new { the_answer = 42 } } }
                                 },
                                 metadata = new { },
-                                output_type = "display_data",
+                                output_type = "display_data"
                             }
                         }
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -791,7 +731,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     new object[]
                     {
                         "line 1",
-                        new Dictionary<string, object>()
+                        new Dictionary<string, object>
                         {
                             { "the_answer", 42 }
                         }
@@ -812,15 +752,15 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         cell_type = "code",
                         execution_count = 1,
                         metadata = new { },
-                        source = "//",
+                        source =new[] {"//"},
                         outputs = new object[]
                         {
                             new
                             {
-                                output_type = "execute_result",
-                                not_data = new Dictionary<string, string>()
+                                output_type = "display_data",
+                                not_data = new Dictionary<string, string[]>
                                 {
-                                    { "text/html", "this is html" }
+                                    { "text/html", new[]{"<div>this is html</div>"} }
                                 },
                                 execution_count = 1,
                                 metadata = new { }
@@ -829,7 +769,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -840,6 +780,52 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .Which
                 .Should()
                 .BeOfType<DisplayElement>()
+                .Which
+                .Data
+                .Should()
+                .BeEmpty();
+        }
+
+        [Fact]
+        public void execute_result_output_without_data_member_can_be_parsed()
+        {
+            var jupyter = new
+            {
+                cells = new object[]
+                {
+                    new
+                    {
+                        cell_type = "code",
+                        execution_count = 1,
+                        metadata = new { },
+                        source =new[] {"//"},
+                        outputs = new object[]
+                        {
+                            new
+                            {
+                                output_type = "execute_result",
+                                not_data = new Dictionary<string, string[]>
+                                {
+                                    { "text/html", new[]{"<div>this is html</div>"} }
+                                },
+                                execution_count = 1,
+                                metadata = new { }
+                            }
+                        }
+                    }
+                }
+            };
+            var notebook = SerializeAndParse(jupyter);
+            notebook.Elements
+                .Should()
+                .ContainSingle()
+                .Which
+                .Outputs
+                .Should()
+                .ContainSingle()
+                .Which
+                .Should()
+                .BeOfType<ReturnValueElement>()
                 .Which
                 .Data
                 .Should()
@@ -858,7 +844,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         cell_type = "code",
                         execution_count = 1,
                         metadata = new { },
-                        source = "//",
+                        source = new[] { "//" },
                         outputs = new object[]
                         {
                             new
@@ -871,7 +857,9 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+
+            var notebook = SerializeAndParse(jupyter);
+
             notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -900,7 +888,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         cell_type = "code",
                         execution_count = 1,
                         metadata = new { },
-                        source = "//",
+                        source =new[] {"//"},
                         outputs = new object[]
                         {
                             new
@@ -918,7 +906,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -931,7 +919,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .BeOfType<ErrorElement>()
                 .Which
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new ErrorElement(null, null, new string[0]));
+                .BeEquivalentToRespectingRuntimeTypes(new ErrorElement(null, null));
         }
 
         [Fact]
@@ -944,24 +932,24 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     new
                     {
                         cell_type = "markdown",
-                        not_source = "this isn't markdown"
+                        not_source = new[] { "this isn't markdown" }
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
-                .Should()
-                .ContainSingle()
-                .Which
-                .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new InteractiveDocumentElement("markdown", ""));
+                    .Should()
+                    .ContainSingle()
+                    .Which
+                    .Should()
+                    .BeEquivalentToRespectingRuntimeTypes(new InteractiveDocumentElement(language: "markdown"));
         }
 
         [Fact]
         public void serialized_notebook_has_appropriate_metadata()
         {
-            var notebook = new InteractiveDocument(new List<InteractiveDocumentElement>());
-            var serialized = SerializeJupyter(notebook, "\n");
+            var notebook = new InteractiveDocument();
+            var serialized = notebook.Serialize();
             var jupyter = JToken.Parse(serialized);
 
             using var _ = new AssertionScope();
@@ -991,18 +979,18 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
             jupyter["nbformat_minor"]
                 .ToObject<int>()
                 .Should()
-                .Be(4);
+                .BeGreaterOrEqualTo(4);
         }
 
         [Fact]
         public void serialized_code_cells_have_appropriate_shape()
         {
-            var cells = new List<InteractiveDocumentElement>()
+            var cells = new List<InteractiveDocumentElement>
             {
-                new InteractiveDocumentElement("csharp", "//")
+                new("//", "csharp")
             };
             var notebook = new InteractiveDocument(cells);
-            var serialized = SerializeJupyter(notebook,"\n");
+            var serialized = notebook.Serialize();
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"]
                 .Should()
@@ -1013,7 +1001,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
+                        execution_count = (int?)null,
                         metadata = new
                         {
                             dotnet_interactive = new
@@ -1021,11 +1009,11 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                                 language = "csharp"
                             }
                         },
+                        outputs = Array.Empty<object>(),
                         source = new[]
                         {
                             "//"
                         },
-                        outputs = Array.Empty<object>()
                     }
                 )));
         }
@@ -1035,10 +1023,10 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         {
             var cells = new List<InteractiveDocumentElement>
             {
-                new InteractiveDocumentElement("csharp", "var x = 1;")
+                new("var x = 1;", "csharp")
             };
             var notebook = new InteractiveDocument(cells);
-            var serialized = SerializeJupyter(notebook, "\n");
+            var serialized = notebook.Serialize();
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"][0]["source"]
                 .Should()
@@ -1051,19 +1039,19 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public void serialized_code_cells_with_non_default_jupyter_kernel_language_have_language_metadata_and_no_language_specifier()
         {
-            var cells = new List<InteractiveDocumentElement>()
+            var cells = new List<InteractiveDocumentElement>
             {
-                new InteractiveDocumentElement("fsharp", "let x = 1")
+                new("let x = 1", "fsharp") { ExecutionOrder = 123 }
             };
             var notebook = new InteractiveDocument(cells);
-            var serialized = SerializeJupyter(notebook, "\n");
+            var serialized = notebook.Serialize();
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"][0]
                 .Should()
                 .BeEquivalentTo(JToken.Parse(JsonConvert.SerializeObject(new
                 {
                     cell_type = "code",
-                    execution_count = 1,
+                    execution_count = 123,
                     metadata = new
                     {
                         dotnet_interactive = new
@@ -1082,12 +1070,12 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public void code_cells_with_multi_line_text_are_serialized_as_an_array()
         {
-            var cells = new List<InteractiveDocumentElement>()
+            var cells = new List<InteractiveDocumentElement>
             {
-                new("csharp", "var x = 1;\nvar y = 2;")
+                new("var x = 1;\nvar y = 2;", "csharp")
             };
             var notebook = new InteractiveDocument(cells);
-            var serialized = SerializeJupyter(notebook, "\n");
+            var serialized = notebook.Serialize();
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"][0]["source"]
                 .Should()
@@ -1101,12 +1089,12 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public void serialized_markdown_cells_have_appropriate_shape()
         {
-            var cells = new List<InteractiveDocumentElement>()
+            var cells = new List<InteractiveDocumentElement>
             {
-                new InteractiveDocumentElement("markdown", "This is `markdown`.\nThis is more `markdown`.")
+                new("This is `markdown`.\nThis is more `markdown`.", "markdown")
             };
             var notebook = new InteractiveDocument(cells);
-            var serialized = SerializeJupyter(notebook, "\n");
+            var serialized = notebook.Serialize();
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"]
                 .Should()
@@ -1121,7 +1109,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         source = new[]
                         {
                             "This is `markdown`.\n",
-                            "This is more `markdown`.",
+                            "This is more `markdown`."
                         }
                     }
                 )));
@@ -1130,15 +1118,15 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public void text_cell_outputs_are_serialized()
         {
-            var cells = new List<InteractiveDocumentElement>()
+            var cells = new List<InteractiveDocumentElement>
             {
-                new InteractiveDocumentElement("csharp", "//", new[]
+                new("//", "csharp", new[]
                 {
-                    new TextElement("this is text")
+                    new TextElement("this is text", "stdout")
                 })
             };
             var notebook = new InteractiveDocument(cells);
-            var serialized = SerializeJupyter(notebook, "\n");
+            var serialized = notebook.Serialize();
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"]
                 .Should()
@@ -1153,7 +1141,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     {
                         output_type = "stream",
                         name = "stdout",
-                        text = "this is text"
+                        text = new[] { "this is text" }
                     }
                 )));
         }
@@ -1168,8 +1156,6 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     new
                     {
                         cell_type = "code",
-                        execution_count = 1,
-                        metadata = new { },
                         source = "//",
                         outputs = new object[]
                         {
@@ -1183,17 +1169,19 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+
+            var notebook = SerializeAndParse(jupyter);
+            
             notebook.Elements
-                .Should()
-                .ContainSingle()
-                .Which
-                .Outputs
-                .Should()
-                .ContainSingle()
-                .Which
-                .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new TextElement("this is text"));
+                    .Should()
+                    .ContainSingle()
+                    .Which
+                    .Outputs
+                    .Should()
+                    .ContainSingle()
+                    .Which
+                    .Should()
+                    .BeEquivalentToRespectingRuntimeTypes(new TextElement("this is text", "stdout"));
         }
 
         [Fact]
@@ -1208,7 +1196,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         cell_type = "code",
                         execution_count = 1,
                         metadata = new { },
-                        source = "//",
+                        source = new[] { "//" },
                         outputs = new object[]
                         {
                             new
@@ -1217,7 +1205,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                                 name = "stdout",
                                 text = new[]
                                 {
-                                    "this is text",
+                                    "this is text\n",
                                     "so is this"
                                 }
                             }
@@ -1225,7 +1213,9 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+
+            var notebook = SerializeAndParse(jupyter);
+
             notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -1235,24 +1225,24 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new TextElement("this is text\nso is this"));
+                .BeEquivalentToRespectingRuntimeTypes(new TextElement("this is text\nso is this", "stdout"));
         }
 
         [Fact]
         public void rich_cell_outputs_are_serialized()
         {
-            var cells = new List<InteractiveDocumentElement>()
+            var cells = new List<InteractiveDocumentElement>
             {
-                new InteractiveDocumentElement("csharp", "//", new[]
+                new("//", "csharp", new[]
                 {
                     new DisplayElement(new Dictionary<string, object>
                     {
-                        { "text/html", "this is html" }
+                        { "text/html", new[] { "<div>this is html</div>" } }
                     })
                 })
             };
             var notebook = new InteractiveDocument(cells);
-            var serialized = SerializeJupyter(notebook, "\n");
+            var serialized = notebook.Serialize();
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"]
                 .Should()
@@ -1263,17 +1253,16 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .Which
                 .Should()
                 .BeEquivalentTo(JToken.Parse(JsonConvert.SerializeObject(
-                    new
-                    {
-                        output_type = "execute_result",
-                        data = new Dictionary<string, string>()
-                        {
-                            { "text/html", "this is html" }
-                        },
-                        execution_count = 1,
-                        metadata = new { }
-                    }
-                )));
+                                                 new
+                                                 {
+                                                     output_type = "display_data",
+                                                     data = new Dictionary<string, string[]>
+                                                     {
+                                                         { "text/html", new[] { "<div>this is html</div>" } }
+                                                     },
+                                                     metadata = new{}
+                                                 }
+                                             )));
         }
 
         [Fact]
@@ -1288,23 +1277,22 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         cell_type = "code",
                         execution_count = 1,
                         metadata = new { },
-                        source = "//",
+                        source = new[] { "//" },
                         outputs = new object[]
                         {
                             new
                             {
-                                output_type = "execute_result",
-                                data = new Dictionary<string, string>
+                                output_type = "display_data",
+                                data = new Dictionary<string, string[]>
                                 {
-                                    { "text/html", "this is html" }
+                                    { "text/html", new[] { "<div>this is html</div>" } }
                                 },
-                                metadata = new{ }
                             }
                         }
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -1316,22 +1304,22 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new DisplayElement(new Dictionary<string, object>
                 {
-                    { "text/html", "this is html" }
+                    { "text/html", new[]{"<div>this is html</div>"} }
                 }));
         }
 
         [Fact]
         public void error_cell_outputs_are_serialized()
         {
-            var cells = new List<InteractiveDocumentElement>()
+            var cells = new List<InteractiveDocumentElement>
             {
-                new InteractiveDocumentElement("csharp", "//", new[]
+                new("//", "csharp", new[]
                 {
-                    new ErrorElement("e-name", "e-value", new[] { "at func1()", "at func2()" })
+                    new ErrorElement("e-value", "e-name", new[] { "at func1()", "at func2()" })
                 })
             };
             var notebook = new InteractiveDocument(cells);
-            var serialized = SerializeJupyter(notebook, "\n");
+            var serialized = (string)notebook.Serialize();
             var jupyter = JToken.Parse(serialized);
             jupyter["cells"]
                 .Should()
@@ -1368,7 +1356,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         cell_type = "code",
                         execution_count = 1,
                         metadata = new { },
-                        source = "//",
+                        source = new[] { "//" },
                         outputs = new object[]
                         {
                             new
@@ -1386,7 +1374,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     }
                 }
             };
-            var notebook = ParseJupyter(jupyter);
+            var notebook = SerializeAndParse(jupyter);
             notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -1396,33 +1384,72 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new ErrorElement("e-name", "e-value", new[]
+                .BeEquivalentToRespectingRuntimeTypes(new ErrorElement("e-value", "e-name", new[]
                 {
                     "at func1()",
                     "at func2()"
                 }));
         }
 
-        [Fact]
-        public void serialize_entire_file_to_verify_indention()
+        [Theory]
+        [InlineData("", new string[] {  })]
+        [InlineData("one", new[] { "one" })]
+        [InlineData("one\n", new[] { "one\n" })]
+        [InlineData("one\r\n", new[] { "one\r\n" })]
+        [InlineData("one\ntwo", new[] { "one\n", "two" })]
+        [InlineData("one\r\ntwo", new[] { "one\r\n", "two" })]
+        public void SplitIntoJupyterFileArray_performs_expected_split_for_ipynb_array_values(string input, string[] expected)
         {
-            var configuration = new Configuration()
-                                 .UsingExtension("json")
-                                 .SetInteractive(Debugger.IsAttached);
-            var cells = new List<InteractiveDocumentElement>()
+            var lines = input.SplitIntoJupyterFileArray();
+
+            lines.Should().BeEquivalentTo(expected, c => c.WithStrictOrdering());
+        }
+
+        [Fact]
+        public async Task ipynb_from_Jupyter_can_be_round_tripped_through_read_and_write_without_the_content_changing()
+        {
+            var path = GetNotebookFilePath();
+
+            this.Assent(await RoundTripIpynb(path), _assentConfiguration);
+        }
+
+        [Fact]
+        public async Task ipynb_from_VSCode_can_be_round_tripped_through_read_and_write_without_the_content_changing()
+        {
+            var path = GetNotebookFilePath();
+
+            this.Assent(await RoundTripIpynb(path), _assentConfiguration);
+        }
+
+        private async Task<string> RoundTripIpynb(string notebookFile)
+        {
+            var expectedContent = await File.ReadAllTextAsync(notebookFile);
+            
+            var inputDoc = Notebook.Parse(expectedContent);
+
+            var resultContent = inputDoc.Serialize(enforceJupyterMetadata: false);
+
+            if (expectedContent.EndsWith("\r\n"))
             {
-                new InteractiveDocumentElement("csharp", "// this is csharp", new[]
-                {
-                    new DisplayElement(new Dictionary<string, object>()
-                    {
-                        { "text/html", "this is html" }
-                    })
-                }),
-                new InteractiveDocumentElement("markdown", "This is `markdown`.")
-            };
-            var notebook = new InteractiveDocument(cells);
-            var json = SerializeJupyter(notebook, "\n");
-            this.Assent(json, configuration);
+                resultContent += "\r\n";
+            }
+            else if (expectedContent.EndsWith("\n"))
+            {
+                resultContent += "\n";
+            }
+
+            return resultContent;
+        }
+
+        private string GetNotebookFilePath([CallerMemberName] string testName = null) =>
+            Path.Combine(
+                Path.GetDirectoryName(
+                    PathToCurrentSourceFile()),
+                $"{nameof(JupyterFormatTests)}.{testName}.approved.json");
+
+        private static string PathToCurrentSourceFile([CallerFilePath] string path = null)
+        {
+            return path;
         }
     }
 }

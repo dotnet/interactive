@@ -40,6 +40,7 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
             typeof(KernelCommand),
             typeof(KernelEvent),
             typeof(DisplayElement),
+            typeof(ReturnValueElement),
             typeof(TextElement),
             typeof(ErrorElement),
         };

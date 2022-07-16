@@ -1,10 +1,9 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -38,9 +37,10 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .Should()
                 .BeEquivalentTo(new NotebookParseResponse(
                     "the-id",
-                    document: new InteractiveDocument(new List<InteractiveDocumentElement>()
+                    document: new InteractiveDocument(
+                   new List<InteractiveDocumentElement>
                     {
-                        new InteractiveDocumentElement("csharp", "var x = 1;")
+                        new("var x = 1;", "csharp")
                     })));
         }
 
@@ -59,9 +59,11 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 serializationType: DocumentSerializationType.Dib,
                 defaultLanguage: "csharp",
                 newLine: "\n",
-                document: new InteractiveDocument(new List<InteractiveDocumentElement>()
-                {
-                    new InteractiveDocumentElement("fsharp", "let y = 2")
+                document: new InteractiveDocument
+              (
+                   new List<InteractiveDocumentElement>
+                    {
+                    new("let y = 2", "fsharp")
                 }));
             var fullRequestText = string.Concat(
                 request1.ToJson(),
@@ -100,7 +102,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 rawData: Array.Empty<byte>());
 
             var requestJson = string.Concat(
-                "this is a request that can't be handled in any meaninful way, including returning an error",
+                "this is a request that can't be handled in any meaningful way, including returning an error",
                 "\n",
                 validRequest.ToJson(),
                 "\n");
@@ -123,14 +125,21 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
             var stream = new SimplexStream();
             var output = new StreamWriter(stream);
             var server = new NotebookParserServer(input, output);
+
+            // FIX: (GetResponseObjectsEnumerable) clean up properly
+
             var _ = Task.Run(() => server.RunAsync()); // start server listener in the background
+
             var outputReader = new StreamReader(stream);
 
             while (true)
             {
                 var responseText = await outputReader.ReadLineAsync();
-                var responseObject = NotebookParserServerResponse.FromJson(responseText);
-                yield return responseObject;
+                if (responseText is { })
+                {
+                    var responseObject = NotebookParserServerResponse.FromJson(responseText);
+                    yield return responseObject;
+                }
             }
         }
     }
@@ -145,7 +154,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 return collection.Current;
             }
 
-            throw new Exception("No more items");
+            throw new InvalidOperationException("No more items");
         }
     }
 }

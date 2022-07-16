@@ -12,6 +12,10 @@
     <None Remove="TestResults\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Microsoft.DotNet.Interactive.Documents\Utility\StringExtension.cs" Link="Utility\StringExtension.cs" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
@@ -44,10 +48,20 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="JupyterFormatTests.ipynb_can_be_round_tripped_through_read_and_write_without_the_content_changing.approved.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Update="xunit.runner.visualstudio" Version="2.4.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Utility\" />
   </ItemGroup>
 
 </Project>

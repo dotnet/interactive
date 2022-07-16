@@ -15,6 +15,11 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
 {
     public class NotebookParserServerTests_Serialization
     {
+        private readonly Configuration _configuration =
+            new Configuration()
+                .UsingExtension(".json")
+                .SetInteractive(Debugger.IsAttached);
+
         [Fact]
         public void NotebookParseRequest_deserialization_contract()
         {
@@ -39,36 +44,23 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         public void NotebookSerializeRequest_deserialization_contract()
         {
             var requestJson = GetTestFileContents();
-            var request = NotebookParseOrSerializeRequest.FromJson(requestJson);
-            using var _ = new AssertionScope();
 
-            request.Type.Should().Be(RequestType.Serialize);
-            request.Id.Should().Be("the-id");
-            request.SerializationType.Should().Be(DocumentSerializationType.Dib);
-            request.DefaultLanguage.Should().Be("csharp");
-            request
-                .Should()
-                .BeOfType<NotebookSerializeRequest>();
-            var serializeRequest = (NotebookSerializeRequest)request;
-            serializeRequest.NewLine.Should().Be("\r\n");
-            serializeRequest.Document.Should().BeEquivalentTo(new InteractiveDocument(new List<InteractiveDocumentElement>()
-            {
-                new InteractiveDocumentElement("csharp", "var x = 1;"),
-                new InteractiveDocumentElement("fsharp", "let y = 2"),
-            }));
+            var request = NotebookParseOrSerializeRequest.FromJson(requestJson);
+
+            var json = request.ToJson();
+
+            this.Assent(json, _configuration);
         }
 
         [Fact]
         public void NotebookParseResponse_serialization_contract()
         {
-            var _configuration = new Configuration()
-                                 .UsingExtension(".json")
-                                 .SetInteractive(Debugger.IsAttached);
-
-            var response = new NotebookParseResponse("the-id", new InteractiveDocument(new List<InteractiveDocumentElement>()
+            var response = new NotebookParseResponse("the-id", new InteractiveDocument(new List<InteractiveDocumentElement>
             {
-                new InteractiveDocumentElement("csharp", "var x = 1;")
+                new("var x = 1;", "csharp")
             }));
+
+            response.Document.Metadata.Add("some-metadata-value", 123);
 
             var json = response.ToJson();
 
@@ -78,10 +70,6 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public void NotebookSerializeResponse_serialization_contract()
         {
-            var _configuration = new Configuration()
-                                 .UsingExtension(".json")
-                                 .SetInteractive(Debugger.IsAttached);
-
             var response = new NotebookSerializeResponse("the-id", new byte[] { 0x01, 0x02, 0x03 });
 
             var json = response.ToJson();
@@ -92,10 +80,6 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
         [Fact]
         public void NotebookErrorResponse_serialization_contract()
         {
-            var _configuration = new Configuration()
-                                 .UsingExtension(".json")
-                                 .SetInteractive(Debugger.IsAttached);
-
             var response = new NotebookErrorResponse("the-id", "some error message");
 
             var json = response.ToJson();
@@ -103,9 +87,9 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
             this.Assent(json, _configuration);
         }
 
-        private string GetTestFileContents(string extension = ".json", [CallerFilePath] string thisFilePath = null, [CallerMemberName] string testName = null)
+        private string GetTestFileContents(string extension = "json", [CallerFilePath] string thisFilePath = null, [CallerMemberName] string testName = null)
         {
-            var fileName = $"{GetType().Name}.{testName}.approved{extension}";
+            var fileName = $"{GetType().Name}.{testName}.approved.{extension}";
             var thisFileDirectory = Path.GetDirectoryName(thisFilePath);
             var fullFilePath = Path.Combine(thisFileDirectory, fileName);
             var contents = File.ReadAllText(fullFilePath);
