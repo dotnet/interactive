@@ -22,23 +22,27 @@ export class ProxyKernel extends kernel.Kernel {
     }
 
     private async _commandHandler(commandInvocation: kernel.IKernelCommandInvocation): Promise<void> {
-        const token = commandInvocation.commandEnvelope.token;
+        const commandToken = commandInvocation.commandEnvelope.token;
+        const commandId = commandInvocation.commandEnvelope.id;
         const completionSource = new promiseCompletionSource.PromiseCompletionSource<contracts.KernelEventEnvelope>();
-        let sub = this._receiver.subscribe({
+        let counter = 1;
+        let eventSubscription = this._receiver.subscribe({
             next: (envelope) => {
                 if (connection.isKernelEventEnvelope(envelope)) {
-                    if (envelope.command!.token === token) {
+                    if (envelope.command!.token === commandToken) {
                         switch (envelope.eventType) {
                             case contracts.CommandFailedType:
                             case contracts.CommandSucceededType:
-                                if (envelope.command!.id === commandInvocation.commandEnvelope.id) {
+                                if (envelope.command!.id === commandId) {
+                                    console.log(`proxy ${this.name} completing command ${commandToken} at step ${counter++}`);
                                     completionSource.resolve(envelope);
                                 } else {
                                     commandInvocation.context.publish(envelope);
                                 }
                                 break;
                             default:
-                                commandInvocation.context.publish(envelope);
+                                console.log(`proxy ${this.name} pushing event ${envelope.eventType} : {${JSON.stringify(envelope.event)}} at step ${counter++}`);
+                                //   commandInvocation.context.publish(envelope);
                                 break;
                         }
                     }
@@ -56,18 +60,19 @@ export class ProxyKernel extends kernel.Kernel {
             }
 
             this._sender.send(commandInvocation.commandEnvelope);
-            logger.Logger.default.info(`proxy ${this.name} about to await with token ${token}`);
+            logger.Logger.default.info(`proxy ${this.name} about to await with token ${commandToken}`);
             const enventEnvelope = await completionSource.promise;
             if (enventEnvelope.eventType === contracts.CommandFailedType) {
                 commandInvocation.context.fail((<contracts.CommandFailed>enventEnvelope.event).message);
             }
-            logger.Logger.default.info(`proxy ${this.name} done awaiting with token ${token}`);
+            logger.Logger.default.info(`proxy ${this.name} done awaiting with token ${commandToken}`);
         }
         catch (e) {
             commandInvocation.context.fail((<any>e).message);
         }
         finally {
-            sub.unsubscribe();
+            eventSubscription.unsubscribe();
+            console.log(`proxy ${this.name} unsubscribed with token ${commandToken} at step ${counter++}`);
         }
     }
 }

@@ -22,22 +22,49 @@ export function findEventEnvelopeFromKernel(kernelEventEnvelopes: contracts.Kern
 }
 
 export function createInMemoryChannels(): {
-    local: { sender: connection.IKernelCommandAndEventSender, receiver: connection.IKernelCommandAndEventReceiver },
-    remote: { sender: connection.IKernelCommandAndEventSender, receiver: connection.IKernelCommandAndEventReceiver }
+    local: {
+        sender: connection.IKernelCommandAndEventSender,
+        receiver: connection.IKernelCommandAndEventReceiver,
+        messagesSent: connection.KernelCommandOrEventEnvelope[]
+    },
+    remote: {
+        sender: connection.IKernelCommandAndEventSender,
+        receiver: connection.IKernelCommandAndEventReceiver,
+        messagesSent: connection.KernelCommandOrEventEnvelope[]
+    }
 } {
 
 
     let localToRemote = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
     let remoteToLocal = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
 
+    let remoteToLocalMessages: connection.KernelCommandOrEventEnvelope[] = [];
+    let localToRemoteMessages: connection.KernelCommandOrEventEnvelope[] = [];
+
+    localToRemote.subscribe({
+        next: (e) => {
+            localToRemoteMessages;//?
+            localToRemoteMessages.push(e);
+        }
+    });
+
+    remoteToLocal.subscribe({
+        next: (e) => {
+            remoteToLocalMessages//?;
+            remoteToLocalMessages.push(e);
+        }
+    });
+
     let channels = {
         local: {
             receiver: connection.KernelCommandAndEventReceiver2.FromObservable(remoteToLocal),
-            sender: connection.KernelCommandAndEventSender2.FromObserver(localToRemote)
+            sender: connection.KernelCommandAndEventSender2.FromObserver(localToRemote),
+            messagesSent: localToRemoteMessages,
         },
         remote: {
             receiver: connection.KernelCommandAndEventReceiver2.FromObservable(localToRemote),
-            sender: connection.KernelCommandAndEventSender2.FromObserver(remoteToLocal)
+            sender: connection.KernelCommandAndEventSender2.FromObserver(remoteToLocal),
+            messagesSent: remoteToLocalMessages,
         }
     };
 
