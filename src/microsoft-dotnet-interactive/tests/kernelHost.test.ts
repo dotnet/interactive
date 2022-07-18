@@ -5,7 +5,7 @@ import { expect } from "chai";
 import * as contracts from "../src/contracts";
 import { CompositeKernel } from "../src/compositeKernel";
 import { Kernel } from "../src/kernel";
-import { createInMemoryChannels, createInMemoryChannel } from "./testSupport";
+import { createInMemoryChannels } from "./testSupport";
 import { Logger } from "../src/logger";
 import { KernelHost } from "../src/kernelHost";
 

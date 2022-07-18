@@ -3,7 +3,6 @@
 
 import * as contracts from "../src/contracts";
 import * as connection from "../src/connection";
-import * as genericChannel from "../src/genericChannel";
 import * as rxjs from "rxjs";
 
 export function findEvent<T>(kernelEventEnvelopes: contracts.KernelEventEnvelope[], eventType: contracts.KernelEventType): T | undefined {
