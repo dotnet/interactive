@@ -5,7 +5,7 @@ import { expect } from "chai";
 import * as contracts from "../src/contracts";
 import { CompositeKernel } from "../src/compositeKernel";
 import { Kernel } from "../src/kernel";
-import { createInMemoryChannels2, createInMemoryChannel } from "./testSupport";
+import { createInMemoryChannels, createInMemoryChannel } from "./testSupport";
 import { Logger } from "../src/logger";
 import { KernelHost } from "../src/kernelHost";
 
@@ -17,7 +17,7 @@ describe("kernelHost",
         });
 
         it("provides uri for kernels", () => {
-            const inMemory = createInMemoryChannels2();
+            const inMemory = createInMemoryChannels();
             const compositeKernel = new CompositeKernel("vscode");
             const kernelHost = new KernelHost(compositeKernel, inMemory.local.sender, inMemory.local.receiver, "kernel://vscode");
 
@@ -34,7 +34,7 @@ describe("kernelHost",
         });
 
         it("provides uri for kernels as it is attached to composite kernel", () => {
-            const inMemory = createInMemoryChannels2();
+            const inMemory = createInMemoryChannels();
             const compositeKernel = new CompositeKernel("vscode");
 
             const childKernel = new Kernel("test");
@@ -54,13 +54,13 @@ describe("kernelHost",
             const events: contracts.KernelEventEnvelope[] = [];
             const vscodeKernel = new CompositeKernel("composite-kernel");
 
-            const inMemory = createInMemoryChannels2();
+            const inMemory = createInMemoryChannels();
 
             const vscodeHost = new KernelHost(vscodeKernel, inMemory.local.sender, inMemory.local.receiver, "kernel://vscode");
 
             vscodeHost.createProxyKernelOnDefaultConnector({ localName: "python", remoteUri: "kernel://remote/python", aliases: [], supportedDirectives: [], supportedKernelCommands: [] });
             vscodeHost.createProxyKernelOnDefaultConnector({ localName: "go", remoteUri: "kernel://remote/go", aliases: [], supportedDirectives: [], supportedKernelCommands: [] });
-            vscodeHost.connect();
+
 
             vscodeKernel.subscribeToKernelEvents(e => {
                 events.push(e);
@@ -109,8 +109,9 @@ describe("kernelHost",
             });
 
             const remoteHost = new KernelHost(remote, inMemory.remote.sender, inMemory.remote.receiver, "kernel://remote");
-            remoteHost.connect();
 
+            vscodeHost.connect();
+            remoteHost.connect();
 
             await vscodeKernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "pytonCode", targetKernelName: "python" } });
             await vscodeKernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "goCode", targetKernelName: "go" } });
