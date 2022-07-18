@@ -1,17 +1,18 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { areCommandsTheSame, KernelInvocationContext } from "./kernelInvocationContext";
-import { Guid, TokenGenerator } from "./tokenGenerator";
+import * as kernelInvocationContext from "./kernelInvocationContext";
+import * as tokenGenerator from "./tokenGenerator";
 import * as contracts from "./contracts";
-import { Logger } from "./logger";
-import { CompositeKernel } from "./compositeKernel";
-import { KernelScheduler } from "./kernelScheduler";
-import { PromiseCompletionSource } from "./genericChannel";
+import * as logger from "./logger";
+import * as compositeKernel from "./compositeKernel";
+import * as kernelScheduler from "./kernelScheduler";
+import * as promiseCompletionSource from "./promiseCompletionSource";
+import * as disposables from "./disposables";
 
 export interface IKernelCommandInvocation {
     commandEnvelope: contracts.KernelCommandEnvelope;
-    context: KernelInvocationContext;
+    context: kernelInvocationContext.KernelInvocationContext;
 }
 
 export interface IKernelCommandHandler {
@@ -25,19 +26,20 @@ export interface IKernelEventObserver {
 
 export class Kernel {
     private _kernelInfo: contracts.KernelInfo;
-
     private _commandHandlers = new Map<string, IKernelCommandHandler>();
     private readonly _eventObservers: { [token: string]: contracts.KernelEventEnvelopeObserver } = {};
-    private readonly _tokenGenerator: TokenGenerator = new TokenGenerator();
+    private readonly _tokenGenerator: tokenGenerator.TokenGenerator = new tokenGenerator.TokenGenerator();
     public rootKernel: Kernel = this;
-    public parentKernel: CompositeKernel | null = null;
-    private _scheduler?: KernelScheduler<contracts.KernelCommandEnvelope> | null = null;
+    public parentKernel: compositeKernel.CompositeKernel | null = null;
+    private _scheduler?: kernelScheduler.KernelScheduler<contracts.KernelCommandEnvelope> | null = null;
 
     public get kernelInfo(): contracts.KernelInfo {
+
         return this._kernelInfo;
     }
 
     constructor(readonly name: string, languageName?: string, languageVersion?: string) {
+
         this._kernelInfo = {
             localName: name,
             languageName: languageName,
@@ -46,12 +48,13 @@ export class Kernel {
             supportedDirectives: [],
             supportedKernelCommands: []
         };
-
         this.registerCommandHandler({
             commandType: contracts.RequestKernelInfoType, handle: async invocation => {
                 await this.handleRequestKernelInfo(invocation);
             }
         });
+
+
     }
 
     protected async handleRequestKernelInfo(invocation: IKernelCommandInvocation): Promise<void> {
@@ -65,9 +68,9 @@ export class Kernel {
         return Promise.resolve();
     }
 
-    private getScheduler(): KernelScheduler<contracts.KernelCommandEnvelope> {
+    private getScheduler(): kernelScheduler.KernelScheduler<contracts.KernelCommandEnvelope> {
         if (!this._scheduler) {
-            this._scheduler = this.parentKernel?.getScheduler() ?? new KernelScheduler<contracts.KernelCommandEnvelope>();
+            this._scheduler = this.parentKernel?.getScheduler() ?? new kernelScheduler.KernelScheduler<contracts.KernelCommandEnvelope>();
         }
 
         return this._scheduler;
@@ -77,22 +80,22 @@ export class Kernel {
         commandEnvelope;//?
         if (!commandEnvelope.token) {
             let nextToken = this._tokenGenerator.GetNewToken();
-            if (KernelInvocationContext.current?.commandEnvelope) {
+            if (kernelInvocationContext.KernelInvocationContext.current?.commandEnvelope) {
                 // a parent command exists, create a token hierarchy
-                nextToken = KernelInvocationContext.current.commandEnvelope.token!;
+                nextToken = kernelInvocationContext.KernelInvocationContext.current.commandEnvelope.token!;
             }
 
             commandEnvelope.token = nextToken;
         }
 
         if (!commandEnvelope.id) {
-            commandEnvelope.id = Guid.create().toString();
+            commandEnvelope.id = tokenGenerator.Guid.create().toString();
         }
     }
 
     static get current(): Kernel | null {
-        if (KernelInvocationContext.current) {
-            return KernelInvocationContext.current.handlingKernel;
+        if (kernelInvocationContext.KernelInvocationContext.current) {
+            return kernelInvocationContext.KernelInvocationContext.current.handlingKernel;
         }
         return null;
     }
@@ -110,19 +113,19 @@ export class Kernel {
     // nothing is ever going to look at the promise we return here.
     async send(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         this.ensureCommandTokenAndId(commandEnvelope);
-        let context = KernelInvocationContext.establish(commandEnvelope);
+        let context = kernelInvocationContext.KernelInvocationContext.establish(commandEnvelope);
         this.getScheduler().runAsync(commandEnvelope, (value) => this.executeCommand(value));
         return context.promise;
     }
 
     private async executeCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
-        let context = KernelInvocationContext.establish(commandEnvelope);
-        let isRootCommand = areCommandsTheSame(context.commandEnvelope, commandEnvelope);
-        let contextEventsSubscription: contracts.Disposable | null = null;
+        let context = kernelInvocationContext.KernelInvocationContext.establish(commandEnvelope);
+        let isRootCommand = kernelInvocationContext.areCommandsTheSame(context.commandEnvelope, commandEnvelope);
+        let contextEventsSubscription: disposables.Disposable | null = null;
         if (isRootCommand) {
             contextEventsSubscription = context.subscribeToKernelEvents(e => {
                 const message = `kernel ${this.name} saw event ${e.eventType} with token ${e.command?.token}`;
-                Logger.default.info(message);
+                logger.Logger.default.info(message);
                 return this.publishEvent(e);
             });
         }
@@ -146,14 +149,14 @@ export class Kernel {
 
     handleCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
-            let context = KernelInvocationContext.establish(commandEnvelope);//?
+            let context = kernelInvocationContext.KernelInvocationContext.establish(commandEnvelope);//?
             context.handlingKernel = this;
-            let isRootCommand = areCommandsTheSame(context.commandEnvelope, commandEnvelope);
+            let isRootCommand = kernelInvocationContext.areCommandsTheSame(context.commandEnvelope, commandEnvelope);
 
             let handler = this.getCommandHandler(commandEnvelope.commandType);
             if (handler) {
                 try {
-                    Logger.default.info(`kernel ${this.name} about to handle command: ${JSON.stringify(commandEnvelope)}`);
+                    logger.Logger.default.info(`kernel ${this.name} about to handle command: ${JSON.stringify(commandEnvelope)}`);
                     await handler.handle({ commandEnvelope: commandEnvelope, context });
 
                     context.complete(commandEnvelope);
@@ -161,7 +164,7 @@ export class Kernel {
                         context.dispose();
                     }
 
-                    Logger.default.info(`kernel ${this.name} done handling command: ${JSON.stringify(commandEnvelope)}`);
+                    logger.Logger.default.info(`kernel ${this.name} done handling command: ${JSON.stringify(commandEnvelope)}`);
                     resolve();
                 }
                 catch (e) {
@@ -182,7 +185,7 @@ export class Kernel {
         });
     }
 
-    subscribeToKernelEvents(observer: contracts.KernelEventEnvelopeObserver): contracts.DisposableSubscription {
+    subscribeToKernelEvents(observer: contracts.KernelEventEnvelopeObserver): disposables.DisposableSubscription {
         let subToken = this._tokenGenerator.GetNewToken();
         this._eventObservers[subToken] = observer;
 
@@ -233,7 +236,7 @@ export class Kernel {
 }
 
 export async function submitCommandAndGetResult<TEvent extends contracts.KernelEvent>(kernel: Kernel, commandEnvelope: contracts.KernelCommandEnvelope, expectedEventType: contracts.KernelEventType): Promise<TEvent> {
-    let completionSource = new PromiseCompletionSource<TEvent>();
+    let completionSource = new promiseCompletionSource.PromiseCompletionSource<TEvent>();
     let handled = false;
     let disposable = kernel.subscribeToKernelEvents(eventEnvelope => {
         if (eventEnvelope.command?.token === commandEnvelope.token) {
@@ -246,7 +249,7 @@ export async function submitCommandAndGetResult<TEvent extends contracts.KernelE
                     }
                     break;
                 case contracts.CommandSucceededType:
-                    if (areCommandsTheSame(eventEnvelope.command!, commandEnvelope)
+                    if (kernelInvocationContext.areCommandsTheSame(eventEnvelope.command!, commandEnvelope)
                         && (eventEnvelope.command?.id === commandEnvelope.id)) {
                         if (!handled) {//? ($ ? eventEnvelope : {})
                             handled = true;

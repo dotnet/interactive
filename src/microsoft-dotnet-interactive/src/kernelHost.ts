@@ -3,6 +3,7 @@
 
 import { CompositeKernel } from './compositeKernel';
 import * as contracts from './contracts';
+import * as connection from './connection';
 import { Kernel } from './kernel';
 import { ProxyKernel } from './proxyKernel';
 import { Logger } from './logger';
@@ -14,11 +15,17 @@ export class KernelHost {
     private readonly _kernelToKernelInfo = new Map<Kernel, contracts.KernelInfo>();
     private readonly _uri: string;
     private readonly _scheduler: KernelScheduler<contracts.KernelCommandEnvelope>;
+    private _defaultSender: connection.IKernelCommandAndEventSender;
+    private _defaultReceiver: connection.IKernelCommandAndEventReceiver;
+    private _kernel: CompositeKernel;
 
-    constructor(private readonly _kernel: CompositeKernel, private readonly _channel: contracts.KernelCommandAndEventChannel, hostUri: string) {
+    constructor(kernel: CompositeKernel, sender: connection.IKernelCommandAndEventSender, receiver: connection.IKernelCommandAndEventReceiver, hostUri: string) {
+        this._kernel = kernel;
         this._uri = hostUri || "kernel://vscode";
         this._kernel.host = this;
         this._scheduler = new KernelScheduler<contracts.KernelCommandEnvelope>();
+        this._defaultSender = sender;
+        this._defaultReceiver = receiver;
     }
 
     public tryGetKernelByRemoteUri(remoteUri: string): Kernel | undefined {
@@ -92,7 +99,7 @@ export class KernelHost {
     }
 
     public createProxyKernelOnDefaultConnector(kernelInfo: contracts.KernelInfo): ProxyKernel {
-        const proxyKernel = new ProxyKernel(kernelInfo.localName, this._channel);
+        const proxyKernel = new ProxyKernel(kernelInfo.localName, this._defaultSender, this._defaultReceiver);
         this._kernel.add(proxyKernel, kernelInfo.aliases);
         if (kernelInfo.remoteUri) {
             this.registerRemoteUriForProxy(proxyKernel.name, kernelInfo.remoteUri);
@@ -101,17 +108,20 @@ export class KernelHost {
     }
 
     public connect() {
-        this._channel.setCommandHandler((kernelCommandEnvelope: contracts.KernelCommandEnvelope) => {
-            // fire and forget this one
-            this._scheduler.runAsync(kernelCommandEnvelope, commandEnvelope => {
-                const kernel = this.getKernel(commandEnvelope);
-                return kernel.send(commandEnvelope);
-            });
-            return Promise.resolve();
+        this._kernel.subscribeToKernelEvents(e => {
+            this._defaultSender.send(e);
         });
 
-        this._kernel.subscribeToKernelEvents(e => {
-            this._channel.publishKernelEvent(e);
+        this._defaultReceiver.subscribe({
+            next: (kernelCommandOrEventEnvelope: connection.KernelCommandOrEventEnvelope) => {
+                if (connection.isKernelCommandEnvelope(kernelCommandOrEventEnvelope)) {
+                    this._scheduler.runAsync(kernelCommandOrEventEnvelope, commandEnvelope => {
+                        const kernel = this.getKernel(commandEnvelope);
+                        return kernel.send(commandEnvelope);
+                    });
+                }
+            }
         });
+
     }
 }

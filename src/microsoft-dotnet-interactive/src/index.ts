@@ -2,8 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 export * from './compositeKernel';
+export * from './connection';
 export * from './consoleCapture';
 export * from './contracts';
+export * from './disposables';
 export * from './genericChannel';
 export * from './htmlKernel';
 export * from './javascriptKernel';
@@ -12,6 +14,6 @@ export * from './kernelHost';
 export * from './kernelInvocationContext';
 export * from './kernelScheduler';
 export * from './logger';
+export * from './promiseCompletionSource';
 export * from './proxyKernel';
 export * from './tokenGenerator';
-export * from './utilities';

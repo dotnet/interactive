@@ -2,8 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as contracts from "./contracts";
-import { PromiseCompletionSource } from "./genericChannel";
 import * as kernel from "./kernel";
+import * as promiseCompletionSource from "./promiseCompletionSource";
 
 export class HtmlKernel extends kernel.Kernel {
     constructor(kernelName?: string, private readonly htmlFragmentProcessor?: (htmlFragment: string) => Promise<void>, languageName?: string, languageVersion?: string) {
@@ -51,7 +51,7 @@ export function domHtmlFragmentProcessor(htmlFragment: string, configuration?: {
     }
 
     container.innerHTML = htmlFragment;
-    const completionPromise = new PromiseCompletionSource<void>();
+    const completionPromise = new promiseCompletionSource.PromiseCompletionSource<void>();
     const mutationObserver = mutationObserverFactory((mutations: MutationRecord[], observer: MutationObserver) => {
 
         for (const mutation of mutations) {

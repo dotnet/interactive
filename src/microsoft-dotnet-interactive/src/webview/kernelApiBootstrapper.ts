@@ -5,10 +5,10 @@ import { CompositeKernel } from "../compositeKernel";
 import * as genericChannel from "../genericChannel";
 import { JavascriptKernel } from "../javascriptKernel";
 import { Kernel } from "../kernel";
-import * as contracts from "../contracts";
-import { isKernelEventEnvelope } from "../utilities";
 import { Logger } from "../logger";
 import { KernelHost } from "../kernelHost";
+import * as rxjs from "rxjs";
+import * as connection from "../connection";
 
 export function configure(global?: any) {
     if (!global) {
@@ -41,36 +41,31 @@ export function configure(global?: any) {
         }
     };
 
-    const receiver = new genericChannel.CommandAndEventReceiver();
-
     Logger.configure('webview', entry => {
         // @ts-ignore
         postKernelMessage({ logEntry: entry });
     });
 
 
-    const channel = new genericChannel.GenericChannel(
-        (envelope) => {
+    const remoteToLocal = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
+    const localToRemote = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
+    localToRemote.subscribe({
+        next: envelope => {
             // @ts-ignore
             postKernelMessage({ envelope });
-            return Promise.resolve();
-        },
-        () => {
-            return receiver.read();
         }
-    );
-
+    });
     const compositeKernel = new CompositeKernel("webview");
-    const kernelHost = new KernelHost(compositeKernel, channel, "kernel://webview");
+    const kernelHost = new KernelHost(compositeKernel, connection.KernelCommandAndEventSender2.FromObserver(localToRemote), connection.KernelCommandAndEventReceiver2.FromObservable(remoteToLocal), "kernel://webview");
 
     // @ts-ignore
     onDidReceiveKernelMessage(event => {
         if (event.envelope) {
-            const envelope = <contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope><any>(event.envelope);
-            if (isKernelEventEnvelope(envelope)) {
+            const envelope = <connection.KernelCommandOrEventEnvelope><any>(event.envelope);
+            if (connection.isKernelEventEnvelope(envelope)) {
                 Logger.default.info(`channel got ${envelope.eventType} with token ${envelope.command?.token} and id ${envelope.command?.id}`);
             }
-            receiver.delegate(envelope);
+            remoteToLocal.next(envelope);
         }
     });
 
@@ -84,7 +79,6 @@ export function configure(global?: any) {
     kernelHost.createProxyKernelOnDefaultConnector({ localName: 'vscode', aliases: [], remoteUri: "kernel://vscode/vscode", supportedDirectives: [], supportedKernelCommands: [] });
 
     kernelHost.connect();
-    channel.run();
 }
 
 // @ts-ignore

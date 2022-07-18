@@ -7,7 +7,7 @@ import { JavascriptKernel } from "../src/javascriptKernel";
 import * as contracts from "../src/contracts";
 import { CompositeKernel } from "../src/compositeKernel";
 import { KernelHost } from "../src/kernelHost";
-import { createInMemoryChannel } from "./testSupport";
+import { createInMemoryChannels2 } from "./testSupport";
 
 describe("kernelInfo", () => {
     describe("for composite kernel", () => {
@@ -52,8 +52,8 @@ describe("kernelInfo", () => {
 
         it("unproxied kernels have a URI", async () => {
             const kernel = new CompositeKernel("root");
-            let inMemory = createInMemoryChannel();
-            const host = new KernelHost(kernel, inMemory.channel, "kernel://local");
+            let inMemory = createInMemoryChannels2();
+            const host = new KernelHost(kernel, inMemory.local.sender, inMemory.local.receiver, "kernel://local");
             kernel.add(new JavascriptKernel("child1"), ["child1Js"]);
             kernel.add(new JavascriptKernel("child2"), ["child2Js"]);
             const events: contracts.KernelEventEnvelope[] = [];

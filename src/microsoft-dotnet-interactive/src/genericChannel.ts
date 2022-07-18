@@ -2,45 +2,21 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as contracts from "./contracts";
-import * as utilities from "./utilities";
-import { Logger } from "./logger";
+import * as connection from "./connection";
+import * as logger from "./logger";
+import * as disposable from "./disposables";
+import * as promiseCompletionSource from "./promiseCompletionSource";
 
-export function isPromiseCompletionSource<T>(obj: any): obj is PromiseCompletionSource<T> {
-    return obj.promise
-        && obj.resolve
-        && obj.reject;
-}
 
-export class PromiseCompletionSource<T> {
-    private _resolve: (value: T) => void = () => { };
-    private _reject: (reason: any) => void = () => { };
-    readonly promise: Promise<T>;
+export class GenericChannel implements connection.KernelCommandAndEventChannel {
 
-    constructor() {
-        this.promise = new Promise<T>((resolve, reject) => {
-            this._resolve = resolve;
-            this._reject = reject;
-        });
-    }
-
-    resolve(value: T) {
-        this._resolve(value);
-    }
-
-    reject(reason: any) {
-        this._reject(reason);
-    }
-}
-
-export class GenericChannel implements contracts.KernelCommandAndEventChannel {
-
-    private stillRunning: PromiseCompletionSource<number>;
+    private stillRunning: promiseCompletionSource.PromiseCompletionSource<number>;
     private commandHandler: contracts.KernelCommandEnvelopeHandler = () => Promise.resolve();
     private eventSubscribers: Array<contracts.KernelEventEnvelopeObserver> = [];
 
     constructor(private readonly messageSender: (message: contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope) => Promise<void>, private readonly messageReceiver: () => Promise<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>) {
 
-        this.stillRunning = new PromiseCompletionSource<number>();
+        this.stillRunning = new promiseCompletionSource.PromiseCompletionSource<number>();
     }
 
     dispose(): void {
@@ -53,9 +29,9 @@ export class GenericChannel implements contracts.KernelCommandAndEventChannel {
             if (typeof message === 'number') {
                 return;
             }
-            if (utilities.isKernelCommandEnvelope(message)) {
+            if (connection.isKernelCommandEnvelope(message)) {
                 this.commandHandler(message);
-            } else if (utilities.isKernelEventEnvelope(message)) {
+            } else if (connection.isKernelEventEnvelope(message)) {
                 for (let i = this.eventSubscribers.length - 1; i >= 0; i--) {
                     this.eventSubscribers[i](message);
                 }
@@ -76,7 +52,7 @@ export class GenericChannel implements contracts.KernelCommandAndEventChannel {
         return this.messageSender(eventEnvelope);
     }
 
-    subscribeToKernelEvents(observer: contracts.KernelEventEnvelopeObserver): contracts.DisposableSubscription {
+    subscribeToKernelEvents(observer: contracts.KernelEventEnvelopeObserver): disposable.DisposableSubscription {
         this.eventSubscribers.push(observer);
         return {
             dispose: () => {
@@ -94,7 +70,7 @@ export class GenericChannel implements contracts.KernelCommandAndEventChannel {
 }
 
 export class CommandAndEventReceiver {
-    private _waitingOnMessages: PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope> | null = null;
+    private _waitingOnMessages: promiseCompletionSource.PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope> | null = null;
     private readonly _envelopeQueue: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] = [];
 
     public delegate(commandOrEvent: contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope) {
@@ -115,8 +91,8 @@ export class CommandAndEventReceiver {
             return Promise.resolve<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>(envelope);
         }
         else {
-            Logger.default.info(`channel building promise awaiter`);
-            this._waitingOnMessages = new PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>();
+            logger.Logger.default.info(`channel building promise awaiter`);
+            this._waitingOnMessages = new promiseCompletionSource.PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>();
             return this._waitingOnMessages.promise;
         }
     }

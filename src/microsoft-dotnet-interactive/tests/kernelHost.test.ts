@@ -5,7 +5,7 @@ import { expect } from "chai";
 import * as contracts from "../src/contracts";
 import { CompositeKernel } from "../src/compositeKernel";
 import { Kernel } from "../src/kernel";
-import { createInMemoryChannels, createInMemoryChannel } from "./testSupport";
+import { createInMemoryChannels2, createInMemoryChannel } from "./testSupport";
 import { Logger } from "../src/logger";
 import { KernelHost } from "../src/kernelHost";
 
@@ -17,9 +17,9 @@ describe("kernelHost",
         });
 
         it("provides uri for kernels", () => {
-            const inMemory = createInMemoryChannel();
+            const inMemory = createInMemoryChannels2();
             const compositeKernel = new CompositeKernel("vscode");
-            const kernelHost = new KernelHost(compositeKernel, inMemory.channel, "kernel://vscode");
+            const kernelHost = new KernelHost(compositeKernel, inMemory.local.sender, inMemory.local.receiver, "kernel://vscode");
 
             const childKernel = new Kernel("test");
             compositeKernel.add(childKernel, ["test1", "test2"]);
@@ -34,14 +34,13 @@ describe("kernelHost",
         });
 
         it("provides uri for kernels as it is attached to composite kernel", () => {
-            const inMemory = createInMemoryChannel();
+            const inMemory = createInMemoryChannels2();
             const compositeKernel = new CompositeKernel("vscode");
-
 
             const childKernel = new Kernel("test");
             compositeKernel.add(childKernel, ["test1", "test2"]);
 
-            const kernelHost = new KernelHost(compositeKernel, inMemory.channel, "kernel://vscode");
+            const kernelHost = new KernelHost(compositeKernel, inMemory.local.sender, inMemory.local.receiver, "kernel://vscode");
             const kernelInfo = kernelHost.tryGetKernelInfo(childKernel);
 
             expect(kernelInfo).to.not.be.undefined;
@@ -51,13 +50,13 @@ describe("kernelHost",
 
         });
 
-        it("routes commands to the appropriate kernels", async () => {
+        it.only("routes commands to the appropriate kernels", async () => {
             const events: contracts.KernelEventEnvelope[] = [];
             const vscodeKernel = new CompositeKernel("composite-kernel");
 
-            const inMemory = createInMemoryChannels();
+            const inMemory = createInMemoryChannels2();
 
-            const vscodeHost = new KernelHost(vscodeKernel, inMemory.channels[0].channel, "kernel://vscode");
+            const vscodeHost = new KernelHost(vscodeKernel, inMemory.local.sender, inMemory.local.receiver, "kernel://vscode");
 
             vscodeHost.createProxyKernelOnDefaultConnector({ localName: "python", remoteUri: "kernel://remote/python", aliases: [], supportedDirectives: [], supportedKernelCommands: [] });
             vscodeHost.createProxyKernelOnDefaultConnector({ localName: "go", remoteUri: "kernel://remote/go", aliases: [], supportedDirectives: [], supportedKernelCommands: [] });
@@ -109,11 +108,9 @@ describe("kernelHost",
                 }
             });
 
-            const remoteHost = new KernelHost(remote, inMemory.channels[1].channel, "kernel://remote");
+            const remoteHost = new KernelHost(remote, inMemory.remote.sender, inMemory.remote.receiver, "kernel://remote");
             remoteHost.connect();
 
-            inMemory.channels[0].channel.run();
-            inMemory.channels[1].channel.run();
 
             await vscodeKernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "pytonCode", targetKernelName: "python" } });
             await vscodeKernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "goCode", targetKernelName: "go" } });
@@ -121,7 +118,5 @@ describe("kernelHost",
             expect(events.find(e => e.command!.command.targetKernelName === "python")).not.to.be.undefined;
             expect(events.find(e => e.command!.command.targetKernelName === "go")).not.to.be.undefined;
         });
-
-
     }
 );

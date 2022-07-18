@@ -7,11 +7,12 @@ import { IKernelEventObserver } from "../src/kernel";
 import { KernelInvocationContext } from "../src/kernelInvocationContext";
 import * as contracts from "../src/contracts";
 import { Guid } from "../src/tokenGenerator";
+import * as disposables from "../src/disposables";
 
 describe("dotnet-interactive", () => {
 
-    let toDispose: contracts.Disposable[] = [];
-    function use<T extends contracts.Disposable>(disposable: T): T {
+    let toDispose: disposables.Disposable[] = [];
+    function use<T extends disposables.Disposable>(disposable: T): T {
         toDispose.push(disposable);
         return disposable;
     }
