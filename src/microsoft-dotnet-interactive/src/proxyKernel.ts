@@ -41,6 +41,7 @@ export class ProxyKernel extends kernel.Kernel {
                                 }
                                 break;
                             default:
+                                // todo : here
                                 console.log(`proxy ${this.name} pushing event ${envelope.eventType} : {${JSON.stringify(envelope.event)}} at step ${counter++}`);
                                 //   commandInvocation.context.publish(envelope);
                                 break;
