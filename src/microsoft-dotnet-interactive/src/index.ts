@@ -6,7 +6,6 @@ export * from './connection';
 export * from './consoleCapture';
 export * from './contracts';
 export * from './disposables';
-export * from './genericChannel';
 export * from './htmlKernel';
 export * from './javascriptKernel';
 export * from './kernel';
