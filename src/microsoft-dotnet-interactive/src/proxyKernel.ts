@@ -24,7 +24,7 @@ export class ProxyKernel extends Kernel {
         const commandToken = commandInvocation.commandEnvelope.token;
         const commandId = commandInvocation.commandEnvelope.id;
         const completionSource = new PromiseCompletionSource<contracts.KernelEventEnvelope>();
-
+        // fix : is this the right way? We are trying to avoid forwarding events we just did forward
         const handledEvents = new Set<contracts.KernelEventEnvelope>();
         let eventSubscription = this._receiver.subscribe({
             next: (envelope) => {
