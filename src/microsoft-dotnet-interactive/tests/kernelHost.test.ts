@@ -50,7 +50,7 @@ describe("kernelHost",
 
         });
 
-        it.only("routes commands to the appropriate kernels", async () => {
+        it("routes commands to the appropriate kernels", async () => {
             const events: contracts.KernelEventEnvelope[] = [];
             const vscodeKernel = new CompositeKernel("composite-kernel");
 
@@ -116,8 +116,6 @@ describe("kernelHost",
             await vscodeKernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "pytonCode", targetKernelName: "python" } });
             await vscodeKernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "goCode", targetKernelName: "go" } });
 
-            inMemory.local.messagesSent;//?
-            inMemory.remote.messagesSent;//?
 
             expect(events.find(e => e.command!.command.targetKernelName === "python")).not.to.be.undefined;
             expect(events.find(e => e.command!.command.targetKernelName === "go")).not.to.be.undefined;

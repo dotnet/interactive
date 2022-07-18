@@ -2,10 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as contracts from "./contracts";
-import * as kernel from "./kernel";
-import * as promiseCompletionSource from "./promiseCompletionSource";
+import { Kernel, IKernelCommandInvocation } from "./kernel";
+import { PromiseCompletionSource } from "./promiseCompletionSource";
 
-export class HtmlKernel extends kernel.Kernel {
+export class HtmlKernel extends Kernel {
     constructor(kernelName?: string, private readonly htmlFragmentProcessor?: (htmlFragment: string) => Promise<void>, languageName?: string, languageVersion?: string) {
         super(kernelName ?? "html", languageName ?? "HTML");
         if (!this.htmlFragmentProcessor) {
@@ -14,7 +14,7 @@ export class HtmlKernel extends kernel.Kernel {
         this.registerCommandHandler({ commandType: contracts.SubmitCodeType, handle: invocation => this.handleSubmitCode(invocation) });
     }
 
-    private async handleSubmitCode(invocation: kernel.IKernelCommandInvocation): Promise<void> {
+    private async handleSubmitCode(invocation: IKernelCommandInvocation): Promise<void> {
         const submitCode = <contracts.SubmitCode>invocation.commandEnvelope.command;
         const code = submitCode.code;
 
@@ -51,7 +51,7 @@ export function domHtmlFragmentProcessor(htmlFragment: string, configuration?: {
     }
 
     container.innerHTML = htmlFragment;
-    const completionPromise = new promiseCompletionSource.PromiseCompletionSource<void>();
+    const completionPromise = new PromiseCompletionSource<void>();
     const mutationObserver = mutationObserverFactory((mutations: MutationRecord[], observer: MutationObserver) => {
 
         for (const mutation of mutations) {

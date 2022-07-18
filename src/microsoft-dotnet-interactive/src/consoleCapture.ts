@@ -3,19 +3,19 @@
 
 import * as util from "util";
 import * as contracts from "./contracts";
-import * as kernelInvocationContext from "./kernelInvocationContext";
+import { KernelInvocationContext } from "./kernelInvocationContext";
 import * as disposables from "./disposables";
 
 export class ConsoleCapture implements disposables.Disposable {
     private originalConsole: Console;
-    private _kernelInvocationContext: kernelInvocationContext.KernelInvocationContext | undefined;
+    private _kernelInvocationContext: KernelInvocationContext | undefined;
 
     constructor() {
         this.originalConsole = console;
         console = <Console><any>this;
     }
 
-    set kernelInvocationContext(value: kernelInvocationContext.KernelInvocationContext | undefined) {
+    set kernelInvocationContext(value: KernelInvocationContext | undefined) {
         this._kernelInvocationContext = value;
     }
 

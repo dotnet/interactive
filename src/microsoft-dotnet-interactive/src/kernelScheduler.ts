@@ -1,13 +1,13 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import * as promiseCompletionSource from "./promiseCompletionSource";
+import { PromiseCompletionSource } from "./promiseCompletionSource";
 
 
 interface SchedulerOperation<T> {
     value: T;
     executor: (value: T) => Promise<void>;
-    promiseCompletionSource: promiseCompletionSource.PromiseCompletionSource<void>;
+    promiseCompletionSource: PromiseCompletionSource<void>;
 }
 
 export class KernelScheduler<T> {
@@ -21,7 +21,7 @@ export class KernelScheduler<T> {
         const operation = {
             value,
             executor,
-            promiseCompletionSource: new promiseCompletionSource.PromiseCompletionSource<void>(),
+            promiseCompletionSource: new PromiseCompletionSource<void>(),
         };
 
         if (this.inFlightOperation) {

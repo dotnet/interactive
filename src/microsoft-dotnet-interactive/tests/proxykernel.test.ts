@@ -7,6 +7,7 @@ import { ProxyKernel } from "../src/proxyKernel";
 import { Logger } from "../src/logger";
 import * as rxjs from "rxjs";
 import * as connection from "../src/connection";
+
 describe("proxyKernel", () => {
     before(() => {
         Logger.configure("test", () => { });
@@ -22,7 +23,7 @@ describe("proxyKernel", () => {
             }
         });
 
-        let kernel = new ProxyKernel("proxy", connection.KernelCommandAndEventSender2.FromObserver(localToRemote), connection.KernelCommandAndEventReceiver2.FromObservable(remoteToLocal));
+        let kernel = new ProxyKernel("proxy", connection.KernelCommandAndEventSender.FromObserver(localToRemote), connection.KernelCommandAndEventReceiver.FromObservable(remoteToLocal));
         let events: contracts.KernelEventEnvelope[] = [];
 
         kernel.subscribeToKernelEvents((e) => events.push(e));
@@ -46,7 +47,7 @@ describe("proxyKernel", () => {
             }
         });
 
-        let kernel = new ProxyKernel("proxy", connection.KernelCommandAndEventSender2.FromObserver(localToRemote), connection.KernelCommandAndEventReceiver2.FromObservable(remoteToLocal));
+        let kernel = new ProxyKernel("proxy", connection.KernelCommandAndEventSender.FromObserver(localToRemote), connection.KernelCommandAndEventReceiver.FromObservable(remoteToLocal));
         let events: contracts.KernelEventEnvelope[] = [];
 
         kernel.subscribeToKernelEvents((e) => events.push(e));
@@ -71,7 +72,7 @@ describe("proxyKernel", () => {
             }
         });
 
-        let kernel = new ProxyKernel("proxy", connection.KernelCommandAndEventSender2.FromObserver(localToRemote), connection.KernelCommandAndEventReceiver2.FromObservable(remoteToLocal));
+        let kernel = new ProxyKernel("proxy", connection.KernelCommandAndEventSender.FromObserver(localToRemote), connection.KernelCommandAndEventReceiver.FromObservable(remoteToLocal));
         let events: contracts.KernelEventEnvelope[] = [];
 
         kernel.subscribeToKernelEvents((e) => events.push(e));
@@ -120,7 +121,7 @@ describe("proxyKernel", () => {
             }
         });
 
-        let kernel = new ProxyKernel("proxy", connection.KernelCommandAndEventSender2.FromObserver(localToRemote), connection.KernelCommandAndEventReceiver2.FromObservable(remoteToLocal));
+        let kernel = new ProxyKernel("proxy", connection.KernelCommandAndEventSender.FromObserver(localToRemote), connection.KernelCommandAndEventReceiver.FromObservable(remoteToLocal));
         let events: contracts.KernelEventEnvelope[] = [];
 
         kernel.subscribeToKernelEvents((e) => events.push(e));

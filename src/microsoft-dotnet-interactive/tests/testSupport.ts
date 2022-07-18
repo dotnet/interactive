@@ -57,13 +57,13 @@ export function createInMemoryChannels(): {
 
     let channels = {
         local: {
-            receiver: connection.KernelCommandAndEventReceiver2.FromObservable(remoteToLocal),
-            sender: connection.KernelCommandAndEventSender2.FromObserver(localToRemote),
+            receiver: connection.KernelCommandAndEventReceiver.FromObservable(remoteToLocal),
+            sender: connection.KernelCommandAndEventSender.FromObserver(localToRemote),
             messagesSent: localToRemoteMessages,
         },
         remote: {
-            receiver: connection.KernelCommandAndEventReceiver2.FromObservable(localToRemote),
-            sender: connection.KernelCommandAndEventSender2.FromObserver(remoteToLocal),
+            receiver: connection.KernelCommandAndEventReceiver.FromObservable(localToRemote),
+            sender: connection.KernelCommandAndEventSender.FromObserver(remoteToLocal),
             messagesSent: remoteToLocalMessages,
         }
     };

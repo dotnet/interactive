@@ -3,7 +3,7 @@
 
 import * as rxjs from 'rxjs';
 import * as contracts from './contracts';
-import * as disposable from './disposables';
+import * as disposables from './disposables';
 
 export type KernelCommandOrEventEnvelope = contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope;
 
@@ -15,22 +15,6 @@ export function isKernelEventEnvelope(commandOrEvent: KernelCommandOrEventEnvelo
     return (<any>commandOrEvent).eventType !== undefined;
 }
 
-export interface KernelCommandAndEventSender {
-    submitCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void>;
-    publishKernelEvent(eventEnvelope: contracts.KernelEventEnvelope): Promise<void>;
-}
-
-export interface KernelCommandAndEventReceiver {
-    subscribeToKernelEvents(observer: contracts.KernelEventEnvelopeObserver): disposable.DisposableSubscription;
-    setCommandHandler(handler: contracts.KernelCommandEnvelopeHandler): void;
-}
-
-
-export interface KernelCommandAndEventChannel extends KernelCommandAndEventSender, KernelCommandAndEventReceiver, disposable.Disposable {
-}
-
-
-
 export interface IKernelCommandAndEventReceiver extends rxjs.Subscribable<KernelCommandOrEventEnvelope> {
 
 }
@@ -40,9 +24,9 @@ export interface IKernelCommandAndEventSender {
     get remoteHostUri(): string;
 }
 
-export class KernelCommandAndEventReceiver2 implements IKernelCommandAndEventReceiver {
+export class KernelCommandAndEventReceiver implements IKernelCommandAndEventReceiver {
     private _observable: rxjs.Subscribable<KernelCommandOrEventEnvelope>;
-    private _disposables: disposable.Disposable[] = [];
+    private _disposables: disposables.Disposable[] = [];
 
     private constructor(observer: rxjs.Subscribable<KernelCommandOrEventEnvelope>) {
         this._observable = observer;
@@ -59,12 +43,10 @@ export class KernelCommandAndEventReceiver2 implements IKernelCommandAndEventRec
     }
 
     public static FromObservable(observable: rxjs.Observable<KernelCommandOrEventEnvelope>): IKernelCommandAndEventReceiver {
-        return new KernelCommandAndEventReceiver2(observable);
+        return new KernelCommandAndEventReceiver(observable);
     }
 }
-
-
-export class KernelCommandAndEventSender2 implements IKernelCommandAndEventSender {
+export class KernelCommandAndEventSender implements IKernelCommandAndEventSender {
     private _remoteHostUri: string;
     private _sender: rxjs.Subject<KernelCommandOrEventEnvelope>;
     private constructor(remoteHostUri: string) {
@@ -79,7 +61,7 @@ export class KernelCommandAndEventSender2 implements IKernelCommandAndEventSende
         return this._remoteHostUri;
     }
     public static FromObserver(observer: rxjs.Observer<KernelCommandOrEventEnvelope>): IKernelCommandAndEventSender {
-        const sender = new KernelCommandAndEventSender2("");
+        const sender = new KernelCommandAndEventSender("");
         sender._sender.subscribe(observer);
         return sender;
     }

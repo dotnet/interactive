@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { CompositeKernel } from "../compositeKernel";
-import * as genericChannel from "../genericChannel";
 import { JavascriptKernel } from "../javascriptKernel";
 import { Kernel } from "../kernel";
 import { Logger } from "../logger";
@@ -56,7 +55,7 @@ export function configure(global?: any) {
         }
     });
     const compositeKernel = new CompositeKernel("webview");
-    const kernelHost = new KernelHost(compositeKernel, connection.KernelCommandAndEventSender2.FromObserver(localToRemote), connection.KernelCommandAndEventReceiver2.FromObservable(remoteToLocal), "kernel://webview");
+    const kernelHost = new KernelHost(compositeKernel, connection.KernelCommandAndEventSender.FromObserver(localToRemote), connection.KernelCommandAndEventReceiver.FromObservable(remoteToLocal), "kernel://webview");
 
     // @ts-ignore
     onDidReceiveKernelMessage(event => {

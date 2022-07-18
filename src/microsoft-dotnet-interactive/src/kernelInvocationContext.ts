@@ -3,9 +3,9 @@
 
 import * as contracts from "./contracts";
 import { Disposable } from "./disposables";
-import * as kernel from "./kernel";
-import * as promiseCompletionSource from "./promiseCompletionSource";
-import * as tokenGenerator from "./tokenGenerator";
+import { IKernelEventObserver, Kernel } from "./kernel";
+import { PromiseCompletionSource } from "./promiseCompletionSource";
+import { TokenGenerator } from "./tokenGenerator";
 
 
 export class KernelInvocationContext implements Disposable {
@@ -15,11 +15,11 @@ export class KernelInvocationContext implements Disposable {
     private static _current: KernelInvocationContext | null = null;
     private readonly _commandEnvelope: contracts.KernelCommandEnvelope;
     private readonly _childCommands: contracts.KernelCommandEnvelope[] = [];
-    private readonly _tokenGenerator: tokenGenerator.TokenGenerator = new tokenGenerator.TokenGenerator();
-    private readonly _eventObservers: Map<string, kernel.IKernelEventObserver> = new Map();
+    private readonly _tokenGenerator: TokenGenerator = new TokenGenerator();
+    private readonly _eventObservers: Map<string, IKernelEventObserver> = new Map();
     private _isComplete = false;
-    public handlingKernel: kernel.Kernel | null = null;
-    private completionSource = new promiseCompletionSource.PromiseCompletionSource<void>();
+    public handlingKernel: Kernel | null = null;
+    private completionSource = new PromiseCompletionSource<void>();
     static establish(kernelCommandInvocation: contracts.KernelCommandEnvelope): KernelInvocationContext {
         let current = KernelInvocationContext._current;
         if (!current || current._isComplete) {
@@ -43,7 +43,7 @@ export class KernelInvocationContext implements Disposable {
         this._commandEnvelope = kernelCommandInvocation;
     }
 
-    subscribeToKernelEvents(observer: kernel.IKernelEventObserver) {
+    subscribeToKernelEvents(observer: IKernelEventObserver) {
         let subToken = this._tokenGenerator.GetNewToken();
         this._eventObservers.set(subToken, observer);
         return {
