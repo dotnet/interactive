@@ -37,6 +37,9 @@ namespace Microsoft.DotNet.Interactive
         {
             EnsureMiddlewarePipelineIsInitialized();
 
+            var uri = _kernel.KernelInfo.Uri ?? new Uri($"kernel://local/{_kernel.KernelInfo.LocalName}", UriKind.Absolute);
+            command.RoutingSlip.TryAdd(uri);
+            
             try
             {
                 await _pipeline(command, context, (_, __) => Task.CompletedTask);

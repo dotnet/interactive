@@ -160,7 +160,7 @@ namespace Microsoft.DotNet.Interactive
                     context.Fail(command, new NoSuitableKernelException(command));
                     return false;
                 }
-
+                
                 command.SchedulingScope ??= handlingKernel.SchedulingScope;
                 command.TargetKernelName ??= handlingKernel.Name;
 
@@ -308,7 +308,6 @@ namespace Microsoft.DotNet.Interactive
             {
                 throw new ArgumentNullException(nameof(command));
             }
-
             command.ShouldPublishCompletionEvent ??= true;
 
             context = KernelInvocationContext.Establish(command);
