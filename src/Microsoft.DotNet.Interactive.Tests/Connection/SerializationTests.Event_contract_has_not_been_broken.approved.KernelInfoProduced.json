@@ -31,5 +31,6 @@
       "originUri": "kernel://pid-1234/csharp",
       "destinationUri": "kernel://webview/javascript"
     }
-  }
+  },
+  "id": "event-id"
 }

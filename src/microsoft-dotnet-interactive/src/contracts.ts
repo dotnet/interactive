@@ -522,6 +522,7 @@ export enum SubmissionType {
 export interface KernelEventEnvelope {
     eventType: KernelEventType;
     event: KernelEvent;
+    id?: string;
     command?: KernelCommandEnvelope;
 }
 

@@ -206,6 +206,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
             foreach (var @event in events().Select(e =>
             {
                 e.Command.Properties["id"] = "command-id";
+                e.Id = "event-id";
                 return e;
             }))
             {

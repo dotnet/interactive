@@ -16,5 +16,6 @@
       "originUri": null,
       "destinationUri": null
     }
-  }
+  },
+  "id": "event-id"
 }

@@ -1,5 +1,6 @@
 {
   "event": {},
   "eventType": "KernelReady",
-  "command": null
+  "command": null,
+  "id": "event-id"
 }

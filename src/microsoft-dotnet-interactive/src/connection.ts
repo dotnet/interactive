@@ -4,6 +4,7 @@
 import * as rxjs from 'rxjs';
 import * as contracts from './contracts';
 import * as disposables from './disposables';
+import { Guid } from './tokenGenerator';
 
 export type KernelCommandOrEventEnvelope = contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope;
 
@@ -54,6 +55,9 @@ export class KernelCommandAndEventSender implements IKernelCommandAndEventSender
         this._sender = new rxjs.Subject<KernelCommandOrEventEnvelope>();
     }
     send(kernelEventEnvelope: KernelCommandOrEventEnvelope): Promise<void> {
+        if (isKernelEventEnvelope(kernelEventEnvelope)) {
+            ensureEventId(kernelEventEnvelope);
+        }
         this._sender.next(kernelEventEnvelope);
         return Promise.resolve();
     }
@@ -64,5 +68,11 @@ export class KernelCommandAndEventSender implements IKernelCommandAndEventSender
         const sender = new KernelCommandAndEventSender("");
         sender._sender.subscribe(observer);
         return sender;
+    }
+}
+
+export function ensureEventId(eventEnvelope: contracts.KernelEventEnvelope) {
+    if (eventEnvelope.id === undefined) {
+        eventEnvelope.id = Guid.create().toString();
     }
 }

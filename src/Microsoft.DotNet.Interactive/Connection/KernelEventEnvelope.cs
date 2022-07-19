@@ -42,6 +42,8 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
 
     public abstract string EventType { get; }
 
+    public string EventId => _event.Id;
+
     KernelEvent IKernelEventEnvelope.Event => _event;
 
     public static void RegisterEvent<TEvent>() where TEvent : KernelEvent
@@ -152,6 +154,8 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
 
         var eventTypeName = jsonObject.GetProperty(nameof(SerializationModel.eventType)).GetString();
 
+       
+
         var eventType = EventTypeByName(eventTypeName);
 
         var ctor = eventType.GetConstructors(BindingFlags.IgnoreCase
@@ -178,6 +182,11 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
 
         var @event = (KernelEvent)ctor.Invoke(ctorParams.ToArray());
 
+        if (jsonObject.TryGetProperty(nameof(SerializationModel.id), out var idJson))
+        {
+            @event.Id = idJson.GetString();
+        }
+        
         return Create(@event);
     }
 
@@ -209,6 +218,7 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
         {
             @event = eventEnvelope.Event,
             eventType = eventEnvelope.EventType,
+            id = eventEnvelope.EventId,
             command = commandSerializationModel
         };
 
@@ -224,5 +234,7 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
         public string eventType { get; set; }
 
         public KernelCommandEnvelope.SerializationModel command { get; set; }
+
+        public string id { get; set; }
     }
 }

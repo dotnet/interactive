@@ -113,7 +113,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
                                  .SetInteractive(Debugger.IsAttached);
 
             @event.Command?.SetToken("the-token");
-
+            
             var json = KernelEventEnvelope.Serialize(@event);
 
             this.Assent(Indent(json), configuration);
@@ -177,6 +177,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
             foreach (var @event in events().Select(e =>
             {
                 e.Command.Properties["id"] = "command-id";
+                e.Id = "event-id";
                 return e;
             }))
             {

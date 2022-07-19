@@ -21,9 +21,10 @@ export class ProxyKernel extends Kernel {
         };
     }
 
-    private delegatePublication(envelope: contracts.KernelEventEnvelope, invocationContext: KernelInvocationContext, handledEvents: Set<contracts.KernelEventEnvelope>): void {
-        if (this.hasSameOrigin(envelope) && !handledEvents.has(envelope)) {
-            handledEvents.add(envelope);
+    private delegatePublication(envelope: contracts.KernelEventEnvelope, invocationContext: KernelInvocationContext, handledEvents: Set<string>): void {
+        connection.ensureEventId(envelope);
+        if (this.hasSameOrigin(envelope) && !handledEvents.has(envelope.id!)) {
+            handledEvents.add(envelope.id!);
             invocationContext.publish(envelope);
         }
     }
@@ -41,7 +42,7 @@ export class ProxyKernel extends Kernel {
         const commandId = commandInvocation.commandEnvelope.id;
         const completionSource = new PromiseCompletionSource<contracts.KernelEventEnvelope>();
         // fix : is this the right way? We are trying to avoid forwarding events we just did forward
-        const handledEvents = new Set<contracts.KernelEventEnvelope>();
+        const handledEvents = new Set<string>();
         let eventSubscription = this._receiver.subscribe({
             next: (envelope) => {
                 if (connection.isKernelEventEnvelope(envelope)) {

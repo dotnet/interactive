@@ -469,6 +469,7 @@ Microsoft.DotNet.Interactive.Connection
     public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> CreateKernelAsync(System.String kernelName)
   public abstract class IKernelEventEnvelope
     public Microsoft.DotNet.Interactive.Events.KernelEvent Event { get;}
+    public System.String EventId { get;}
     public System.String EventType { get;}
   public abstract class KernelClientBase
     public System.IObservable<Microsoft.DotNet.Interactive.Events.KernelEvent> KernelEvents { get;}
@@ -517,6 +518,7 @@ Microsoft.DotNet.Interactive.Connection
     public static System.String Serialize(Microsoft.DotNet.Interactive.Events.KernelEvent event)
     public static System.String Serialize(IKernelEventEnvelope eventEnvelope)
     public System.String CommandType { get;}
+    public System.String EventId { get;}
     public System.String EventType { get;}
   public class KernelEventEnvelope<T> : KernelEventEnvelope, IKernelEventEnvelope
     .ctor(T event)
@@ -609,6 +611,7 @@ Microsoft.DotNet.Interactive.Events
     Snippet=2
   public abstract class KernelEvent
     public Microsoft.DotNet.Interactive.Commands.KernelCommand Command { get;}
+    public System.String Id { get; set;}
     public System.String ToString()
   public class KernelExtensionLoaded : KernelEvent
     .ctor(Microsoft.DotNet.Interactive.Commands.KernelCommand command)

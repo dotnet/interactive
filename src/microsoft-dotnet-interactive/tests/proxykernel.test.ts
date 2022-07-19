@@ -79,7 +79,7 @@ describe("proxyKernel", () => {
         let command: contracts.KernelCommandEnvelope = { commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "1+2" } };
         await kernel.send(command);
 
-        expect(events[0]).to.be.deep.eq({
+        expect(events[0]).to.deep.include({
             eventType: contracts.ValueProducedType,
             event: {
                 name: "a",
@@ -91,7 +91,7 @@ describe("proxyKernel", () => {
             command: command
         });
 
-        expect(events[1]).to.be.deep.eq({
+        expect(events[1]).to.deep.include({
             eventType: contracts.ValueProducedType,
             event: {
                 name: "b",
@@ -128,7 +128,7 @@ describe("proxyKernel", () => {
         let command: contracts.KernelCommandEnvelope = { commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "1+2" } };
         await kernel.send(command);
 
-        expect(events[0]).to.be.deep.eq({
+        expect(events[0]).to.be.deep.include({
             eventType: contracts.ValueProducedType,
             event: {
                 name: "a",
@@ -140,7 +140,7 @@ describe("proxyKernel", () => {
             command: { ...command, id: "newId" }
         });
 
-        expect(events[1]).to.be.deep.eq({
+        expect(events[1]).to.be.deep.include({
             eventType: contracts.ValueProducedType,
             event: {
                 name: "b",
