@@ -8,5 +8,8 @@
     "targetKernelName": "vscode",
     "originUri": null,
     "destinationUri": null
-  }
+  },
+  "routingSlip": [
+    "kernel://somelocation/kernelName"
+  ]
 }

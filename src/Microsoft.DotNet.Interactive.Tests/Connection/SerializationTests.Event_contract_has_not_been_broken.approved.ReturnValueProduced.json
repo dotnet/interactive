@@ -19,7 +19,8 @@
       "targetKernelName": "csharp",
       "originUri": null,
       "destinationUri": null
-    }
+    },
+    "routingSlip": []
   },
   "id": "event-id"
 }

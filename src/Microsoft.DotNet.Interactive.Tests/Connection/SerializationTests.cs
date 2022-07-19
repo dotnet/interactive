@@ -150,6 +150,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
             foreach (var command in commands().Select(c =>
             {
                 c.Properties["id"] = "command-id";
+                c.RoutingSlip.TryAdd(new Uri("kernel://somelocation/kernelName", UriKind.Absolute));
                 return c;
             }))
             {

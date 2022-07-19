@@ -210,7 +210,8 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
                 command = commandEnvelope.Command,
                 commandType = commandEnvelope.CommandType,
                 token = eventEnvelope.Event.Command.GetOrCreateToken(),
-                id = commandEnvelope.CommandId
+                id = commandEnvelope.CommandId,
+                routingSlip = commandEnvelope.Command.RoutingSlip.Select(uri => uri.AbsoluteUri).ToArray()
             };
         }
 
