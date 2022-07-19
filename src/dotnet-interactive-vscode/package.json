@@ -8,11 +8,7 @@
   "author": "Microsoft Corporation",
   "license": "MIT",
   "enabledApiProposals": [
-    "notebookCellExecutionState",
-    "notebookControllerKind",
-    "notebookDebugOptions",
     "notebookMessaging",
-    "notebookMime",
     "notebookWorkspaceEdit"
   ],
   "preview": true,
