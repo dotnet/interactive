@@ -5,7 +5,6 @@ import * as cp from 'child_process';
 import {
     CommandFailedType,
     CommandSucceededType,
-    DisposableSubscription,
     DiagnosticLogEntryProducedType,
     DiagnosticLogEntryProduced,
     KernelCommandEnvelopeHandler,
@@ -19,8 +18,10 @@ import { ProcessStart } from './interfaces';
 import { ReportChannel } from './interfaces/vscode-like';
 import { LineReader } from './lineReader';
 import { isNotNull, parse, stringify } from './utilities';
-import { isKernelCommandEnvelope, isKernelEventEnvelope } from "./dotnet-interactive/utilities";
 import { DotnetInteractiveChannel } from './DotnetInteractiveChannel';
+import { IKernelCommandAndEventReceiver, IKernelCommandAndEventSender, isKernelCommandEnvelope, isKernelEventEnvelope, KernelCommandAndEventReceiver, KernelCommandAndEventSender, KernelCommandOrEventEnvelope } from './dotnet-interactive/connection';
+import { DisposableSubscription } from './dotnet-interactive/disposables';
+import { Subject } from 'rxjs';
 
 export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
     private childProcess: cp.ChildProcessWithoutNullStreams | null;
@@ -30,12 +31,24 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
     private commandHandler: KernelCommandEnvelopeHandler = () => Promise.resolve();
     private eventSubscribers: Array<KernelEventEnvelopeObserver> = [];
     private pingTimer: NodeJS.Timer | null = null;
+    private _senderSubject: Subject<KernelCommandOrEventEnvelope>;
+    private _receiverSubject: Subject<KernelCommandOrEventEnvelope>;
+    private _sender: IKernelCommandAndEventSender;
+    private _receiver: IKernelCommandAndEventReceiver;
 
     constructor(
         notebookPath: string,
         processStart: ProcessStart,
         private diagnosticChannel: ReportChannel,
         private processExited: (pid: number, code: number | undefined, signal: string | undefined) => void) {
+
+
+        this._senderSubject = new Subject<KernelCommandOrEventEnvelope>();
+        this._receiverSubject = new Subject<KernelCommandOrEventEnvelope>();
+
+        this._sender = KernelCommandAndEventSender.FromObserver(this._senderSubject);
+        this._receiver = KernelCommandAndEventReceiver.FromObservable(this._receiverSubject);
+
         // prepare root event handler
         this.lineReader = new LineReader();
         this.lineReader.subscribe(line => this.handleLine(line));
@@ -80,6 +93,14 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
         });
     }
 
+    public get sender() {
+        return this._sender;
+    }
+
+    public get receiver() {
+        return this._receiver;
+    }
+
     private async handleLine(line: string): Promise<void> {
         try {
             const garbage = parse(line);
@@ -102,6 +123,7 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
                     break;
             }
 
+            // diego : why in this order?
             for (let i = this.eventSubscribers.length - 1; i >= 0; i--) {
                 this.eventSubscribers[i](envelope);
             }
@@ -174,7 +196,6 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
                             }, 500);
                         }
                     }
-
                     resolve();
                 } catch (e) {
                     reject(e);

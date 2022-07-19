@@ -2,14 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as contracts from './dotnet-interactive/contracts';
-import * as genericChannel from './dotnet-interactive/genericChannel';
 import * as vscodeLike from './interfaces/vscode-like';
 import { ClientMapper } from './clientMapper';
 import { ProxyKernel } from './dotnet-interactive/proxyKernel';
 import { Logger } from './dotnet-interactive/logger';
+import { PromiseCompletionSource } from './dotnet-interactive/promiseCompletionSource';
 
 export type MessageHandler = {
-    waitingOnMessages: genericChannel.PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope> | null;
+    waitingOnMessages: PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope> | null;
     envelopeQueue: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[];
 };
 

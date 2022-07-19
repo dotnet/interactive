@@ -13,7 +13,6 @@ import {
     DisplayEvent,
     DisplayedValueProducedType,
     DisplayedValueUpdatedType,
-    DisposableSubscription,
     HoverTextProduced,
     HoverTextProducedType,
     KernelCommand,
@@ -22,7 +21,6 @@ import {
     KernelEventEnvelope,
     KernelEventEnvelopeObserver,
     KernelEventType,
-    KernelCommandAndEventChannel,
     RequestCompletions,
     RequestCompletionsType,
     RequestDiagnostics,
@@ -56,6 +54,9 @@ import * as vscodeLike from './interfaces/vscode-like';
 import { CompositeKernel } from './dotnet-interactive/compositeKernel';
 import { Guid } from './dotnet-interactive/tokenGenerator';
 import { KernelHost } from './dotnet-interactive/kernelHost';
+import { KernelCommandAndEventChannel } from './DotnetInteractiveChannel';
+import { isKernelEventEnvelope } from './dotnet-interactive/connection';
+import { DisposableSubscription } from './dotnet-interactive/disposables';
 
 export interface ErrorOutputCreator {
     (message: string, outputId?: string): vscodeLike.NotebookCellOutput;
@@ -75,10 +76,16 @@ export class InteractiveClient {
     private _kernel: CompositeKernel;
     private _kernelHost: KernelHost;
     constructor(readonly config: InteractiveClientConfiguration) {
-        config.channel.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
+        config.channel.receiver.subscribe({
+            next: (envelope) => {
+                if (isKernelEventEnvelope(envelope)) {
+                    this.eventListener(envelope)
+                }
+            }
+        });
 
         this._kernel = new CompositeKernel("vscode");
-        this._kernelHost = new KernelHost(this._kernel, config.channel, "kernel://vscode");
+        this._kernelHost = new KernelHost(this._kernel, config.channel.sender, config.channel.receiver, "kernel://vscode");
 
         this._kernelHost.createProxyKernelOnDefaultConnector({ localName: 'csharp', aliases: ['c#', 'C#'], supportedDirectives: [], supportedKernelCommands: [] });
         this._kernelHost.createProxyKernelOnDefaultConnector({ localName: 'fsharp', aliases: ['fs', 'F#'], supportedDirectives: [], supportedKernelCommands: [] });
@@ -346,7 +353,7 @@ export class InteractiveClient {
                     }
                 }
             });
-            await this.config.channel.submitCommand({ command, commandType, token, id });
+            await this.config.channel.sender.send({ command, commandType, token, id });
         });
     }
 
@@ -375,7 +382,7 @@ export class InteractiveClient {
                         break;
                 }
             });
-            this.config.channel.submitCommand({ command, commandType, token, id }).catch(e => {
+            this.config.channel.sender.send({ command, commandType, token, id }).catch(e => {
                 // only report a failure if it's not a `CommandFailed` event from above (which has already called `reject()`)
                 if (!failureReported) {
                     reject(e);
