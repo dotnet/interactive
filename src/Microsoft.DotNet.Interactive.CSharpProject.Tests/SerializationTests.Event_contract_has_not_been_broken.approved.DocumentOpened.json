@@ -15,7 +15,10 @@
       "targetKernelName": null,
       "originUri": null,
       "destinationUri": null
-    }
+    },
+    "routingSlip": [
+      "kernel://somelocation/kernelName"
+    ]
   },
   "id": "event-id"
 }
