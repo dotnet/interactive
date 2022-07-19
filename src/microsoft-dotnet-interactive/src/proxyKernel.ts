@@ -6,6 +6,7 @@ import { Logger } from "./logger";
 import { Kernel, IKernelCommandHandler, IKernelCommandInvocation } from "./kernel";
 import * as connection from "./connection";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
+import { KernelInvocationContext } from "./kernelInvocationContext";
 export class ProxyKernel extends Kernel {
 
     constructor(override readonly name: string, private readonly _sender: connection.IKernelCommandAndEventSender, private readonly _receiver: connection.IKernelCommandAndEventReceiver) {
@@ -18,6 +19,21 @@ export class ProxyKernel extends Kernel {
                 return this._commandHandler(invocation);
             }
         };
+    }
+
+    private delegatePublication(envelope: contracts.KernelEventEnvelope, invocationContext: KernelInvocationContext, handledEvents: Set<contracts.KernelEventEnvelope>): void {
+        if (this.hasSameOrigin(envelope) && !handledEvents.has(envelope)) {
+            handledEvents.add(envelope);
+            invocationContext.publish(envelope);
+        }
+    }
+
+    private hasSameOrigin(envelope: contracts.KernelEventEnvelope): boolean {
+        let commandOriginUri = envelope.command?.command?.originUri ?? this.kernelInfo.uri;
+        if (commandOriginUri === this.kernelInfo.uri) {
+            return true;
+        }
+        return commandOriginUri === null;
     }
 
     private async _commandHandler(commandInvocation: IKernelCommandInvocation): Promise<void> {
@@ -36,17 +52,11 @@ export class ProxyKernel extends Kernel {
                                 if (envelope.command!.id === commandId) {
                                     completionSource.resolve(envelope);
                                 } else {
-                                    if (!handledEvents.has(envelope)) {
-                                        handledEvents.add(envelope);
-                                        commandInvocation.context.publish(envelope);
-                                    }
+                                    this.delegatePublication(envelope, commandInvocation.context, handledEvents);
                                 }
                                 break;
                             default:
-                                if (!handledEvents.has(envelope)) {
-                                    handledEvents.add(envelope);
-                                    commandInvocation.context.publish(envelope);
-                                }
+                                this.delegatePublication(envelope, commandInvocation.context, handledEvents);
                                 break;
                         }
                     }
