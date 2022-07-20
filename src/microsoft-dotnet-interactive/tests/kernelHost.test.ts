@@ -61,7 +61,6 @@ describe("kernelHost",
             vscodeHost.createProxyKernelOnDefaultConnector({ localName: "python", remoteUri: "kernel://remote/python", aliases: [], supportedDirectives: [], supportedKernelCommands: [] });
             vscodeHost.createProxyKernelOnDefaultConnector({ localName: "go", remoteUri: "kernel://remote/go", aliases: [], supportedDirectives: [], supportedKernelCommands: [] });
 
-
             vscodeKernel.subscribeToKernelEvents(e => {
                 events.push(e);
             });

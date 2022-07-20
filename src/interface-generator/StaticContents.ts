@@ -1,8 +1,8 @@
 ﻿export interface KernelEventEnvelope {
     eventType: KernelEventType;
     event: KernelEvent;
-    id?: string;
     command?: KernelCommandEnvelope;
+    routingSlip?: Set<string>;
 }
 
 export interface KernelCommandEnvelope {
@@ -10,6 +10,7 @@ export interface KernelCommandEnvelope {
     id?: string;
     commandType: KernelCommandType;
     command: KernelCommand;
+    routingSlip?: Set<string>;
 }
 
 export interface KernelEventEnvelopeObserver {

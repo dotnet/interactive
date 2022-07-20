@@ -1,9 +1,11 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+import { tryAddUriToRoutingSlip } from "./connection";
 import * as contracts from "./contracts";
-import { IKernelCommandInvocation, Kernel } from "./kernel";
+import { getKernelUri, IKernelCommandInvocation, Kernel } from "./kernel";
 import { KernelHost } from "./kernelHost";
+import { KernelInvocationContext } from "./kernelInvocationContext";
 
 export class CompositeKernel extends Kernel {
 
@@ -65,6 +67,7 @@ export class CompositeKernel extends Kernel {
         kernel.parentKernel = this;
         kernel.rootKernel = this.rootKernel;
         kernel.subscribeToKernelEvents(event => {
+            tryAddUriToRoutingSlip(event, getKernelUri(this));
             this.publishEvent(event);
         });
         this._namesTokernelMap.set(kernel.name.toLowerCase(), kernel);
@@ -120,12 +123,34 @@ export class CompositeKernel extends Kernel {
             ? this
             : this.getHandlingKernel(commandEnvelope);
 
+        const invocationContext = KernelInvocationContext.current;
+        const previusoHandlingKernel = invocationContext?.handlingKernel ?? null;
+
+
+
         if (kernel === this) {
-            return super.handleCommand(commandEnvelope);
+            if (invocationContext !== null) {
+                invocationContext.handlingKernel = kernel;
+            }
+            return super.handleCommand(commandEnvelope).finally(() => {
+                if (invocationContext !== null) {
+                    invocationContext.handlingKernel = previusoHandlingKernel;
+                }
+            });
         } else if (kernel) {
-            return kernel.handleCommand(commandEnvelope);
+            if (invocationContext !== null) {
+                invocationContext.handlingKernel = kernel;
+            }
+            return kernel.handleCommand(commandEnvelope).finally(() => {
+                if (invocationContext !== null) {
+                    invocationContext.handlingKernel = previusoHandlingKernel;
+                }
+            });
         }
 
+        if (invocationContext !== null) {
+            invocationContext.handlingKernel = previusoHandlingKernel;
+        }
         return Promise.reject(new Error("Kernel not found: " + commandEnvelope.command.targetKernelName));
     }
 

@@ -3,7 +3,7 @@
 
 import * as contracts from "./contracts";
 import { Logger } from "./logger";
-import { Kernel, IKernelCommandHandler, IKernelCommandInvocation } from "./kernel";
+import { Kernel, IKernelCommandHandler, IKernelCommandInvocation, getKernelUri } from "./kernel";
 import * as connection from "./connection";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
 import { KernelInvocationContext } from "./kernelInvocationContext";
@@ -21,11 +21,12 @@ export class ProxyKernel extends Kernel {
         };
     }
 
-    private delegatePublication(envelope: contracts.KernelEventEnvelope, invocationContext: KernelInvocationContext, handledEvents: Set<string>): void {
-        connection.ensureEventId(envelope);
-        if (this.hasSameOrigin(envelope) && !handledEvents.has(envelope.id!)) {
-            handledEvents.add(envelope.id!);
-            invocationContext.publish(envelope);
+    private delegatePublication(envelope: contracts.KernelEventEnvelope, invocationContext: KernelInvocationContext): void {
+        if (this.hasSameOrigin(envelope)) {
+            if (envelope.routingSlip == undefined || !envelope.routingSlip.has(getKernelUri(this))) {
+                connection.tryAddUriToRoutingSlip(envelope, getKernelUri(this));
+                invocationContext.publish(envelope);
+            }
         }
     }
 
@@ -42,22 +43,26 @@ export class ProxyKernel extends Kernel {
         const commandId = commandInvocation.commandEnvelope.id;
         const completionSource = new PromiseCompletionSource<contracts.KernelEventEnvelope>();
         // fix : is this the right way? We are trying to avoid forwarding events we just did forward
-        const handledEvents = new Set<string>();
         let eventSubscription = this._receiver.subscribe({
             next: (envelope) => {
                 if (connection.isKernelEventEnvelope(envelope)) {
                     if (envelope.command!.token === commandToken) {
+
+                        for (const kernelUri in envelope.command!.routingSlip!) {
+                            connection.tryAddUriToRoutingSlip(commandInvocation.commandEnvelope, kernelUri);
+                        }
+
                         switch (envelope.eventType) {
                             case contracts.CommandFailedType:
                             case contracts.CommandSucceededType:
                                 if (envelope.command!.id === commandId) {
                                     completionSource.resolve(envelope);
                                 } else {
-                                    this.delegatePublication(envelope, commandInvocation.context, handledEvents);
+                                    this.delegatePublication(envelope, commandInvocation.context);
                                 }
                                 break;
                             default:
-                                this.delegatePublication(envelope, commandInvocation.context, handledEvents);
+                                this.delegatePublication(envelope, commandInvocation.context);
                                 break;
                         }
                     }
@@ -73,6 +78,7 @@ export class ProxyKernel extends Kernel {
                     commandInvocation.commandEnvelope.command.destinationUri ??= kernelInfo.remoteUri;
                 }
             }
+
 
             this._sender.send(commandInvocation.commandEnvelope);
             Logger.default.info(`proxy ${this.name} about to await with token ${commandToken}`);

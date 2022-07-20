@@ -1,10 +1,10 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { ensureEventId } from "./connection";
+import { tryAddUriToRoutingSlip } from "./connection";
 import * as contracts from "./contracts";
 import { Disposable } from "./disposables";
-import { IKernelEventObserver, Kernel } from "./kernel";
+import { getKernelUri, IKernelEventObserver, Kernel } from "./kernel";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
 import { TokenGenerator } from "./tokenGenerator";
 
@@ -19,7 +19,17 @@ export class KernelInvocationContext implements Disposable {
     private readonly _tokenGenerator: TokenGenerator = new TokenGenerator();
     private readonly _eventObservers: Map<string, IKernelEventObserver> = new Map();
     private _isComplete = false;
-    public handlingKernel: Kernel | null = null;
+    private _handlingKernel: Kernel | null = null;
+    public get handlingKernel() {
+        return this._handlingKernel;
+    };
+
+    public set handlingKernel(value: Kernel | null) {
+        if (value !== null) {
+            this._handlingKernel;//?
+        }
+        this._handlingKernel = value;
+    }
     private completionSource = new PromiseCompletionSource<void>();
     static establish(kernelCommandInvocation: contracts.KernelCommandEnvelope): KernelInvocationContext {
         let current = KernelInvocationContext._current;
@@ -101,7 +111,15 @@ export class KernelInvocationContext implements Disposable {
 
     private internalPublish(kernelEvent: contracts.KernelEventEnvelope) {
         let command = kernelEvent.command;
-        ensureEventId(kernelEvent);
+
+        if (this.handlingKernel) {
+            tryAddUriToRoutingSlip(kernelEvent, getKernelUri(this.handlingKernel));
+            kernelEvent.routingSlip;//?
+
+        } else {
+            kernelEvent;//?
+        }
+
         if (command === null ||
             areCommandsTheSame(command!, this._commandEnvelope) ||
             this._childCommands.includes(command!)) {

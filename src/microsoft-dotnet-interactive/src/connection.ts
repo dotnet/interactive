@@ -54,11 +54,8 @@ export class KernelCommandAndEventSender implements IKernelCommandAndEventSender
         this._remoteHostUri = remoteHostUri;
         this._sender = new rxjs.Subject<KernelCommandOrEventEnvelope>();
     }
-    send(kernelEventEnvelope: KernelCommandOrEventEnvelope): Promise<void> {
-        if (isKernelEventEnvelope(kernelEventEnvelope)) {
-            ensureEventId(kernelEventEnvelope);
-        }
-        this._sender.next(kernelEventEnvelope);
+    send(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope): Promise<void> {
+        this._sender.next(kernelCommandOrEventEnvelope);
         return Promise.resolve();
     }
     get remoteHostUri(): string {
@@ -71,8 +68,15 @@ export class KernelCommandAndEventSender implements IKernelCommandAndEventSender
     }
 }
 
-export function ensureEventId(eventEnvelope: contracts.KernelEventEnvelope) {
-    if (eventEnvelope.id === undefined) {
-        eventEnvelope.id = Guid.create().toString();
+export function tryAddUriToRoutingSlip(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope, kernelUri: string): boolean {
+    if (!kernelCommandOrEventEnvelope.routingSlip) {
+        kernelCommandOrEventEnvelope.routingSlip = new Set<string>();
     }
+
+    var canAdd = !kernelCommandOrEventEnvelope.routingSlip.has(kernelUri)
+    if (canAdd) {
+        kernelCommandOrEventEnvelope.routingSlip.add(kernelUri);
+    }
+
+    return canAdd;
 }

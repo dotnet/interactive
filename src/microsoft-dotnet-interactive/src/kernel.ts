@@ -9,6 +9,7 @@ import { CompositeKernel } from "./compositeKernel";
 import { KernelScheduler } from "./kernelScheduler";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
 import * as disposables from "./disposables";
+import { tryAddUriToRoutingSlip } from "./connection";
 
 export interface IKernelCommandInvocation {
     commandEnvelope: contracts.KernelCommandEnvelope;
@@ -129,14 +130,17 @@ export class Kernel {
                 return this.publishEvent(e);
             });
         }
-
+        let previousHandlingKernel = context.handlingKernel;
         try {
+            context.handlingKernel = this;
+            tryAddUriToRoutingSlip(commandEnvelope, getKernelUri(this));
             await this.handleCommand(commandEnvelope);
         }
         catch (e) {
             context.fail((<any>e)?.message || JSON.stringify(e));
         }
         finally {
+            context.handlingKernel = previousHandlingKernel;
             if (contextEventsSubscription) {
                 contextEventsSubscription.dispose();
             }
@@ -150,6 +154,7 @@ export class Kernel {
     handleCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
             let context = KernelInvocationContext.establish(commandEnvelope);//?
+            const previoudHendlingKernel = context.handlingKernel;
             context.handlingKernel = this;
             let isRootCommand = areCommandsTheSame(context.commandEnvelope, commandEnvelope);
 
@@ -160,6 +165,7 @@ export class Kernel {
                     await handler.handle({ commandEnvelope: commandEnvelope, context });
 
                     context.complete(commandEnvelope);
+                    context.handlingKernel = previoudHendlingKernel;
                     if (isRootCommand) {
                         context.dispose();
                     }
@@ -169,6 +175,7 @@ export class Kernel {
                 }
                 catch (e) {
                     context.fail((<any>e)?.message || JSON.stringify(e));
+                    context.handlingKernel = previoudHendlingKernel;
                     if (isRootCommand) {
                         context.dispose();
                     }
@@ -176,6 +183,7 @@ export class Kernel {
                     reject(e);
                 }
             } else {
+                context.handlingKernel = previoudHendlingKernel;
                 if (isRootCommand) {
                     context.dispose();
                 }
@@ -276,4 +284,8 @@ export async function submitCommandAndGetResult<TEvent extends contracts.KernelE
     }
 
     return completionSource.promise;
+}
+
+export function getKernelUri(kernel: Kernel): string {
+    return kernel.kernelInfo.uri ?? `kernel://local/${kernel.kernelInfo.localName}`;
 }
