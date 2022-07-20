@@ -7,7 +7,7 @@ import { JavascriptKernel } from "../src/javascriptKernel";
 import * as contracts from "../src/contracts";
 
 describe("kernelRouting", () => {
-    it.only("commands routing slip contains kernels that have been traversed", async () => {
+    it("commands routing slip contains kernels that have been traversed", async () => {
         let composite = new CompositeKernel("vscode");
         composite.add(new JavascriptKernel("javascript"));
         composite.add(new JavascriptKernel("typescript"));

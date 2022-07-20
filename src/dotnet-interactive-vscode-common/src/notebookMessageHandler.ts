@@ -7,6 +7,7 @@ import { ClientMapper } from './clientMapper';
 import { ProxyKernel } from './dotnet-interactive/proxyKernel';
 import { Logger } from './dotnet-interactive/logger';
 import { PromiseCompletionSource } from './dotnet-interactive/promiseCompletionSource';
+import { KernelCommandAndEventReceiver, KernelCommandAndEventSender } from './dotnet-interactive';
 
 export type MessageHandler = {
     waitingOnMessages: PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope> | null;
@@ -36,6 +37,11 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, messageHandlerMap: M
         messageHandlerMap.set(documentUriString, messageHandler);
     }
 
+    const documentToWebview = KernelCommandAndEventSender.FromWriter(envelope => {
+        controllerPostMessage({ envelope });
+    });
+
+    const WebviewToDocumentReceiver = KernelCommandAndEventReceiver
     const documentWebViewTrasport = new genericChannel.GenericChannel(envelope => {
         controllerPostMessage({ envelope });
         return Promise.resolve();

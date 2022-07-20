@@ -46,6 +46,15 @@ export class KernelCommandAndEventReceiver implements IKernelCommandAndEventRece
     public static FromObservable(observable: rxjs.Observable<KernelCommandOrEventEnvelope>): IKernelCommandAndEventReceiver {
         return new KernelCommandAndEventReceiver(observable);
     }
+
+    public static FromEventListener(args: { map: (data: Event) => KernelCommandOrEventEnvelope, eventTarget: EventTarget, event: string }): IKernelCommandAndEventReceiver {
+        let subject = new rxjs.Subject<KernelCommandOrEventEnvelope>();
+        args.eventTarget.addEventListener(args.event, (e: Event) => {
+            let mapped = args.map(e);
+            subject.next(mapped);
+        });
+        return new KernelCommandAndEventReceiver(subject);
+    }
 }
 export class KernelCommandAndEventSender implements IKernelCommandAndEventSender {
     private _remoteHostUri: string;
@@ -64,6 +73,14 @@ export class KernelCommandAndEventSender implements IKernelCommandAndEventSender
     public static FromObserver(observer: rxjs.Observer<KernelCommandOrEventEnvelope>): IKernelCommandAndEventSender {
         const sender = new KernelCommandAndEventSender("");
         sender._sender.subscribe(observer);
+        return sender;
+    }
+
+    public static FromWriter(writer: (kernelEventEnvelope: KernelCommandOrEventEnvelope) => void): IKernelCommandAndEventSender {
+        const sender = new KernelCommandAndEventSender("");
+        sender._sender.subscribe({
+            next: writer
+        });
         return sender;
     }
 }
