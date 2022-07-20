@@ -5,7 +5,6 @@ import { IKernelCommandAndEventReceiver, IKernelCommandAndEventSender } from "./
 import { Disposable } from "./dotnet-interactive/disposables";
 
 export interface KernelCommandAndEventChannel extends Disposable {
-
     sender: IKernelCommandAndEventSender,
     receiver: IKernelCommandAndEventReceiver
 }

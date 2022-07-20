@@ -1,46 +1,39 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelEventEnvelopeObserver, DisposableSubscription, KernelEventEnvelope, KernelCommandEnvelopeHandler, KernelCommandEnvelope } from '../../src/vscode-common/dotnet-interactive/contracts';
+import * as rxjs from 'rxjs';
+import { IKernelCommandAndEventSender, IKernelCommandAndEventReceiver, KernelCommandAndEventSender, KernelCommandOrEventEnvelope, KernelCommandAndEventReceiver, isKernelCommandEnvelope } from '../../src/vscode-common/dotnet-interactive';
+import { KernelEventEnvelope } from '../../src/vscode-common/dotnet-interactive/contracts';
 import { DotnetInteractiveChannel } from '../../src/vscode-common/DotnetInteractiveChannel';
 // executes the given callback for the specified commands
 export class CallbackTestTestDotnetInteractiveChannel implements DotnetInteractiveChannel {
-    private theObserver: KernelEventEnvelopeObserver | undefined;
+    private _senderSubject: rxjs.Subject<KernelCommandOrEventEnvelope>;
+    private _receiverSubject: rxjs.Subject<KernelCommandOrEventEnvelope>;
 
     constructor(readonly fakedCommandCallbacks: { [key: string]: () => KernelEventEnvelope }) {
-    }
+        this._senderSubject = new rxjs.Subject<KernelCommandOrEventEnvelope>();
+        this._receiverSubject = new rxjs.Subject<KernelCommandOrEventEnvelope>();
 
-    subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription {
-        this.theObserver = observer;
-        return {
-            dispose: () => { }
-        };
-    }
+        this.sender = KernelCommandAndEventSender.FromObserver(this._senderSubject);
+        this.receiver = KernelCommandAndEventReceiver.FromObservable(this._receiverSubject);
 
-    setCommandHandler(handler: KernelCommandEnvelopeHandler) {
+        this._senderSubject.subscribe({
+            next: (envelope) => {
+                if (isKernelCommandEnvelope(envelope)) {
+                    const commandCallback = this.fakedCommandCallbacks[envelope.commandType];
+                    if (!commandCallback) {
+                        throw new Error(`No callback specified for command '${envelope.commandType}'`);
+                    }
 
-    }
-
-    async submitCommand(commandEnvelope: KernelCommandEnvelope): Promise<void> {
-        return new Promise((resolve, reject) => {
-            const commandCallback = this.fakedCommandCallbacks[commandEnvelope.commandType];
-            if (!commandCallback) {
-                reject(`No callback specified for command '${commandEnvelope.commandType}'`);
-                return;
+                    const eventEnvelope = commandCallback();
+                    this._receiverSubject.next(eventEnvelope);
+                }
             }
-
-            const eventEnvelope = commandCallback();
-            if (this.theObserver) {
-                this.theObserver(eventEnvelope);
-            }
-
-            resolve();
         });
     }
 
-    publishKernelEvent(eventEnvelope: KernelEventEnvelope): Promise<void> {
-        throw new Error("Stdio channel doesn't currently support a back channel");
-    }
+    sender: IKernelCommandAndEventSender;
+    receiver: IKernelCommandAndEventReceiver;
 
     waitForReady(): Promise<void> {
         return Promise.resolve();

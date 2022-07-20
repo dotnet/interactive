@@ -48,6 +48,7 @@ export function configure(global?: any) {
 
     const remoteToLocal = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
     const localToRemote = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
+
     localToRemote.subscribe({
         next: envelope => {
             // @ts-ignore

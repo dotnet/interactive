@@ -4,7 +4,6 @@
 import * as rxjs from 'rxjs';
 import * as contracts from './contracts';
 import * as disposables from './disposables';
-import { Guid } from './tokenGenerator';
 
 export type KernelCommandOrEventEnvelope = contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope;
 

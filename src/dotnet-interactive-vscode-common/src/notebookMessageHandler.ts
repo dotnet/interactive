@@ -1,20 +1,16 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import * as contracts from './dotnet-interactive/contracts';
 import * as vscodeLike from './interfaces/vscode-like';
 import { ClientMapper } from './clientMapper';
 import { ProxyKernel } from './dotnet-interactive/proxyKernel';
 import { Logger } from './dotnet-interactive/logger';
-import { PromiseCompletionSource } from './dotnet-interactive/promiseCompletionSource';
-import { KernelCommandAndEventReceiver, KernelCommandAndEventSender } from './dotnet-interactive';
+import { isKernelCommandEnvelope, isKernelEventEnvelope, KernelCommandAndEventReceiver, KernelCommandAndEventSender, KernelCommandOrEventEnvelope } from './dotnet-interactive';
+import * as rxjs from 'rxjs';
 
-export type MessageHandler = {
-    waitingOnMessages: PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope> | null;
-    envelopeQueue: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[];
-};
 
-export function hashBangConnect(clientMapper: ClientMapper, messageHandlerMap: Map<string, MessageHandler>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
+
+export function hashBangConnect(clientMapper: ClientMapper, messageHandlerMap: Map<string, rxjs.Subject<KernelCommandOrEventEnvelope>>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
     Logger.default.info(`handling #!connect for ${documentUri.toString()}`);
     hashBangConnectPrivate(clientMapper, messageHandlerMap, controllerPostMessage, documentUri);
     clientMapper.onClientCreate((clientUri, _client) => {
@@ -26,53 +22,43 @@ export function hashBangConnect(clientMapper: ClientMapper, messageHandlerMap: M
     });
 }
 
-function hashBangConnectPrivate(clientMapper: ClientMapper, messageHandlerMap: Map<string, MessageHandler>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
+function hashBangConnectPrivate(clientMapper: ClientMapper, messageHandlerMap: Map<string, rxjs.Subject<KernelCommandOrEventEnvelope>>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
     const documentUriString = documentUri.toString();
     let messageHandler = messageHandlerMap.get(documentUriString);
     if (!messageHandler) {
-        messageHandler = {
-            waitingOnMessages: null,
-            envelopeQueue: [],
-        };
+        messageHandler = new rxjs.Subject<KernelCommandOrEventEnvelope>();
         messageHandlerMap.set(documentUriString, messageHandler);
     }
 
-    const documentToWebview = KernelCommandAndEventSender.FromWriter(envelope => {
+    const documentToWebviewSender = KernelCommandAndEventSender.FromWriter(envelope => {
         controllerPostMessage({ envelope });
     });
 
-    const WebviewToDocumentReceiver = KernelCommandAndEventReceiver
-    const documentWebViewTrasport = new genericChannel.GenericChannel(envelope => {
-        controllerPostMessage({ envelope });
-        return Promise.resolve();
-    }, () => {
-        let envelope = messageHandler!.envelopeQueue.shift();
-        if (envelope) {
-            return Promise.resolve<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>(envelope);
-        }
-        else {
-            messageHandler!.waitingOnMessages = new genericChannel.PromiseCompletionSource<contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope>();
-            return messageHandler!.waitingOnMessages.promise;
-        }
-    });
+    const WebviewToDocumentReceiver = KernelCommandAndEventReceiver.FromObservable(messageHandler);
+
 
     clientMapper.getOrAddClient(documentUri).then(client => {
-        const proxyJsKernel = new ProxyKernel('javascript', documentWebViewTrasport);
+        const proxyJsKernel = new ProxyKernel('javascript', documentToWebviewSender, WebviewToDocumentReceiver);
         client.kernel.add(proxyJsKernel, ['js']);
 
         client.kernelHost.registerRemoteUriForProxy(proxyJsKernel.name, "kernel://webview/javascript");
 
-        documentWebViewTrasport.setCommandHandler(envelope => {
-            const kernel = client.kernelHost.getKernel(envelope);
-            kernel.send(envelope);
-            return Promise.resolve();
+        WebviewToDocumentReceiver.subscribe({
+            next: envelope => {
+                if (isKernelCommandEnvelope(envelope)) {
+                    const kernel = client.kernelHost.getKernel(envelope);
+                    kernel.send(envelope);
+                }
+            }
         });
 
-        client.channel.subscribeToKernelEvents(eventEnvelope => {
-            Logger.default.info(`forwarding event to webview ${JSON.stringify(eventEnvelope)}`);
-            return documentWebViewTrasport.publishKernelEvent(eventEnvelope);
+        client.channel.receiver.subscribe({
+            next: envelope => {
+                if (isKernelEventEnvelope(envelope)) {
+                    Logger.default.info(`forwarding event to webview ${JSON.stringify(envelope)}`);
+                    documentToWebviewSender.send(envelope);
+                }
+            }
         });
-
-        documentWebViewTrasport.run();
     });
 }
