@@ -9,5 +9,4 @@ public interface IKernelEventEnvelope
 {
     KernelEvent Event { get; }
     string EventType { get; }
-    string EventId { get; }
 }

@@ -207,7 +207,12 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
             foreach (var @event in events().Select(e =>
             {
                 e.Command.Properties["id"] = "command-id";
-                e.Id = "event-id";
+                if (e is not KernelReady)
+                {
+                    e.Command.RoutingSlip.TryAdd(new Uri("kernel://somelocation/kernelName"));
+                }
+               
+                e.RoutingSlip.TryAdd(new Uri("kernel://somelocation/kernelName"));
                 return e;
             }))
             {

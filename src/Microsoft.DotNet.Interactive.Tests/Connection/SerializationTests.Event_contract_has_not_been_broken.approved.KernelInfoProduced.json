@@ -31,7 +31,11 @@
       "originUri": "kernel://pid-1234/csharp",
       "destinationUri": "kernel://webview/javascript"
     },
-    "routingSlip": []
+    "routingSlip": [
+      "kernel://somelocation/kernelName"
+    ]
   },
-  "id": "event-id"
+  "routingSlip": [
+    "kernel://somelocation/kernelName"
+  ]
 }

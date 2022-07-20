@@ -41,8 +41,7 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
     public string CommandType { get; }
 
     public abstract string EventType { get; }
-
-    public string EventId => _event.Id;
+    
 
     KernelEvent IKernelEventEnvelope.Event => _event;
 
@@ -182,11 +181,16 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
 
         var @event = (KernelEvent)ctor.Invoke(ctorParams.ToArray());
 
-        if (jsonObject.TryGetProperty(nameof(SerializationModel.id), out var idJson))
+        if (jsonObject.TryGetProperty(nameof(SerializationModel.routingSlip), out var routingSlipProperty))
         {
-            @event.Id = idJson.GetString();
+            foreach (var routingSlipItem in routingSlipProperty.EnumerateArray())
+            {
+                var uri = new Uri(routingSlipItem.GetString(), UriKind.Absolute);
+
+                @event.RoutingSlip.TryAdd(uri);
+            }
         }
-        
+
         return Create(@event);
     }
 
@@ -219,7 +223,7 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
         {
             @event = eventEnvelope.Event,
             eventType = eventEnvelope.EventType,
-            id = eventEnvelope.EventId,
+            routingSlip = eventEnvelope.Event.RoutingSlip.Select(uri => uri.AbsoluteUri).ToArray(),
             command = commandSerializationModel
         };
 
@@ -236,6 +240,6 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
 
         public KernelCommandEnvelope.SerializationModel command { get; set; }
 
-        public string id { get; set; }
+        public string[] routingSlip { get; set; }
     }
 }

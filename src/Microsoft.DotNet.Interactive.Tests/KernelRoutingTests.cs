@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
@@ -216,6 +217,73 @@ Console.WriteLine(1);";
         await localCompositeKernel.SendAsync(command);
 
         command.RoutingSlip.Should().BeEquivalentTo(
+            new[]
+            {
+                new Uri("kernel://local/", UriKind.Absolute),
+                new Uri("kernel://local/csharp-proxy", UriKind.Absolute),
+                new Uri("kernel://remote/", UriKind.Absolute),
+                new Uri("kernel://remote/csharp", UriKind.Absolute)
+            });
+    }
+
+    [Fact]
+    public async Task events_routing_slip_contains_kernels_that_have_been_traversed()
+    {
+        using var compositeKernel = new CompositeKernel
+        {
+            new CSharpKernel(),
+            new FSharpKernel()
+        };
+
+        compositeKernel.DefaultKernelName = "fsharp";
+
+        var command = new SubmitCode(@"Console.WriteLine(1);", targetKernelName: "csharp");
+
+        var result = await compositeKernel.SendAsync(command);
+
+        var events = result.KernelEvents.ToSubscribedList();
+
+        events.Should().ContainSingle<StandardOutputValueProduced>()
+            .Which
+            .RoutingSlip.Should().BeEquivalentTo(
+            new[]
+            {
+                new Uri("kernel://local/.NET", UriKind.Absolute),
+                new Uri("kernel://local/csharp", UriKind.Absolute)
+            });
+    }
+
+    [Fact]
+    public async Task events_routing_slip_contains_proxy_kernels_that_have_been_traversed()
+    {
+        using var localCompositeKernel = new CompositeKernel("vscode");
+        using var remoteCompositeKernel = new CompositeKernel(".NET")
+        {
+            new CSharpKernel(),
+            new FSharpKernel()
+        };
+
+        remoteCompositeKernel.DefaultKernelName = "fsharp";
+
+        ConnectHost.ConnectInProcessHost(
+            localCompositeKernel,
+            remoteCompositeKernel);
+
+        await localCompositeKernel
+            .Host
+            .ConnectProxyKernelOnDefaultConnectorAsync(
+                "csharp-proxy",
+                new(remoteCompositeKernel.Host.Uri, "csharp"));
+
+        var command = new SubmitCode(@"Console.WriteLine(1);", targetKernelName: "csharp-proxy");
+
+        var result = await localCompositeKernel.SendAsync(command);
+
+        var events = result.KernelEvents.ToSubscribedList();
+
+        events.Should().ContainSingle<StandardOutputValueProduced>()
+            .Which
+            .RoutingSlip.Should().BeEquivalentTo(
             new[]
             {
                 new Uri("kernel://local/", UriKind.Absolute),

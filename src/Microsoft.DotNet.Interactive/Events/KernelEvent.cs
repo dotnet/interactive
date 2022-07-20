@@ -12,15 +12,14 @@ namespace Microsoft.DotNet.Interactive.Events
         protected KernelEvent(KernelCommand command)
         {
             Command = command ?? throw new ArgumentNullException(nameof(command));
-            Id = Guid.NewGuid().ToString("N");
+            RoutingSlip = new RoutingSlip();
         }
 
 
         [JsonIgnore]
         public KernelCommand Command { get; }
 
-        [JsonIgnore]
-        public string Id { get; set; }
+        [JsonIgnore] public RoutingSlip RoutingSlip { get; }
 
         public override string ToString()
         {

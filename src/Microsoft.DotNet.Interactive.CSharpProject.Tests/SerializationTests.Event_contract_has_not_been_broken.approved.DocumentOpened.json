@@ -20,5 +20,7 @@
       "kernel://somelocation/kernelName"
     ]
   },
-  "id": "event-id"
+  "routingSlip": [
+    "kernel://somelocation/kernelName"
+  ]
 }
