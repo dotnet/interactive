@@ -126,8 +126,6 @@ export class CompositeKernel extends Kernel {
         const invocationContext = KernelInvocationContext.current;
         const previusoHandlingKernel = invocationContext?.handlingKernel ?? null;
 
-
-
         if (kernel === this) {
             if (invocationContext !== null) {
                 invocationContext.handlingKernel = kernel;
@@ -141,6 +139,7 @@ export class CompositeKernel extends Kernel {
             if (invocationContext !== null) {
                 invocationContext.handlingKernel = kernel;
             }
+            tryAddUriToRoutingSlip(commandEnvelope, getKernelUri(kernel));
             return kernel.handleCommand(commandEnvelope).finally(() => {
                 if (invocationContext !== null) {
                     invocationContext.handlingKernel = previusoHandlingKernel;

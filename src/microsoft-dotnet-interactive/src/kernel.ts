@@ -79,6 +79,7 @@ export class Kernel {
 
     private ensureCommandTokenAndId(commandEnvelope: contracts.KernelCommandEnvelope) {
         commandEnvelope;//?
+
         if (!commandEnvelope.token) {
             let nextToken = this._tokenGenerator.GetNewToken();
             if (KernelInvocationContext.current?.commandEnvelope) {
@@ -114,6 +115,7 @@ export class Kernel {
     // nothing is ever going to look at the promise we return here.
     async send(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         this.ensureCommandTokenAndId(commandEnvelope);
+        tryAddUriToRoutingSlip(commandEnvelope, getKernelUri(this));
         let context = KernelInvocationContext.establish(commandEnvelope);
         this.getScheduler().runAsync(commandEnvelope, (value) => this.executeCommand(value));
         return context.promise;
@@ -133,7 +135,7 @@ export class Kernel {
         let previousHandlingKernel = context.handlingKernel;
         try {
             context.handlingKernel = this;
-            tryAddUriToRoutingSlip(commandEnvelope, getKernelUri(this));
+
             await this.handleCommand(commandEnvelope);
         }
         catch (e) {
