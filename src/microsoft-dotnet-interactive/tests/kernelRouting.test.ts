@@ -30,9 +30,10 @@ describe("kernelRouting", () => {
 
         expect(command.routingSlip).not.to.be.undefined;
 
-        expect(Array.from(command.routingSlip!.values())).to.deep.eq(
+        expect(Array.from(command.routingSlip!.values())).to.deep.equal(
             [
                 'kernel://local/vscode',
-                'kernel://local/javascript']);
+                'kernel://local/javascript'
+            ]);
     });
 });
