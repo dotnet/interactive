@@ -37,8 +37,7 @@ namespace Microsoft.DotNet.Interactive
         {
             EnsureMiddlewarePipelineIsInitialized();
 
-            var uri = _kernel.KernelInfo.Uri ?? new Uri($"kernel://local/{_kernel.KernelInfo.LocalName}", UriKind.Absolute);
-            command.RoutingSlip.TryAdd(uri);
+            command.RoutingSlip.TryAdd(_kernel.GetKernelUri());
             
             try
             {

@@ -245,11 +245,12 @@ Console.WriteLine(1);";
 
         events.Should().ContainSingle<StandardOutputValueProduced>()
             .Which
-            .RoutingSlip.Should().BeEquivalentTo(
+            .RoutingSlip.Should().ContainInOrder(
             new[]
             {
-                new Uri("kernel://local/.NET", UriKind.Absolute),
-                new Uri("kernel://local/csharp", UriKind.Absolute)
+                new Uri("kernel://local/csharp", UriKind.Absolute),
+                new Uri("kernel://local/.NET", UriKind.Absolute)
+               
             });
     }
 
@@ -283,13 +284,13 @@ Console.WriteLine(1);";
 
         events.Should().ContainSingle<StandardOutputValueProduced>()
             .Which
-            .RoutingSlip.Should().BeEquivalentTo(
+            .RoutingSlip.Should().ContainInOrder(
             new[]
             {
-                new Uri("kernel://local/", UriKind.Absolute),
-                new Uri("kernel://local/csharp-proxy", UriKind.Absolute),
+                new Uri("kernel://remote/csharp", UriKind.Absolute),
                 new Uri("kernel://remote/", UriKind.Absolute),
-                new Uri("kernel://remote/csharp", UriKind.Absolute)
+                new Uri("kernel://local/csharp-proxy", UriKind.Absolute),
+                new Uri("kernel://local/", UriKind.Absolute)
             });
     }
 }

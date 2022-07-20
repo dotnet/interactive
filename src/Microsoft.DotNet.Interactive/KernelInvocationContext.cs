@@ -210,7 +210,9 @@ namespace Microsoft.DotNet.Interactive
             }
 
             var command = @event.Command;
-
+            
+            @event.RoutingSlip.TryAdd(HandlingKernel.GetKernelUri());
+            
             if (_childCommands.TryGetValue(command, out var events))
             {
                 events.OnNext(@event);
