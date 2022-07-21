@@ -23,7 +23,7 @@ export class ProxyKernel extends Kernel {
 
     private delegatePublication(envelope: contracts.KernelEventEnvelope, invocationContext: KernelInvocationContext): void {
         if (this.hasSameOrigin(envelope)) {
-            if (envelope.routingSlip === undefined || !envelope.routingSlip.has(getKernelUri(this))) {
+            if (envelope.routingSlip === undefined || !envelope.routingSlip.find(e => e === getKernelUri(this))) {
                 connection.tryAddUriToRoutingSlip(envelope, getKernelUri(this));
                 invocationContext.publish(envelope);
             }

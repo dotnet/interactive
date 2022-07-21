@@ -28,7 +28,7 @@ export class KernelCommandAndEventReceiver implements IKernelCommandAndEventRece
     private _observable: rxjs.Subscribable<KernelCommandOrEventEnvelope>;
     private _disposables: disposables.Disposable[] = [];
 
-    private constructor(observer: rxjs.Subscribable<KernelCommandOrEventEnvelope>) {
+    private constructor(observer: rxjs.Observable<KernelCommandOrEventEnvelope>) {
         this._observable = observer;
     }
 
@@ -102,14 +102,24 @@ export class KernelCommandAndEventSender implements IKernelCommandAndEventSender
     }
 }
 
+export function isSetOfString(collection: any): collection is Set<string> {
+    return typeof (collection) !== typeof (new Set<string>());
+}
+
+export function isArrayOfString(collection: any): collection is string[] {
+    return Array.isArray(collection) && collection.length > 0 && typeof (collection[0]) === typeof ("");
+}
+
 export function tryAddUriToRoutingSlip(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope, kernelUri: string): boolean {
-    if (!kernelCommandOrEventEnvelope.routingSlip) {
-        kernelCommandOrEventEnvelope.routingSlip = new Set<string>();
+    if (kernelCommandOrEventEnvelope.routingSlip === undefined || kernelCommandOrEventEnvelope.routingSlip === null) {
+        kernelCommandOrEventEnvelope.routingSlip = [];
     }
 
-    var canAdd = !kernelCommandOrEventEnvelope.routingSlip.has(kernelUri);
+
+
+    var canAdd = !kernelCommandOrEventEnvelope.routingSlip.find(e => e === kernelUri);
     if (canAdd) {
-        kernelCommandOrEventEnvelope.routingSlip.add(kernelUri);
+        kernelCommandOrEventEnvelope.routingSlip.push(kernelUri);
     }
 
     return canAdd;

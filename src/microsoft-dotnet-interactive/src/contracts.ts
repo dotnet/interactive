@@ -523,7 +523,7 @@ export interface KernelEventEnvelope {
     eventType: KernelEventType;
     event: KernelEvent;
     command?: KernelCommandEnvelope;
-    routingSlip?: Set<string>;
+    routingSlip?: string[];
 }
 
 export interface KernelCommandEnvelope {
@@ -531,7 +531,7 @@ export interface KernelCommandEnvelope {
     id?: string;
     commandType: KernelCommandType;
     command: KernelCommand;
-    routingSlip?: Set<string>;
+    routingSlip?: string[];
 }
 
 export interface KernelEventEnvelopeObserver {

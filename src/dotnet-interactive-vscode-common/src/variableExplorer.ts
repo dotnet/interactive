@@ -163,7 +163,6 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
         if (vscode.window.activeNotebookEditor) {
             const notebook = versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
             const client = await this.clientMapper.getOrAddClient(notebook.uri);
-            this.currentNotebookSubscription
 
             let sub = client.channel.receiver.subscribe({
                 next: (envelope) => {

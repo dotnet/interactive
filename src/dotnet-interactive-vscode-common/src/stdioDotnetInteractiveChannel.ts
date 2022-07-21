@@ -141,7 +141,7 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
 
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription {
         let sub = this._receiverSubject.subscribe({
-            next: envelope => {
+            next: (envelope: KernelCommandOrEventEnvelope) => {
                 if (isKernelEventEnvelope(envelope)) {
                     observer(envelope);
                 }
@@ -210,3 +210,6 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
         }
     }
 }
+
+
+
