@@ -7,9 +7,6 @@ import {
     CommandSucceededType,
     DiagnosticLogEntryProducedType,
     DiagnosticLogEntryProduced,
-    KernelCommandEnvelopeHandler,
-    KernelCommandEnvelope,
-    KernelEventEnvelope,
     KernelEventEnvelopeObserver,
     KernelReadyType,
     SubmitCodeType
@@ -19,7 +16,15 @@ import { ReportChannel } from './interfaces/vscode-like';
 import { LineReader } from './lineReader';
 import { isNotNull, parse, stringify } from './utilities';
 import { DotnetInteractiveChannel } from './DotnetInteractiveChannel';
-import { IKernelCommandAndEventReceiver, IKernelCommandAndEventSender, isKernelCommandEnvelope, isKernelEventEnvelope, KernelCommandAndEventReceiver, KernelCommandAndEventSender, KernelCommandOrEventEnvelope } from './dotnet-interactive/connection';
+import {
+    IKernelCommandAndEventReceiver,
+    IKernelCommandAndEventSender,
+    isKernelCommandEnvelope,
+    isKernelEventEnvelope,
+    KernelCommandAndEventReceiver,
+    KernelCommandAndEventSender,
+    KernelCommandOrEventEnvelope
+} from './dotnet-interactive/connection';
 import { DisposableSubscription } from './dotnet-interactive/disposables';
 import { Subject } from 'rxjs';
 
@@ -29,7 +34,6 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
     private notifyOnExit: boolean = true;
     private readyPromise: Promise<void>;
     private pingTimer: NodeJS.Timer | null = null;
-    private _senderSubject: Subject<KernelCommandOrEventEnvelope>;
     private _receiverSubject: Subject<KernelCommandOrEventEnvelope>;
     private _sender: IKernelCommandAndEventSender;
     private _receiver: IKernelCommandAndEventReceiver;
@@ -42,16 +46,12 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
         private processExited: (pid: number, code: number | undefined, signal: string | undefined) => void) {
 
 
-        this._senderSubject = new Subject<KernelCommandOrEventEnvelope>();
         this._receiverSubject = new Subject<KernelCommandOrEventEnvelope>();
 
-        this._senderSubscription = this._senderSubject.subscribe({
-            next: envelope => {
-                this.writeToProcessStdin(envelope);
-            }
+        this._sender = KernelCommandAndEventSender.FromWriter(envelope => {
+            this.writeToProcessStdin(envelope);
         });
 
-        this._sender = KernelCommandAndEventSender.FromObserver(this._senderSubject);
         this._receiver = KernelCommandAndEventReceiver.FromObservable(this._receiverSubject);
 
         // prepare root event handler

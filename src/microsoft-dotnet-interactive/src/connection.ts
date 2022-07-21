@@ -76,7 +76,6 @@ export class KernelCommandAndEventSender implements IKernelCommandAndEventSender
                 } else {
                     return Promise.reject(new Error("Sender is not set"));
                 }
-
             }
             catch (error) {
                 return Promise.reject(error);
@@ -85,9 +84,11 @@ export class KernelCommandAndEventSender implements IKernelCommandAndEventSender
         }
         return Promise.reject(new Error("Sender is not set"));
     }
+
     get remoteHostUri(): string {
         return this._remoteHostUri;
     }
+
     public static FromObserver(observer: rxjs.Observer<KernelCommandOrEventEnvelope>): IKernelCommandAndEventSender {
         const sender = new KernelCommandAndEventSender("");
         sender._sender = observer;
