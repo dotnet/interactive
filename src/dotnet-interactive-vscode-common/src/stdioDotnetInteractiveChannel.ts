@@ -27,6 +27,7 @@ import {
 } from './dotnet-interactive/connection';
 import { DisposableSubscription } from './dotnet-interactive/disposables';
 import { Subject } from 'rxjs';
+import { Logger } from './dotnet-interactive/logger';
 
 export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
     private childProcess: cp.ChildProcessWithoutNullStreams | null;
@@ -115,6 +116,7 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
             const x = e;
         }
         const envelope = parse(line);
+        Logger.default.info(`envelope received from stdio: ${JSON.stringify(envelope)}`);
         if (isKernelEventEnvelope(envelope)) {
             switch (envelope.eventType) {
                 case DiagnosticLogEntryProducedType:
