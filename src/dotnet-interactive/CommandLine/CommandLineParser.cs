@@ -489,6 +489,7 @@ public static class CommandLineParser
         kernel.AddKernelConnector(new ConnectNamedPipeCommand());
         kernel.AddKernelConnector(new ConnectSignalRCommand());
         kernel.AddKernelConnector(new ConnectStdIoCommand());
+        kernel.AddKernelConnector(new ConnectJupyterKernelCommand());
 
         if (startupOptions.Verbose)
         {
