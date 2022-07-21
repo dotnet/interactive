@@ -81,7 +81,7 @@ export function configure(global?: any) {
     kernelHost.connect();
 }
 
+configure(window);
+
 // @ts-ignore
 postKernelMessage({ preloadCommand: '#!connect' });
-
-configure(window);

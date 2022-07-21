@@ -48,7 +48,7 @@ export class ProxyKernel extends Kernel {
                 if (connection.isKernelEventEnvelope(envelope)) {
                     if (envelope.command!.token === commandToken) {
 
-                        for (const kernelUri in envelope.command!.routingSlip!) {
+                        for (const kernelUri of envelope.command!.routingSlip!) {
                             connection.tryAddUriToRoutingSlip(commandInvocation.commandEnvelope, kernelUri);
                         }
 
