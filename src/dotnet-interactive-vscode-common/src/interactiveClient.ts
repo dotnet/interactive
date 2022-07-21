@@ -143,95 +143,100 @@ export class InteractiveClient {
             let failureReported = false;
             const commandToken = configuration?.token ? configuration.token : this.getNextToken();
             const commandId = Guid.create().toString();
+            try {
+                return this.submitCode(source, language, eventEnvelope => {
+                    if (this.deferredOutput.length > 0) {
+                        outputs.push(...this.deferredOutput);
+                        this.deferredOutput = [];
+                    }
 
-            return this.submitCode(source, language, eventEnvelope => {
-                if (this.deferredOutput.length > 0) {
-                    outputs.push(...this.deferredOutput);
-                    this.deferredOutput = [];
-                }
-
-                switch (eventEnvelope.eventType) {
-                    // if kernel languages were added, handle those events here
-                    case CommandSucceededType:
-                        if (eventEnvelope.command?.id === commandId) {
-                            // only complete this promise if it's the root command
-                            resolve();
-                        }
-                        break;
-                    case CommandFailedType:
-                        {
-                            const err = <CommandFailed>eventEnvelope.event;
-                            const errorOutput = this.config.createErrorOutput(err.message, this.getNextOutputId());
-                            outputs.push(errorOutput);
-                            reportOutputs();
-                            failureReported = true;
+                    switch (eventEnvelope.eventType) {
+                        // if kernel languages were added, handle those events here
+                        case CommandSucceededType:
                             if (eventEnvelope.command?.id === commandId) {
                                 // only complete this promise if it's the root command
-                                reject(err);
+                                resolve();
                             }
-                        }
-                        break;
-                    case DiagnosticsProducedType:
-                        {
-                            const diags = <DiagnosticsProduced>eventEnvelope.event;
-                            diagnostics.push(...diags.diagnostics);
-                            reportDiagnostics();
-                        }
-                        break;
-                    case StandardErrorValueProducedType:
-                    case StandardOutputValueProducedType:
-                        {
-                            let disp = <DisplayEvent>eventEnvelope.event;
-                            const stream = eventEnvelope.eventType === StandardErrorValueProducedType ? 'stderr' : 'stdout';
-                            let output = this.displayEventToCellOutput(disp, stream);
-                            outputs.push(output);
-                            reportOutputs();
-                        }
-                        break;
-                    case DisplayedValueProducedType:
-                    case DisplayedValueUpdatedType:
-                    case ReturnValueProducedType:
-                        {
-                            let disp = <DisplayEvent>eventEnvelope.event;
-                            let output = this.displayEventToCellOutput(disp);
+                            break;
+                        case CommandFailedType:
+                            {
+                                const err = <CommandFailed>eventEnvelope.event;
+                                const errorOutput = this.config.createErrorOutput(err.message, this.getNextOutputId());
+                                outputs.push(errorOutput);
+                                reportOutputs();
+                                failureReported = true;
+                                if (eventEnvelope.command?.id === commandId) {
+                                    // only complete this promise if it's the root command
+                                    reject(err);
+                                }
+                            }
+                            break;
+                        case DiagnosticsProducedType:
+                            {
+                                const diags = <DiagnosticsProduced>eventEnvelope.event;
+                                diagnostics.push(...diags.diagnostics);
+                                reportDiagnostics();
+                            }
+                            break;
+                        case StandardErrorValueProducedType:
+                        case StandardOutputValueProducedType:
+                            {
+                                let disp = <DisplayEvent>eventEnvelope.event;
+                                const stream = eventEnvelope.eventType === StandardErrorValueProducedType ? 'stderr' : 'stdout';
+                                let output = this.displayEventToCellOutput(disp, stream);
+                                outputs.push(output);
+                                reportOutputs();
+                            }
+                            break;
+                        case DisplayedValueProducedType:
+                        case DisplayedValueUpdatedType:
+                        case ReturnValueProducedType:
+                            {
+                                let disp = <DisplayEvent>eventEnvelope.event;
+                                let output = this.displayEventToCellOutput(disp);
 
-                            if (disp.valueId) {
-                                let valueId = this.valueIdMap.get(disp.valueId);
-                                if (valueId !== undefined) {
-                                    // update existing value
-                                    valueId.outputs[valueId.idx] = output;
-                                    valueId.observer(valueId.outputs);
-                                    // don't report through regular channels
-                                    break;
+                                if (disp.valueId) {
+                                    let valueId = this.valueIdMap.get(disp.valueId);
+                                    if (valueId !== undefined) {
+                                        // update existing value
+                                        valueId.outputs[valueId.idx] = output;
+                                        valueId.observer(valueId.outputs);
+                                        // don't report through regular channels
+                                        break;
+                                    } else {
+                                        // add new tracked value
+                                        this.valueIdMap.set(disp.valueId, {
+                                            idx: outputs.length,
+                                            outputs,
+                                            observer: outputObserver
+                                        });
+                                        outputs.push(output);
+                                    }
                                 } else {
-                                    // add new tracked value
-                                    this.valueIdMap.set(disp.valueId, {
-                                        idx: outputs.length,
-                                        outputs,
-                                        observer: outputObserver
-                                    });
+                                    // raw value, just push it
                                     outputs.push(output);
                                 }
-                            } else {
-                                // raw value, just push it
-                                outputs.push(output);
-                            }
 
-                            reportOutputs();
-                        }
-                        break;
-                }
-            }, commandToken, commandId).catch(e => {
-                // only report a failure if it's not a `CommandFailed` event from above (which has already called `reject()`)
-                if (!failureReported) {
-                    const errorMessage = typeof e?.message === 'string' ? <string>e.message : '' + e;
-                    const errorOutput = this.config.createErrorOutput(errorMessage, this.getNextOutputId());
-                    outputs.push(errorOutput);
-                    reportOutputs();
-                    reject(e);
-                }
-            });
+                                reportOutputs();
+                            }
+                            break;
+                    }
+                }, commandToken, commandId).catch(e => {
+                    // only report a failure if it's not a `CommandFailed` event from above (which has already called `reject()`)
+                    if (!failureReported) {
+                        const errorMessage = typeof e?.message === 'string' ? <string>e.message : '' + e;
+                        const errorOutput = this.config.createErrorOutput(errorMessage, this.getNextOutputId());
+                        outputs.push(errorOutput);
+                        reportOutputs();
+                        reject(e);
+                    }
+                });
+            }
+            catch (e) {
+                reject(e);
+            }
         });
+
     }
 
     completion(language: string, code: string, line: number, character: number, token?: string | undefined): Promise<CompletionsProduced> {
@@ -289,7 +294,13 @@ export class InteractiveClient {
         id = id || Guid.create().toString();
 
         let disposable = this.subscribeToKernelTokenEvents(token, observer);
-        await this.submitCommand(command, SubmitCodeType, token, id);
+        try {
+            await this.submitCommand(command, SubmitCodeType, token, id);
+        }
+        catch (error) {
+            return Promise.reject(error);
+
+        }
         return disposable;
     }
 
@@ -382,12 +393,18 @@ export class InteractiveClient {
                         break;
                 }
             });
-            this.config.channel.sender.send({ command, commandType, token, id }).catch(e => {
-                // only report a failure if it's not a `CommandFailed` event from above (which has already called `reject()`)
-                if (!failureReported) {
-                    reject(e);
-                }
-            });
+            try {
+                this.config.channel.sender
+                    .send({ command, commandType, token, id })
+                    .catch(e => {
+                        // only report a failure if it's not a `CommandFailed` event from above (which has already called `reject()`)
+                        if (!failureReported) {
+                            reject(e);
+                        }
+                    });
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 

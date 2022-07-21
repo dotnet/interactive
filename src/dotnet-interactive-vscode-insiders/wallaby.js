@@ -14,10 +14,11 @@ module.exports = function (wallaby) {
             { pattern: "/node_modules/compare-versions/**.*", instrument: flattenDiagnosticMessageText },
             { pattern: "tests/Responses/**/*.json", instrument: false },
             "!src/common/tests/**/*.test.ts*",
+            "!tests/**/*.test.ts*",
+            "tests/**/*.ts*",
         ],
         tests: [
-            "/src/common/tests/unit/**/*.test.ts",
-            "!src/common/tests/integration/**/*.test.ts"
+            "/tests/**/*.test.ts",
         ],
         compilers: {
             '**/*.ts?(x)': wallaby.compilers.typeScript({})

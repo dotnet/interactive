@@ -55,31 +55,48 @@ export class KernelCommandAndEventReceiver implements IKernelCommandAndEventRece
         return new KernelCommandAndEventReceiver(subject);
     }
 }
+
+function isObservable(source: any): source is rxjs.Observer<KernelCommandOrEventEnvelope> {
+    return (<any>source).next !== undefined;
+}
+
 export class KernelCommandAndEventSender implements IKernelCommandAndEventSender {
     private _remoteHostUri: string;
-    private _sender: rxjs.Subject<KernelCommandOrEventEnvelope>;
+    private _sender?: rxjs.Observer<KernelCommandOrEventEnvelope> | ((kernelEventEnvelope: KernelCommandOrEventEnvelope) => void);
     private constructor(remoteHostUri: string) {
         this._remoteHostUri = remoteHostUri;
-        this._sender = new rxjs.Subject<KernelCommandOrEventEnvelope>();
     }
     send(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope): Promise<void> {
-        this._sender.next(kernelCommandOrEventEnvelope);
-        return Promise.resolve();
+        if (this._sender) {
+            try {
+                if (typeof this._sender === "function") {
+                    this._sender(kernelCommandOrEventEnvelope);
+                } else if (isObservable(this._sender)) {
+                    this._sender.next(kernelCommandOrEventEnvelope);
+                } else {
+                    return Promise.reject(new Error("Sender is not set"));
+                }
+
+            }
+            catch (error) {
+                return Promise.reject(error);
+            }
+            return Promise.resolve();
+        }
+        return Promise.reject(new Error("Sender is not set"));
     }
     get remoteHostUri(): string {
         return this._remoteHostUri;
     }
     public static FromObserver(observer: rxjs.Observer<KernelCommandOrEventEnvelope>): IKernelCommandAndEventSender {
         const sender = new KernelCommandAndEventSender("");
-        sender._sender.subscribe(observer);
+        sender._sender = observer;
         return sender;
     }
 
     public static FromWriter(writer: (kernelEventEnvelope: KernelCommandOrEventEnvelope) => void): IKernelCommandAndEventSender {
         const sender = new KernelCommandAndEventSender("");
-        sender._sender.subscribe({
-            next: writer
-        });
+        sender._sender = writer;
         return sender;
     }
 }

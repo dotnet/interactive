@@ -505,17 +505,20 @@ describe('InteractiveClient tests', () => {
         expect(diagnosticsCallbackFired).to.be.false;
     });
 
-    it('exception in submit code properly rejects all promises', done => {
+    it('exception in submit code properly rejects all promises', async () => {
         const token = 'test-token';
         const config = createChannelConfig(async (_notebookPath) => new CallbackTestTestDotnetInteractiveChannel({
             'SubmitCode': () => {
                 throw new Error('expected exception during submit');
             },
         }));
+
         const clientMapper = new ClientMapper(config);
-        clientMapper.getOrAddClient(createUri('test-path.dib')).then(client => {
-            expect(client.execute("1+1", "csharp", _outputs => { }, _diagnostics => { }, { token, id: '' })).eventually.rejectedWith('expected exception during submit').notify(done);
-        });
+        let client = await clientMapper.getOrAddClient(createUri('test-path.dib'));
+
+        await expect(client.execute("1+1", "csharp", _outputs => { }, _diagnostics => { }, { token, id: '' }))
+            .eventually
+            .rejectedWith('expected exception during submit');
     });
 
     it('exception in submit code properly generates error outputs', done => {
