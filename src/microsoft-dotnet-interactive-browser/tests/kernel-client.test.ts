@@ -9,7 +9,6 @@ import * as contracts from "../src/dotnet-interactive/contracts";
 import { IKernelCommandInvocation, Kernel } from "../src/dotnet-interactive/kernel";
 import { attachKernelToChannel } from "../src/kernel-factory";
 import { KernelInvocationContext } from "../src/dotnet-interactive/kernelInvocationContext";
-import { Logger } from "../src/dotnet-interactive/logger";
 
 
 interface CustomCommand extends contracts.KernelCommand {
@@ -44,7 +43,7 @@ describe("dotnet-interactive", () => {
             let csharpKernel = asKernelClientContainer(client).csharp;
 
             await csharpKernel.submitCode("var a = 12");
-            expect(transport!.codeSubmissions[0].command.targetKernelName).to.be.equal("csharp");
+            expect(transport!.commandsSent[0].command.targetKernelName).to.be.equal("csharp");
         });
 
 
@@ -96,7 +95,7 @@ describe("dotnet-interactive", () => {
                     }
                 });
                 let token = await client.submitCode("var a = 12");
-                expect(token).to.be.equal(transport!.codeSubmissions[0].token);
+                expect(token).to.be.equal(transport!.commandsSent[0].token);
             });
 
             it("sends SubmitCode command", async () => {
@@ -116,7 +115,7 @@ describe("dotnet-interactive", () => {
                 });
 
                 await client.submitCode("var a = 12");
-                expect(transport!.codeSubmissions[0].commandType).to.be.equal(contracts.SubmitCodeType);
+                expect(transport!.commandsSent[0].commandType).to.be.equal(contracts.SubmitCodeType);
             });
         });
     });
@@ -234,9 +233,9 @@ describe("dotnet-interactive", () => {
                 event: eventIn
             };
 
-            expect(transport!.publishedEvents.length).to.be.equal(1);
-            expect(transport!.publishedEvents[0].eventType).to.be.equal(eventEnvelopeIn.eventType);
-            let eventPublished = <contracts.CodeSubmissionReceived>transport!.publishedEvents[0].event;
+            expect(transport!.eventsPublished.length).to.be.equal(1);
+            expect(transport!.eventsPublished[0].eventType).to.be.equal(eventEnvelopeIn.eventType);
+            let eventPublished = <contracts.CodeSubmissionReceived>transport!.eventsPublished[0].event;
             expect(eventPublished.code).to.be.equal(eventIn.code);
         });
 

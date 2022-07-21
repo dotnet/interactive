@@ -2,10 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as fetchMock from "fetch-mock";
+import * as rxjs from "rxjs";
 import { DotnetInteractiveClient, KernelClientContainer } from "../src/dotnet-interactive-interfaces";
+import * as connection from "../src/dotnet-interactive/connection";
 import * as contracts from "../src/dotnet-interactive/contracts";
 import { TokenGenerator } from "../src/dotnet-interactive/tokenGenerator";
-import { CommandAndEventReceiver, GenericChannel } from "../src/dotnet-interactive/genericChannel";
 
 
 export function asKernelClientContainer(client: DotnetInteractiveClient): KernelClientContainer {
@@ -16,18 +17,39 @@ export function configureFetchForKernelDiscovery(rootUrl: string) {
     fetchMock.get(`${rootUrl}/kernels`, require("./Responses/kernels-get-response.json"));
 }
 
-export class MockKernelCommandAndEventChannel implements contracts.KernelCommandAndEventChannel {
+export class MockKernelCommandAndEventChannel {
 
-    public codeSubmissions: Array<contracts.KernelCommandEnvelope>;
-    public publishedEvents: Array<contracts.KernelEventEnvelope>;
+    public commandsSent: Array<contracts.KernelCommandEnvelope>;
+    public eventsPublished: Array<contracts.KernelEventEnvelope>;
     private tokenGenerator = new TokenGenerator();
     private eventObservers: { [key: string]: contracts.KernelEventEnvelopeObserver } = {};
     private commandHandlers: { [key: string]: contracts.KernelCommandEnvelopeHandler } = {};
 
+    public sender: connection.IKernelCommandAndEventSender;
+    public receiver: connection.IKernelCommandAndEventReceiver;
+    private _senderSubject: rxjs.Subject<connection.KernelCommandOrEventEnvelope>;
+    private _receiverSubject: rxjs.Subject<connection.KernelCommandOrEventEnvelope>;
+
     constructor() {
 
-        this.codeSubmissions = new Array<contracts.KernelCommandEnvelope>();
-        this.publishedEvents = new Array<contracts.KernelEventEnvelope>();
+        this.commandsSent = new Array<contracts.KernelCommandEnvelope>();
+        this.eventsPublished = new Array<contracts.KernelEventEnvelope>();
+
+        this._senderSubject = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
+        this._receiverSubject = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
+
+        this._senderSubject.subscribe({
+            next: (envelope) => {
+                if (connection.isKernelCommandEnvelope(envelope)) {
+                    this.commandsSent.push(envelope);
+                } else if (connection.isKernelEventEnvelope(envelope)) {
+                    this.eventsPublished.push(envelope);
+                }
+            }
+        });
+
+        this.sender = connection.KernelCommandAndEventSender.FromObserver(this._senderSubject);
+        this.receiver = connection.KernelCommandAndEventReceiver.FromObservable(this._receiverSubject);
     }
 
     public subscribeToKernelEvents(observer: contracts.KernelEventEnvelopeObserver) {
@@ -47,20 +69,17 @@ export class MockKernelCommandAndEventChannel implements contracts.KernelCommand
     }
 
     public fakeIncomingSubmitCommand(envelope: contracts.KernelCommandEnvelope) {
-        for (let key of Object.keys(this.commandHandlers)) {
-            let observer = this.commandHandlers[key];
-            observer(envelope);
-        }
+        this._receiverSubject.next(envelope);
     }
 
     publishKernelEvent(eventEnvelope: contracts.KernelEventEnvelope): Promise<void> {
-        this.publishedEvents.push(eventEnvelope);
+        this.eventsPublished.push(eventEnvelope);
         return Promise.resolve();
     }
 
     public submitCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
 
-        this.codeSubmissions.push(commandEnvelope);
+        this.commandsSent.push(commandEnvelope);
         return Promise.resolve();
     }
 
@@ -72,7 +91,10 @@ export class MockKernelCommandAndEventChannel implements contracts.KernelCommand
     }
 }
 
-export function createMockChannel(rootUrl: string): Promise<contracts.KernelCommandAndEventChannel> {
+export function createMockChannel(rootUrl: string): Promise<{
+    sender: connection.IKernelCommandAndEventSender,
+    receiver: connection.IKernelCommandAndEventReceiver;
+}> {
     return Promise.resolve(new MockKernelCommandAndEventChannel());
 }
 
@@ -90,85 +112,4 @@ export function findEventEnvelope(kernelEventEnvelopes: contracts.KernelEventEnv
 
 export function findEventEnvelopeFromKernel(kernelEventEnvelopes: contracts.KernelEventEnvelope[], eventType: contracts.KernelEventType, kernelName: string): contracts.KernelEventEnvelope | undefined {
     return kernelEventEnvelopes.find(eventEnvelope => eventEnvelope.eventType === eventType && eventEnvelope.command!.command.targetKernelName === kernelName);
-}
-
-export function createInMemoryChannel(eventProducer?: (commandEnvelope: contracts.KernelCommandEnvelope) => contracts.KernelEventEnvelope[]): { channel: GenericChannel, sentItems: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[], writeToTransport: (data: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)) => void } {
-    let sentItems: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] = [];
-    let ep = eventProducer;
-    if (!eventProducer) {
-        ep = (ce) => {
-            return [{ eventType: contracts.CommandSucceededType, event: <contracts.CommandSucceeded>{}, command: ce }];
-        }
-    } else {
-        ep = eventProducer;
-    }
-
-    const receiver = new CommandAndEventReceiver();
-    let sender: (message: contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope) => Promise<void> = (item) => {
-        sentItems.push(item);
-        let events = ep!(<contracts.KernelCommandEnvelope>item)
-        for (let event of events) {
-            receiver.delegate(event);
-        }
-        return Promise.resolve();
-    }
-    let channel = new GenericChannel(
-        sender,
-        () => {
-            return receiver.read();
-        }
-    );
-    return {
-        channel: channel,
-        sentItems,
-        writeToTransport: (data) => {
-            receiver.delegate(data);
-        }
-    };
-}
-
-export function createInMemoryChannels(): { channels: { transport: GenericChannel, sentItems: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] }[] } {
-    const sentItems1: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] = [];
-    const sentItems2: (contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope)[] = [];
-    const receiver1 = new CommandAndEventReceiver();
-    const receiver2 = new CommandAndEventReceiver();
-
-    const sender1: (message: contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope) => Promise<void> = (item) => {
-        sentItems1.push(item);
-        receiver2.delegate(item);
-        return Promise.resolve();
-    }
-
-    const sender2: (message: contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope) => Promise<void> = (item) => {
-        sentItems2.push(item);
-        receiver1.delegate(item);
-        return Promise.resolve();
-    }
-
-    const channel1 = new GenericChannel(
-        sender1,
-        () => {
-            return receiver1.read();
-        }
-    );
-
-    const channel2 = new GenericChannel(
-        sender2,
-        () => {
-            return receiver2.read();
-        }
-    );
-
-    return {
-        channels: [
-            {
-                transport: channel1,
-                sentItems: sentItems1,
-            },
-            {
-                transport: channel2,
-                sentItems: sentItems2,
-            }
-        ]
-    };
 }

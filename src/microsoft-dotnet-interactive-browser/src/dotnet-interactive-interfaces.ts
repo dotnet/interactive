@@ -2,7 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as contracts from "./dotnet-interactive/contracts";
-import * as kernel from "./dotnet-interactive/kernel";
+import { DisposableSubscription } from "./dotnet-interactive/disposables";
+import { IKernelCommandHandler } from "./dotnet-interactive/kernel";
 
 export interface VariableRequest {
     [kernelName: string]: Array<any>;
@@ -22,8 +23,8 @@ export interface KernelClient {
 
 // Implemented by the client-side kernel.
 export interface DotnetInteractiveClient {
-    subscribeToKernelEvents(observer: contracts.KernelEventEnvelopeObserver): contracts.DisposableSubscription;
-    registerCommandHandler(handler: kernel.IKernelCommandHandler): void;
+    subscribeToKernelEvents(observer: contracts.KernelEventEnvelopeObserver): DisposableSubscription;
+    registerCommandHandler(handler: IKernelCommandHandler): void;
     getVariable(kernelName: string, variableName: string): Promise<any>;
     getVariables(variableRequest: VariableRequest): Promise<VariableResponse>;
     getResource(resource: string): Promise<Response>;

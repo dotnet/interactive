@@ -2,12 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as signalR from "@microsoft/signalr";
+import { Subject } from "rxjs";
+import { IKernelCommandAndEventReceiver, IKernelCommandAndEventSender, isKernelCommandEnvelope, isKernelEventEnvelope, KernelCommandAndEventReceiver, KernelCommandAndEventSender, KernelCommandOrEventEnvelope } from "./dotnet-interactive";
+import { KernelEventEnvelope, KernelCommandEnvelope } from "./dotnet-interactive/contracts";
 
-import { KernelCommandAndEventChannel, KernelEventEnvelope, KernelEventEnvelopeObserver, DisposableSubscription, KernelCommandEnvelope, KernelCommandEnvelopeHandler } from "./dotnet-interactive/contracts";
-import { TokenGenerator } from "./dotnet-interactive/tokenGenerator";
 
 
-export async function signalTransportFactory(rootUrl: string): Promise<KernelCommandAndEventChannel> {
+export async function signalTransportFactory(rootUrl: string): Promise<{ sender: IKernelCommandAndEventSender, receiver: IKernelCommandAndEventReceiver }> {
 
     let hubUrl = rootUrl;
     if (hubUrl.endsWith("/")) {
@@ -21,84 +22,50 @@ export async function signalTransportFactory(rootUrl: string): Promise<KernelCom
         .withAutomaticReconnect()
         .build();
 
-    let tokenGenerator = new TokenGenerator();
 
-    let eventObservers: { [key: string]: KernelEventEnvelopeObserver } = {};
-    let commandHandlers: { [key: string]: KernelCommandEnvelopeHandler } = {};
+    let remoteToLocalSubject = new Subject<KernelCommandOrEventEnvelope>()
+    let localToRemoteSubject = new Subject<KernelCommandOrEventEnvelope>()
 
     // deprecated
     connection.on("kernelEvent", (message: string) => {
-        let eventEnvelope = <KernelEventEnvelope>JSON.parse(message);
-        let keys = Object.keys(eventObservers);
-        for (let key of keys) {
-            let observer = eventObservers[key];
-            observer(eventEnvelope);
-        }
+        let envelope = <KernelEventEnvelope>JSON.parse(message);
+        remoteToLocalSubject.next(envelope);
     });
 
     // deprecated
     connection.on("submitCommand", (message: string) => {
-        let commandEnvelope = <KernelCommandEnvelope>JSON.parse(message);
-        let keys = Object.keys(commandHandlers);
-        for (let key of keys) {
-            let observer = commandHandlers[key];
-            observer(commandEnvelope);
-        }
+        let envelope = <KernelCommandEnvelope>JSON.parse(message);
+        remoteToLocalSubject.next(envelope);
     });
 
     connection.on("commandFromServer", (message: string) => {
-        let commandEnvelope = <KernelCommandEnvelope>JSON.parse(message);
-        let keys = Object.keys(commandHandlers);
-        for (let key of keys) {
-            let observer = commandHandlers[key];
-            observer(commandEnvelope);
-        }
+        let envelope = <KernelCommandEnvelope>JSON.parse(message);
+        remoteToLocalSubject.next(envelope);
     });
 
     connection.on("eventFromServer", (message: string) => {
-        let eventEnvelope = <KernelEventEnvelope>JSON.parse(message);
-        let keys = Object.keys(eventObservers);
-        for (let key of keys) {
-            let observer = eventObservers[key];
-            observer(eventEnvelope);
-        }
+        let envelope = <KernelEventEnvelope>JSON.parse(message);
+        remoteToLocalSubject.next(envelope);
     });
 
     await connection
         .start()
         .catch(err => console.log(err));
 
-    let eventStream: KernelCommandAndEventChannel = {
-
-        subscribeToKernelEvents: (observer: KernelEventEnvelopeObserver): DisposableSubscription => {
-            let key = tokenGenerator.GetNewToken();
-            eventObservers[key] = observer;
-
-            let disposableSubscription: DisposableSubscription = {
-                dispose: () => {
-                    delete eventObservers[key];
-                }
+    localToRemoteSubject.subscribe({
+        next: (envelope) => {
+            if (isKernelCommandEnvelope(envelope)) {
+                connection.send("kernelCommandFromRemote", JSON.stringify(envelope));
+            } else if (isKernelEventEnvelope(envelope)) {
+                connection.send("kernelEventFromRemote", JSON.stringify(envelope));
             }
-
-            return disposableSubscription;
-        },
-
-        setCommandHandler: (handler: KernelCommandEnvelopeHandler) => {
-            const key = tokenGenerator.GetNewToken();
-            commandHandlers[key] = handler;
-        },
-
-        submitCommand: (commandEnvelope: KernelCommandEnvelope): Promise<void> => {
-            return connection.send("submitCommand", JSON.stringify(commandEnvelope));
-        },
-
-        publishKernelEvent: (eventEnvelope: KernelEventEnvelope): Promise<void> => {
-            return connection.send("kernelEvent", JSON.stringify(eventEnvelope));
-        },
-
-        dispose: (): void => {
         }
+    });
+    let eventStream = {
+        sender: KernelCommandAndEventSender.FromObserver(localToRemoteSubject),
+        receiver: KernelCommandAndEventReceiver.FromObservable(remoteToLocalSubject)
     };
+
 
     await connection.send("connect");
     return Promise.resolve(eventStream);
