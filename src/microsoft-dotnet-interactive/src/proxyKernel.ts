@@ -22,9 +22,15 @@ export class ProxyKernel extends Kernel {
     }
 
     private delegatePublication(envelope: contracts.KernelEventEnvelope, invocationContext: KernelInvocationContext): void {
+        let alreadyBeenSeen = false;
+        if (envelope.routingSlip === undefined || !envelope.routingSlip.find(e => e === getKernelUri(this))) {
+            connection.tryAddUriToRoutingSlip(envelope, getKernelUri(this));
+        } else {
+            alreadyBeenSeen = true;
+        }
+
         if (this.hasSameOrigin(envelope)) {
-            if (envelope.routingSlip === undefined || !envelope.routingSlip.find(e => e === getKernelUri(this))) {
-                connection.tryAddUriToRoutingSlip(envelope, getKernelUri(this));
+            if (!alreadyBeenSeen) {
                 invocationContext.publish(envelope);
             }
         }
@@ -35,6 +41,7 @@ export class ProxyKernel extends Kernel {
         if (commandOriginUri === this.kernelInfo.uri) {
             return true;
         }
+
         return commandOriginUri === null;
     }
 
