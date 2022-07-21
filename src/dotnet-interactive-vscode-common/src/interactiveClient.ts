@@ -79,7 +79,7 @@ export class InteractiveClient {
         config.channel.receiver.subscribe({
             next: (envelope) => {
                 if (isKernelEventEnvelope(envelope)) {
-                    this.eventListener(envelope)
+                    this.eventListener(envelope);
                 }
             }
         });

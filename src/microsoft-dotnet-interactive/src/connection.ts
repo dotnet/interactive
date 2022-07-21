@@ -95,9 +95,9 @@ export class KernelCommandAndEventSender implements IKernelCommandAndEventSender
         return sender;
     }
 
-    public static FromWriter(writer: (kernelEventEnvelope: KernelCommandOrEventEnvelope) => void): IKernelCommandAndEventSender {
+    public static FromFunction(send: (kernelEventEnvelope: KernelCommandOrEventEnvelope) => void): IKernelCommandAndEventSender {
         const sender = new KernelCommandAndEventSender("");
-        sender._sender = writer;
+        sender._sender = send;
         return sender;
     }
 }
@@ -107,7 +107,7 @@ export function tryAddUriToRoutingSlip(kernelCommandOrEventEnvelope: KernelComma
         kernelCommandOrEventEnvelope.routingSlip = new Set<string>();
     }
 
-    var canAdd = !kernelCommandOrEventEnvelope.routingSlip.has(kernelUri)
+    var canAdd = !kernelCommandOrEventEnvelope.routingSlip.has(kernelUri);
     if (canAdd) {
         kernelCommandOrEventEnvelope.routingSlip.add(kernelUri);
     }

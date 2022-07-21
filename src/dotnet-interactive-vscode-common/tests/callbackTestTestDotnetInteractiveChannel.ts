@@ -14,7 +14,7 @@ export class CallbackTestTestDotnetInteractiveChannel implements DotnetInteracti
 
         this._receiverSubject = new rxjs.Subject<KernelCommandOrEventEnvelope>();
 
-        this.sender = KernelCommandAndEventSender.FromWriter((envelope: KernelCommandOrEventEnvelope) => {
+        this.sender = KernelCommandAndEventSender.FromFunction((envelope: KernelCommandOrEventEnvelope) => {
             if (isKernelCommandEnvelope(envelope)) {
                 const commandCallback = this.fakedCommandCallbacks[envelope.commandType];
                 if (!commandCallback) {

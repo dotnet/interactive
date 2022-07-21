@@ -48,7 +48,7 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
 
         this._receiverSubject = new Subject<KernelCommandOrEventEnvelope>();
 
-        this._sender = KernelCommandAndEventSender.FromWriter(envelope => {
+        this._sender = KernelCommandAndEventSender.FromFunction(envelope => {
             this.writeToProcessStdin(envelope);
         });
 

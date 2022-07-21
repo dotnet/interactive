@@ -30,7 +30,7 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, messageHandlerMap: M
         messageHandlerMap.set(documentUriString, messageHandler);
     }
 
-    const documentToWebviewSender = KernelCommandAndEventSender.FromWriter(envelope => {
+    const documentToWebviewSender = KernelCommandAndEventSender.FromFunction(envelope => {
         controllerPostMessage({ envelope });
     });
 
