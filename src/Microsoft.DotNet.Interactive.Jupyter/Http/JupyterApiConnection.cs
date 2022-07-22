@@ -121,8 +121,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.KernelProxy
             var request = JupyterMessage.Create(new KernelInfoRequest());
             var reply = Messages.ChildOf(request)
                                  .SelectContent()
-                                 .OfType<KernelInfoReply>()
-                                 .Take(1)
+                                 .TakeUntilMessage<KernelInfoReply>()
                                  .ToTask();
             await SendAsync(request).ConfigureAwait(false);
             await reply.ConfigureAwait(false); // wait for kernel reply

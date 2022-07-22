@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
             var executeReply = Receiver.Messages.ChildOf(executeRequest)
                                     .SelectContent()
                                     .Do(replyMessage => HandleReplyMessage(replyMessage, command, context))
-                                    .TakeUntil(m => m.MessageType == JupyterMessageContentTypes.ExecuteReply || m.MessageType == JupyterMessageContentTypes.Error); 
+                                    .TakeUntilMessageType(JupyterMessageContentTypes.ExecuteReply, JupyterMessageContentTypes.Error); 
                                     // run until we get a definitive pass or fail
 
             await Sender.SendAsync(executeRequest);
