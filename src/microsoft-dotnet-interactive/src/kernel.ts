@@ -29,7 +29,7 @@ export interface IKernelEventObserver {
 export enum KernelType {
     composite,
     proxy,
-    langauage
+    default
 };
 
 export class Kernel {
@@ -40,7 +40,7 @@ export class Kernel {
     public rootKernel: Kernel = this;
     public parentKernel: CompositeKernel | null = null;
     private _scheduler?: KernelScheduler<contracts.KernelCommandEnvelope> | null = null;
-    private _kernelType: KernelType = KernelType.langauage;
+    private _kernelType: KernelType = KernelType.default;
 
     public get kernelInfo(): contracts.KernelInfo {
 
@@ -166,8 +166,10 @@ export class Kernel {
             context.handlingKernel?.kernelInfo.uri;//?
             let currentCommandOwnsContext = areCommandsTheSame(context.commandEnvelope, commandEnvelope);
 
-            if (currentCommandOwnsContext) {
-                `kernel ${this.name} of type ${KernelType[this.kernelType]} subscribing to context events`;//?
+            // todo : check this part here 
+            //if (currentCommandOwnsContext)
+            {
+                Logger.default.info(`kernel ${this.name} of type ${KernelType[this.kernelType]} subscribing to context events`);
                 eventSubscription = context.kernelEvents.pipe(rxjs.map(e => {
                     const message = `kernel ${this.name} of type ${KernelType[this.kernelType]} saw event ${e.eventType} with token ${e.command?.token}`;
                     message;//?

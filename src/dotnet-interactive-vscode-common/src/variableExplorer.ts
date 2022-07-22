@@ -22,7 +22,7 @@ const languageIdToAliasMap = new Map(
 );
 
 export function registerVariableExplorer(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
-
+    return;
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.shareValueTo', async (variableInfo: { kernelName: string, valueName: string } | undefined) => {
         if (variableInfo && vscode.window.activeNotebookEditor) {
             const client = await clientMapper.tryGetClient(versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor).uri);
