@@ -96,15 +96,12 @@ export class Kernel {
     }
 
     private ensureCommandTokenAndId(commandEnvelope: contracts.KernelCommandEnvelope) {
-        commandEnvelope;//?
-
         if (!commandEnvelope.token) {
             let nextToken = this._tokenGenerator.GetNewToken();
             if (KernelInvocationContext.current?.commandEnvelope) {
                 // a parent command exists, create a token hierarchy
                 nextToken = KernelInvocationContext.current.commandEnvelope.token!;
             }
-
             commandEnvelope.token = nextToken;
         }
 
@@ -142,19 +139,8 @@ export class Kernel {
 
     private async executeCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         let context = KernelInvocationContext.establish(commandEnvelope);
-
-        const eventSubscription = context.kernelEvents.pipe(rxjs.map(e => {
-            const message = `kernel ${this.name} saw event ${e.eventType} with token ${e.command?.token}`;
-            Logger.default.info(message);
-            tryAddUriToRoutingSlip(e, getKernelUri(this));
-            return e;
-        })).subscribe(this.publishEvent.bind(this));
-
-
         let previousHandlingKernel = context.handlingKernel;
         try {
-            context.handlingKernel = this;
-
             await this.handleCommand(commandEnvelope);
         }
         catch (e) {
@@ -162,7 +148,7 @@ export class Kernel {
         }
         finally {
             context.handlingKernel = previousHandlingKernel;
-            eventSubscription.unsubscribe();
+
         }
     }
 
@@ -172,9 +158,25 @@ export class Kernel {
 
     handleCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
+            let eventSubscription: rxjs.Subscription | undefined = undefined;
             let context = KernelInvocationContext.establish(commandEnvelope);//?
             const previoudHendlingKernel = context.handlingKernel;
             context.handlingKernel = this;
+
+            context.handlingKernel?.kernelInfo.uri;//?
+            let currentCommandOwnsContext = areCommandsTheSame(context.commandEnvelope, commandEnvelope);
+
+            if (currentCommandOwnsContext) {
+                `kernel ${this.name} of type ${KernelType[this.kernelType]} subscribing to context events`;//?
+                eventSubscription = context.kernelEvents.pipe(rxjs.map(e => {
+                    const message = `kernel ${this.name} of type ${KernelType[this.kernelType]} saw event ${e.eventType} with token ${e.command?.token}`;
+                    message;//?
+                    Logger.default.info(message);
+                    tryAddUriToRoutingSlip(e, getKernelUri(this));
+                    return e;
+                })).subscribe(this.publishEvent.bind(this));
+            }
+
             let isRootCommand = areCommandsTheSame(context.commandEnvelope, commandEnvelope);
             let handler = this.getCommandHandler(commandEnvelope.commandType);
             if (handler) {
@@ -182,6 +184,7 @@ export class Kernel {
                     Logger.default.info(`kernel ${this.name} about to handle command: ${JSON.stringify(commandEnvelope)}`);
                     await handler.handle({ commandEnvelope: commandEnvelope, context });
                     context.complete(commandEnvelope);
+                    eventSubscription?.unsubscribe();
                     context.handlingKernel = previoudHendlingKernel;
                     if (isRootCommand) {
                         context.dispose();
@@ -191,6 +194,7 @@ export class Kernel {
                 }
                 catch (e) {
                     context.fail((<any>e)?.message || JSON.stringify(e));
+                    eventSubscription?.unsubscribe();
                     context.handlingKernel = previoudHendlingKernel;
                     if (isRootCommand) {
                         context.dispose();
@@ -199,6 +203,7 @@ export class Kernel {
                 }
             } else {
                 context.handlingKernel = previoudHendlingKernel;
+                eventSubscription?.unsubscribe();
                 if (isRootCommand) {
                     context.dispose();
                 }
