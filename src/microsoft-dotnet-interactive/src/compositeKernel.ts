@@ -8,8 +8,6 @@ import { KernelHost } from "./kernelHost";
 import { KernelInvocationContext } from "./kernelInvocationContext";
 
 export class CompositeKernel extends Kernel {
-
-
     private _host: KernelHost | null = null;
     private readonly _defaultKernelNamesByCommandType: Map<contracts.KernelCommandType, string> = new Map();
 

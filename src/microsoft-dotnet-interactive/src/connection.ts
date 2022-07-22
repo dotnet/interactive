@@ -114,13 +114,11 @@ export function tryAddUriToRoutingSlip(kernelCommandOrEventEnvelope: KernelComma
     if (kernelCommandOrEventEnvelope.routingSlip === undefined || kernelCommandOrEventEnvelope.routingSlip === null) {
         kernelCommandOrEventEnvelope.routingSlip = [];
     }
-
+    
     var canAdd = !kernelCommandOrEventEnvelope.routingSlip.find(e => e === kernelUri);
     if (canAdd) {
         kernelCommandOrEventEnvelope.routingSlip.push(kernelUri);
         kernelCommandOrEventEnvelope.routingSlip;//?
-    } else {
-        kernelUri;//?
     }
 
     return canAdd;
