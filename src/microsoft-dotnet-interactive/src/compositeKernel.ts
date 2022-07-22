@@ -66,10 +66,15 @@ export class CompositeKernel extends Kernel {
 
         kernel.parentKernel = this;
         kernel.rootKernel = this.rootKernel;
-        kernel.subscribeToKernelEvents(event => {
-            tryAddUriToRoutingSlip(event, getKernelUri(this));
-            this.publishEvent(event);
+        kernel.kernelEvents.subscribe({
+            next: (event) => {
+                event;//?
+                tryAddUriToRoutingSlip(event, getKernelUri(this));
+                this.publishEvent(event);
+            }
         });
+
+
         this._namesTokernelMap.set(kernel.name.toLowerCase(), kernel);
 
         let kernelNames = new Set<string>();

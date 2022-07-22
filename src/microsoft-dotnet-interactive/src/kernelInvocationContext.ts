@@ -1,12 +1,12 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+import * as rxjs from "rxjs";
 import { tryAddUriToRoutingSlip } from "./connection";
 import * as contracts from "./contracts";
 import { Disposable } from "./disposables";
 import { getKernelUri, IKernelEventObserver, Kernel } from "./kernel";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
-import { TokenGenerator } from "./tokenGenerator";
 
 
 export class KernelInvocationContext implements Disposable {
@@ -16,20 +16,27 @@ export class KernelInvocationContext implements Disposable {
     private static _current: KernelInvocationContext | null = null;
     private readonly _commandEnvelope: contracts.KernelCommandEnvelope;
     private readonly _childCommands: contracts.KernelCommandEnvelope[] = [];
-    private readonly _tokenGenerator: TokenGenerator = new TokenGenerator();
-    private readonly _eventObservers: Map<string, IKernelEventObserver> = new Map();
+    private readonly _eventSubject: rxjs.Subject<contracts.KernelEventEnvelope> = new rxjs.Subject<contracts.KernelEventEnvelope>();
+
     private _isComplete = false;
     private _handlingKernel: Kernel | null = null;
+
     public get handlingKernel() {
         return this._handlingKernel;
+    };
+
+    public get kernelEvents(): rxjs.Observable<contracts.KernelEventEnvelope> {
+        return this._eventSubject.asObservable();
     };
 
     public set handlingKernel(value: Kernel | null) {
         if (value !== null) {
             this._handlingKernel;//?
+
         }
         this._handlingKernel = value;
     }
+
     private completionSource = new PromiseCompletionSource<void>();
     static establish(kernelCommandInvocation: contracts.KernelCommandEnvelope): KernelInvocationContext {
         let current = KernelInvocationContext._current;
@@ -54,15 +61,6 @@ export class KernelInvocationContext implements Disposable {
         this._commandEnvelope = kernelCommandInvocation;
     }
 
-    subscribeToKernelEvents(observer: IKernelEventObserver) {
-        let subToken = this._tokenGenerator.GetNewToken();
-        this._eventObservers.set(subToken, observer);
-        return {
-            dispose: () => {
-                this._eventObservers.delete(subToken);
-            }
-        };
-    }
     complete(command: contracts.KernelCommandEnvelope) {
         if (command === this._commandEnvelope) {
             this._isComplete = true;
@@ -123,9 +121,7 @@ export class KernelInvocationContext implements Disposable {
         if (command === null ||
             areCommandsTheSame(command!, this._commandEnvelope) ||
             this._childCommands.includes(command!)) {
-            this._eventObservers.forEach((observer) => {
-                observer(kernelEvent);
-            });
+            this._eventSubject.next(kernelEvent);
         }
     }
 

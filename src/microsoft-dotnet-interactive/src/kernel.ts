@@ -10,6 +10,7 @@ import { KernelScheduler } from "./kernelScheduler";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
 import * as disposables from "./disposables";
 import { tryAddUriToRoutingSlip } from "./connection";
+import * as rxjs from "rxjs";
 
 export interface IKernelCommandInvocation {
     commandEnvelope: contracts.KernelCommandEnvelope;
@@ -28,7 +29,7 @@ export interface IKernelEventObserver {
 export class Kernel {
     private _kernelInfo: contracts.KernelInfo;
     private _commandHandlers = new Map<string, IKernelCommandHandler>();
-    private readonly _eventObservers: { [token: string]: contracts.KernelEventEnvelopeObserver } = {};
+    private _eventSubject = new rxjs.Subject<contracts.KernelEventEnvelope>();
     private readonly _tokenGenerator: TokenGenerator = new TokenGenerator();
     public rootKernel: Kernel = this;
     public parentKernel: CompositeKernel | null = null;
@@ -37,6 +38,10 @@ export class Kernel {
     public get kernelInfo(): contracts.KernelInfo {
 
         return this._kernelInfo;
+    }
+
+    public get kernelEvents(): rxjs.Observable<contracts.KernelEventEnvelope> {
+        return this._eventSubject.asObservable();
     }
 
     constructor(readonly name: string, languageName?: string, languageVersion?: string) {
@@ -54,8 +59,6 @@ export class Kernel {
                 await this.handleRequestKernelInfo(invocation);
             }
         });
-
-
     }
 
     protected async handleRequestKernelInfo(invocation: IKernelCommandInvocation): Promise<void> {
@@ -123,15 +126,15 @@ export class Kernel {
 
     private async executeCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         let context = KernelInvocationContext.establish(commandEnvelope);
-        let isRootCommand = areCommandsTheSame(context.commandEnvelope, commandEnvelope);
-        let contextEventsSubscription: disposables.Disposable | null = null;
-        if (isRootCommand) {
-            contextEventsSubscription = context.subscribeToKernelEvents(e => {
-                const message = `kernel ${this.name} saw event ${e.eventType} with token ${e.command?.token}`;
-                Logger.default.info(message);
-                return this.publishEvent(e);
-            });
-        }
+
+        const eventSubscription = context.kernelEvents.pipe(rxjs.map(e => {
+            const message = `kernel ${this.name} saw event ${e.eventType} with token ${e.command?.token}`;
+            Logger.default.info(message);
+            tryAddUriToRoutingSlip(e, getKernelUri(this));
+            return e;
+        })).subscribe(this.publishEvent.bind(this));
+
+
         let previousHandlingKernel = context.handlingKernel;
         try {
             context.handlingKernel = this;
@@ -143,9 +146,7 @@ export class Kernel {
         }
         finally {
             context.handlingKernel = previousHandlingKernel;
-            if (contextEventsSubscription) {
-                contextEventsSubscription.dispose();
-            }
+            eventSubscription.unsubscribe();
         }
     }
 
@@ -159,19 +160,16 @@ export class Kernel {
             const previoudHendlingKernel = context.handlingKernel;
             context.handlingKernel = this;
             let isRootCommand = areCommandsTheSame(context.commandEnvelope, commandEnvelope);
-
             let handler = this.getCommandHandler(commandEnvelope.commandType);
             if (handler) {
                 try {
                     Logger.default.info(`kernel ${this.name} about to handle command: ${JSON.stringify(commandEnvelope)}`);
                     await handler.handle({ commandEnvelope: commandEnvelope, context });
-
                     context.complete(commandEnvelope);
                     context.handlingKernel = previoudHendlingKernel;
                     if (isRootCommand) {
                         context.dispose();
                     }
-
                     Logger.default.info(`kernel ${this.name} done handling command: ${JSON.stringify(commandEnvelope)}`);
                     resolve();
                 }
@@ -181,7 +179,6 @@ export class Kernel {
                     if (isRootCommand) {
                         context.dispose();
                     }
-
                     reject(e);
                 }
             } else {
@@ -189,18 +186,16 @@ export class Kernel {
                 if (isRootCommand) {
                     context.dispose();
                 }
-
                 reject(new Error(`No handler found for command type ${commandEnvelope.commandType}`));
             }
         });
     }
 
     subscribeToKernelEvents(observer: contracts.KernelEventEnvelopeObserver): disposables.DisposableSubscription {
-        let subToken = this._tokenGenerator.GetNewToken();
-        this._eventObservers[subToken] = observer;
+        const sub = this._eventSubject.subscribe(observer);
 
         return {
-            dispose: () => { delete this._eventObservers[subToken]; }
+            dispose: () => { sub.unsubscribe(); }
         };
     }
 
@@ -237,11 +232,7 @@ export class Kernel {
     }
 
     protected publishEvent(kernelEvent: contracts.KernelEventEnvelope) {
-        let keys = Object.keys(this._eventObservers);
-        for (let subToken of keys) {
-            let observer = this._eventObservers[subToken];
-            observer(kernelEvent);
-        }
+        this._eventSubject.next(kernelEvent);
     }
 }
 
