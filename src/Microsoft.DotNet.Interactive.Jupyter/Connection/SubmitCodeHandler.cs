@@ -3,11 +3,9 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
-using System;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,26 +17,25 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
         {
         }
 
-        public override async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
+        public override async Task HandleCommandAsync(SubmitCode command, ICommandExecutionContext context, CancellationToken token)
         {
             var executeRequest = Messaging.Message.Create(new ExecuteRequest(command.Code));
             var executeReply = Receiver.Messages.ChildOf(executeRequest)
                                     .SelectContent()
-                                    .Do(message => HandleReplyMessage(message, context))
-                                    .OfType<Status>()
-                                    .TakeUntil(m => m.ExecutionState == StatusValues.Idle); // run until the messages have been executed for this request
+                                    .Do(replyMessage => HandleReplyMessage(replyMessage, command, context))
+                                    .TakeUntil(m => m.MessageType == JupyterMessageContentTypes.ExecuteReply || m.MessageType == JupyterMessageContentTypes.Error); 
+                                    // run until we get a definitive pass or fail
 
             await Sender.SendAsync(executeRequest);
-            await executeReply.ToTask(context.CancellationToken);
+            await executeReply.ToTask(token);
         }
 
-        private void HandleReplyMessage(Protocol.Message message, KernelInvocationContext context)
+        private void HandleReplyMessage(Protocol.Message message, SubmitCode command, ICommandExecutionContext context)
         {
-            var command = context.Command;
             switch (message)
             {
                 case (ExecuteReplyOk _):
-                    context.Complete(command);
+                    context.Publish(new CommandSucceeded(command));
                     break;
 
                 case (DisplayData displayData):
@@ -58,17 +55,23 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
                 case (Stream streamResult):
                     if (streamResult.Name == Stream.StandardOutput)
                     {
-                        context.DisplayStandardOut(streamResult.Text);
+                        context.Publish(
+                            new StandardOutputValueProduced(
+                                command,
+                                new[] { new FormattedValue(PlainTextFormatter.MimeType, streamResult.Text) }));
                     }
 
                     if (streamResult.Name == Stream.StandardError)
                     {
-                        context.DisplayStandardError(streamResult.Text);
+                        context.Publish(
+                            new StandardErrorValueProduced(
+                                command,
+                                new[] { new FormattedValue(PlainTextFormatter.MimeType, streamResult.Text) }));
                     }
                     break;
                 case (Error error):
-                    // how to translate traceback to exception;
-                    context.Fail(command, message: error.EValue);
+                    // TODO: how to translate traceback to exception;
+                    context.Publish(new CommandFailed(null, command, error.EValue));
                     break;
                 default:
                     break;

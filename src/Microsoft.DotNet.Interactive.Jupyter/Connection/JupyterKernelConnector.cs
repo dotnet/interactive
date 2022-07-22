@@ -25,15 +25,17 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
 
         public async Task<Kernel> CreateKernelAsync(string kernelName)
         {
-            var kernel = new JupyterKernel(
-                kernelName,
-                _kernelType,
-                _sender,
-                _receiver);
-
             await _kernelConnection.StartAsync(_kernelType);
 
-            return kernel;
+            MessageToCommandAndEventConnector translator = new MessageToCommandAndEventConnector(_sender, _receiver, _kernelConnection.TargetUri);
+
+            ProxyKernel proxyKernel = new ProxyKernel(
+                kernelName,
+                translator,
+                translator,
+                _kernelConnection.TargetUri);
+
+            return proxyKernel;
         }
     }
 }
