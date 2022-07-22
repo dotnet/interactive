@@ -30,10 +30,6 @@ export class KernelInvocationContext implements Disposable {
     };
 
     public set handlingKernel(value: Kernel | null) {
-        if (value !== null) {
-            this._handlingKernel;//?
-
-        }
         this._handlingKernel = value;
     }
 
