@@ -77,7 +77,8 @@ namespace Microsoft.DotNet.Interactive.Utility
             string packageName,
             DirectoryInfo toolPath,
             string addSource = null,
-            string version = null)
+            string version = null,
+            bool globalInstall = false)
         {
             if (string.IsNullOrWhiteSpace(packageName))
             {
@@ -86,8 +87,17 @@ namespace Microsoft.DotNet.Interactive.Utility
 
             var versionArg = version is not null ? $"--version {version}" : "";
             
-            var args = $@"{packageName} --tool-path ""{toolPath.FullName.TrimTrailingSeparators()}"" {versionArg}";
-            
+            var args = $@"{packageName}";
+            if (globalInstall)
+            {
+                args += " --global";
+            }
+            else
+            {
+                args += $@" --tool-path ""{toolPath.FullName.TrimTrailingSeparators()}""";
+            }
+            args += $@" {versionArg}";
+
             if (addSource is not null)
             {
                 args += $@" --add-source ""{addSource}""";
