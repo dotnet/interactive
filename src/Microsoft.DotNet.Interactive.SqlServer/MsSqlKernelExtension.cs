@@ -3,54 +3,46 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
 using System.Runtime.InteropServices;
+using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
     public class MsSqlKernelExtension : IKernelExtension
     {
-        public Task OnLoadAsync(Kernel kernel)
+        public async Task OnLoadAsync(Kernel kernel)
         {
             if (kernel is CompositeKernel compositeKernel)
             {
-                var root = compositeKernel.RootKernel.FindResolvedNativeSqlToolsServicePackageReference();
-                if (root != null)
+                // Check if the required Sql Tools Service tool is installed, and then install it if necessary
+                var dotnet = new Dotnet();
+                var installedGlobalTools = await dotnet.ToolList(null, true);
+                const string sqlToolName = "MicrosoftSqlToolsServiceLayer";
+                bool sqlToolInstalled = installedGlobalTools.Any(tool => string.Equals(tool, sqlToolName, StringComparison.InvariantCultureIgnoreCase));
+                if (!sqlToolInstalled)
                 {
-                    var pathToService = root.PathToToolsService("MicrosoftSqlToolsServiceLayer");
-
-                    if (!string.IsNullOrEmpty(pathToService))
-                    {
-                        if (File.Exists(pathToService))
-                        {
-                            compositeKernel
-                            .AddKernelConnector(new ConnectMsSqlCommand(pathToService));
-
-                            KernelInvocationContext.Current?.Display(
-                                new HtmlString(@"<details><summary>Query Microsoft SQL Server databases.</summary>
-    <p>This extension adds support for connecting to Microsoft SQL Server databases using the <code>#!connect mssql</code> magic command. For more information, run a cell using the <code>#!sql</code> magic command.</p>
-    </details>"),
-                                "text/html");
-                        }
-                        else
-                        {
-                            throw new InvalidOperationException($"The SQL Server extension was loaded successfully and resolved the path to the SQL Tools Service but the file {pathToService} does not exist. The #!connect mssql command will not be available.");
-                        }
-
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException($"The SQL Server extension was loaded successfully but was unable to determine the path to the SQL Tools Service. The #!connect mssql command will not be available.");
-                    }
+                    var nugetSource = "https://mssqltools.pkgs.visualstudio.com/_packaging/mssqltools/nuget/v3/index.json";
+                    var commandLineResult = await dotnet.ToolInstall("Microsoft.SqlTools.ServiceLayer.Tool", null, nugetSource, null, true);
+                    commandLineResult.ThrowOnFailure();
+                    KernelInvocationContext.Current?.Display("SQL Tools package successfully installed.");
                 }
                 else
                 {
-                    throw new InvalidOperationException($"The SQL Server extension was loaded successfully but was unable to find the SQL Tools Service package. The #!connect mssql command will not be available. (RID: {RuntimeInformation.RuntimeIdentifier})");
+                    KernelInvocationContext.Current?.Display("SQL Tools package already installed.");
                 }
-            }
 
-            return Task.CompletedTask;
+                compositeKernel
+                .AddKernelConnector(new ConnectMsSqlCommand(sqlToolName));
+
+                KernelInvocationContext.Current?.Display(
+                    new HtmlString(@"<details><summary>Query Microsoft SQL Server databases.</summary>
+<p>This extension adds support for connecting to Microsoft SQL Server databases using the <code>#!connect mssql</code> magic command. For more information, run a cell using the <code>#!sql</code> magic command.</p>
+</details>"),
+                    "text/html");
+            }
         }
     }
 }
