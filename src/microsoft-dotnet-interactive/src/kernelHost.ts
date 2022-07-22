@@ -81,10 +81,10 @@ export class KernelHost {
     }
 
     public connectProxyKernelOnDefaultConnector(localName: string, remoteKernelUri?: string, aliases?: string[]): ProxyKernel {
-        return this.connectProxyKernelOntConnector(localName, this._defaultSender, this._defaultReceiver, remoteKernelUri, aliases);
+        return this.connectProxyKernelOnConnector(localName, this._defaultSender, this._defaultReceiver, remoteKernelUri, aliases);
     }
 
-    public connectProxyKernelOntConnector(localName: string, sender: connection.IKernelCommandAndEventSender, receiver: connection.IKernelCommandAndEventReceiver, remoteKernelUri?: string, aliases?: string[]): ProxyKernel {
+    public connectProxyKernelOnConnector(localName: string, sender: connection.IKernelCommandAndEventSender, receiver: connection.IKernelCommandAndEventReceiver, remoteKernelUri?: string, aliases?: string[]): ProxyKernel {
         let kernel = new ProxyKernel(localName, sender, receiver);
         kernel.kernelInfo.remoteUri = remoteKernelUri;
         this._kernel.add(kernel, aliases);

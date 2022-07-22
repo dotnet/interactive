@@ -37,7 +37,7 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, messageHandlerMap: M
 
 
     clientMapper.getOrAddClient(documentUri).then(client => {
-        client.kernelHost.connectProxyKernelOntConnector('javascript', extensionHostToWebviewSender, WebviewToExtensionHostReceiver, "kernel://webview/javascript", ['js']);
+        client.kernelHost.connectProxyKernelOnConnector('javascript', extensionHostToWebviewSender, WebviewToExtensionHostReceiver, "kernel://webview/javascript", ['js']);
 
         WebviewToExtensionHostReceiver.subscribe({
             next: envelope => {
@@ -56,7 +56,6 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, messageHandlerMap: M
                             client.channel.sender.send(envelope);
                         }
                     }
-
                     else {
                         const kernel = client.kernelHost.getKernel(envelope);
                         kernel.send(envelope);
