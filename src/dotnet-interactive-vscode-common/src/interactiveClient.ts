@@ -87,10 +87,10 @@ export class InteractiveClient {
         this._kernel = new CompositeKernel("vscode");
         this._kernelHost = new KernelHost(this._kernel, config.channel.sender, config.channel.receiver, "kernel://vscode");
 
-        this._kernelHost.createProxyKernelOnDefaultConnector({ localName: 'csharp', aliases: ['c#', 'C#'], supportedDirectives: [], supportedKernelCommands: [] });
-        this._kernelHost.createProxyKernelOnDefaultConnector({ localName: 'fsharp', aliases: ['fs', 'F#'], supportedDirectives: [], supportedKernelCommands: [] });
-        this._kernelHost.createProxyKernelOnDefaultConnector({ localName: 'pwsh', aliases: ['powershell'], supportedDirectives: [], supportedKernelCommands: [] });
-        this._kernelHost.createProxyKernelOnDefaultConnector({ localName: 'mermaid', aliases: [], supportedDirectives: [], supportedKernelCommands: [] });
+        this._kernelHost.connectProxyKernelOnDefaultConnector('csharp', undefined, ['c#', 'C#']);
+        this._kernelHost.connectProxyKernelOnDefaultConnector('fsharp', undefined, ['fs', 'F#']);
+        this._kernelHost.connectProxyKernelOnDefaultConnector('pwsh', undefined, ['powershell']);
+        this._kernelHost.connectProxyKernelOnDefaultConnector('mermaid', undefined, []);
 
         this._kernelHost.connect();
     }

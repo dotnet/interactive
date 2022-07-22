@@ -38,10 +38,7 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, messageHandlerMap: M
 
 
     clientMapper.getOrAddClient(documentUri).then(client => {
-        const proxyJsKernel = new ProxyKernel('javascript', documentToWebviewSender, WebviewToDocumentReceiver);
-        client.kernel.add(proxyJsKernel, ['js']);
-
-        client.kernelHost.registerRemoteUriForProxy(proxyJsKernel.name, "kernel://webview/javascript");
+        client.kernelHost.connectProxyKernelOntConnector('javascript', documentToWebviewSender, WebviewToDocumentReceiver, "kernel://webview/javascript", ['js']);
 
         WebviewToDocumentReceiver.subscribe({
             next: envelope => {

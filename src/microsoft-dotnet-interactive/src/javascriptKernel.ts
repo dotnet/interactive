@@ -24,8 +24,11 @@ export class JavascriptKernel extends Kernel {
         const submitCode = <contracts.SubmitCode>invocation.commandEnvelope.command;
         const code = submitCode.code;
 
+        super.kernelInfo.localName;//?
+        super.kernelInfo.uri;//?
+        super.kernelInfo.remoteUri;//?
         invocation.context.publish({ eventType: contracts.CodeSubmissionReceivedType, event: { code }, command: invocation.commandEnvelope });
-
+        invocation.context.commandEnvelope.routingSlip;//?
         this.capture.kernelInvocationContext = invocation.context;
         let result: any = undefined;
 

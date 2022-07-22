@@ -24,7 +24,7 @@ describe("kernelHost",
             const childKernel = new Kernel("test");
             compositeKernel.add(childKernel, ["test1", "test2"]);
 
-            const kernelInfo = kernelHost.tryGetKernelInfo(childKernel);
+            const kernelInfo = childKernel.kernelInfo;
 
             expect(kernelInfo).to.not.be.undefined;
             expect(kernelInfo!.uri).to.not.be.undefined;
@@ -41,7 +41,7 @@ describe("kernelHost",
             compositeKernel.add(childKernel, ["test1", "test2"]);
 
             const kernelHost = new KernelHost(compositeKernel, inMemory.local.sender, inMemory.local.receiver, "kernel://vscode");
-            const kernelInfo = kernelHost.tryGetKernelInfo(childKernel);
+            const kernelInfo = childKernel.kernelInfo;
 
             expect(kernelInfo).to.not.be.undefined;
             expect(kernelInfo!.uri).to.not.be.undefined;
@@ -58,8 +58,8 @@ describe("kernelHost",
 
             const vscodeHost = new KernelHost(vscodeKernel, inMemory.local.sender, inMemory.local.receiver, "kernel://vscode");
 
-            vscodeHost.createProxyKernelOnDefaultConnector({ localName: "python", remoteUri: "kernel://remote/python", aliases: [], supportedDirectives: [], supportedKernelCommands: [] });
-            vscodeHost.createProxyKernelOnDefaultConnector({ localName: "go", remoteUri: "kernel://remote/go", aliases: [], supportedDirectives: [], supportedKernelCommands: [] });
+            vscodeHost.connectProxyKernelOnDefaultConnector("python", "kernel://remote/python");
+            vscodeHost.connectProxyKernelOnDefaultConnector("go", "kernel://remote/go");
 
             vscodeKernel.subscribeToKernelEvents(e => {
                 events.push(e);

@@ -4,7 +4,7 @@
 import { CompositeKernel } from './compositeKernel';
 import * as contracts from './contracts';
 import * as connection from './connection';
-import { Kernel } from './kernel';
+import { Kernel, KernelType } from './kernel';
 import { ProxyKernel } from './proxyKernel';
 import { Logger } from './logger';
 import { KernelScheduler } from './kernelScheduler';
@@ -28,6 +28,10 @@ export class KernelHost {
         this._defaultReceiver = receiver;
     }
 
+    public get uri(): string {
+        return this._uri;
+    }
+
     public tryGetKernelByRemoteUri(remoteUri: string): Kernel | undefined {
         return this._remoteUriToKernel.get(remoteUri);
     }
@@ -42,7 +46,7 @@ export class KernelHost {
 
     public addKernelInfo(kernel: Kernel, kernelInfo: contracts.KernelInfo) {
 
-        kernelInfo.uri = `${this._uri}/${kernel.name}`;
+        kernelInfo.uri = `${this._uri}/${kernel.name}`;//?
         this._kernelToKernelInfo.set(kernel, kernelInfo);
         this._uriToKernel.set(kernelInfo.uri, kernel);
     }
@@ -73,38 +77,18 @@ export class KernelHost {
 
         Logger.default.info(`Using Kernel ${this._kernel.name}`);
         return this._kernel;
+
     }
 
-    public registerRemoteUriForProxy(proxyLocalKernelName: string, remoteUri: string) {
-        const kernel = this._kernel.findKernelByName(proxyLocalKernelName);
-        if (!(kernel as ProxyKernel)) {
-            throw new Error(`Kernel ${proxyLocalKernelName} is not a proxy kernel`);
-        }
-
-        const kernelinfo = this._kernelToKernelInfo.get(kernel!);
-
-        if (!kernelinfo) {
-            throw new Error("kernelinfo not found");
-        }
-        if (kernelinfo?.remoteUri) {
-            Logger.default.info(`Removing remote uri ${kernelinfo.remoteUri} for proxy kernel ${kernelinfo.localName}`);
-            this._remoteUriToKernel.delete(kernelinfo.remoteUri.toLowerCase());
-        }
-        kernelinfo.remoteUri = remoteUri;
-
-        if (kernel) {
-            Logger.default.info(`Registering remote uri ${remoteUri} for proxy kernel ${kernelinfo.localName}`);
-            this._remoteUriToKernel.set(remoteUri.toLowerCase(), kernel);
-        }
+    public connectProxyKernelOnDefaultConnector(localName: string, remoteKernelUri?: string, aliases?: string[]): ProxyKernel {
+        return this.connectProxyKernelOntConnector(localName, this._defaultSender, this._defaultReceiver, remoteKernelUri, aliases);
     }
 
-    public createProxyKernelOnDefaultConnector(kernelInfo: contracts.KernelInfo): ProxyKernel {
-        const proxyKernel = new ProxyKernel(kernelInfo.localName, this._defaultSender, this._defaultReceiver);
-        this._kernel.add(proxyKernel, kernelInfo.aliases);
-        if (kernelInfo.remoteUri) {
-            this.registerRemoteUriForProxy(proxyKernel.name, kernelInfo.remoteUri);
-        }
-        return proxyKernel;
+    public connectProxyKernelOntConnector(localName: string, sender: connection.IKernelCommandAndEventSender, receiver: connection.IKernelCommandAndEventReceiver, remoteKernelUri?: string, aliases?: string[]): ProxyKernel {
+        let kernel = new ProxyKernel(localName, sender, receiver);
+        kernel.kernelInfo.remoteUri = remoteKernelUri;
+        this._kernel.add(kernel, aliases);
+        return kernel;
     }
 
     public connect() {
@@ -116,7 +100,7 @@ export class KernelHost {
             next: (kernelCommandOrEventEnvelope: connection.KernelCommandOrEventEnvelope) => {
                 if (connection.isKernelCommandEnvelope(kernelCommandOrEventEnvelope)) {
                     this._scheduler.runAsync(kernelCommandOrEventEnvelope, commandEnvelope => {
-                        const kernel = this.getKernel(commandEnvelope);
+                        const kernel = this._kernel;;
                         return kernel.send(commandEnvelope);
                     });
                 }

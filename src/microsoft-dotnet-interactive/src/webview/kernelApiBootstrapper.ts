@@ -72,11 +72,11 @@ export function configure(global?: any) {
     const jsKernel = new JavascriptKernel();
     compositeKernel.add(jsKernel, ["js"]);
 
-    kernelHost.createProxyKernelOnDefaultConnector({ localName: 'csharp', aliases: ['c#', 'C#'], supportedDirectives: [], supportedKernelCommands: [] });
-    kernelHost.createProxyKernelOnDefaultConnector({ localName: 'fsharp', aliases: ['fs', 'F#'], supportedDirectives: [], supportedKernelCommands: [] });
-    kernelHost.createProxyKernelOnDefaultConnector({ localName: 'pwsh', aliases: ['powershell'], supportedDirectives: [], supportedKernelCommands: [] });
-    kernelHost.createProxyKernelOnDefaultConnector({ localName: 'mermaid', aliases: [], supportedDirectives: [], supportedKernelCommands: [] });
-    kernelHost.createProxyKernelOnDefaultConnector({ localName: 'vscode', aliases: [], remoteUri: "kernel://vscode/vscode", supportedDirectives: [], supportedKernelCommands: [] });
+    kernelHost.connectProxyKernelOnDefaultConnector('csharp', undefined, ['c#', 'C#']);
+    kernelHost.connectProxyKernelOnDefaultConnector('fsharp', undefined, ['fs', 'F#']);
+    kernelHost.connectProxyKernelOnDefaultConnector('pwsh', undefined, ['powershell']);
+    kernelHost.connectProxyKernelOnDefaultConnector('mermaid', undefined, []);
+    kernelHost.connectProxyKernelOnDefaultConnector('vscode', "kernel://vscode/vscode");
 
     kernelHost.connect();
 }

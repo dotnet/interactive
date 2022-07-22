@@ -3,7 +3,7 @@
 
 import * as contracts from "./contracts";
 import { Logger } from "./logger";
-import { Kernel, IKernelCommandHandler, IKernelCommandInvocation, getKernelUri } from "./kernel";
+import { Kernel, IKernelCommandHandler, IKernelCommandInvocation, getKernelUri, KernelType } from "./kernel";
 import * as connection from "./connection";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
 import { KernelInvocationContext } from "./kernelInvocationContext";
@@ -11,6 +11,7 @@ export class ProxyKernel extends Kernel {
 
     constructor(override readonly name: string, private readonly _sender: connection.IKernelCommandAndEventSender, private readonly _receiver: connection.IKernelCommandAndEventReceiver) {
         super(name);
+        this.kernelType = KernelType.proxy;
     }
     override getCommandHandler(commandType: contracts.KernelCommandType): IKernelCommandHandler | undefined {
         return {
@@ -57,6 +58,7 @@ export class ProxyKernel extends Kernel {
 
                         for (const kernelUri of envelope.command!.routingSlip!) {
                             connection.tryAddUriToRoutingSlip(commandInvocation.commandEnvelope, kernelUri);
+                            envelope.command!.routingSlip = commandInvocation.commandEnvelope.routingSlip;//?
                         }
 
                         switch (envelope.eventType) {
@@ -86,6 +88,7 @@ export class ProxyKernel extends Kernel {
                 }
             }
 
+            commandInvocation.commandEnvelope.routingSlip;//?
 
             this._sender.send(commandInvocation.commandEnvelope);
             Logger.default.info(`proxy ${this.name} about to await with token ${commandToken}`);

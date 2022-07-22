@@ -12,13 +12,13 @@ import { createInMemoryChannels } from "./testSupport";
 describe("kernelInfo", () => {
     describe("for composite kernel", () => {
         it("returns kernel info for all children", async () => {
-            const kernel = new CompositeKernel("root");
-            kernel.add(new JavascriptKernel("child1"), ["child1Js"]);
-            kernel.add(new JavascriptKernel("child2"), ["child2Js"]);
+            const compositeKernel = new CompositeKernel("root");
+            compositeKernel.add(new JavascriptKernel("child1"), ["child1Js"]);
+            compositeKernel.add(new JavascriptKernel("child2"), ["child2Js"]);
             const events: contracts.KernelEventEnvelope[] = [];
-            const sub = kernel.subscribeToKernelEvents((event) => events.push(event));
+            const sub = compositeKernel.subscribeToKernelEvents((event) => events.push(event));
 
-            await kernel.send({ commandType: contracts.RequestKernelInfoType, command: {} });
+            await compositeKernel.send({ commandType: contracts.RequestKernelInfoType, command: {} });
 
             sub.dispose();
             const kernelInfos = events.filter(e => e.eventType === contracts.KernelInfoProducedType).map(e => (<contracts.KernelInfoProduced>(e.event)).kernelInfo);

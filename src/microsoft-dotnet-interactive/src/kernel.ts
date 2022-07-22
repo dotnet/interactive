@@ -26,6 +26,12 @@ export interface IKernelEventObserver {
     (kernelEvent: contracts.KernelEventEnvelope): void;
 }
 
+export enum KernelType {
+    composite,
+    proxy,
+    langauage
+};
+
 export class Kernel {
     private _kernelInfo: contracts.KernelInfo;
     private _commandHandlers = new Map<string, IKernelCommandHandler>();
@@ -34,10 +40,19 @@ export class Kernel {
     public rootKernel: Kernel = this;
     public parentKernel: CompositeKernel | null = null;
     private _scheduler?: KernelScheduler<contracts.KernelCommandEnvelope> | null = null;
+    private _kernelType: KernelType = KernelType.langauage;
 
     public get kernelInfo(): contracts.KernelInfo {
 
         return this._kernelInfo;
+    }
+
+    public get kernelType(): KernelType {
+        return this._kernelType;
+    }
+
+    protected set kernelType(value: KernelType) {
+        this._kernelType = value;
     }
 
     public get kernelEvents(): rxjs.Observable<contracts.KernelEventEnvelope> {
@@ -119,6 +134,7 @@ export class Kernel {
     async send(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         this.ensureCommandTokenAndId(commandEnvelope);
         tryAddUriToRoutingSlip(commandEnvelope, getKernelUri(this));
+        commandEnvelope.routingSlip;//?
         let context = KernelInvocationContext.establish(commandEnvelope);
         this.getScheduler().runAsync(commandEnvelope, (value) => this.executeCommand(value));
         return context.promise;
@@ -226,9 +242,13 @@ export class Kernel {
         this._kernelInfo.supportedKernelCommands = Array.from(this._commandHandlers.keys()).map(commandName => ({ name: commandName }));
     }
 
-    getHandlingKernel(commandEnvelope: contracts.KernelCommandEnvelope): Kernel | undefined {
-        let targetKernelName = commandEnvelope.command.targetKernelName ?? this.name;
-        return targetKernelName === this.name ? this : undefined;
+    protected getHandlingKernel(commandEnvelope: contracts.KernelCommandEnvelope, context?: KernelInvocationContext | null): Kernel | null {
+        if (this.canHandle(commandEnvelope)) {
+            return this;
+        } else {
+            context?.fail(`Command ${commandEnvelope.commandType} is not supported by Kernel ${this.name}`);
+            return null;
+        }
     }
 
     protected publishEvent(kernelEvent: contracts.KernelEventEnvelope) {
