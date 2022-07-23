@@ -436,11 +436,14 @@ export class InteractiveClient {
     }
 
     private displayEventToCellOutput(disp: DisplayEvent, stream?: 'stdout' | 'stderr'): vscodeLike.NotebookCellOutput {
+
         const encoder = new TextEncoder();
         let outputItems: Array<vscodeLike.NotebookCellOutputItem> = [];
         if (disp.formattedValues && disp.formattedValues.length > 0) {
             for (let formatted of disp.formattedValues) {
-                let data = encoder.encode(formatted.value);
+                let data = this.IsEncodedMimeType(formatted.mimeType)
+                    ? Buffer.from(formatted.value, 'base64')
+                    : encoder.encode(formatted.value);
                 const outputItem: vscodeLike.NotebookCellOutputItem = {
                     mime: formatted.mimeType,
                     data
@@ -454,6 +457,11 @@ export class InteractiveClient {
 
         const output = createOutput(outputItems, this.getNextOutputId());
         return output;
+    }
+
+    private IsEncodedMimeType(mimeType: string): boolean {
+        const encdoedMimetypes = new Set<string>(["image/png"]);
+        return mimeType.startsWith("image/") || encdoedMimetypes.has(mimeType);
     }
 
     private getNextOutputId(): string {
