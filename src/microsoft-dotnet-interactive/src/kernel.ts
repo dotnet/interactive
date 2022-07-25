@@ -140,9 +140,14 @@ export class Kernel {
         let context = KernelInvocationContext.establish(commandEnvelope);
         let previousHandlingKernel = context.handlingKernel;
         let currentCommandOwnsContext = areCommandsTheSame(context.commandEnvelope, commandEnvelope);
+
+        if (commandEnvelope.command.targetKernelName && (commandEnvelope.command.targetKernelName === this.kernelInfo.localName)) {
+            currentCommandOwnsContext = currentCommandOwnsContext && true;
+        }
         let eventSubscription: rxjs.Subscription | undefined = undefined;
 
         if (currentCommandOwnsContext) {
+            this.name;//?
             Logger.default.info(`kernel ${this.name} of type ${KernelType[this.kernelType]} subscribing to context events`);
             eventSubscription = context.kernelEvents.pipe(rxjs.map(e => {
                 const message = `kernel ${this.name} of type ${KernelType[this.kernelType]} saw event ${e.eventType} with token ${e.command?.token}`;
