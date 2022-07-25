@@ -1,5 +1,8 @@
 {
   "event": {},
   "eventType": "KernelReady",
-  "command": null
+  "command": null,
+  "routingSlip": [
+    "kernel://somelocation/kernelName"
+  ]
 }

@@ -33,6 +33,7 @@ import { Logger, LogLevel } from './dotnet-interactive/logger';
 import { ChildProcessLineAdapter } from './childProcessLineAdapter';
 import { NotebookParserServer } from './notebookParserServer';
 import { registerVariableExplorer } from './variableExplorer';
+import { KernelCommandAndEventChannel } from './DotnetInteractiveChannel';
 
 export const KernelIdForJupyter = 'dotnet-interactive-for-jupyter';
 
@@ -98,7 +99,7 @@ export async function activate(context: vscode.ExtensionContext) {
         throw e;
     }
 
-    async function kernelChannelCreator(notebookUri: vscodeLike.Uri): Promise<contracts.KernelCommandAndEventChannel> {
+    async function kernelChannelCreator(notebookUri: vscodeLike.Uri): Promise<KernelCommandAndEventChannel> {
         const launchOptions = await getInteractiveLaunchOptions();
         if (!launchOptions) {
             throw new Error(`Unable to get interactive launch options.  Please see the '${diagnosticsChannel.getName()}' output window for details.`);

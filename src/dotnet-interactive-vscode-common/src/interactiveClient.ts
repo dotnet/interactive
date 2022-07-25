@@ -13,7 +13,6 @@ import {
     DisplayEvent,
     DisplayedValueProducedType,
     DisplayedValueUpdatedType,
-    DisposableSubscription,
     HoverTextProduced,
     HoverTextProducedType,
     KernelCommand,
@@ -22,7 +21,6 @@ import {
     KernelEventEnvelope,
     KernelEventEnvelopeObserver,
     KernelEventType,
-    KernelCommandAndEventChannel,
     RequestCompletions,
     RequestCompletionsType,
     RequestDiagnostics,
@@ -56,6 +54,9 @@ import * as vscodeLike from './interfaces/vscode-like';
 import { CompositeKernel } from './dotnet-interactive/compositeKernel';
 import { Guid } from './dotnet-interactive/tokenGenerator';
 import { KernelHost } from './dotnet-interactive/kernelHost';
+import { KernelCommandAndEventChannel } from './DotnetInteractiveChannel';
+import { isKernelEventEnvelope } from './dotnet-interactive/connection';
+import { DisposableSubscription } from './dotnet-interactive/disposables';
 
 export interface ErrorOutputCreator {
     (message: string, outputId?: string): vscodeLike.NotebookCellOutput;
@@ -75,15 +76,21 @@ export class InteractiveClient {
     private _kernel: CompositeKernel;
     private _kernelHost: KernelHost;
     constructor(readonly config: InteractiveClientConfiguration) {
-        config.channel.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
+        config.channel.receiver.subscribe({
+            next: (envelope) => {
+                if (isKernelEventEnvelope(envelope)) {
+                    this.eventListener(envelope);
+                }
+            }
+        });
 
         this._kernel = new CompositeKernel("vscode");
-        this._kernelHost = new KernelHost(this._kernel, config.channel, "kernel://vscode");
+        this._kernelHost = new KernelHost(this._kernel, config.channel.sender, config.channel.receiver, "kernel://vscode");
 
-        this._kernelHost.createProxyKernelOnDefaultConnector({ localName: 'csharp', aliases: ['c#', 'C#'], supportedDirectives: [], supportedKernelCommands: [] });
-        this._kernelHost.createProxyKernelOnDefaultConnector({ localName: 'fsharp', aliases: ['fs', 'F#'], supportedDirectives: [], supportedKernelCommands: [] });
-        this._kernelHost.createProxyKernelOnDefaultConnector({ localName: 'pwsh', aliases: ['powershell'], supportedDirectives: [], supportedKernelCommands: [] });
-        this._kernelHost.createProxyKernelOnDefaultConnector({ localName: 'mermaid', aliases: [], supportedDirectives: [], supportedKernelCommands: [] });
+        this._kernelHost.connectProxyKernelOnDefaultConnector('csharp', undefined, ['c#', 'C#']);
+        this._kernelHost.connectProxyKernelOnDefaultConnector('fsharp', undefined, ['fs', 'F#']);
+        this._kernelHost.connectProxyKernelOnDefaultConnector('pwsh', undefined, ['powershell']);
+        this._kernelHost.connectProxyKernelOnDefaultConnector('mermaid', undefined, []);
 
         this._kernelHost.connect();
     }
@@ -136,95 +143,100 @@ export class InteractiveClient {
             let failureReported = false;
             const commandToken = configuration?.token ? configuration.token : this.getNextToken();
             const commandId = Guid.create().toString();
+            try {
+                return this.submitCode(source, language, eventEnvelope => {
+                    if (this.deferredOutput.length > 0) {
+                        outputs.push(...this.deferredOutput);
+                        this.deferredOutput = [];
+                    }
 
-            return this.submitCode(source, language, eventEnvelope => {
-                if (this.deferredOutput.length > 0) {
-                    outputs.push(...this.deferredOutput);
-                    this.deferredOutput = [];
-                }
-
-                switch (eventEnvelope.eventType) {
-                    // if kernel languages were added, handle those events here
-                    case CommandSucceededType:
-                        if (eventEnvelope.command?.id === commandId) {
-                            // only complete this promise if it's the root command
-                            resolve();
-                        }
-                        break;
-                    case CommandFailedType:
-                        {
-                            const err = <CommandFailed>eventEnvelope.event;
-                            const errorOutput = this.config.createErrorOutput(err.message, this.getNextOutputId());
-                            outputs.push(errorOutput);
-                            reportOutputs();
-                            failureReported = true;
+                    switch (eventEnvelope.eventType) {
+                        // if kernel languages were added, handle those events here
+                        case CommandSucceededType:
                             if (eventEnvelope.command?.id === commandId) {
                                 // only complete this promise if it's the root command
-                                reject(err);
+                                resolve();
                             }
-                        }
-                        break;
-                    case DiagnosticsProducedType:
-                        {
-                            const diags = <DiagnosticsProduced>eventEnvelope.event;
-                            diagnostics.push(...diags.diagnostics);
-                            reportDiagnostics();
-                        }
-                        break;
-                    case StandardErrorValueProducedType:
-                    case StandardOutputValueProducedType:
-                        {
-                            let disp = <DisplayEvent>eventEnvelope.event;
-                            const stream = eventEnvelope.eventType === StandardErrorValueProducedType ? 'stderr' : 'stdout';
-                            let output = this.displayEventToCellOutput(disp, stream);
-                            outputs.push(output);
-                            reportOutputs();
-                        }
-                        break;
-                    case DisplayedValueProducedType:
-                    case DisplayedValueUpdatedType:
-                    case ReturnValueProducedType:
-                        {
-                            let disp = <DisplayEvent>eventEnvelope.event;
-                            let output = this.displayEventToCellOutput(disp);
+                            break;
+                        case CommandFailedType:
+                            {
+                                const err = <CommandFailed>eventEnvelope.event;
+                                const errorOutput = this.config.createErrorOutput(err.message, this.getNextOutputId());
+                                outputs.push(errorOutput);
+                                reportOutputs();
+                                failureReported = true;
+                                if (eventEnvelope.command?.id === commandId) {
+                                    // only complete this promise if it's the root command
+                                    reject(err);
+                                }
+                            }
+                            break;
+                        case DiagnosticsProducedType:
+                            {
+                                const diags = <DiagnosticsProduced>eventEnvelope.event;
+                                diagnostics.push(...diags.diagnostics);
+                                reportDiagnostics();
+                            }
+                            break;
+                        case StandardErrorValueProducedType:
+                        case StandardOutputValueProducedType:
+                            {
+                                let disp = <DisplayEvent>eventEnvelope.event;
+                                const stream = eventEnvelope.eventType === StandardErrorValueProducedType ? 'stderr' : 'stdout';
+                                let output = this.displayEventToCellOutput(disp, stream);
+                                outputs.push(output);
+                                reportOutputs();
+                            }
+                            break;
+                        case DisplayedValueProducedType:
+                        case DisplayedValueUpdatedType:
+                        case ReturnValueProducedType:
+                            {
+                                let disp = <DisplayEvent>eventEnvelope.event;
+                                let output = this.displayEventToCellOutput(disp);
 
-                            if (disp.valueId) {
-                                let valueId = this.valueIdMap.get(disp.valueId);
-                                if (valueId !== undefined) {
-                                    // update existing value
-                                    valueId.outputs[valueId.idx] = output;
-                                    valueId.observer(valueId.outputs);
-                                    // don't report through regular channels
-                                    break;
+                                if (disp.valueId) {
+                                    let valueId = this.valueIdMap.get(disp.valueId);
+                                    if (valueId !== undefined) {
+                                        // update existing value
+                                        valueId.outputs[valueId.idx] = output;
+                                        valueId.observer(valueId.outputs);
+                                        // don't report through regular channels
+                                        break;
+                                    } else {
+                                        // add new tracked value
+                                        this.valueIdMap.set(disp.valueId, {
+                                            idx: outputs.length,
+                                            outputs,
+                                            observer: outputObserver
+                                        });
+                                        outputs.push(output);
+                                    }
                                 } else {
-                                    // add new tracked value
-                                    this.valueIdMap.set(disp.valueId, {
-                                        idx: outputs.length,
-                                        outputs,
-                                        observer: outputObserver
-                                    });
+                                    // raw value, just push it
                                     outputs.push(output);
                                 }
-                            } else {
-                                // raw value, just push it
-                                outputs.push(output);
-                            }
 
-                            reportOutputs();
-                        }
-                        break;
-                }
-            }, commandToken, commandId).catch(e => {
-                // only report a failure if it's not a `CommandFailed` event from above (which has already called `reject()`)
-                if (!failureReported) {
-                    const errorMessage = typeof e?.message === 'string' ? <string>e.message : '' + e;
-                    const errorOutput = this.config.createErrorOutput(errorMessage, this.getNextOutputId());
-                    outputs.push(errorOutput);
-                    reportOutputs();
-                    reject(e);
-                }
-            });
+                                reportOutputs();
+                            }
+                            break;
+                    }
+                }, commandToken, commandId).catch(e => {
+                    // only report a failure if it's not a `CommandFailed` event from above (which has already called `reject()`)
+                    if (!failureReported) {
+                        const errorMessage = typeof e?.message === 'string' ? <string>e.message : '' + e;
+                        const errorOutput = this.config.createErrorOutput(errorMessage, this.getNextOutputId());
+                        outputs.push(errorOutput);
+                        reportOutputs();
+                        reject(e);
+                    }
+                });
+            }
+            catch (e) {
+                reject(e);
+            }
         });
+
     }
 
     completion(language: string, code: string, line: number, character: number, token?: string | undefined): Promise<CompletionsProduced> {
@@ -282,7 +294,13 @@ export class InteractiveClient {
         id = id || Guid.create().toString();
 
         let disposable = this.subscribeToKernelTokenEvents(token, observer);
-        await this.submitCommand(command, SubmitCodeType, token, id);
+        try {
+            await this.submitCommand(command, SubmitCodeType, token, id);
+        }
+        catch (error) {
+            return Promise.reject(error);
+
+        }
         return disposable;
     }
 
@@ -346,7 +364,7 @@ export class InteractiveClient {
                     }
                 }
             });
-            await this.config.channel.submitCommand({ command, commandType, token, id });
+            await this.config.channel.sender.send({ command, commandType, token, id });
         });
     }
 
@@ -375,12 +393,18 @@ export class InteractiveClient {
                         break;
                 }
             });
-            this.config.channel.submitCommand({ command, commandType, token, id }).catch(e => {
-                // only report a failure if it's not a `CommandFailed` event from above (which has already called `reject()`)
-                if (!failureReported) {
-                    reject(e);
-                }
-            });
+            try {
+                this.config.channel.sender
+                    .send({ command, commandType, token, id })
+                    .catch(e => {
+                        // only report a failure if it's not a `CommandFailed` event from above (which has already called `reject()`)
+                        if (!failureReported) {
+                            reject(e);
+                        }
+                    });
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 
@@ -436,11 +460,14 @@ export class InteractiveClient {
     }
 
     private displayEventToCellOutput(disp: DisplayEvent, stream?: 'stdout' | 'stderr'): vscodeLike.NotebookCellOutput {
+
         const encoder = new TextEncoder();
         let outputItems: Array<vscodeLike.NotebookCellOutputItem> = [];
         if (disp.formattedValues && disp.formattedValues.length > 0) {
             for (let formatted of disp.formattedValues) {
-                let data = encoder.encode(formatted.value);
+                let data = this.IsEncodedMimeType(formatted.mimeType)
+                    ? Buffer.from(formatted.value, 'base64')
+                    : encoder.encode(formatted.value);
                 const outputItem: vscodeLike.NotebookCellOutputItem = {
                     mime: formatted.mimeType,
                     data
@@ -454,6 +481,11 @@ export class InteractiveClient {
 
         const output = createOutput(outputItems, this.getNextOutputId());
         return output;
+    }
+
+    private IsEncodedMimeType(mimeType: string): boolean {
+        const encdoedMimetypes = new Set<string>(["image/png"]);
+        return mimeType.startsWith("image/") || encdoedMimetypes.has(mimeType);
     }
 
     private getNextOutputId(): string {

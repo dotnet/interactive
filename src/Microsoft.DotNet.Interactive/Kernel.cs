@@ -161,6 +161,12 @@ namespace Microsoft.DotNet.Interactive
                     return false;
                 }
 
+                if (command.DestinationUri is { } && handlingKernel.KernelInfo.Uri is {} && command.DestinationUri == handlingKernel.KernelInfo.Uri)
+                {
+                    command.SchedulingScope = handlingKernel.SchedulingScope;
+                    command.TargetKernelName = handlingKernel.Name;
+                }
+                
                 command.SchedulingScope ??= handlingKernel.SchedulingScope;
                 command.TargetKernelName ??= handlingKernel.Name;
 
@@ -308,7 +314,6 @@ namespace Microsoft.DotNet.Interactive
             {
                 throw new ArgumentNullException(nameof(command));
             }
-
             command.ShouldPublishCompletionEvent ??= true;
 
             context = KernelInvocationContext.Establish(command);
@@ -668,7 +673,8 @@ namespace Microsoft.DotNet.Interactive
             {
                 throw new ArgumentNullException(nameof(kernelEvent));
             }
-
+            
+            kernelEvent.RoutingSlip.TryAdd(this.GetKernelUri());
             _kernelEvents.OnNext(kernelEvent);
         }
 

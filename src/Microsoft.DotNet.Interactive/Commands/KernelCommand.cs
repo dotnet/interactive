@@ -20,6 +20,7 @@ namespace Microsoft.DotNet.Interactive.Commands
             Properties = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
             TargetKernelName = targetKernelName;
             Parent = parent;
+            RoutingSlip = new RoutingSlip();
         }
 
         [JsonIgnore] 
@@ -47,6 +48,8 @@ namespace Microsoft.DotNet.Interactive.Commands
 
         [JsonIgnore] 
         public ParseResult KernelChooserParseResult { get; internal set; }
+
+        [JsonIgnore] public RoutingSlip RoutingSlip { get; }
 
         public virtual Task InvokeAsync(KernelInvocationContext context)
         {

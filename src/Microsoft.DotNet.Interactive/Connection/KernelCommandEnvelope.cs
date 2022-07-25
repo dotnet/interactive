@@ -181,6 +181,16 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
             command.SetToken(commandToken);
         }
 
+        if (json.TryGetProperty(nameof(SerializationModel.routingSlip), out var routingSlipProperty))
+        {
+            foreach (var routingSlipItem in routingSlipProperty.EnumerateArray())
+            {
+                var uri = new Uri(routingSlipItem.GetString(), UriKind.Absolute);
+
+                command.RoutingSlip.TryAdd(uri);
+            }
+        }
+
         return Create(command);
     }
 
@@ -193,7 +203,8 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
             command = envelope.Command,
             commandType = envelope.CommandType,
             token = envelope.Token,
-            id = envelope.CommandId
+            id = envelope.CommandId,
+            routingSlip = envelope.Command.RoutingSlip.Select(uri => uri.AbsoluteUri).ToArray()
         };
 
         return JsonSerializer.Serialize(
@@ -210,5 +221,7 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
         public string commandType { get; set; }
 
         public object command { get; set; }
+
+        public string[] routingSlip { get; set; }
     }
 }

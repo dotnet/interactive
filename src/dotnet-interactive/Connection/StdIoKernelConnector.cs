@@ -69,6 +69,7 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
                     stdOutObservable.OnNext(args.Data);
                 }
             };
+            
             var stdErr = new StringBuilder();
             _process.ErrorDataReceived += (_, args) =>
             {

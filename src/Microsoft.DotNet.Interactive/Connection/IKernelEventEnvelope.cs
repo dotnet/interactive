@@ -8,6 +8,5 @@ namespace Microsoft.DotNet.Interactive.Connection;
 public interface IKernelEventEnvelope
 {
     KernelEvent Event { get; }
-
     string EventType { get; }
 }

@@ -6,5 +6,8 @@
     "targetKernelName": "csharp",
     "originUri": null,
     "destinationUri": null
-  }
+  },
+  "routingSlip": [
+    "kernel://somelocation/kernelName"
+  ]
 }

@@ -2,6 +2,7 @@
     eventType: KernelEventType;
     event: KernelEvent;
     command?: KernelCommandEnvelope;
+    routingSlip?: string[];
 }
 
 export interface KernelCommandEnvelope {
@@ -9,6 +10,7 @@ export interface KernelCommandEnvelope {
     id?: string;
     commandType: KernelCommandType;
     command: KernelCommand;
+    routingSlip?: string[];
 }
 
 export interface KernelEventEnvelopeObserver {
@@ -18,24 +20,3 @@ export interface KernelEventEnvelopeObserver {
 export interface KernelCommandEnvelopeHandler {
     (eventEnvelope: KernelCommandEnvelope): Promise<void>;
 }
-
-export interface Disposable {
-    dispose(): void;
-}
-
-export interface DisposableSubscription extends Disposable {
-}
-
-export interface KernelCommandAndEventSender {
-    submitCommand(commandEnvelope: KernelCommandEnvelope): Promise<void>;
-    publishKernelEvent(eventEnvelope: KernelEventEnvelope): Promise<void>;
-}
-
-export interface KernelCommandAndEventReceiver {
-    subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;
-    setCommandHandler(handler: KernelCommandEnvelopeHandler): void;
-}
-
-export interface KernelCommandAndEventChannel extends KernelCommandAndEventSender, KernelCommandAndEventReceiver, Disposable {
-}
-

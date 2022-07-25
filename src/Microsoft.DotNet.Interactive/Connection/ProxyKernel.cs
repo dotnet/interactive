@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
@@ -116,10 +117,12 @@ public sealed class ProxyKernel : Kernel
 
         if (hasPending && HasSameOrigin(kernelEvent, KernelInfo))
         {
+            PatchRoutingSlip(pending.command, kernelEvent.Command);
             switch (kernelEvent)
             {
                 case CommandFailed cf when pending.command.IsEquivalentTo(kernelEvent.Command):
                     _inflight.Remove(token);
+                   
                     pending.completionSource.TrySetResult(cf);
                     break;
 
@@ -139,6 +142,14 @@ public sealed class ProxyKernel : Kernel
                     }
                     break;
             }
+        }
+    }
+
+    private void PatchRoutingSlip(KernelCommand command, KernelCommand commandFromRemoteKernel)
+    {
+        foreach (var kernelOrKernelHostUri in commandFromRemoteKernel.RoutingSlip.Skip(command.RoutingSlip.Count()))
+        {
+            command.RoutingSlip.TryAdd(kernelOrKernelHostUri);
         }
     }
 

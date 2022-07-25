@@ -8,6 +8,8 @@ import * as contracts from './dotnet-interactive/contracts';
 import { getNotebookSpecificLanguage } from './interactiveNotebook';
 import { VariableGridRow } from './dotnet-interactive/webview/variableGridInterfaces';
 import * as versionSpecificFunctions from '../versionSpecificFunctions';
+import { DisposableSubscription } from './dotnet-interactive/disposables';
+import { isKernelEventEnvelope } from './dotnet-interactive';
 
 // creates a map of, e.g.:
 //   "dotnet-interactive.csharp" => "C# (.NET Interactive)""
@@ -20,7 +22,6 @@ const languageIdToAliasMap = new Map(
 );
 
 export function registerVariableExplorer(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
-
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.shareValueTo', async (variableInfo: { kernelName: string, valueName: string } | undefined) => {
         if (variableInfo && vscode.window.activeNotebookEditor) {
             const client = await clientMapper.tryGetClient(versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor).uri);
@@ -71,7 +72,7 @@ export function registerVariableExplorer(context: vscode.ExtensionContext, clien
 }
 
 class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
-    private currentNotebookSubscription: contracts.DisposableSubscription | undefined = undefined;
+    private currentNotebookSubscription: DisposableSubscription | undefined = undefined;
     private webview: vscode.Webview | undefined = undefined;
 
     constructor(private readonly clientMapper: ClientMapper, private readonly extensionPath: string) {
@@ -161,17 +162,24 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
         if (vscode.window.activeNotebookEditor) {
             const notebook = versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
             const client = await this.clientMapper.getOrAddClient(notebook.uri);
-            this.currentNotebookSubscription = client.channel.subscribeToKernelEvents(eventEnvelope => {
-                switch (eventEnvelope.eventType) {
-                    case contracts.CommandSucceededType:
-                    case contracts.CommandFailedType:
-                    case contracts.CommandCancelledType:
-                        if (eventEnvelope.command?.commandType === contracts.SubmitCodeType) {
-                            this.refresh();
+
+            let sub = client.channel.receiver.subscribe({
+                next: (envelope) => {
+                    if (isKernelEventEnvelope(envelope)) {
+                        switch (envelope.eventType) {
+                            case contracts.CommandSucceededType:
+                            case contracts.CommandFailedType:
+                            case contracts.CommandCancelledType:
+                                if (envelope.command?.commandType === contracts.SubmitCodeType) {
+                                    this.refresh();
+                                }
+                                break;
                         }
-                        break;
+                    }
                 }
             });
+
+            this.currentNotebookSubscription = { dispose: () => sub.unsubscribe() };
 
             const kernelNames = [...client.kernel.childKernels.map(k => k.name)];
             kernelNames.push('value');
