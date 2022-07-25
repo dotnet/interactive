@@ -28,12 +28,8 @@ namespace Microsoft.DotNet.Interactive.Kql
                     var nugetSource = "https://mssqltools.pkgs.visualstudio.com/_packaging/mssqltools/nuget/v3/index.json";
                     var commandLineResult = await dotnet.ToolInstall("Microsoft.Kusto.ServiceLayer.Tool", null, nugetSource, null, true);
                     commandLineResult.ThrowOnFailure();
-                    KernelInvocationContext.Current?.Display("Kusto package successfully installed.");
                 }
-                else
-                {
-                    KernelInvocationContext.Current?.Display("Kusto package already installed.");
-                }
+
                 compositeKernel
                     .AddKernelConnector(new ConnectKqlCommand(kqlToolName));
 
