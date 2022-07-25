@@ -41,6 +41,7 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
     public string CommandType { get; }
 
     public abstract string EventType { get; }
+    
 
     KernelEvent IKernelEventEnvelope.Event => _event;
 
@@ -152,6 +153,8 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
 
         var eventTypeName = jsonObject.GetProperty(nameof(SerializationModel.eventType)).GetString();
 
+       
+
         var eventType = EventTypeByName(eventTypeName);
 
         var ctor = eventType.GetConstructors(BindingFlags.IgnoreCase
@@ -178,6 +181,16 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
 
         var @event = (KernelEvent)ctor.Invoke(ctorParams.ToArray());
 
+        if (jsonObject.TryGetProperty(nameof(SerializationModel.routingSlip), out var routingSlipProperty))
+        {
+            foreach (var routingSlipItem in routingSlipProperty.EnumerateArray())
+            {
+                var uri = new Uri(routingSlipItem.GetString(), UriKind.Absolute);
+
+                @event.RoutingSlip.TryAdd(uri);
+            }
+        }
+
         return Create(@event);
     }
 
@@ -201,7 +214,8 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
                 command = commandEnvelope.Command,
                 commandType = commandEnvelope.CommandType,
                 token = eventEnvelope.Event.Command.GetOrCreateToken(),
-                id = commandEnvelope.CommandId
+                id = commandEnvelope.CommandId,
+                routingSlip = commandEnvelope.Command.RoutingSlip.Select(uri => uri.AbsoluteUri).ToArray()
             };
         }
 
@@ -209,6 +223,7 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
         {
             @event = eventEnvelope.Event,
             eventType = eventEnvelope.EventType,
+            routingSlip = eventEnvelope.Event.RoutingSlip.Select(uri => uri.AbsoluteUri).ToArray(),
             command = commandSerializationModel
         };
 
@@ -224,5 +239,7 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
         public string eventType { get; set; }
 
         public KernelCommandEnvelope.SerializationModel command { get; set; }
+
+        public string[] routingSlip { get; set; }
     }
 }

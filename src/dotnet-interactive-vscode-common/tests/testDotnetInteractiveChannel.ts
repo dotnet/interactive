@@ -1,29 +1,37 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+import { IKernelCommandAndEventSender, IKernelCommandAndEventReceiver, KernelCommandOrEventEnvelope, isKernelCommandEnvelope, KernelCommandAndEventReceiver, KernelCommandAndEventSender } from '../../src/vscode-common/dotnet-interactive';
 import * as contracts from '../../src/vscode-common/dotnet-interactive/contracts';
 import { DotnetInteractiveChannel } from '../../src/vscode-common/DotnetInteractiveChannel';
+import * as rxjs from 'rxjs';
 
 // Replays all events given to it
 export class TestDotnetInteractiveChannel implements DotnetInteractiveChannel {
-    private theObserver: contracts.KernelEventEnvelopeObserver | undefined;
     private fakedCommandCounter: Map<string, number> = new Map<string, number>();
-
+    private _senderSubject: rxjs.Subject<KernelCommandOrEventEnvelope>;
+    private _receiverSubject: rxjs.Subject<KernelCommandOrEventEnvelope>;
     constructor(readonly fakedEventEnvelopes: { [key: string]: { eventType: contracts.KernelEventType, event: contracts.KernelEvent, token: string }[] }) {
+        this._senderSubject = new rxjs.Subject<KernelCommandOrEventEnvelope>();
+        this._receiverSubject = new rxjs.Subject<KernelCommandOrEventEnvelope>();
+
+        this.sender = KernelCommandAndEventSender.FromObserver(this._senderSubject);
+        this.receiver = KernelCommandAndEventReceiver.FromObservable(this._receiverSubject);
+
+        this._senderSubject.subscribe({
+            next: (envelope) => {
+                if (isKernelCommandEnvelope(envelope)) {
+                    this.submitCommand(envelope);
+                }
+            }
+        });
+
     }
+    sender: IKernelCommandAndEventSender;
+    receiver: IKernelCommandAndEventReceiver;
 
-    subscribeToKernelEvents(observer: contracts.KernelEventEnvelopeObserver): contracts.DisposableSubscription {
-        this.theObserver = observer;
-        return {
-            dispose: () => { }
-        };
-    }
 
-    setCommandHandler(handler: contracts.KernelCommandEnvelopeHandler) {
-
-    }
-
-    async submitCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
+    private submitCommand(commandEnvelope: contracts.KernelCommandEnvelope) {
         // find bare fake command events
         let eventEnvelopesToReturn = this.fakedEventEnvelopes[commandEnvelope.commandType];
         if (!eventEnvelopesToReturn) {
@@ -44,23 +52,18 @@ export class TestDotnetInteractiveChannel implements DotnetInteractiveChannel {
             }
         }
 
-        if (this.theObserver) {
-            for (let envelope of eventEnvelopesToReturn) {
-                this.theObserver({
-                    eventType: envelope.eventType,
-                    event: envelope.event,
-                    command: {
-                        ...commandEnvelope,
-                        token: envelope.token
-                    }
-                });
-            }
+        for (let envelope of eventEnvelopesToReturn) {
+            this._receiverSubject.next({
+                eventType: envelope.eventType,
+                event: envelope.event,
+                command: {
+                    ...commandEnvelope,
+                    token: envelope.token
+                }
+            });
         }
     }
 
-    publishKernelEvent(eventEnvelope: contracts.KernelEventEnvelope): Promise<void> {
-        throw new Error("Stdio channel doesn't currently support a back channel");
-    }
 
     waitForReady(): Promise<void> {
         return Promise.resolve();

@@ -26,27 +26,6 @@ describe("compositeKernel", () => {
         expect(kernel.defaultKernelName).to.equal("javascript");
     });
 
-    it("can have child kernels", () => {
-        const kernel = new CompositeKernel("composite-kernel");
-        kernel.add(new Kernel("javascript"));
-
-        expect(kernel.childKernels.length).to.be.eq(1);
-    });
-
-    it("can retrive kernel by its name", () => {
-        const kernel = new CompositeKernel("composite-kernel");
-        kernel.add(new Kernel("javascript"));
-
-        expect(kernel.findKernelByName("javascript")).not.to.be.undefined;
-    });
-
-    it("can retrive kernel by alias", () => {
-        const kernel = new CompositeKernel("composite-kernel");
-        kernel.add(new Kernel("javascript"), ["js"]);
-
-        expect(kernel.findKernelByName("js")).not.to.be.undefined;
-    });
-
     it("routes commands to the appropriate kernels", async () => {
         const events: contracts.KernelEventEnvelope[] = [];
         const compositeKernel = new CompositeKernel("composite-kernel");

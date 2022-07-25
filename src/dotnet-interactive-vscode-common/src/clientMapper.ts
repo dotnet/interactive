@@ -1,10 +1,10 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelCommandAndEventChannel } from './dotnet-interactive/contracts';
 import { ErrorOutputCreator, InteractiveClient } from "./interactiveClient";
 import { ReportChannel, Uri } from "./interfaces/vscode-like";
 import { CompositeKernel } from './dotnet-interactive/compositeKernel';
+import { KernelCommandAndEventChannel } from "./DotnetInteractiveChannel";
 
 export interface ClientMapperConfiguration {
     channelCreator: (notebookUri: Uri) => Promise<KernelCommandAndEventChannel>,

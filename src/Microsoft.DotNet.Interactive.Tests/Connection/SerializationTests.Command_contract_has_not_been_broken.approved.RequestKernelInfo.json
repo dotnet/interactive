@@ -6,5 +6,8 @@
     "targetKernelName": null,
     "originUri": "kernel://pid-1234/csharp",
     "destinationUri": "kernel://webview/javascript"
-  }
+  },
+  "routingSlip": [
+    "kernel://somelocation/kernelName"
+  ]
 }

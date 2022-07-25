@@ -2,10 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as contracts from "./contracts";
-import { PromiseCompletionSource } from "./genericChannel";
-import * as kernel from "./kernel";
+import { Kernel, IKernelCommandInvocation } from "./kernel";
+import { PromiseCompletionSource } from "./promiseCompletionSource";
 
-export class HtmlKernel extends kernel.Kernel {
+export class HtmlKernel extends Kernel {
     constructor(kernelName?: string, private readonly htmlFragmentProcessor?: (htmlFragment: string) => Promise<void>, languageName?: string, languageVersion?: string) {
         super(kernelName ?? "html", languageName ?? "HTML");
         if (!this.htmlFragmentProcessor) {
@@ -14,7 +14,7 @@ export class HtmlKernel extends kernel.Kernel {
         this.registerCommandHandler({ commandType: contracts.SubmitCodeType, handle: invocation => this.handleSubmitCode(invocation) });
     }
 
-    private async handleSubmitCode(invocation: kernel.IKernelCommandInvocation): Promise<void> {
+    private async handleSubmitCode(invocation: IKernelCommandInvocation): Promise<void> {
         const submitCode = <contracts.SubmitCode>invocation.commandEnvelope.command;
         const code = submitCode.code;
 

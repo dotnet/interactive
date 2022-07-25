@@ -1,13 +1,16 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { areCommandsTheSame, KernelInvocationContext } from "./kernelInvocationContext";
-import { Guid, TokenGenerator } from "./tokenGenerator";
+import { KernelInvocationContext, areCommandsTheSame } from "./kernelInvocationContext";
+import { TokenGenerator, Guid } from "./tokenGenerator";
 import * as contracts from "./contracts";
 import { Logger } from "./logger";
 import { CompositeKernel } from "./compositeKernel";
 import { KernelScheduler } from "./kernelScheduler";
-import { PromiseCompletionSource } from "./genericChannel";
+import { PromiseCompletionSource } from "./promiseCompletionSource";
+import * as disposables from "./disposables";
+import { tryAddUriToRoutingSlip } from "./connection";
+import * as rxjs from "rxjs";
 
 export interface IKernelCommandInvocation {
     commandEnvelope: contracts.KernelCommandEnvelope;
@@ -23,18 +26,37 @@ export interface IKernelEventObserver {
     (kernelEvent: contracts.KernelEventEnvelope): void;
 }
 
+export enum KernelType {
+    composite,
+    proxy,
+    default
+};
+
 export class Kernel {
     private _kernelInfo: contracts.KernelInfo;
-
     private _commandHandlers = new Map<string, IKernelCommandHandler>();
-    private readonly _eventObservers: { [token: string]: contracts.KernelEventEnvelopeObserver } = {};
+    private _eventSubject = new rxjs.Subject<contracts.KernelEventEnvelope>();
     private readonly _tokenGenerator: TokenGenerator = new TokenGenerator();
     public rootKernel: Kernel = this;
     public parentKernel: CompositeKernel | null = null;
     private _scheduler?: KernelScheduler<contracts.KernelCommandEnvelope> | null = null;
+    private _kernelType: KernelType = KernelType.default;
 
     public get kernelInfo(): contracts.KernelInfo {
+
         return this._kernelInfo;
+    }
+
+    public get kernelType(): KernelType {
+        return this._kernelType;
+    }
+
+    protected set kernelType(value: KernelType) {
+        this._kernelType = value;
+    }
+
+    public get kernelEvents(): rxjs.Observable<contracts.KernelEventEnvelope> {
+        return this._eventSubject.asObservable();
     }
 
     constructor(readonly name: string, languageName?: string, languageVersion?: string) {
@@ -46,7 +68,6 @@ export class Kernel {
             supportedDirectives: [],
             supportedKernelCommands: []
         };
-
         this.registerCommandHandler({
             commandType: contracts.RequestKernelInfoType, handle: async invocation => {
                 await this.handleRequestKernelInfo(invocation);
@@ -74,14 +95,12 @@ export class Kernel {
     }
 
     private ensureCommandTokenAndId(commandEnvelope: contracts.KernelCommandEnvelope) {
-        commandEnvelope;//?
         if (!commandEnvelope.token) {
             let nextToken = this._tokenGenerator.GetNewToken();
             if (KernelInvocationContext.current?.commandEnvelope) {
                 // a parent command exists, create a token hierarchy
                 nextToken = KernelInvocationContext.current.commandEnvelope.token!;
             }
-
             commandEnvelope.token = nextToken;
         }
 
@@ -110,6 +129,8 @@ export class Kernel {
     // nothing is ever going to look at the promise we return here.
     async send(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         this.ensureCommandTokenAndId(commandEnvelope);
+        tryAddUriToRoutingSlip(commandEnvelope, getKernelUri(this));
+        commandEnvelope.routingSlip;//?
         let context = KernelInvocationContext.establish(commandEnvelope);
         this.getScheduler().runAsync(commandEnvelope, (value) => this.executeCommand(value));
         return context.promise;
@@ -117,15 +138,7 @@ export class Kernel {
 
     private async executeCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         let context = KernelInvocationContext.establish(commandEnvelope);
-        let isRootCommand = areCommandsTheSame(context.commandEnvelope, commandEnvelope);
-        let contextEventsSubscription: contracts.Disposable | null = null;
-        if (isRootCommand) {
-            contextEventsSubscription = context.subscribeToKernelEvents(e => {
-                const message = `kernel ${this.name} saw event ${e.eventType} with token ${e.command?.token}`;
-                Logger.default.info(message);
-                return this.publishEvent(e);
-            });
-        }
+        let previousHandlingKernel = context.handlingKernel;
 
         try {
             await this.handleCommand(commandEnvelope);
@@ -134,9 +147,7 @@ export class Kernel {
             context.fail((<any>e)?.message || JSON.stringify(e));
         }
         finally {
-            if (contextEventsSubscription) {
-                contextEventsSubscription.dispose();
-            }
+            context.handlingKernel = previousHandlingKernel;
         }
     }
 
@@ -146,48 +157,66 @@ export class Kernel {
 
     handleCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
-            let context = KernelInvocationContext.establish(commandEnvelope);//?
+            let context = KernelInvocationContext.establish(commandEnvelope);
+
+            const previoudHendlingKernel = context.handlingKernel;
             context.handlingKernel = this;
             let isRootCommand = areCommandsTheSame(context.commandEnvelope, commandEnvelope);
+
+            let eventSubscription: rxjs.Subscription | undefined = undefined;//?
+
+            if (isRootCommand) {
+                this.name;//?
+                Logger.default.info(`kernel ${this.name} of type ${KernelType[this.kernelType]} subscribing to context events`);
+                eventSubscription = context.kernelEvents.pipe(rxjs.map(e => {
+                    const message = `kernel ${this.name} of type ${KernelType[this.kernelType]} saw event ${e.eventType} with token ${e.command?.token}`;
+                    message;//?
+                    Logger.default.info(message);
+                    tryAddUriToRoutingSlip(e, getKernelUri(this));
+                    return e;
+                }))
+                    .subscribe(this.publishEvent.bind(this));
+            }
 
             let handler = this.getCommandHandler(commandEnvelope.commandType);
             if (handler) {
                 try {
                     Logger.default.info(`kernel ${this.name} about to handle command: ${JSON.stringify(commandEnvelope)}`);
                     await handler.handle({ commandEnvelope: commandEnvelope, context });
-
                     context.complete(commandEnvelope);
+                    context.handlingKernel = previoudHendlingKernel;
                     if (isRootCommand) {
+                        eventSubscription?.unsubscribe();
                         context.dispose();
                     }
-
                     Logger.default.info(`kernel ${this.name} done handling command: ${JSON.stringify(commandEnvelope)}`);
                     resolve();
                 }
                 catch (e) {
                     context.fail((<any>e)?.message || JSON.stringify(e));
+                    context.handlingKernel = previoudHendlingKernel;
                     if (isRootCommand) {
+                        eventSubscription?.unsubscribe();
                         context.dispose();
                     }
-
                     reject(e);
                 }
             } else {
+                context.handlingKernel = previoudHendlingKernel;
                 if (isRootCommand) {
+                    eventSubscription?.unsubscribe();
                     context.dispose();
                 }
-
                 reject(new Error(`No handler found for command type ${commandEnvelope.commandType}`));
             }
         });
     }
 
-    subscribeToKernelEvents(observer: contracts.KernelEventEnvelopeObserver): contracts.DisposableSubscription {
-        let subToken = this._tokenGenerator.GetNewToken();
-        this._eventObservers[subToken] = observer;
+    subscribeToKernelEvents(observer: contracts.KernelEventEnvelopeObserver): disposables.DisposableSubscription {
+        const sub = this._eventSubject.subscribe(observer);
 
         return {
-            dispose: () => { delete this._eventObservers[subToken]; }
+            dispose: () => { sub.unsubscribe(); }
         };
     }
 
@@ -218,17 +247,17 @@ export class Kernel {
         this._kernelInfo.supportedKernelCommands = Array.from(this._commandHandlers.keys()).map(commandName => ({ name: commandName }));
     }
 
-    getHandlingKernel(commandEnvelope: contracts.KernelCommandEnvelope): Kernel | undefined {
-        let targetKernelName = commandEnvelope.command.targetKernelName ?? this.name;
-        return targetKernelName === this.name ? this : undefined;
+    protected getHandlingKernel(commandEnvelope: contracts.KernelCommandEnvelope, context?: KernelInvocationContext | null): Kernel | null {
+        if (this.canHandle(commandEnvelope)) {
+            return this;
+        } else {
+            context?.fail(`Command ${commandEnvelope.commandType} is not supported by Kernel ${this.name}`);
+            return null;
+        }
     }
 
     protected publishEvent(kernelEvent: contracts.KernelEventEnvelope) {
-        let keys = Object.keys(this._eventObservers);
-        for (let subToken of keys) {
-            let observer = this._eventObservers[subToken];
-            observer(kernelEvent);
-        }
+        this._eventSubject.next(kernelEvent);
     }
 }
 
@@ -273,4 +302,8 @@ export async function submitCommandAndGetResult<TEvent extends contracts.KernelE
     }
 
     return completionSource.promise;
+}
+
+export function getKernelUri(kernel: Kernel): string {
+    return kernel.kernelInfo.uri ?? `kernel://local/${kernel.kernelInfo.localName}`;
 }

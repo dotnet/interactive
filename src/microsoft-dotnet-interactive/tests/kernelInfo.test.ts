@@ -7,18 +7,18 @@ import { JavascriptKernel } from "../src/javascriptKernel";
 import * as contracts from "../src/contracts";
 import { CompositeKernel } from "../src/compositeKernel";
 import { KernelHost } from "../src/kernelHost";
-import { createInMemoryChannel } from "./testSupport";
+import { createInMemoryChannels } from "./testSupport";
 
 describe("kernelInfo", () => {
     describe("for composite kernel", () => {
         it("returns kernel info for all children", async () => {
-            const kernel = new CompositeKernel("root");
-            kernel.add(new JavascriptKernel("child1"), ["child1Js"]);
-            kernel.add(new JavascriptKernel("child2"), ["child2Js"]);
+            const compositeKernel = new CompositeKernel("root");
+            compositeKernel.add(new JavascriptKernel("child1"), ["child1Js"]);
+            compositeKernel.add(new JavascriptKernel("child2"), ["child2Js"]);
             const events: contracts.KernelEventEnvelope[] = [];
-            const sub = kernel.subscribeToKernelEvents((event) => events.push(event));
+            const sub = compositeKernel.subscribeToKernelEvents((event) => events.push(event));
 
-            await kernel.send({ commandType: contracts.RequestKernelInfoType, command: {} });
+            await compositeKernel.send({ commandType: contracts.RequestKernelInfoType, command: {} });
 
             sub.dispose();
             const kernelInfos = events.filter(e => e.eventType === contracts.KernelInfoProducedType).map(e => (<contracts.KernelInfoProduced>(e.event)).kernelInfo);
@@ -52,8 +52,8 @@ describe("kernelInfo", () => {
 
         it("unproxied kernels have a URI", async () => {
             const kernel = new CompositeKernel("root");
-            let inMemory = createInMemoryChannel();
-            const host = new KernelHost(kernel, inMemory.channel, "kernel://local");
+            let inMemory = createInMemoryChannels();
+            const host = new KernelHost(kernel, inMemory.local.sender, inMemory.local.receiver, "kernel://local");
             kernel.add(new JavascriptKernel("child1"), ["child1Js"]);
             kernel.add(new JavascriptKernel("child2"), ["child2Js"]);
             const events: contracts.KernelEventEnvelope[] = [];

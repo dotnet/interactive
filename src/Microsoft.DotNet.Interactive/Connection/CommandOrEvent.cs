@@ -34,13 +34,6 @@ public class CommandOrEvent
 
     public override string ToString()
     {
-        if (Command is { })
-        {
-            return Command.ToString();
-        }
-        else
-        {
-            return Event.ToString();
-        }
+        return Command is { } ? Command.ToString() : Event.ToString();
     }
 }

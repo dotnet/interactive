@@ -3,10 +3,10 @@
 
 import * as contracts from "./contracts";
 import { ConsoleCapture } from "./consoleCapture";
-import * as kernel from "./kernel";
+import { Kernel, IKernelCommandInvocation } from "./kernel";
 import { Logger } from "./logger";
 
-export class JavascriptKernel extends kernel.Kernel {
+export class JavascriptKernel extends Kernel {
     private suppressedLocals: Set<string>;
     private capture: ConsoleCapture;
 
@@ -20,12 +20,15 @@ export class JavascriptKernel extends kernel.Kernel {
         this.capture = new ConsoleCapture();
     }
 
-    private async handleSubmitCode(invocation: kernel.IKernelCommandInvocation): Promise<void> {
+    private async handleSubmitCode(invocation: IKernelCommandInvocation): Promise<void> {
         const submitCode = <contracts.SubmitCode>invocation.commandEnvelope.command;
         const code = submitCode.code;
 
+        super.kernelInfo.localName;//?
+        super.kernelInfo.uri;//?
+        super.kernelInfo.remoteUri;//?
         invocation.context.publish({ eventType: contracts.CodeSubmissionReceivedType, event: { code }, command: invocation.commandEnvelope });
-
+        invocation.context.commandEnvelope.routingSlip;//?
         this.capture.kernelInvocationContext = invocation.context;
         let result: any = undefined;
 
@@ -48,7 +51,7 @@ export class JavascriptKernel extends kernel.Kernel {
         }
     }
 
-    private handleRequestValueInfos(invocation: kernel.IKernelCommandInvocation): Promise<void> {
+    private handleRequestValueInfos(invocation: IKernelCommandInvocation): Promise<void> {
         const valueInfos: contracts.KernelValueInfo[] = this.allLocalVariableNames().filter(v => !this.suppressedLocals.has(v)).map(v => ({ name: v }));
         const event: contracts.ValueInfosProduced = {
             valueInfos
@@ -57,7 +60,7 @@ export class JavascriptKernel extends kernel.Kernel {
         return Promise.resolve();
     }
 
-    private handleRequestValue(invocation: kernel.IKernelCommandInvocation): Promise<void> {
+    private handleRequestValue(invocation: IKernelCommandInvocation): Promise<void> {
         const requestValue = <contracts.RequestValue>invocation.commandEnvelope.command;
         const rawValue = this.getLocalVariable(requestValue.name);
         const formattedValue = formatValue(rawValue, requestValue.mimeType || 'application/json');

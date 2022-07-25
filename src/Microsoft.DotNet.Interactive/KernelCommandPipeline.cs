@@ -37,6 +37,8 @@ namespace Microsoft.DotNet.Interactive
         {
             EnsureMiddlewarePipelineIsInitialized();
 
+            command.RoutingSlip.TryAdd(_kernel.GetKernelUri());
+            
             try
             {
                 await _pipeline(command, context, (_, __) => Task.CompletedTask);

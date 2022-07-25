@@ -344,6 +344,10 @@ Microsoft.DotNet.Interactive
     public System.String PackageRoot { get;}
     public System.Collections.Generic.IReadOnlyList<System.String> ProbingPaths { get;}
     public System.String ToString()
+  public class RoutingSlip, System.Collections.Generic.IEnumerable<System.Uri>, System.Collections.IEnumerable
+    .ctor()
+    public System.Collections.Generic.IEnumerator<System.Uri> GetEnumerator()
+    public System.Boolean TryAdd(System.Uri kernelOrKernelHostUri)
   public class ScriptContent, Microsoft.AspNetCore.Html.IHtmlContent
     .ctor(System.String scriptValue)
     public System.String ScriptValue { get;}
@@ -385,6 +389,7 @@ Microsoft.DotNet.Interactive.Commands
     public System.Uri OriginUri { get; set;}
     public KernelCommand Parent { get;}
     public System.Collections.Generic.IDictionary<System.String,System.Object> Properties { get;}
+    public Microsoft.DotNet.Interactive.RoutingSlip RoutingSlip { get;}
     public System.String TargetKernelName { get;}
     public System.Threading.Tasks.Task InvokeAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context)
   public abstract class LanguageServiceCommand : KernelCommand
@@ -609,6 +614,7 @@ Microsoft.DotNet.Interactive.Events
     Snippet=2
   public abstract class KernelEvent
     public Microsoft.DotNet.Interactive.Commands.KernelCommand Command { get;}
+    public Microsoft.DotNet.Interactive.RoutingSlip RoutingSlip { get;}
     public System.String ToString()
   public class KernelExtensionLoaded : KernelEvent
     .ctor(Microsoft.DotNet.Interactive.Commands.KernelCommand command)

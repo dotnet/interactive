@@ -549,6 +549,7 @@
   "dependencies": {
     "compare-versions": "3.6.0",
     "node-fetch": "2.6.7",
-    "uuid": "8.3.2"
+    "uuid": "8.3.2",
+    "rxjs": "7.5.6"
   }
 }

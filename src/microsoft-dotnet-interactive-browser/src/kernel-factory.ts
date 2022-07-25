@@ -1,17 +1,29 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelCommandAndEventChannel } from "./dotnet-interactive/contracts";
+import { IKernelCommandAndEventReceiver, IKernelCommandAndEventSender, isKernelCommandEnvelope } from "./dotnet-interactive/connection";
 import { Kernel } from "./dotnet-interactive/kernel";
 
-export function attachKernelToChannel(kernel: Kernel, channel: KernelCommandAndEventChannel) {
-    channel.setCommandHandler(env => kernel.send(env));
-    kernel.subscribeToKernelEvents(env => channel.publishKernelEvent(env))
+export function attachKernelToChannel(kernel: Kernel, channel: {
+    sender: IKernelCommandAndEventSender,
+    receiver: IKernelCommandAndEventReceiver;
+}) {
+    channel.receiver.subscribe({
+        next: (envelope) => {
+            if (isKernelCommandEnvelope(envelope)) {
+                kernel.send(envelope)
+            }
+        }
+    });
+    kernel.subscribeToKernelEvents(env => channel.sender.send(env));
 }
 
 let kernel: Kernel | undefined;
 
-export async function clientSideKernelFactory(connector: KernelCommandAndEventChannel): Promise<Kernel> {
+export async function clientSideKernelFactory(connector: {
+    sender: IKernelCommandAndEventSender,
+    receiver: IKernelCommandAndEventReceiver;
+}): Promise<Kernel> {
     if (!kernel) {
         // We need the client-side kernel to be a singleton. However, this factory method is
         // invoked each time a JS cell executes. This has the slightly unfortunate but ultimately

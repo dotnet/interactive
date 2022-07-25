@@ -1,7 +1,8 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { PromiseCompletionSource } from "./genericChannel";
+import { PromiseCompletionSource } from "./promiseCompletionSource";
+
 
 interface SchedulerOperation<T> {
     value: T;
