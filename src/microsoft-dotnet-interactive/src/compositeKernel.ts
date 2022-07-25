@@ -60,6 +60,7 @@ export class CompositeKernel extends Kernel {
             next: (event) => {
                 event;//?
                 tryAddUriToRoutingSlip(event, getKernelUri(this));
+                event;//?
                 this.publishEvent(event);
             }
         });
