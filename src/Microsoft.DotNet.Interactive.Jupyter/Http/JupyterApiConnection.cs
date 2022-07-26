@@ -198,25 +198,32 @@ namespace Microsoft.DotNet.Interactive.Jupyter.KernelProxy
 
                     using (MemoryStream ms = new MemoryStream())
                     {
-                        do
+                        try
                         {
-                            result = await socket.ReceiveAsync(buffer, cancellationToken);
-                            ms.Write(buffer.Array, buffer.Offset, result.Count);
-                        } while (!result.EndOfMessage);
+                            do
+                            {
+                                result = await socket.ReceiveAsync(buffer, cancellationToken);
+                                ms.Write(buffer.Array, buffer.Offset, result.Count);
+                            } while (!result.EndOfMessage);
 
-                        if (result.MessageType == WebSocketMessageType.Close)
-                        {
-                            await socket.CloseAsync(
-                            WebSocketCloseStatus.NormalClosure,
-                            "Close message received",
-                            CancellationToken.None);
-                            break;
+                            if (result.MessageType == WebSocketMessageType.Close)
+                            {
+                                await socket.CloseAsync(
+                                WebSocketCloseStatus.NormalClosure,
+                                "Close message received",
+                                CancellationToken.None);
+                                break;
+                            }
+
+                            ms.Seek(0, SeekOrigin.Begin);
+
+                            var message = JsonSerializer.Deserialize<JupyterMessage>(ms, MessageFormatter.SerializerOptions);
+                            _subject.OnNext(message);
                         }
-
-                        ms.Seek(0, SeekOrigin.Begin);
-
-                        var message = JsonSerializer.Deserialize<JupyterMessage>(ms, MessageFormatter.SerializerOptions);
-                        _subject.OnNext(message);
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
                     }
                 }
             }, cancellationToken);
