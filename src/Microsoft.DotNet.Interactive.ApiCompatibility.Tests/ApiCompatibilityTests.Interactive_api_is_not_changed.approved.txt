@@ -781,8 +781,8 @@ Microsoft.DotNet.Interactive.Utility
     public System.Threading.Tasks.Task<CommandLineResult> Pack(System.String args = null, System.Nullable<System.TimeSpan> timeout = null)
     public System.Threading.Tasks.Task<CommandLineResult> Publish(System.String args = null, System.Nullable<System.TimeSpan> timeout = null)
     public System.Diagnostics.Process StartProcess(System.String args, System.Action<System.String> output = null, System.Action<System.String> error = null)
-    public System.Threading.Tasks.Task<CommandLineResult> ToolInstall(System.String packageName, System.IO.DirectoryInfo toolPath, System.String addSource = null, System.String version = null)
-    public System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<System.String>> ToolList(System.IO.DirectoryInfo directory)
+    public System.Threading.Tasks.Task<CommandLineResult> ToolInstall(System.String packageName, System.IO.DirectoryInfo toolPath, System.String addSource = null, System.String version = null, System.Boolean globalInstall = False)
+    public System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<System.String>> ToolList(System.IO.DirectoryInfo directory, System.Boolean globalTool = False)
     public System.Threading.Tasks.Task<CommandLineResult> VSTest(System.String args)
   public static class FileNameUtilities
     public static System.String ChangeExtension(System.String path, System.String extension)
