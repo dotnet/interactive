@@ -1,5 +1,7 @@
-﻿using Microsoft.DotNet.Interactive.Connection;
+﻿using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
+using Microsoft.DotNet.Interactive.Jupyter.ValueSharing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,6 +37,12 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
                 translator,
                 _kernelConnection.TargetUri);
 
+            proxyKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(SubmitCode)));
+            proxyKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValue)));
+            proxyKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValueInfos)));
+
+            proxyKernel.UseValueSharing(new PythonValueDeclarer());
+            proxyKernel.UseWho();
             return proxyKernel;
         }
     }
