@@ -21,6 +21,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
 
         // handlers
         private readonly IKernelCommandToMessageHandler<SubmitCode> _submitCodeHandler;
+        private readonly IKernelCommandToMessageHandler<RequestValue> _requestValueHandler;
+        private readonly IKernelCommandToMessageHandler<RequestValueInfos> _requestValueInfoHandler;
 
         public MessageToCommandAndEventConnector(IMessageSender messageSender, IMessageReceiver messageReceiver, Uri targetUri)
         {
@@ -28,6 +30,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
             _targetUri = targetUri;
 
             _submitCodeHandler = new SubmitCodeHandler(messageSender, messageReceiver);
+            _requestValueHandler = new RequestValueHandler(messageSender, messageReceiver);
+            _requestValueInfoHandler = new RequestValueInfoHandler(messageSender, messageReceiver);
 
             _disposables = new CompositeDisposable
             {
@@ -54,6 +58,12 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
             {
                 case (SubmitCode submitCode):
                     await _submitCodeHandler.HandleCommandAsync(submitCode, this, cancellationToken);
+                    break;
+                case (RequestValue requestValue):
+                    await _requestValueHandler.HandleCommandAsync(requestValue, this, cancellationToken);
+                    break;
+                case (RequestValueInfos requestValueInfos):
+                    await _requestValueInfoHandler.HandleCommandAsync(requestValueInfos, this, cancellationToken);
                     break;
                 default:
                     break;
