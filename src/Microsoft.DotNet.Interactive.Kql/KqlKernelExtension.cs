@@ -25,8 +25,7 @@ namespace Microsoft.DotNet.Interactive.Kql
                 bool kqlToolInstalled = installedGlobalTools.Any(tool => string.Equals(tool, kqlToolName, StringComparison.InvariantCultureIgnoreCase));
                 if (!kqlToolInstalled)
                 {
-                    var nugetSource = "https://mssqltools.pkgs.visualstudio.com/_packaging/mssqltools/nuget/v3/index.json";
-                    var commandLineResult = await dotnet.ToolInstall("Microsoft.Kusto.ServiceLayer.Tool", null, nugetSource);
+                    var commandLineResult = await dotnet.ToolInstall("Microsoft.Kusto.ServiceLayer.Tool");
                     commandLineResult.ThrowOnFailure();
                 }
 
