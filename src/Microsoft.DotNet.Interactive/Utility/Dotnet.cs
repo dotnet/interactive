@@ -75,10 +75,9 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         public Task<CommandLineResult> ToolInstall(
             string packageName,
-            DirectoryInfo toolPath,
+            DirectoryInfo toolPath = null,
             string addSource = null,
-            string version = null,
-            bool globalInstall = false)
+            string version = null)
         {
             if (string.IsNullOrWhiteSpace(packageName))
             {
@@ -88,13 +87,13 @@ namespace Microsoft.DotNet.Interactive.Utility
             var versionArg = version is not null ? $"--version {version}" : "";
             
             var args = $@"{packageName}";
-            if (globalInstall)
+            if (toolPath != null)
             {
-                args += " --global";
+                args += $@" --tool-path ""{toolPath.FullName.TrimTrailingSeparators()}""";
             }
             else
             {
-                args += $@" --tool-path ""{toolPath.FullName.TrimTrailingSeparators()}""";
+                args += " --global";
             }
             args += $@" {versionArg}";
 

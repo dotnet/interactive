@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 if (!sqlToolInstalled)
                 {
                     var nugetSource = "https://mssqltools.pkgs.visualstudio.com/_packaging/mssqltools/nuget/v3/index.json";
-                    var commandLineResult = await dotnet.ToolInstall("Microsoft.SqlTools.ServiceLayer.Tool", null, nugetSource, null, true);
+                    var commandLineResult = await dotnet.ToolInstall("Microsoft.SqlTools.ServiceLayer.Tool", null, nugetSource);
                     commandLineResult.ThrowOnFailure();
                 }
 
