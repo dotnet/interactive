@@ -105,16 +105,16 @@ namespace Microsoft.DotNet.Interactive.Utility
             return Execute("tool install".AppendArgs(args));
         }
 
-        public async Task<IEnumerable<string>> ToolList(DirectoryInfo directory, bool globalTool = false)
+        public async Task<IEnumerable<string>> ToolList(DirectoryInfo directory = null)
         {
             var args = "tool list";
-            if (globalTool)
+            if (directory != null)
             {
-                args += " --global";
+                args += $@" --tool-path ""{directory.FullName}""";
             }
             else
             {
-                args += $@" --tool-path ""{directory.FullName}""";
+                args += " --global";
             }
             var result = await Execute(args);
             if (result.ExitCode != 0)

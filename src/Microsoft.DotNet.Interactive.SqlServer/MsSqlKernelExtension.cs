@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             {
                 // Check if the required Sql Tools Service tool is installed, and then install it if necessary
                 var dotnet = new Dotnet();
-                var installedGlobalTools = await dotnet.ToolList(null, true);
+                var installedGlobalTools = await dotnet.ToolList();
                 const string sqlToolName = "MicrosoftSqlToolsServiceLayer";
                 bool sqlToolInstalled = installedGlobalTools.Any(tool => string.Equals(tool, sqlToolName, StringComparison.InvariantCultureIgnoreCase));
                 if (!sqlToolInstalled)
