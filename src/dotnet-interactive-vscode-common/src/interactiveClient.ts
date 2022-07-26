@@ -484,8 +484,8 @@ export class InteractiveClient {
     }
 
     private IsEncodedMimeType(mimeType: string): boolean {
-        const encdoedMimetypes = new Set<string>(["image/png"]);
-        return mimeType.startsWith("image/") || encdoedMimetypes.has(mimeType);
+        const encdodedMimetypes = new Set<string>(["image/png", "image/jpeg", "image/gif"]);
+        return encdodedMimetypes.has(mimeType);
     }
 
     private getNextOutputId(): string {
