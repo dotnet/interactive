@@ -79,7 +79,7 @@ public class KernelInfoTests
             var events = result.KernelEvents.ToSubscribedList();
 
             events.Should()
-                  .ContainSingle<KernelInfoProduced>()
+                  .ContainSingle<KernelInfoProduced>(e => e.KernelInfo.LocalName == "fsharp")
                   .Which
                   .KernelInfo
                   .Should()
