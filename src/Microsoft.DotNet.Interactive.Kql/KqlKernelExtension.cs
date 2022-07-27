@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.Kql
                 bool kqlToolInstalled = installedGlobalTools.Any(tool => string.Equals(tool, kqlToolName, StringComparison.InvariantCultureIgnoreCase));
                 if (!kqlToolInstalled)
                 {
-                    var commandLineResult = await dotnet.ToolInstall("Microsoft.Kusto.ServiceLayer.Tool");
+                    var commandLineResult = await dotnet.ToolInstall("Microsoft.SqlServer.KustoServiceLayer.Tool");
                     commandLineResult.ThrowOnFailure();
                 }
 
