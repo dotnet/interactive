@@ -122,6 +122,7 @@ export class ProxyKernel extends Kernel {
                                             routingSlip: envelope.routingSlip,
                                             command: commandInvocation.commandEnvelope
                                         }, commandInvocation.context);
+                                    this.delegatePublication(envelope, commandInvocation.context);
                                 }
                                 break;
                             case contracts.CommandFailedType:
