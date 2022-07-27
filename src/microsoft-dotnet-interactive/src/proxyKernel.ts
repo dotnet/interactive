@@ -7,6 +7,7 @@ import { Kernel, IKernelCommandHandler, IKernelCommandInvocation, getKernelUri, 
 import * as connection from "./connection";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
 import { KernelInvocationContext } from "./kernelInvocationContext";
+
 export class ProxyKernel extends Kernel {
 
     constructor(override readonly name: string, private readonly _sender: connection.IKernelCommandAndEventSender, private readonly _receiver: connection.IKernelCommandAndEventReceiver) {
@@ -54,7 +55,46 @@ export class ProxyKernel extends Kernel {
         let eventSubscription = this._receiver.subscribe({
             next: (envelope) => {
                 if (connection.isKernelEventEnvelope(envelope)) {
-                    if (envelope.command!.token === commandToken) {
+                    if (envelope.eventType === contracts.KernelInfoProducedType && (envelope.command === null || envelope.command === undefined)) {
+                        const kernelInfoProduced = <contracts.KernelInfoProduced>envelope.event;
+
+                        this.kernelInfo.languageName = kernelInfoProduced.kernelInfo.languageName;
+                        this.kernelInfo.languageVersion = kernelInfoProduced.kernelInfo.languageVersion;
+
+                        const supportedDirectives = new Set<string>();
+                        const supportedCommands = new Set<string>();
+
+                        if (!this.kernelInfo.supportedDirectives) {
+                            this.kernelInfo.supportedDirectives = [];
+                        }
+
+                        if (!this.kernelInfo.supportedKernelCommands) {
+                            this.kernelInfo.supportedKernelCommands = [];
+                        }
+
+                        for (const supportedDirective of this.kernelInfo.supportedDirectives) {
+                            supportedDirectives.add(supportedDirective.name);
+                        }
+
+                        for (const supportedCommand of this.kernelInfo.supportedKernelCommands) {
+                            supportedCommands.add(supportedCommand.name);
+                        }
+
+                        for (const supportedDirective of kernelInfoProduced.kernelInfo.supportedDirectives) {
+                            if (!supportedDirectives.has(supportedDirective.name)) {
+                                supportedDirectives.add(supportedDirective.name);
+                                this.kernelInfo.supportedDirectives.push(supportedDirective);
+                            }
+                        }
+
+                        for (const supportedCommand of kernelInfoProduced.kernelInfo.supportedKernelCommands) {
+                            if (!supportedCommands.has(supportedCommand.name)) {
+                                supportedCommands.add(supportedCommand.name);
+                                this.kernelInfo.supportedKernelCommands.push(supportedCommand);
+                            }
+                        }
+                    }
+                    else if (envelope.command!.token === commandToken) {
 
                         for (const kernelUri of envelope.command!.routingSlip!) {
                             connection.tryAddUriToRoutingSlip(commandInvocation.commandEnvelope, kernelUri);

@@ -103,7 +103,7 @@ describe("kernelInfo", () => {
             }]);
         });
 
-        it.only("when commands adde a kernel it produces KernelInfoProduced events", async () => {
+        it("when commands adde a kernel it produces KernelInfoProduced events", async () => {
             const events: contracts.KernelEventEnvelope[] = [];
             const kernel = new CompositeKernel("root");
             const childKernel = new Kernel("child1", "customLLanguage");

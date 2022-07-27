@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.ValueSharing;
@@ -52,7 +53,21 @@ public sealed class ProxyKernel : Kernel
         {
             if (coe.Event is { } e)
             {
-                DelegatePublication(e);
+                if (e is KernelInfoProduced kip &&
+                    (e.Command is NoCommand ||
+                     KernelInfo.RemoteUri is null ||
+                    e.Command.RoutingSlip.Contains(KernelInfo.RemoteUri)))
+                {
+                    KernelInfo.LanguageName = kip.KernelInfo.LanguageName;
+                    KernelInfo.LanguageVersion = kip.KernelInfo.LanguageVersion;
+                    ((HashSet<KernelDirectiveInfo>)KernelInfo.SupportedDirectives).UnionWith(kip.KernelInfo.SupportedDirectives);
+                    ((HashSet<KernelCommandInfo>)KernelInfo.SupportedKernelCommands).UnionWith(kip.KernelInfo.SupportedKernelCommands);
+                    PublishEvent(new KernelInfoProduced(KernelInfo, KernelCommand.None));
+                }
+                else
+                {
+                    DelegatePublication(e);
+                }
             }
         });
 
@@ -101,7 +116,7 @@ public sealed class ProxyKernel : Kernel
     }
 
     internal override Task HandleAsync(
-        KernelCommand command, 
+        KernelCommand command,
         KernelInvocationContext context) =>
         HandleByForwardingToRemoteAsync(command, context);
 
@@ -122,7 +137,7 @@ public sealed class ProxyKernel : Kernel
             {
                 case CommandFailed cf when pending.command.IsEquivalentTo(kernelEvent.Command):
                     _inflight.Remove(token);
-                   
+
                     pending.completionSource.TrySetResult(cf);
                     break;
 
@@ -162,7 +177,7 @@ public sealed class ProxyKernel : Kernel
             commandOriginUri = KernelInfo.Uri;
         }
 
-        if (kernelInfo is not null && 
+        if (kernelInfo is not null &&
             commandOriginUri is not null)
         {
             return commandOriginUri.Equals(kernelInfo.Uri);
