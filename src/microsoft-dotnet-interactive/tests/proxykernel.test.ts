@@ -7,6 +7,7 @@ import { ProxyKernel } from "../src/proxyKernel";
 import { Logger } from "../src/logger";
 import * as rxjs from "rxjs";
 import * as connection from "../src/connection";
+import { clearTokenAndId } from "./testSupport";
 
 describe("proxyKernel", () => {
     before(() => {
@@ -155,6 +156,45 @@ describe("proxyKernel", () => {
         expect(events[2]).to.include({
             eventType: contracts.CommandSucceededType,
             command: command
+        });
+    });
+
+    it("updates kernelInfo when KernelInfoProduced is intercepted", async () => {
+        let localToRemote = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
+        let remoteToLocal = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
+
+        localToRemote.subscribe(e => {
+            if (connection.isKernelCommandEnvelope(e)) {
+                remoteToLocal.next({ eventType: contracts.KernelInfoProducedType, event: <contracts.KernelInfoProduced>{ kernelInfo: { localName: "remoteKernel", aliases: [], languageName: "gsharp", languageVersion: "1.2.3", supportedKernelCommands: [{ name: "customCommand1" }, { name: "customCommand2" }], supportedDirectives: [] } }, command: { ...e, id: "newId" } });
+
+                remoteToLocal.next({ eventType: contracts.CommandSucceededType, event: <contracts.CommandSucceeded>{}, command: e });
+            }
+        });
+
+        let kernel = new ProxyKernel("proxy", connection.KernelCommandAndEventSender.FromObserver(localToRemote), connection.KernelCommandAndEventReceiver.FromObservable(remoteToLocal));
+        kernel.registerCommandHandler({
+            commandType: "customCommand1",
+            handle: (invocation) => {
+                return Promise.resolve();
+            }
+        });
+
+        let events: contracts.KernelEventEnvelope[] = [];
+
+        kernel.subscribeToKernelEvents((e) => events.push(e));
+        let command: contracts.KernelCommandEnvelope = { commandType: contracts.RequestKernelInfoType, command: <contracts.RequestKernelInfo>{ targetKernelName: "proxy" } };
+        await kernel.send(command);
+
+        expect(kernel.kernelInfo).to.deep.equal({
+            aliases: [],
+            languageName: 'gsharp',
+            languageVersion: '1.2.3',
+            localName: 'proxy',
+            supportedDirectives: [],
+            supportedKernelCommands:
+                [{ name: 'RequestKernelInfo' },
+                { name: 'customCommand1' },
+                { name: 'customCommand2' }]
         });
     });
 });
