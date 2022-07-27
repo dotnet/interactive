@@ -24,9 +24,6 @@ namespace Microsoft.DotNet.Interactive.Kql.Tests
         {
             Formatter.SetPreferredMimeTypesFor(typeof(TabularDataResource), HtmlFormatter.MimeType, CsvFormatter.MimeType);
             var csharpKernel = new CSharpKernel().UseNugetDirective();
-            await csharpKernel.SubmitCodeAsync(@"
-#r ""nuget:Microsoft.SqlToolsService, 3.0.0-release.163""
-");
 
             var kernel = new CompositeKernel
             {
