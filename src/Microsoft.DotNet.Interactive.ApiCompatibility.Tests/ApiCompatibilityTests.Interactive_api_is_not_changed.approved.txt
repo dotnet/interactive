@@ -621,7 +621,7 @@ Microsoft.DotNet.Interactive.Events
     .ctor(Microsoft.DotNet.Interactive.IKernelExtension kernelExtension, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public Microsoft.DotNet.Interactive.IKernelExtension KernelExtension { get;}
   public class KernelInfoProduced : KernelEvent
-    .ctor(Microsoft.DotNet.Interactive.KernelInfo kernelInfo, Microsoft.DotNet.Interactive.Commands.RequestKernelInfo command)
+    .ctor(Microsoft.DotNet.Interactive.KernelInfo kernelInfo, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public Microsoft.DotNet.Interactive.KernelInfo KernelInfo { get;}
   public class KernelReady : KernelEvent
     .ctor()

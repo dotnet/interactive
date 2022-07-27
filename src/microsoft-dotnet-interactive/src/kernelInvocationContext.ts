@@ -104,6 +104,10 @@ export class KernelInvocationContext implements Disposable {
     }
 
     private internalPublish(kernelEvent: contracts.KernelEventEnvelope) {
+        if (!kernelEvent.command) {
+            kernelEvent.command = this._commandEnvelope;
+        }
+
         let command = kernelEvent.command;
 
         if (this.handlingKernel) {
@@ -113,8 +117,9 @@ export class KernelInvocationContext implements Disposable {
         } else {
             kernelEvent;//?
         }
-
+        this._commandEnvelope;//?
         if (command === null ||
+            command === undefined ||
             areCommandsTheSame(command!, this._commandEnvelope) ||
             this._childCommands.includes(command!)) {
             this._eventSubject.next(kernelEvent);
@@ -135,6 +140,9 @@ export class KernelInvocationContext implements Disposable {
 }
 
 export function areCommandsTheSame(envelope1: contracts.KernelCommandEnvelope, envelope2: contracts.KernelCommandEnvelope): boolean {
+    envelope1;//?
+    envelope2;//?
+    envelope1 === envelope2;//?
     return envelope1 === envelope2
-        || (envelope1.commandType === envelope2.commandType && envelope1.token === envelope2.token);
+        || (envelope1?.commandType === envelope2?.commandType && envelope1?.token === envelope2?.token);
 }

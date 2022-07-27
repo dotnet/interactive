@@ -9,7 +9,7 @@ public class KernelInfoProduced : KernelEvent
 {
     public KernelInfoProduced(
         KernelInfo kernelInfo,
-        RequestKernelInfo command) : base(command)
+        KernelCommand command) : base(command)
     {
         KernelInfo = kernelInfo;
     }

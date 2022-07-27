@@ -93,6 +93,17 @@ namespace Microsoft.DotNet.Interactive
 
             RegisterForDisposal(kernel.KernelEvents.Subscribe(PublishEvent));
             RegisterForDisposal(kernel);
+
+            var command = KernelInvocationContext.Current?.Command ?? KernelCommand.None;
+            var kernelInfoProduced = new KernelInfoProduced(kernel.KernelInfo, command);
+            if (KernelInvocationContext.Current is { })
+            {
+                KernelInvocationContext.Current.Publish(kernelInfoProduced);
+            }
+            else
+            {
+                PublishEvent(kernelInfoProduced);
+            }
         }
 
         public void SetDefaultTargetKernelNameForCommand(
@@ -128,9 +139,9 @@ namespace Microsoft.DotNet.Interactive
                 var extensionDir =
                     new DirectoryInfo
                     (Path.Combine(
-                         packageRootDir,
-                         "interactive-extensions",
-                         "dotnet"));
+                        packageRootDir,
+                        "interactive-extensions",
+                        "dotnet"));
 
                 if (extensionDir.Exists)
                 {
@@ -327,7 +338,7 @@ namespace Microsoft.DotNet.Interactive
 
                     var chooseKernelDirective =
                         Directives.OfType<ChooseKernelDirective>()
-                                  .Single(d => d.Kernel == connectedKernel);
+                            .Single(d => d.Kernel == connectedKernel);
 
                     if (!string.IsNullOrWhiteSpace(connectionCommand.ConnectedKernelDescription))
                     {

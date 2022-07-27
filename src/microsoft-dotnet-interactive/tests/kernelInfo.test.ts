@@ -7,7 +7,8 @@ import { JavascriptKernel } from "../src/javascriptKernel";
 import * as contracts from "../src/contracts";
 import { CompositeKernel } from "../src/compositeKernel";
 import { KernelHost } from "../src/kernelHost";
-import { createInMemoryChannels } from "./testSupport";
+import { clearTokenAndId, createInMemoryChannels } from "./testSupport";
+import { Kernel } from "../src/kernel";
 
 describe("kernelInfo", () => {
     describe("for composite kernel", () => {
@@ -66,6 +67,108 @@ describe("kernelInfo", () => {
 
             expect(kernelInfos.length).to.equal(2);
             expect(kernelInfos).to.deep.equal(['kernel://local/child1', 'kernel://local/child2']);
+        });
+
+        it("when kernels are added it produces KernelInfoProduced events", () => {
+            const events: contracts.KernelEventEnvelope[] = [];
+            const kernel = new CompositeKernel("root");
+            kernel.kernelEvents.subscribe({
+                next: (event) => {
+                    events.push(event);
+                }
+            });
+
+            kernel.add(new JavascriptKernel("child1"), ["child1Js"]);
+
+            expect(events).to.deep.equal([{
+                event:
+                {
+                    kernelInfo:
+                    {
+                        aliases: ['child1Js'],
+                        languageName: 'Javascript',
+                        languageVersion: undefined,
+                        localName: 'child1',
+                        supportedDirectives: [],
+                        supportedKernelCommands:
+                            [
+                                { name: 'RequestKernelInfo' },
+                                { name: 'SubmitCode' },
+                                { name: 'RequestValueInfos' },
+                                { name: 'RequestValue' }
+                            ]
+                    }
+                },
+                eventType: 'KernelInfoProduced'
+            }]);
+        });
+
+        it.only("when commands adde a kernel it produces KernelInfoProduced events", async () => {
+            const events: contracts.KernelEventEnvelope[] = [];
+            const kernel = new CompositeKernel("root");
+            const childKernel = new Kernel("child1", "customLLanguage");
+            childKernel.registerCommandHandler({
+                commandType: contracts.SubmitCodeType,
+                handle: (commandInvocation) => {
+                    commandInvocation.commandEnvelope;//?
+                    commandInvocation.context.commandEnvelope;//?
+                    commandInvocation.context.handlingKernel?.rootKernel;//?
+                    const composite = <CompositeKernel>commandInvocation.context.handlingKernel?.rootKernel;
+                    if (!composite) {
+                        return Promise.reject(new Error("No composite kernel"));
+                    };
+                    try {
+                        composite.add(new Kernel("child2", "customLanguage"), ["child2Js"]);
+                        return Promise.resolve();
+                    }
+                    catch (error) {
+                        return Promise.reject(error);
+                    }
+                }
+            });
+
+            kernel.add(childKernel);
+
+            kernel.kernelEvents.subscribe({
+                next: (event) => {
+                    events.push(<contracts.KernelEventEnvelope>clearTokenAndId(event));
+                }
+            });
+
+            const code = `kernel.root.add(new Kernel("child2", "customLanguage"), ["child2Js"]);`;
+            await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: code, targetKernelName: "child1" } });
+
+            expect(events.filter(e => e.eventType === contracts.KernelInfoProducedType))
+                .to
+                .deep
+                .equal([{
+                    eventType: 'KernelInfoProduced',
+                    event:
+                    {
+                        kernelInfo:
+                        {
+                            localName: 'child2',
+                            languageName: "customLanguage",
+                            aliases: ["child2Js"],
+                            languageVersion: undefined,
+                            supportedDirectives: [],
+                            supportedKernelCommands: [{ name: 'RequestKernelInfo' }]
+                        }
+                    },
+                    command:
+                    {
+                        commandType: 'SubmitCode',
+                        command:
+                        {
+                            code: `kernel.root.add(new Kernel("child2", "customLanguage"), ["child2Js"]);`,
+                            targetKernelName: 'child1'
+                        },
+                        token: 'commandToken',
+                        id: 'commandId',
+                        routingSlip: ['kernel://local/root', 'kernel://local/child1']
+                    },
+                    routingSlip: ['kernel://local/child1', 'kernel://local/root']
+                }]);
         });
 
     });
