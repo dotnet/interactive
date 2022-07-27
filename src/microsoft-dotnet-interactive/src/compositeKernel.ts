@@ -78,6 +78,26 @@ export class CompositeKernel extends Kernel {
         }
 
         this._childKernels.add(kernel, aliases);
+
+        const invocationContext = KernelInvocationContext.current;
+
+        if (invocationContext) {
+            invocationContext.commandEnvelope;//?
+            invocationContext.publish({
+                eventType: contracts.KernelInfoProducedType,
+                event: <contracts.KernelInfoProduced>{
+                    kernelInfo: kernel.kernelInfo
+                },
+                command: invocationContext.commandEnvelope
+            });
+        } else {
+            this.publishEvent({
+                eventType: contracts.KernelInfoProducedType,
+                event: <contracts.KernelInfoProduced>{
+                    kernelInfo: kernel.kernelInfo
+                }
+            });
+        }
     }
 
     setDefaultTargetKernelNameForCommand(commandType: contracts.KernelCommandType, kernelName: string) {

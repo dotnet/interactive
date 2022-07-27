@@ -229,8 +229,8 @@ Microsoft.DotNet.Interactive
   public class KernelInfo
     .ctor(System.String localName, System.String languageName = null, System.String languageVersion = null, System.String[] aliases = null)
     public System.String[] Aliases { get; set;}
-    public System.String LanguageName { get;}
-    public System.String LanguageVersion { get;}
+    public System.String LanguageName { get; set;}
+    public System.String LanguageVersion { get; set;}
     public System.String LocalName { get;}
     public System.Uri RemoteUri { get; set;}
     public System.Collections.Generic.ICollection<KernelDirectiveInfo> SupportedDirectives { get; set;}
@@ -621,7 +621,7 @@ Microsoft.DotNet.Interactive.Events
     .ctor(Microsoft.DotNet.Interactive.IKernelExtension kernelExtension, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public Microsoft.DotNet.Interactive.IKernelExtension KernelExtension { get;}
   public class KernelInfoProduced : KernelEvent
-    .ctor(Microsoft.DotNet.Interactive.KernelInfo kernelInfo, Microsoft.DotNet.Interactive.Commands.RequestKernelInfo command)
+    .ctor(Microsoft.DotNet.Interactive.KernelInfo kernelInfo, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public Microsoft.DotNet.Interactive.KernelInfo KernelInfo { get;}
   public class KernelReady : KernelEvent
     .ctor()

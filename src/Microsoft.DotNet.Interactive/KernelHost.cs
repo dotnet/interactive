@@ -5,9 +5,11 @@
 
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Reactive;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 
@@ -106,6 +108,17 @@ namespace Microsoft.DotNet.Interactive
             await _defaultSender.SendAsync(
                 new KernelReady(),
                 _cancellationTokenSource.Token);
+
+            await _defaultSender.SendAsync(
+                new KernelInfoProduced(_kernel.KernelInfo, KernelCommand.None),
+                _cancellationTokenSource.Token);
+            
+            foreach (var kernel in _kernel.ChildKernels.Where(k => k is not ProxyKernel))
+            {
+                await _defaultSender.SendAsync(
+                    new KernelInfoProduced(kernel.KernelInfo, KernelCommand.None),
+                    _cancellationTokenSource.Token);
+            }
         }
 
         public async Task ConnectAndWaitAsync()
