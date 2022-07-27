@@ -46,9 +46,9 @@ namespace Microsoft.DotNet.Interactive
             init => NameAndAliases.UnionWith(value);
         }
 
-        public string? LanguageName { get; set; }
+        public string? LanguageName { get; internal set; }
 
-        public string? LanguageVersion { get; set; }
+        public string? LanguageVersion { get; internal set; }
 
         public string LocalName { get; }
 
