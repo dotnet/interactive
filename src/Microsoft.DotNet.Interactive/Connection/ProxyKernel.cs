@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.ValueSharing;
@@ -52,11 +53,27 @@ public sealed class ProxyKernel : Kernel
         {
             if (coe.Event is { } e)
             {
-                DelegatePublication(e);
+                if (e is KernelInfoProduced kip && e.Command is NoCommand)
+                {
+                    UpdateKernelInfoFromEvent(kip);
+                    PublishEvent(new KernelInfoProduced(KernelInfo, KernelCommand.None));
+                }
+                else
+                {
+                    DelegatePublication(e);
+                }
             }
         });
 
         RegisterForDisposal(subscription);
+    }
+
+    private void UpdateKernelInfoFromEvent(KernelInfoProduced kernelInfoProduced)
+    {
+        KernelInfo.LanguageName = kernelInfoProduced.KernelInfo.LanguageName;
+        KernelInfo.LanguageVersion = kernelInfoProduced.KernelInfo.LanguageVersion;
+        ((HashSet<KernelDirectiveInfo>)KernelInfo.SupportedDirectives).UnionWith(kernelInfoProduced.KernelInfo.SupportedDirectives);
+        ((HashSet<KernelCommandInfo>)KernelInfo.SupportedKernelCommands).UnionWith(kernelInfoProduced.KernelInfo.SupportedKernelCommands);
     }
 
     private Task HandleByForwardingToRemoteAsync(KernelCommand command, KernelInvocationContext context)
@@ -101,7 +118,7 @@ public sealed class ProxyKernel : Kernel
     }
 
     internal override Task HandleAsync(
-        KernelCommand command, 
+        KernelCommand command,
         KernelInvocationContext context) =>
         HandleByForwardingToRemoteAsync(command, context);
 
@@ -122,23 +139,45 @@ public sealed class ProxyKernel : Kernel
             {
                 case CommandFailed cf when pending.command.IsEquivalentTo(kernelEvent.Command):
                     _inflight.Remove(token);
-                   
                     pending.completionSource.TrySetResult(cf);
                     break;
-
                 case CommandSucceeded cs when pending.command.IsEquivalentTo(kernelEvent.Command):
                     _inflight.Remove(token);
                     pending.completionSource.TrySetResult(cs);
                     break;
-
-                default:
-                    if (pending.executionContext is { } ec)
+                case KernelInfoProduced kip:
                     {
-                        ExecutionContext.Run(ec, _ => pending.invocationContext.Publish(kernelEvent), null);
+                        UpdateKernelInfoFromEvent(kip);
+                        var newEvent = new KernelInfoProduced(KernelInfo, kernelEvent.Command);
+                        foreach (var kernelUri in kip.RoutingSlip)
+                        {
+                            newEvent.RoutingSlip.TryAdd(kernelUri);
+                        }
+                        if (pending.executionContext is { } ec)
+                        {
+                            ExecutionContext.Run(ec, _ =>
+                            {
+                                pending.invocationContext.Publish(newEvent);
+                                pending.invocationContext.Publish(kip);
+                            }, null);
+                        }
+                        else
+                        {
+                            pending.invocationContext.Publish(newEvent);
+                            pending.invocationContext.Publish(kip);
+                        }
                     }
-                    else
+                    break;
+                default:
                     {
-                        pending.invocationContext.Publish(kernelEvent);
+                        if (pending.executionContext is { } ec)
+                        {
+                            ExecutionContext.Run(ec, _ => pending.invocationContext.Publish(kernelEvent), null);
+                        }
+                        else
+                        {
+                            pending.invocationContext.Publish(kernelEvent);
+                        }
                     }
                     break;
             }
@@ -162,7 +201,7 @@ public sealed class ProxyKernel : Kernel
             commandOriginUri = KernelInfo.Uri;
         }
 
-        if (kernelInfo is not null && 
+        if (kernelInfo is not null &&
             commandOriginUri is not null)
         {
             return commandOriginUri.Equals(kernelInfo.Uri);

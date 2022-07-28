@@ -70,3 +70,20 @@ export function createInMemoryChannels(): {
 
     return channels;
 }
+
+export function clearTokenAndId(envelope: connection.KernelCommandOrEventEnvelope): connection.KernelCommandOrEventEnvelope {
+    if (connection.isKernelEventEnvelope(envelope)) {
+        let clone: contracts.KernelEventEnvelope = { ...envelope };
+        if (clone.command) {
+            clone.command = <contracts.KernelCommandEnvelope>clearTokenAndId(clone.command);
+        }
+        return clone;
+    } else if (connection.isKernelCommandEnvelope(envelope)) {
+        let clone = { ...envelope };
+        clone.token = "commandToken";
+        clone.id = "commandId";
+        return clone;
+    }
+
+    throw new Error("Unknown envelope type");
+}

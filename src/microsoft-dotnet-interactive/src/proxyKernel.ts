@@ -7,6 +7,7 @@ import { Kernel, IKernelCommandHandler, IKernelCommandInvocation, getKernelUri, 
 import * as connection from "./connection";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
 import { KernelInvocationContext } from "./kernelInvocationContext";
+
 export class ProxyKernel extends Kernel {
 
     constructor(override readonly name: string, private readonly _sender: connection.IKernelCommandAndEventSender, private readonly _receiver: connection.IKernelCommandAndEventReceiver) {
@@ -46,6 +47,44 @@ export class ProxyKernel extends Kernel {
         return commandOriginUri === null;
     }
 
+    private updateKernelInfoFromEvent(kernelInfoProduced: contracts.KernelInfoProduced) {
+        this.kernelInfo.languageName = kernelInfoProduced.kernelInfo.languageName;
+        this.kernelInfo.languageVersion = kernelInfoProduced.kernelInfo.languageVersion;
+
+        const supportedDirectives = new Set<string>();
+        const supportedCommands = new Set<string>();
+
+        if (!this.kernelInfo.supportedDirectives) {
+            this.kernelInfo.supportedDirectives = [];
+        }
+
+        if (!this.kernelInfo.supportedKernelCommands) {
+            this.kernelInfo.supportedKernelCommands = [];
+        }
+
+        for (const supportedDirective of this.kernelInfo.supportedDirectives) {
+            supportedDirectives.add(supportedDirective.name);
+        }
+
+        for (const supportedCommand of this.kernelInfo.supportedKernelCommands) {
+            supportedCommands.add(supportedCommand.name);
+        }
+
+        for (const supportedDirective of kernelInfoProduced.kernelInfo.supportedDirectives) {
+            if (!supportedDirectives.has(supportedDirective.name)) {
+                supportedDirectives.add(supportedDirective.name);
+                this.kernelInfo.supportedDirectives.push(supportedDirective);
+            }
+        }
+
+        for (const supportedCommand of kernelInfoProduced.kernelInfo.supportedKernelCommands) {
+            if (!supportedCommands.has(supportedCommand.name)) {
+                supportedCommands.add(supportedCommand.name);
+                this.kernelInfo.supportedKernelCommands.push(supportedCommand);
+            }
+        }
+    }
+
     private async _commandHandler(commandInvocation: IKernelCommandInvocation): Promise<void> {
         const commandToken = commandInvocation.commandEnvelope.token;
         const commandId = commandInvocation.commandEnvelope.id;
@@ -54,7 +93,17 @@ export class ProxyKernel extends Kernel {
         let eventSubscription = this._receiver.subscribe({
             next: (envelope) => {
                 if (connection.isKernelEventEnvelope(envelope)) {
-                    if (envelope.command!.token === commandToken) {
+                    if (envelope.eventType === contracts.KernelInfoProducedType &&
+                        (envelope.command === null || envelope.command === undefined)) {
+                        const kernelInfoProduced = <contracts.KernelInfoProduced>envelope.event;
+                        this.updateKernelInfoFromEvent(kernelInfoProduced);
+                        this.publishEvent(
+                            {
+                                eventType: contracts.KernelInfoProducedType,
+                                event: { kernelInfo: this.kernelInfo }
+                            });
+                    }
+                    else if (envelope.command!.token === commandToken) {
 
                         for (const kernelUri of envelope.command!.routingSlip!) {
                             connection.tryAddUriToRoutingSlip(commandInvocation.commandEnvelope, kernelUri);
@@ -62,6 +111,20 @@ export class ProxyKernel extends Kernel {
                         }
 
                         switch (envelope.eventType) {
+                            case contracts.KernelInfoProducedType:
+                                {
+                                    const kernelInfoProduced = <contracts.KernelInfoProduced>envelope.event;
+                                    this.updateKernelInfoFromEvent(kernelInfoProduced);
+                                    this.delegatePublication(
+                                        {
+                                            eventType: contracts.KernelInfoProducedType,
+                                            event: { kernelInfo: this.kernelInfo },
+                                            routingSlip: envelope.routingSlip,
+                                            command: commandInvocation.commandEnvelope
+                                        }, commandInvocation.context);
+                                    this.delegatePublication(envelope, commandInvocation.context);
+                                }
+                                break;
                             case contracts.CommandFailedType:
                             case contracts.CommandSucceededType:
                                 if (envelope.command!.id === commandId) {
