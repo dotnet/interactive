@@ -52,57 +52,33 @@ describe("frontEndHost", () => {
             }
         })
         frontEndHost.createHost(testGlobal, 'testKernel', noop, noop, localToRemote, remoteToLocal, noop);
-        expect(seenMessages).to.deep.equal([
-            {
-                event: {},
-                eventType: contracts.KernelReadyType,
-            },
-            {
-                event: {
-                    kernelInfo: {
-                        aliases: [],
-                        languageName: undefined,
-                        languageVersion: undefined,
-                        localName: 'testKernel',
-                        supportedDirectives: [],
-                        supportedKernelCommands: [
-                            {
-                                name: contracts.RequestKernelInfoType,
-                            }
-                        ],
-                        uri: 'kernel://testKernel',
-                    }
-                },
-                eventType: contracts.KernelInfoProducedType,
-            },
-            {
-                event: {
-                    kernelInfo: {
-                        aliases: ['js'],
-                        languageName: 'Javascript',
-                        languageVersion: undefined,
-                        localName: 'javascript',
-                        supportedDirectives: [],
-                        supportedKernelCommands: [
-                            {
-                                name: contracts.RequestKernelInfoType,
-                            },
-                            {
-                                name: contracts.SubmitCodeType,
-                            },
-                            {
-                                name: contracts.RequestValueInfosType,
-                            },
-                            {
-                                name: contracts.RequestValueType,
-                            },
-                        ],
-                        uri: 'kernel://testKernel/javascript',
-                    }
-                },
-                eventType: contracts.KernelInfoProducedType,
-            }
-        ]);
+        expect(seenMessages).to.deep.equal([ { event: {}, eventType: 'KernelReady' },
+        { event:
+           { kernelInfo:
+              { aliases: [],
+                languageName: undefined,
+                languageVersion: undefined,
+                localName: 'testKernel',
+                supportedDirectives: [],
+                supportedKernelCommands: [ { name: 'RequestKernelInfo' } ],
+                uri: 'kernel://testKernel' } },
+          eventType: 'KernelInfoProduced',
+          routingSlip: [ 'kernel://testKernel' ] },
+        { event:
+           { kernelInfo:
+              { aliases: [ 'js' ],
+                languageName: 'Javascript',
+                languageVersion: undefined,
+                localName: 'javascript',
+                supportedDirectives: [],
+                supportedKernelCommands:
+                 [ { name: 'RequestKernelInfo' },
+                   { name: 'SubmitCode' },
+                   { name: 'RequestValueInfos' },
+                   { name: 'RequestValue' } ],
+                uri: 'kernel://testKernel/javascript' } },
+          eventType: 'KernelInfoProduced',
+          routingSlip: [ 'kernel://testKernel/javascript' ] } ]);
     });
 
 });

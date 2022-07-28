@@ -30,46 +30,41 @@ describe("kernelHost",
             const kernelHost = new KernelHost(compositeKernel, inMemory.local.sender, inMemory.local.receiver, "kernel://vscode");
             kernelHost.connect();
 
-            expect(inMemory.local.messagesSent).to.deep.equal([
+            expect(inMemory.local.messagesSent).to.deep.equal([{ event: {}, eventType: 'KernelReady' },
+            {
+                event:
                 {
-                    event: {},
-                    eventType: 'KernelReady'
-                },
-                {
-                    event:
+                    kernelInfo:
                     {
-                        kernelInfo:
-                        {
-                            aliases: [],
-                            languageName: undefined,
-                            languageVersion: undefined,
-                            localName: 'vscode',
-                            supportedDirectives: [],
-                            supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
-                            uri: 'kernel://vscode'
-                        }
-                    },
-                    eventType: 'KernelInfoProduced'
+                        aliases: [],
+                        languageName: undefined,
+                        languageVersion: undefined,
+                        localName: 'vscode',
+                        supportedDirectives: [],
+                        supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
+                        uri: 'kernel://vscode'
+                    }
                 },
+                eventType: 'KernelInfoProduced',
+                routingSlip: ['kernel://vscode']
+            },
+            {
+                event:
                 {
-                    event:
+                    kernelInfo:
                     {
-                        kernelInfo:
-                        {
-                            aliases: ['test1', 'test2'],
-                            languageName: "customLanguage",
-                            languageVersion: undefined,
-                            localName: 'test',
-                            supportedDirectives: [],
-                            supportedKernelCommands: [
-                                { name: 'RequestKernelInfo' },
-                                { name: 'customCommand' }
-                            ],
-                            uri: 'kernel://vscode/test'
-                        }
-                    },
-                    eventType: 'KernelInfoProduced'
-                }]);
+                        aliases: ['test1', 'test2'],
+                        languageName: 'customLanguage',
+                        languageVersion: undefined,
+                        localName: 'test',
+                        supportedDirectives: [],
+                        supportedKernelCommands: [{ name: 'RequestKernelInfo' }, { name: 'customCommand' }],
+                        uri: 'kernel://vscode/test'
+                    }
+                },
+                eventType: 'KernelInfoProduced',
+                routingSlip: ['kernel://vscode/test']
+            }]);
         });
 
         it("provides uri for kernels", () => {
