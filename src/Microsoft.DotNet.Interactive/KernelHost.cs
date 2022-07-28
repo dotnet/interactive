@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reactive;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
@@ -17,7 +18,7 @@ namespace Microsoft.DotNet.Interactive
 {
     public class KernelHost : IDisposable
     {
-        private readonly CancellationTokenSource _cancellationTokenSource = new ();
+        private readonly CancellationTokenSource _cancellationTokenSource = new();
         private readonly TaskCompletionSource<Unit> _disposed = new();
         private readonly CompositeKernel _kernel;
         private readonly IKernelCommandAndEventSender _defaultSender;
@@ -61,7 +62,7 @@ namespace Microsoft.DotNet.Interactive
                     _sender,
                     _receiver,
                     new Uri(_sender.RemoteHostUri, kernelName));
-                
+
                 return Task.FromResult<Kernel>(proxy);
             }
         }
@@ -109,14 +110,19 @@ namespace Microsoft.DotNet.Interactive
                 new KernelReady(),
                 _cancellationTokenSource.Token);
 
+            var infoProduced = new KernelInfoProduced(_kernel.KernelInfo, KernelCommand.None);
+            infoProduced.RoutingSlip.TryAdd(_kernel.KernelInfo.Uri);
+
             await _defaultSender.SendAsync(
-                new KernelInfoProduced(_kernel.KernelInfo, KernelCommand.None),
+                infoProduced,
                 _cancellationTokenSource.Token);
-            
+
             foreach (var kernel in _kernel.ChildKernels.Where(k => k is not ProxyKernel))
             {
+                infoProduced = new KernelInfoProduced(kernel.KernelInfo, KernelCommand.None);
+                infoProduced.RoutingSlip.TryAdd(kernel.KernelInfo.Uri);
                 await _defaultSender.SendAsync(
-                    new KernelInfoProduced(kernel.KernelInfo, KernelCommand.None),
+                    infoProduced,
                     _cancellationTokenSource.Token);
             }
         }

@@ -109,10 +109,10 @@ export class KernelHost {
 
         this._defaultSender.send({ eventType: contracts.KernelReadyType, event: {} });
 
-        this._defaultSender.send({ eventType: contracts.KernelInfoProducedType, event: <contracts.KernelInfoProduced>{ kernelInfo: this._kernel.kernelInfo } });
+        this._defaultSender.send({ eventType: contracts.KernelInfoProducedType, event: <contracts.KernelInfoProduced>{ kernelInfo: this._kernel.kernelInfo }, routingSlip: [this._kernel.kernelInfo.uri!] });
 
         for (let kernel of this._kernel.childKernels) {
-            this._defaultSender.send({ eventType: contracts.KernelInfoProducedType, event: <contracts.KernelInfoProduced>{ kernelInfo: kernel.kernelInfo } });
+            this._defaultSender.send({ eventType: contracts.KernelInfoProducedType, event: <contracts.KernelInfoProduced>{ kernelInfo: kernel.kernelInfo }, routingSlip: [kernel.kernelInfo.uri!] });
         }
 
     }
