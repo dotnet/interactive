@@ -2,13 +2,10 @@
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
-using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Collections.Concurrent;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,22 +16,19 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
         private readonly Subject<CommandOrEvent> _commandOrEventsSubject;
         private readonly Uri _targetUri;
         private readonly CompositeDisposable _disposables;
-
-        // handlers
-        private readonly IKernelCommandToMessageHandler<SubmitCode> _submitCodeHandler;
-        private readonly IKernelCommandToMessageHandler<RequestValue> _requestValueHandler;
-        private readonly IKernelCommandToMessageHandler<RequestValueInfos> _requestValueInfoHandler;
-        private readonly IKernelCommandToMessageHandler<RequestKernelInfo> _requestKernelInfoHandler;
+        private readonly ConcurrentDictionary<Type, Func<KernelCommand, ICommandExecutionContext, CancellationToken, Task>> _dynamicHandlers = new();
 
         public MessageToCommandAndEventConnector(IMessageSender messageSender, IMessageReceiver messageReceiver, Uri targetUri)
         {
             _commandOrEventsSubject = new Subject<CommandOrEvent>();
             _targetUri = targetUri;
 
-            _submitCodeHandler = new SubmitCodeHandler(messageSender, messageReceiver);
-            _requestValueHandler = new RequestValueHandler(messageSender, messageReceiver);
-            _requestValueInfoHandler = new RequestValueInfoHandler(messageSender, messageReceiver);
-            _requestKernelInfoHandler = new RequestKernelInfoHandler(messageSender, messageReceiver);
+            
+            var submitCodeHandler = new SubmitCodeHandler(messageSender, messageReceiver);
+            var requestKernelInfoHandler = new RequestKernelInfoHandler(messageSender, messageReceiver);
+            
+            RegisterCommandHandler<SubmitCode>(submitCodeHandler.HandleCommandAsync);
+            RegisterCommandHandler<RequestKernelInfo>(requestKernelInfoHandler.HandleCommandAsync);
 
             _disposables = new CompositeDisposable
             {
@@ -42,12 +36,27 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
             };
         }
 
-
         public Uri RemoteHostUri => _targetUri;
 
         public void Dispose()
         {
             _disposables.Dispose();
+        }
+
+        public void RegisterCommandHandler<TCommand>(Func<TCommand, ICommandExecutionContext, CancellationToken, Task> handler)
+            where TCommand : KernelCommand
+        {
+            _dynamicHandlers[typeof(TCommand)] = (command, context, token) => handler((TCommand)command, context, token);
+        }
+
+
+        private Func<KernelCommand, ICommandExecutionContext, CancellationToken, Task> TryGetDynamicHandler(KernelCommand command) 
+        {
+            if (_dynamicHandlers.TryGetValue(command.GetType(), out var handler))
+            {
+                return handler;
+            }
+            return null;
         }
 
         public void Publish(KernelEvent kernelEvent)
@@ -58,22 +67,16 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
 
         public async Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
         {
-            switch (kernelCommand)
+            var handler = TryGetDynamicHandler(kernelCommand);
+            if (handler != null)
             {
-                case (SubmitCode submitCode):
-                    await _submitCodeHandler.HandleCommandAsync(submitCode, this, cancellationToken);
-                    break;
-                case (RequestValue requestValue):
-                    await _requestValueHandler.HandleCommandAsync(requestValue, this, cancellationToken);
-                    break;
-                case (RequestValueInfos requestValueInfos):
-                    await _requestValueInfoHandler.HandleCommandAsync(requestValueInfos, this, cancellationToken);
-                    break;
-                case (RequestKernelInfo requestKernelInfo):
-                    await _requestKernelInfoHandler.HandleCommandAsync(requestKernelInfo, this, cancellationToken);
-                    break;
-                default:
-                    break;
+                await handler(kernelCommand, this, cancellationToken);
+            }
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                //TODO: trigger an explicit kernel interrupt as well to make sure the out-of-proc kernel 
+                // stops any running executions.
             }
         }
 
