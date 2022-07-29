@@ -2,8 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as rxjs from 'rxjs';
+import { CompositeKernel } from './compositeKernel';
 import * as contracts from './contracts';
 import * as disposables from './disposables';
+import { KernelHost } from './kernelHost';
+import { Logger } from './logger';
 
 export type KernelCommandOrEventEnvelope = contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope;
 
@@ -114,7 +117,7 @@ export function tryAddUriToRoutingSlip(kernelCommandOrEventEnvelope: KernelComma
     if (kernelCommandOrEventEnvelope.routingSlip === undefined || kernelCommandOrEventEnvelope.routingSlip === null) {
         kernelCommandOrEventEnvelope.routingSlip = [];
     }
-    
+
     var canAdd = !kernelCommandOrEventEnvelope.routingSlip.find(e => e === kernelUri);
     if (canAdd) {
         kernelCommandOrEventEnvelope.routingSlip.push(kernelUri);
@@ -122,4 +125,69 @@ export function tryAddUriToRoutingSlip(kernelCommandOrEventEnvelope: KernelComma
     }
 
     return canAdd;
+}
+
+export function ensureProxyForKernelInfo(kernelInfoProduced: contracts.KernelInfoProduced, compositeKernel: CompositeKernel) {
+    const uriToLookup = kernelInfoProduced.kernelInfo.remoteUri ?? kernelInfoProduced.kernelInfo.uri;
+    if (uriToLookup) {
+        let kernel = compositeKernel.findKernelByUri(uriToLookup);
+        if (!kernel) {
+            // add
+            if (compositeKernel.host) {
+                Logger.default.info(`creating proxy for uri [${uriToLookup}] with info ${JSON.stringify(kernelInfoProduced)}`);
+                kernel = compositeKernel.host.connectProxyKernelOnDefaultConnector(kernelInfoProduced.kernelInfo.localName, uriToLookup, kernelInfoProduced.kernelInfo.aliases);
+            } else {
+                throw new Error('no kernel host found');
+            }
+        } else {
+            Logger.default.info(`patching proxy for uri [${uriToLookup}] with info ${JSON.stringify(kernelInfoProduced)}`);
+        }
+
+        // patch
+        updateKernelInfo(kernel.kernelInfo, kernelInfoProduced.kernelInfo);
+    }
+}
+
+export function isKernelInfoForProxy(kernelInfo: contracts.KernelInfo): boolean {
+    const hasUri = !!kernelInfo.uri;
+    const hasRemoteUri = !!kernelInfo.remoteUri;
+    return hasUri && hasRemoteUri;
+}
+
+export function updateKernelInfo(destination: contracts.KernelInfo, incoming: contracts.KernelInfo) {
+    destination.languageName = incoming.languageName ?? destination.languageName;
+    destination.languageVersion = incoming.languageVersion ?? destination.languageVersion;
+
+    const supportedDirectives = new Set<string>();
+    const supportedCommands = new Set<string>();
+
+    if (!destination.supportedDirectives) {
+        destination.supportedDirectives = [];
+    }
+
+    if (!destination.supportedKernelCommands) {
+        destination.supportedKernelCommands = [];
+    }
+
+    for (const supportedDirective of destination.supportedDirectives) {
+        supportedDirectives.add(supportedDirective.name);
+    }
+
+    for (const supportedCommand of destination.supportedKernelCommands) {
+        supportedCommands.add(supportedCommand.name);
+    }
+
+    for (const supportedDirective of incoming.supportedDirectives) {
+        if (!supportedDirectives.has(supportedDirective.name)) {
+            supportedDirectives.add(supportedDirective.name);
+            destination.supportedDirectives.push(supportedDirective);
+        }
+    }
+
+    for (const supportedCommand of incoming.supportedKernelCommands) {
+        if (!supportedCommands.has(supportedCommand.name)) {
+            supportedCommands.add(supportedCommand.name);
+            destination.supportedKernelCommands.push(supportedCommand);
+        }
+    }
 }

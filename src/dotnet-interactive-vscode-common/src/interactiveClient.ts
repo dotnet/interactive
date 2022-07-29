@@ -21,6 +21,8 @@ import {
     KernelEventEnvelope,
     KernelEventEnvelopeObserver,
     KernelEventType,
+    KernelInfoProduced,
+    KernelInfoProducedType,
     RequestCompletions,
     RequestCompletionsType,
     RequestDiagnostics,
@@ -55,7 +57,7 @@ import { CompositeKernel } from './dotnet-interactive/compositeKernel';
 import { Guid } from './dotnet-interactive/tokenGenerator';
 import { KernelHost } from './dotnet-interactive/kernelHost';
 import { KernelCommandAndEventChannel } from './DotnetInteractiveChannel';
-import { isKernelEventEnvelope } from './dotnet-interactive/connection';
+import * as connection from './dotnet-interactive/connection';
 import { DisposableSubscription } from './dotnet-interactive/disposables';
 
 export interface ErrorOutputCreator {
@@ -76,21 +78,21 @@ export class InteractiveClient {
     private _kernel: CompositeKernel;
     private _kernelHost: KernelHost;
     constructor(readonly config: InteractiveClientConfiguration) {
-        config.channel.receiver.subscribe({
-            next: (envelope) => {
-                if (isKernelEventEnvelope(envelope)) {
-                    this.eventListener(envelope);
-                }
-            }
-        });
-
         this._kernel = new CompositeKernel("vscode");
         this._kernelHost = new KernelHost(this._kernel, config.channel.sender, config.channel.receiver, "kernel://vscode");
 
-        this._kernelHost.connectProxyKernelOnDefaultConnector('csharp', undefined, ['c#', 'C#']);
-        this._kernelHost.connectProxyKernelOnDefaultConnector('fsharp', undefined, ['fs', 'F#']);
-        this._kernelHost.connectProxyKernelOnDefaultConnector('pwsh', undefined, ['powershell']);
-        this._kernelHost.connectProxyKernelOnDefaultConnector('mermaid', undefined, []);
+        config.channel.receiver.subscribe({
+            next: (envelope) => {
+                if (connection.isKernelEventEnvelope(envelope)) {
+                    this.eventListener(envelope);
+
+                    if (envelope.eventType === KernelInfoProducedType) {
+                        const kernelInfoProduced = <KernelInfoProduced>envelope.event;
+                        connection.ensureProxyForKernelInfo(kernelInfoProduced, this._kernel);
+                    }
+                }
+            }
+        });
 
         this._kernelHost.connect();
     }

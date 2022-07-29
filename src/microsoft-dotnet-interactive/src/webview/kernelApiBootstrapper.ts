@@ -44,12 +44,6 @@ export function configure(global?: any) {
         localToRemote,
         remoteToLocal,
         () => {
-            global.webview.kernelHost.connectProxyKernelOnDefaultConnector('csharp', undefined, ['c#', 'C#']);
-            global.webview.kernelHost.connectProxyKernelOnDefaultConnector('fsharp', undefined, ['fs', 'F#']);
-            global.webview.kernelHost.connectProxyKernelOnDefaultConnector('pwsh', undefined, ['powershell']);
-            global.webview.kernelHost.connectProxyKernelOnDefaultConnector('mermaid', undefined, []);
-            global.webview.kernelHost.connectProxyKernelOnDefaultConnector('vscode', "kernel://vscode/vscode");
-
             // @ts-ignore
             postKernelMessage({ preloadCommand: '#!connect' });
         }

@@ -100,6 +100,14 @@ export class CompositeKernel extends Kernel {
         }
     }
 
+    findKernelByUri(uri: string): Kernel | undefined {
+        return this._childKernels.tryGetByUri(uri);
+    }
+
+    findKernelByName(name: string): Kernel | undefined {
+        return this._childKernels.tryGetByAlias(name);
+    }
+
     setDefaultTargetKernelNameForCommand(commandType: contracts.KernelCommandType, kernelName: string) {
         this._defaultKernelNamesByCommandType.set(commandType, kernelName);
     }
@@ -218,6 +226,18 @@ class KernelCollection implements Iterable<Kernel> {
     }
 
     updateKernelInfoAndIndex(kernel: Kernel, aliases?: string[]): void {
+        if (this._kernelsByNameOrAlias.has(kernel.name)) {
+            throw new Error(`kernel with name ${kernel.name} already exists`);
+        }
+
+        if (aliases) {
+            for (let alias of aliases) {
+                if (this._kernelsByNameOrAlias.has(alias)) {
+                    throw new Error(`kernel with alias ${alias} already exists`);
+                }
+            }
+        }
+
         if (!this._nameAndAliasesByKernel.has(kernel)) {
 
             let set = new Set<string>();

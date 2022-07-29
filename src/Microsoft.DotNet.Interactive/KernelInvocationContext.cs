@@ -265,13 +265,23 @@ namespace Microsoft.DotNet.Interactive
                         command.Parent = _current.Value.Command;
                     }
 
-                    _current.Value._childCommands.GetOrAdd(command, _ =>
+                    var capturedEventStream = _current.Value._events;
+                    _current.Value._childCommands.GetOrAdd(command, innerCommand =>
                     {
                         var replaySubject = new ReplaySubject<KernelEvent>();
 
                         var subscription = replaySubject
-                                           .Where(e => e is not CommandSucceeded and not CommandFailed)
-                                           .Subscribe(e => _current.Value._events.OnNext(e));
+                                           .Where(e =>
+                                            {
+                                                if (innerCommand.OriginUri is { })
+                                                {
+                                                    // if executing on behalf of a proxy, don't swallow anything
+                                                    return true;
+                                                }
+
+                                                return e is not CommandSucceeded and not CommandFailed;
+                                            })
+                                           .Subscribe(e => capturedEventStream.OnNext(e));
 
                         _current.Value._disposables.Add(subscription);
                         _current.Value._disposables.Add(replaySubject);

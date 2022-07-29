@@ -53,31 +53,22 @@ export class KernelHost {
 
     public getKernel(kernelCommandEnvelope: contracts.KernelCommandEnvelope): Kernel {
 
-        if (kernelCommandEnvelope.command.destinationUri) {
-            let fromDestinationUri = this._uriToKernel.get(kernelCommandEnvelope.command.destinationUri.toLowerCase());
-            if (fromDestinationUri) {
-                Logger.default.info(`Kernel ${fromDestinationUri.name} found for destination uri ${kernelCommandEnvelope.command.destinationUri}`);
-                return fromDestinationUri;
-            }
+        const uriToLookup = kernelCommandEnvelope.command.destinationUri ?? kernelCommandEnvelope.command.originUri;
+        let kernel: Kernel | undefined = undefined;
+        if (uriToLookup) {
+            kernel = this._kernel.findKernelByUri(uriToLookup);
+        }
 
-            fromDestinationUri = this._remoteUriToKernel.get(kernelCommandEnvelope.command.destinationUri.toLowerCase());
-            if (fromDestinationUri) {
-                Logger.default.info(`Kernel ${fromDestinationUri.name} found for destination uri ${kernelCommandEnvelope.command.destinationUri}`);
-                return fromDestinationUri;
+        if (!kernel) {
+            if (kernelCommandEnvelope.command.targetKernelName) {
+                kernel = this._kernel.findKernelByName(kernelCommandEnvelope.command.targetKernelName);
             }
         }
 
-        if (kernelCommandEnvelope.command.originUri) {
-            let fromOriginUri = this._uriToKernel.get(kernelCommandEnvelope.command.originUri.toLowerCase());
-            if (fromOriginUri) {
-                Logger.default.info(`Kernel ${fromOriginUri.name} found for origin uri ${kernelCommandEnvelope.command.originUri}`);
-                return fromOriginUri;
-            }
-        }
+        kernel ??= this._kernel;
 
-        Logger.default.info(`Using Kernel ${this._kernel.name}`);
-        return this._kernel;
-
+        Logger.default.info(`Using Kernel ${kernel.name}`);
+        return kernel;
     }
 
     public connectProxyKernelOnDefaultConnector(localName: string, remoteKernelUri?: string, aliases?: string[]): ProxyKernel {

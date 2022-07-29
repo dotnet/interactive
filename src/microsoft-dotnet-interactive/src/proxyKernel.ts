@@ -48,41 +48,7 @@ export class ProxyKernel extends Kernel {
     }
 
     private updateKernelInfoFromEvent(kernelInfoProduced: contracts.KernelInfoProduced) {
-        this.kernelInfo.languageName = kernelInfoProduced.kernelInfo.languageName;
-        this.kernelInfo.languageVersion = kernelInfoProduced.kernelInfo.languageVersion;
-
-        const supportedDirectives = new Set<string>();
-        const supportedCommands = new Set<string>();
-
-        if (!this.kernelInfo.supportedDirectives) {
-            this.kernelInfo.supportedDirectives = [];
-        }
-
-        if (!this.kernelInfo.supportedKernelCommands) {
-            this.kernelInfo.supportedKernelCommands = [];
-        }
-
-        for (const supportedDirective of this.kernelInfo.supportedDirectives) {
-            supportedDirectives.add(supportedDirective.name);
-        }
-
-        for (const supportedCommand of this.kernelInfo.supportedKernelCommands) {
-            supportedCommands.add(supportedCommand.name);
-        }
-
-        for (const supportedDirective of kernelInfoProduced.kernelInfo.supportedDirectives) {
-            if (!supportedDirectives.has(supportedDirective.name)) {
-                supportedDirectives.add(supportedDirective.name);
-                this.kernelInfo.supportedDirectives.push(supportedDirective);
-            }
-        }
-
-        for (const supportedCommand of kernelInfoProduced.kernelInfo.supportedKernelCommands) {
-            if (!supportedCommands.has(supportedCommand.name)) {
-                supportedCommands.add(supportedCommand.name);
-                this.kernelInfo.supportedKernelCommands.push(supportedCommand);
-            }
-        }
+        connection.updateKernelInfo(this.kernelInfo, kernelInfoProduced.kernelInfo);
     }
 
     private async _commandHandler(commandInvocation: IKernelCommandInvocation): Promise<void> {
@@ -129,8 +95,10 @@ export class ProxyKernel extends Kernel {
                                     }
                                 }
                                 break;
+                            case contracts.CommandCancelledType:
                             case contracts.CommandFailedType:
                             case contracts.CommandSucceededType:
+                                Logger.default.info(`proxy finished name=${this.name}, envelopeid=${envelope.command!.id}, commandid=${commandId}`);
                                 if (envelope.command!.id === commandId) {
                                     completionSource.resolve(envelope);
                                 } else {
@@ -148,11 +116,8 @@ export class ProxyKernel extends Kernel {
 
         try {
             if (!commandInvocation.commandEnvelope.command.destinationUri || !commandInvocation.commandEnvelope.command.originUri) {
-                const kernelInfo = this.parentKernel?.host?.tryGetKernelInfo(this);
-                if (kernelInfo) {
-                    commandInvocation.commandEnvelope.command.originUri ??= kernelInfo.uri;
-                    commandInvocation.commandEnvelope.command.destinationUri ??= kernelInfo.remoteUri;
-                }
+                commandInvocation.commandEnvelope.command.originUri ??= this.kernelInfo.uri;
+                commandInvocation.commandEnvelope.command.destinationUri ??= this.kernelInfo.remoteUri;
             }
 
             commandInvocation.commandEnvelope.routingSlip;//?

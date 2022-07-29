@@ -6,6 +6,8 @@ import { ClientMapper } from './clientMapper';
 import { Logger } from './dotnet-interactive/logger';
 import { isKernelCommandEnvelope, isKernelEventEnvelope, KernelCommandAndEventReceiver, KernelCommandAndEventSender, KernelCommandOrEventEnvelope } from './dotnet-interactive';
 import * as rxjs from 'rxjs';
+import * as connection from './dotnet-interactive/connection';
+import * as contracts from './dotnet-interactive/contracts';
 
 
 
@@ -63,6 +65,13 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, messageHandlerMap: M
                 }
 
                 if (isKernelEventEnvelope(envelope)) {
+                    if (envelope.eventType === contracts.KernelInfoProducedType) {
+                        const kernelInfoProduced = <contracts.KernelInfoProduced>envelope.event;
+                        if (!connection.isKernelInfoForProxy(kernelInfoProduced.kernelInfo)) {
+                            connection.ensureProxyForKernelInfo(kernelInfoProduced, client.kernel);
+                        }
+                    }
+
                     if (envelope.command?.command.originUri) {
                         // route to interactive
                         if (envelope.command?.command.originUri.startsWith("kernel://pid")) {
