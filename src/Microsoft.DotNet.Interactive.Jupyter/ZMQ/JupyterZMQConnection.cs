@@ -71,6 +71,10 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
 
         public IObservable<JupyterMessage> Messages => _subject;
 
+        public IMessageSender Sender => this;
+
+        public IMessageReceiver Receiver => this;
+
         public void Dispose()
         {
             _cancellationTokenSource.Cancel();
@@ -83,7 +87,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
             return Task.CompletedTask;
         }
 
-        public Task StartAsync(string kernelType)
+        public Task StartAsync()
         {
             _shell.Bind(_shellAddress);
             _ioPubSocket.Bind(_ioPubAddress);

@@ -2,6 +2,7 @@
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
+using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,6 +24,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
         private readonly IKernelCommandToMessageHandler<SubmitCode> _submitCodeHandler;
         private readonly IKernelCommandToMessageHandler<RequestValue> _requestValueHandler;
         private readonly IKernelCommandToMessageHandler<RequestValueInfos> _requestValueInfoHandler;
+        private readonly IKernelCommandToMessageHandler<RequestKernelInfo> _requestKernelInfoHandler;
 
         public MessageToCommandAndEventConnector(IMessageSender messageSender, IMessageReceiver messageReceiver, Uri targetUri)
         {
@@ -32,12 +34,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
             _submitCodeHandler = new SubmitCodeHandler(messageSender, messageReceiver);
             _requestValueHandler = new RequestValueHandler(messageSender, messageReceiver);
             _requestValueInfoHandler = new RequestValueInfoHandler(messageSender, messageReceiver);
+            _requestKernelInfoHandler = new RequestKernelInfoHandler(messageSender, messageReceiver);
 
             _disposables = new CompositeDisposable
             {
                 _commandOrEventsSubject
             };
         }
+
 
         public Uri RemoteHostUri => _targetUri;
 
@@ -64,6 +68,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
                     break;
                 case (RequestValueInfos requestValueInfos):
                     await _requestValueInfoHandler.HandleCommandAsync(requestValueInfos, this, cancellationToken);
+                    break;
+                case (RequestKernelInfo requestKernelInfo):
+                    await _requestKernelInfoHandler.HandleCommandAsync(requestKernelInfo, this, cancellationToken);
                     break;
                 default:
                     break;
