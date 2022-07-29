@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.Interactive.Utility
             var versionArg = version is not null ? $"--version {version}" : "";
             
             var args = $@"{packageName}";
-            if (toolPath != null)
+            if (toolPath is not null)
             {
                 args += $@" --tool-path ""{toolPath.FullName.TrimTrailingSeparators()}""";
             }
@@ -108,7 +108,7 @@ namespace Microsoft.DotNet.Interactive.Utility
         public async Task<IEnumerable<string>> ToolList(DirectoryInfo directory = null)
         {
             var args = "tool list";
-            if (directory != null)
+            if (directory is not null)
             {
                 args += $@" --tool-path ""{directory.FullName}""";
             }
