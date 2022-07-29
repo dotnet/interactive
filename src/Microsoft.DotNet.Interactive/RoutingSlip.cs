@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive;
 
-public class RoutingSlip : IEnumerable<Uri>
+public class RoutingSlip : IReadOnlyCollection<Uri>
 {
     private readonly List<Uri> _uris;
     private readonly object _lock = new();
@@ -41,4 +41,8 @@ public class RoutingSlip : IEnumerable<Uri>
     {
         return ((IEnumerable) _uris).GetEnumerator();
     }
+
+    public Uri this[int i] => _uris[i];
+    
+    public int Count => _uris.Count;
 }
