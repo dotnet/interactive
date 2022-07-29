@@ -131,9 +131,8 @@ export class Kernel {
         this.ensureCommandTokenAndId(commandEnvelope);
         tryAddUriToRoutingSlip(commandEnvelope, getKernelUri(this));
         commandEnvelope.routingSlip;//?
-        let context = KernelInvocationContext.establish(commandEnvelope);
-        this.getScheduler().runAsync(commandEnvelope, (value) => this.executeCommand(value));
-        return context.promise;
+        KernelInvocationContext.establish(commandEnvelope);
+        return this.getScheduler().runAsync(commandEnvelope, (value) => this.executeCommand(value));
     }
 
     private async executeCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
