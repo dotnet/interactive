@@ -1,48 +1,70 @@
 ﻿using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
-using Microsoft.DotNet.Interactive.Jupyter.Messaging;
+using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Jupyter.ValueSharing;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Reactive;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Connection
 {
     internal class JupyterKernelConnector : IKernelConnector
     {
-        private readonly IJupyterKernelConnection _kernelConnection;
-        private readonly IMessageSender _sender;
-        private readonly IMessageReceiver _receiver;
+        private readonly IJupyterConnection _jupyterConnection;
         private readonly string _kernelType;
 
-        public JupyterKernelConnector(IJupyterKernelConnection kernelConnection, IMessageSender sender, IMessageReceiver receiver, string kernelType)
+        public JupyterKernelConnector(IJupyterConnection jupyterConnection, string kernelType)
         {
-            _kernelConnection = kernelConnection;
-            _sender = sender;
-            _receiver = receiver;
+            _jupyterConnection = jupyterConnection;
             _kernelType = kernelType;
         }
 
         public async Task<Kernel> CreateKernelAsync(string kernelName)
         {
-            await _kernelConnection.StartAsync(_kernelType);
+            var remoteUri = _jupyterConnection.TargetUri;
+            var kernelConnection = await _jupyterConnection.CreateKernelConnectionAsync(_kernelType);
+            var sender = kernelConnection.Sender;
+            var receiver = kernelConnection.Receiver;
 
-            MessageToCommandAndEventConnector translator = new MessageToCommandAndEventConnector(_sender, _receiver, _kernelConnection.TargetUri);
+            MessageToCommandAndEventConnector commandOrEventHandler = new(sender, receiver, remoteUri);
 
-            ProxyKernel proxyKernel = new ProxyKernel(
-                kernelName,
-                translator,
-                translator,
-                _kernelConnection.TargetUri);
-
+            ProxyKernel proxyKernel = new(kernelName, commandOrEventHandler, commandOrEventHandler, remoteUri);
             proxyKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(SubmitCode)));
-            proxyKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValue)));
-            proxyKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValueInfos)));
 
-            proxyKernel.UseValueSharing(new PythonValueDeclarer());
-            proxyKernel.UseWho();
+            KernelInfoProduced kernelInfoProduced = null;
+            Task waitForKernelInfoProduced = Task.Run(async () =>
+            {
+                while (kernelInfoProduced == null)
+                {
+                    await Task.Delay(200);
+                }
+            });
+
+            commandOrEventHandler.Select(coe => coe.Event)
+                                   .OfType<KernelInfoProduced>()
+                                   .Take(1)
+                                   .Subscribe(e => kernelInfoProduced = e);
+
+            // start the kernel connection and request kernel info
+            await kernelConnection.StartAsync();
+            await commandOrEventHandler.SendAsync(new RequestKernelInfo(), CancellationToken.None);
+            await waitForKernelInfoProduced;
+
+            if (kernelInfoProduced.KernelInfo.LanguageName == LanguageNameValues.Python)
+            {
+                proxyKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValue)));
+                proxyKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValueInfos)));
+                proxyKernel.UseValueSharing(new PythonValueDeclarer());
+                proxyKernel.UseWho();
+            }
+
+            proxyKernel.RegisterForDisposal(kernelConnection);
+            proxyKernel.RegisterForDisposal(commandOrEventHandler);
+
             return proxyKernel;
         }
     }

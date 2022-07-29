@@ -4,11 +4,11 @@
 using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.Connection;
-using Microsoft.DotNet.Interactive.Jupyter.KernelProxy;
-using Microsoft.DotNet.Interactive.Jupyter.ZMQ;
+using Microsoft.DotNet.Interactive.Jupyter.Http;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
 {
@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         { 
         };
 
-        public override Task<Kernel> ConnectKernelAsync(
+        public override async Task<Kernel> ConnectKernelAsync(
             KernelInvocationContext context,
             InvocationContext commandLineContext)
         {
@@ -47,21 +47,24 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             var token = commandLineContext.ParseResult.GetValueForOption(Token);
 
             JupyterKernelConnector connector = null;
+
+            CompositeDisposable disposables = new CompositeDisposable();
             if (targetUrl is not null)
             {
-                var connection = new JupyterApiConnection(new Uri(targetUrl), token);
-                connector = new JupyterKernelConnector(connection, connection, connection, kernelType);
+                var connection = new JupyterHttpConnection(new Uri(targetUrl), token);
+                connector = new JupyterKernelConnector(connection, kernelType);
+                disposables.Add(connection);
             }
             else
             {
-                var connectionInfo = ConnectionInformation.Load(new System.IO.FileInfo($"\\{kernelType}\\kernel.json"));
-                var connection = new JupyterZMQConnection(connectionInfo);
-
+                // TODO: add ZMQ Jupyter connection
             }
 
             var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
 
-            return connector?.CreateKernelAsync(localName);
+            var kernel = await connector?.CreateKernelAsync(localName);
+            kernel?.RegisterForDisposal(disposables);
+            return kernel;
         }
     }
 }
