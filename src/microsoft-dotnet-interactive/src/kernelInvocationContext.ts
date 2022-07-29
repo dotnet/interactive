@@ -5,7 +5,7 @@ import * as rxjs from "rxjs";
 import { tryAddUriToRoutingSlip } from "./connection";
 import * as contracts from "./contracts";
 import { Disposable } from "./disposables";
-import { getKernelUri, IKernelEventObserver, Kernel } from "./kernel";
+import { getKernelUri, Kernel } from "./kernel";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
 
 
@@ -58,7 +58,7 @@ export class KernelInvocationContext implements Disposable {
     }
 
     complete(command: contracts.KernelCommandEnvelope) {
-        if (command === this._commandEnvelope) {
+        if (areCommandsTheSame(command, this._commandEnvelope)) {
             this._isComplete = true;
             let succeeded: contracts.CommandSucceeded = {};
             let eventEnvelope: contracts.KernelEventEnvelope = {
@@ -144,5 +144,5 @@ export function areCommandsTheSame(envelope1: contracts.KernelCommandEnvelope, e
     envelope2;//?
     envelope1 === envelope2;//?
     return envelope1 === envelope2
-        || (envelope1?.commandType === envelope2?.commandType && envelope1?.token === envelope2?.token);
+        || (envelope1?.commandType === envelope2?.commandType && envelope1?.token === envelope2?.token && envelope1?.id === envelope2?.id);
 }

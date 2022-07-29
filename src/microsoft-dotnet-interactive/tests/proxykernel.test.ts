@@ -126,7 +126,7 @@ describe("proxyKernel", () => {
         let events: contracts.KernelEventEnvelope[] = [];
 
         kernel.subscribeToKernelEvents((e) => events.push(e));
-        let command: contracts.KernelCommandEnvelope = { commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "1+2" } };
+        let command: contracts.KernelCommandEnvelope = { commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "1+2" }, id: "newId" };
         await kernel.send(command);
 
         expect(events[0]).to.be.deep.include({
