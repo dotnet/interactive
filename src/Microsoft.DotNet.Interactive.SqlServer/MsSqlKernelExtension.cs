@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 bool sqlToolInstalled = installedGlobalTools.Any(tool => string.Equals(tool, sqlToolName, StringComparison.InvariantCultureIgnoreCase));
                 if (!sqlToolInstalled)
                 {
-                    var commandLineResult = await dotnet.ToolInstall("Microsoft.SqlServer.SqlToolsServiceLayer.Tool");
+                    var commandLineResult = await dotnet.ToolInstall("Microsoft.SqlServer.SqlToolsServiceLayer.Tool", null, null, "1.0.0");
                     commandLineResult.ThrowOnFailure();
                 }
 
