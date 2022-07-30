@@ -29,6 +29,13 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
             await Sender.SendAsync(request);
             var kernelInfoReply = await reply.ToTask(token);
 
+            if (kernelInfoReply.Status != StatusValues.Ok)
+            {
+                // TODO: Add an error trace
+                context.Publish(new CommandFailed(null, command, "kernel returned failed"));
+                return;
+            }
+
             var kernelInfo = new KernelInfo(kernelInfoReply.Implementation,
                                             kernelInfoReply.LanguageInfo?.Name,
                                             kernelInfoReply.LanguageInfo?.Version);
