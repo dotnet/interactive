@@ -26,9 +26,11 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
             
             var submitCodeHandler = new SubmitCodeHandler(messageSender, messageReceiver);
             var requestKernelInfoHandler = new RequestKernelInfoHandler(messageSender, messageReceiver);
-            
+            var completionsHandler = new RequestCompletionsHandler(messageSender, messageReceiver);
+
             RegisterCommandHandler<SubmitCode>(submitCodeHandler.HandleCommandAsync);
             RegisterCommandHandler<RequestKernelInfo>(requestKernelInfoHandler.HandleCommandAsync);
+            RegisterCommandHandler<RequestCompletions>(completionsHandler.HandleCommandAsync);
 
             _disposables = new CompositeDisposable
             {
