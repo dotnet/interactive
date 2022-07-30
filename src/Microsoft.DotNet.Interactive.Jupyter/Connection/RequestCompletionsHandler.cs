@@ -41,6 +41,13 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
             {
                 case (CompleteReply results):
 
+                    if (results.Status != StatusValues.Ok)
+                    {
+                        // TODO: Add an error trace
+                        context.Publish(new CommandFailed(null, command, "kernel returned failed"));
+                        break;
+                    }
+
                     bool metadataAvailable = results.MetaData.TryGetValue(CompletionResultMetadata.Entry, out IReadOnlyList<CompletionResultMetadata> resultsMetadata);
                     if (!metadataAvailable)
                     {
