@@ -145,7 +145,7 @@ public sealed class ProxyKernel : Kernel
                     _inflight.Remove(token);
                     pending.completionSource.TrySetResult(cs);
                     break;
-                case KernelInfoProduced kip:
+                case KernelInfoProduced kip when kip.KernelInfo.Uri == KernelInfo.RemoteUri:
                     {
                         UpdateKernelInfoFromEvent(kip);
                         var newEvent = new KernelInfoProduced(KernelInfo, kernelEvent.Command);

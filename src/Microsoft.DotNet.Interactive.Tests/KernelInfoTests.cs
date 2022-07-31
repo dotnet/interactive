@@ -101,7 +101,7 @@ public class KernelInfoTests
             using var remoteCompositeKernel = new CompositeKernel("REMOTE")
             {
                 proxiedCsharpKernel,
-                new FakeKernel("fsharp")
+                new FakeKernel("fsharp", languageName: "fsharp")
             };
 
             ConnectHost.ConnectInProcessHost(
@@ -117,7 +117,7 @@ public class KernelInfoTests
                     remoteKernelUri);
 
             var result = await localCompositeKernel.SendAsync(
-                new RequestKernelInfo(remoteKernelUri));
+                new RequestKernelInfo(targetKernelName: "proxied-fsharp"));
 
             var events = result.KernelEvents.ToSubscribedList();
 

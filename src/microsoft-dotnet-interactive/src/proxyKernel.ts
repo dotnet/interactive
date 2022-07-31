@@ -114,15 +114,19 @@ export class ProxyKernel extends Kernel {
                             case contracts.KernelInfoProducedType:
                                 {
                                     const kernelInfoProduced = <contracts.KernelInfoProduced>envelope.event;
-                                    this.updateKernelInfoFromEvent(kernelInfoProduced);
-                                    this.delegatePublication(
-                                        {
-                                            eventType: contracts.KernelInfoProducedType,
-                                            event: { kernelInfo: this.kernelInfo },
-                                            routingSlip: envelope.routingSlip,
-                                            command: commandInvocation.commandEnvelope
-                                        }, commandInvocation.context);
-                                    this.delegatePublication(envelope, commandInvocation.context);
+                                    if (kernelInfoProduced.kernelInfo.uri === this.kernelInfo.remoteUri) {
+                                        this.updateKernelInfoFromEvent(kernelInfoProduced);
+                                        this.delegatePublication(
+                                            {
+                                                eventType: contracts.KernelInfoProducedType,
+                                                event: { kernelInfo: this.kernelInfo },
+                                                routingSlip: envelope.routingSlip,
+                                                command: commandInvocation.commandEnvelope
+                                            }, commandInvocation.context);
+                                        this.delegatePublication(envelope, commandInvocation.context);
+                                    } else {
+                                        this.delegatePublication(envelope, commandInvocation.context);
+                                    }
                                 }
                                 break;
                             case contracts.CommandFailedType:
