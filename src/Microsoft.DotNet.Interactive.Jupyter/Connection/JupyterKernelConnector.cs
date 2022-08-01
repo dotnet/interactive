@@ -1,14 +1,12 @@
 ﻿using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Jupyter.ValueSharing;
+using Microsoft.DotNet.Interactive.ValueSharing;
 using System;
 using System.Linq;
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Reactive;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Connection
 {
@@ -54,11 +52,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
             await commandOrEventHandler.SendAsync(new RequestKernelInfo(), CancellationToken.None);
             await waitForKernelInfoProduced;
 
-            if (kernelInfoProduced.KernelInfo.LanguageName == LanguageNameValues.Python)
+            if (commandOrEventHandler.ValueHandler is IKernelValueDeclarer valueDeclarer)
             {
-                proxyKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValue)));
-                proxyKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValueInfos)));
-                proxyKernel.UseValueSharing(new PythonValueDeclarer());
+                proxyKernel.UseValueSharing(valueDeclarer);
+            }
+
+            if (commandOrEventHandler.ValueHandler is ISupportGetValue)
+            {
+                // enable who directive only when the kernel language implements value handler for getting values
                 proxyKernel.UseWho();
             }
 
