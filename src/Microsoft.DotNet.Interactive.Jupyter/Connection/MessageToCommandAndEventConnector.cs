@@ -6,7 +6,6 @@ using Microsoft.DotNet.Interactive.Jupyter.ValueSharing;
 using Microsoft.DotNet.Interactive.ValueSharing;
 using System;
 using System.Collections.Concurrent;
-using System.Drawing.Text;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -20,9 +19,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
         private readonly Subject<CommandOrEvent> _commandOrEventsSubject;
         private readonly Uri _targetUri;
         private readonly CompositeDisposable _disposables;
-        private readonly IMessageSender _sender;
-        private readonly IMessageReceiver _receiver;
-
+        
         private readonly ConcurrentDictionary<Type, Func<KernelCommand, ICommandExecutionContext, CancellationToken, Task>> _dynamicHandlers = new();
         private readonly KernelValueHandler _kernelValueHandler = new();
         
@@ -31,8 +28,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
         {
             _commandOrEventsSubject = new Subject<CommandOrEvent>();
             _targetUri = targetUri;
-            _receiver = messageReceiver;
-            _sender = messageSender;
 
             var submitCodeHandler = new SubmitCodeHandler(messageSender, messageReceiver);
             var requestKernelInfoHandler = new RequestKernelInfoHandler(messageSender, messageReceiver);
@@ -44,9 +39,24 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
             RegisterCommandHandler<RequestCompletions>(completionsHandler.HandleCommandAsync);
             RegisterCommandHandler<RequestHoverText>(hoverTipHandler.HandleCommandAsync);
 
+            // initialize request value handlers based on the language returned from the kernel
+            var subscription = _commandOrEventsSubject.Subscribe(coe =>
+            {
+                if (coe.Event is KernelInfoProduced kip)
+                {
+                    ValueHandler = _kernelValueHandler.GetValueSupport(kip.KernelInfo.LanguageName, messageSender, messageReceiver);
+
+                    if (ValueHandler is ISupportGetValue getValueHandler)
+                    {
+                        SupportGetValue(getValueHandler);
+                    }
+                }
+            });
+
             _disposables = new CompositeDisposable
             {
-                _commandOrEventsSubject
+                _commandOrEventsSubject,
+                subscription
             };
         }
 
@@ -105,26 +115,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
 
         public IDisposable Subscribe(IObserver<CommandOrEvent> observer)
         {
-            return _commandOrEventsSubject.Select(coe => UpdateCommandOrEvent(coe)).Subscribe(observer);
-        }
-
-        private CommandOrEvent UpdateCommandOrEvent(CommandOrEvent coe)
-        {
-            CommandOrEvent updated = coe;
-            if (coe.Event is KernelInfoProduced e)
-            {
-                ValueHandler = _kernelValueHandler.GetValueSupport(e.KernelInfo.LanguageName, _sender, _receiver);
-
-                if (ValueHandler is ISupportGetValue getValueHandler)
-                {
-                    SupportGetValue(getValueHandler);
-                    e.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValue)));
-                    e.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValueInfos)));
-                    updated = new CommandOrEvent(new KernelInfoProduced(e.KernelInfo, e.Command));
-                }
-            }
-
-            return updated;
+            return _commandOrEventsSubject.Subscribe(observer);
         }
 
         private void SupportGetValue(ISupportGetValue languageValueHandler)
