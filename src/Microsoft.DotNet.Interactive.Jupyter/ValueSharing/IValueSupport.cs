@@ -6,9 +6,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing
 {
-    internal static class LanguageNameValues
+    internal interface IValueSupport
     {
-        public const string Python = "python";
-        public const string R = "R";
     }
 }
