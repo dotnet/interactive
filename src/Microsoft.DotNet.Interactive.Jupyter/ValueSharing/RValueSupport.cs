@@ -44,9 +44,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing
         {
             if (valueProduced.Value is IList<TabularDataResource> value && value.Count == 1)
             {
-                var code = $@"library(jsonlite)
-{valueProduced.Name} <- data.frame(fromJSON('{JsonSerializer.Serialize(value[0].Data, _serializerOptions)}'))
-";
+                var code = $@"library(jsonlite); {valueProduced.Name} <- data.frame(fromJSON('{JsonSerializer.Serialize(value[0].Data, _serializerOptions)}'))";
                 command = new SubmitCode(code);
                 return true;
             }
