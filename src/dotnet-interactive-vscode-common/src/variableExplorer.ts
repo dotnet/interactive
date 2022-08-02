@@ -7,6 +7,7 @@ import { ClientMapper } from './clientMapper';
 import * as contracts from './dotnet-interactive/contracts';
 import { getNotebookSpecificLanguage } from './interactiveNotebook';
 import { VariableGridRow } from './dotnet-interactive/webview/variableGridInterfaces';
+import * as utilities from './utilities';
 import * as versionSpecificFunctions from '../versionSpecificFunctions';
 import { DisposableSubscription } from './dotnet-interactive/disposables';
 import { isKernelEventEnvelope } from './dotnet-interactive';
@@ -21,8 +22,11 @@ const languageIdToAliasMap = new Map(
         .map(l => <[string, string]>[<string>l.id, <string>l.aliases[0]])
 );
 
+function debounce(callback: () => void) {
+    utilities.debounce('variable-explorer', 500, callback);
+}
+
 export function registerVariableExplorer(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
-    return;
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.shareValueTo', async (variableInfo: { kernelName: string, valueName: string } | undefined) => {
         if (variableInfo && vscode.window.activeNotebookEditor) {
             const client = await clientMapper.tryGetClient(versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor).uri);
@@ -68,7 +72,7 @@ export function registerVariableExplorer(context: vscode.ExtensionContext, clien
 
     vscode.window.onDidChangeActiveNotebookEditor(async _editor => {
         // TODO: update on client process restart
-        webViewProvider.refresh();
+        debounce(() => webViewProvider.refresh());
     });
 }
 
@@ -147,7 +151,7 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
         </html>
         `;
         this.webview.html = html;
-        this.refresh();
+        debounce(() => this.refresh());
     }
 
     private setRows(rows: VariableGridRow[]) {
@@ -172,7 +176,7 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                             case contracts.CommandFailedType:
                             case contracts.CommandCancelledType:
                                 if (envelope.command?.commandType === contracts.SubmitCodeType) {
-                                    this.refresh();
+                                    debounce(() => this.refresh());
                                 }
                                 break;
                         }
