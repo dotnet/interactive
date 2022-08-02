@@ -187,7 +187,7 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
             {
                 var uri = new Uri(routingSlipItem.GetString(), UriKind.Absolute);
 
-                command.RoutingSlip.TryAdd(uri);
+                command.TryAddToRoutingSlip(uri);
             }
         }
 

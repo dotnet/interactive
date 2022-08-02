@@ -53,7 +53,7 @@ public sealed class ProxyKernel : Kernel
         {
             if (coe.Event is { } e)
             {
-                if (e is KernelInfoProduced kip && e.RoutingSlip.Count > 0 && e.RoutingSlip[0] == _remoteUri)
+                if (e is KernelInfoProduced kip && e.RoutingSlip.Count > 0 && e.RoutingSlip.FirstOrDefault() == _remoteUri)
                 {
                     UpdateKernelInfoFromEvent(kip);
                     PublishEvent(new KernelInfoProduced(KernelInfo, e.Command));
@@ -110,6 +110,7 @@ public sealed class ProxyKernel : Kernel
         return completionSource.Task.ContinueWith(te =>
         {
             command.TargetKernelName = targetKernelName;
+          
             if (te.Result is CommandFailed cf)
             {
                 context.Fail(command, cf.Exception, cf.Message);
@@ -151,7 +152,7 @@ public sealed class ProxyKernel : Kernel
                         var newEvent = new KernelInfoProduced(KernelInfo, kernelEvent.Command);
                         foreach (var kernelUri in kip.RoutingSlip)
                         {
-                            newEvent.RoutingSlip.TryAdd(kernelUri);
+                            newEvent.TryAddToRoutingSlip(kernelUri);
                         }
                         if (pending.executionContext is { } ec)
                         {
@@ -188,7 +189,7 @@ public sealed class ProxyKernel : Kernel
     {
         foreach (var kernelOrKernelHostUri in commandFromRemoteKernel.RoutingSlip.Skip(command.RoutingSlip.Count()))
         {
-            command.RoutingSlip.TryAdd(kernelOrKernelHostUri);
+            command.TryAddToRoutingSlip(kernelOrKernelHostUri);
         }
     }
 

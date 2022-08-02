@@ -17,7 +17,7 @@ public class RoutingSlip : IReadOnlyCollection<Uri>
         _uris = new List<Uri>();
     }
 
-    public bool TryAdd(Uri kernelOrKernelHostUri)
+    internal bool TryAdd(Uri kernelOrKernelHostUri)
     {
         var added = false;
         lock (_lock)

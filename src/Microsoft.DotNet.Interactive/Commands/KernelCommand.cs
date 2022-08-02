@@ -5,60 +5,81 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine.Parsing;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Commands
+namespace Microsoft.DotNet.Interactive.Commands;
+
+[DebuggerStepThrough]
+public abstract class KernelCommand
 {
-    [DebuggerStepThrough]
-    public abstract class KernelCommand
+    private readonly RoutingSlip _routingSlip;
+
+    protected KernelCommand(
+        string targetKernelName = null, 
+        KernelCommand parent = null)
     {
-        protected KernelCommand(
-            string targetKernelName = null, 
-            KernelCommand parent = null)
+        Properties = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
+        TargetKernelName = targetKernelName;
+        Parent = parent;
+        _routingSlip = new RoutingSlip();
+    }
+
+    [JsonIgnore] 
+    public KernelCommandInvocation Handler { get; set; }
+
+    [JsonIgnore]
+    public KernelCommand Parent { get; internal set; }
+
+    [JsonIgnore]
+    public IDictionary<string, object> Properties { get; }
+
+    public string TargetKernelName { get; internal set; }
+
+    internal static KernelCommand None => new NoCommand();
+
+    public Uri OriginUri { get; set; }
+
+    public Uri DestinationUri { get; set; }
+
+    [JsonIgnore]
+    internal SchedulingScope SchedulingScope { get; set; } 
+
+    [JsonIgnore]
+    internal bool? ShouldPublishCompletionEvent { get; set; }
+
+    [JsonIgnore] 
+    public ParseResult KernelChooserParseResult { get; internal set; }
+
+    [JsonIgnore]
+    public IReadOnlyCollection<Uri> RoutingSlip
+    {
+        get
         {
-            Properties = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
-            TargetKernelName = targetKernelName;
-            Parent = parent;
-            RoutingSlip = new RoutingSlip();
+            var unique = new HashSet<Uri>();
+            var list = new List<Uri>(Parent?.RoutingSlip ?? Array.Empty<Uri>());
+            list.AddRange(_routingSlip.Where(unique.Add));
+            return list;
+        }
+    }
+
+    public virtual Task InvokeAsync(KernelInvocationContext context)
+    {
+        if (Handler is null)
+        {
+            throw new NoSuitableKernelException(this);
         }
 
-        [JsonIgnore] 
-        public KernelCommandInvocation Handler { get; set; }
+        return Handler(this, context);
+    }
 
-        [JsonIgnore]
-        public KernelCommand Parent { get; internal set; }
-
-        [JsonIgnore]
-        public IDictionary<string, object> Properties { get; }
-
-        public string TargetKernelName { get; internal set; }
-
-        internal static KernelCommand None => new NoCommand();
-
-        public Uri OriginUri { get; set; }
-
-        public Uri DestinationUri { get; set; }
-
-        [JsonIgnore]
-        internal SchedulingScope SchedulingScope { get; set; } 
-
-        [JsonIgnore]
-        internal bool? ShouldPublishCompletionEvent { get; set; }
-
-        [JsonIgnore] 
-        public ParseResult KernelChooserParseResult { get; internal set; }
-
-        [JsonIgnore] public RoutingSlip RoutingSlip { get; }
-
-        public virtual Task InvokeAsync(KernelInvocationContext context)
+    public bool TryAddToRoutingSlip(Uri uri)
+    {
+        if (Parent?.RoutingSlip.Contains(uri) == true)
         {
-            if (Handler is null)
-            {
-                throw new NoSuitableKernelException(this);
-            }
-
-            return Handler(this, context);
+            return false;
         }
+        return _routingSlip.TryAdd(uri);
     }
 }

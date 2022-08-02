@@ -213,7 +213,7 @@ namespace Microsoft.DotNet.Interactive
 
             if (HandlingKernel is { })
             {
-                @event.RoutingSlip.TryAdd(HandlingKernel.GetKernelUri());
+                @event.TryAddToRoutingSlip(HandlingKernel.GetKernelUri());
             }
             
             if (_childCommands.TryGetValue(command, out var events))

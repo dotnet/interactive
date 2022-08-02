@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
@@ -111,7 +111,7 @@ namespace Microsoft.DotNet.Interactive
                 _cancellationTokenSource.Token);
 
             var infoProduced = new KernelInfoProduced(_kernel.KernelInfo, KernelCommand.None);
-            infoProduced.RoutingSlip.TryAdd(_kernel.KernelInfo.Uri);
+            infoProduced.TryAddToRoutingSlip(_kernel.KernelInfo.Uri);
 
             await _defaultSender.SendAsync(
                 infoProduced,
@@ -120,7 +120,7 @@ namespace Microsoft.DotNet.Interactive
             foreach (var kernel in _kernel.ChildKernels.Where(k => k is not ProxyKernel))
             {
                 infoProduced = new KernelInfoProduced(kernel.KernelInfo, KernelCommand.None);
-                infoProduced.RoutingSlip.TryAdd(kernel.KernelInfo.Uri);
+                infoProduced.TryAddToRoutingSlip(kernel.KernelInfo.Uri);
                 await _defaultSender.SendAsync(
                     infoProduced,
                     _cancellationTokenSource.Token);
