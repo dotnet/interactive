@@ -216,6 +216,9 @@ class KernelCollection implements Iterable<Kernel> {
 
 
     public add(kernel: Kernel, aliases?: string[]): void {
+        if (this._kernelsByNameOrAlias.has(kernel.name)) {
+            throw new Error(`kernel with name ${kernel.name} already exists`);
+        }
         this.updateKernelInfoAndIndex(kernel, aliases);
         this._kernels.push(kernel);
     }
@@ -226,9 +229,6 @@ class KernelCollection implements Iterable<Kernel> {
     }
 
     updateKernelInfoAndIndex(kernel: Kernel, aliases?: string[]): void {
-        if (this._kernelsByNameOrAlias.has(kernel.name)) {
-            throw new Error(`kernel with name ${kernel.name} already exists`);
-        }
 
         if (aliases) {
             for (let alias of aliases) {

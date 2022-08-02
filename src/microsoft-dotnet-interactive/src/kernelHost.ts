@@ -4,7 +4,7 @@
 import { CompositeKernel } from './compositeKernel';
 import * as contracts from './contracts';
 import * as connection from './connection';
-import { Kernel, KernelType } from './kernel';
+import { Kernel } from './kernel';
 import { ProxyKernel } from './proxyKernel';
 import { Logger } from './logger';
 import { KernelScheduler } from './kernelScheduler';
