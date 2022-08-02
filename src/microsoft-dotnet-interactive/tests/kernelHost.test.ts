@@ -30,7 +30,11 @@ describe("kernelHost",
             const kernelHost = new KernelHost(compositeKernel, inMemory.local.sender, inMemory.local.receiver, "kernel://vscode");
             kernelHost.connect();
 
-            expect(inMemory.local.messagesSent).to.deep.equal([{ event: {}, eventType: 'KernelReady' },
+            expect(inMemory.local.messagesSent).to.deep.equal([{
+                event: {},
+                eventType: 'KernelReady',
+                routingSlip: ['kernel://vscode']
+            },
             {
                 event:
                 {

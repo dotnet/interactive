@@ -53,7 +53,11 @@ describe("frontEndHost", () => {
             }
         });
         frontEndHost.createHost(testGlobal, 'testKernel', noop, noop, localToRemote, remoteToLocal, noop);
-        expect(seenMessages).to.deep.equal([{ event: {}, eventType: 'KernelReady' },
+        expect(seenMessages).to.deep.equal([{
+            event: {},
+            eventType: 'KernelReady',
+            routingSlip: ['kernel://testKernel']
+        },
         {
             event:
             {
