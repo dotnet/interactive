@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly IKernelCommandAndEventReceiver _receiver;
         private IDisposable? _kernelEventSubscription;
         private readonly IKernelConnector _defaultConnector;
-        private EventLoopScheduler _eventLoop;
+        private EventLoopScheduler? _eventLoop;
 
         internal KernelHost(
             CompositeKernel kernel,
@@ -111,7 +111,7 @@ namespace Microsoft.DotNet.Interactive
                 else if (commandOrEvent.Command is { })
                 {
                     // this needs to be dispatched this way so that it does not block the current thread, which we see in certain bidirectional command scenarios (RequestInput sent by the SubmissionParser during magic command token interpolation) in stdio mode only (i.e. System.Console.In implementation details), and it has proven non-reproducible in tests.
-                    _eventLoop.Schedule(async () =>
+                    _eventLoop?.Schedule(async () =>
                     {
                         await _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
                     });
