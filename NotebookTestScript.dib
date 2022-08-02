@@ -52,6 +52,20 @@ console.log(`The value is ${x}.`);
 
 #!markdown
 
+# Execude the next cell. After execution, the output immediately below should be:
+
+```
+1234
+```
+
+And the .NET ITERACTIVE: VALUES window should contain a variable with name `asdf`, value `1234` and kernel Name `csharp`
+
+#!javascript
+
+await kernel.root.send({ commandType: 'SubmitCode', command: { code: 'var asdf = 1234; Console.WriteLine(asdf);', targetKernelName: 'csharp' } });
+
+#!markdown
+
 # Execute the next cell, the output should be displayed as HTML like so:
 
 | Name | Salary |
@@ -234,11 +248,3 @@ using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 
 var _ = Kernel.Root.SendAsync(new SendEditableCode("fsharp","#!share --from csharp x\nx"));
-
-#!javascript
-
-await kernel.root.send({ commandType: 'SubmitCode', command: { code: 'var asdf = 1234;', targetKernelName: 'csharp' } });
-
-#!csharp
-
-asdf

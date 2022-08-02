@@ -72,7 +72,6 @@ namespace Microsoft.DotNet.Interactive
 
         public async Task ConnectAsync()
         {
-            Debugger.Launch();
             _eventLoop = new EventLoopScheduler(a => new Thread(a)
             {
                 Name = "KernelHost command dispatcher"
