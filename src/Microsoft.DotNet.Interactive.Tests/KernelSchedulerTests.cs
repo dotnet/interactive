@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task scheduled_work_is_completed_in_order()
         {
-            using var scheduler = new KernelScheduler<int, int>();
+            using var scheduler = new KernelScheduler<int, int>( (o,i)=>false);
 
             var executionList = new List<int>();
 
@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task scheduled_work_does_not_execute_in_parallel()
         {
-            using var scheduler = new KernelScheduler<int, int>();
+            using var scheduler = new KernelScheduler<int, int>((o, i) => false);
             var concurrencyCounter = 0;
             var maxObservedParallelism = 0;
 
@@ -100,7 +100,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 return Task.FromResult(v);
             }
 
-            using var scheduler = new KernelScheduler<int, int>();
+            using var scheduler = new KernelScheduler<int, int>((o, i) => false);
             scheduler.RegisterDeferredOperationSource(
                 (v, _) => Enumerable.Repeat(v * 10, v).ToList(), PerformWork);
 
@@ -115,7 +115,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task Deferred_work_in_progress_is_allowed_to_complete_when_the_work_that_triggered_it_is_cancelled()
         {
-            using var scheduler = new KernelScheduler<int, int>();
+            using var scheduler = new KernelScheduler<int, int>((o, i) => false);
             var cts = new CancellationTokenSource();
 
             var deferredOperations = new[] { 1, 2, 3 };
@@ -152,7 +152,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public void disposing_scheduler_prevents_later_scheduled_work_from_executing()
         {
-            using var scheduler = new KernelScheduler<int, int>();
+            using var scheduler = new KernelScheduler<int, int>((o, i) => false);
             var barrier = new Barrier(2);
             var laterWorkWasExecuted = false;
 
@@ -178,7 +178,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [FactSkipLinux]
         public void cancelling_work_in_progress_prevents_subsequent_work_scheduled_before_cancellation_from_executing()
         {
-            using var scheduler = new KernelScheduler<int, int>();
+            using var scheduler = new KernelScheduler<int, int>((o, i) => false);
             var cts = new CancellationTokenSource();
             var barrier = new Barrier(2);
             var laterWorkWasExecuted = false;
@@ -208,7 +208,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public void work_in_progress_can_be_cancelled_without_holding_reference_to_the_CancellationToken_used_to_schedule_it()
         {
-            using var scheduler = new KernelScheduler<int, int>();
+            using var scheduler = new KernelScheduler<int, int>((o, i) => false);
             var barrier = new Barrier(2);
             var cts = new CancellationTokenSource();
 
@@ -228,7 +228,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public void cancelling_work_in_progress_throws_exception()
         {
-            using var scheduler = new KernelScheduler<int, int>();
+            using var scheduler = new KernelScheduler<int, int>((o, i) => false);
             var cts = new CancellationTokenSource();
 
             var barrier = new Barrier(2);
@@ -251,7 +251,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public void disposing_scheduler_throws_exception()
         {
-            using var scheduler = new KernelScheduler<int, int>();
+            using var scheduler = new KernelScheduler<int, int>((o, i) => false);
 
             var barrier = new Barrier(2);
 
@@ -273,7 +273,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task exception_in_scheduled_work_does_not_prevent_execution_of_work_already_queued()
         {
-            using var scheduler = new KernelScheduler<int, int>();
+            using var scheduler = new KernelScheduler<int, int>((o, i) => false);
             var barrier = new Barrier(2);
             var laterWorkWasExecuted = false;
 
@@ -297,7 +297,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task after_an_exception_in_scheduled_work_more_work_can_be_scheduled()
         {
-            using var scheduler = new KernelScheduler<int, int>();
+            using var scheduler = new KernelScheduler<int, int>((o, i) => false);
 
             try
             {
@@ -315,7 +315,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public void exception_in_scheduled_work_is_propagated()
         {
-            using var scheduler = new KernelScheduler<int, int>();
+            using var scheduler = new KernelScheduler<int, int>((o, i) => false);
             var barrier = new Barrier(2);
 
             Task<int> Throw(int v)
@@ -338,7 +338,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             var executionList = new List<int>();
 
-            using var scheduler = new KernelScheduler<int, int>();
+            using var scheduler = new KernelScheduler<int, int>((o, i) => false);
 
             async Task<int> PerformWorkAsync(int v)
             {
@@ -367,7 +367,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 return Task.FromResult(v);
             }
 
-            using var scheduler = new KernelScheduler<int, int>();
+            using var scheduler = new KernelScheduler<int, int>((o, i) => false);
             scheduler.RegisterDeferredOperationSource(
                 (v, scope) => scope == "scope2" ? Enumerable.Repeat(v * 10, v).ToList() : Enumerable.Empty<int>().ToList(), PerformWork);
 
@@ -384,7 +384,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             var executionList = new List<string>();
 
-            using var scheduler = new KernelScheduler<string, string>();
+            using var scheduler = new KernelScheduler<string, string>( (o,i) => o == "outer" && i == "inner");
 
             await scheduler.RunAsync("outer", async _ =>
             {
@@ -418,7 +418,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             var participantCount = 5;
             var barrier = new Barrier(participantCount);
             var schedulers = Enumerable.Range(0, participantCount)
-                                       .Select(_ => new KernelScheduler<int, int>());
+                                       .Select(_ => new KernelScheduler<int, int>((o, i) => false));
 
             var tasks = schedulers.Select((s, i) => s.RunAsync(i, async value =>
                                               {
@@ -436,7 +436,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task AsyncContext_is_maintained_across_async_operations_within_scheduled_work()
         {
-            using var scheduler = new KernelScheduler<int, int>();
+            using var scheduler = new KernelScheduler<int, int>((o, i) => false);
             int asyncId1 = default;
             int asyncId2 = default;
 
@@ -454,7 +454,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task AsyncContext_is_maintained_across_from_outside_context_to_scheduled_work()
         {
-            using var scheduler = new KernelScheduler<int, int>();
+            using var scheduler = new KernelScheduler<int, int>((o, i) => false);
             int asyncId1 = default;
             int asyncId2 = default;
             
@@ -473,7 +473,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task AsyncContext_does_not_leak_from_inner_context()
         {
-            using var scheduler = new KernelScheduler<int, int>();
+            using var scheduler = new KernelScheduler<int, int>((o, i) => false);
             int asyncId = default;
 
             await scheduler.RunAsync(0, async value =>
@@ -489,7 +489,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task AsyncContext_does_not_leak_between_scheduled_work()
         {
-            using var scheduler = new KernelScheduler<int, int>();
+            using var scheduler = new KernelScheduler<int, int>((o, i) => false);
             int asyncId1 = default;
             int asyncId2 = default;
 
@@ -512,7 +512,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task AsyncContext_flows_from_scheduled_work_to_deferred_work()
         {
-            using var scheduler = new KernelScheduler<int, int>();
+            using var scheduler = new KernelScheduler<int, int>((o, i) => false);
             int asyncIdForScheduledWork = default;
             var asyncIdsForDeferredWork = new ConcurrentBag<int>();
 

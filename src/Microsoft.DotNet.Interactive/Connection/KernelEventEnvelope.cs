@@ -131,9 +131,11 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
 
     public static IKernelEventEnvelope Deserialize(JsonElement jsonObject)
     {
-        var commandJson = jsonObject.GetProperty(nameof(SerializationModel.command));
+        var hasCommand = jsonObject.TryGetProperty(nameof(SerializationModel.command), out var commandJson);
 
-        var commandEnvelope = commandJson.ValueKind == JsonValueKind.Null ? null : KernelCommandEnvelope.Deserialize(commandJson);
+        var commandEnvelope = hasCommand && commandJson.ValueKind != JsonValueKind.Null 
+            ? KernelCommandEnvelope.Deserialize(commandJson)
+            : null;
 
         var command = commandEnvelope?.Command;
 

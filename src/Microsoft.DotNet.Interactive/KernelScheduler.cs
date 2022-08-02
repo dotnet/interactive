@@ -13,19 +13,21 @@ namespace Microsoft.DotNet.Interactive
 {
     public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TResult>
     {
+        private readonly Func<T, T, bool> _isInnerSchedule;
         private static readonly Logger Log = new("KernelScheduler");
 
         private readonly CompositeDisposable _disposables;
         private readonly List<DeferredOperationSource> _deferredOperationSources = new();
         private readonly CancellationTokenSource _schedulerDisposalSource = new();
         private readonly Task _runLoopTask;
-        private readonly AsyncLocal<ScheduledOperation> _currentTopLevelOperation = new();
+        private T _currentTopLevelOperation = default;
 
         private readonly BlockingCollection<ScheduledOperation> _topLevelScheduledOperations = new();
         private ScheduledOperation _currentlyRunningOperation;
 
-        public KernelScheduler()
+        public KernelScheduler(Func<T, T, bool> isInnerSchedule)
         {
+            _isInnerSchedule = isInnerSchedule ?? throw new ArgumentNullException(nameof(isInnerSchedule));
             _runLoopTask = Task.Factory.StartNew(
                 ScheduledOperationRunLoop,
                 TaskCreationOptions.LongRunning,
@@ -55,9 +57,9 @@ namespace Microsoft.DotNet.Interactive
             CancellationToken cancellationToken = default)
         {
             ThrowIfDisposed();
-
+            
             ScheduledOperation operation;
-            if (_currentTopLevelOperation.Value is { })
+            if (_isInnerSchedule(_currentTopLevelOperation, value))
             {
                 // recursive scheduling
                 operation = new ScheduledOperation(
@@ -88,7 +90,7 @@ namespace Microsoft.DotNet.Interactive
         {
             foreach (var operation in _topLevelScheduledOperations.GetConsumingEnumerable(_schedulerDisposalSource.Token))
             {
-                _currentTopLevelOperation.Value = operation;
+                _currentTopLevelOperation = operation.Value;
 
                 var executionContext = operation.ExecutionContext;
 
@@ -115,7 +117,7 @@ namespace Microsoft.DotNet.Interactive
                 }
                 finally
                 {
-                    _currentTopLevelOperation.Value = null;
+                    _currentTopLevelOperation = default;
                     _currentlyRunningOperation = null;
                 }
             }
@@ -123,24 +125,24 @@ namespace Microsoft.DotNet.Interactive
 
         private void Run(ScheduledOperation operation)
         {
-            _currentTopLevelOperation.Value ??= operation;
+            _currentTopLevelOperation = _currentTopLevelOperation is null? operation.Value : _currentTopLevelOperation;
 
             using var logOp = Log.OnEnterAndConfirmOnExit($"Run: {operation.Value}");
 
             try
             {
                 var operationTask = operation
-                                    .ExecuteAsync()
-                                    .ContinueWith(t =>
-                                    {
-                                        if (!operation.TaskCompletionSource.Task.IsCompleted)
-                                        {
-                                            if (t.GetIsCompletedSuccessfully())
-                                            {
-                                                operation.TaskCompletionSource.TrySetResult(t.Result);
-                                            }
-                                        }
-                                    });
+                    .ExecuteAsync()
+                    .ContinueWith(t =>
+                    {
+                        if (!operation.TaskCompletionSource.Task.IsCompleted)
+                        {
+                            if (t.GetIsCompletedSuccessfully())
+                            {
+                                operation.TaskCompletionSource.TrySetResult(t.Result);
+                            }
+                        }
+                    });
 
                 Task.WaitAny(new[]
                 {

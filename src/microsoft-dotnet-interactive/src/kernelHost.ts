@@ -98,7 +98,7 @@ export class KernelHost {
             }
         });
 
-        this._defaultSender.send({ eventType: contracts.KernelReadyType, event: {} });
+        this._defaultSender.send({ eventType: contracts.KernelReadyType, event: {}, routingSlip: [this._kernel.kernelInfo.uri!] });
 
         this._defaultSender.send({ eventType: contracts.KernelInfoProducedType, event: <contracts.KernelInfoProduced>{ kernelInfo: this._kernel.kernelInfo }, routingSlip: [this._kernel.kernelInfo.uri!] });
 

@@ -1,4 +1,4 @@
-// Copyright (c) .NET Foundation and contributors. All rights reserved.
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
@@ -7,6 +7,8 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -25,6 +27,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly IKernelCommandAndEventReceiver _receiver;
         private IDisposable? _kernelEventSubscription;
         private readonly IKernelConnector _defaultConnector;
+        private EventLoopScheduler _eventLoop;
 
         internal KernelHost(
             CompositeKernel kernel,
@@ -69,6 +72,13 @@ namespace Microsoft.DotNet.Interactive
 
         public async Task ConnectAsync()
         {
+            Debugger.Launch();
+            _eventLoop = new EventLoopScheduler(a => new Thread(a)
+            {
+                Name = "KernelHost command dispatcher"
+            }); 
+
+            
             _kernelEventSubscription = _kernel.KernelEvents.Subscribe(e =>
             {
                 if (e is ReturnValueProduced { Value: DisplayedValue })
@@ -93,17 +103,21 @@ namespace Microsoft.DotNet.Interactive
                 var _ = _defaultSender.SendAsync(e, _cancellationTokenSource.Token);
             });
 
-            _receiver.Subscribe(commandOrEvent =>
+            _receiver.Subscribe( commandOrEvent =>
             {
                 if (commandOrEvent.IsParseError)
                 {
-                    var _ = _defaultSender.SendAsync(commandOrEvent.Event, _cancellationTokenSource.Token);
+                    var _= _defaultSender.SendAsync(commandOrEvent.Event, _cancellationTokenSource.Token);
                 }
                 else if (commandOrEvent.Command is { })
                 {
                     // this needs to be dispatched this way so that it does not block the current thread, which we see in certain bidirectional command scenarios (RequestInput sent by the SubmissionParser during magic command token interpolation) in stdio mode only (i.e. System.Console.In implementation details), and it has proven non-reproducible in tests.
-                    var _ = Task.Run(() => _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token));
+                    _eventLoop.Schedule(async () =>
+                    {
+                        await _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
+                    });
                 }
+                
             });
 
             await _defaultSender.SendAsync(
@@ -136,6 +150,7 @@ namespace Microsoft.DotNet.Interactive
 
         public void Dispose()
         {
+            _eventLoop?.Dispose();
             _kernelEventSubscription?.Dispose();
 
             if (_cancellationTokenSource.Token.CanBeCanceled)

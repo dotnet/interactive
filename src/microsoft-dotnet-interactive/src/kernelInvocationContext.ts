@@ -43,6 +43,12 @@ export class KernelInvocationContext implements Disposable {
                 const found = current._childCommands.includes(kernelCommandInvocation);
                 if (!found) {
                     current._childCommands.push(kernelCommandInvocation);
+
+                    const oldSlip = kernelCommandInvocation.routingSlip ?? [];
+                    kernelCommandInvocation.routingSlip = [...(current._commandEnvelope.routingSlip ?? [])];
+                    for (const uri of oldSlip) {
+                        tryAddUriToRoutingSlip(kernelCommandInvocation, uri);
+                    }
                 }
             }
         }

@@ -529,7 +529,24 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (_commandScheduler is null)
                 {
-                    var scheduler = new KernelScheduler<KernelCommand, KernelCommandResult>();
+                    var scheduler = new KernelScheduler<KernelCommand, KernelCommandResult>(
+                        (outer, inner) =>
+                        {
+                            if (outer is null)
+                            {
+                                return false;
+                            }
+
+                            if (outer == inner.Parent)
+                            {
+                                return true;
+                            }
+                            
+                            var isInRoutingSlip = outer.RoutingSlip.Zip(inner.RoutingSlip, (o, i) => o.Equals(i)).All(x => x);
+
+                            return isInRoutingSlip;
+                        }
+                        );
                     RegisterForDisposal(scheduler);
                     SetScheduler(scheduler);
                 }

@@ -157,6 +157,7 @@ export class CompositeKernel extends Kernel {
                 return kernel;
             }
         }
+
         let targetKernelName = commandEnvelope.command.targetKernelName;
 
         if (targetKernelName === undefined || targetKernelName === null) {
@@ -171,7 +172,12 @@ export class CompositeKernel extends Kernel {
             kernel = this._childKernels.tryGetByAlias(targetKernelName) ?? null;
         }
 
+        if (targetKernelName && !kernel) {
+            throw new Error("Kernel not found: " + targetKernelName);
+        }
+
         if (!kernel) {
+
             if (this._childKernels.count === 1) {
                 kernel = this._childKernels.single() ?? null;
             }
