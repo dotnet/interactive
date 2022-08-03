@@ -247,27 +247,27 @@ namespace Microsoft.DotNet.Interactive.Journey.Tests
         [Fact]
         public async Task teacher_can_show_challenge_contents_when_starting_a_Lesson()
         {
-            var capturedCommands = new List<SendEditableCode>();
+            var capturedSendEditableCode = new List<(string language, string code)>();
             using var kernel = await CreateKernel(LessonMode.StudentMode);
             var vscodeKernel = kernel.FindKernel("vscode");
             vscodeKernel.RegisterCommandHandler<SendEditableCode>((command, _) =>
             {
-                capturedCommands.Add(command);
+                capturedSendEditableCode.Add((command.Language, command.Code));
                 return Task.CompletedTask;
             });
             using var events = kernel.KernelEvents.ToSubscribedList();
-            var contents = new SendEditableCode[] {
-                new("csharp", "var a = 2;"),
-                new("csharp", "var b = 3;"),
-                new("csharp", "a = 4;")
+            var contents = new (string language, string code)[] {
+                ("csharp", "var a = 2;"),
+                ("csharp", "var b = 3;"),
+                ("csharp", "a = 4;")
             };
-            var challenge = new Challenge(contents: contents);
+            var challenge = new Challenge(contents: contents.Select(c => new SendEditableCode(c.language, c.code)).ToArray());
             await Lesson.StartChallengeAsync(challenge);
             await kernel.InitializeChallenge(challenge);
 
             await kernel.SubmitCodeAsync("a+b");
 
-            capturedCommands.Should().BeEquivalentTo(contents);
+            capturedSendEditableCode.Should().BeEquivalentTo(contents);
         }
 
         [Fact]
@@ -297,24 +297,24 @@ namespace Microsoft.DotNet.Interactive.Journey.Tests
         [Fact]
         public async Task teacher_can_show_challenge_contents_when_progressing_the_student_to_a_new_challenge()
         {
-            var capturedCommands = new List<SendEditableCode>();
+            var capturedSendEditableCode = new List<(string language, string code)>();
             using var kernel = await CreateKernel(LessonMode.StudentMode);
             var vscodeKernel = kernel.FindKernel("vscode");
             vscodeKernel.RegisterCommandHandler<SendEditableCode>((command, _) =>
             {
-                capturedCommands.Add(command);
+                capturedSendEditableCode.Add((command.Language, command.Code));
                 return Task.CompletedTask;
             });
             using var events = kernel.KernelEvents.ToSubscribedList();
-            var contents = new SendEditableCode[] {
-                new("csharp", "var a = 2;"),
-                new("csharp", "var b = 3;"),
-                new("csharp", "a = 4;")
+            var contents = new (string language, string code)[] {
+                ("csharp", "var a = 2;"),
+                ("csharp", "var b = 3;"),
+                ("csharp", "a = 4;")
             };
             var challenges = new Challenge[]
             {
                 new(),
-                new(contents: contents)
+                new(contents: contents.Select(c => new SendEditableCode(c.language, c.code)).ToArray())
             }.ToList();
             challenges.SetDefaultProgressionHandlers();
             await Lesson.StartChallengeAsync(challenges[0]);
@@ -322,7 +322,7 @@ namespace Microsoft.DotNet.Interactive.Journey.Tests
 
             await kernel.SubmitCodeAsync("a + b");
 
-            capturedCommands.Should().BeEquivalentTo(contents);
+            capturedSendEditableCode.Should().BeEquivalentTo(contents);
         }
 
         [Fact]

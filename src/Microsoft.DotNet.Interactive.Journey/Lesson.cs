@@ -68,9 +68,19 @@ namespace Microsoft.DotNet.Interactive.Journey
 
         public static bool IsSetupCommand(KernelCommand command)
         {
-            return (CurrentChallenge?.EnvironmentSetup?.Any(s => s == command || s == command.Parent) ?? false)
-                   || (CurrentChallenge?.Setup?.Any(s => s == command || s == command.Parent) ?? false)
-                   || (Setup?.Any(s => s == command || s == command.Parent) ?? false);
+            bool IsEquivalentSubmitCode(SubmitCode original, KernelCommand other)
+            {
+                if (other is SubmitCode otherSubmitCode)
+                {
+                    return (original.Code == otherSubmitCode.Code) || IsEquivalentSubmitCode(original, other.Parent);
+                }
+
+                return false;
+            }
+
+            return (CurrentChallenge?.EnvironmentSetup?.Any(s => IsEquivalentSubmitCode(s,command)) ?? false)
+                   || (CurrentChallenge?.Setup?.Any(s => IsEquivalentSubmitCode(s,command)) ?? false)
+                   || (Setup?.Any(s => IsEquivalentSubmitCode(s, command)) ?? false);
         }
 
         public static void Clear()
