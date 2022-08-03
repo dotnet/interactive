@@ -91,7 +91,7 @@ export class KernelHost {
             next: (kernelCommandOrEventEnvelope: connection.KernelCommandOrEventEnvelope) => {
                 if (connection.isKernelCommandEnvelope(kernelCommandOrEventEnvelope)) {
                     this._scheduler.runAsync(kernelCommandOrEventEnvelope, commandEnvelope => {
-                        const kernel = this._kernel;;
+                        const kernel = this._kernel;
                         return kernel.send(commandEnvelope);
                     });
                 }

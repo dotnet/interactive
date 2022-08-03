@@ -6,6 +6,7 @@ import * as contracts from "./contracts";
 import { getKernelUri, IKernelCommandInvocation, Kernel, KernelType } from "./kernel";
 import { KernelHost } from "./kernelHost";
 import { KernelInvocationContext } from "./kernelInvocationContext";
+import { Logger } from "./logger";
 
 export class CompositeKernel extends Kernel {
     private _host: KernelHost | null = null;
@@ -173,7 +174,9 @@ export class CompositeKernel extends Kernel {
         }
 
         if (targetKernelName && !kernel) {
-            throw new Error("Kernel not found: " + targetKernelName);
+            const errorMessage = `Kernel not found: ${targetKernelName}`;
+            Logger.default.error(errorMessage);
+            throw new Error(errorMessage);
         }
 
         if (!kernel) {
