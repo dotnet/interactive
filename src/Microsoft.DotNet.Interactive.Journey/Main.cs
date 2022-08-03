@@ -21,7 +21,6 @@ namespace Microsoft.DotNet.Interactive.Journey
                     compositeKernel.UseProgressiveLearning(httpClient)
                     .UseProgressiveLearningMiddleware()
                     .UseModelAnswerValidation();
-
                 }
             }
             else
