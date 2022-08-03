@@ -499,16 +499,14 @@ Formatter.Register<DataFrame>((df, writer) =>
         public async Task Pound_r_nuget_disallows_package_specifications_with_different_versions_single_cell(Language language, string code)
         {
             var kernel = CreateKernel(language);
-
-            using var events = kernel.KernelEvents.ToSubscribedList();
-
-            await kernel.SubmitCodeAsync(@"
+            
+            var results = await kernel.SubmitCodeAsync(@"
 #!time
 #r ""nuget:Microsoft.ML.AutoML, 0.19.0""
 #r ""nuget:Microsoft.ML.AutoML, 0.19.1""
 ");
 
-            await kernel.SubmitCodeAsync(code);
+            var events = results.KernelEvents.ToSubscribedList();
 
             events.Should()
                   .ContainSingle<CommandFailed>()
@@ -517,6 +515,26 @@ Formatter.Register<DataFrame>((df, writer) =>
                   .Should()
                   .Be("Microsoft.ML.AutoML version 0.19.1 cannot be added because version 0.19.0 was added previously.");
 
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, "using Microsoft.ML.AutoML;")]
+        [InlineData(Language.FSharp, "open Microsoft.ML.AutoML")]
+        public async Task Pound_r_nuget_with_different_versions_single_cell_can_load_the_library(Language language, string code)
+        {
+            var kernel = CreateKernel(language);
+
+            await kernel.SubmitCodeAsync(@"
+#!time
+#r ""nuget:Microsoft.ML.AutoML, 0.19.0""
+#r ""nuget:Microsoft.ML.AutoML, 0.19.1""
+");
+
+            var results = await kernel.SubmitCodeAsync(code);
+
+            var events = results.KernelEvents.ToSubscribedList();
+            events.Should()
+                .NotContainErrors();
         }
 
         [Theory]
