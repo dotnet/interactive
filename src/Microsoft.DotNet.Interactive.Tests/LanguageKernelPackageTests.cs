@@ -802,7 +802,7 @@ using NodaTime.Extensions;");
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
-        public async Task it_can_load_assembly_referenced_from_refs_folder_in_nugetpackage(Language language)
+        public async Task it_can_load_assembly_referenced_from_refs_folder_in_nuget_package(Language language)
         {
             var kernel = CreateKernel(language);
 

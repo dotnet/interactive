@@ -575,11 +575,11 @@ namespace Microsoft.DotNet.Interactive
 
             while (_deferredCommands.TryDequeue(out var kernelCommand))
             {
+                var currentInvocationContext = KernelInvocationContext.Current;
                 kernelCommand.TargetKernelName = Name;
                 kernelCommand.SchedulingScope = SchedulingScope;
-
-                var currentInvocationContext = KernelInvocationContext.Current;
-
+                kernelCommand.Parent = currentInvocationContext?.Command;
+                
                 if (TryPreprocessCommands(kernelCommand, currentInvocationContext, out var commands))
                 {
                     deferredCommands.AddRange(commands);
