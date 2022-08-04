@@ -1,5 +1,6 @@
 ﻿using Microsoft.DotNet.Interactive.Jupyter.Connection;
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reactive.Disposables;
@@ -35,13 +36,15 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Http
     internal class JupyterHttpConnection : IJupyterConnection
     {
         private readonly string _token;
+        private readonly string _authType;
         private readonly HttpClient _httpClient;
         private readonly CompositeDisposable _disposables;
 
-        public JupyterHttpConnection(Uri targetUri, string token)
+        public JupyterHttpConnection(Uri targetUri, string token, string authType = null)
         {
             TargetUri = targetUri;
             _token = token;
+            _authType = authType ?? AuthType.Token;
             _httpClient = new HttpClient();
             _disposables = new CompositeDisposable
             {
@@ -101,7 +104,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Http
 
             if (_token is not null)
             {
-                _httpClient.DefaultRequestHeaders.Add("Authorization", $"token {_token}");
+                _httpClient.DefaultRequestHeaders.Add("Authorization", $"{_authType} {_token}");
             }
 
             var request = new HttpRequestMessage()
