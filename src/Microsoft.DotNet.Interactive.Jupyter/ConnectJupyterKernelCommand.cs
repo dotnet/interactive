@@ -20,10 +20,11 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             AddOption(KernelType);
             AddOption(TargetUrl);
             AddOption(Token);
+            AddOption(UseBearerAuth);
         }
 
         public Option<string> KernelType { get; } =
-        new("--kernel-type", "The kernel spec to connect to")
+        new("--kernel-spec", "The kernel spec to connect to")
         {
             IsRequired = true
         };
@@ -38,6 +39,11 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         { 
         };
 
+        public Option<bool> UseBearerAuth { get; } =
+        new("--bearer", "auth type is bearer token")
+        {
+        };
+
         public override async Task<Kernel> ConnectKernelAsync(
             KernelInvocationContext context,
             InvocationContext commandLineContext)
@@ -45,13 +51,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             var kernelType = commandLineContext.ParseResult.GetValueForOption(KernelType);
             var targetUrl = commandLineContext.ParseResult.GetValueForOption(TargetUrl);
             var token = commandLineContext.ParseResult.GetValueForOption(Token);
+            var useBearerAuth = commandLineContext.ParseResult.GetValueForOption(UseBearerAuth);
 
             JupyterKernelConnector connector = null;
 
             CompositeDisposable disposables = new CompositeDisposable();
             if (targetUrl is not null)
             {
-                var connection = new JupyterHttpConnection(new Uri(targetUrl), token);
+                var connection = new JupyterHttpConnection(new Uri(targetUrl), token, useBearerAuth ? AuthType.Bearer : null);
                 connector = new JupyterKernelConnector(connection, kernelType);
                 disposables.Add(connection);
             }
