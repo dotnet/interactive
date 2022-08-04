@@ -91,7 +91,6 @@ public static class KernelExtensions
             Lesson.From(lessonDefinition);
             Lesson.SetChallengeLookup(queryName => challenges.FirstOrDefault(c => c.Name == queryName));
 
-            Task ret;
             Lesson.Mode = LessonMode.StudentMode;
             foreach (var setup in Lesson.Setup)
             {

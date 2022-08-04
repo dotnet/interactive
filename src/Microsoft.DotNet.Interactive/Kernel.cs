@@ -30,10 +30,10 @@ using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public abstract partial class Kernel : 
-        IKernelCommandHandler<RequestKernelInfo>, 
-        IKernelCommandHandler<RequestValue>, 
-        IKernelCommandHandler<RequestValueInfos>, 
+    public abstract partial class Kernel :
+        IKernelCommandHandler<RequestKernelInfo>,
+        IKernelCommandHandler<RequestValue>,
+        IKernelCommandHandler<RequestValueInfos>,
         IDisposable
     {
         private static readonly ConcurrentDictionary<Type, IReadOnlyCollection<Type>> _declaredHandledCommandTypesByKernelType = new();
@@ -161,16 +161,16 @@ namespace Microsoft.DotNet.Interactive
                     return false;
                 }
 
-                if (command.DestinationUri is { } && handlingKernel.KernelInfo.Uri is {} && command.DestinationUri == handlingKernel.KernelInfo.Uri)
+                if (command.DestinationUri is { } && handlingKernel.KernelInfo.Uri is { } && command.DestinationUri == handlingKernel.KernelInfo.Uri)
                 {
                     command.SchedulingScope = handlingKernel.SchedulingScope;
                     command.TargetKernelName = handlingKernel.Name;
                 }
-                
+
                 command.SchedulingScope ??= handlingKernel.SchedulingScope;
                 command.TargetKernelName ??= handlingKernel.Name;
 
-                if (command.Parent is null && 
+                if (command.Parent is null &&
                     !CommandEqualityComparer.Instance.Equals(command, originalCommand))
                 {
                     command.Parent = originalCommand;
@@ -187,8 +187,8 @@ namespace Microsoft.DotNet.Interactive
         }
 
         private bool TryAdjustLanguageServiceCommandLinePositions(
-            LanguageServiceCommand command, 
-            KernelInvocationContext context, 
+            LanguageServiceCommand command,
+            KernelInvocationContext context,
             out LanguageServiceCommand adjustedCommand)
         {
             var tree = SubmissionParser.Parse(command.Code, command.TargetKernelName);
@@ -255,7 +255,7 @@ namespace Microsoft.DotNet.Interactive
         protected bool IsDisposed => _disposables.IsDisposed;
 
         public IObservable<KernelEvent> KernelEvents => _kernelEvents;
-      
+
         public string Name { get; }
 
         public KernelInfo KernelInfo => _kernelInfo;
@@ -282,7 +282,7 @@ namespace Microsoft.DotNet.Interactive
             if (_supportedCommandTypes.Add(typeof(TCommand)))
             {
                 var defaultHandler = CreateDefaultHandlerForCommandType<TCommand>() ?? throw new InvalidOperationException("CreateDefaultHandlerForCommandType should not return null");
-                
+
                 _dynamicHandlers[typeof(TCommand)] = (command, context) => defaultHandler((TCommand)command, context);
 
                 _kernelInfo.SupportedKernelCommands.Add(new(typeof(TCommand).Name));
@@ -291,7 +291,7 @@ namespace Microsoft.DotNet.Interactive
 
         protected virtual Func<TCommand, KernelInvocationContext, Task> CreateDefaultHandlerForCommandType<TCommand>() where TCommand : KernelCommand
         {
-            return (_,_) => Task.CompletedTask;
+            return (_, _) => Task.CompletedTask;
         }
 
         internal virtual async Task HandleAsync(
@@ -335,7 +335,7 @@ namespace Microsoft.DotNet.Interactive
             if (TryPreprocessCommands(command, context, out var commands))
             {
                 SetHandlingKernel(command, context);
-          
+
                 foreach (var c in commands)
                 {
                     switch (c)
@@ -357,41 +357,41 @@ namespace Microsoft.DotNet.Interactive
                             break;
 
                         case RequestDiagnostics _:
-                        {
-                            if (_countOfLanguageServiceCommandsInFlight > 0)
                             {
-                                context.CancelWithSuccess();
-                                return context.Result;
+                                if (_countOfLanguageServiceCommandsInFlight > 0)
+                                {
+                                    context.CancelWithSuccess();
+                                    return context.Result;
+                                }
+
+                                if (_inFlightContext is { } inflight)
+                                {
+                                    inflight.Complete(inflight.Command);
+                                }
+
+                                _inFlightContext = context;
+
+                                await RunOnFastPath(context, c, cancellationToken);
+
+                                _inFlightContext = null;
                             }
-
-                            if (_inFlightContext is { } inflight)
-                            {
-                                inflight.Complete(inflight.Command);
-                            }
-
-                            _inFlightContext = context;
-
-                            await RunOnFastPath(context, c, cancellationToken);
-
-                            _inFlightContext = null;
-                        }
                             break;
 
                         case RequestHoverText _:
                         case RequestCompletions _:
                         case RequestSignatureHelp _:
-                        {
-                            if (_inFlightContext is { } inflight)
                             {
-                                inflight.CancelWithSuccess();
+                                if (_inFlightContext is { } inflight)
+                                {
+                                    inflight.CancelWithSuccess();
+                                }
+
+                                Interlocked.Increment(ref _countOfLanguageServiceCommandsInFlight);
+
+                                await RunOnFastPath(context, c, cancellationToken);
+
+                                Interlocked.Decrement(ref _countOfLanguageServiceCommandsInFlight);
                             }
-
-                            Interlocked.Increment(ref _countOfLanguageServiceCommandsInFlight);
-
-                            await RunOnFastPath(context, c, cancellationToken);
-
-                            Interlocked.Decrement(ref _countOfLanguageServiceCommandsInFlight);
-                        }
                             break;
 
                         case DisplayError _:
@@ -405,18 +405,21 @@ namespace Microsoft.DotNet.Interactive
                             break;
 
                         default:
-                            await Scheduler.RunAsync(
-                                               c,
-                                               InvokePipelineAndCommandHandler,
-                                               c.SchedulingScope.ToString(),
-                                               cancellationToken: cancellationToken)
-                                           .ContinueWith(t =>
-                                           {
-                                               if (t.IsCanceled)
+                            if (!context.IsFailed)
+                            {
+                                await Scheduler.RunAsync(
+                                                   c,
+                                                   InvokePipelineAndCommandHandler,
+                                                   c.SchedulingScope.ToString(),
+                                                   cancellationToken: cancellationToken)
+                                               .ContinueWith(t =>
                                                {
-                                                   context.Cancel();
-                                               }
-                                           }, cancellationToken);
+                                                   if (t.IsCanceled)
+                                                   {
+                                                       context.Cancel();
+                                                   }
+                                               }, cancellationToken);
+                            }
                             break;
                     }
                 }
@@ -447,7 +450,7 @@ namespace Microsoft.DotNet.Interactive
 
         private async Task RunOnFastPath(
             KernelInvocationContext context,
-            KernelCommand command, 
+            KernelCommand command,
             CancellationToken cancellationToken)
         {
             await RunDeferredCommandsAsync(context);
@@ -483,7 +486,7 @@ namespace Microsoft.DotNet.Interactive
         private class UndeferScheduledCommands : AnonymousKernelCommand
         {
             public UndeferScheduledCommands(
-                string targetKernelName, 
+                string targetKernelName,
                 KernelCommand parent) : base((_, _) =>
             {
                 Log.Info("Undeferring commands ahead of {command}", parent);
@@ -509,7 +512,7 @@ namespace Microsoft.DotNet.Interactive
                 {
                     context.Complete(command);
                 }
-                
+
                 return context.ResultFor(command);
             }
             catch (Exception exception)
@@ -541,7 +544,7 @@ namespace Microsoft.DotNet.Interactive
                             {
                                 return true;
                             }
-                            
+
                             var isInRoutingSlip = outer.RoutingSlip.Zip(inner.RoutingSlip, (o, i) => o.Equals(i)).All(x => x);
 
                             return isInRoutingSlip;
@@ -560,7 +563,7 @@ namespace Microsoft.DotNet.Interactive
             _commandScheduler = scheduler;
 
             _commandScheduler.RegisterDeferredOperationSource(
-                GetDeferredCommands, 
+                GetDeferredCommands,
                 InvokePipelineAndCommandHandler);
         }
 
@@ -579,7 +582,7 @@ namespace Microsoft.DotNet.Interactive
                 kernelCommand.TargetKernelName = Name;
                 kernelCommand.SchedulingScope = SchedulingScope;
                 kernelCommand.Parent = currentInvocationContext?.Command;
-                
+
                 if (TryPreprocessCommands(kernelCommand, currentInvocationContext, out var commands))
                 {
                     deferredCommands.AddRange(commands);
@@ -690,7 +693,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 throw new ArgumentNullException(nameof(kernelEvent));
             }
-            
+
             kernelEvent.TryAddToRoutingSlip(this.GetKernelUri());
             _kernelEvents.OnNext(kernelEvent);
         }
@@ -806,7 +809,7 @@ namespace Microsoft.DotNet.Interactive
                         SetHandler(submitCode, submitCodeHandler);
                         break;
 
-                    case (RequestCompletions {LanguageNode: DirectiveNode} rq, _):
+                    case (RequestCompletions { LanguageNode: DirectiveNode } rq, _):
                         rq.Handler = (_, _) => HandleRequestCompletionsAsync(rq, context);
                         break;
 
@@ -828,11 +831,11 @@ namespace Microsoft.DotNet.Interactive
                         requestSignatureHelpHandler):
                         SetHandler(requestSignatureHelp, requestSignatureHelpHandler);
                         break;
-                    
+
                     case (RequestValue requestValue, IKernelCommandHandler<RequestValue>
                         requestValueHandler):
                         SetHandler(requestValue, requestValueHandler);
-                        break; 
+                        break;
 
                     case (RequestValueInfos requestValueInfos, IKernelCommandHandler<RequestValueInfos>
                         requestValueInfosHandler):

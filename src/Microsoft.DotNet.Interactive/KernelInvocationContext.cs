@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.Interactive
         private List<Action<KernelInvocationContext>> _onCompleteActions;
 
         private readonly CancellationTokenSource _cancellationTokenSource;
-        
+
         private KernelInvocationContext(KernelCommand command)
         {
             var operation = new OperationLogger(
@@ -62,13 +62,17 @@ namespace Microsoft.DotNet.Interactive
                     c.Error.Subscribe(s => this.DisplayStandardError(s, command))
                 };
             }));
-        
+
             _disposables.Add(operation);
         }
 
         public KernelCommand Command { get; }
 
         public bool IsComplete { get; private set; }
+
+        private bool _isFailed;
+
+        public bool IsFailed => IsComplete && _isFailed;
 
         public CancellationToken CancellationToken
         {
@@ -125,7 +129,7 @@ namespace Microsoft.DotNet.Interactive
                 }
 
                 var completingMainCommand = CommandEqualityComparer.Instance.Equals(command, Command);
-                
+
                 if (succeed)
                 {
                     if (completingMainCommand)
@@ -162,6 +166,10 @@ namespace Microsoft.DotNet.Interactive
                 }
 
                 IsComplete = completingMainCommand;
+                if (completingMainCommand)
+                {
+                    _isFailed = !succeed;
+                }
             }
 
             void StopPublishingMainCommandEvents()
@@ -215,7 +223,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 @event.TryAddToRoutingSlip(HandlingKernel.GetKernelUri());
             }
-            
+
             if (_childCommands.TryGetValue(command, out var events))
             {
                 events.OnNext(@event);
