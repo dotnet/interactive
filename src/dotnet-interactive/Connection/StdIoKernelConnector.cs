@@ -52,6 +52,11 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
                 {
                     FileName = command,
                     Arguments = arguments,
+                    EnvironmentVariables =
+                    {
+                        ["DOTNET_INTERACTIVE_SKIP_FIRST_TIME_EXPERIENCE"]  = "1",
+                        ["DOTNET_SKIP_FIRST_TIME_EXPERIENCE"]  = "1",
+                    },
                     WorkingDirectory = WorkingDirectory.FullName,
                     RedirectStandardInput = true,
                     RedirectStandardOutput = true,
