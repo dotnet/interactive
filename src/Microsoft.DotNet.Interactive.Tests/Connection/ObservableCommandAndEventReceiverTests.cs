@@ -43,7 +43,7 @@ public class ObservableCommandAndEventReceiverTests : IDisposable
     }
 
     [Fact]
-    public void When_there_are_multiple_subscribers_there_are_no_concurrent_reads_from_underlying_source()
+    public async Task When_there_are_multiple_subscribers_there_are_no_concurrent_reads_from_underlying_source()
     {
         int readCount = 0;
 
@@ -62,15 +62,40 @@ public class ObservableCommandAndEventReceiverTests : IDisposable
 
         var connectable = receiver.Publish();
 
+        var subscriber1TaskCompletionSource = new TaskCompletionSource();
         var subscriber1Received = new List<CommandOrEvent>();
-        using var subscriber1 = connectable.Subscribe(e => subscriber1Received.Add(e));
+        using var subscriber1 = connectable.Subscribe(e =>
+        {
+            subscriber1Received.Add(e);
+            if (subscriber1Received.Count == enqueuedMessageCount)
+            {
+                subscriber1TaskCompletionSource.SetResult();
+            }
+        });
 
+        var subscriber2TasksCompletionSource = new TaskCompletionSource();
         var subscriber2Received = new List<CommandOrEvent>();
-        using var subscriber2 = connectable.Subscribe(e => subscriber2Received.Add(e));
+        using var subscriber2 = connectable.Subscribe(e =>
+        {
+            subscriber2Received.Add(e);
+            if (subscriber2Received.Count == enqueuedMessageCount)
+            {
+                subscriber2TasksCompletionSource.SetResult();
+            }
+        });
 
         using var _ = connectable.Connect();
 
         Wait.Until(() => _messageQueue.Count == 0);
+
+        // wait for both subscribers to receive all messages, but not longer than 5s
+        await Task.WhenAny(
+            Task.WhenAll(
+                subscriber1TaskCompletionSource.Task,
+                subscriber2TasksCompletionSource.Task
+            ),
+            Task.Delay(TimeSpan.FromSeconds(5))
+        );
 
         subscriber1Received.Select(e => e.Command.As<SubmitCode>().Code).Should().BeEquivalentTo(new[] { "0", "1", "2" });
 
