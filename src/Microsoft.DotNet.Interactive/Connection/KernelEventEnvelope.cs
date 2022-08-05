@@ -41,15 +41,16 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
     public string CommandType { get; }
 
     public abstract string EventType { get; }
-    
+
 
     KernelEvent IKernelEventEnvelope.Event => _event;
 
     public static void RegisterEvent<TEvent>() where TEvent : KernelEvent
     {
-        RegisterEvent(typeof(TEvent));       }
+        RegisterEvent(typeof(TEvent));
+    }
 
-    public static void RegisterEvent(Type eventType) 
+    public static void RegisterEvent(Type eventType)
     {
         _envelopeTypesByEventTypeName[eventType.Name] = typeof(KernelEventEnvelope<>).MakeGenericType(eventType);
         _eventTypesByEventTypeName[eventType.Name] = eventType;
@@ -131,9 +132,11 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
 
     public static IKernelEventEnvelope Deserialize(JsonElement jsonObject)
     {
-        var commandJson = jsonObject.GetProperty(nameof(SerializationModel.command));
+        var hasCommand = jsonObject.TryGetProperty(nameof(SerializationModel.command), out var commandJson);
 
-        var commandEnvelope = commandJson.ValueKind == JsonValueKind.Null ? null : KernelCommandEnvelope.Deserialize(commandJson);
+        var commandEnvelope = hasCommand && commandJson.ValueKind != JsonValueKind.Null
+            ? KernelCommandEnvelope.Deserialize(commandJson)
+            : null;
 
         var command = commandEnvelope?.Command;
 
@@ -153,7 +156,7 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
 
         var eventTypeName = jsonObject.GetProperty(nameof(SerializationModel.eventType)).GetString();
 
-       
+
 
         var eventType = EventTypeByName(eventTypeName);
 
