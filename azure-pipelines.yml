@@ -130,7 +130,7 @@ stages:
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
             DOTNET_INTERACTIVE_FRONTEND_NAME: CI
 
-        - script: dotnet test -l trx --no-build --blame-hang-timeout 15m --blame-hang-dump-type full -c $(_BuildConfig) --results-directory $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
+        - script: dotnet test -l trx --no-build --blame-hang-timeout 15m --blame-hang-dump-type full --blame-crash -c $(_BuildConfig) --results-directory $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
           displayName: Test / Blame
           workingDirectory: $(Build.SourcesDirectory)
           condition: ne(variables['SkipTests'], 'true')
@@ -274,7 +274,7 @@ stages:
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
             DOTNET_INTERACTIVE_FRONTEND_NAME: CI
 
-        - script: dotnet test -l trx --no-build --blame-hang-timeout 15m --blame-hang-dump-type full -c $(_BuildConfig) --results-directory $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
+        - script: dotnet test -l trx --no-build --blame-hang-timeout 15m --blame-hang-dump-type full --blame-crash -c $(_BuildConfig) --results-directory $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
           displayName: Test / Blame
           workingDirectory: $(Build.SourcesDirectory)
           condition: ne(variables['SkipTests'], 'true')

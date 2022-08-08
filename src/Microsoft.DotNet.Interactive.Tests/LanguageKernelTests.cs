@@ -18,6 +18,7 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
 using Pocket.For.Xunit;
+using Serilog;
 using Xunit;
 using Xunit.Abstractions;
 using DiagnosticsProduced = Microsoft.DotNet.Interactive.Events.DiagnosticsProduced;
@@ -29,6 +30,15 @@ namespace Microsoft.DotNet.Interactive.Tests
     [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
     public sealed class LanguageKernelTests : LanguageKernelTestBase
     {
+        static LanguageKernelTests()
+        {
+            TaskScheduler.UnobservedTaskException += (sender, args) =>
+            {
+                Log.Warning($"{nameof(TaskScheduler.UnobservedTaskException)}", args.Exception);
+                args.SetObserved();
+            };
+        }
+
         public LanguageKernelTests(ITestOutputHelper output) : base(output)
         {
         }
