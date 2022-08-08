@@ -182,7 +182,7 @@ Console.WriteLine(2);");
             result.ShouldSucceedWithOutput("", "1", "", "", "2", "");
         }
 
-        [Fact]
+        [Fact(Skip = "This test might be causing test runner crashes on Linux")]
         public async Task Multi_line_console_output_is_captured_correctly_when_an_exception_is_thrown()
         {
             var server = GetCodeRunner();
