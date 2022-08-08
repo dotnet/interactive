@@ -13,8 +13,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
 {
     public abstract class WorkspaceServerTests : WorkspaceServerTestsCore
     {
-        protected abstract Workspace CreateWorkspaceWithMainContaining(
-            string text);
+        protected abstract Workspace CreateWorkspaceWithMainContaining(string text);
 
         [Fact]
         public async Task Diagnostic_logs_do_not_show_up_in_captured_console_output()
@@ -167,7 +166,6 @@ Console.WriteLine(4);");
         [Fact]
         public async Task Whitespace_is_preserved_in_multi_line_output()
         {
-
             var server = GetCodeRunner();
 
             var request = CreateWorkspaceWithMainContaining(@"
@@ -182,22 +180,22 @@ Console.WriteLine(2);");
             result.ShouldSucceedWithOutput("", "1", "", "", "2", "");
         }
 
-        [Fact(Skip = "This test might be causing test runner crashes on Linux")]
+        [Fact]
         public async Task Multi_line_console_output_is_captured_correctly_when_an_exception_is_thrown()
         {
             var server = GetCodeRunner();
 
-            var request = CreateWorkspaceWithMainContaining(@"
+            var request = CreateWorkspaceWithMainContaining($@"
 Console.WriteLine(1);
 Console.WriteLine(2);
-throw new Exception(""oops!"");
+throw new Exception(""oops! from {nameof(Multi_line_console_output_is_captured_correctly_when_an_exception_is_thrown)}"");
 Console.WriteLine(3);
 Console.WriteLine(4);");
 
             var result = await server.RunAsync(new WorkspaceRequest(request));
 
             result.ShouldSucceedWithExceptionContaining(
-                "System.Exception: oops!",
+                $"System.Exception: oops! from {nameof(Multi_line_console_output_is_captured_correctly_when_an_exception_is_thrown)}",
                 output: new[] { "1", "2" });
         }
 
@@ -219,8 +217,8 @@ Console.WriteLine(4);");
         {
             var server = GetCodeRunner();
 
-            var request = CreateWorkspaceWithMainContaining(@"
-throw new Exception(""oops!"");");
+            var request = CreateWorkspaceWithMainContaining($@"
+throw new Exception(""oops! from {nameof(When_the_users_code_throws_on_subsequent_line_then_it_is_returned_as_an_exception_property)}"");");
 
 
             var result = await server.RunAsync(new WorkspaceRequest(request));

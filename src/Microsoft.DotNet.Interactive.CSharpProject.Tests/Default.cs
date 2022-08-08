@@ -8,9 +8,9 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
 {
     public class Default
     {
-        public static IPackageFinder PackageRegistry => PackageFinder.Create(ConsoleWorkspace().Result);
+        public static IPackageFinder PackageRegistry => PackageFinder.Create(ConsoleWorkspaceAsync);
 
-        public static async Task<Package> ConsoleWorkspace()
+        public static async Task<Package> ConsoleWorkspaceAsync()
         {
             var packageBuilder = new PackageBuilder("console");
             packageBuilder.CreateUsingDotnet("console");

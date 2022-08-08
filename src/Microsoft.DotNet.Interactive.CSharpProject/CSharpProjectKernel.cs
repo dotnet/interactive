@@ -61,8 +61,7 @@ public class CSharpProjectKernel : Kernel
 
     public async Task HandleAsync(OpenProject command, KernelInvocationContext context)
     {
-        var package = await CreateConsoleWorkspacePackage();
-        _workspaceServer = new RoslynWorkspaceServer(package);
+        _workspaceServer = new RoslynWorkspaceServer(CreateConsoleWorkspacePackage);
 
         var extractor = new BufferFromRegionExtractor();
         _workspace = extractor.Extract(command.Project.Files.Select(f => new ProjectFileContent(f.RelativeFilePath, f.Content)).ToArray());

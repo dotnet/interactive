@@ -9,7 +9,6 @@ using Newtonsoft.Json.Linq;
 using Recipes;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation;
 using Xunit;
-using Microsoft.DotNet.Interactive.CSharpProject.Utility;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests.Instrumentation
 {

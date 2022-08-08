@@ -3,36 +3,39 @@
 
 using System;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
 {
     public static class PackageFinder
     {
-        public static Task<T> Find<T>(
-            this IPackageFinder finder, 
-            string packageName) 
+        public static Task<T> FindAsync<T>(
+            this IPackageFinder finder,
+            string packageName)
             where T : class, IPackage =>
             finder.Find<T>(new PackageDescriptor(packageName));
 
-        public static IPackageFinder Create(IPackage package)
+        public static IPackageFinder Create(Func<Task<Package>> package)
         {
             return new AnonymousPackageFinder(package);
         }
 
         private class AnonymousPackageFinder : IPackageFinder
         {
-            private readonly IPackage _package;
+            private readonly AsyncLazy<Package> _lazyPackage;
 
-            public AnonymousPackageFinder(IPackage package)
+            public AnonymousPackageFinder(Func<Task<Package>> package)
             {
-                _package = package ?? throw new ArgumentNullException(nameof(package));
+                _lazyPackage = new(package);
             }
 
-            public Task<T> Find<T>(PackageDescriptor descriptor) where T : class, IPackage
+            public async Task<T> Find<T>(PackageDescriptor descriptor) where T : class, IPackage
             {
-                if (_package is T package)
+                var package = await _lazyPackage.ValueAsync();
+
+                if (package is T p)
                 {
-                    return Task.FromResult(package);
+                    return p;
                 }
 
                 return default;

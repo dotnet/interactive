@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
             };
         }
 
-        public RoslynWorkspaceServer(IPackage package)
+        public RoslynWorkspaceServer(Func<Task<Package>> package)
         {
             _packageFinder = PackageFinder.Create(package);
         }
@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
 
         public async Task<CompletionResult> GetCompletionsAsync(WorkspaceRequest request)
         {
-            var package = await _packageFinder.Find<ICreateWorkspace>(request.Workspace.WorkspaceType);
+            var package = await _packageFinder.FindAsync<ICreateWorkspace>(request.Workspace.WorkspaceType);
 
             var workspace = await request.Workspace.InlineBuffersAsync();
             var sourceFiles = workspace.GetSourceFiles();
@@ -125,7 +125,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
 
         public async Task<SignatureHelpResult> GetSignatureHelpAsync(WorkspaceRequest request)
         {
-            var package = await _packageFinder.Find<ICreateWorkspace>(request.Workspace.WorkspaceType);
+            var package = await _packageFinder.FindAsync<ICreateWorkspace>(request.Workspace.WorkspaceType);
 
             var workspace = await request.Workspace.InlineBuffersAsync();
 
@@ -165,7 +165,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
 
         public async Task<DiagnosticResult> GetDiagnosticsAsync(WorkspaceRequest request)
         {
-            var package = await _packageFinder.Find<ICreateWorkspace>(request.Workspace.WorkspaceType);
+            var package = await _packageFinder.FindAsync<ICreateWorkspace>(request.Workspace.WorkspaceType);
 
             var workspace = await request.Workspace.InlineBuffersAsync();
 
@@ -232,7 +232,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
 
             using (await locks.GetOrAdd(workspace.WorkspaceType, s => new AsyncLock()).LockAsync())
             {
-                var package = await _packageFinder.Find<Package>(workspace.WorkspaceType);
+                var package = await _packageFinder.FindAsync<Package>(workspace.WorkspaceType);
 
                 var result = await CompileWorker(request.Workspace, request.ActiveBufferId);
 
@@ -400,7 +400,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
             Workspace workspace,
             BufferId activeBufferId)
         {
-            var package = await _packageFinder.Find<ICreateWorkspace>(workspace.WorkspaceType);
+            var package = await _packageFinder.FindAsync<ICreateWorkspace>(workspace.WorkspaceType);
             workspace = await workspace.InlineBuffersAsync();
             var sources = workspace.GetSourceFiles();
             var (compilation, project) = await package.GetCompilationAsync(sources, SourceCodeKind.Regular, workspace.Usings, () => package.CreateWorkspaceAsync());

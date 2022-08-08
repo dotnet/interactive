@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
     {
         public static async Task<Package> ConsoleWorkspaceCopy([CallerMemberName] string testName = null, bool isRebuildable = false, IScheduler buildThrottleScheduler = null) =>
             await PackageUtilities.Copy(
-                await Default.ConsoleWorkspace(),
+                (Package)await Default.ConsoleWorkspaceAsync(),
                 testName,
                 isRebuildable,
                 buildThrottleScheduler);
