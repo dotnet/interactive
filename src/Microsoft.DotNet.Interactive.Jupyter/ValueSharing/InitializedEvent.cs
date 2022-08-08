@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing
 {
-    internal static class LanguageNameValues
+    [ValueAdapterEvent(ValueAdapterEventTypes.Initialized)]
+    public class InitializedEvent : ValueAdapterEvent
     {
-        public const string Python = "python";
-        public const string R = "r";
+        public InitializedEvent() : base()
+        {
+        }
     }
 }

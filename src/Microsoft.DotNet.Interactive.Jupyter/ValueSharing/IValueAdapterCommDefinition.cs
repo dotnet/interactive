@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing
 {
-    internal interface IValueSupport
+    internal interface IValueAdapterCommDefinition
     {
+        string GetTargetDefinition(string targetName);
     }
 }

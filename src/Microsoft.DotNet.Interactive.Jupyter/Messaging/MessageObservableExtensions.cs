@@ -15,21 +15,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Messaging
             return observable.TakeUntil(m => messageTypes.Contains(m.MessageType));
         }
 
-        public static IObservable<Protocol.Message> TakeUntilStatusIdle(this IObservable<Protocol.Message> observable)
-        {
-            return observable.OfType<Protocol.Status>()
-                             .TakeUntil(m => m.ExecutionState == Protocol.StatusValues.Idle);
-        }
-
-        public static IObservable<Protocol.Message> TakeUntilMessage<TMessage>(this IObservable<Protocol.Message> observable) where TMessage: Protocol.Message
-        {
-            return observable.OfType<TMessage>()
-                             .Take(1);
-        }
-
         public static IObservable<Protocol.Message> SelectContent(this IObservable<Message> observable)
         {
             return observable.Select(m => m.Content);
+        }
+
+        public static IObservable<Protocol.Message> FilterByMessageType(this IObservable<Protocol.Message> observable, params string[] messageTypes)
+        {
+            return observable.Where(m => messageTypes.Contains(m.MessageType));
         }
     }
 }
