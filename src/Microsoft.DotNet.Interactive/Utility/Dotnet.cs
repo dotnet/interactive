@@ -75,7 +75,7 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         public Task<CommandLineResult> ToolInstall(
             string packageName,
-            DirectoryInfo toolPath,
+            DirectoryInfo toolPath = null,
             string addSource = null,
             string version = null)
         {
@@ -86,8 +86,17 @@ namespace Microsoft.DotNet.Interactive.Utility
 
             var versionArg = version is not null ? $"--version {version}" : "";
             
-            var args = $@"{packageName} --tool-path ""{toolPath.FullName.TrimTrailingSeparators()}"" {versionArg}";
-            
+            var args = $@"{packageName}";
+            if (toolPath is not null)
+            {
+                args += $@" --tool-path ""{toolPath.FullName.TrimTrailingSeparators()}""";
+            }
+            else
+            {
+                args += " --global";
+            }
+            args += $@" {versionArg}";
+
             if (addSource is not null)
             {
                 args += $@" --add-source ""{addSource}""";
@@ -96,9 +105,18 @@ namespace Microsoft.DotNet.Interactive.Utility
             return Execute("tool install".AppendArgs(args));
         }
 
-        public async Task<IEnumerable<string>> ToolList(DirectoryInfo directory)
+        public async Task<IEnumerable<string>> ToolList(DirectoryInfo directory = null)
         {
-            var result = await Execute("tool list".AppendArgs($@"--tool-path ""{directory.FullName}"""));
+            var args = "tool list";
+            if (directory is not null)
+            {
+                args += $@" --tool-path ""{directory.FullName}""";
+            }
+            else
+            {
+                args += " --global";
+            }
+            var result = await Execute(args);
             if (result.ExitCode != 0)
             {
                 return Enumerable.Empty<string>();

@@ -3,56 +3,41 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.SqlServer;
+using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Kql
 {
     public class KqlKernelExtension : IKernelExtension
     {
-        public Task OnLoadAsync(Kernel kernel)
+        public async Task OnLoadAsync(Kernel kernel)
         {
             if (kernel is CompositeKernel compositeKernel)
             {
-                var root = compositeKernel.RootKernel.FindResolvedNativeSqlToolsServicePackageReference();
-                if (root != null)
+                // Check if the required Sql Tools Service tool is installed, and then install it if necessary
+                var dotnet = new Dotnet();
+                var installedGlobalTools = await dotnet.ToolList();
+                const string kqlToolName = "MicrosoftKustoServiceLayer";
+                bool kqlToolInstalled = installedGlobalTools.Any(tool => string.Equals(tool, kqlToolName, StringComparison.InvariantCultureIgnoreCase));
+                if (!kqlToolInstalled)
                 {
-                    var pathToService = root.PathToToolsService("MicrosoftKustoServiceLayer");
+                    var commandLineResult = await dotnet.ToolInstall("Microsoft.SqlServer.KustoServiceLayer.Tool", null, null, "1.0.0");
+                    commandLineResult.ThrowOnFailure();
+                }
 
-                    if (!string.IsNullOrEmpty(pathToService))
-                    {
-                        if (File.Exists(pathToService))
-                        {
-                            compositeKernel
-                                .AddKernelConnector(new ConnectKqlCommand(pathToService));
+                compositeKernel
+                    .AddKernelConnector(new ConnectKqlCommand(kqlToolName));
 
-                            KernelInvocationContext.Current?.Display(
-                                new HtmlString(@"<details><summary>Query Microsoft Kusto Server databases.</summary>
+                KernelInvocationContext.Current?.Display(
+                    new HtmlString(@"<details><summary>Query Microsoft Kusto Server databases.</summary>
         <p>This extension adds support for connecting to Microsoft Kusto Server databases using the <code>#!connect kql</code> magic command. For more information, run a cell using the <code>#!kql</code> magic command.</p>
         </details>"),
-                                "text/html");
-                        }
-                        else
-                        {
-                            throw new InvalidOperationException($"The KQL extension was loaded successfully and resolved the path to the Kusto Tools Service but the file {pathToService} does not exist. The #!connect kql command will not be available.");
-                        }
-
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException("The KQL extension was loaded successfully but was unable to determine the path to the KQL Tools Service. The #!connect kql command will not be available.");
-                    }
-                }
-                else
-                {
-                    throw new InvalidOperationException($"The KQL extension was loaded successfully but was unable to find the KQL Tools Service package. The #!connect kql command will not be available. (RID: {RuntimeInformation.RuntimeIdentifier})");
-                }
-
+                    "text/html");
             }
-
-            return Task.CompletedTask;
         }
     }
 }

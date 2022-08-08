@@ -16,7 +16,6 @@
  <ItemGroup>
    <Compile Remove="bin\**" />
    <Compile Include="..\Microsoft.DotNet.Interactive.SqlServer\MsSqlRpcObjects.cs" Link="MsSqlRpcObjects.cs" />
-   <Compile Include="..\Microsoft.DotNet.Interactive.SqlServer\SqlToolsServiceDiscovery.cs" Link="SqlToolsServiceDiscovery.cs" />
    <Compile Include="..\Microsoft.DotNet.Interactive.SqlServer\ToolsServiceClient.cs" Link="ToolsServiceClient.cs" />
    <Compile Include="..\Microsoft.DotNet.Interactive.SqlServer\ToolsServiceKernel.cs" Link="ToolsServiceKernel.cs" />
    <Compile Include="..\Microsoft.DotNet.Interactive.SqlServer\Utils.cs" Link="Utils.cs" />
@@ -27,7 +26,6 @@
  <ItemGroup>
    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
    <PackageReference Include="Microsoft.Azure.Kusto.Data" Version="10.0.3" />
-   <PackageReference Include="Microsoft.SqlToolsService" Version="3.0.0-release.163" />
    <PackageReference Include="StreamJsonRpc" Version="2.11.35" />
  </ItemGroup>
 

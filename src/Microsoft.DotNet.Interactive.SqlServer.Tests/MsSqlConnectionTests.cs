@@ -24,9 +24,6 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
         {
             Formatter.SetPreferredMimeTypesFor(typeof(TabularDataResource), HtmlFormatter.MimeType, CsvFormatter.MimeType);
             var csharpKernel = new CSharpKernel().UseNugetDirective().UseValueSharing();
-            await csharpKernel.SubmitCodeAsync(@"
-#r ""nuget:microsoft.sqltoolsservice,3.0.0-release.163""
-");
 
             // TODO: remove SQLKernel it is used to test current patch
             var kernel = new CompositeKernel
