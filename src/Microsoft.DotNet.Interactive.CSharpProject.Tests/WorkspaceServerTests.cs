@@ -8,7 +8,6 @@ using Microsoft.CodeAnalysis;
 using Pocket;
 using Xunit;
 using Xunit.Abstractions;
-using Workspace = Microsoft.DotNet.Interactive.CSharpProject.Workspace;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
 {
