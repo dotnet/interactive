@@ -10,7 +10,7 @@ using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing
 {
-    internal class RValueSupport : IValueSupport, IKernelValueDeclarer
+    internal class RValueSupport : IKernelValueDeclarer
     {
         private static readonly JsonSerializerOptions _serializerOptions;
         private readonly IMessageSender _sender;
@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing
         {
             if (valueProduced.Value is IList<TabularDataResource> value && value.Count == 1)
             {
-                var code = $@"library(jsonlite); {valueProduced.Name} <- data.frame(fromJSON('{JsonSerializer.Serialize(value[0].Data, _serializerOptions)}'))";
+                var code = $@"library(jsonlite); {valueProduced.Name} <- data.frame(fromJSON('{JsonSerializer.Serialize(value[0].Data, _serializerOptions).Replace("'", "\\'")}'))";
                 command = new SubmitCode(code);
                 return true;
             }

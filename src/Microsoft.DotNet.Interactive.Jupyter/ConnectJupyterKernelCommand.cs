@@ -73,5 +73,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             kernel?.RegisterForDisposal(disposables);
             return kernel;
         }
+
     }
 }

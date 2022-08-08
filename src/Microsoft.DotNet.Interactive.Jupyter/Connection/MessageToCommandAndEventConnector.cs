@@ -2,6 +2,8 @@
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
+using Microsoft.DotNet.Interactive.Jupyter.Messaging.Comms;
+using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Jupyter.ValueSharing;
 using Microsoft.DotNet.Interactive.ValueSharing;
 using System;
@@ -9,6 +11,7 @@ using System.Collections.Concurrent;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Reactive.Threading.Tasks;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,50 +22,58 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
         private readonly Subject<CommandOrEvent> _commandOrEventsSubject;
         private readonly Uri _targetUri;
         private readonly CompositeDisposable _disposables;
-        
+        private readonly IMessageSender _sender;
+        private readonly IMessageReceiver _receiver;
+
         private readonly ConcurrentDictionary<Type, Func<KernelCommand, ICommandExecutionContext, CancellationToken, Task>> _dynamicHandlers = new();
-        private readonly KernelValueHandler _kernelValueHandler = new();
-        
+        // private readonly KernelValueHandler _kernelValueHandler = new();
+
 
         public MessageToCommandAndEventConnector(IMessageSender messageSender, IMessageReceiver messageReceiver, Uri targetUri)
         {
             _commandOrEventsSubject = new Subject<CommandOrEvent>();
             _targetUri = targetUri;
+            _receiver = messageReceiver;
+            _sender = messageSender;
 
             var submitCodeHandler = new SubmitCodeHandler(messageSender, messageReceiver);
             var requestKernelInfoHandler = new RequestKernelInfoHandler(messageSender, messageReceiver);
             var completionsHandler = new RequestCompletionsHandler(messageSender, messageReceiver);
             var hoverTipHandler = new RequestHoverTextHandler(messageSender, messageReceiver);
+            var sigHelpHandler = new RequestSignatureHelpHandler(messageSender, messageReceiver);
 
             RegisterCommandHandler<SubmitCode>(submitCodeHandler.HandleCommandAsync);
             RegisterCommandHandler<RequestKernelInfo>(requestKernelInfoHandler.HandleCommandAsync);
             RegisterCommandHandler<RequestCompletions>(completionsHandler.HandleCommandAsync);
             RegisterCommandHandler<RequestHoverText>(hoverTipHandler.HandleCommandAsync);
+            RegisterCommandHandler<RequestSignatureHelp>(sigHelpHandler.HandleCommandAsync);
+
+
 
             // initialize request value handlers based on the language returned from the kernel
-            var subscription = _commandOrEventsSubject.Subscribe(coe =>
-            {
-                if (coe.Event is KernelInfoProduced kip)
-                {
-                    ValueHandler = _kernelValueHandler.GetValueSupport(kip.KernelInfo.LanguageName, messageSender, messageReceiver);
+            //var subscription = _commandOrEventsSubject.Subscribe(async (coe) =>
+            //{
+            //    if (coe.Event is KernelInfoProduced kip)
+            //    {
+            //        ValueHandler = _kernelValueHandler.GetValueSupport(kip.KernelInfo.LanguageName, messageSender, messageReceiver);
 
-                    if (ValueHandler is ISupportGetValue getValueHandler)
-                    {
-                        SupportGetValue(getValueHandler);
-                    }
-                }
-            });
+            //        if (ValueHandler is ISupportGetValue getValueHandler)
+            //        {
+            //            SupportGetValue(getValueHandler);
+            //        }
+            //    }
+            //});
 
             _disposables = new CompositeDisposable
             {
-                _commandOrEventsSubject,
-                subscription
+                _commandOrEventsSubject
+                // subscription
             };
         }
 
         public Uri RemoteHostUri => _targetUri;
 
-        public IValueSupport ValueHandler { get; private set; }
+        // public IValueSupport ValueHandler { get; private set; }
 
         public void Dispose()
         {
@@ -96,13 +107,15 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
             var handler = TryGetDynamicHandler(kernelCommand);
             if (handler != null)
             {
-                await handler(kernelCommand, this, cancellationToken);
-            }
-
-            if (cancellationToken.IsCancellationRequested)
-            {
-                //TODO: trigger an explicit kernel interrupt as well to make sure the out-of-proc kernel 
-                // stops any running executions.
+                await handler(kernelCommand, this, cancellationToken).ContinueWith(async (t) =>
+                {
+                    if (t.IsCanceled)
+                    {
+                        // trigger an explicit kernel interrupt as well to make sure the out-of-proc kernel 
+                        // stops any running executions.
+                        await InterruptKernelExecutionAsync();
+                    }
+                }).Unwrap();
             }
         }
 
@@ -118,11 +131,22 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
             return _commandOrEventsSubject.Subscribe(observer);
         }
 
-        private void SupportGetValue(ISupportGetValue languageValueHandler)
+        //private void SupportGetValue(ISupportGetValue languageValueHandler)
+        //{
+        //    var valueHandler = new RequestValueHandler(languageValueHandler);
+        //    RegisterCommandHandler<RequestValue>(valueHandler.HandleRequestValueAsync);
+        //    RegisterCommandHandler<RequestValueInfos>(valueHandler.HandleRequestValueInfosAsync);
+        //}
+
+        private async Task InterruptKernelExecutionAsync()
         {
-            var valueHandler = new RequestValueHandler(languageValueHandler);
-            RegisterCommandHandler<RequestValue>(valueHandler.HandleRequestValueAsync);
-            RegisterCommandHandler<RequestValueInfos>(valueHandler.HandleRequestValueInfosAsync);
+            var interruptRequest = Messaging.Message.Create(new InterruptRequest(), channel: "control");
+            var interruptReply = _receiver.Messages.ChildOf(interruptRequest)
+                                    .SelectContent()
+                                    .TakeUntilMessageType(JupyterMessageContentTypes.InterruptReply, JupyterMessageContentTypes.Error);
+
+            await _sender.SendAsync(interruptRequest);
+            await interruptReply.ToTask();
         }
     }
 }

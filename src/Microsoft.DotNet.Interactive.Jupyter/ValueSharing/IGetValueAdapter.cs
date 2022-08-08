@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.DotNet.Interactive.Commands;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,9 +7,8 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing
 {
-    internal static class LanguageNameValues
+    internal interface IGetValueAdapter
     {
-        public const string Python = "python";
-        public const string R = "r";
+        Task<IValueAdapter> GetValueAdapter(KernelInfo kernelInfo);
     }
 }
