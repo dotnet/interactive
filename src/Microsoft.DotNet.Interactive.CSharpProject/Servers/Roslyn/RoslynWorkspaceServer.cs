@@ -11,15 +11,15 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.DotNet.Interactive.Utility;
-using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
 using Recipes;
 using Microsoft.DotNet.Interactive.CSharpProject.Models.Execution;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation;
 using Microsoft.DotNet.Interactive.CSharpProject.Transformations;
-using Workspace = Microsoft.DotNet.Interactive.CSharpProject.Workspace;
 using Microsoft.DotNet.Interactive.CSharpProject.LanguageServices;
 using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 using Microsoft.DotNet.Interactive.CSharpProject.WorkspaceFeatures;
+using Pocket;
+using static Pocket.Logger;
 using Package = Microsoft.DotNet.Interactive.CSharpProject.Packaging.Package;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
@@ -27,9 +27,19 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
     public class RoslynWorkspaceServer : IWorkspaceServer
     {
         private readonly IPackageFinder _packageFinder;
-        private const int defaultBudgetInSeconds = 30;
+
         private static readonly ConcurrentDictionary<string, AsyncLock> locks = new();
+
         private static readonly string UserCodeCompleted = nameof(UserCodeCompleted);
+
+        static RoslynWorkspaceServer()
+        {
+            TaskScheduler.UnobservedTaskException += (sender, args) =>
+            {
+                Log.Warning($"{nameof(TaskScheduler.UnobservedTaskException)}", args.Exception);
+                args.SetObserved();
+            };
+        }
 
         public RoslynWorkspaceServer(IPackage package)
         {
