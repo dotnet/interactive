@@ -18,8 +18,8 @@ class __ValueAdapterCommTarget:
     @classmethod
     def _handle_control_comm_msg(cls, msg):
         # This shouldn't happen unless someone calls this method manually
-        #if cls._control_comm is None:
-        #    raise RuntimeError('Control comm has not been properly opened')
+        if cls._control_comm is None:
+            raise RuntimeError('Control comm has not been properly opened')
             
         data = msg['content']['data']
         messageType = data['type']
@@ -36,7 +36,37 @@ class __ValueAdapterCommTarget:
         
         if (command == 'setVariable'): 
             cls._handle_setVariableRequest(command, arguments)
+        elif (command == 'getVariable'):
+            cls._handle_getVariableRequest(command, arguments)
     
+    @classmethod
+    def _handle_getVariableRequest(cls, command, variableInfo):
+        var_name = variableInfo['name']
+        var_type = variableInfo['type']
+        
+        if (var_name in globals()):
+            rawValue = globals()[var_name]
+            
+            try: 
+                import pandas as pd; 
+                if (isinstance(rawValue, pd.DataFrame)):
+                    var_type = 'application/table-schema+json'
+                    rawValue = rawValue.to_dict('records')
+            except Exception as e: 
+                cls.__debugLog('__commDebug.dataframe.geterror', e)
+                pass
+
+            if (rawValue is not None): 
+                cls._sendResponse(command, True, {
+                    'name': var_name, 
+                    'value': rawValue, 
+                    'type': var_type
+                })
+            else: 
+                cls._sendResponse(command, False)
+        else: 
+            cls._sendResponse(command, False)
+            
     @classmethod
     def _handle_setVariableRequest(cls, command, variableInfo):
         var_name = variableInfo['name']
