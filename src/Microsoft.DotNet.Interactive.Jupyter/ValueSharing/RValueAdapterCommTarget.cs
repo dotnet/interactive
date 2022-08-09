@@ -16,6 +16,13 @@ library(jsonlite);
         if (msg$type == 'request') {
             command <- msg$command;
 
+            response <- list(
+                    type = 'response',
+                    command=command, 
+                    success=FALSE, 
+                    body=list()
+                    );
+            
             if (command == 'setVariable') {
                 varInfo <- msg$arguments;
                 varName <- varInfo$name;
@@ -37,8 +44,28 @@ library(jsonlite);
                         type=typeof(resultVal)
                     )
                 );
-                comm$send(response);
-            }
+                
+            } else if (command == 'getVariable') {
+                varInfo <- msg$arguments;
+                varName <- varInfo$name;
+                
+                if (!is.na(varName) && varName != '' && exists(varName)) {
+                    rawValue = get(varName);
+                    varType = if (is.data.frame(rawValue)) 'application/table-schema+json' else varInfo$type;
+                    response <- list(
+                        type = 'response',
+                        command=command, 
+                        success=TRUE, 
+                        body=list(
+                            name=varName, 
+                            value=rawValue,
+                            type=varType
+                        )
+                    );  
+                };
+            };
+            
+            comm$send(response);
         }
     });
     
@@ -51,10 +78,10 @@ library(jsonlite);
         {
             StringBuilder builder = new StringBuilder(_commTargetDefinition);
             builder.Append($"comm_manager()$register_target('{targetName}', .value_adapter_comm_env$value_adapter_connect_to_comm);");
-            builder.Replace(Environment.NewLine, "");
-            builder.Replace(" ", ""); // remove whitespaces as well in R
-            builder.Replace("elseif", "else if"); // but preserve the else if conditions. TODO: change to some minification formatter
-            return builder.ToString();
+            
+
+            var minifiedr = builder.Replace(Environment.NewLine, "").Replace("  ", "").ToString();
+            return minifiedr;
         }
     }
 }
