@@ -30,6 +30,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing
             {
                 case LanguageNameValues.Python:
                     return await CreateValueAdapterAsync(new PythonValueAdapterCommTarget());
+                case LanguageNameValues.R:
+                    return await CreateValueAdapterAsync(new RValueAdapterCommTarget());
                 default:
                     return null;
             }

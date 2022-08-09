@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Messaging.Comms
 
                 if (message.Content is CommOpen commOpen)
                 {
-                    await RequestCommOpenAsync(commOpen);
+                    await HandleCommOpenRequestAsync(commOpen);
                 }
             });
 
@@ -67,17 +67,12 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Messaging.Comms
         {
             var agent = AddAgent(commId);
 
-            await _sender.SendAsync(Messaging.Message.Create(new CommOpen()
-            {
-                CommId = agent.CommId,
-                TargetName = targetName,
-                Data = data
-            }));
+            await _sender.SendAsync(Messaging.Message.Create(new CommOpen(agent.CommId, targetName, data)));
 
             return agent;
         }
 
-        private async Task RequestCommOpenAsync(CommOpen commOpen)
+        private async Task HandleCommOpenRequestAsync(CommOpen commOpen)
         {
             if (string.IsNullOrEmpty(commOpen.TargetName) || string.IsNullOrEmpty(commOpen.CommId) ||
                 !_targets.TryGetValue(commOpen.TargetName, out ICommTarget target))
