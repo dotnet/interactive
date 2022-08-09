@@ -251,6 +251,7 @@ stages:
 
         - script: |
             mkdir -p "$(Build.SourcesDirectory)/artifacts"
+            rm -rf "$(Build.SourcesDirectory)/artifacts/*"
             cp eng/resources/* "$(Build.SourcesDirectory)/artifacts"
           displayName: Prevent test directory crawling
 

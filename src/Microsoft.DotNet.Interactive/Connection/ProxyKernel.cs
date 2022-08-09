@@ -101,7 +101,7 @@ public sealed class ProxyKernel : Kernel
 
         var targetKernelName = command.TargetKernelName;
         command.TargetKernelName = null;
-        var completionSource = new TaskCompletionSource<KernelEvent>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var completionSource = new TaskCompletionSource<KernelEvent>();
 
         _inflight[token] = (command, _executionContext, completionSource, context);
 
