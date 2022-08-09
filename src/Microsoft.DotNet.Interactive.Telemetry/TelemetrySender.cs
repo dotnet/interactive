@@ -12,7 +12,7 @@ using Microsoft.DotNet.PlatformAbstractions;
 
 namespace Microsoft.DotNet.Interactive.Telemetry
 {
-    public sealed class Telemetry : ITelemetry
+    public sealed class TelemetrySender : ITelemetrySender
     {
         private readonly string _eventsNamespace;
         internal static string CurrentSessionId = null;
@@ -31,7 +31,7 @@ Telemetry
 The .NET Core tools collect usage data in order to help us improve your experience.The data is anonymous and doesn't include command-line arguments. The data is collected by Microsoft and shared with the community. You can opt-out of telemetry by setting the DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 ";
 
-        public Telemetry(
+        public TelemetrySender(
             string productVersion,
             IFirstTimeUseNoticeSentinel sentinel,
             string eventsNamespace,

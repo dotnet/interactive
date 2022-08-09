@@ -5,7 +5,9 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.Telemetry;
 
-public interface ITelemetryFilter
+public interface ITelemetrySender
 {
-    IEnumerable<ApplicationInsightsEntryFormat> Filter(object o);
+    bool Enabled { get; }
+
+    void TrackEvent(string eventName, IDictionary<string, string> properties, IDictionary<string, double> measurements);
 }

@@ -5,16 +5,16 @@ namespace Microsoft.DotNet.Interactive.Telemetry
 {
     public static class TelemetryExtensions
     {
-        public static void SendFiltered(this ITelemetry telemetry, ITelemetryFilter filter, object o)
+        public static void SendFiltered(this ITelemetrySender telemetrySender, ITelemetryFilter filter, object o)
         {
-            if (o is null || !telemetry.Enabled || filter is null)
+            if (o is null || !telemetrySender.Enabled || filter is null)
             {
                 return;
             }
 
             foreach (ApplicationInsightsEntryFormat entry in filter.Filter(o))
             {
-                telemetry.TrackEvent(entry.EventName, entry.Properties, entry.Measurements);
+                telemetrySender.TrackEvent(entry.EventName, entry.Properties, entry.Measurements);
             }
         }
     }

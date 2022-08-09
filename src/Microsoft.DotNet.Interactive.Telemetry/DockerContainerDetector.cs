@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
 
         private static bool ReadProcToDetectDockerInLinux()
         {
-            return Telemetry.IsRunningInDockerContainer || File.ReadAllText("/proc/1/cgroup").Contains("/docker/");
+            return TelemetrySender.IsRunningInDockerContainer || File.ReadAllText("/proc/1/cgroup").Contains("/docker/");
         }
     }
 }

@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
     public class FirstTimeUseSentinelTests : IDisposable
     {
         private readonly FileInfo _connectionFile;
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        private readonly CompositeDisposable _disposables = new();
 
         public FirstTimeUseSentinelTests()
         {
@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
                 startServer: (options, invocationContext) => { },
                 jupyter: (startupOptions, console, startServer, context) => Task.FromResult(1),
                 startKernelHost: (startupOptions, kernelHost, console) => Task.FromResult(1),
-                telemetry: new FakeTelemetry(),
+                telemetrySender: new FakeTelemetrySender(),
                 firstTimeUseNoticeSentinel: firstTimeUseNoticeSentinel);
         }
 

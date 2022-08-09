@@ -7,9 +7,9 @@ using Microsoft.DotNet.Interactive.Telemetry;
 
 namespace Microsoft.DotNet.Interactive.App.Tests
 {
-    public sealed class FakeTelemetry : ITelemetry
+    public sealed class FakeTelemetrySender : ITelemetrySender
     {
-        public FakeTelemetry()
+        public FakeTelemetrySender()
         {
             Enabled = true;
         }
@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                 });
         }
 
-        public ConcurrentBag<LogEntry> LogEntries { get; set; } = new ConcurrentBag<LogEntry>();
+        public ConcurrentBag<LogEntry> LogEntries { get; set; } = new();
 
         public class LogEntry
         {

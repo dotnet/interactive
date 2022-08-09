@@ -78,7 +78,7 @@ public static class CommandLineParser
         StartNotebookParser startNotebookParser = null,
         StartHttp startHttp = null,
         Action onServerStarted = null,
-        ITelemetry telemetry = null,
+        ITelemetrySender telemetrySender = null,
         IFirstTimeUseNoticeSentinel firstTimeUseNoticeSentinel = null)
     {
         var operation = Log.OnEnterAndExit();
@@ -115,7 +115,7 @@ public static class CommandLineParser
         firstTimeUseNoticeSentinel ??= new FirstTimeUseNoticeSentinel(VersionSensor.Version().AssemblyInformationalVersion);
 
         // Setup telemetry.
-        telemetry ??= new Telemetry.Telemetry(
+        telemetrySender ??= new TelemetrySender(
             VersionSensor.Version().AssemblyInformationalVersion,
             firstTimeUseNoticeSentinel,
             "dotnet/interactive/cli");
@@ -206,15 +206,15 @@ public static class CommandLineParser
             {
                 if (context.ParseResult.Errors.Count == 0)
                 {
-                    telemetry.SendFiltered(filter, context.ParseResult);
+                    telemetrySender.SendFiltered(filter, context.ParseResult);
                 }
 
                 // If sentinel does not exist, print the welcome message showing the telemetry notification.
-                if (!Telemetry.Telemetry.SkipFirstTimeExperience &&
+                if (!Telemetry.TelemetrySender.SkipFirstTimeExperience &&
                     !firstTimeUseNoticeSentinel.Exists())
                 {
                     context.Console.Out.WriteLine();
-                    context.Console.Out.WriteLine(Telemetry.Telemetry.WelcomeMessage);
+                    context.Console.Out.WriteLine(Telemetry.TelemetrySender.WelcomeMessage);
 
                     firstTimeUseNoticeSentinel.CreateIfNotExists();
                 }

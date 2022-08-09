@@ -68,7 +68,7 @@ public class CommandLineParserTests : IDisposable
                 _startOptions = startupOptions;
                 return Task.FromResult(1);
             },
-            telemetry: new FakeTelemetry(),
+            telemetrySender: new FakeTelemetrySender(),
             firstTimeUseNoticeSentinel: new NopFirstTimeUseNoticeSentinel());
 
         _connectionFile = new FileInfo(Path.GetTempFileName());
