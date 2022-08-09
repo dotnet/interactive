@@ -18,6 +18,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Text.Json;
+using Microsoft.DotNet.Interactive.ValueSharing;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing
 {
@@ -137,11 +138,28 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing
             context.Publish(new CommandFailed($"Failed to get variable ${command.Name}.", command));
         }
 
-        public Task HandleCommandAsync(RequestValueInfos command, ICommandExecutionContext context, CancellationToken token)
+        public async Task HandleCommandAsync(RequestValueInfos command, ICommandExecutionContext context, CancellationToken token)
         {
-            FailIfAgentIsClosed(command, context);
-            context.Publish(new CommandSucceeded(command));
-            return Task.CompletedTask;
+            if (FailIfAgentIsClosed(command, context))
+            {
+                return;
+            }
+
+            var request = new VariablesRequest();
+
+            var response = await SendRequestAsync(request, token);
+
+            if (response is VariablesResponse variablesResponse && variablesResponse.Success)
+            {
+                var kernelValueInfos = variablesResponse.Body.Variables
+                    .Select(v => new KernelValueInfo(v.Name)).ToList();
+
+                context.Publish(new ValueInfosProduced(kernelValueInfos, command));
+                context.Publish(new CommandSucceeded(command));
+                return;
+            }
+
+            context.Publish(new CommandFailed($"Failed to get variables", command));
         }
 
         private async Task<ValueAdapterMessage> SendRequestAsync(ValueAdapterMessage request, CancellationToken token)

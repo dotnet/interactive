@@ -32,13 +32,24 @@ class __ValueAdapterCommTarget:
     @classmethod
     def _handle_adapter_request(cls, data):
         command = data['command']
-        arguments = data['arguments']
         
-        if (command == 'setVariable'): 
-            cls._handle_setVariableRequest(command, arguments)
-        elif (command == 'getVariable'):
-            cls._handle_getVariableRequest(command, arguments)
+        try:
+            if (command == 'setVariable'): 
+                cls._handle_setVariableRequest(command, data['arguments'])
+            elif (command == 'getVariable'):
+                cls._handle_getVariableRequest(command, data['arguments'])
+            elif (command == 'variables'):
+                cls._handle_variablesRequest(command)
+        except Exception as e:
+            cls._sendResponse(command, False)
     
+    @classmethod
+    def _handle_variablesRequest(cls, command):
+        rwho_ls = %who_ls
+        variables = globals()
+        results = [{'name': x, 'type':  str(type(variables[x]))} for x in rwho_ls ]
+        cls._sendResponse(command, True, { 'variables': results })
+            
     @classmethod
     def _handle_getVariableRequest(cls, command, variableInfo):
         var_name = variableInfo['name']
