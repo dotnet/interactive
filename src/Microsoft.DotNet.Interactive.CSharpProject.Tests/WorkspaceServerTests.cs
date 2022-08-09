@@ -180,7 +180,7 @@ Console.WriteLine(2);");
             result.ShouldSucceedWithOutput("", "1", "", "", "2", "");
         }
 
-        [Fact]
+        [Fact(Skip = "Might be causing crashes on Linux")]
         public async Task Multi_line_console_output_is_captured_correctly_when_an_exception_is_thrown()
         {
             var server = GetCodeRunner();
@@ -212,7 +212,7 @@ Console.WriteLine(4);");
             result.ShouldSucceedWithExceptionContaining("System.Exception: oops!");
         }
 
-        [Fact]
+        [Fact(Skip = "Might be causing crashes on Linux")]
         public async Task When_the_users_code_throws_on_subsequent_line_then_it_is_returned_as_an_exception_property()
         {
             var server = GetCodeRunner();
