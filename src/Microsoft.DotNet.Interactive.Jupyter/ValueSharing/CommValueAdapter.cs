@@ -8,6 +8,8 @@ using Microsoft.DotNet.Interactive.Jupyter.Messaging.Comms;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Threading;
@@ -15,6 +17,7 @@ using System.Reactive.Threading.Tasks;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing
 {
@@ -68,7 +71,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing
                     var response = await SetVariableAsync(seq, variableName, command.FormattedValue.Value, command.FormattedValue.MimeType, token);
                     success = response is not null && response.Success;
                 }
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 context.Publish(new CommandFailed(e, command));
                 return;
@@ -77,7 +81,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing
             if (success)
             {
                 context.Publish(new CommandSucceeded(command));
-            } else
+            }
+            else
             {
                 context.Publish(new CommandFailed($"Failed to create variable ${variableName}.", command));
             }
@@ -98,11 +103,38 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing
             return null;
         }
 
-        public Task HandleCommandAsync(RequestValue command, ICommandExecutionContext context, CancellationToken token)
+        public async Task HandleCommandAsync(RequestValue command, ICommandExecutionContext context, CancellationToken token)
         {
-            FailIfAgentIsClosed(command, context);
-            context.Publish(new CommandSucceeded(command));
-            return Task.CompletedTask;
+            if (FailIfAgentIsClosed(command, context))
+            {
+                return;
+            }
+
+            var arguments = new GetVariableArguments(command.Name, command.MimeType);
+            var request = new GetVariableRequest(arguments);
+
+            var response = await SendRequestAsync(request, token);
+
+            if (response is GetVariableResponse getVariableResponse && getVariableResponse.Success)
+            {
+                var jsonValue = (JsonElement)getVariableResponse.Body.Value;
+                var value = getVariableResponse.Body.Type == TabularDataResourceFormatter.MimeType ?
+                        jsonValue.ToTabularDataResource() : jsonValue.ToObject();
+
+                var valueType = value.GetType();
+                var formatter = Formatter.GetPreferredFormatterFor(valueType, command.MimeType);
+
+                using var writer = new StringWriter(CultureInfo.InvariantCulture);
+                formatter.Format(value, writer);
+
+                var formatted = new FormattedValue(command.MimeType, writer.ToString());
+
+                context.Publish(new ValueProduced(value, command.Name, formatted, command));
+                context.Publish(new CommandSucceeded(command));
+                return;
+            }
+
+            context.Publish(new CommandFailed($"Failed to get variable ${command.Name}.", command));
         }
 
         public Task HandleCommandAsync(RequestValueInfos command, ICommandExecutionContext context, CancellationToken token)
