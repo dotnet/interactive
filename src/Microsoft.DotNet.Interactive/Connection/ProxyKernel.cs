@@ -108,16 +108,17 @@ public sealed class ProxyKernel : Kernel
         ExecutionContext.SuppressFlow();
 
         var t = _sender.SendAsync(command, context.CancellationToken);
-        t.ContinueWith(task =>
-        {
-            if (!task.GetIsCompletedSuccessfully())
-            {
-                if (task.Exception is {} ex)
-                {
-                    completionSource.TrySetException(ex);
-                }
-            }
-        });
+        // FIX: (HandleByForwardingToRemoteAsync) is this needed? there's no test coverage.
+        // t.ContinueWith(task =>
+        // {
+        //     if (!task.GetIsCompletedSuccessfully())
+        //     {
+        //         if (task.Exception is {} ex)
+        //         {
+        //             completionSource.TrySetException(ex);
+        //         }
+        //     }
+        // });
 
         return completionSource.Task.ContinueWith(te =>
         {
