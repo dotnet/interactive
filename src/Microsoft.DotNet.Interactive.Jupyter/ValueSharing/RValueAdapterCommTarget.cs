@@ -11,20 +11,19 @@ library(jsonlite);
 .value_adapter_comm_env <- new.env();
 
 .value_adapter_comm_env$value_adapter_connect_to_comm <- function(comm, data) {
-    comm$on_msg(function(msg) {
-        assign('debug.onmsg', msg, globalenv());
-        if (msg$type == 'request') {
-            command <- msg$command;
+    comm$on_msg(function(.msg) {
+        if (.msg$type == 'request') {
+            .command <- .msg$command;
 
-            response <- list(
+            .response <- list(
                     type = 'response',
-                    command=command, 
+                    command=.command, 
                     success=FALSE, 
                     body=list()
                     );
             
-            if (command == 'setVariable') {
-                varInfo <- msg$arguments;
+            if (.command == 'setVariable') {
+                varInfo <- .msg$arguments;
                 varName <- varInfo$name;
                 resultVal <- varInfo$value;
 
@@ -35,9 +34,9 @@ library(jsonlite);
                 };
                 
                 assign(varName, resultVal, globalenv());
-                response <- list(
+                .response <- list(
                     type = 'response',
-                    command=command, 
+                    command=.command, 
                     success=TRUE, 
                     body=list(
                         name=varName, 
@@ -45,16 +44,16 @@ library(jsonlite);
                     )
                 );
                 
-            } else if (command == 'getVariable') {
-                varInfo <- msg$arguments;
+            } else if (.command == 'getVariable') {
+                varInfo <- .msg$arguments;
                 varName <- varInfo$name;
                 
                 if (!is.na(varName) && varName != '' && exists(varName)) {
                     rawValue = get(varName);
                     varType = if (is.data.frame(rawValue)) 'application/table-schema+json' else varInfo$type;
-                    response <- list(
+                    .response <- list(
                         type = 'response',
-                        command=command, 
+                        command=.command, 
                         success=TRUE, 
                         body=list(
                             name=varName, 
@@ -63,9 +62,25 @@ library(jsonlite);
                         )
                     );  
                 };
+            } else if (.command == 'variables') {
+                allVar <- ls(all=TRUE, globalenv());
+                variableList <- list();
+                for (var in allVar) {
+                    if (!startsWith(var, '.')) {
+                        type <- toString(typeof(get(var)));
+                        variableList <- append(variableList, list(list(name=var, type=type)));
+                    };
+                };
+                .response <- list(
+                        type = 'response',
+                        command=.command, 
+                        success=TRUE, 
+                        body=list(
+                            variables=variableList
+                        )
+                    );  
             };
-            
-            comm$send(response);
+            comm$send(.response);
         }
     });
     
