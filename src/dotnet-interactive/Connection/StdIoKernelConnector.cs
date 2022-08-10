@@ -56,6 +56,7 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
                     {
                         ["DOTNET_INTERACTIVE_SKIP_FIRST_TIME_EXPERIENCE"]  = "1",
                         ["DOTNET_SKIP_FIRST_TIME_EXPERIENCE"]  = "1",
+                        ["DOTNET_DbgEnableMiniDump"] = "0" // https://docs.microsoft.com/en-us/dotnet/core/diagnostics/dumps
                     },
                     WorkingDirectory = WorkingDirectory.FullName,
                     RedirectStandardInput = true,
