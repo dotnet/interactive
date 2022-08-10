@@ -26,7 +26,7 @@ public class JavaScriptTests : IDisposable
 
     public void Dispose() => _disposables.Dispose();
 
-    [Fact]
+    [FactSkipLinux]
     public async Task It_can_execute_code()
     {
         using var kernel = await CreateKernelAsync();
@@ -38,7 +38,7 @@ public class JavaScriptTests : IDisposable
         events.Should().NotContainErrors();
     }
 
-    [Fact]
+    [FactSkipLinux]
     public async Task It_can_get_a_return_value()
     {
         using var kernel = await CreateKernelAsync();
@@ -55,7 +55,7 @@ public class JavaScriptTests : IDisposable
                                   v.Value == "123");
     }
 
-    [Fact]
+    [FactSkipLinux]
     public async Task It_can_get_console_log_output()
     {
         using var kernel = await CreateKernelAsync();
