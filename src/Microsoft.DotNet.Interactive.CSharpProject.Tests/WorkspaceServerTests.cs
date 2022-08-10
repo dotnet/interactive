@@ -199,17 +199,16 @@ Console.WriteLine(4);");
                 output: new[] { "1", "2" });
         }
 
-        [Fact]
+        [Fact(Skip = "Might be causing crashes on Linux")]
         public async Task When_the_users_code_throws_on_first_line_then_it_is_returned_as_an_exception_property()
         {
             var server = GetCodeRunner();
 
-            var request = CreateWorkspaceWithMainContaining(@"throw new Exception(""oops!"");");
-
+            var request = CreateWorkspaceWithMainContaining($@"throw new Exception(""oops! from {nameof(When_the_users_code_throws_on_first_line_then_it_is_returned_as_an_exception_property)}"");");
 
             var result = await server.RunAsync(new WorkspaceRequest(request));
 
-            result.ShouldSucceedWithExceptionContaining("System.Exception: oops!");
+            result.ShouldSucceedWithExceptionContaining($"System.Exception: oops! from {nameof(When_the_users_code_throws_on_first_line_then_it_is_returned_as_an_exception_property)}");
         }
 
         [Fact(Skip = "Might be causing crashes on Linux")]
@@ -220,10 +219,9 @@ Console.WriteLine(4);");
             var request = CreateWorkspaceWithMainContaining($@"
 throw new Exception(""oops! from {nameof(When_the_users_code_throws_on_subsequent_line_then_it_is_returned_as_an_exception_property)}"");");
 
-
             var result = await server.RunAsync(new WorkspaceRequest(request));
 
-            result.ShouldSucceedWithExceptionContaining("System.Exception: oops!");
+            result.ShouldSucceedWithExceptionContaining($"System.Exception: oops! from {nameof(When_the_users_code_throws_on_subsequent_line_then_it_is_returned_as_an_exception_property)}");
         }
 
         [Fact]

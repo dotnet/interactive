@@ -127,7 +127,13 @@ namespace Microsoft.DotNet.Interactive.Utility
                         RedirectStandardOutput = true,
                         RedirectStandardInput = true,
                         WorkingDirectory = workingDir?.FullName ?? string.Empty,
-                        StandardOutputEncoding = Encoding.UTF8
+                        StandardOutputEncoding = Encoding.UTF8,
+                        EnvironmentVariables =
+                        {
+                            ["DOTNET_INTERACTIVE_SKIP_FIRST_TIME_EXPERIENCE"]  = "1",
+                            ["DOTNET_SKIP_FIRST_TIME_EXPERIENCE"]  = "1",
+                            ["DOTNET_DbgEnableMiniDump"] = "0" // https://docs.microsoft.com/en-us/dotnet/core/diagnostics/dumps
+                        },
                     }
                 };
 
