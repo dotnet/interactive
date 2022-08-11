@@ -14,6 +14,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Utility
 {
     public class ConsoleOutput : IDisposable
     {
+        // TODO: (ConsoleOutput) use Microsoft.DotNet.Interactive.Utility.ConsoleOutput 
         private TextWriter _originalOutputWriter;
         private TextWriter _originalErrorWriter;
         private readonly TrackingStringWriter _outputWriter = new();

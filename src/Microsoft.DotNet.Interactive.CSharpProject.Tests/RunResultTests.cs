@@ -6,7 +6,6 @@ using FluentAssertions;
 using Newtonsoft.Json.Linq;
 using Pocket;
 using Recipes;
-using Microsoft.DotNet.Interactive.CSharpProject.Models.Execution;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests

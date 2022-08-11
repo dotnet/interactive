@@ -15,4 +15,5 @@ export * from './kernelScheduler';
 export * from './logger';
 export * from './promiseCompletionSource';
 export * from './proxyKernel';
+export * from './setup';
 export * from './tokenGenerator';

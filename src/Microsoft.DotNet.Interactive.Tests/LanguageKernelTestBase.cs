@@ -13,12 +13,10 @@ using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-
 using Pocket;
 using Pocket.For.Xunit;
 using Xunit;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Tests.LanguageKernelTestBase>;
-
 using Xunit.Abstractions;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
@@ -29,6 +27,15 @@ namespace Microsoft.DotNet.Interactive.Tests
     public abstract class LanguageKernelTestBase : IDisposable
     {
         private readonly CompositeDisposable _disposables = new();
+
+        static LanguageKernelTestBase()
+        {
+            TaskScheduler.UnobservedTaskException += (sender, args) =>
+            {
+                Log.Warning($"{nameof(TaskScheduler.UnobservedTaskException)}", args.Exception);
+                args.SetObserved();
+            };
+        }
 
         protected LanguageKernelTestBase(ITestOutputHelper output)
         {

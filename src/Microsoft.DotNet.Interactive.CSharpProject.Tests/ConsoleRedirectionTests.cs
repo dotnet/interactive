@@ -30,9 +30,11 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
         {
             using (var console = await ConsoleOutput.Capture())
             {
-                Console.Error.Write("oops!");
+                var message = $"oops! from {nameof(StandardError_is_captured)}";
 
-                console.StandardError.Should().Be("oops!");
+                Console.Error.Write(message);
+
+                console.StandardError.Should().Be(message);
             }
         }
 

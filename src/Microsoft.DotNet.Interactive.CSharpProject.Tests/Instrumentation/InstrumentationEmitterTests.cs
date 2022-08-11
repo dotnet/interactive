@@ -9,7 +9,6 @@ using Newtonsoft.Json.Linq;
 using Recipes;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation;
 using Xunit;
-using Microsoft.DotNet.Interactive.CSharpProject.Utility;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests.Instrumentation
 {
@@ -65,7 +64,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests.Instrumentation
         [Fact]
         public async Task It_Emits_Right_Format_With_Sentinels_Around_JSONAsync()
         {
-            using (var output = await ConsoleOutput.Capture())
+            using (var output = await Utility.ConsoleOutput.Capture())
             {
                 InstrumentationEmitter.EmitProgramState(programStateJson);
                 output.StandardOutput.Should().MatchEquivalentOf($"{ InstrumentationEmitter.Sentinel}*{InstrumentationEmitter.Sentinel}");
