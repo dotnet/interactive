@@ -1,41 +1,52 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Concurrent;
+using System;
 using System.Collections.Generic;
 using Microsoft.DotNet.Interactive.Telemetry;
 
-namespace Microsoft.DotNet.Interactive.App.Tests
+namespace Microsoft.DotNet.Interactive.App.Tests;
+
+public class FakeTelemetrySender : TelemetrySender
 {
-    public sealed class FakeTelemetrySender : ITelemetrySender
+    private static readonly string _productVersion = BuildInfo.GetBuildInfo(typeof(Program).Assembly).AssemblyInformationalVersion + "-tests";
+    private readonly List<TelemetryEvent> _telemetryEvents = new();
+
+    public FakeTelemetrySender(IFirstTimeUseNoticeSentinel firstTimeUseNoticeSentinel = null) :
+        base(
+            _productVersion,
+            firstTimeUseNoticeSentinel ?? new FakeFirstTimeUseNoticeSentinel
+            {
+                SentinelExists = true
+            },
+            // FIX: (FakeTelemetrySender) get a test instrumentation key
+            instrumentationKey: Guid.NewGuid().ToString())
     {
-        public FakeTelemetrySender()
+    }
+
+    protected override void DoTrackEvent(
+        string eventName,
+        IDictionary<string, string> properties,
+        IDictionary<string, double> metrics)
+    {
+        lock (_telemetryEvents)
         {
-            Enabled = true;
+            _telemetryEvents.Add(
+                new TelemetryEvent(
+                    eventName,
+                    properties,
+                    metrics));
         }
+    }
 
-        public bool Enabled { get; set; }
-
-        public void TrackEvent(string eventName,
-            IDictionary<string, string> properties,
-            IDictionary<string, double> measurements)
+    public IReadOnlyList<TelemetryEvent> TelemetryEvents
+    {
+        get
         {
-            LogEntries.Add(
-                new LogEntry
-                {
-                    EventName = eventName,
-                    Measurement = measurements,
-                    Properties = properties
-                });
-        }
-
-        public ConcurrentBag<LogEntry> LogEntries { get; set; } = new();
-
-        public class LogEntry
-        {
-            public string EventName { get; set; }
-            public IDictionary<string, string> Properties { get; set; }
-            public IDictionary<string, double> Measurement { get; set; }
+            lock (_telemetryEvents)
+            {
+                return _telemetryEvents.ToArray();
+            }
         }
     }
 }

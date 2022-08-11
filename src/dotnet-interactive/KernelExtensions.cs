@@ -8,8 +8,8 @@ using System.CommandLine.NamingConventionBinder;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.DotNet.Interactive.Utility;
-using Recipes;
 
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
@@ -24,14 +24,14 @@ namespace Microsoft.DotNet.Interactive.App
             {
                 Handler = CommandHandler.Create((InvocationContext ctx) =>
                 {
-                    ctx.GetService<KernelInvocationContext>().Display(VersionSensor.Version());
+                    ctx.GetService<KernelInvocationContext>().Display(BuildInfo.GetBuildInfo(typeof(Program).Assembly));
                     return Task.CompletedTask;
                 })
             };
 
             kernel.AddDirective(about);
 
-            Formatter.Register<VersionSensor.BuildInfo>((info, writer) =>
+            Formatter.Register<BuildInfo>((info, writer) =>
             {
                 var url = "https://github.com/dotnet/interactive";
                 var encodedImage = string.Empty;

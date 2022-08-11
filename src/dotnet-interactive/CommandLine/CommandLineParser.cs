@@ -37,7 +37,6 @@ using Microsoft.DotNet.Interactive.VSCode;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Pocket;
-using Recipes;
 using static Pocket.Logger;
 
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
@@ -78,8 +77,7 @@ public static class CommandLineParser
         StartNotebookParser startNotebookParser = null,
         StartHttp startHttp = null,
         Action onServerStarted = null,
-        ITelemetrySender telemetrySender = null,
-        IFirstTimeUseNoticeSentinel firstTimeUseNoticeSentinel = null)
+        TelemetrySender telemetrySender = null)
     {
         var operation = Log.OnEnterAndExit();
 
@@ -104,77 +102,18 @@ public static class CommandLineParser
         jupyter ??= JupyterCommand.Do;
 
         startKernelHost ??= KernelHostLauncher.Do;
-            
+
         startNotebookParser ??= ParseNotebookCommand.Do;
 
         startHttp ??= HttpCommand.Do;
 
-        var isVSCode = false;
-
         // Setup first time use notice sentinel.
-        firstTimeUseNoticeSentinel ??= new FirstTimeUseNoticeSentinel(VersionSensor.Version().AssemblyInformationalVersion);
+        var buildInfo = BuildInfo.GetBuildInfo(typeof(Program).Assembly);
 
         // Setup telemetry.
         telemetrySender ??= new TelemetrySender(
-            VersionSensor.Version().AssemblyInformationalVersion,
-            firstTimeUseNoticeSentinel,
-            "dotnet/interactive/cli");
-
-        var filter = new TelemetryFilter(
-            Sha256Hasher.HashWithNormalizedCasing,
-            new[] { "frontend" },
-            (commandResult, directives, entryItems) =>
-            {
-                // add frontend
-                var frontendTelemetryAdded = false;
-
-                // check if is codespaces
-                if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CODESPACES")))
-                {
-                    frontendTelemetryAdded = true;
-                    isVSCode = true;
-                    entryItems.Add(new KeyValuePair<string, string>("frontend", "gitHubCodeSpaces"));
-                }
-
-                if (!frontendTelemetryAdded)
-                {
-                    foreach (var directive in directives)
-                    {
-                        switch (directive.Key)
-                        {
-                            case "jupyter":
-                            case "synapse":
-                            case "vscode":
-                                frontendTelemetryAdded = true;
-                                isVSCode = directive.Key.ToLowerInvariant() == "vscode";
-                                entryItems.Add(new KeyValuePair<string, string>("frontend", directive.Key));
-                                break;
-                        }
-                    }
-                }
-
-                if (!frontendTelemetryAdded)
-                {
-                    switch (commandResult.Command.Name)
-                    {
-                        case "jupyter":
-                            entryItems.Add(new KeyValuePair<string, string>("frontend", commandResult.Command.Name));
-                            frontendTelemetryAdded = true;
-                            break;
-                    }
-                }
-
-                if (!frontendTelemetryAdded)
-                {
-                    var frontendName = Environment.GetEnvironmentVariable("DOTNET_INTERACTIVE_FRONTEND_NAME");
-                    if (string.IsNullOrWhiteSpace(frontendName))
-                    {
-                        frontendName = "unknown";
-                    }
-
-                    entryItems.Add(new KeyValuePair<string, string>("frontend", frontendName));
-                }
-            });
+            buildInfo.AssemblyInformationalVersion,
+            new FirstTimeUseNoticeSentinel(buildInfo.AssemblyInformationalVersion));
 
         var verboseOption = new Option<bool>(
             "--verbose",
@@ -200,23 +139,25 @@ public static class CommandLineParser
         rootCommand.AddCommand(StdIO());
         rootCommand.AddCommand(NotebookParser());
 
+        var filter = new StartupTelemetryEventBuilder(Sha256Hasher.ToSha256HashWithNormalizedCasing);
+
         return new CommandLineBuilder(rootCommand)
             .UseDefaults()
             .AddMiddleware(async (context, next) =>
             {
                 if (context.ParseResult.Errors.Count == 0)
                 {
-                    telemetrySender.SendFiltered(filter, context.ParseResult);
+                    telemetrySender.TrackStartupEvent(context.ParseResult, filter);
                 }
 
                 // If sentinel does not exist, print the welcome message showing the telemetry notification.
-                if (!Telemetry.TelemetrySender.SkipFirstTimeExperience &&
-                    !firstTimeUseNoticeSentinel.Exists())
+                if (!TelemetrySender.SkipFirstTimeExperience &&
+                    !telemetrySender.FirstTimeUseNoticeSentinelExists())
                 {
                     context.Console.Out.WriteLine();
-                    context.Console.Out.WriteLine(Telemetry.TelemetrySender.WelcomeMessage);
+                    context.Console.Out.WriteLine(TelemetrySender.WelcomeMessage);
 
-                    firstTimeUseNoticeSentinel.CreateIfNotExists();
+                    telemetrySender.CreateFirstTimeUseNoticeSentinelIfNotExists();
                 }
 
                 await next(context);
@@ -264,7 +205,7 @@ public static class CommandLineParser
                 pathOption
             };
 
-            installCommand.Handler = CommandHandler.Create<IConsole, InvocationContext, HttpPortRange, DirectoryInfo>(InstallHandler);
+            installCommand.Handler = CommandHandler.Create<InvocationContext, HttpPortRange, DirectoryInfo>((context, httpPortRange, path) => JupyterInstallHandler(httpPortRange, path, context));
 
             jupyterCommand.AddCommand(installCommand);
 
@@ -281,7 +222,7 @@ public static class CommandLineParser
 
                 var clientSideKernelClient = new SignalRBackchannelKernelClient();
 
-                services.AddSingleton(c => ConnectionInformation.Load(options.ConnectionFile))
+                services.AddSingleton(_ => ConnectionInformation.Load(options.ConnectionFile))
                     .AddSingleton(clientSideKernelClient)
                     .AddSingleton(c =>
                     {
@@ -295,9 +236,9 @@ public static class CommandLineParser
                 return result;
             }
 
-            Task<int> InstallHandler(IConsole console, InvocationContext context, HttpPortRange httpPortRange, DirectoryInfo path)
+            Task<int> JupyterInstallHandler(HttpPortRange httpPortRange, DirectoryInfo path, InvocationContext context)
             {
-                var jupyterInstallCommand = new JupyterInstallCommand(console, new JupyterKernelSpecInstaller(console), httpPortRange, path);
+                var jupyterInstallCommand = new JupyterInstallCommand(context.Console, new JupyterKernelSpecInstaller(context.Console), httpPortRange, path);
                 return jupyterInstallCommand.InvokeAsync();
             }
         }
@@ -375,7 +316,7 @@ public static class CommandLineParser
 
                     services.AddKernel(kernel);
 
-                    kernel = kernel.UseQuitCommand();
+                    kernel.UseQuitCommand();
 
                     var sender = KernelCommandAndEventSender.FromTextWriter(
                         Console.Out,
@@ -387,6 +328,9 @@ public static class CommandLineParser
                         sender,
                         receiver,
                         KernelHost.CreateHostUriForCurrentProcessId());
+
+                    var isVSCode = context.ParseResult.Directives.Contains("vscode") ||
+                                   !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CODESPACES"));
 
                     if (isVSCode)
                     {

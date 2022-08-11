@@ -7,112 +7,82 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.Telemetry
+namespace Microsoft.DotNet.Interactive.Telemetry;
+
+public sealed class StreamForwarder
 {
-    public sealed class StreamForwarder
+    private static readonly char[] s_ignoreCharacters = new char[] { '\r' };
+    private static readonly char s_flushBuilderCharacter = '\n';
+
+    private StringBuilder _builder;
+    private StringWriter _capture;
+
+    public string CapturedOutput => _capture?.GetStringBuilder()?.ToString();
+
+    public StreamForwarder Capture()
     {
-        private static readonly char[] s_ignoreCharacters = new char[] { '\r' };
-        private static readonly char s_flushBuilderCharacter = '\n';
+        ThrowIfCaptureSet();
 
-        private StringBuilder _builder;
-        private StringWriter _capture;
-        private Action<string> _writeLine;
+        _capture = new StringWriter();
 
-        public string CapturedOutput => _capture?.GetStringBuilder()?.ToString();
+        return this;
+    }
+        
+    public Task BeginRead(TextReader reader)
+    {
+        return Task.Run(() => Read(reader));
+    }
 
-        public StreamForwarder Capture()
+    public void Read(TextReader reader)
+    {
+        const int bufferSize = 1;
+
+        var buffer = new char[bufferSize];
+        _builder = new StringBuilder();
+
+        // Using Read with buffer size 1 to prevent looping endlessly
+        // like we would when using Read() with no buffer
+        while (reader.Read(buffer, 0, bufferSize) > 0)
         {
-            ThrowIfCaptureSet();
+            var currentCharacter = buffer[0];
 
-            _capture = new StringWriter();
-
-            return this;
-        }
-
-        public StreamForwarder ForwardTo(Action<string> writeLine)
-        {
-            ThrowIfNull(writeLine);
-
-            ThrowIfForwarderSet();
-
-            _writeLine = writeLine;
-
-            return this;
-        }
-
-        public Task BeginRead(TextReader reader)
-        {
-            return Task.Run(() => Read(reader));
-        }
-
-        public void Read(TextReader reader)
-        {
-            const int bufferSize = 1;
-
-            var buffer = new char[bufferSize];
-            _builder = new StringBuilder();
-
-            // Using Read with buffer size 1 to prevent looping endlessly
-            // like we would when using Read() with no buffer
-            while ((reader.Read(buffer, 0, bufferSize)) > 0)
+            if (currentCharacter == s_flushBuilderCharacter)
             {
-                var currentCharacter = buffer[0];
-
-                if (currentCharacter == s_flushBuilderCharacter)
-                {
-                    WriteBuilder();
-                }
-                else if (!s_ignoreCharacters.Contains(currentCharacter))
-                {
-                    _builder.Append(currentCharacter);
-                }
+                WriteBuilder();
             }
-
-            // Flush anything else when the stream is closed
-            // Which should only happen if someone used console.Write
-            WriteBuilder();
-        }
-
-        private void WriteBuilder()
-        {
-            if (_builder.Length == 0)
+            else if (!s_ignoreCharacters.Contains(currentCharacter))
             {
-                return;
-            }
-
-            WriteLine(_builder.ToString());
-            _builder.Clear();
-        }
-
-        private void WriteLine(string str)
-        {
-            _capture?.WriteLine(str);
-
-            _writeLine?.Invoke(str);
-        }
-
-        private void ThrowIfNull(object obj)
-        {
-            if (obj is null)
-            {
-                throw new ArgumentNullException(nameof(obj));
+                _builder.Append(currentCharacter);
             }
         }
 
-        private void ThrowIfForwarderSet()
+        // Flush anything else when the stream is closed
+        // Which should only happen if someone used console.Write
+        WriteBuilder();
+    }
+
+    private void WriteBuilder()
+    {
+        if (_builder.Length == 0)
         {
-            if (_writeLine is not null)
-            {
-                throw new InvalidOperationException("WriteLine forwarder set previously"); // TODO: Localize this?
-            }
+            return;
         }
 
-        private void ThrowIfCaptureSet()
+        WriteLine(_builder.ToString());
+
+        _builder.Clear();
+    }
+
+    private void WriteLine(string str)
+    {
+        _capture?.WriteLine(str);
+    }
+    
+    private void ThrowIfCaptureSet()
+    {
+        if (_capture is not null)
         {
-            if (_capture is not null)
-            {
-                throw new InvalidOperationException("Already capturing stream!"); // TODO: Localize this?
-            }
+            throw new InvalidOperationException("Already capturing stream!");
         }
     }
 }
