@@ -1,14 +1,14 @@
 {
   "sdk": {
-    "version": "6.0.300",
+    "version": "7.0.100-preview.5.22307.18",
     "allowPrerelease": true,
     "rollForward": "latestMinor"
   },
   "tools": {
-    "dotnet": "6.0.300",
+    "dotnet": "7.0.100-preview.5.22307.18",
     "rollForward": "latestMinor"
   },
   "msbuild-sdks": {
-    "Microsoft.DotNet.Arcade.Sdk": "7.0.0-beta.22405.6"
+    "Microsoft.DotNet.Arcade.Sdk": "7.0.0-beta.22411.2"
   }
 }
