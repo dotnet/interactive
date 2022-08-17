@@ -30,7 +30,7 @@ A fourth approach, if you'd like to avoid thinking about string escaping and HTM
 
 ## Emitting JavaScript
 
-Just like you can directly write HTML using a magic command, you can also scripts that will be run on the frontend. The simplest approach is again a magic command, either `#!javascript` or `#!js`:
+Just like you can directly write HTML using a magic command, you can also scripts that will be run on the frontend. The simplest approach is again a magic command, either [`#!javascript`](https://www.scaler.com/topics/javascript/) or `#!js`:
 
 <img src="https://user-images.githubusercontent.com/547415/82244383-00bd3c80-98f6-11ea-8778-80d933a901c6.png" width="60%">
 
