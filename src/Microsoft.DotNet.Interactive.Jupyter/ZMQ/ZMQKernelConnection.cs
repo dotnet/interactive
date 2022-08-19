@@ -11,26 +11,26 @@ using JupyterMessage = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
 {
-    internal class JupyterZMQConnection : IJupyterKernelConnection, IMessageSender, IMessageReceiver
+    internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, IMessageReceiver
     {
-        private readonly RouterSocket _shell;
-        private readonly PublisherSocket _ioPubSocket;
+        private readonly DealerSocket _shell;
+        private readonly SubscriberSocket _ioSubSocket;
         private readonly string _shellAddress;
-        private readonly string _ioPubAddress;
+        private readonly string _ioSubAddress;
         private readonly CompositeDisposable _disposables;
         private readonly RequestReplyChannel _shellChannel;
-        private readonly PubSubChannel _ioPubChannel;
+        private readonly PubSubChannel _ioSubChannel;
         private readonly StdInChannel _stdInChannel;
         private readonly string _stdInAddress;
         private readonly string _controlAddress;
-        private readonly RouterSocket _stdIn;
-        private readonly RouterSocket _control;
+        private readonly DealerSocket _stdIn;
+        private readonly DealerSocket _control;
         private readonly Subject<JupyterMessage> _subject;
         private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly string _kernelIdentity = Guid.NewGuid().ToString();
         private readonly JupyterMessageSender _sender;
 
-        public JupyterZMQConnection(ConnectionInformation connectionInformation)
+        public ZMQKernelConnection(ConnectionInformation connectionInformation)
         {
             if (connectionInformation is null)
             {
@@ -38,36 +38,34 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
             }
 
             _shellAddress = $"{connectionInformation.Transport}://{connectionInformation.IP}:{connectionInformation.ShellPort}";
-            _ioPubAddress = $"{connectionInformation.Transport}://{connectionInformation.IP}:{connectionInformation.IOPubPort}";
+            _ioSubAddress = $"{connectionInformation.Transport}://{connectionInformation.IP}:{connectionInformation.IOPubPort}";
             _stdInAddress = $"{connectionInformation.Transport}://{connectionInformation.IP}:{connectionInformation.StdinPort}";
             _controlAddress = $"{connectionInformation.Transport}://{connectionInformation.IP}:{connectionInformation.ControlPort}";
 
             var signatureAlgorithm = connectionInformation.SignatureScheme.Replace("-", string.Empty).ToUpperInvariant();
             var signatureValidator = new SignatureValidator(connectionInformation.Key, signatureAlgorithm);
-            _shell = new RouterSocket();
-            _ioPubSocket = new PublisherSocket();
-            _stdIn = new RouterSocket();
-            _control = new RouterSocket();
+            _shell = new DealerSocket();
+            _ioSubSocket = new SubscriberSocket();
+            _stdIn = new DealerSocket();
+            _control = new DealerSocket();
 
             _shellChannel = new RequestReplyChannel(new MessageSender(_shell, signatureValidator));
-            _ioPubChannel = new PubSubChannel(new MessageSender(_ioPubSocket, signatureValidator));
+            _ioSubChannel = new PubSubChannel(new MessageSender(_ioSubSocket, signatureValidator));
             _stdInChannel = new StdInChannel(new MessageSender(_stdIn, signatureValidator), new MessageReceiver(_stdIn));
 
-            _sender = new JupyterMessageSender(_ioPubChannel, _shellChannel, _stdInChannel, _kernelIdentity);
+            _sender = new JupyterMessageSender(_ioSubChannel, _shellChannel, _stdInChannel, _kernelIdentity);
             _cancellationTokenSource = new CancellationTokenSource();
             _subject = new Subject<JupyterMessage>();
 
             _disposables = new CompositeDisposable
                            {
                                _shell,
-                               _ioPubSocket,
+                               _ioSubSocket,
                                _stdIn,
                                _control,
                                _cancellationTokenSource
                            };
         }
-
-        public Uri TargetUri => throw new NotImplementedException();
 
         public IObservable<JupyterMessage> Messages => _subject;
 
@@ -89,13 +87,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
 
         public Task StartAsync()
         {
-            _shell.Bind(_shellAddress);
-            _ioPubSocket.Bind(_ioPubAddress);
-            _stdIn.Bind(_stdInAddress);
-            _control.Bind(_controlAddress);
+            _shell.Connect(_shellAddress);
+            _ioSubSocket.Connect(_ioSubAddress);
+            _ioSubSocket.SubscribeToAnyTopic();
+            _stdIn.Connect(_stdInAddress);
+            _control.Connect(_controlAddress);
 
+            StartListening(_ioSubSocket, _cancellationTokenSource.Token);
             StartListening(_shell, _cancellationTokenSource.Token);
-            StartListening(_ioPubSocket, _cancellationTokenSource.Token);
             StartListening(_stdIn, _cancellationTokenSource.Token);
             StartListening(_control, _cancellationTokenSource.Token);
             return Task.CompletedTask;

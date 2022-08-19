@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Utility;
 
-namespace Microsoft.DotNet.Interactive.App
+namespace Microsoft.DotNet.Interactive.Jupyter
 {
     public class JupyterKernelSpecModule : IJupyterKernelSpecModule
     {
         private async Task<CommandLineResult> ExecuteCommand(string command, string args = "")
         {
-            return await Utility.CommandLine.Execute("jupyter", $"kernelspec {command} {args}");
+            return await CommandLine.Execute("jupyter", $"kernelspec {command} {args}");
         }
 
         public Task<CommandLineResult> InstallKernel(DirectoryInfo sourceDirectory)

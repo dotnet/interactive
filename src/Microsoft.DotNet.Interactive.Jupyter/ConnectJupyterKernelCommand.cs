@@ -4,11 +4,13 @@
 using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.IO;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.Http;
+using Microsoft.DotNet.Interactive.Jupyter.ZMQ;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
 {
@@ -64,7 +66,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             }
             else
             {
-                // TODO: add ZMQ Jupyter connection
+                var connection = new LocalJupyterConnection();
+                connector = new JupyterKernelConnector(connection, kernelType);
+                disposables.Add(connection);
             }
 
             var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);

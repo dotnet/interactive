@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.App.Tests

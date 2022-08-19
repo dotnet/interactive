@@ -5,7 +5,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Utility;
 
-namespace Microsoft.DotNet.Interactive.App
+namespace Microsoft.DotNet.Interactive.Jupyter
 {
     public interface IJupyterKernelSpecModule
     {

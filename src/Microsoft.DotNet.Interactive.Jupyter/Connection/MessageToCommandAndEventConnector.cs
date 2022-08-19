@@ -48,32 +48,13 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
             RegisterCommandHandler<RequestHoverText>(hoverTipHandler.HandleCommandAsync);
             RegisterCommandHandler<RequestSignatureHelp>(sigHelpHandler.HandleCommandAsync);
 
-
-
-            // initialize request value handlers based on the language returned from the kernel
-            //var subscription = _commandOrEventsSubject.Subscribe(async (coe) =>
-            //{
-            //    if (coe.Event is KernelInfoProduced kip)
-            //    {
-            //        ValueHandler = _kernelValueHandler.GetValueSupport(kip.KernelInfo.LanguageName, messageSender, messageReceiver);
-
-            //        if (ValueHandler is ISupportGetValue getValueHandler)
-            //        {
-            //            SupportGetValue(getValueHandler);
-            //        }
-            //    }
-            //});
-
             _disposables = new CompositeDisposable
             {
                 _commandOrEventsSubject
-                // subscription
             };
         }
 
         public Uri RemoteHostUri => _targetUri;
-
-        // public IValueSupport ValueHandler { get; private set; }
 
         public void Dispose()
         {
@@ -130,13 +111,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
         {
             return _commandOrEventsSubject.Subscribe(observer);
         }
-
-        //private void SupportGetValue(ISupportGetValue languageValueHandler)
-        //{
-        //    var valueHandler = new RequestValueHandler(languageValueHandler);
-        //    RegisterCommandHandler<RequestValue>(valueHandler.HandleRequestValueAsync);
-        //    RegisterCommandHandler<RequestValueInfos>(valueHandler.HandleRequestValueInfosAsync);
-        //}
 
         private async Task InterruptKernelExecutionAsync()
         {
