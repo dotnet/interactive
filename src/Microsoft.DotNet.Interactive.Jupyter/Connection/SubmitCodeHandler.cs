@@ -23,7 +23,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
             var executeReply = Receiver.Messages.ChildOf(executeRequest)
                                     .SelectContent()
                                     .Do(replyMessage => HandleReplyMessage(replyMessage, command, context))
-                                    .TakeUntilMessageType(JupyterMessageContentTypes.ExecuteReply, JupyterMessageContentTypes.Error); 
+                                    .TakeUntil(m => m.MessageType == JupyterMessageContentTypes.Error
+                                    || (m.MessageType == JupyterMessageContentTypes.Status && (m as Status)?.ExecutionState == StatusValues.Idle));
+                                    //.TakeUntilMessageType(JupyterMessageContentTypes.ExecuteReply, JupyterMessageContentTypes.Error); 
                                     // run until we get a definitive pass or fail
 
             await Sender.SendAsync(executeRequest);
@@ -34,8 +36,13 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
         {
             switch (message)
             {
-                case (ExecuteReplyOk _):
-                    context.Publish(new CommandSucceeded(command));
+                case (Status status):
+                    if (status.ExecutionState == StatusValues.Idle)
+                    {
+                        // Since Error will trigger CommandFailed event before Status.Idle is reported, assume that 
+                        // status idle means command is successful.
+                        context.Publish(new CommandSucceeded(command));
+                    }
                     break;
 
                 case (DisplayData displayData):

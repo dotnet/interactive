@@ -26,8 +26,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
 
         public async Task<Kernel> CreateKernelAsync(string kernelName)
         {
-            var remoteUri = _jupyterConnection.TargetUri;
             var kernelConnection = await _jupyterConnection.CreateKernelConnectionAsync(_kernelType);
+            var remoteUri = _jupyterConnection.TargetUri;
             var sender = kernelConnection.Sender;
             var receiver = kernelConnection.Receiver;
             var commsManager = new CommsManager(sender, receiver);
