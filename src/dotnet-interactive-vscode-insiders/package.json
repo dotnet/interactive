@@ -124,6 +124,11 @@
           ],
           "description": "Command and arguments used to start a notebook session."
         },
+        "dotnet-interactive.kernelEnvironmentVariables": {
+          "type": "object",
+          "default": {},
+          "description": "Environment variables to set when starting a notebook session."
+        },
         "dotnet-interactive.notebookParserArgs": {
           "type": "array",
           "default": [

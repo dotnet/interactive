@@ -89,7 +89,7 @@ export async function getDotNetVersionOrThrow(dotnetPath: string, outputChannel:
     return dotnetVersion;
 }
 
-export function processArguments(template: { args: Array<string>, workingDirectory: string }, workingDirectory: string, dotnetPath: string, globalStoragePath: string): ProcessStart {
+export function processArguments(template: { args: Array<string>, workingDirectory: string }, workingDirectory: string, dotnetPath: string, globalStoragePath: string, env?: { [key: string]: string }): ProcessStart {
     let map: { [key: string]: string } = {
         'dotnet_path': dotnetPath,
         'global_storage_path': globalStoragePath,
@@ -100,7 +100,8 @@ export function processArguments(template: { args: Array<string>, workingDirecto
     return {
         command: processed[0],
         args: [...processed.slice(1)],
-        workingDirectory: performReplacement(template.workingDirectory, map)
+        workingDirectory: performReplacement(template.workingDirectory, map),
+        env: env || {},
     };
 }
 

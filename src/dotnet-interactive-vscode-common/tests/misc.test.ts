@@ -91,7 +91,8 @@ describe('Miscellaneous tests', () => {
                 '--working-dir',
                 'replacement-working-dir'
             ],
-            workingDirectory: 'replacement-global-storage-path'
+            workingDirectory: 'replacement-global-storage-path',
+            env: {}
         });
     });
 

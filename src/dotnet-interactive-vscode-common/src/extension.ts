@@ -100,6 +100,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 
     async function kernelChannelCreator(notebookUri: vscodeLike.Uri): Promise<KernelCommandAndEventChannel> {
+        const config = vscode.workspace.getConfiguration('dotnet-interactive');
         const launchOptions = await getInteractiveLaunchOptions();
         if (!launchOptions) {
             throw new Error(`Unable to get interactive launch options.  Please see the '${diagnosticsChannel.getName()}' output window for details.`);
@@ -120,7 +121,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
         const workspaceFolderUris = vscode.workspace.workspaceFolders?.map(folder => folder.uri) || [];
         const workingDirectory = getWorkingDirectoryForNotebook(notebookUri, workspaceFolderUris, fallbackWorkingDirectory);
-        const processStart = processArguments(argsTemplate, workingDirectory, DotNetPathManager.getDotNetPath(), launchOptions!.workingDirectory);
+        const environmentVariables = config.get<{ [key: string]: string }>('kernelEnvironmentVariables');
+        const processStart = processArguments(argsTemplate, workingDirectory, DotNetPathManager.getDotNetPath(), launchOptions!.workingDirectory, environmentVariables);
         let notification = {
             displayError: async (message: string) => { await vscode.window.showErrorMessage(message, { modal: false }); },
             displayInfo: async (message: string) => { await vscode.window.showInformationMessage(message, { modal: false }); },
