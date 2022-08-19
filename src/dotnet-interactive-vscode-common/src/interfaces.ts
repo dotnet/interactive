@@ -9,6 +9,7 @@ export interface ProcessStart {
     command: string;
     args: Array<string>;
     workingDirectory: string;
+    env: { [key: string]: string };
 }
 
 // interactive acquisition
