@@ -448,7 +448,13 @@ module Html =
         /// Specifies an HTML attribute
         let _step (s: string) = HtmlAttribute ("step", s)
         /// Specifies an HTML attribute
-        let _style (s: string list) = HtmlAttribute ("style", (s |> String.concat " "))
+        let _style (strings: string list) =
+            let styleString =
+                // Formats ["a"; " b; "; "c;"] as "a; b; c"
+                strings
+                |> List.map (fun x -> x.Trim().TrimEnd(';'))
+                |> String.concat "; "
+            HtmlAttribute ("style", styleString)
         /// Specifies an HTML attribute
         let _summary (s: string) = HtmlAttribute ("summary", s)
         /// Specifies an HTML attribute

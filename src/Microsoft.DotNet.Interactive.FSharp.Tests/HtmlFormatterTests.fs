@@ -4,7 +4,6 @@
 namespace Microsoft.DotNet.Interactive.FSharp.Tests
 
 open Microsoft.DotNet.Interactive
-open Microsoft.DotNet.Interactive.Formatting
 open Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers.Html
 open Xunit
 
@@ -55,3 +54,7 @@ type HtmlFormatterTests() =
     [<Fact>]
     member __.``HTML varargs 2``() =
         Assert.Equal("<div>ab</div>", (div [] [str "a"; str "b"]).ToString())
+
+    [<Fact>]
+    member __.``Formatting _style attribute value`` () =
+        Assert.Equal((_style ["a"; " b; "; "c;"]), HtmlAttribute ("style", "a; b; c"))
