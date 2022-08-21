@@ -58,3 +58,9 @@ type HtmlFormatterTests() =
     [<Fact>]
     member __.``Formatting _style attribute value`` () =
         Assert.Equal((_style ["a"; " b; "; "c;"]), HtmlAttribute ("style", "a; b; c"))
+        Assert.Equal(_style [
+            "width: 3em;";
+            "background: rgb(0,0,0);";
+            "display: inline-block;";
+            "border: 3px solid black;";
+        ], HtmlAttribute ("style", "width: 3em; background: rgb(0,0,0); display: inline-block; border: 3px solid black"))
