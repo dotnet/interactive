@@ -447,7 +447,7 @@ module Html =
         let _start (v: float) = HtmlAttribute("start", v)
         /// Specifies an HTML attribute
         let _step (s: string) = HtmlAttribute ("step", s)
-        /// Specifies an HTML attribute
+        /// Specifies an HTML attribute. The style attribute value strings are typically given as "name: value".
         let _style (strings: string list) =
             let styleString =
                 // Formats ["a"; " b; "; "c;"] as "a; b; c"
