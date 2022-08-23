@@ -30,12 +30,4 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <RepositoryUrl>https://github.com/dotnet/interactive</RepositoryUrl>
   </PropertyGroup>
-  <PropertyGroup>
-    <RestoreSources>
-      $(RestoreSources);
-      https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json;
-      https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json;
-      https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1/nuget/v3/index.json;
-    </RestoreSources>
-  </PropertyGroup>
 </Project>
