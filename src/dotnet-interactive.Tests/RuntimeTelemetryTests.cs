@@ -133,6 +133,20 @@ public class RuntimeTelemetryTests : IDisposable
     }
 
     [Fact]
+    public async Task Kernel_session_id_is_sent()
+    {
+        await _kernel.SendAsync(new SubmitCode("123"));
+        await _kernel.SendAsync(new SubmitCode("456"));
+
+        var sessionIdForFirstExecution = _telemetrySender.TelemetryEvents[0].Properties["KernelSessionId"];
+        var sessionIdForSecondExecution = _telemetrySender.TelemetryEvents[1].Properties["KernelSessionId"];
+
+        sessionIdForFirstExecution
+            .Should()
+            .Be(sessionIdForSecondExecution);
+    }
+
+    [Fact]
     public async Task Package_and_version_number_are_sent_on_successful_package_load()
     {
         await _kernel.SendAsync(new SubmitCode("#r \"nuget:NodaTime,3.1.0\"", "csharp"));

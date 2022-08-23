@@ -78,8 +78,8 @@ public static class KernelExtensions
         this CompositeKernel kernel,
         TelemetrySender telemetrySender)
     {
-        int executionOrder = 0;
-
+        var executionOrder = 0;
+        var sessionId = Guid.NewGuid().ToString();
         var subscription = kernel.KernelEvents.Subscribe(SendTelemetryFor);
 
         kernel.RegisterForDisposal(subscription);
@@ -124,7 +124,8 @@ public static class KernelExtensions
                 var properties = new Dictionary<string, string>
                 {
                     ["KernelName"] = kernelEvent.Command.TargetKernelName.ToSha256Hash(),
-                    ["KernelLanguageName"] = handlingKernel?.KernelInfo?.LanguageName?.ToSha256Hash()
+                    ["KernelLanguageName"] = handlingKernel?.KernelInfo?.LanguageName?.ToSha256Hash(),
+                    ["KernelSessionId"] = sessionId
                 };
                 return properties;
             }
