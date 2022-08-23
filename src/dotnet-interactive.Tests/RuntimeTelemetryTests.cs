@@ -126,6 +126,8 @@ public class RuntimeTelemetryTests : IDisposable
         await _kernel.SendAsync(new SubmitCode("123", "csharp"));
         await _kernel.SendAsync(new SubmitCode("456", "csharp"));
 
+        await Task.Delay(100);
+
         _telemetrySender.TelemetryEvents
                         .Select(e => e.Metrics["ExecutionOrder"])
                         .Should()
