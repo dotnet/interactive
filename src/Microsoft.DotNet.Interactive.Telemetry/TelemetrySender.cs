@@ -113,7 +113,9 @@ The .NET Core tools collect usage data in order to help us improve your experien
     {
         try
         {
+#pragma warning disable CS0618 // https://github.com/microsoft/ApplicationInsights-dotnet/issues/2560
             var config = new TelemetryConfiguration(_instrumentationKey);
+#pragma warning restore CS0618
             _client = new TelemetryClient(config);
             _client.Context.Session.Id = _currentSessionId;
             _client.Context.Device.OperatingSystem = RuntimeEnvironment.OperatingSystem;
