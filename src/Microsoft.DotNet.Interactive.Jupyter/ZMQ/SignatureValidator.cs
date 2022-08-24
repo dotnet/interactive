@@ -38,11 +38,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
             return BitConverter.ToString(_signatureGenerator.Hash).Replace("-", "").ToLower();
         }
 
+        /*
+         * The signature should match exactly the packed contents that are sent 
+         */
         private static IEnumerable<string> GetMessagesToAddForDigest(Message message)
         {
             yield return message.Header.ToJson();
-            yield return message.ParentHeader.ToJson();
-            yield return message.MetaData.ToJson();
+            yield return (message.ParentHeader ?? new object()).ToJson();
+            yield return (message.MetaData ?? new object()).ToJson();
             yield return message.Content.ToJson();
         }
     }
