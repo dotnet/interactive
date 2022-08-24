@@ -38,11 +38,6 @@ export function setup(global?: any) {
         () => {
             const htmlKernel = new HtmlKernel();
             global.browser.add(htmlKernel);
-
-            global.browser.kernelHost.connectProxyKernelOnDefaultConnector('csharp', undefined, ['c#', 'C#']);
-            global.browser.kernelHost.connectProxyKernelOnDefaultConnector('fsharp', undefined, ['fs', 'F#']);
-            global.browser.kernelHost.connectProxyKernelOnDefaultConnector('pwsh', undefined, ['powershell']);
-            global.browser.kernelHost.connectProxyKernelOnDefaultConnector('mermaid', undefined, []);
         }
     );
 
