@@ -19,7 +19,8 @@ namespace Microsoft.DotNet.Interactive.Events
         [JsonIgnore]
         public KernelCommand Command { get; }
 
-        [JsonIgnore] public RoutingSlip RoutingSlip { get; }
+        [JsonIgnore] 
+        public RoutingSlip RoutingSlip { get; }
 
         public override string ToString()
         {

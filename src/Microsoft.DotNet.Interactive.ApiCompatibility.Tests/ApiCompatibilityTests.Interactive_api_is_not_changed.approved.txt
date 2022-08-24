@@ -344,9 +344,10 @@ Microsoft.DotNet.Interactive
     public System.String PackageRoot { get;}
     public System.Collections.Generic.IReadOnlyList<System.String> ProbingPaths { get;}
     public System.String ToString()
-  public class RoutingSlip, System.Collections.Generic.IEnumerable<System.Uri>, System.Collections.IEnumerable
+  public class RoutingSlip, System.Collections.Generic.IEnumerable<System.Uri>, System.Collections.Generic.IReadOnlyCollection<System.Uri>, System.Collections.Generic.IReadOnlyList<System.Uri>, System.Collections.IEnumerable
     .ctor()
-    public System.Collections.Generic.IEnumerator<System.Uri> GetEnumerator()
+    public System.Int32 Count { get;}
+    public System.Uri Item { get;}
     public System.Boolean TryAdd(System.Uri kernelOrKernelHostUri)
   public class ScriptContent, Microsoft.AspNetCore.Html.IHtmlContent
     .ctor(System.String scriptValue)

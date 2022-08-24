@@ -110,7 +110,6 @@ public sealed class ProxyKernel : Kernel
         var t = _sender.SendAsync(command, context.CancellationToken);
         t.ContinueWith(task =>
         {
-            // FIX: (HandleByForwardingToRemoteAsync) is this needed? it has no code coverage.
             if (!task.GetIsCompletedSuccessfully())
             {
                 if (task.Exception is {} ex)

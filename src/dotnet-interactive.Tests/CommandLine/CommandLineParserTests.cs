@@ -47,6 +47,11 @@ public class CommandLineParserTests : IDisposable
 
         _output = output;
         _serviceCollection = new ServiceCollection();
+        var firstTimeUseNoticeSentinel = new FakeFirstTimeUseNoticeSentinel
+        {
+            SentinelExists = false
+        };
+
         _parser = CommandLineParser.Create(
             _serviceCollection,
             startServer: (options, invocationContext) =>
@@ -68,8 +73,7 @@ public class CommandLineParserTests : IDisposable
                 _startOptions = startupOptions;
                 return Task.FromResult(1);
             },
-            telemetry: new FakeTelemetry(),
-            firstTimeUseNoticeSentinel: new NopFirstTimeUseNoticeSentinel());
+            telemetrySender: new FakeTelemetrySender(firstTimeUseNoticeSentinel));
 
         _connectionFile = new FileInfo(Path.GetTempFileName());
         _kernelSpecInstallPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()));

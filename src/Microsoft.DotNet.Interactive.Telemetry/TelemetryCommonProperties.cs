@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
             IUserLevelCacheWriter userLevelCacheWriter = null)
         {
             _productVersion = productVersion;
-            _hasher = hasher ?? Sha256Hasher.Hash;
+            _hasher = hasher ?? Sha256Hasher.ToSha256Hash;
             _getMACAddress = getMACAddress ?? MacAddressGetter.GetMacAddress;
             _dockerContainerDetector = dockerContainerDetector ?? new DockerContainerDetectorForTelemetry();
             _userLevelCacheWriter = userLevelCacheWriter ?? new UserLevelCacheWriter(productVersion);

@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Interactive
     {
         private readonly Kernel _kernel;
 
-        private readonly List<(KernelCommandPipelineMiddleware func, string name)> _middlewares = new List<(KernelCommandPipelineMiddleware func, string name)>();
+        private readonly List<(KernelCommandPipelineMiddleware func, string name)> _middlewares = new();
 
         private KernelCommandPipelineMiddleware _pipeline;
 
