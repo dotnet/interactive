@@ -337,27 +337,15 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public static ProxyKernel UseWho(this ProxyKernel kernel)
+        public static TKernel UseWho<TKernel>(this TKernel kernel)
+            where TKernel : Kernel
         {
             if (kernel.KernelInfo.SupportsCommand(nameof(RequestValueInfos)))
             {
-                return kernel.AddWhoDirective();
+                kernel.AddDirective(who());
+                kernel.AddDirective(whos());
+                Formatter.Register(new CurrentVariablesFormatter());
             }
-            return kernel;
-        }
-
-        public static TKernel UseWho<TKernel>(this TKernel kernel)
-            where TKernel : Kernel, ISupportGetValue
-        {
-            return kernel.AddWhoDirective();
-        }
-
-        private static TKernel AddWhoDirective<TKernel>(this TKernel kernel)
-            where TKernel : Kernel
-        {
-            kernel.AddDirective(who());
-            kernel.AddDirective(whos());
-            Formatter.Register(new CurrentVariablesFormatter());
             return kernel;
         }
 
