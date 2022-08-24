@@ -1,29 +1,68 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { CompositeKernel } from "./compositeKernel";
-import { JavascriptKernel } from "./javascriptKernel";
 import * as contracts from "./contracts";
 import { HtmlKernel } from "./htmlKernel";
+import * as frontEndHost from './webview/frontEndHost';
+import * as rxjs from "rxjs";
+import * as connection from "./connection";
 
 export function setup(global?: any) {
 
-    global = global || window;
-    let compositeKernel = new CompositeKernel("browser");
+    const remoteToLocal = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
+    const localToRemote = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
 
-    const jsKernel = new JavascriptKernel();
-    const htmlKernel = new HtmlKernel();
+    global = (global || window) || {};
 
-    compositeKernel.add(jsKernel, ["js"]);
-    compositeKernel.add(htmlKernel);
-
-    compositeKernel.subscribeToKernelEvents(envelope => {
-        global?.publishCommandOrEvent(envelope);
+    localToRemote.subscribe({
+        next: envelope => {
+            global?.publishCommandOrEvent(envelope);
+        }
     });
 
     if (global) {
         global.sendKernelCommand = (kernelCommandEnvelope: contracts.KernelCommandEnvelope) => {
-            compositeKernel.send(kernelCommandEnvelope);
+            remoteToLocal.next(kernelCommandEnvelope);
         };
+    }
+
+    frontEndHost.createHost(
+        global,
+        'browser',
+        configureRequire,
+        entry => {
+            console.log({ logEntry: entry });
+        },
+        localToRemote,
+        remoteToLocal,
+        () => {
+            const htmlKernel = new HtmlKernel();
+            global.browser.add(htmlKernel);
+
+            global.browser.kernelHost.connectProxyKernelOnDefaultConnector('csharp', undefined, ['c#', 'C#']);
+            global.browser.kernelHost.connectProxyKernelOnDefaultConnector('fsharp', undefined, ['fs', 'F#']);
+            global.browser.kernelHost.connectProxyKernelOnDefaultConnector('pwsh', undefined, ['powershell']);
+            global.browser.kernelHost.connectProxyKernelOnDefaultConnector('mermaid', undefined, []);
+        }
+    );
+
+    function configureRequire(interactive: any) {
+        if ((typeof (require) !== typeof (Function)) || (typeof ((<any>require).config) !== typeof (Function))) {
+            let require_script = document.createElement('script');
+            require_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
+            require_script.setAttribute('type', 'text/javascript');
+            require_script.onload = function () {
+                interactive.configureRequire = (confing: any) => {
+                    return (<any>require).config(confing) || require;
+                };
+
+            };
+            document.getElementsByTagName('head')[0].appendChild(require_script);
+
+        } else {
+            interactive.configureRequire = (confing: any) => {
+                return (<any>require).config(confing) || require;
+            };
+        }
     }
 }
