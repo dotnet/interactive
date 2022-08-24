@@ -96,6 +96,8 @@ The .NET Core tools collect usage data in order to help us improve your experien
             _ => DoTrackEvent(eventName, properties, measurements));
     }
 
+    public async Task FlushedAsync() => await _trackEventTask;
+
     public void TrackStartupEvent(ParseResult parseResult, StartupTelemetryEventBuilder eventBuilder)
     {
         if (parseResult is null || !Enabled || eventBuilder is null)

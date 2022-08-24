@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Telemetry;
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
@@ -43,6 +44,7 @@ public class FakeTelemetrySender : TelemetrySender
     {
         get
         {
+            Task.Run(FlushedAsync).Wait();
             lock (_telemetryEvents)
             {
                 return _telemetryEvents.ToArray();
