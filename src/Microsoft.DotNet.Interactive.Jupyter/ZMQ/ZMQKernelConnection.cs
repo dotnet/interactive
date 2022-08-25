@@ -27,8 +27,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
         private readonly DealerSocket _control;
         private readonly Subject<JupyterMessage> _subject;
         private readonly CancellationTokenSource _cancellationTokenSource;
-        private readonly string _kernelIdentity = Guid.NewGuid().ToString();
-        private readonly JupyterMessageSender _sender;
 
         public ZMQKernelConnection(ConnectionInformation connectionInformation)
         {
@@ -53,7 +51,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
             _ioSubChannel = new PubSubChannel(new MessageSender(_ioSubSocket, signatureValidator));
             _stdInChannel = new StdInChannel(new MessageSender(_stdIn, signatureValidator), new MessageReceiver(_stdIn));
 
-            _sender = new JupyterMessageSender(_ioSubChannel, _shellChannel, _stdInChannel, _kernelIdentity);
             _cancellationTokenSource = new CancellationTokenSource();
             _subject = new Subject<JupyterMessage>();
 
