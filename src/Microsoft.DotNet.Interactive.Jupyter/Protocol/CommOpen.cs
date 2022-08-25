@@ -11,15 +11,29 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
     public class CommOpen : Message
     {
         [JsonPropertyName("comm_id")]
-        public string CommId { get; set; }
+        public string CommId { get; }
 
         [JsonPropertyName("target_name")]
-        public string TargetName { get; set; }
+        public string TargetName { get; }
 
         [JsonPropertyName("data")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public object Data { get; } = new Dictionary<string,object>();
+        public object Data { get; }
 
+        public CommOpen(string commId, string targetName, object data)
+        {
+            if (string.IsNullOrWhiteSpace(commId))
+            {
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(commId));
+            }
 
+            if (string.IsNullOrWhiteSpace(targetName))
+            {
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(targetName));
+            }
+
+            CommId = commId;
+            TargetName = targetName;
+            Data = data ?? new Dictionary<string, object>();
+        }
     }
 }
