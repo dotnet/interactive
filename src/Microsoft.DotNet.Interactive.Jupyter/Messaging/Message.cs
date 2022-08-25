@@ -7,7 +7,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
+namespace Microsoft.DotNet.Interactive.Jupyter.Messaging
 {
     public class Message
     {
@@ -34,13 +34,19 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
         [JsonPropertyName("buffers")]
         public IReadOnlyList<IReadOnlyList<byte>> Buffers { get; }
 
+        // Used over remote websocket to determine underlying channel to send to
+        [JsonPropertyName("channel")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string Channel { get; }
+
         public Message(Header header,
             Protocol.Message content = null,
             Header parentHeader = null,
             string signature = null,
             IReadOnlyDictionary<string, object> metaData = null,
             IReadOnlyList<IReadOnlyList<byte>> identifiers = null,
-            IReadOnlyList<IReadOnlyList<byte>> buffers = null)
+            IReadOnlyList<IReadOnlyList<byte>> buffers = null, 
+            string channel = MessageChannel.shell)
         {
             Header = header;
             ParentHeader = parentHeader;
@@ -49,13 +55,15 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
             MetaData = metaData ?? new Dictionary<string, object>();
             Content = content ?? Protocol.Message.Empty;
             Signature = signature ?? string.Empty;
+            Channel = channel;
         }
 
         public static Message Create<T>(T content,
             Header parentHeader = null,
             IReadOnlyList<IReadOnlyList<byte>> identifiers = null,
             IReadOnlyDictionary<string, object> metaData = null,
-            string signature = null)
+            string signature = null,
+            string channel = null)
             where T : Protocol.Message
         {
             if (content is null)
@@ -65,14 +73,16 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
 
             var session = parentHeader?.Session ?? Guid.NewGuid().ToString();
             var header = Header.Create(content, session);
-            var message = new Message(header, parentHeader: parentHeader, content: content, identifiers: identifiers, signature: signature, metaData: metaData);
+            var message = new Message(header, parentHeader: parentHeader, content: content, identifiers: identifiers, signature: signature, metaData: metaData, channel: channel);
 
             return message;
         }
 
+        // request/reply work on both shell or control channel. 
         public static Message CreateReply<T>(
             T content,
-            Message request)
+            Message request,
+            string channel = null)
             where T : ReplyMessage
         {
             if (content is null)
@@ -90,7 +100,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
                 throw new ArgumentOutOfRangeException($"{request.Content.GetType()} is not a valid {nameof(RequestMessage)}");
             }
 
-            var replyMessage = Create(content, request.Header, request.Identifiers, request.MetaData, request.Signature);
+            var replyMessage = Create(content, request.Header, request.Identifiers, request.MetaData, request.Signature, channel: channel);
 
             return replyMessage;
         }
@@ -118,7 +128,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
 
             var topic = Topic(content, kernelIdentity);
             var identifiers = topic is null ? null : new[] { Topic(content, kernelIdentity) };
-            var replyMessage = Create(content, request.Header, identifiers: identifiers, metaData: request.MetaData, signature: request.Signature);
+            var replyMessage = Create(content, request.Header, identifiers: identifiers, metaData: request.MetaData, signature: request.Signature, channel: MessageChannel.iopub);
 
             return replyMessage;
         }
@@ -158,9 +168,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
                     encodedTopic = null;
                     break;
 
-                case nameof(Protocol.Stream):
+                case nameof(Stream):
                     {
-                        if (!(content is Protocol.Stream stream))
+                        if (!(content is Stream stream))
                         {
                             throw new ArgumentNullException(nameof(stream));
                         }

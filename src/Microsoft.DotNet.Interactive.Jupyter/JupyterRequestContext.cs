@@ -4,9 +4,10 @@
 using System;
 using System.Reactive;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Jupyter.ZMQ;
-using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.ZMQ.Message;
+using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
 {
@@ -16,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
         internal static JupyterRequestContext Current { get; set; }
 
-        internal JupyterRequestContext(ReplyChannel serverChannel, PubSubChannel ioPubChannel, StdInChannel stdInChannel, ZeroMQMessage request, string kernelIdentity)
+        internal JupyterRequestContext(RequestReplyChannel serverChannel, PubSubChannel ioPubChannel, StdInChannel stdInChannel, ZeroMQMessage request, string kernelIdentity)
             : this(new JupyterMessageSender(ioPubChannel, serverChannel, stdInChannel, kernelIdentity, request), request)
         {
         }

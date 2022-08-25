@@ -6,7 +6,7 @@ using System.Text.Json;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
 
 
-namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
+namespace Microsoft.DotNet.Interactive.Jupyter.Messaging
 {
     public static class MetadataExtensions
     {
@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
                 switch (property.Name)
                 {
                     case "dotnet_interactive":
-                        metadata[property.Name] = JsonSerializer.Deserialize<InputCellMetadata>( property.Value.GetRawText() );
+                        metadata[property.Name] = JsonSerializer.Deserialize<InputCellMetadata>(property.Value.GetRawText());
                         break;
 
                     default:
