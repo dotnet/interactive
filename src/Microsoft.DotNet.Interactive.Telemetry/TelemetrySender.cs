@@ -16,14 +16,14 @@ public class TelemetrySender : ITelemetrySender
 {
     private readonly IFirstTimeUseNoticeSentinel _firstTimeUseNoticeSentinel;
     private readonly string _eventsNamespace;
-    private readonly string _instrumentationKey;
+    private readonly string _appInsightsConnectionString;
     private readonly string _currentSessionId = null;
     private TelemetryClient _client = null;
     private Dictionary<string, string> _commonProperties = null;
     private Dictionary<string, double> _commonMetrics = null;
     private Task _trackEventTask = null;
 
-    private const string DefaultInstrumentationKey = "b0dafad5-1430-4852-bc61-95c836b3e612";
+    private const string DefaultAppInsightsConnectionString = @"InstrumentationKey=b0dafad5-1430-4852-bc61-95c836b3e612;IngestionEndpoint=https://centralus-0.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/";
     public const string TelemetryOptOutEnvironmentVariableName = "DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT";
 
     public const string WelcomeMessage = @"Welcome to .NET Interactive!
@@ -37,7 +37,7 @@ The .NET Core tools collect usage data in order to help us improve your experien
         string productVersion,
         IFirstTimeUseNoticeSentinel firstTimeUseNoticeSentinel,
         string eventsNamespace = "dotnet/interactive/cli",
-        string instrumentationKey = null)
+        string appInsightsConnectionString = null)
     {
         if (string.IsNullOrWhiteSpace(eventsNamespace))
         {
@@ -46,7 +46,7 @@ The .NET Core tools collect usage data in order to help us improve your experien
 
         _firstTimeUseNoticeSentinel = firstTimeUseNoticeSentinel ?? throw new ArgumentNullException(nameof(firstTimeUseNoticeSentinel));
         _eventsNamespace = eventsNamespace;
-        _instrumentationKey = instrumentationKey ?? DefaultInstrumentationKey;
+        _appInsightsConnectionString = appInsightsConnectionString ?? DefaultAppInsightsConnectionString;
 
         Enabled = !GetEnvironmentVariableAsBool(TelemetryOptOutEnvironmentVariableName) &&
                   firstTimeUseNoticeSentinel.Exists();
@@ -115,9 +115,8 @@ The .NET Core tools collect usage data in order to help us improve your experien
     {
         try
         {
-#pragma warning disable CS0618 // https://github.com/microsoft/ApplicationInsights-dotnet/issues/2560
-            var config = new TelemetryConfiguration(_instrumentationKey);
-#pragma warning restore CS0618
+            var config = new TelemetryConfiguration();
+            config.ConnectionString = _appInsightsConnectionString;
             _client = new TelemetryClient(config);
             _client.Context.Session.Id = _currentSessionId;
             _client.Context.Device.OperatingSystem = RuntimeEnvironment.OperatingSystem;
