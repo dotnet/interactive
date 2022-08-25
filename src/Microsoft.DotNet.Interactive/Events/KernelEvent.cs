@@ -10,19 +10,18 @@ namespace Microsoft.DotNet.Interactive.Events;
 
 public abstract class KernelEvent
 {
-    private readonly RoutingSlip _routingSlip;
-
     protected KernelEvent(KernelCommand command)
     {
         Command = command ?? throw new ArgumentNullException(nameof(command));
-        _routingSlip = new RoutingSlip();
+        RoutingSlip = new RoutingSlip();
     }
 
 
     [JsonIgnore]
     public KernelCommand Command { get; }
 
-    [JsonIgnore] public IReadOnlyCollection<Uri> RoutingSlip => _routingSlip;
+    [JsonIgnore]
+    public RoutingSlip RoutingSlip { get; }
 
     public override string ToString()
     {
@@ -31,6 +30,6 @@ public abstract class KernelEvent
 
     public bool TryAddToRoutingSlip(Uri uri)
     {
-        return _routingSlip.TryAdd(uri);
+        return RoutingSlip.TryAdd(uri);
     }
 }

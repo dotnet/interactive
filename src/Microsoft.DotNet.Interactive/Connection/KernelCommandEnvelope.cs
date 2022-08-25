@@ -198,6 +198,24 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
 
     public static string Serialize(IKernelCommandEnvelope envelope)
     {
+        var serializationModel = CreateSerializationModel(envelope);
+
+        return JsonSerializer.Serialize(
+            serializationModel,
+            Serializer.JsonSerializerOptions);
+    }
+
+    public static JsonElement SerializeToJsonElement(IKernelCommandEnvelope envelope)
+    {
+        var serializationModel = CreateSerializationModel(envelope);
+
+        return JsonSerializer.SerializeToElement(
+            serializationModel, 
+            Serializer.JsonSerializerOptions);
+    }
+
+    private static SerializationModel CreateSerializationModel(IKernelCommandEnvelope envelope)
+    {
         var serializationModel = new SerializationModel
         {
             command = envelope.Command,
@@ -206,10 +224,7 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
             id = envelope.CommandId,
             routingSlip = envelope.Command.RoutingSlip.Select(uri => uri.AbsoluteUri).ToArray()
         };
-
-        return JsonSerializer.Serialize(
-            serializationModel,
-            Serializer.JsonSerializerOptions);
+        return serializationModel;
     }
 
     internal class SerializationModel

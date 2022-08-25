@@ -13,7 +13,7 @@
   "//version": "The version '42.42.42' is auto-set during CI package creation.",
   "version": "42.42.42",
   "engines": {
-    "vscode": "^1.59.0"
+    "vscode": "^1.62.0"
   },
   "bugs": {
     "url": "https://github.com/dotnet/interactive/issues"
@@ -113,6 +113,11 @@
           ],
           "description": "Command and arguments used to start a notebook session."
         },
+        "dotnet-interactive.kernelEnvironmentVariables": {
+          "type": "object",
+          "default": {},
+          "description": "Environment variables to set when starting a notebook session."
+        },
         "dotnet-interactive.notebookParserArgs": {
           "type": "array",
           "default": [
@@ -146,7 +151,7 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.332903",
+          "default": "1.0.337703",
           "description": "The minimum required version of the .NET Interactive tool."
         },
         "dotnet-interactive.logLevel": {
@@ -485,7 +490,7 @@
     "test": "mocha out/tests/**/*.test.js",
     "ciTest": "npm test -- --reporter mocha-multi-reporters --reporter-options configFile=testConfig.json",
     "tdd": "npm test -- --watch",
-    "package": "npx vsce@2.6.7 package",
+    "package": "npx vsce package",
     "clearUserData": "del-cli \"./userData/**/*\" \"!.gitignore\""
   },
   "mocha": {},
@@ -519,6 +524,7 @@
     "source-map-support": "0.5.21",
     "tmp": "0.2.1",
     "typescript": "4.4.4",
+    "vsce": "2.10.2",
     "vscode-oniguruma": "1.6.1",
     "vscode-test": "1.6.1",
     "vscode-textmate": "6.0.0"

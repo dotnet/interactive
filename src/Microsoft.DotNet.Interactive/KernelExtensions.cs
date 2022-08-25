@@ -338,11 +338,15 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public static TKernel UseWho<TKernel>(this TKernel kernel)
-            where TKernel : Kernel, ISupportGetValue
+            where TKernel : Kernel
         {
-            kernel.AddDirective(who());
-            kernel.AddDirective(whos());
-            Formatter.Register(new CurrentVariablesFormatter());
+            if (kernel.KernelInfo.SupportsCommand(nameof(RequestValueInfos))
+                    && kernel.KernelInfo.SupportsCommand(nameof(RequestValue)))
+            {
+                kernel.AddDirective(who());
+                kernel.AddDirective(whos());
+                Formatter.Register(new CurrentVariablesFormatter());
+            }
             return kernel;
         }
 
@@ -376,11 +380,13 @@ namespace Microsoft.DotNet.Interactive
         private static async Task DisplayValues(KernelInvocationContext context, bool detailed)
         {
             if (context.Command is SubmitCode &&
-                context.HandlingKernel is ISupportGetValue)
+                (context.HandlingKernel is ISupportGetValue
+                || (context.HandlingKernel.KernelInfo.SupportsCommand(nameof(RequestValueInfos)) 
+                    && context.HandlingKernel.KernelInfo.SupportsCommand(nameof(RequestValue)))))
             {
                 var nameEvents = new List<ValueInfosProduced>();
 
-                var result = await context.HandlingKernel.SendAsync(new RequestValueInfos(context.Command.TargetKernelName));
+                var result = await context.HandlingKernel.SendAsync(new RequestValueInfos(context.HandlingKernel.Name));
                 using var _ = result.KernelEvents.OfType<ValueInfosProduced>().Subscribe(e => nameEvents.Add(e));
 
                 var valueNames = nameEvents.SelectMany(e => e.ValueInfos.Select(d => d.Name)).Distinct();

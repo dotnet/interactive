@@ -5,66 +5,63 @@ using System;
 using System.IO;
 using System.Reactive.Disposables;
 
-namespace Microsoft.DotNet.Interactive.Utility
+namespace Microsoft.DotNet.Interactive.Utility;
+
+public static class ConsoleOutput
 {
-    internal static class ConsoleOutput
+    private static readonly object _systemConsoleSwapLock = new();
+
+    private static MultiplexingTextWriter _multiplexingOutputWriter;
+    private static MultiplexingTextWriter _multiplexingErrorWriter;
+    private static TextWriter _originalOutputWriter;
+    private static TextWriter _originalErrorWriter;
+
+    private static int _refCount = 0;
+
+    public static IDisposable Subscribe(Func<ObservableConsole, IDisposable> subscribe)
     {
-        private static readonly object _systemConsoleSwapLock = new();
-
-        private static MultiplexingTextWriter _multiplexingOutputWriter;
-        private static MultiplexingTextWriter _multiplexingErrorWriter;
-        private static TextWriter _originalOutputWriter;
-        private static TextWriter _originalErrorWriter;
-
-        private static int _refCount = 0;
-
-        public static IDisposable Subscribe(Func<ObservableConsole, IDisposable> subscribe)
+        lock (_systemConsoleSwapLock)
         {
-
-            lock (_systemConsoleSwapLock)
+            if (++_refCount == 1)
             {
-
-                if (++_refCount == 1)
-                {
-                    _originalOutputWriter = Console.Out;
-                    _originalErrorWriter = Console.Error;
-                    _multiplexingOutputWriter = new MultiplexingTextWriter("out");
-                    _multiplexingErrorWriter = new MultiplexingTextWriter("err");
-                    Console.SetOut(_multiplexingOutputWriter);
-                    Console.SetError(_multiplexingErrorWriter);
-                }
+                _originalOutputWriter = Console.Out;
+                _originalErrorWriter = Console.Error;
+                _multiplexingOutputWriter = new MultiplexingTextWriter("out");
+                _multiplexingErrorWriter = new MultiplexingTextWriter("err");
+                Console.SetOut(_multiplexingOutputWriter);
+                Console.SetError(_multiplexingErrorWriter);
             }
-
-            var outWriterForContext = _multiplexingOutputWriter.EnsureInitializedForCurrentAsyncContext();
-            var errWriterForContext = _multiplexingErrorWriter.EnsureInitializedForCurrentAsyncContext();
-
-            var obsConsole = new ObservableConsole(
-                _multiplexingOutputWriter.GetObservable(),
-                _multiplexingErrorWriter.GetObservable());
-            
-            return new CompositeDisposable(
-                subscribe(obsConsole),
-                outWriterForContext,
-                errWriterForContext,
-                Disposable.Create(() =>
-                {
-                    lock (_systemConsoleSwapLock)
-                    {
-                        if (--_refCount == 0)
-                        {
-                            Console.SetOut(_originalOutputWriter);
-                            Console.SetError(_originalErrorWriter);
-                            _multiplexingOutputWriter.Dispose();
-                            _multiplexingOutputWriter = null;
-                            _multiplexingErrorWriter.Dispose();
-                            _multiplexingErrorWriter = null;
-                        }
-                    }
-                }));
         }
 
-        public record ObservableConsole(
-            IObservable<string> Out,
-            IObservable<string> Error);
+        var outWriterForContext = _multiplexingOutputWriter.EnsureInitializedForCurrentAsyncContext();
+        var errWriterForContext = _multiplexingErrorWriter.EnsureInitializedForCurrentAsyncContext();
+
+        var obsConsole = new ObservableConsole(
+            _multiplexingOutputWriter.GetObservable(),
+            _multiplexingErrorWriter.GetObservable());
+            
+        return new CompositeDisposable(
+            subscribe(obsConsole),
+            outWriterForContext,
+            errWriterForContext,
+            Disposable.Create(() =>
+            {
+                lock (_systemConsoleSwapLock)
+                {
+                    if (--_refCount == 0)
+                    {
+                        Console.SetOut(_originalOutputWriter);
+                        Console.SetError(_originalErrorWriter);
+                        _multiplexingOutputWriter.Dispose();
+                        _multiplexingOutputWriter = null;
+                        _multiplexingErrorWriter.Dispose();
+                        _multiplexingErrorWriter = null;
+                    }
+                }
+            }));
     }
+
+    public record ObservableConsole(
+        IObservable<string> Out,
+        IObservable<string> Error);
 }

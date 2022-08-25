@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive;
 
-public class RoutingSlip : IReadOnlyCollection<Uri>
+public class RoutingSlip : IReadOnlyList<Uri>
 {
     private readonly List<Uri> _uris;
     private readonly object _lock = new();
@@ -17,32 +17,30 @@ public class RoutingSlip : IReadOnlyCollection<Uri>
         _uris = new List<Uri>();
     }
 
-    internal bool TryAdd(Uri kernelOrKernelHostUri)
+    public bool TryAdd(Uri kernelOrKernelHostUri)
     {
-        var added = false;
         lock (_lock)
         {
             if (!_uris.Contains(kernelOrKernelHostUri))
             {
                 _uris.Add(kernelOrKernelHostUri);
-                added = true;
+                return true;
             }
         }
-       
-        return added;
+
+        return false;
     }
 
-    public IEnumerator<Uri> GetEnumerator()
+    IEnumerator<Uri> IEnumerable<Uri>.GetEnumerator()
     {
         return _uris.GetEnumerator();
     }
 
     IEnumerator IEnumerable.GetEnumerator()
     {
-        return ((IEnumerable) _uris).GetEnumerator();
+        return ((IEnumerable)_uris).GetEnumerator();
     }
 
     public Uri this[int i] => _uris[i];
-    
     public int Count => _uris.Count;
 }

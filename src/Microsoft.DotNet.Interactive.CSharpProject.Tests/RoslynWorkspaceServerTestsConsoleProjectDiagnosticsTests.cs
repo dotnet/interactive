@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
-using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Buffer;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
 {

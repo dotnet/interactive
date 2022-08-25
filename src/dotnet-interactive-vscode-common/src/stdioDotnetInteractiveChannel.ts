@@ -66,7 +66,8 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
             let args = processStart.args;
             // launch the process
             this.diagnosticChannel.appendLine(`Starting kernel for '${notebookPath}' using: ${processStart.command} ${args.join(' ')}`);
-            let childProcess = cp.spawn(processStart.command, args, { cwd: processStart.workingDirectory });
+            const processEnv = { ...process.env, ...processStart.env };
+            let childProcess = cp.spawn(processStart.command, args, { cwd: processStart.workingDirectory, env: processEnv });
             let pid = childProcess.pid;
 
             this.childProcess = childProcess;
