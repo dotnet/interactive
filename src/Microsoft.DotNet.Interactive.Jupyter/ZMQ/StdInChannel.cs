@@ -2,7 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
+using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
 {
@@ -23,14 +25,15 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
             {
                 throw new ArgumentNullException(nameof(message));
             }
-            
+
             _sender.Send(
                 Message.Create(
                     message,
                     request.Header,
                     request.Identifiers,
                     request.MetaData,
-                    request.Signature));
+                    request.Signature,
+                    MessageChannel.stdin));
 
             var msgReceived = _receiver.Receive();
             var msgType = msgReceived.Header.MessageType;

@@ -7,6 +7,7 @@ using System.Reactive.Disposables;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Jupyter.ZMQ;
 using Microsoft.Extensions.Hosting;
@@ -14,7 +15,7 @@ using NetMQ.Sockets;
 using Pocket;
 using Recipes;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Jupyter.Shell>;
-using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.ZMQ.Message;
+using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
 {
@@ -27,7 +28,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         private readonly string _shellAddress;
         private readonly string _ioPubAddress;
         private readonly CompositeDisposable _disposables;
-        private readonly ReplyChannel _shellChannel;
+        private readonly RequestReplyChannel _shellChannel;
         private readonly PubSubChannel _ioPubChannel;
         private readonly StdInChannel _stdInChannel;
         private readonly string _stdInAddress;
@@ -60,7 +61,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             _stdIn = new RouterSocket();
             _control = new RouterSocket();
 
-            _shellChannel = new ReplyChannel(new MessageSender(_shell, signatureValidator));
+            _shellChannel = new RequestReplyChannel(new MessageSender(_shell, signatureValidator));
             _ioPubChannel = new PubSubChannel(new MessageSender(_ioPubSocket, signatureValidator));
             _stdInChannel = new StdInChannel(new MessageSender(_stdIn, signatureValidator), new MessageReceiver(_stdIn));
 

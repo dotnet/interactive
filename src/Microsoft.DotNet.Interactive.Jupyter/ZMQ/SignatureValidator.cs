@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using Recipes;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ

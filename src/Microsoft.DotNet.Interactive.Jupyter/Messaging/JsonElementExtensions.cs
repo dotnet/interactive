@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using System.Text.Json;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
+namespace Microsoft.DotNet.Interactive.Jupyter.Messaging
 {
     public static class JsonElementExtensions
     {
@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
 
         public static IDictionary<string, object> ToDictionary(this JsonElement source)
         {
-            var ret =   new Dictionary<string, object>();
+            var ret = new Dictionary<string, object>();
             foreach (var value in source.EnumerateObject())
             {
                 ret[value.Name] = value.Value.ToObject();

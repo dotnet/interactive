@@ -3,6 +3,7 @@
 
 using System;
 using System.Linq;
+using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using NetMQ;
 using Recipes;
 

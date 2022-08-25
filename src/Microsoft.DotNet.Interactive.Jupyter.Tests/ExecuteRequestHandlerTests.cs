@@ -17,7 +17,7 @@ using Pocket;
 using Recipes;
 using Xunit;
 using Xunit.Abstractions;
-using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.ZMQ.Message;
+using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 {
