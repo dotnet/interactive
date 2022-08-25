@@ -22,6 +22,16 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Messaging
             };
         }
 
+        public static IReadOnlyDictionary<string, object> ToReadOnlyDictionary(this JsonElement source)
+        {
+            var ret = new Dictionary<string, object>();
+            foreach (var value in source.EnumerateObject())
+            {
+                ret[value.Name] = value.Value.ToObject();
+            }
+            return ret;
+        }
+
         public static IDictionary<string, object> ToDictionary(this JsonElement source)
         {
             var ret = new Dictionary<string, object>();

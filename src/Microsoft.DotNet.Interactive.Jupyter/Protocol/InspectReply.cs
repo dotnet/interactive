@@ -10,16 +10,16 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
     [JupyterMessageType(JupyterMessageContentTypes.InspectReply)]
     public class InspectReply : ReplyMessage
     {
-        public static InspectReply Ok(string source, IReadOnlyDictionary<string, object> data, IReadOnlyDictionary<string, object> metaData) => new InspectReply(source, StatusValues.Ok, data, metaData);
-        public static InspectReply Error(string source, IReadOnlyDictionary<string, object> data, IReadOnlyDictionary<string, object> metaData) => new InspectReply(source, StatusValues.Error, data, metaData);
-        public InspectReply(string source, string status, IReadOnlyDictionary<string, object> data = null, IReadOnlyDictionary<string, object> metaData = null)
+        public static InspectReply Ok(bool found, IReadOnlyDictionary<string, object> data, IReadOnlyDictionary<string, object> metaData) => new InspectReply(StatusValues.Ok, found, data, metaData);
+        public static InspectReply Error(IReadOnlyDictionary<string, object> data, IReadOnlyDictionary<string, object> metaData) => new InspectReply(StatusValues.Error, false, data, metaData);
+        public InspectReply(string status, bool found, IReadOnlyDictionary<string, object> data = null, IReadOnlyDictionary<string, object> metaData = null)
         {
             if (string.IsNullOrWhiteSpace(status))
             {
                 throw new ArgumentException("Value cannot be null or whitespace.", nameof(status));
             }
             Status = status;
-            Source = source ?? throw new ArgumentNullException(nameof(source));
+            Found = found;
             Data = data?? new Dictionary<string, object>();
             MetaData = metaData?? new Dictionary<string, object>();
         }
@@ -27,8 +27,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
         [JsonPropertyName("status")]
         public string Status { get; }
 
-        [JsonPropertyName("source")]
-        public string Source { get;  }
+        [JsonPropertyName("found")]
+        public bool Found { get;  }
 
         [JsonPropertyName("data")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

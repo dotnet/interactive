@@ -8,6 +8,7 @@ using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
 {
+    [JsonConverter(typeof(CommCloseConverter))]
     [JupyterMessageType(JupyterMessageContentTypes.CommClose)]
     public class CommClose : Message
     {
