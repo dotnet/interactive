@@ -5,29 +5,29 @@ using System;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Events
+namespace Microsoft.DotNet.Interactive.Events;
+
+public class ValueProduced : KernelEvent
 {
-    public class ValueProduced : KernelEvent
+    [JsonIgnore] 
+    public object Value { get; }
+
+    public string Name { get; }
+
+    public FormattedValue FormattedValue { get; }
+
+    public ValueProduced(object value,
+        string name,
+        FormattedValue formattedValue,
+        RequestValue command) : base(command)
     {
-        [JsonIgnore] 
-        public object Value { get; }
-
-        public string Name { get; }
-        public FormattedValue FormattedValue { get; }
-
-        public ValueProduced(object value,
-            string name,
-            FormattedValue formattedValue,
-            RequestValue command) : base(command)
+        if (string.IsNullOrWhiteSpace(name))
         {
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
-            }
-
-            Value = value;
-            Name = name;
-            FormattedValue = formattedValue ?? throw new ArgumentNullException(nameof(formattedValue));
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
         }
+
+        Value = value;
+        Name = name;
+        FormattedValue = formattedValue ?? throw new ArgumentNullException(nameof(formattedValue));
     }
 }
