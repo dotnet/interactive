@@ -30,7 +30,7 @@ describe("htmlKernel", () => {
             events.push(e);
         });
 
-        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "<div>a</div>" } });
+        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="0">a</div>' } });
 
         expect(events.find(e => e.eventType === contracts.CommandSucceededType)).to.not.be.undefined;
     });

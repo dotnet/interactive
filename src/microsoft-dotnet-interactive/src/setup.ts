@@ -7,12 +7,12 @@ import * as frontEndHost from './webview/frontEndHost';
 import * as rxjs from "rxjs";
 import * as connection from "./connection";
 
-export function setup(global?: any) {
+export function setup(configuration?: { global?: any, hostName: string }) {
 
     const remoteToLocal = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
     const localToRemote = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
 
-    global = (global || window) || {};
+    const global = (configuration?.global || window);
 
     localToRemote.subscribe({
         next: envelope => {
@@ -26,18 +26,19 @@ export function setup(global?: any) {
         };
     }
 
+    const compositeKernelName = configuration?.hostName || 'browser';
     frontEndHost.createHost(
         global,
-        'browser',
+        compositeKernelName,
         configureRequire,
-        entry => {
-            console.log({ logEntry: entry });
+        _entry => {
+
         },
         localToRemote,
         remoteToLocal,
         () => {
             const htmlKernel = new HtmlKernel();
-            global.browser.add(htmlKernel);
+            global[compositeKernelName].compositeKernel.add(htmlKernel);
         }
     );
 
