@@ -3,6 +3,7 @@
 
 using System;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
+using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
 {

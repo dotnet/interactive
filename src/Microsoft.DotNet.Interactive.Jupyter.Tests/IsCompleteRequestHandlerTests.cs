@@ -9,7 +9,7 @@ using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Recipes;
 using Xunit;
 using Xunit.Abstractions;
-using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.ZMQ.Message;
+using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 using System.Collections.Generic;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
 

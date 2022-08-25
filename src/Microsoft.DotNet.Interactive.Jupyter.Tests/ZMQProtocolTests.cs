@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using FluentAssertions;
 using FluentAssertions.Execution;
+using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Jupyter.ZMQ;
 using Xunit;
@@ -28,7 +29,7 @@ using Xunit;
 
             var identifiers = new List<byte[]>();
 
-            var message = NetMQExtensions.DeserializeMessage(signature, headerJson,parentHeaderJson,  metadataJson, contentJson, identifiers);
+            var message = MessageExtensions.DeserializeMessage(signature, headerJson,parentHeaderJson,  metadataJson, contentJson, identifiers);
 
             message.Header.Should().NotBeNull();
             message.Content.Should().NotBeNull().And.BeOfType<ExecuteRequest>();
@@ -55,7 +56,7 @@ using Xunit;
 
             var identifiers = new List<byte[]>();
 
-            var message = NetMQExtensions.DeserializeMessage(signature, headerJson, parentHeaderJson, metadataJson, contentJson, identifiers);
+            var message = MessageExtensions.DeserializeMessage(signature, headerJson, parentHeaderJson, metadataJson, contentJson, identifiers);
             
             using var _ = new AssertionScope();
             

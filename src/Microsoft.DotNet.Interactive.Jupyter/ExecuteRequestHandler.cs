@@ -13,8 +13,9 @@ using System.Reactive.Concurrency;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.ZMQ.Message;
+using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 using Recipes;
+using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
 {
