@@ -9,6 +9,7 @@ namespace Microsoft.DotNet.Interactive;
 
 public class RoutingSlip : IReadOnlyList<Uri>
 {
+    private readonly HashSet<Uri> _uniqueUris = new() ;
     private readonly List<Uri> _uris;
     private readonly object _lock = new();
 
@@ -21,7 +22,7 @@ public class RoutingSlip : IReadOnlyList<Uri>
     {
         lock (_lock)
         {
-            if (!_uris.Contains(kernelOrKernelHostUri))
+            if (_uniqueUris.Add(kernelOrKernelHostUri))
             {
                 _uris.Add(kernelOrKernelHostUri);
                 return true;
@@ -29,6 +30,11 @@ public class RoutingSlip : IReadOnlyList<Uri>
         }
 
         return false;
+    }
+
+    public bool Contains(Uri kernelOrKernelHostUri)
+    {
+        return _uniqueUris.Contains(kernelOrKernelHostUri);
     }
 
     IEnumerator<Uri> IEnumerable<Uri>.GetEnumerator()

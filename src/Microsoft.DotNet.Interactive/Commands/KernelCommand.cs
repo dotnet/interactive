@@ -14,7 +14,6 @@ namespace Microsoft.DotNet.Interactive.Commands;
 [DebuggerStepThrough]
 public abstract class KernelCommand
 {
-    private readonly RoutingSlip _routingSlip;
 
     protected KernelCommand(
         string targetKernelName = null, 
@@ -23,7 +22,7 @@ public abstract class KernelCommand
         Properties = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
         TargetKernelName = targetKernelName;
         Parent = parent;
-        _routingSlip = new RoutingSlip();
+        RoutingSlip = new RoutingSlip();
     }
 
     [JsonIgnore] 
@@ -53,15 +52,9 @@ public abstract class KernelCommand
     public ParseResult KernelChooserParseResult { get; internal set; }
 
     [JsonIgnore]
-    public IReadOnlyCollection<Uri> RoutingSlip
+    public RoutingSlip RoutingSlip
     {
-        get
-        {
-            var unique = new HashSet<Uri>();
-            var list = new List<Uri>(Parent?.RoutingSlip ?? Array.Empty<Uri>());
-            list.AddRange(_routingSlip.Where(unique.Add));
-            return list;
-        }
+        get;
     }
 
     public virtual Task InvokeAsync(KernelInvocationContext context)
@@ -80,6 +73,6 @@ public abstract class KernelCommand
         {
             return false;
         }
-        return _routingSlip.TryAdd(uri);
+        return RoutingSlip.TryAdd(uri);
     }
 }
