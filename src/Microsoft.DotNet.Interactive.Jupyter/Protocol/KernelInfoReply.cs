@@ -44,11 +44,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
                 throw new ArgumentException("Value cannot be null or whitespace.", nameof(implementation));
             }
 
-            if (string.IsNullOrWhiteSpace(implementationVersion))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(implementationVersion));
-            }
-
             ProtocolVersion = protocolVersion;
             Implementation = implementation;
             ImplementationVersion = implementationVersion;
