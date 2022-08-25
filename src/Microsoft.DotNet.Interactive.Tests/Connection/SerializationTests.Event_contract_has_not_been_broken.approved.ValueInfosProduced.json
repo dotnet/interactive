@@ -2,13 +2,22 @@
   "event": {
     "valueInfos": [
       {
-        "name": "a"
+        "name": "a",
+        "preferredMimeTypes": [
+          "text/plain"
+        ]
       },
       {
-        "name": "b"
+        "name": "b",
+        "preferredMimeTypes": [
+          "text/plain"
+        ]
       },
       {
-        "name": "c"
+        "name": "c",
+        "preferredMimeTypes": [
+          "text/plain"
+        ]
       }
     ]
   },
