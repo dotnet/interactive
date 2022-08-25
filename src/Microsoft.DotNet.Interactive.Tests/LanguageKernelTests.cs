@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             await SubmitCode(kernel, source);
 
-            var result = await kernel.SendAsync(new RequestValue(valueName, language.LanguageName(), mimeType));
+            var result = await kernel.SendAsync(new RequestValue(valueName, mimeType: mimeType, targetKernelName: language.LanguageName()));
             var kernelEvents = result.KernelEvents.ToSubscribedList();
 
             kernelEvents

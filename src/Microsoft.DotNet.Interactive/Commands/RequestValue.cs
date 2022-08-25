@@ -7,14 +7,14 @@ namespace Microsoft.DotNet.Interactive.Commands
 {
     public class RequestValue : KernelCommand
     {
-        public string Name { get; }
-
-        public string MimeType { get; }
-
-        public RequestValue(string name, string targetKernelName = null, string mimeType = null) : base(targetKernelName)
+        public RequestValue(string name, string mimeType = null, string targetKernelName = null) : base(targetKernelName)
         {
             Name = name;
             MimeType = mimeType ?? JsonFormatter.MimeType;
         }
+
+        public string Name { get; }
+
+        public string MimeType { get; }
     }
 }
