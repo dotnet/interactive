@@ -2,13 +2,16 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Text.Json;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
+using Microsoft.DotNet.Interactive.ValueSharing;
 using Microsoft.Playwright;
 using Pocket;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Browser.PlaywrightKernelConnector>;
@@ -18,28 +21,37 @@ namespace Microsoft.DotNet.Interactive.Browser;
 
 public class PlaywrightKernelConnector : IKernelConnector
 {
-    public Task<Kernel> CreateKernelAsync(string kernelName)
+    private string _browserChannel = null;
+    private readonly RefCountDisposable _refCountDisposable;
+    private readonly AsyncLazy<IPage> _page;
+
+    public PlaywrightKernelConnector()
     {
-        var disposables = new CompositeDisposable();
+        var playwrightDisposable = new SerialDisposable();
 
-        string? browserChannel = null;
+        _refCountDisposable = new(playwrightDisposable);
 
-        var _page = new AsyncLazy<IPage>(async () =>
+        _page = new AsyncLazy<IPage>(async () =>
         {
             var playwright = await Playwright.Playwright.CreateAsync();
 
             var launch = await LaunchBrowserAsync(playwright);
 
-            browserChannel = launch.Options.Channel;
+            _browserChannel = launch.Options.Channel;
 
             var context = await launch.Browser.NewContextAsync();
 
             var page = await context.NewPageAsync();
 
-            disposables.Add(playwright);
+            playwrightDisposable.Disposable = playwright;
 
             return page;
         });
+    }
+
+    public Task<Kernel> CreateKernelAsync(string kernelName)
+    {
+        string? browserChannel = null;
 
         var senderAndReceiver = new PlaywrightSenderAndReceiver(_page, browserChannel);
 
@@ -48,7 +60,42 @@ public class PlaywrightKernelConnector : IKernelConnector
             senderAndReceiver,
             senderAndReceiver);
 
-        proxy.RegisterForDisposal(disposables);
+        proxy.KernelInfo.SupportedKernelCommands.Add(new KernelCommandInfo(nameof(SubmitCode)));
+
+        proxy.RegisterCommandHandler<RequestValueInfos>((request, context) =>
+        {
+            context.Publish(new ValueInfosProduced(new KernelValueInfo[]
+            {
+                new("page", typeof(IPage))
+            }, request));
+            return Task.CompletedTask;
+        });
+
+        proxy.RegisterCommandHandler<RequestValue>(async (request, context) =>
+        {
+            switch (request.Name)
+            {
+                case "page":
+
+                    var page = await _page.ValueAsync();
+
+                    var html = request.MimeType switch
+                    {
+                        HtmlFormatter.MimeType => await page.InnerHTMLAsync("*"),
+                        PlainTextFormatter.MimeType => await page.InnerTextAsync("*"),
+                    };
+
+                    context.Publish(
+                        new ValueProduced(
+                            page,
+                            request.Name,
+                            new FormattedValue("text/html", html),
+                            request));
+                    break;
+            }
+        });
+
+        proxy.RegisterForDisposal(_refCountDisposable.GetDisposable());
 
         return Task.FromResult<Kernel>(proxy);
     }
@@ -82,9 +129,9 @@ public class PlaywrightKernelConnector : IKernelConnector
                 if (exitCode != 0)
                 {
                     var message = $"Playwright browser acquisition failed with exit code {exitCode}.\n{stdOut}\n{stdErr}";
-                    
+
                     activity.Fail(message: message);
-                    
+
                     throw new PlaywrightException(message);
                 }
             }

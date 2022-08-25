@@ -276,13 +276,13 @@ Console.WriteLine(1);";
                 "csharp-proxy",
                 new(remoteCompositeKernel.Host.Uri, "csharp"));
 
-        var command = new SubmitCode(@"Console.WriteLine(1);", targetKernelName: "csharp-proxy");
+        var command = new SubmitCode("123", targetKernelName: "csharp-proxy");
 
         var result = await localCompositeKernel.SendAsync(command);
 
         var events = result.KernelEvents.ToSubscribedList();
 
-        events.Should().ContainSingle<StandardOutputValueProduced>()
+        events.Should().ContainSingle<DisplayedValueProduced>()
             .Which
             .RoutingSlip.Should().ContainInOrder(
             new[]

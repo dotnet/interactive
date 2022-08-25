@@ -392,7 +392,7 @@ namespace Microsoft.DotNet.Interactive
                 var valueNames = nameEvents.SelectMany(e => e.ValueInfos.Select(d => d.Name)).Distinct();
 
                 var valueEvents = new List<ValueProduced>();
-                var valueCommands = valueNames.Select(valueName => new RequestValue(valueName, context.HandlingKernel.Name));
+                var valueCommands = valueNames.Select(valueName => new RequestValue(valueName, targetKernelName: context.HandlingKernel.Name));
 
                 foreach (var valueCommand in valueCommands)
                 {

@@ -419,7 +419,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             }
             else
             {
-                var result = _kernel.RootKernel.SendAsync(new RequestValue(valueName, targetKernelName)).GetAwaiter().GetResult();
+                var result = _kernel.RootKernel.SendAsync(new RequestValue(valueName, targetKernelName: targetKernelName)).GetAwaiter().GetResult();
 
                 var events = result.KernelEvents.ToEnumerable().ToArray();
                 var valueProduced = events.OfType<ValueProduced>().SingleOrDefault();

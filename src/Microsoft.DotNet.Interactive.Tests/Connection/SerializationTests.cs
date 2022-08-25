@@ -196,7 +196,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
 
                 yield return new RequestValueInfos("csharp");
 
-                yield return new RequestValue("a", "csharp", HtmlFormatter.MimeType);
+                yield return new RequestValue("a", mimeType: HtmlFormatter.MimeType, targetKernelName: "csharp");
 
                 yield return new RequestInput(prompt:"provide answer", isPassword: true, targetKernelName: "vscode");
             }
@@ -370,9 +370,14 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
 
                 yield return new KernelExtensionLoaded(new SubmitCode(@"#r ""nuget:package"" "));
 
-                yield return new ValueInfosProduced(new[] { new KernelValueInfo("a", typeof(string)), new KernelValueInfo("b", typeof(string)), new KernelValueInfo("c", typeof(string)) }, new RequestValueInfos("csharp"));
+                yield return new ValueInfosProduced(new[]
+                {
+                    new KernelValueInfo("a", typeof(string)), 
+                    new KernelValueInfo("b", typeof(string)), 
+                    new KernelValueInfo("c", typeof(string))
+                }, new RequestValueInfos("csharp"));
 
-                yield return new ValueProduced("raw value", "a", new FormattedValue(HtmlFormatter.MimeType, "<span>formatted value</span>"), new RequestValue("a", "csharp", HtmlFormatter.MimeType));
+                yield return new ValueProduced("raw value", "a", new FormattedValue(HtmlFormatter.MimeType, "<span>formatted value</span>"), new RequestValue("a", mimeType: HtmlFormatter.MimeType, targetKernelName: "csharp"));
 
                 yield return new CommandCancelled( new Cancel() ,new SubmitCode("var value = 1;", "csharp"));
 
