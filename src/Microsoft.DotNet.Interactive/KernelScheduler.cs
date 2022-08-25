@@ -180,6 +180,11 @@ namespace Microsoft.DotNet.Interactive
 
         private void RunPreemptively(ScheduledOperation operation)
         {
+            foreach (var deferredOperation in OperationsToRunBefore(operation))
+            {
+                Run(deferredOperation);
+            }
+            
             Run(operation);
             operation.TaskCompletionSource.Task.Wait(_schedulerDisposalSource.Token);
         }
