@@ -93,15 +93,15 @@ namespace Microsoft.DotNet.Interactive
 
             RegisterForDisposal(kernel.KernelEvents.Subscribe(PublishEvent));
             RegisterForDisposal(kernel);
-
-            var command = KernelInvocationContext.Current?.Command ?? KernelCommand.None;
-            var kernelInfoProduced = new KernelInfoProduced(kernel.KernelInfo, command);
-            if (KernelInvocationContext.Current is { })
+            
+            if (KernelInvocationContext.Current is { } current)
             {
-                KernelInvocationContext.Current.Publish(kernelInfoProduced);
+                var kernelInfoProduced = new KernelInfoProduced(kernel.KernelInfo, current.Command);
+                current.Publish(kernelInfoProduced);
             }
             else
             {
+                var kernelInfoProduced = new KernelInfoProduced(kernel.KernelInfo, KernelCommand.None);
                 PublishEvent(kernelInfoProduced);
             }
         }
