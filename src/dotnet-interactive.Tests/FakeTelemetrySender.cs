@@ -20,10 +20,13 @@ public class FakeTelemetrySender : TelemetrySender
             {
                 SentinelExists = true
             },
-            // FIX: (FakeTelemetrySender) get a test instrumentation key
-            instrumentationKey: Guid.NewGuid().ToString())
+            appInsightsConnectionString: GetInstrumentationKey())
     {
     }
+
+    private static string GetInstrumentationKey() =>
+        Environment.GetEnvironmentVariable("DOTNET_INTERACTIVE_APPINSIGHTS_CONNECTION_STRING") ?? 
+        $@"InstrumentationKey={Guid.NewGuid()};IngestionEndpoint=https://centralus-0.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/";
 
     protected override void DoTrackEvent(
         string eventName,
