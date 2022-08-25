@@ -9,7 +9,6 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
 using Pocket.For.Xunit;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Browser.Tests;
@@ -29,7 +28,7 @@ public class JavaScriptKernelTests : IDisposable
     [FactSkipLinux]
     public async Task It_can_execute_code()
     {
-        using var kernel = await CreateJavaScriptKernelAsync();
+        using var kernel = await CreateJavaScriptProxyKernelAsync();
 
         var result = await kernel.SendAsync(new SubmitCode("x = [ 1, 2, 3 ]"));
 
@@ -41,7 +40,7 @@ public class JavaScriptKernelTests : IDisposable
     [FactSkipLinux]
     public async Task It_can_get_a_return_value()
     {
-        using var kernel = await CreateJavaScriptKernelAsync();
+        using var kernel = await CreateJavaScriptProxyKernelAsync();
 
         var result = await kernel.SendAsync(new SubmitCode("x = 123;\nreturn x;"));
 
@@ -58,7 +57,7 @@ public class JavaScriptKernelTests : IDisposable
     [FactSkipLinux]
     public async Task It_can_get_console_log_output()
     {
-        using var kernel = await CreateJavaScriptKernelAsync();
+        using var kernel = await CreateJavaScriptProxyKernelAsync();
 
         var result = await kernel.SendAsync(new SubmitCode("console.log(123);"));
 
@@ -72,7 +71,7 @@ public class JavaScriptKernelTests : IDisposable
                                   v.Value == "123");
     }
 
-    private static async Task<Kernel> CreateJavaScriptKernelAsync()
+    private static async Task<Kernel> CreateJavaScriptProxyKernelAsync()
     {
         var connector = new PlaywrightKernelConnector();
 

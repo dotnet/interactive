@@ -16,12 +16,12 @@ using Microsoft.Playwright;
 using Pocket;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Browser.PlaywrightKernelConnector>;
 using CompositeDisposable = Pocket.CompositeDisposable;
+using Disposable = System.Reactive.Disposables.Disposable;
 
 namespace Microsoft.DotNet.Interactive.Browser;
 
 public class PlaywrightKernelConnector : IKernelConnector
 {
-    private string _browserChannel = null;
     private readonly RefCountDisposable _refCountDisposable;
     private readonly AsyncLazy<IPage> _page;
 
@@ -37,13 +37,11 @@ public class PlaywrightKernelConnector : IKernelConnector
 
             var launch = await LaunchBrowserAsync(playwright);
 
-            _browserChannel = launch.Options.Channel;
-
             var context = await launch.Browser.NewContextAsync();
 
             var page = await context.NewPageAsync();
 
-            playwrightDisposable.Disposable = playwright;
+            playwrightDisposable.Disposable = Disposable.Create(() => { playwright.Dispose(); });
 
             return page;
         });
@@ -51,9 +49,7 @@ public class PlaywrightKernelConnector : IKernelConnector
 
     public Task<Kernel> CreateKernelAsync(string kernelName)
     {
-        string? browserChannel = null;
-
-        var senderAndReceiver = new PlaywrightSenderAndReceiver(_page, browserChannel);
+        var senderAndReceiver = new PlaywrightSenderAndReceiver(_page);
 
         var proxy = new ProxyKernel(
             kernelName,
@@ -62,39 +58,46 @@ public class PlaywrightKernelConnector : IKernelConnector
 
         proxy.KernelInfo.SupportedKernelCommands.Add(new KernelCommandInfo(nameof(SubmitCode)));
 
-        proxy.RegisterCommandHandler<RequestValueInfos>((request, context) =>
+        switch (kernelName)
         {
-            context.Publish(new ValueInfosProduced(new KernelValueInfo[]
-            {
-                new("page", typeof(IPage))
-            }, request));
-            return Task.CompletedTask;
-        });
+            case "html":
+                proxy.RegisterCommandHandler<RequestValueInfos>((request, context) =>
+                {
+                    context.Publish(new ValueInfosProduced(new KernelValueInfo[]
+                    {
+                        new(":root", typeof(ILocator))
+                    }, request));
+                    return Task.CompletedTask;
+                });
 
-        proxy.RegisterCommandHandler<RequestValue>(async (request, context) =>
-        {
-            switch (request.Name)
-            {
-                case "page":
-
+                proxy.RegisterCommandHandler<RequestValue>(async (request, context) =>
+                {
                     var page = await _page.ValueAsync();
+
+                    var selector = request.Name;
 
                     var html = request.MimeType switch
                     {
-                        HtmlFormatter.MimeType => await page.InnerHTMLAsync("*"),
-                        PlainTextFormatter.MimeType => await page.InnerTextAsync("*"),
+                        HtmlFormatter.MimeType => await page.InnerHTMLAsync(selector),
+                        PlainTextFormatter.MimeType => await page.InnerTextAsync(selector),
                     };
 
                     context.Publish(
                         new ValueProduced(
-                            page,
+                            page.Locator(selector),
                             request.Name,
                             new FormattedValue("text/html", html),
                             request));
-                    break;
-            }
-        });
+                });
 
+                break;
+
+            case "javascript":
+
+                break;
+        }
+
+        proxy.RegisterForDisposal(_refCountDisposable);
         proxy.RegisterForDisposal(_refCountDisposable.GetDisposable());
 
         return Task.FromResult<Kernel>(proxy);
@@ -157,7 +160,7 @@ public class PlaywrightKernelConnector : IKernelConnector
         }
     }
 
-    private record BrowserLaunch(IBrowser Browser, BrowserTypeLaunchOptions Options);
+    private record BrowserLaunch(IBrowser Browser, BrowserTypeLaunchOptions options);
 
     private class PlaywrightSenderAndReceiver : IKernelCommandAndEventSender, IKernelCommandAndEventReceiver
     {
@@ -165,10 +168,10 @@ public class PlaywrightKernelConnector : IKernelConnector
         private bool _remoteKernelIsLoaded;
         private readonly Subject<CommandOrEvent> _commandsAndEvents = new();
 
-        public PlaywrightSenderAndReceiver(AsyncLazy<IPage> page, string? browserChannel = null)
+        public PlaywrightSenderAndReceiver(AsyncLazy<IPage> page)
         {
             _page = page;
-            RemoteHostUri = new($"kernel://{browserChannel?? "browser"}/");
+            RemoteHostUri = new("kernel://browser/");
         }
 
         public async Task SendAsync(KernelCommand command, CancellationToken cancellationToken)

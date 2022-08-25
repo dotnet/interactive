@@ -282,7 +282,7 @@ Console.WriteLine(1);";
 
         var events = result.KernelEvents.ToSubscribedList();
 
-        events.Should().ContainSingle<DisplayedValueProduced>()
+        events.Should().ContainSingle<ReturnValueProduced>()
             .Which
             .RoutingSlip.Should().ContainInOrder(
             new[]

@@ -4,14 +4,12 @@
 using System;
 using System.Threading.Tasks;
 using FluentAssertions;
-using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.Playwright;
 using Pocket;
 using Pocket.For.Xunit;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Browser.Tests;
@@ -28,16 +26,14 @@ public class HtmlKernelTests : IDisposable
 
     public void Dispose() => _disposables.Dispose();
 
-    [Fact]
+    [FactSkipLinux]
     public async Task It_can_share_the_underlying_Playwright_page_object()
     {
-        using var kernel = await CreateJavaScriptKernelAsync();
+        using var kernel = await CreateHtmlProxyKernelAsync();
 
-        var result = await kernel.SendAsync(new RequestValue("page", "text/html"));
+        var result = await kernel.SendAsync(new RequestValue("*", "text/html"));
 
         var events = result.KernelEvents.ToSubscribedList();
-
-        using var _ = new AssertionScope();
 
         events
             .Should()
@@ -45,22 +41,20 @@ public class HtmlKernelTests : IDisposable
             .Which
             .Value
             .Should()
-            .BeAssignableTo<IPage>();
+            .BeAssignableTo<ILocator>();
     }
 
-    [Fact]
+    [FactSkipLinux]
     public async Task It_can_share_the_underlying_page_HTML()
     {
-        using var kernel = await CreateJavaScriptKernelAsync();
+        using var kernel = await CreateHtmlProxyKernelAsync();
 
         var setupEvents = await kernel.SubmitCodeAsync("<div>hello</div>");
         setupEvents.KernelEvents.ToSubscribedList().Should().NotContainErrors();
 
-        var result = await kernel.SendAsync(new RequestValue("page", "text/html"));
+        var result = await kernel.SendAsync(new RequestValue("*", "text/html"));
 
         var events = result.KernelEvents.ToSubscribedList();
-
-        using var _ = new AssertionScope();
 
         events
             .Should()
@@ -69,22 +63,20 @@ public class HtmlKernelTests : IDisposable
             .FormattedValue
             .Value
             .Should()
-            .Be("<head></head><body><div>hello</div></body>");
+            .Contain("<div>hello</div>");
     }
 
-    [Fact]
+    [FactSkipLinux]
     public async Task It_can_share_the_underlying_page_content()
     {
-        using var kernel = await CreateJavaScriptKernelAsync();
+        using var kernel = await CreateHtmlProxyKernelAsync();
 
         var setupEvents = await kernel.SubmitCodeAsync("<div>hello</div>");
         setupEvents.KernelEvents.ToSubscribedList().Should().NotContainErrors();
 
-        var result = await kernel.SendAsync(new RequestValue("page", "text/plain"));
+        var result = await kernel.SendAsync(new RequestValue(":root", "text/plain"));
 
         var events = result.KernelEvents.ToSubscribedList();
-
-        using var _ = new AssertionScope();
 
         events
             .Should()
@@ -96,11 +88,10 @@ public class HtmlKernelTests : IDisposable
             .Be("hello");
     }
 
-
-    [Fact]
+    [FactSkipLinux]
     public async Task It_has_shareable_values()
     {
-        using var kernel = await CreateJavaScriptKernelAsync();
+        using var kernel = await CreateHtmlProxyKernelAsync();
 
         var result = await kernel.SendAsync(new RequestValueInfos());
 
@@ -112,12 +103,34 @@ public class HtmlKernelTests : IDisposable
             .Which
             .ValueInfos
             .Should()
-            .ContainSingle(i => i.Name == "page");
+            .ContainSingle(i => i.Name == ":root");
     }
 
+    [FactSkipLinux]
+    public async Task JavaScript_and_HTML_proxies_have_access_to_the_same_DOM()
+    {
+        var connector = new PlaywrightKernelConnector();
+
+        using var javascriptKernel = await connector.CreateKernelAsync("javascript");
+        using var htmlKernel = await connector.CreateKernelAsync("html");
+
+        await javascriptKernel.SendAsync(new SubmitCode("document.body.innerHTML += '<div>howdy</div>'"));
+
+        var result = await htmlKernel.SendAsync(new RequestValue("html", "text/html"));
+
+        var events = result.KernelEvents.ToSubscribedList();
+        events
+            .Should()
+            .ContainSingle<ValueProduced>()
+            .Which
+            .FormattedValue
+            .Value
+            .Should()
+            .Contain("<div>howdy</div>");
+    }
 
     // FIX: (HtmlKernelTests) 
-    private async Task<Kernel> CreateJavaScriptKernelAsync()
+    private async Task<Kernel> CreateHtmlProxyKernelAsync()
     {
         var connector = new PlaywrightKernelConnector();
 
