@@ -25,9 +25,9 @@ namespace Microsoft.DotNet.Interactive
         private readonly BlockingCollection<ScheduledOperation> _topLevelScheduledOperations = new();
         private ScheduledOperation _currentlyRunningOperation;
 
-        public KernelScheduler(Func<T, T, bool> isInnerSchedule)
+        public KernelScheduler(Func<T, T, bool> isInnerSchedule = null)
         {
-            _isInnerSchedule = isInnerSchedule ?? throw new ArgumentNullException(nameof(isInnerSchedule));
+            _isInnerSchedule = isInnerSchedule ?? ((_, __) => false);
             _runLoopTask = Task.Factory.StartNew(
                 ScheduledOperationRunLoop,
                 TaskCreationOptions.LongRunning,
