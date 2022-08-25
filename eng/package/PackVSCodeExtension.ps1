@@ -32,7 +32,7 @@ function Build-VsCodeExtension([string] $packageDirectory, [string] $outputSubDi
 
     # pack
     Write-Host "Packing extension"
-    npm run package --out "$outDir\$outputSubDirectory\dotnet-interactive-vscode-$packageVersionNumber.vsix"
+    npm run package -- --out "$outDir\$outputSubDirectory\dotnet-interactive-vscode-$packageVersionNumber.vsix"
 
     Pop-Location
 }
