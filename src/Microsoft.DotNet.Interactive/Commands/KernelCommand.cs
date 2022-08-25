@@ -14,6 +14,7 @@ namespace Microsoft.DotNet.Interactive.Commands;
 [DebuggerStepThrough]
 public abstract class KernelCommand
 {
+    private KernelCommand _parent;
 
     protected KernelCommand(
         string targetKernelName = null, 
@@ -21,15 +22,28 @@ public abstract class KernelCommand
     {
         Properties = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
         TargetKernelName = targetKernelName;
-        Parent = parent;
         RoutingSlip = new RoutingSlip();
+        Parent = parent;
     }
 
     [JsonIgnore] 
     public KernelCommandInvocation Handler { get; set; }
 
     [JsonIgnore]
-    public KernelCommand Parent { get; internal set; }
+    public KernelCommand Parent
+    {
+        get => _parent;
+        internal set
+        {
+            _parent = value;
+            var currentSlip = RoutingSlip;
+            RoutingSlip = new RoutingSlip(_parent?.RoutingSlip);
+            foreach (var uri in currentSlip)
+            {
+                RoutingSlip.TryAdd(uri);
+            }
+        }
+    }
 
     [JsonIgnore]
     public IDictionary<string, object> Properties { get; }
@@ -52,10 +66,7 @@ public abstract class KernelCommand
     public ParseResult KernelChooserParseResult { get; internal set; }
 
     [JsonIgnore]
-    public RoutingSlip RoutingSlip
-    {
-        get;
-    }
+    public RoutingSlip RoutingSlip { get; private set; }
 
     public virtual Task InvokeAsync(KernelInvocationContext context)
     {

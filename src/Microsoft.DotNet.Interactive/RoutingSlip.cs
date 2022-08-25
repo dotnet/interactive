@@ -9,13 +9,22 @@ namespace Microsoft.DotNet.Interactive;
 
 public class RoutingSlip : IReadOnlyList<Uri>
 {
-    private readonly HashSet<Uri> _uniqueUris = new() ;
+    private readonly HashSet<Uri> _uniqueUris ;
     private readonly List<Uri> _uris;
     private readonly object _lock = new();
 
-    public RoutingSlip()
+    public RoutingSlip(RoutingSlip source = null)
     {
-        _uris = new List<Uri>();
+        if (source is { })
+        {
+            _uniqueUris = new HashSet<Uri>(source);
+            _uris = new List<Uri>(source);
+        }
+        else
+        {
+            _uniqueUris = new HashSet<Uri>();
+            _uris = new List<Uri>();
+        }
     }
 
     public bool TryAdd(Uri kernelOrKernelHostUri)
