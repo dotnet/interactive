@@ -118,10 +118,10 @@ public class PlaywrightKernelConnector : IKernelConnector
         private bool _remoteKernelIsLoaded;
         private readonly Subject<CommandOrEvent> _commandsAndEvents = new();
 
-        public PlaywrightSenderAndReceiver(AsyncLazy<IPage> page, string? browserChannel = "browser")
+        public PlaywrightSenderAndReceiver(AsyncLazy<IPage> page, string? browserChannel = null)
         {
             _page = page;
-            RemoteHostUri = new($"kernel://{browserChannel}/");
+            RemoteHostUri = new($"kernel://{browserChannel?? "browser"}/");
         }
 
         public async Task SendAsync(KernelCommand command, CancellationToken cancellationToken)
@@ -175,7 +175,7 @@ public class PlaywrightKernelConnector : IKernelConnector
 
             await page.EvaluateAsync(jsSource);
 
-            await page.EvaluateAsync(@"dotnetInteractive.setup();");
+            await page.EvaluateAsync($@"dotnetInteractive.setup({{hostName : ""{RemoteHostUri.Host}""}});");
 
             _remoteKernelIsLoaded = true;
         }

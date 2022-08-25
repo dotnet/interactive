@@ -210,7 +210,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     case LanguageNode languageNode:
                     {
                         if (commands.Count > 0 &&
-                            commands[commands.Count - 1] is SubmitCode previous)
+                            commands[^1] is SubmitCode previous)
                         {
                             previous.Code += languageNode.Text;
                         }
