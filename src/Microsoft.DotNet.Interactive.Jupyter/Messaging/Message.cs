@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Messaging
             IReadOnlyList<IReadOnlyList<byte>> identifiers = null,
             IReadOnlyDictionary<string, object> metaData = null,
             string signature = null,
-            string channel = null)
+            string channel = MessageChannel.shell)
             where T : Protocol.Message
         {
             if (content is null)
@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Messaging
         public static Message CreateReply<T>(
             T content,
             Message request,
-            string channel = null)
+            string channel = MessageChannel.shell)
             where T : ReplyMessage
         {
             if (content is null)
