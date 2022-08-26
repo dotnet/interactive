@@ -10,6 +10,7 @@ namespace Microsoft.DotNet.Interactive.ValueSharing
     {
         bool TryGetValueDeclaration(
             ValueProduced valueProduced, 
+            string declareAsName,
             out KernelCommand command);
     }
 }

@@ -317,7 +317,7 @@ x")]
 
             await kernel.SubmitCodeAsync("#!csharp\nvar x = 123;");
 
-            var result = await kernel.SubmitCodeAsync(@"
+            await kernel.SubmitCodeAsync(@"
 #!fsharp
 #!share --from csharp x --mime-type text/html
 x");
@@ -330,6 +330,30 @@ x");
                   .FormattedValue
                   .Should()
                   .BeEquivalentTo(new FormattedValue("text/html", 123.ToDisplayString("text/html")));
+        }
+
+        [Fact]
+        public async Task A_name_can_be_specified_for_the_imported_value()
+        {
+            using var kernel = CreateKernel();
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
+            await kernel.SubmitCodeAsync("#!csharp\nvar x = 123;");
+
+            await kernel.SubmitCodeAsync(@"
+#!fsharp
+#!share --from csharp x --mime-type text/plain --as y
+y");
+
+            events.Should().NotContainErrors();
+
+            events.Should()
+                  .ContainSingle<ValueProduced>()
+                  .Which
+                  .FormattedValue
+                  .Should()
+                  .BeEquivalentTo(new FormattedValue("text/plain", 123.ToDisplayString("text/plain")));
         }
 
         private async Task<(CompositeKernel, FakeKernel)> CreateCompositeKernelWithJavaScriptProxyKernel()
