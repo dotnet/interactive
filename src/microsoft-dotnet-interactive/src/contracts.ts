@@ -469,6 +469,7 @@ export interface KernelDirectiveInfo {
 
 export interface KernelValueInfo {
     name: string;
+    preferredMimeTypes: Array<string>;
 }
 
 export interface PackageReference {
