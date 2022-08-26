@@ -66,7 +66,6 @@ export class KernelHost {
         }
 
         kernel ??= this._kernel;
-
         Logger.default.info(`Using Kernel ${kernel.name}`);
         return kernel;
     }
@@ -98,6 +97,10 @@ export class KernelHost {
             }
         });
 
+        this.publishKerneInfo();
+    }
+
+    public publishKerneInfo() {
         this._defaultSender.send({ eventType: contracts.KernelReadyType, event: {}, routingSlip: [this._kernel.kernelInfo.uri!] });
 
         this._defaultSender.send({ eventType: contracts.KernelInfoProducedType, event: <contracts.KernelInfoProduced>{ kernelInfo: this._kernel.kernelInfo }, routingSlip: [this._kernel.kernelInfo.uri!] });
@@ -105,6 +108,5 @@ export class KernelHost {
         for (let kernel of this._kernel.childKernels) {
             this._defaultSender.send({ eventType: contracts.KernelInfoProducedType, event: <contracts.KernelInfoProduced>{ kernelInfo: kernel.kernelInfo }, routingSlip: [kernel.kernelInfo.uri!] });
         }
-
     }
 }

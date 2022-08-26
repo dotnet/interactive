@@ -186,8 +186,7 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
 
             this.currentNotebookSubscription = { dispose: () => sub.unsubscribe() };
 
-            const kernelNames = [...client.kernel.childKernels.map(k => k.name)];
-            kernelNames.push('value');
+            const kernelNames = Array.from(client.kernel.childKernels.filter(k => k.kernelInfo.supportedKernelCommands.find(ci => ci.name === contracts.RequestValueInfosType)).map(k => k.name));
 
             for (const name of kernelNames) {
                 try {

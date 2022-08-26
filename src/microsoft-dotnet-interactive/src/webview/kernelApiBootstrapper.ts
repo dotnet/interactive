@@ -46,6 +46,8 @@ export function configure(global?: any) {
         () => {
             // @ts-ignore
             postKernelMessage({ preloadCommand: '#!connect' });
+
+            global['webview'].kernelHost.publishKerneInfo();
         }
     );
 }
