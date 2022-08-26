@@ -671,6 +671,11 @@ namespace Microsoft.DotNet.Interactive
             return SupportsCommand(command);
         }
 
+        private protected bool HasDynamicHandlerFor(KernelCommand command)
+        {
+            return _dynamicHandlers.ContainsKey(command.GetType());
+        }
+
         private protected virtual Kernel GetHandlingKernel(
             KernelCommand command,
             KernelInvocationContext context)
@@ -881,7 +886,7 @@ namespace Microsoft.DotNet.Interactive
 
         internal virtual bool AcceptsUnknownDirectives => false;
 
-        public bool SupportsCommand(KernelCommand command)
+        internal bool SupportsCommand(KernelCommand command)
         {
             if (command.Handler is not null)
             {
@@ -912,7 +917,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public bool SupportsCommandType(Type commandType)
+        internal bool SupportsCommandType(Type commandType)
         {
             if (KernelInfo.SupportsCommand(commandType.Name))
             {
@@ -937,7 +942,7 @@ namespace Microsoft.DotNet.Interactive
             return false;
         }
 
-        public virtual IKernelValueDeclarer GetValueDeclarer() => KernelValueDeclarer.Default;
+        internal virtual IKernelValueDeclarer GetValueDeclarer() => KernelValueDeclarer.Default;
 
         public override string ToString()
         {

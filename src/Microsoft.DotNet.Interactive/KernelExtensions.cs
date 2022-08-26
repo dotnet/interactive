@@ -236,21 +236,26 @@ namespace Microsoft.DotNet.Interactive
                 return Array.Empty<CompletionItem>();
             });
 
+            var mimeTypeOption = new Option<string>("--mime-type", "Share the value as a string formatted to the specified MIME type.")
+                .AddCompletions(JsonFormatter.MimeType, HtmlFormatter.MimeType, PlainTextFormatter.MimeType);
+
             var share = new Command("#!share", "Share a value between subkernels")
             {
                 fromKernelOption,
-                valueNameArg
+                valueNameArg,
+                mimeTypeOption
             };
 
-            share.Handler = CommandHandler.Create(async (InvocationContext cmdLineContext) =>
+            share.SetHandler(async cmdLineContext =>
             {
                 var from = cmdLineContext.ParseResult.GetValueForOption(fromKernelOption);
                 var valueName = cmdLineContext.ParseResult.GetValueForArgument(valueNameArg);
                 var context = cmdLineContext.GetService<KernelInvocationContext>();
+                var mimeType = cmdLineContext.ParseResult.GetValueForOption(mimeTypeOption);
 
                 if (kernel.FindKernel(from) is { } fromKernel)
                 {
-                    await fromKernel.GetValueAndImportTo(kernel, valueName);
+                    await fromKernel.GetValueAndImportTo(kernel, valueName, mimeType);
                 }
                 else
                 {
@@ -266,7 +271,8 @@ namespace Microsoft.DotNet.Interactive
         internal static async Task GetValueAndImportTo(
             this Kernel fromKernel,
             Kernel toKernel,
-            string valueName)
+            string valueName, 
+            string mimeType)
         {
             var supportedRequestValue = fromKernel.SupportsCommandType(typeof(RequestValue));
 
@@ -275,7 +281,7 @@ namespace Microsoft.DotNet.Interactive
                 throw new InvalidOperationException($"Kernel {fromKernel} does not support command {nameof(RequestValue)}");
             }
 
-            var requestValueResult = await fromKernel.SendAsync(new RequestValue(valueName));
+            var requestValueResult = await fromKernel.SendAsync(new RequestValue(valueName, mimeType: mimeType));
 
             if (requestValueResult.KernelEvents.ToEnumerable().OfType<ValueProduced>().SingleOrDefault() is { } valueProduced)
             {
@@ -392,7 +398,7 @@ namespace Microsoft.DotNet.Interactive
                 var valueNames = nameEvents.SelectMany(e => e.ValueInfos.Select(d => d.Name)).Distinct();
 
                 var valueEvents = new List<ValueProduced>();
-                var valueCommands = valueNames.Select(valueName => new RequestValue(valueName, context.HandlingKernel.Name));
+                var valueCommands = valueNames.Select(valueName => new RequestValue(valueName, targetKernelName: context.HandlingKernel.Name));
 
                 foreach (var valueCommand in valueCommands)
                 {

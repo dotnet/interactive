@@ -2,53 +2,104 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Text.Json;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
+using Microsoft.DotNet.Interactive.ValueSharing;
 using Microsoft.Playwright;
 using Pocket;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Browser.PlaywrightKernelConnector>;
 using CompositeDisposable = Pocket.CompositeDisposable;
+using Disposable = System.Reactive.Disposables.Disposable;
 
 namespace Microsoft.DotNet.Interactive.Browser;
 
 public class PlaywrightKernelConnector : IKernelConnector
 {
-    public Task<Kernel> CreateKernelAsync(string kernelName)
+    private readonly RefCountDisposable _refCountDisposable;
+    private readonly AsyncLazy<IPage> _page;
+
+    public PlaywrightKernelConnector()
     {
-        var disposables = new CompositeDisposable();
+        var playwrightDisposable = new SerialDisposable();
 
-        string? browserChannel = null;
+        _refCountDisposable = new(playwrightDisposable);
 
-        var _page = new AsyncLazy<IPage>(async () =>
+        _page = new AsyncLazy<IPage>(async () =>
         {
             var playwright = await Playwright.Playwright.CreateAsync();
 
             var launch = await LaunchBrowserAsync(playwright);
 
-            browserChannel = launch.Options.Channel;
-
             var context = await launch.Browser.NewContextAsync();
 
             var page = await context.NewPageAsync();
 
-            disposables.Add(playwright);
+            playwrightDisposable.Disposable = Disposable.Create(() => { playwright.Dispose(); });
 
             return page;
         });
+    }
 
-        var senderAndReceiver = new PlaywrightSenderAndReceiver(_page, browserChannel);
+    public Task<Kernel> CreateKernelAsync(string kernelName)
+    {
+        var senderAndReceiver = new PlaywrightSenderAndReceiver(_page);
 
         var proxy = new ProxyKernel(
             kernelName,
             senderAndReceiver,
             senderAndReceiver);
 
-        proxy.RegisterForDisposal(disposables);
+        proxy.KernelInfo.SupportedKernelCommands.Add(new KernelCommandInfo(nameof(SubmitCode)));
+
+        switch (kernelName)
+        {
+            case "html":
+                proxy.RegisterCommandHandler<RequestValueInfos>((request, context) =>
+                {
+                    context.Publish(new ValueInfosProduced(new KernelValueInfo[]
+                    {
+                        new(":root", typeof(ILocator))
+                    }, request));
+                    return Task.CompletedTask;
+                });
+
+                proxy.RegisterCommandHandler<RequestValue>(async (request, context) =>
+                {
+                    var page = await _page.ValueAsync();
+
+                    var selector = request.Name;
+
+                    var html = request.MimeType switch
+                    {
+                        HtmlFormatter.MimeType => await page.InnerHTMLAsync(selector),
+                        PlainTextFormatter.MimeType => await page.InnerTextAsync(selector),
+                        _ => throw new ArgumentOutOfRangeException($"Unsupported MIME type: {request.MimeType}")
+                    };
+
+                    context.Publish(
+                        new ValueProduced(
+                            page.Locator(selector),
+                            request.Name,
+                            new FormattedValue("text/html", html),
+                            request));
+                });
+
+                break;
+
+            case "javascript":
+
+                break;
+        }
+
+        proxy.RegisterForDisposal(_refCountDisposable);
+        proxy.RegisterForDisposal(_refCountDisposable.GetDisposable());
 
         return Task.FromResult<Kernel>(proxy);
     }
@@ -82,9 +133,9 @@ public class PlaywrightKernelConnector : IKernelConnector
                 if (exitCode != 0)
                 {
                     var message = $"Playwright browser acquisition failed with exit code {exitCode}.\n{stdOut}\n{stdErr}";
-                    
+
                     activity.Fail(message: message);
-                    
+
                     throw new PlaywrightException(message);
                 }
             }
@@ -110,7 +161,7 @@ public class PlaywrightKernelConnector : IKernelConnector
         }
     }
 
-    private record BrowserLaunch(IBrowser Browser, BrowserTypeLaunchOptions Options);
+    private record BrowserLaunch(IBrowser Browser, BrowserTypeLaunchOptions options);
 
     private class PlaywrightSenderAndReceiver : IKernelCommandAndEventSender, IKernelCommandAndEventReceiver
     {
@@ -118,10 +169,10 @@ public class PlaywrightKernelConnector : IKernelConnector
         private bool _remoteKernelIsLoaded;
         private readonly Subject<CommandOrEvent> _commandsAndEvents = new();
 
-        public PlaywrightSenderAndReceiver(AsyncLazy<IPage> page, string? browserChannel = null)
+        public PlaywrightSenderAndReceiver(AsyncLazy<IPage> page)
         {
             _page = page;
-            RemoteHostUri = new($"kernel://{browserChannel?? "browser"}/");
+            RemoteHostUri = new("kernel://browser/");
         }
 
         public async Task SendAsync(KernelCommand command, CancellationToken cancellationToken)

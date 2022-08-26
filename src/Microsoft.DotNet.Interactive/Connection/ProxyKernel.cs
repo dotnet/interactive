@@ -86,6 +86,11 @@ public sealed class ProxyKernel : Kernel
                 return base.HandleAsync(command, context);
         }
 
+        if (CanHandleLocally(command))
+        {
+            return base.HandleAsync(command, context);
+        }
+
         if (command.OriginUri is null)
         {
             if (context.HandlingKernel == this)
@@ -128,6 +133,21 @@ public sealed class ProxyKernel : Kernel
                 context.Fail(command, cf.Exception, cf.Message);
             }
         });
+    }
+
+    private bool CanHandleLocally(KernelCommand command)
+    {
+        if (!CanHandle(command))
+        {
+            return false;
+        }
+
+        if (HasDynamicHandlerFor(command))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     internal override Task HandleAsync(
@@ -228,5 +248,5 @@ public sealed class ProxyKernel : Kernel
         set => _valueDeclarer = value;
     }
 
-    public override IKernelValueDeclarer GetValueDeclarer() => _valueDeclarer ?? KernelValueDeclarer.Default;
+    internal override IKernelValueDeclarer GetValueDeclarer() => _valueDeclarer ?? KernelValueDeclarer.Default;
 }

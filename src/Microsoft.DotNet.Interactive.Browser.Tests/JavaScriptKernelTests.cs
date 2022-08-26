@@ -14,11 +14,11 @@ using Xunit.Abstractions;
 namespace Microsoft.DotNet.Interactive.Browser.Tests;
 
 [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
-public class JavaScriptTests : IDisposable
+public class JavaScriptKernelTests : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
 
-    public JavaScriptTests(ITestOutputHelper output)
+    public JavaScriptKernelTests(ITestOutputHelper output)
     {
         _disposables.Add(output.SubscribeToPocketLogger());
     }
@@ -28,9 +28,9 @@ public class JavaScriptTests : IDisposable
     [FactSkipLinux]
     public async Task It_can_execute_code()
     {
-        using var kernel = await CreateKernelAsync();
+        using var kernel = await CreateJavaScriptProxyKernelAsync();
 
-        var result = await kernel.SendAsync(new SubmitCode("x = [ 1, 2, 3 ]", "javascript"));
+        var result = await kernel.SendAsync(new SubmitCode("x = [ 1, 2, 3 ]"));
 
         var events = result.KernelEvents.ToSubscribedList();
 
@@ -40,9 +40,9 @@ public class JavaScriptTests : IDisposable
     [FactSkipLinux]
     public async Task It_can_get_a_return_value()
     {
-        using var kernel = await CreateKernelAsync();
+        using var kernel = await CreateJavaScriptProxyKernelAsync();
 
-        var result = await kernel.SendAsync(new SubmitCode("x = 123;\nreturn x;", "javascript"));
+        var result = await kernel.SendAsync(new SubmitCode("x = 123;\nreturn x;"));
 
         var events = result.KernelEvents.ToSubscribedList();
 
@@ -57,9 +57,9 @@ public class JavaScriptTests : IDisposable
     [FactSkipLinux]
     public async Task It_can_get_console_log_output()
     {
-        using var kernel = await CreateKernelAsync();
+        using var kernel = await CreateJavaScriptProxyKernelAsync();
 
-        var result = await kernel.SendAsync(new SubmitCode("console.log(123);", "javascript"));
+        var result = await kernel.SendAsync(new SubmitCode("console.log(123);"));
 
         var events = result.KernelEvents.ToSubscribedList();
 
@@ -71,15 +71,12 @@ public class JavaScriptTests : IDisposable
                                   v.Value == "123");
     }
 
-    private static async Task<CompositeKernel> CreateKernelAsync()
+    private static async Task<Kernel> CreateJavaScriptProxyKernelAsync()
     {
-        var compositeKernel = new CompositeKernel();
-
         var connector = new PlaywrightKernelConnector();
 
         var proxy = await connector.CreateKernelAsync("javascript");
-        compositeKernel.Add(proxy, new[] { "js" });
 
-        return compositeKernel;
+        return proxy;
     }
 }

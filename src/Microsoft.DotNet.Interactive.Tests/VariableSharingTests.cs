@@ -78,13 +78,7 @@ x")]
             using var kernel = CreateKernel();
 
             using var events = kernel.KernelEvents.ToSubscribedList();
-
-
-            await kernel.SendAsync(new SubmitCode("",targetKernelName:"fsharp"));
-            events.Should().NotContainErrors();
-
-
-
+            
             await kernel.SubmitCodeAsync($"{from}\n{codeToWrite}");
 
             await kernel.SubmitCodeAsync($"#!fsharp\n{codeToRead}");
@@ -314,6 +308,30 @@ x")]
             inputValue.Should().Be("hello!");
         }
 
+        [Fact]
+        public async Task Values_can_be_shared_using_a_specified_MIME_type()
+        {
+            using var kernel = CreateKernel();
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
+            await kernel.SubmitCodeAsync("#!csharp\nvar x = 123;");
+
+            var result = await kernel.SubmitCodeAsync(@"
+#!fsharp
+#!share --from csharp x --mime-type text/html
+x");
+
+            events.Should().NotContainErrors();
+
+            events.Should()
+                  .ContainSingle<ValueProduced>()
+                  .Which
+                  .FormattedValue
+                  .Should()
+                  .BeEquivalentTo(new FormattedValue("text/html", 123.ToDisplayString("text/html")));
+        }
+
         private async Task<(CompositeKernel, FakeKernel)> CreateCompositeKernelWithJavaScriptProxyKernel()
         {
             var localCompositeKernel = new CompositeKernel
@@ -362,12 +380,6 @@ x")]
                 new PowerShellKernel()
                     .UseValueSharing()
             }.LogEventsToPocketLogger();
-        }
-
-        [Fact(Skip = "WIP")]
-        public void Internal_types_are_shared_as_their_most_public_supertype()
-        {
-            throw new NotImplementedException("test not written");
         }
 
         public void Dispose() => _disposables.Dispose();
