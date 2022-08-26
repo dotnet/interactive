@@ -80,6 +80,7 @@ public class PlaywrightKernelConnector : IKernelConnector
                     {
                         HtmlFormatter.MimeType => await page.InnerHTMLAsync(selector),
                         PlainTextFormatter.MimeType => await page.InnerTextAsync(selector),
+                        _ => throw new ArgumentOutOfRangeException($"Unsupported MIME type: {request.MimeType}")
                     };
 
                     context.Publish(
