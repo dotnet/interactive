@@ -101,9 +101,10 @@ public class PlaywrightKernelConnector : IKernelConnector
 
                     var html = request.MimeType switch
                     {
-                        HtmlFormatter.MimeType => await page.InnerHTMLAsync(selector),
+                        "image/jpeg" => await CaptureImageAsync(page, selector, ScreenshotType.Jpeg),
+                        "image/png" => await CaptureImageAsync(page, selector, ScreenshotType.Png),
                         PlainTextFormatter.MimeType => await page.InnerTextAsync(selector),
-                        _ => throw new ArgumentOutOfRangeException($"Unsupported MIME type: {request.MimeType}")
+                        _ => await page.InnerHTMLAsync(selector)
                     };
 
                     context.Publish(
@@ -125,6 +126,16 @@ public class PlaywrightKernelConnector : IKernelConnector
         proxy.RegisterForDisposal(_refCountDisposable.GetDisposable());
 
         return Task.FromResult<Kernel>(proxy);
+    }
+
+    private async Task<string> CaptureImageAsync(IPage page, string selector, ScreenshotType screenshotType)
+    {
+        var rawBytes = await page.Locator(selector).ScreenshotAsync(new LocatorScreenshotOptions
+        {
+            Type = screenshotType
+        });
+
+        return Convert.ToBase64String(rawBytes);
     }
 
     private static async Task<BrowserLaunch> LaunchBrowserAsync(IPlaywright playwright, bool headless)

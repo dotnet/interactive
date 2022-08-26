@@ -11,6 +11,9 @@ using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.Playwright;
 using Pocket;
 using Pocket.For.Xunit;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Png;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Browser.Tests;
@@ -87,6 +90,60 @@ public class HtmlKernelTests : IDisposable
             .Value
             .Should()
             .Be("hello");
+    }
+
+    [FactSkipLinux]
+    public async Task It_can_capture_a_PNG_using_a_selector()
+    {
+        using var kernel = await CreateHtmlProxyKernelAsync();
+
+        await kernel.SubmitCodeAsync(@"<svg height=""250"" width=""450"">
+  <polygon points=""225,10 100,210 350,210"" style=""fill:rgb(0,0,0);stroke:#609AAF;stroke-width:10""></polygon>
+</svg>");
+
+        var result = await kernel.SendAsync(new RequestValue("svg", "image/png"));
+
+        var events = result.KernelEvents.ToSubscribedList();
+
+        events.Should().NotContainErrors();
+
+        var value = events
+                    .Should()
+                    .ContainSingle<ValueProduced>()
+                    .Which
+                    .FormattedValue
+                    .Value;
+
+        value.Invoking(v => Image.Load(Convert.FromBase64String(v), new PngDecoder()))
+             .Should()
+             .NotThrow();
+    }
+
+    [FactSkipLinux]
+    public async Task It_can_capture_a_Jpeg_using_a_selector()
+    {
+        using var kernel = await CreateHtmlProxyKernelAsync();
+
+        await kernel.SubmitCodeAsync(@"<svg height=""250"" width=""450"">
+  <polygon points=""225,10 100,210 350,210"" style=""fill:rgb(0,0,0);stroke:#609AAF;stroke-width:10""></polygon>
+</svg>");
+
+        var result = await kernel.SendAsync(new RequestValue("svg", "image/jpeg"));
+
+        var events = result.KernelEvents.ToSubscribedList();
+
+        events.Should().NotContainErrors();
+
+        var value = events
+                    .Should()
+                    .ContainSingle<ValueProduced>()
+                    .Which
+                    .FormattedValue
+                    .Value;
+
+        value.Invoking(v => Image.Load(Convert.FromBase64String(v), new JpegDecoder()))
+             .Should()
+             .NotThrow();
     }
 
     [FactSkipLinux]
