@@ -348,6 +348,7 @@ Microsoft.DotNet.Interactive
     public System.Int32 Count { get;}
     public System.Uri Item { get;}
     public System.Boolean Contains(System.Uri kernelOrKernelHostUri)
+    public System.Boolean Contains(RoutingSlip other)
     public System.Boolean TryAdd(System.Uri kernelOrKernelHostUri)
   public class ScriptContent, Microsoft.AspNetCore.Html.IHtmlContent
     .ctor(System.String scriptValue)
