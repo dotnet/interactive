@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
@@ -107,9 +108,9 @@ public class HtmlKernelTests : IDisposable
     }
 
     [FactSkipLinux]
-    public async Task JavaScript_and_HTML_proxies_have_access_to_the_same_DOM()
+    public async Task HTML_kernel_can_see_DOM_changes_made_by_JavaScript_kernel()
     {
-        var connector = new PlaywrightKernelConnector();
+        var connector = new PlaywrightKernelConnector(!Debugger.IsAttached);
 
         using var javascriptKernel = await connector.CreateKernelAsync("javascript");
         using var htmlKernel = await connector.CreateKernelAsync("html");
@@ -129,10 +130,35 @@ public class HtmlKernelTests : IDisposable
             .Contain("<div>howdy</div>");
     }
 
+    [FactSkipLinux]
+    public async Task JavaScript_kernel_can_see_DOM_changes_made_by_HTML_kernel()
+    {
+        var connector = new PlaywrightKernelConnector(!Debugger.IsAttached);
+
+        using var javascriptKernel = await connector.CreateKernelAsync("javascript");
+        using var htmlKernel = await connector.CreateKernelAsync("html");
+
+        await htmlKernel.SendAsync(new SubmitCode("<div>hey there!</div>"));
+
+        var result = await javascriptKernel.SendAsync(new SubmitCode("return document.body.innerHTML;"));
+
+        var events = result.KernelEvents.ToSubscribedList();
+
+        events.Should().NotContainErrors();
+
+        events
+            .Should()
+            .ContainSingle<ReturnValueProduced>()
+            .Which
+            .FormattedValues
+            .Should()
+            .ContainSingle(v => v.Value.Contains("<div>hey there!</div>"));
+    }
+
     // FIX: (HtmlKernelTests) 
     private async Task<Kernel> CreateHtmlProxyKernelAsync()
     {
-        var connector = new PlaywrightKernelConnector();
+        var connector = new PlaywrightKernelConnector(!Debugger.IsAttached);
 
         var proxy = await connector.CreateKernelAsync("html");
 
