@@ -79,11 +79,8 @@ x")]
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-
-            await kernel.SendAsync(new SubmitCode("",targetKernelName:"fsharp"));
+            await kernel.SendAsync(new SubmitCode("", targetKernelName: "fsharp"));
             events.Should().NotContainErrors();
-
-
 
             await kernel.SubmitCodeAsync($"{from}\n{codeToWrite}");
 
