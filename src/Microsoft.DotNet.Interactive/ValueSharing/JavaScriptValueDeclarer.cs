@@ -34,6 +34,7 @@ namespace Microsoft.DotNet.Interactive.ValueSharing
 
         public bool TryGetValueDeclaration(
             ValueProduced valueProduced,
+            string declareAsName,
             out KernelCommand command)
         {
             if (valueProduced.Value is { } value)

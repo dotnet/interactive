@@ -13,7 +13,8 @@ internal static class KernelValueDeclarer
     private class DefaultKernelValueDeclarer : IKernelValueDeclarer
     {
         public bool TryGetValueDeclaration(
-            ValueProduced value, 
+            ValueProduced value,
+            string declareAsName,
             out KernelCommand command)
         {
             command = null;

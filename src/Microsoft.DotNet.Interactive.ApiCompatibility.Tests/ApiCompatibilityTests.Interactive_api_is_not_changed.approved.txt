@@ -925,7 +925,7 @@ Microsoft.DotNet.Interactive.Utility
     public static Microsoft.DotNet.Interactive.LinePosition GetPositionFromCursorOffset(System.String code, System.Int32 cursorOffset)
 Microsoft.DotNet.Interactive.ValueSharing
   public abstract class IKernelValueDeclarer
-    public System.Boolean TryGetValueDeclaration(Microsoft.DotNet.Interactive.Events.ValueProduced valueProduced, ref Microsoft.DotNet.Interactive.Commands.KernelCommand& command)
+    public System.Boolean TryGetValueDeclaration(Microsoft.DotNet.Interactive.Events.ValueProduced valueProduced, System.String declareAsName, ref Microsoft.DotNet.Interactive.Commands.KernelCommand& command)
   public abstract class ISupportGetValue
     public System.Collections.Generic.IReadOnlyCollection<KernelValueInfo> GetValueInfos()
     public System.Boolean TryGetValue<T>(System.String name, ref T& value)
@@ -933,7 +933,7 @@ Microsoft.DotNet.Interactive.ValueSharing
     public System.Threading.Tasks.Task SetValueAsync(System.String name, System.Object value, System.Type declaredType = null)
   public class JavaScriptValueDeclarer, IKernelValueDeclarer
     .ctor()
-    public System.Boolean TryGetValueDeclaration(Microsoft.DotNet.Interactive.Events.ValueProduced valueProduced, ref Microsoft.DotNet.Interactive.Commands.KernelCommand& command)
+    public System.Boolean TryGetValueDeclaration(Microsoft.DotNet.Interactive.Events.ValueProduced valueProduced, System.String declareAsName, ref Microsoft.DotNet.Interactive.Commands.KernelCommand& command)
   public class KernelValue
     .ctor(KernelValueInfo valueInfo, System.Object value, System.String kernelName)
     public System.String KernelName { get;}
