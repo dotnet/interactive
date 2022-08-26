@@ -544,9 +544,9 @@ namespace Microsoft.DotNet.Interactive
                             {
                                 return true;
                             }
-
-                            var isInRoutingSlip = outer.RoutingSlip.Zip(inner.RoutingSlip, (o, i) => o.Equals(i)).All(x => x);
-
+                            
+                            var isInRoutingSlip = inner.RoutingSlip.Contains(outer.RoutingSlip);
+                          
                             return isInRoutingSlip;
                         }
                         );

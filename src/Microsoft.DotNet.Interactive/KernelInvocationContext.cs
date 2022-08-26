@@ -19,6 +19,8 @@ namespace Microsoft.DotNet.Interactive
 {
     public class KernelInvocationContext : IDisposable
     {
+        private bool _isFailed;
+        
         private static readonly AsyncLocal<KernelInvocationContext> _current = new();
 
         private readonly ReplaySubject<KernelEvent> _events = new();
@@ -70,22 +72,13 @@ namespace Microsoft.DotNet.Interactive
 
         public bool IsComplete { get; private set; }
 
-        private bool _isFailed;
-
         public bool IsFailed => IsComplete && _isFailed;
 
         public CancellationToken CancellationToken
         {
             get
             {
-                if (_cancellationTokenSource.IsCancellationRequested)
-                {
-                    return new CancellationToken(true);
-                }
-                else
-                {
-                    return _cancellationTokenSource.Token;
-                }
+                return _cancellationTokenSource.IsCancellationRequested ? new CancellationToken(true) : _cancellationTokenSource.Token;
             }
         }
 

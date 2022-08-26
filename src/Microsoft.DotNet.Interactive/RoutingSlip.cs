@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.DotNet.Interactive;
 
@@ -45,6 +46,24 @@ public class RoutingSlip : IReadOnlyList<Uri>
     {
         return _uniqueUris.Contains(kernelOrKernelHostUri);
     }
+    
+    public bool Contains(RoutingSlip other)
+    {
+        if (other._uris.Count < _uris.Count)
+        {
+            return false;
+        }
+        
+        for (var i = 0; i < _uris.Count; i++)
+        {
+            if (_uris[i].Equals(other._uris[i]))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     IEnumerator<Uri> IEnumerable<Uri>.GetEnumerator()
     {
@@ -53,9 +72,9 @@ public class RoutingSlip : IReadOnlyList<Uri>
 
     IEnumerator IEnumerable.GetEnumerator()
     {
-        return ((IEnumerable)_uris).GetEnumerator();
+        return _uris.GetEnumerator();
     }
 
-    public Uri this[int i] => _uris[i];
+    public Uri this[int index] => _uris[index];
     public int Count => _uris.Count;
 }
