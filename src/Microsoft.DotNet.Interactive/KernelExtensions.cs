@@ -425,7 +425,6 @@ namespace Microsoft.DotNet.Interactive
             {
                 kernel.AddDirective(who());
                 kernel.AddDirective(whos());
-                Formatter.Register(new CurrentVariablesFormatter());
             }
             return kernel;
         }
@@ -449,8 +448,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 Handler = CommandHandler.Create(async (InvocationContext ctx) =>
                 {
-                    await DisplayValues(
-                        ctx.GetService<KernelInvocationContext>(), true);
+                    await DisplayValues(ctx.GetService<KernelInvocationContext>(), true);
                 })
             };
 
@@ -485,19 +483,11 @@ namespace Microsoft.DotNet.Interactive
                     kernelValues,
                     detailed);
 
-                var html = currentVariables
-                    .ToDisplayString(HtmlFormatter.MimeType);
-
                 context.Publish(
                     new DisplayedValueProduced(
-                        html,
+                        currentVariables,
                         context.Command,
-                        new[]
-                        {
-                            new FormattedValue(
-                                HtmlFormatter.MimeType,
-                                html)
-                        }));
+                        FormattedValue.FromObject(currentVariables)));
             }
         }
 
