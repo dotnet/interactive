@@ -242,7 +242,6 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         protected virtual void StoreQueryResults(IReadOnlyCollection<TabularDataResource> results, ParseResult commandKernelChooserParseResult)
         {
-
         }
 
         private static IEnumerable<TabularDataResource> GetTabularDataResources(ColumnInfo[] columnInfos, CellValue[][] rows)
