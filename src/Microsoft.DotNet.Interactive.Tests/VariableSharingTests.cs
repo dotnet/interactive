@@ -321,7 +321,6 @@ x")]
 #!fsharp
 #!share --from csharp x --mime-type text/html
 x");
-
             events.Should().NotContainErrors();
 
             events.Should()
@@ -329,7 +328,31 @@ x");
                   .Which
                   .FormattedValue
                   .Should()
-                  .BeEquivalentTo(new FormattedValue("text/html", 123.ToDisplayString("text/html")));
+                  .BeEquivalentTo(new FormattedValue("text/plain", 123.ToDisplayString("text/plain")));
+        }
+
+        [Fact]
+        public async Task When_a_MIME_type_is_specified_then_a_value_is_not_shared_by_reference()
+        {
+            using var kernel = CreateKernel();
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
+            await kernel.SubmitCodeAsync("#!csharp\nvar x = 123;");
+
+            var result = await kernel.SubmitCodeAsync(@"
+#!fsharp
+#!share --from csharp x --mime-type text/html
+x");
+
+            events.Should().NotContainErrors();
+
+            events.Should()
+                  .ContainSingle<ValueProduced>()
+                  .Which
+                  .Value
+                  .Should()
+                  .BeNull();
         }
 
         [Fact]
