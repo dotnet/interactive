@@ -328,31 +328,31 @@ x");
                   .Which
                   .FormattedValue
                   .Should()
-                  .BeEquivalentTo(new FormattedValue("text/plain", 123.ToDisplayString("text/plain")));
+                  .BeEquivalentTo(new FormattedValue("text/html", 123.ToDisplayString("text/html")));
         }
 
         [Fact]
-        public async Task When_a_MIME_type_is_specified_then_a_value_is_not_shared_by_reference()
+        public async Task When_a_MIME_type_is_specified_then_a_string_is_declared_instead_of_a_reference()
         {
             using var kernel = CreateKernel();
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SubmitCodeAsync("#!csharp\nvar x = 123;");
+            await kernel.SubmitCodeAsync("#!csharp\nvar stringType = typeof(string);");
 
-            var result = await kernel.SubmitCodeAsync(@"
+            await kernel.SubmitCodeAsync(@"
 #!fsharp
-#!share --from csharp x --mime-type text/html
-x");
+#!share --from csharp stringType --mime-type text/plain
+stringType");
 
             events.Should().NotContainErrors();
 
             events.Should()
-                  .ContainSingle<ValueProduced>()
+                  .ContainSingle<ReturnValueProduced>()
                   .Which
                   .Value
                   .Should()
-                  .BeNull();
+                  .Be("System.String");
         }
 
         [Fact]
