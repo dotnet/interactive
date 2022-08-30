@@ -296,18 +296,21 @@ namespace Microsoft.DotNet.Interactive
                 await DeclareValue(
                     toKernel,
                     valueProduced,
-                    toName ?? fromName);
+                    toName ?? fromName,
+                    allowShareByRef: mimeType is null);
             }
         }
 
         private static async Task DeclareValue(
             Kernel importingKernel,
             ValueProduced valueProduced,
-            string declarationName)
+            string declarationName,
+            bool allowShareByRef)
         {
             if (importingKernel is ISupportSetClrValue toInProcessKernel)
             {
-                if (valueProduced.Value is not { } value)
+                if (!allowShareByRef || 
+                    valueProduced.Value is not { } value)
                 {
                     if (valueProduced.FormattedValue.MimeType == JsonFormatter.MimeType)
                     {
@@ -330,10 +333,10 @@ namespace Microsoft.DotNet.Interactive
                     }
                     else
                     {
-                        throw new ArgumentException($"Unable to import value '{valueProduced.Name}' into kernel {importingKernel}");
+                        value = valueProduced.FormattedValue.Value;
                     }
                 }
-
+          
                 await toInProcessKernel.SetValueAsync(declarationName, value);
 
                 return;
