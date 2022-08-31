@@ -152,6 +152,7 @@ Microsoft.DotNet.Interactive
     public System.Boolean TryGetByUri(System.Uri uri, ref Kernel& kernel)
   public static class KernelCommandExtensions
     public static System.String GetOrCreateToken()
+    public static System.Boolean IsChildCommand(Microsoft.DotNet.Interactive.Commands.KernelCommand candidateParentCommand)
     public static System.Void PublishInternalEvents()
     public static System.Void SetToken(System.String token)
   public class KernelCommandInfo, System.IEquatable<KernelCommandInfo>

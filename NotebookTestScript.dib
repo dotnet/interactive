@@ -70,7 +70,7 @@ await kernel.root.send({ commandType: 'SubmitCode', command: { code: 'var asdf =
 
 | Name | Salary |
  :---|---: |
-| Developer | 24 |
+| Developer | 42 |
 
 change the renderer using the `...` element, choose the json and the output should look like so:
 

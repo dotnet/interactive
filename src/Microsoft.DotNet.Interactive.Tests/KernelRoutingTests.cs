@@ -29,6 +29,32 @@ public class KernelRoutingTests : IDisposable
     public void Dispose() => _disposables.Dispose();
 
     [Fact]
+    public void RoutingSlip_includes_parent_RoutingSlip()
+    {
+        var parent = new RoutingSlip();
+        parent.TryAdd(new Uri("kernel://a"));
+
+        var child = new RoutingSlip(parent);
+        child.TryAdd(new Uri("kernel://b"));
+
+        child.Contains(parent).Should().BeTrue();
+    }
+
+    [Fact]
+    public void RoutingSlip_identifies_childCommands()
+    {
+        var parent = new SubmitCode("code1");
+        parent.RoutingSlip.TryAdd(new Uri("kernel://1"));
+        parent.RoutingSlip.TryAdd(new Uri("kernel://2"));
+        var child = new SubmitCode("code2");
+        child.RoutingSlip.TryAdd(new Uri("kernel://1"));
+        child.RoutingSlip.TryAdd(new Uri("kernel://2"));
+        child.RoutingSlip.TryAdd(new Uri("kernel://5"));
+
+        child.IsChildCommand(parent).Should().BeTrue();
+    }
+
+    [Fact]
     public async Task When_target_kernel_name_is_specified_then_ProxyKernel_does_not_split_magics()
     {
         var handledCommands = new List<KernelCommand>();

@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine.Parsing;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Text.Json.Serialization;
 
@@ -78,12 +77,5 @@ public abstract class KernelCommand
         return Handler(this, context);
     }
 
-    public bool TryAddToRoutingSlip(Uri uri)
-    {
-        if (Parent?.RoutingSlip.Contains(uri) == true)
-        {
-            return false;
-        }
-        return RoutingSlip.TryAdd(uri);
-    }
+    public bool TryAddToRoutingSlip(Uri uri) => Parent?.RoutingSlip.Contains(uri) != true && RoutingSlip.TryAdd(uri);
 }

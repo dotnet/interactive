@@ -4,7 +4,7 @@
 import * as vscodeLike from './interfaces/vscode-like';
 import { ClientMapper } from './clientMapper';
 import { Logger } from './dotnet-interactive/logger';
-import { isKernelCommandEnvelope, isKernelEventEnvelope, KernelCommandAndEventReceiver, KernelCommandAndEventSender, KernelCommandOrEventEnvelope } from './dotnet-interactive';
+import { extractHostAndNomalize, isKernelCommandEnvelope, isKernelEventEnvelope, KernelCommandAndEventReceiver, KernelCommandAndEventSender, KernelCommandOrEventEnvelope } from './dotnet-interactive';
 import * as rxjs from 'rxjs';
 import * as connection from './dotnet-interactive/connection';
 import * as contracts from './dotnet-interactive/contracts';
@@ -39,7 +39,20 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, messageHandlerMap: M
 
 
     clientMapper.getOrAddClient(documentUri).then(client => {
-        client.kernelHost.connectProxyKernelOnConnector('javascript', extensionHostToWebviewSender, WebviewToExtensionHostReceiver, "kernel://webview/javascript", ['js']);
+
+        const knownKernels = client.kernelHost.getKernelInfoProduced();
+
+        for (const knwonKernel of knownKernels) {
+            extensionHostToWebviewSender.send(knwonKernel);
+        }
+
+        client.kernelHost.tryAddConnector({
+            sender: extensionHostToWebviewSender,
+            receiver: WebviewToExtensionHostReceiver,
+            remoteUris: ["kernel://webview"]
+        });
+
+        client.kernelHost.connectProxyKernel('javascript', "kernel://webview/javascript", ['js']);
 
         WebviewToExtensionHostReceiver.subscribe({
             next: envelope => {
@@ -52,10 +65,16 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, messageHandlerMap: M
                             const kernel = client.kernelHost.getKernel(envelope);
                             kernel.send(envelope);
 
-                        } else if (envelope.command.destinationUri.startsWith("kernel://pid")) {
-                            // route to interactive
-                            Logger.default.info(`routing command from webview ${JSON.stringify(envelope)} to interactive`);
-                            client.channel.sender.send(envelope);
+                        } else {
+                            const host = extractHostAndNomalize(envelope.command.destinationUri);
+                            const connector = client.kernelHost.tryGetConnector(host!);
+                            if (connector) {
+                                // route to interactive
+                                Logger.default.info(`routing command from webview ${JSON.stringify(envelope)} to interactive`);
+                                connector.sender.send(envelope);
+                            } else {
+                                Logger.default.error(`cannot find connector to reach${envelope.command.destinationUri}`);
+                            }
                         }
                     }
                     else {
@@ -68,15 +87,20 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, messageHandlerMap: M
                     if (envelope.eventType === contracts.KernelInfoProducedType) {
                         const kernelInfoProduced = <contracts.KernelInfoProduced>envelope.event;
                         if (!connection.isKernelInfoForProxy(kernelInfoProduced.kernelInfo)) {
-                            connection.ensureProxyForKernelInfo(kernelInfoProduced, client.kernel);
+                            connection.ensureOrUpdateProxyForKernelInfo(kernelInfoProduced, client.kernel);
                         }
                     }
 
                     if (envelope.command?.command.originUri) {
-                        // route to interactive
-                        if (envelope.command?.command.originUri.startsWith("kernel://pid")) {
-                            Logger.default.info(`routing event from webview ${JSON.stringify(envelope)} to interactive`);
-                            client.channel.sender.send(envelope);
+
+                        const host = extractHostAndNomalize(envelope.command?.command.originUri);
+                        const connector = client.kernelHost.tryGetConnector(host!);
+                        if (connector) {
+                            // route to interactive
+                            Logger.default.info(`routing command from webview ${JSON.stringify(envelope)} to host ${host}`);
+                            connector.sender.send(envelope);
+                        } else {
+                            Logger.default.error(`cannot find connector to reach${envelope.command?.command.originUri}`);
                         }
                     }
                 }
@@ -93,3 +117,5 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, messageHandlerMap: M
         });
     });
 }
+
+

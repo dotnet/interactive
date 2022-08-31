@@ -540,14 +540,8 @@ namespace Microsoft.DotNet.Interactive
                                 return false;
                             }
 
-                            if (outer == inner.Parent)
-                            {
-                                return true;
-                            }
-                            
-                            var isInRoutingSlip = inner.RoutingSlip.Contains(outer.RoutingSlip);
+                            return inner.IsChildCommand(outer);
                           
-                            return isInRoutingSlip;
                         }
                         );
                     RegisterForDisposal(scheduler);

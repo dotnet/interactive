@@ -5,7 +5,8 @@ import * as rxjs from 'rxjs';
 import { CompositeKernel } from './compositeKernel';
 import * as contracts from './contracts';
 import * as disposables from './disposables';
-import { KernelHost } from './kernelHost';
+import { Disposable } from './disposables';
+import { KernelType } from './kernel';
 import { Logger } from './logger';
 
 export type KernelCommandOrEventEnvelope = contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope;
@@ -24,7 +25,6 @@ export interface IKernelCommandAndEventReceiver extends rxjs.Subscribable<Kernel
 
 export interface IKernelCommandAndEventSender {
     send(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope): Promise<void>;
-    get remoteHostUri(): string;
 }
 
 export class KernelCommandAndEventReceiver implements IKernelCommandAndEventReceiver {
@@ -64,10 +64,8 @@ function isObservable(source: any): source is rxjs.Observer<KernelCommandOrEvent
 }
 
 export class KernelCommandAndEventSender implements IKernelCommandAndEventSender {
-    private _remoteHostUri: string;
     private _sender?: rxjs.Observer<KernelCommandOrEventEnvelope> | ((kernelEventEnvelope: KernelCommandOrEventEnvelope) => void);
-    private constructor(remoteHostUri: string) {
-        this._remoteHostUri = remoteHostUri;
+    private constructor() {
     }
     send(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope): Promise<void> {
         if (this._sender) {
@@ -88,18 +86,14 @@ export class KernelCommandAndEventSender implements IKernelCommandAndEventSender
         return Promise.reject(new Error("Sender is not set"));
     }
 
-    get remoteHostUri(): string {
-        return this._remoteHostUri;
-    }
-
     public static FromObserver(observer: rxjs.Observer<KernelCommandOrEventEnvelope>): IKernelCommandAndEventSender {
-        const sender = new KernelCommandAndEventSender("");
+        const sender = new KernelCommandAndEventSender();
         sender._sender = observer;
         return sender;
     }
 
     public static FromFunction(send: (kernelEventEnvelope: KernelCommandOrEventEnvelope) => void): IKernelCommandAndEventSender {
-        const sender = new KernelCommandAndEventSender("");
+        const sender = new KernelCommandAndEventSender();
         sender._sender = send;
         return sender;
     }
@@ -127,7 +121,7 @@ export function tryAddUriToRoutingSlip(kernelCommandOrEventEnvelope: KernelComma
     return canAdd;
 }
 
-export function ensureProxyForKernelInfo(kernelInfoProduced: contracts.KernelInfoProduced, compositeKernel: CompositeKernel) {
+export function ensureOrUpdateProxyForKernelInfo(kernelInfoProduced: contracts.KernelInfoProduced, compositeKernel: CompositeKernel) {
     const uriToLookup = kernelInfoProduced.kernelInfo.remoteUri ?? kernelInfoProduced.kernelInfo.uri;
     if (uriToLookup) {
         let kernel = compositeKernel.findKernelByUri(uriToLookup);
@@ -135,7 +129,7 @@ export function ensureProxyForKernelInfo(kernelInfoProduced: contracts.KernelInf
             // add
             if (compositeKernel.host) {
                 Logger.default.info(`creating proxy for uri [${uriToLookup}] with info ${JSON.stringify(kernelInfoProduced)}`);
-                kernel = compositeKernel.host.connectProxyKernelOnDefaultConnector(kernelInfoProduced.kernelInfo.localName, uriToLookup, kernelInfoProduced.kernelInfo.aliases);
+                kernel = compositeKernel.host.connectProxyKernel(kernelInfoProduced.kernelInfo.localName, uriToLookup, kernelInfoProduced.kernelInfo.aliases);
             } else {
                 throw new Error('no kernel host found');
             }
@@ -143,8 +137,10 @@ export function ensureProxyForKernelInfo(kernelInfoProduced: contracts.KernelInf
             Logger.default.info(`patching proxy for uri [${uriToLookup}] with info ${JSON.stringify(kernelInfoProduced)}`);
         }
 
-        // patch
-        updateKernelInfo(kernel.kernelInfo, kernelInfoProduced.kernelInfo);
+        if (kernel.kernelType === KernelType.proxy) {
+            // patch
+            updateKernelInfo(kernel.kernelInfo, kernelInfoProduced.kernelInfo);
+        }
     }
 }
 
@@ -190,4 +186,81 @@ export function updateKernelInfo(destination: contracts.KernelInfo, incoming: co
             destination.supportedKernelCommands.push(supportedCommand);
         }
     }
+}
+
+export class Connector implements Disposable {
+    private readonly _listener: rxjs.Unsubscribable;
+    private readonly _receiver: IKernelCommandAndEventReceiver;
+    private readonly _sender: IKernelCommandAndEventSender;
+    private readonly _remoteUris: Set<string> = new Set<string>();
+
+    public get remoteHostUris(): string[] {
+        return Array.from(this._remoteUris.values());
+    }
+
+    public get sender(): IKernelCommandAndEventSender {
+        return this._sender;
+    }
+
+    public get receiver(): IKernelCommandAndEventReceiver {
+        return this._receiver;
+    }
+
+    constructor(configuration: { receiver: IKernelCommandAndEventReceiver, sender: IKernelCommandAndEventSender, remoteUris?: string[] }) {
+        this._receiver = configuration.receiver;
+        this._sender = configuration.sender;
+        if (configuration.remoteUris) {
+            for (const remoteUri of configuration.remoteUris) {
+                const uri = extractHostAndNomalize(remoteUri);
+                if (uri) {
+                    this._remoteUris.add(uri);
+                }
+            }
+
+        }
+
+        this._listener = this._receiver.subscribe({
+            next: (kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope) => {
+                if (isKernelEventEnvelope(kernelCommandOrEventEnvelope)) {
+                    if (kernelCommandOrEventEnvelope.eventType === contracts.KernelInfoProducedType) {
+                        const event = <contracts.KernelInfoProduced>kernelCommandOrEventEnvelope.event;
+                        if (!event.kernelInfo.remoteUri) {
+                            const uri = extractHostAndNomalize(event.kernelInfo.uri!);
+                            if (uri) {
+                                this._remoteUris.add(uri);
+                            }
+                        }
+                    }
+                    if ((kernelCommandOrEventEnvelope.routingSlip?.length ?? 0) > 0) {
+                        const eventOrigin = kernelCommandOrEventEnvelope.routingSlip![0];
+                        const uri = extractHostAndNomalize(eventOrigin);
+                        if (uri) {
+                            this._remoteUris.add(uri);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    public canReach(remoteUri: string): boolean {
+        const host = extractHostAndNomalize(remoteUri);//?
+        if (host) {
+            return this._remoteUris.has(host);
+        }
+        return false;
+    }
+    dispose(): void {
+        this._listener.unsubscribe();
+    }
+}
+
+export function extractHostAndNomalize(kernelUri: string): string | undefined {
+    const filter: RegExp = /(?<host>.+:\/\/[^\/]+)(\/[^\/])*/gi;
+    const match = filter.exec(kernelUri); //?
+    if (match?.groups?.host) {
+        const host = match.groups.host;
+        return host;//?
+    }
+    return "";
 }

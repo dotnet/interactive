@@ -42,38 +42,17 @@ public class RoutingSlip : IReadOnlyList<Uri>
         return false;
     }
 
-    public bool Contains(Uri kernelOrKernelHostUri)
-    {
-        return _uniqueUris.Contains(kernelOrKernelHostUri);
-    }
-    
+    public bool Contains(Uri kernelOrKernelHostUri) => _uniqueUris.Contains(kernelOrKernelHostUri);
+
     public bool Contains(RoutingSlip other)
     {
-        if (other._uris.Count < _uris.Count)
-        {
-            return false;
-        }
-        
-        for (var i = 0; i < _uris.Count; i++)
-        {
-            if (_uris[i].Equals(other._uris[i]))
-            {
-                return false;
-            }
-        }
-
-        return true;
+        var contains =  this.Zip(other, (o, i) => o.Equals(i)).All(x => x);
+        return contains;
     }
 
-    IEnumerator<Uri> IEnumerable<Uri>.GetEnumerator()
-    {
-        return _uris.GetEnumerator();
-    }
+    IEnumerator<Uri> IEnumerable<Uri>.GetEnumerator() => _uris.GetEnumerator();
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return _uris.GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => _uris.GetEnumerator();
 
     public Uri this[int index] => _uris[index];
     public int Count => _uris.Count;

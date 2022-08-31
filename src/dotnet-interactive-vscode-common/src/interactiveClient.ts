@@ -88,7 +88,7 @@ export class InteractiveClient {
 
                     if (envelope.eventType === KernelInfoProducedType) {
                         const kernelInfoProduced = <KernelInfoProduced>envelope.event;
-                        connection.ensureProxyForKernelInfo(kernelInfoProduced, this._kernel);
+                        connection.ensureOrUpdateProxyForKernelInfo(kernelInfoProduced, this._kernel);
                     }
                 }
             }

@@ -98,7 +98,7 @@ export class ProxyKernel extends Kernel {
                             case contracts.CommandCancelledType:
                             case contracts.CommandFailedType:
                             case contracts.CommandSucceededType:
-                                Logger.default.info(`proxy finished name=${this.name}, envelopeid=${envelope.command!.id}, commandid=${commandId}`);
+                                Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] finished, envelopeid=${envelope.command!.id}, commandid=${commandId}`);
                                 if (envelope.command!.id === commandId) {
                                     completionSource.resolve(envelope);
                                 } else {
@@ -121,14 +121,14 @@ export class ProxyKernel extends Kernel {
             }
 
             commandInvocation.commandEnvelope.routingSlip;//?
-
+            Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] forwarding command ${commandInvocation.commandEnvelope.commandType} to ${commandInvocation.commandEnvelope.command.destinationUri}`);
             this._sender.send(commandInvocation.commandEnvelope);
-            Logger.default.info(`proxy ${this.name} about to await with token ${commandToken}`);
+            Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] about to await with token ${commandToken}`);
             const enventEnvelope = await completionSource.promise;
             if (enventEnvelope.eventType === contracts.CommandFailedType) {
                 commandInvocation.context.fail((<contracts.CommandFailed>enventEnvelope.event).message);
             }
-            Logger.default.info(`proxy ${this.name} done awaiting with token ${commandToken}`);
+            Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] done awaiting with token ${commandToken}`);
         }
         catch (e) {
             commandInvocation.context.fail((<any>e).message);
