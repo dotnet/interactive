@@ -145,7 +145,12 @@ export async function activate(context: vscode.ExtensionContext) {
                 const requestInput = <contracts.RequestInput>commandInvocation.commandEnvelope.command;
                 const prompt = requestInput.prompt;
                 const password = requestInput.isPassword;
-                const value = await vscode.window.showInputBox({ prompt, password });
+
+                const value = (requestInput.inputTypeHint === "file")
+                    ? await vscode.window.showOpenDialog({ canSelectFiles: true, canSelectFolders: false, title: prompt, canSelectMany: false })
+                        .then(v => typeof v?.[0].fsPath === 'undefined' ? null : v[0].fsPath)
+                    : await vscode.window.showInputBox({ prompt, password });
+
                 if (!value) {
                     commandInvocation.context.fail('Input request cancelled');
                 } else {

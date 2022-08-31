@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
+using System.CommandLine.Binding;
 using System.CommandLine.Builder;
 using System.CommandLine.Parsing;
 using System.IO;
@@ -96,6 +97,17 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 switch (node)
                 {
                     case DirectiveNode directiveNode:
+
+                        // FIX: (SplitSubmission) 
+                        if (KernelInvocationContext.Current is {} context)
+                        {
+                            context.CurrentlyParsingDirectiveNode = directiveNode;
+                        }
+                        else
+                        {
+
+                        }
+
                         var parseResult = directiveNode.GetDirectiveParseResult();
 
                         if (parseResult.Errors.Any())
@@ -382,14 +394,16 @@ namespace Microsoft.DotNet.Interactive.Parsing
         {
             errorMessage = null;
             replacementTokens = null;
-            
+
             if (ContainsInvalidCharactersForValueReference(tokenToReplace.AsSpan()))
             {
                 // F# verbatim strings should not be replaced but it's hard to detect them because the quotes are also stripped away by the tokenizer, so we use slashes as a proxy to detect file paths
                 return false;
             }
 
-            if (KernelInvocationContext.Current?.Command is not SubmitCode)
+            var context = KernelInvocationContext.Current;
+
+            if (context is { Command: not SubmitCode })
             {
                 return false;
             }
@@ -403,7 +417,33 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             if (targetKernelName is "input" or "password")
             {
-                var inputRequest = new RequestInput($"Please enter a value for field \"{valueName}\".", isPassword: targetKernelName == "password");
+                string typeHint = null;
+
+                if (context is { CurrentlyParsingDirectiveNode: { } currentDirectiveNode })
+                {
+                    var fixedUpText = currentDirectiveNode
+                                      .Text
+                                      .Replace($"@{tokenToReplace}", "REPLACE-ME")
+                                      .Replace(" @", "");
+
+                    var parseResult = currentDirectiveNode.DirectiveParser.Parse(fixedUpText);
+
+                    var c = parseResult.CommandResult.Children.FirstOrDefault(c => c.Tokens.Any(t => t.Value == "REPLACE-ME"));
+
+                    typeHint = c?.Symbol switch
+                    {
+                        IValueDescriptor<DateTime> => "datetime-local",
+                        IValueDescriptor<int> => "number",
+                        IValueDescriptor<float> => "number",
+                        IValueDescriptor<FileSystemInfo> => "file",
+                        IValueDescriptor<Uri> => "url",
+                        _ => null
+                    };
+                }
+
+                var inputRequest = new RequestInput(
+                    $"Please enter a value for field \"{valueName}\".", isPassword: targetKernelName == "password",
+                    inputTypeHint: typeHint);
 
                 var result = _kernel.RootKernel.SendAsync(inputRequest).GetAwaiter().GetResult();
 
