@@ -1,7 +1,7 @@
 
 # .NET Interactive <img src ="https://user-images.githubusercontent.com/2546640/56708992-deee8780-66ec-11e9-9991-eb85abb1d10a.png" width="80px" alt="dotnet bot in space" align ="right">
 
-[![Discord](https://img.shields.io/discord/732297728826277939?label=discord)](https://discord.gg/3pvut9YujN) [![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/dotnet/interactive/interactive-ci?branchName=main)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=744&branchName=main) [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dotnet/interactive/main?urlpath=lab) 
+[![Discord](https://img.shields.io/discord/732297728826277939?label=discord)](https://discord.gg/3pvut9YujN) [![Build Status](https://dev.azure.com/dnceng-public/public/_apis/build/status/dotnet/interactive/interactive-ci?branchName=main)](https://dev.azure.com/dnceng-public/public/_build?definitionId=71&branchName=main) [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dotnet/interactive/main?urlpath=lab) 
 
 .NET Interactive takes the power of .NET and embeds it into *your* interactive experiences. Share code, explore data, write, and learn across your apps in ways you couldn't before.
 
