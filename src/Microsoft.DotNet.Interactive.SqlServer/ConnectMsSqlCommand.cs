@@ -22,13 +22,11 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         }
 
         private static Option<bool> CreateDbContextOption { get; } =
-            new Option<bool>(
-                "--create-dbcontext",
+            new("--create-dbcontext",
                 "Scaffold a DbContext in the C# kernel.");
 
-        public Argument<string> ConnectionStringArgument { get; } =
-            new Argument<string>(
-                "connectionString",
+        public Argument<MsSqlConnectionString> ConnectionStringArgument { get; } =
+            new("connectionString",
                 "The connection string used to connect to the database");
 
         public override async Task<Kernel> ConnectKernelAsync(
