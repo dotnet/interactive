@@ -21,7 +21,8 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         Kernel,
         IKernelCommandHandler<SubmitCode>,
         IKernelCommandHandler<RequestCompletions>,
-        ISupportGetValue,
+        IKernelCommandHandler<RequestValueInfos>,
+        IKernelCommandHandler<RequestValue>,
         ISupportSetClrValue
     {
 
@@ -312,7 +313,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         public bool TryGetValue<T>(string name, out T value)
         {
-            if (QueryResults.TryGetValue(name, out var resultSet) && 
+            if (QueryResults.TryGetValue(name, out var resultSet) &&
                 resultSet is T resultSetT)
             {
                 value = resultSetT;
@@ -325,6 +326,23 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         public IReadOnlyCollection<KernelValueInfo> GetValueInfos()
         {
             return QueryResults.Keys.Select(key => new KernelValueInfo(key, typeof(IEnumerable<TabularDataResource>))).ToArray();
+        }
+
+        public Task HandleAsync(RequestValue command, KernelInvocationContext context)
+        {
+            if (TryGetValue<object>(command.Name, out var value))
+            {
+                context.PublishValueProduced(command, value);
+            }
+
+            return Task.CompletedTask;
+        }
+
+        public Task HandleAsync(RequestValueInfos command, KernelInvocationContext context)
+        {
+            var valueInfos = GetValueInfos();
+            context.Publish(new ValueInfosProduced(valueInfos, command));
+            return Task.CompletedTask;
         }
 
         private string PrependVariableDeclarationsToCode(SubmitCode command, KernelInvocationContext context)

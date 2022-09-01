@@ -28,13 +28,6 @@ namespace Microsoft.DotNet.Interactive.Tests
         [InlineData(
             "#!fsharp",
             "let x = 123",
-            @"using Microsoft.DotNet.Interactive;
-
-(Kernel.Current.FindKernel(""fsharp"") as Microsoft.DotNet.Interactive.ValueSharing.ISupportGetValue).TryGetValue(""x"", out int x);
-x")]
-        [InlineData(
-            "#!fsharp",
-            "let x = 123",
             "#!share --from fsharp x\nx")]
         [InlineData(
            "#!pwsh",
@@ -261,9 +254,10 @@ x")]
 #!share --from javascript {jsVariableName}");
             await compositeKernel.SendAsync(submitCode);
 
-            var csharpKernel = (CSharpKernel)compositeKernel.FindKernel("csharp");
+            var csharpKernel = (CSharpKernel)compositeKernel.FindKernelByName("csharp");
 
-            csharpKernel.GetValueInfos()
+            var (success, valueInfosProduced) = await csharpKernel.TryRequestValueInfosAsync();
+            valueInfosProduced.ValueInfos
                         .Should()
                         .ContainSingle(v => v.Name == jsVariableName);
 
@@ -300,12 +294,13 @@ x")]
 
             events.Should().NotContainErrors();
 
-            valueKernel
-                .TryGetValue<string>(valueName, out var inputValue)
+            var (success, valueProduced) = await valueKernel.TryRequestValueAsync(valueName);
+
+            success
                 .Should()
                 .BeTrue();
 
-            inputValue.Should().Be("hello!");
+            valueProduced.Value.Should().Be("hello!");
         }
 
         [Fact]

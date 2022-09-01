@@ -47,8 +47,11 @@ namespace Microsoft.DotNet.Interactive.CSharp.Tests
             await kernel.SendAsync(new SubmitCode("var x = 1;"));
             await kernel.SendAsync(new SubmitCode("var x = \"two\";"));
 
-            var valueInfos = kernel.GetValueInfos();
-            valueInfos
+            var (success, valueInfosProduced) = await kernel.TryRequestValueInfosAsync();
+
+            success.Should().BeTrue();
+
+            valueInfosProduced.ValueInfos
                 .Should()
                 .ContainSingle(v => v.Name == "x");
         }

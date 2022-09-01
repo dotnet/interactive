@@ -6,8 +6,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Parsing;
-using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
@@ -19,21 +17,17 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.ValueSharing;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Kernel>;
 using Pocket;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 using Disposable = System.Reactive.Disposables.Disposable;
-using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive
 {
     public abstract partial class Kernel :
         IKernelCommandHandler<RequestKernelInfo>,
-        IKernelCommandHandler<RequestValue>,
-        IKernelCommandHandler<RequestValueInfos>,
         IDisposable
     {
         private static readonly ConcurrentDictionary<Type, IReadOnlyCollection<Type>> _declaredHandledCommandTypesByKernelType = new();
@@ -595,57 +589,6 @@ namespace Microsoft.DotNet.Interactive
             return Task.CompletedTask;
         }
 
-        public virtual Task HandleAsync(
-            RequestValue command,
-            KernelInvocationContext context)
-        {
-            if (this is ISupportGetValue supportsGetValue)
-            {
-                if (supportsGetValue.TryGetValue(command.Name, out object value))
-                {
-                    if (value is { })
-                    {
-                        var valueType = value.GetType();
-                        var formatter = Formatter.GetPreferredFormatterFor(valueType, command.MimeType);
-
-                        using var writer = new StringWriter(CultureInfo.InvariantCulture);
-                        formatter.Format(value, writer);
-                        var formatted = new FormattedValue(command.MimeType, writer.ToString());
-                        context.Publish(new ValueProduced(value, command.Name, formatted, command));
-                    }
-                    else
-                    {
-                        var formatted = new FormattedValue(command.MimeType, "null");
-
-                        context.Publish(new ValueProduced(value, command.Name, formatted, command));
-                    }
-                }
-                else
-                {
-                    throw new InvalidOperationException($"Cannot find value named: {command.Name}");
-                }
-            }
-            else
-            {
-                context.Fail(command, message: $"Value '{command.Name}' not found in kernel {this}");
-            }
-
-            return Task.CompletedTask;
-        }
-
-        public virtual Task HandleAsync(
-            RequestValueInfos command,
-            KernelInvocationContext context)
-        {
-            if (context.HandlingKernel is ISupportGetValue supportsGetValue)
-            {
-                context.Publish(new ValueInfosProduced(supportsGetValue.GetValueInfos(), command));
-                return Task.CompletedTask;
-            }
-
-            throw new InvalidOperationException($"Kernel {context.HandlingKernel.Name} doesn't support command {nameof(RequestValueInfos)}");
-        }
-
         private protected bool CanHandle(KernelCommand command)
         {
             if (command.TargetKernelName is not null &&
@@ -911,7 +854,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        internal bool SupportsCommandType(Type commandType)
+        public bool SupportsCommandType(Type commandType)
         {
             if (KernelInfo.SupportsCommand(commandType.Name))
             {

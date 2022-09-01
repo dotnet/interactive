@@ -52,11 +52,11 @@ namespace Microsoft.DotNet.Interactive.Tests
 #!value --name hi
 {storedValue}");
 
-            var keyValueStoreKernel = (ISupportGetValue) kernel.FindKernel("value");
+            var keyValueStoreKernel = kernel.FindKernelByName("value");
 
-            keyValueStoreKernel.TryGetValue("hi", out object retrievedValue);
+            var (success, valueProduced) = await keyValueStoreKernel.TryRequestValueAsync("hi");
 
-            retrievedValue
+            valueProduced.Value
                 .Should()
                 .BeOfType<string>()
                 .Which
@@ -102,11 +102,11 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             await kernel.SubmitCodeAsync(string.Format(code, filePath));
 
-            var keyValueStoreKernel = (ISupportGetValue) kernel.FindKernel("value");
+            var keyValueStoreKernel = kernel.FindKernelByName("value");
 
-            keyValueStoreKernel.TryGetValue("hi", out object retrievedValue);
+            var (success, valueProduced) = await keyValueStoreKernel.TryRequestValueAsync("hi");
 
-            retrievedValue
+            valueProduced.Value
                 .Should()
                 .BeOfType<string>()
                 .Which
@@ -121,11 +121,11 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             await kernel.SubmitCodeAsync("#!value --name hi --from-url http://bing.com");
 
-            var keyValueStoreKernel = (ISupportGetValue) kernel.FindKernel("value");
+            var keyValueStoreKernel = kernel.FindKernelByName("value");
 
-            keyValueStoreKernel.TryGetValue("hi", out object retrievedValue);
+            var (success, valueProduced) = await keyValueStoreKernel.TryRequestValueAsync("hi");
 
-            retrievedValue
+            valueProduced.Value
                 .Should()
                 .BeOfType<string>()
                 .Which
@@ -147,11 +147,11 @@ namespace Microsoft.DotNet.Interactive.Tests
             kernel.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), kernel.Name);
             await kernel.SubmitCodeAsync("#!value --name hi --from-value @input:input-please");
 
-            var keyValueStoreKernel = (ISupportGetValue)kernel.FindKernel("value");
+            var keyValueStoreKernel = kernel.FindKernelByName("value");
 
-            keyValueStoreKernel.TryGetValue("hi", out object retrievedValue);
+            var (success, valueProduced) = await keyValueStoreKernel.TryRequestValueAsync("hi");
 
-            retrievedValue
+            valueProduced.Value
                 .Should()
                 .BeOfType<string>()
                 .Which
@@ -224,11 +224,12 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             events.Should().NotContainErrors();
 
-            var valueKernel = (KeyValueStoreKernel)kernel.FindKernel("value");
+            var valueKernel = (KeyValueStoreKernel)kernel.FindKernelByName("value");
 
-            valueKernel.TryGetValue<string>("x", out var x).Should().BeTrue();
+            var (success, valueProduced) = await valueKernel.TryRequestValueAsync("x");
+            success.Should().BeTrue();
 
-            x.Should().Be("#!share --from fsharp f");
+            valueProduced.Value.Should().Be("#!share --from fsharp f");
         }
 
         [Fact]
@@ -284,10 +285,11 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             result.KernelEvents.ToSubscribedList();
 
-            kernel
-                .FindKernel("value")
-                .As<ISupportGetValue>()
-                .GetValueInfos()
+            var valueKernel = kernel.FindKernelByName("value");
+
+            var (success, valueInfosProduced) = await valueKernel.TryRequestValueInfosAsync();
+
+            valueInfosProduced.ValueInfos
                 .Should()
                 .NotContain(vi => vi.Name == "hi");
         }
@@ -309,14 +311,16 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             result.KernelEvents.ToSubscribedList();
 
-            kernel
-                .FindKernel("value")
-                .As<ISupportGetValue>()
-                .TryGetValue("hi", out object previousValue)
+            var valueKernel = kernel.FindKernelByName("value");
+
+            var (success, valueProduced) = await valueKernel.TryRequestValueAsync("hi");
+
+            success
                 .Should()
                 .BeTrue();
 
-            previousValue.Should()
+            valueProduced.Value
+                .Should()
                 .Be("// previous content");
         }
 

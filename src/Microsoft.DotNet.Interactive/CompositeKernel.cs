@@ -263,7 +263,7 @@ namespace Microsoft.DotNet.Interactive
 
                 var directiveName = directiveNode.ChildNodesAndTokens[0].Text;
 
-                var kernel = this.FindKernel(actionDirectiveNode.ParentKernelName);
+                var kernel = this.FindKernelByName(actionDirectiveNode.ParentKernelName);
 
                 if (kernel is null)
                 {

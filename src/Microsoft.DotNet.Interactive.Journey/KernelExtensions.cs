@@ -207,7 +207,7 @@ public static class KernelExtensions
 
     private static void Bootstrapping(this Kernel kernel)
     {
-        if (kernel.RootKernel.FindKernel("csharp") is CSharpKernel csharpKernel)
+        if (kernel.RootKernel.FindKernelByName("csharp") is CSharpKernel csharpKernel)
         {
             csharpKernel.DeferCommand(new SubmitCode($"#r \"{typeof(Lesson).Assembly.Location}\"", csharpKernel.Name));
             csharpKernel.DeferCommand(new SubmitCode($"using {typeof(Lesson).Namespace};", csharpKernel.Name));

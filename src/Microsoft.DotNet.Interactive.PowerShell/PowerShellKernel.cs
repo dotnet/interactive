@@ -28,10 +28,11 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
     public class PowerShellKernel :
         Kernel,
-        ISupportGetValue,
         ISupportSetClrValue,
         IKernelCommandHandler<RequestCompletions>,
         IKernelCommandHandler<RequestDiagnostics>,
+        IKernelCommandHandler<RequestValueInfos>,
+        IKernelCommandHandler<RequestValue>,
         IKernelCommandHandler<SubmitCode>
     {
         private const string PSTelemetryEnvName = "POWERSHELL_DISTRIBUTION_CHANNEL";
@@ -169,6 +170,27 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             value = default;
             return false;
+        }
+
+        public Task HandleAsync(RequestValueInfos command, KernelInvocationContext context)
+        {
+            var valueInfos = GetValueInfos();
+            context.Publish(new ValueInfosProduced(valueInfos, command));
+            return Task.CompletedTask;
+        }
+
+        public Task HandleAsync(RequestValue command, KernelInvocationContext context)
+        {
+            if (TryGetValue<object>(command.Name, out var value))
+            {
+                context.PublishValueProduced(command, value);
+            }
+            else
+            {
+                context.Fail(command, message: $"Value '{command.Name}' not found in kernel {Name}");
+            }
+
+            return Task.CompletedTask;
         }
 
         public Task SetValueAsync(string name, object value, Type declaredType)

@@ -257,7 +257,7 @@ Microsoft.DotNet.Interactive.SqlServer
     public System.Void remove_OnQueryMessage(System.EventHandler<MessageParams> value)
     public System.Threading.Tasks.Task SendTextChangeNotificationAsync(System.Uri ownerUri, System.String newText, System.String oldText)
   public static class ToolsServiceClientExtensions
-  public abstract class ToolsServiceKernel : Microsoft.DotNet.Interactive.Kernel, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestCompletions>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValue>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValueInfos>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, Microsoft.DotNet.Interactive.ValueSharing.ISupportGetValue, Microsoft.DotNet.Interactive.ValueSharing.ISupportSetClrValue, System.IDisposable
+  public abstract class ToolsServiceKernel : Microsoft.DotNet.Interactive.Kernel, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestCompletions>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValue>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValueInfos>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, Microsoft.DotNet.Interactive.ValueSharing.ISupportSetClrValue, System.IDisposable
     protected System.Boolean CanDeclareVariable(System.String name, System.Object value, ref System.String& msg)
     public System.Threading.Tasks.Task ConnectAsync()
     protected System.String CreateVariableDeclaration(System.String name, System.Object value)
@@ -265,6 +265,8 @@ Microsoft.DotNet.Interactive.SqlServer
     public System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.ValueSharing.KernelValueInfo> GetValueInfos()
     public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SubmitCode command, Microsoft.DotNet.Interactive.KernelInvocationContext context)
     public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.RequestCompletions command, Microsoft.DotNet.Interactive.KernelInvocationContext context)
+    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.RequestValue command, Microsoft.DotNet.Interactive.KernelInvocationContext context)
+    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.RequestValueInfos command, Microsoft.DotNet.Interactive.KernelInvocationContext context)
     public System.Threading.Tasks.Task SetValueAsync(System.String name, System.Object value, System.Type declaredType = null)
     protected System.Void StoreQueryResults(System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource> results, System.CommandLine.Parsing.ParseResult commandKernelChooserParseResult)
     public System.Boolean TryGetValue<T>(System.String name, ref T& value)

@@ -31,7 +31,7 @@ public class VariableSharingWithinMagicCommandsTests : IDisposable
             (string value) => receivedValue = value,
             valueOption);
 
-        _kernel.FindKernel("csharp").AddDirective(shim);
+        _kernel.FindKernelByName("csharp").AddDirective(shim);
     }
 
     public void Dispose()
@@ -100,7 +100,7 @@ public class VariableSharingWithinMagicCommandsTests : IDisposable
               .Which
               .Message
               .Should()
-              .Contain("Cannot find value named: x");
+              .Contain("Value 'x' not found in kernel csharp");
     }
 
     [Fact]

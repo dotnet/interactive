@@ -121,7 +121,7 @@ namespace Microsoft.DotNet.Interactive.Journey.Tests
         {
             var capturedCommands = new List<SendEditableCode>();
             using var kernel = await CreateKernel(LessonMode.StudentMode);
-            var vscodeKernel = kernel.FindKernel("vscode");
+            var vscodeKernel = kernel.FindKernelByName("vscode");
             vscodeKernel.RegisterCommandHandler<SendEditableCode>((command, _) =>
             {
                 capturedCommands.Add(command);
@@ -249,7 +249,7 @@ namespace Microsoft.DotNet.Interactive.Journey.Tests
         {
             var capturedSendEditableCode = new List<(string language, string code)>();
             using var kernel = await CreateKernel(LessonMode.StudentMode);
-            var vscodeKernel = kernel.FindKernel("vscode");
+            var vscodeKernel = kernel.FindKernelByName("vscode");
             vscodeKernel.RegisterCommandHandler<SendEditableCode>((command, _) =>
             {
                 capturedSendEditableCode.Add((command.Language, command.Code));
@@ -299,7 +299,7 @@ namespace Microsoft.DotNet.Interactive.Journey.Tests
         {
             var capturedSendEditableCode = new List<(string language, string code)>();
             using var kernel = await CreateKernel(LessonMode.StudentMode);
-            var vscodeKernel = kernel.FindKernel("vscode");
+            var vscodeKernel = kernel.FindKernelByName("vscode");
             vscodeKernel.RegisterCommandHandler<SendEditableCode>((command, _) =>
             {
                 capturedSendEditableCode.Add((command.Language, command.Code));

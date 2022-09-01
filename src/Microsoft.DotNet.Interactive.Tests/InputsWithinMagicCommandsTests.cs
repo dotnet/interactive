@@ -38,7 +38,7 @@ public class InputsWithinMagicCommandsTests : IDisposable
         };
         shim.SetHandler((string value) => { _receivedUserInput = value; }, argument);
 
-        kernel.FindKernel("csharp").AddDirective(shim);
+        kernel.FindKernelByName("csharp").AddDirective(shim);
     }
 
     public void Dispose()

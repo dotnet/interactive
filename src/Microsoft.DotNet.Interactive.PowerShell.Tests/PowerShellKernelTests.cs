@@ -173,23 +173,26 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             await kernel.SubmitCodeAsync("$currentUserCurrentHost = $PROFILE.CurrentUserCurrentHost");
             await kernel.SubmitCodeAsync("$allUsersCurrentHost = $PROFILE.AllUsersCurrentHost");
 
-            kernel.TryGetValue("currentUserCurrentHost", out object profileObj).Should().BeTrue();
-            profileObj.Should().BeOfType<string>();
-            string currentUserCurrentHost = profileObj.As<string>();
+            var (success, valueProduced) = await kernel.TryRequestValueAsync("currentUserCurrentHost");
+            success.Should().BeTrue();
+            valueProduced.Value.Should().BeOfType<string>();
+            string currentUserCurrentHost = valueProduced.Value.As<string>();
 
             // Get $PROFILE default.
-            kernel.TryGetValue("PROFILE", out profileObj).Should().BeTrue();
-            profileObj.Should().BeOfType<string>();
-            string profileDefault = profileObj.As<string>();
+            (success, valueProduced) = await kernel.TryRequestValueAsync("PROFILE");
+            success.Should().BeTrue();
+            valueProduced.Value.Should().BeOfType<string>();
+            string profileDefault = valueProduced.Value.As<string>();
 
             // Check that $PROFILE is not null or empty and it is the same as
             // $PROFILE.CurrentUserCurrentHost
             profileDefault.Should().NotBeNullOrEmpty();
             profileDefault.Should().Be(currentUserCurrentHost);
 
-            kernel.TryGetValue("allUsersCurrentHost", out profileObj).Should().BeTrue();
-            profileObj.Should().BeOfType<string>();
-            string allUsersCurrentHost = profileObj.As<string>();
+            (success, valueProduced) = await kernel.TryRequestValueAsync("allUsersCurrentHost");
+            success.Should().BeTrue();
+            valueProduced.Value.Should().BeOfType<string>();
+            string allUsersCurrentHost = valueProduced.Value.As<string>();
 
             // Check that $PROFILE.AllUsersCurrentHost is what we expect it is:
             // $PSHOME + Microsoft.dotnet-interactive_profile.ps1
@@ -209,10 +212,11 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                 // trigger first time setup.
                 await kernel.SubmitCodeAsync("Get-Date");
 
-                kernel.TryGetValue(randomVariableName, out object profileObj).Should().BeTrue();
+                var (success, valueProduced) = await kernel.TryRequestValueAsync(randomVariableName);
+                success.Should().BeTrue();
 
-                profileObj.Should().BeOfType<bool>();
-                profileObj.As<bool>().Should().BeTrue();
+                valueProduced.Value.Should().BeOfType<bool>();
+                valueProduced.Value.As<bool>().Should().BeTrue();
             }
             finally
             {
