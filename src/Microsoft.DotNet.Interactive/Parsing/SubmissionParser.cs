@@ -430,15 +430,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                     var c = parseResult.CommandResult.Children.FirstOrDefault(c => c.Tokens.Any(t => t.Value == "REPLACE-ME"));
 
-                    typeHint = c?.Symbol switch
+                    if (c is { Symbol: {} symbol })
                     {
-                        IValueDescriptor<DateTime> => "datetime-local",
-                        IValueDescriptor<int> => "number",
-                        IValueDescriptor<float> => "number",
-                        IValueDescriptor<FileSystemInfo> => "file",
-                        IValueDescriptor<Uri> => "url",
-                        _ => null
-                    };
+                        typeHint = GetTypeHint(symbol);
+                    }
                 }
 
                 var inputRequest = new RequestInput(
@@ -515,6 +510,17 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 return false;
             }
         }
+
+        private static string GetTypeHint(Symbol symbol) =>
+            symbol switch
+            {
+                IValueDescriptor<DateTime> => "datetime-local",
+                IValueDescriptor<int> => "number",
+                IValueDescriptor<float> => "number",
+                IValueDescriptor<FileSystemInfo> => "file",
+                IValueDescriptor<Uri> => "url",
+                _ => null
+            };
 
         public void AddDirective(Command command)
         {
