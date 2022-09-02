@@ -388,7 +388,7 @@ select @x, @y";
                   .ContainValues(new object[] { "Hello world!", 123 });
         }
 
-        [Fact]
+        [MsSqlFact]
         public async Task An_input_type_hint_is_set_for_connection_strings()
         {
             using var kernel = await CreateKernelAsync();
