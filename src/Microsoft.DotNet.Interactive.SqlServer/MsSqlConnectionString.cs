@@ -3,8 +3,4 @@
 
 namespace Microsoft.DotNet.Interactive.SqlServer;
 
-internal class MsSqlConnectionString
-{
-
-
-}
+internal readonly record struct MsSqlConnectionString(string Value);

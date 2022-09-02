@@ -2,11 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
-using System.Runtime.InteropServices;
 using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
@@ -29,7 +27,11 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 }
 
                 compositeKernel
-                .AddKernelConnector(new ConnectMsSqlCommand(sqlToolName));
+                    .AddKernelConnector(new ConnectMsSqlCommand(sqlToolName));
+
+                compositeKernel
+                    .SubmissionParser
+                    .SetInputTypeHint(typeof(MsSqlConnectionString), "connectionstring-mssql");
 
                 KernelInvocationContext.Current?.Display(
                     new HtmlString(@"<details><summary>Query Microsoft SQL Server databases.</summary>

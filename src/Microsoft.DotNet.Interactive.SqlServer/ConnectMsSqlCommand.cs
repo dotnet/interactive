@@ -3,6 +3,8 @@
 
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.CommandLine.Parsing;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -25,9 +27,10 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             new("--create-dbcontext",
                 "Scaffold a DbContext in the C# kernel.");
 
-        public Argument<MsSqlConnectionString> ConnectionStringArgument { get; } =
+        private Argument<MsSqlConnectionString> ConnectionStringArgument { get; } =
             new("connectionString",
-                "The connection string used to connect to the database");
+                description: "The connection string used to connect to the database",
+                parse: s => new(s.Tokens.Single().Value));
 
         public override async Task<Kernel> ConnectKernelAsync(
             KernelInvocationContext context,
@@ -35,8 +38,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         {
             var connector = new MsSqlKernelConnector(
                 commandLineContext.ParseResult.GetValueForOption(CreateDbContextOption),
-                commandLineContext.ParseResult.GetValueForArgument(ConnectionStringArgument)
-            );
+                commandLineContext.ParseResult.GetValueForArgument(ConnectionStringArgument).Value);
             connector.PathToService = ResolvedToolsServicePath;
 
             var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);

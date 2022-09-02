@@ -387,7 +387,28 @@ select @x, @y";
                   .Should()
                   .ContainValues(new object[] { "Hello world!", 123 });
         }
-        
+
+        [Fact]
+        public async Task An_input_type_hint_is_set_for_connection_strings()
+        {
+            using var kernel = await CreateKernelAsync();
+
+            RequestInput requestInput = null;
+
+            kernel.RegisterCommandHandler<RequestInput>((command, context) =>
+            {
+                requestInput = command;
+                context.Publish(new InputProduced("hello!", requestInput));
+                return Task.CompletedTask;
+            });
+
+            kernel.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), kernel.Name);
+
+            await kernel.SendAsync(new SubmitCode("#!connect mssql @input:connectionString"));
+
+            requestInput.InputTypeHint.Should().Be("connectionstring-mssql");
+        }
+
         public void Dispose()
         {
             DataExplorer.ResetToDefault();
