@@ -169,7 +169,7 @@ namespace Microsoft.DotNet.Interactive.Http
                 var variableName = segments[2];
 
                 var targetKernel = GetKernel(kernelName);
-                if (targetKernel.SupportsCommandType(typeof(RequestValue)))
+                if (targetKernel?.SupportsCommandType(typeof(RequestValue)) == true)
                 {
                     var value = await GetValueAsync(targetKernel, variableName);
                     if (value is { })
@@ -189,17 +189,6 @@ namespace Microsoft.DotNet.Interactive.Http
             }
         }
 
-        private Kernel GetKernel(string kernelName)
-        {
-            Kernel targetKernel = null;
-            if (_kernel.Name != kernelName)
-            {
-                if (_kernel is CompositeKernel composite)
-                {
-                    targetKernel = composite.ChildKernels.FirstOrDefault(k => k.Name == kernelName);
-                }
-            }
-            return targetKernel;
-        }
+        private Kernel GetKernel(string kernelName) => _kernel.FindKernelByName(kernelName);
     }
 }
