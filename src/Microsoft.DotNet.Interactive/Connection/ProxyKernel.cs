@@ -219,7 +219,7 @@ public sealed class ProxyKernel : Kernel
 
     private void PatchRoutingSlip(KernelCommand command, KernelCommand commandFromRemoteKernel)
     {
-        foreach (var kernelOrKernelHostUri in commandFromRemoteKernel.RoutingSlip.Skip(command.RoutingSlip.Count()))
+        foreach (var kernelOrKernelHostUri in commandFromRemoteKernel.RoutingSlip.Skip(command.RoutingSlip.Count))
         {
             command.TryAddToRoutingSlip(kernelOrKernelHostUri);
         }

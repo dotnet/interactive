@@ -20,7 +20,7 @@ URL redirects are supported by this scenario and the extension and/or `notebookF
 
 ## PR Build Definition
 
-The PR build definition can be found [here](https://dev.azure.com/dnceng/public/_build?definitionId=744&_a=summary) or by nagivating through an existing PR.
+The PR build definition can be found [here](https://dev.azure.com/dnceng-public/public/_build?definitionId=71) or by nagivating through an existing PR.
 
 ## Signed Build Definition
 
