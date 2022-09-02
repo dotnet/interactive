@@ -43,7 +43,7 @@ public class InputsWithinMagicCommandsTests : IDisposable
             _receivedUserInput = context.ParseResult.GetValueForOption(stringOption);
         });
 
-        kernel.FindKernelByName("csharp").AddDirective(shim);
+        kernel.FindKernelByName("csharp").AddDirective(_shimCommand);
     }
 
     public void Dispose()
