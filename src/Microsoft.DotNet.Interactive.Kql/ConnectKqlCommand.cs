@@ -21,13 +21,11 @@ namespace Microsoft.DotNet.Interactive.Kql
         }
 
         public Option<string> ClusterOption { get; } =
-            new(
-                "--cluster",
+            new("--cluster",
                 "The cluster used to connect") { IsRequired = true };
 
         public Option<string> DatabaseOption { get; } =
-            new(
-                "--database",
+            new("--database",
                 "The database to query");
 
         public override async Task<Kernel> ConnectKernelAsync(

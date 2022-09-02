@@ -23,6 +23,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
         private readonly Kernel _kernel;
         private Parser _directiveParser;
         private RootCommand _rootCommand;
+        private Dictionary<Type, string> _customInputTypeHints;
 
         public SubmissionParser(Kernel kernel)
         {
@@ -511,8 +512,18 @@ namespace Microsoft.DotNet.Interactive.Parsing
             }
         }
 
-        private static string GetTypeHint(Symbol symbol) =>
-            symbol switch
+        private string GetTypeHint(Symbol symbol)
+        {
+            string hint;
+
+            if (_customInputTypeHints is not null &&
+                symbol is IValueDescriptor descriptor &&
+                _customInputTypeHints.TryGetValue(descriptor.ValueType, out hint))
+            {
+                return hint;
+            }
+
+            hint = symbol switch
             {
                 IValueDescriptor<DateTime> => "datetime-local",
                 IValueDescriptor<int> => "number",
@@ -521,6 +532,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 IValueDescriptor<Uri> => "url",
                 _ => null
             };
+            return hint;
+        }
 
         public void AddDirective(Command command)
         {
@@ -558,10 +571,21 @@ namespace Microsoft.DotNet.Interactive.Parsing
             ResetParser();
         }
 
-        internal void ResetParser()
+        /// <summary>
+        /// Specifies the type hint to be used for a given destination type parsed as a magic command input type. 
+        /// </summary>
+        /// <remarks>Type hints are loosely based on the types used for HTML <c>input</c> elements. They allow what is ultimately a text input to be presented in a more specific way (e.g. a date or file picker) to a user according to the capabilities of a UI.</remarks>
+        public void SetInputTypeHint(Type expectedType, string inputTypeHint)
         {
-            _directiveParser = null;
+            if (_customInputTypeHints is null)
+            {
+                _customInputTypeHints = new();
+            }
+
+            _customInputTypeHints[expectedType] = inputTypeHint;
         }
+
+        internal void ResetParser() => _directiveParser = null;
 
         public static CompletionItem CompletionItemFor(string name, ParseResult parseResult)
         {
