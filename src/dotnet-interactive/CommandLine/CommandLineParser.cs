@@ -435,7 +435,6 @@ public static class CommandLineParser
         FrontendEnvironment frontendEnvironment,
         StartupOptions startupOptions)
     {
-        System.Diagnostics.Debugger.Launch();
         using var _ = Log.OnEnterAndExit("Creating Kernels");
 
         var compositeKernel = new CompositeKernel();
