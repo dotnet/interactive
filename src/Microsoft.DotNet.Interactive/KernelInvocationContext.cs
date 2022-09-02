@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
 using CompositeDisposable = Pocket.CompositeDisposable;
@@ -315,6 +316,8 @@ namespace Microsoft.DotNet.Interactive
             Complete(Command);
             TryCancel();
         }
+
+        internal DirectiveNode CurrentlyParsingDirectiveNode { get; set; }
 
         public Task ScheduleAsync(Func<KernelInvocationContext, Task> func) =>
             HandlingKernel.SendAsync(new AnonymousKernelCommand((_, invocationContext) =>
