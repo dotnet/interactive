@@ -91,9 +91,6 @@ public class InputsWithinMagicCommandsTests : IDisposable
             .Be("Please enter a value for field \"input-please\".");
     }
 
-    // FIX: (InputsWithinMagicCommandsTests) other default type hints
-    // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input
-
     [Fact]
     public async Task An_input_type_hint_is_set_for_file_inputs()
     {
@@ -102,6 +99,16 @@ public class InputsWithinMagicCommandsTests : IDisposable
         await kernel.SendAsync(new SubmitCode("#!shim --file @input:file-please\n// some more stuff", "csharp"));
 
         _receivedRequestInput.InputTypeHint.Should().Be("file");
+    }
+
+    [Fact]
+    public async Task Unknown_types_return_type_hint_of_text()
+    {
+        _shimCommand.Add(new Option<CompositeKernel>("--unknown"));
+
+        await kernel.SendAsync(new SubmitCode("#!shim --file @input:file-please\n// some more stuff", "csharp"));
+
+        _receivedRequestInput.InputTypeHint.Should().Be("text");
     }
 
     private static CompositeKernel CreateKernel() =>

@@ -717,6 +717,7 @@ Microsoft.DotNet.Interactive.Parsing
     public System.Collections.Generic.IReadOnlyList<System.CommandLine.Command> Directives { get;}
     public System.Void AddDirective(System.CommandLine.Command command)
     public PolyglotSyntaxTree Parse(System.String code, System.String language = null)
+    public System.Void SetInputTypeHint(System.Type expectedType, System.String inputTypeHint)
     public System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.KernelCommand> SplitSubmission(Microsoft.DotNet.Interactive.Commands.SubmitCode submitCode)
     public System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.KernelCommand> SplitSubmission(Microsoft.DotNet.Interactive.Commands.RequestDiagnostics requestDiagnostics)
   public abstract class SyntaxNode : SyntaxNodeOrToken
