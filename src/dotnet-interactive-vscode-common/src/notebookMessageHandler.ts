@@ -43,6 +43,8 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, kernelInfoProduced: 
         const knownKernels = client.kernelHost.getKernelInfoProduced();
 
         for (const knwonKernel of knownKernels) {
+            const kernelInfoProduced = <contracts.KernelInfoProduced>knwonKernel.event;
+            Logger.default.info(`forwarding kernelInfo [${JSON.stringify(kernelInfoProduced.kernelInfo)}] to webview`);
             extensionHostToWebviewSender.send(knwonKernel);
         }
 
@@ -55,8 +57,6 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, kernelInfoProduced: 
         for (const kernelInfo of kernelInfoProduced) {
             connection.ensureOrUpdateProxyForKernelInfo(kernelInfo, client.kernel);
         }
-
-        client.kernelHost.connectProxyKernel('javascript', "kernel://webview/javascript", ['js']);
 
         WebviewToExtensionHostReceiver.subscribe({
             next: envelope => {
