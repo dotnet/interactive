@@ -316,6 +316,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
 .dni-treeview td {
     vertical-align: top;
+    text-align: start;
 }
 
 details.dni-treeview {
