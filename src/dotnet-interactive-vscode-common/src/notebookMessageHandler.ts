@@ -11,19 +11,19 @@ import * as contracts from './dotnet-interactive/contracts';
 
 
 
-export function hashBangConnect(clientMapper: ClientMapper, messageHandlerMap: Map<string, rxjs.Subject<KernelCommandOrEventEnvelope>>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
+export function hashBangConnect(clientMapper: ClientMapper, kernelInfoProduced: contracts.KernelInfoProduced[], messageHandlerMap: Map<string, rxjs.Subject<KernelCommandOrEventEnvelope>>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
     Logger.default.info(`handling #!connect for ${documentUri.toString()}`);
-    hashBangConnectPrivate(clientMapper, messageHandlerMap, controllerPostMessage, documentUri);
+    hashBangConnectPrivate(clientMapper, kernelInfoProduced, messageHandlerMap, controllerPostMessage, documentUri);
     clientMapper.onClientCreate((clientUri, _client) => {
         if (clientUri.toString() === documentUri.toString()) {
             Logger.default.info(`reconnecting webview kernels for ${documentUri.toString()}`);
-            hashBangConnectPrivate(clientMapper, messageHandlerMap, controllerPostMessage, documentUri);
+            hashBangConnectPrivate(clientMapper, kernelInfoProduced, messageHandlerMap, controllerPostMessage, documentUri);
             return Promise.resolve();
         }
     });
 }
 
-function hashBangConnectPrivate(clientMapper: ClientMapper, messageHandlerMap: Map<string, rxjs.Subject<KernelCommandOrEventEnvelope>>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
+function hashBangConnectPrivate(clientMapper: ClientMapper, kernelInfoProduced: contracts.KernelInfoProduced[], messageHandlerMap: Map<string, rxjs.Subject<KernelCommandOrEventEnvelope>>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
     const documentUriString = documentUri.toString();
     let messageHandler = messageHandlerMap.get(documentUriString);
     if (!messageHandler) {
@@ -51,6 +51,10 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, messageHandlerMap: M
             receiver: WebviewToExtensionHostReceiver,
             remoteUris: ["kernel://webview"]
         });
+
+        for (const kernelInfo of kernelInfoProduced) {
+            connection.ensureOrUpdateProxyForKernelInfo(kernelInfo, client.kernel);
+        }
 
         client.kernelHost.connectProxyKernel('javascript', "kernel://webview/javascript", ['js']);
 

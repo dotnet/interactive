@@ -115,7 +115,7 @@ export class DotNetNotebookKernel {
             switch (e.message.preloadCommand) {
                 case '#!connect':
                     this.config.clientMapper.getOrAddClient(notebookUri).then(() => {
-                        notebookMessageHandler.hashBangConnect(this.config.clientMapper, this.uriMessageHandlerMap, (arg) => controller.postMessage(arg), notebookUri);
+                        notebookMessageHandler.hashBangConnect(this.config.clientMapper, (<contracts.KernelEventEnvelope[]>(e.message.kernelInfoProduced)).map(e => <contracts.KernelInfoProduced>e.event), this.uriMessageHandlerMap, (arg) => controller.postMessage(arg), notebookUri);
                     });
                     break;
             }
