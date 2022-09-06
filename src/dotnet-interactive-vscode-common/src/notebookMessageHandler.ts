@@ -11,19 +11,22 @@ import * as contracts from './dotnet-interactive/contracts';
 
 
 
-export function hashBangConnect(clientMapper: ClientMapper, kernelInfoProduced: contracts.KernelInfoProduced[], messageHandlerMap: Map<string, rxjs.Subject<KernelCommandOrEventEnvelope>>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
+export function hashBangConnect(clientMapper: ClientMapper, hostUri: string, kernelInfoProduced: contracts.KernelInfoProduced[], messageHandlerMap: Map<string, rxjs.Subject<KernelCommandOrEventEnvelope>>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
     Logger.default.info(`handling #!connect for ${documentUri.toString()}`);
-    hashBangConnectPrivate(clientMapper, kernelInfoProduced, messageHandlerMap, controllerPostMessage, documentUri);
+    hashBangConnectPrivate(clientMapper, hostUri, kernelInfoProduced, messageHandlerMap, controllerPostMessage, documentUri);
     clientMapper.onClientCreate((clientUri, _client) => {
         if (clientUri.toString() === documentUri.toString()) {
             Logger.default.info(`reconnecting webview kernels for ${documentUri.toString()}`);
-            hashBangConnectPrivate(clientMapper, kernelInfoProduced, messageHandlerMap, controllerPostMessage, documentUri);
+            hashBangConnectPrivate(clientMapper, hostUri, kernelInfoProduced, messageHandlerMap, controllerPostMessage, documentUri);
             return Promise.resolve();
         }
     });
 }
 
-function hashBangConnectPrivate(clientMapper: ClientMapper, kernelInfoProduced: contracts.KernelInfoProduced[], messageHandlerMap: Map<string, rxjs.Subject<KernelCommandOrEventEnvelope>>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
+function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, kernelInfoProduced: contracts.KernelInfoProduced[], messageHandlerMap: Map<string, rxjs.Subject<KernelCommandOrEventEnvelope>>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
+
+    Logger.default.info(`handling #!connect from '${hostUri}' for ntoebook: ${documentUri.toString()}`);
+
     const documentUriString = documentUri.toString();
     let messageHandler = messageHandlerMap.get(documentUriString);
     if (!messageHandler) {
@@ -40,23 +43,15 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, kernelInfoProduced: 
 
     clientMapper.getOrAddClient(documentUri).then(client => {
 
-        const knownKernels = client.kernelHost.getKernelInfoProduced();
-
-        for (const knwonKernel of knownKernels) {
-            const kernelInfoProduced = <contracts.KernelInfoProduced>knwonKernel.event;
-            Logger.default.info(`forwarding kernelInfo [${JSON.stringify(kernelInfoProduced.kernelInfo)}] to webview`);
-            extensionHostToWebviewSender.send(knwonKernel);
-        }
-
-        client.kernelHost.tryAddConnector({
-            sender: extensionHostToWebviewSender,
-            receiver: WebviewToExtensionHostReceiver,
-            remoteUris: ["kernel://webview"]
+        Logger.default.info(`configuring routing from '${hostUri}'`);
+        client.channel.receiver.subscribe({
+            next: envelope => {
+                if (isKernelEventEnvelope(envelope)) {
+                    Logger.default.info(`forwarding event to '${hostUri}' ${JSON.stringify(envelope)}`);
+                    extensionHostToWebviewSender.send(envelope);
+                }
+            }
         });
-
-        for (const kernelInfo of kernelInfoProduced) {
-            connection.ensureOrUpdateProxyForKernelInfo(kernelInfo, client.kernel);
-        }
 
         WebviewToExtensionHostReceiver.subscribe({
             next: envelope => {
@@ -65,7 +60,7 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, kernelInfoProduced: 
                     if (envelope.command.destinationUri) {
                         if (envelope.command.destinationUri.startsWith("kernel://vscode")) {
                             // wants to go to vscode
-                            Logger.default.info(`routing command from webview ${JSON.stringify(envelope)} to extension host`);
+                            Logger.default.info(`routing command from '${hostUri}' ${JSON.stringify(envelope)} to extension host`);
                             const kernel = client.kernelHost.getKernel(envelope);
                             kernel.send(envelope);
 
@@ -74,7 +69,7 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, kernelInfoProduced: 
                             const connector = client.kernelHost.tryGetConnector(host!);
                             if (connector) {
                                 // route to interactive
-                                Logger.default.info(`routing command from webview ${JSON.stringify(envelope)} to interactive`);
+                                Logger.default.info(`routing command from '${hostUri}' ${JSON.stringify(envelope)} to '${host}'`);
                                 connector.sender.send(envelope);
                             } else {
                                 Logger.default.error(`cannot find connector to reach${envelope.command.destinationUri}`);
@@ -104,21 +99,30 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, kernelInfoProduced: 
                             Logger.default.info(`routing command from webview ${JSON.stringify(envelope)} to host ${host}`);
                             connector.sender.send(envelope);
                         } else {
-                            Logger.default.error(`cannot find connector to reach${envelope.command?.command.originUri}`);
+                            Logger.default.error(`cannot find connector to reach ${envelope.command?.command.originUri}`);
                         }
                     }
                 }
             }
         });
 
-        client.channel.receiver.subscribe({
-            next: envelope => {
-                if (isKernelEventEnvelope(envelope)) {
-                    Logger.default.info(`forwarding event to webview ${JSON.stringify(envelope)}`);
-                    extensionHostToWebviewSender.send(envelope);
-                }
-            }
+        const knownKernels = client.kernelHost.getKernelInfoProduced();
+
+        for (const knwonKernel of knownKernels) {
+            const kernelInfoProduced = <contracts.KernelInfoProduced>knwonKernel.event;
+            Logger.default.info(`forwarding kernelInfo [${JSON.stringify(kernelInfoProduced.kernelInfo)}] to webview`);
+            extensionHostToWebviewSender.send(knwonKernel);
+        }
+
+        client.kernelHost.tryAddConnector({
+            sender: extensionHostToWebviewSender,
+            receiver: WebviewToExtensionHostReceiver,
+            remoteUris: ["kernel://webview"]
         });
+
+        for (const kernelInfo of kernelInfoProduced) {
+            connection.ensureOrUpdateProxyForKernelInfo(kernelInfo, client.kernel);
+        }
     });
 }
 

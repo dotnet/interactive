@@ -47,7 +47,7 @@ export function configure(global?: any) {
         () => {
             let kernelInfoProduced = (<KernelHost>(global['webview'].kernelHost)).getKernelInfoProduced();
             // @ts-ignore
-            postKernelMessage({ preloadCommand: '#!connect', kernelInfoProduced });
+            postKernelMessage({ preloadCommand: '#!connect', kernelInfoProduced, hostUri: (<KernelHost>(global['webview'].kernelHost)).hostUri });
 
         }
     );
