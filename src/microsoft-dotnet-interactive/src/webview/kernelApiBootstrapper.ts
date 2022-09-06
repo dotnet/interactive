@@ -45,9 +45,10 @@ export function configure(global?: any) {
         localToRemote,
         remoteToLocal,
         () => {
-            let kernelInfoProduced = (<KernelHost>(global['webview'].kernelHost)).getKernelInfoProduced();
+            const kernelInfoProduced = (<KernelHost>(global['webview'].kernelHost)).getKernelInfoProduced();
+            const hostUri = (<KernelHost>(global['webview'].kernelHost)).uri;
             // @ts-ignore
-            postKernelMessage({ preloadCommand: '#!connect', kernelInfoProduced, hostUri: (<KernelHost>(global['webview'].kernelHost)).hostUri });
+            postKernelMessage({ preloadCommand: '#!connect', kernelInfoProduced, hostUri });
 
         }
     );

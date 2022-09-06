@@ -25,7 +25,7 @@ export function hashBangConnect(clientMapper: ClientMapper, hostUri: string, ker
 
 function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, kernelInfoProduced: contracts.KernelInfoProduced[], messageHandlerMap: Map<string, rxjs.Subject<KernelCommandOrEventEnvelope>>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
 
-    Logger.default.info(`handling #!connect from '${hostUri}' for ntoebook: ${documentUri.toString()}`);
+    Logger.default.info(`handling #!connect from '${hostUri}' for not ebook: ${documentUri.toString()}`);
 
     const documentUriString = documentUri.toString();
     let messageHandler = messageHandlerMap.get(documentUriString);
@@ -43,7 +43,7 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, ker
 
     clientMapper.getOrAddClient(documentUri).then(client => {
 
-        Logger.default.info(`configuring routing from '${hostUri}'`);
+        Logger.default.info(`configuring routing for host '${hostUri}'`);
         client.channel.receiver.subscribe({
             next: envelope => {
                 if (isKernelEventEnvelope(envelope)) {
