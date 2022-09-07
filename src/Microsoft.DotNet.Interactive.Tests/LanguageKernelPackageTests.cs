@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             using var kernel = CreateKernel(language);
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-            var command = new SubmitCode("#r \"nuget:Microsoft.ML, 1.3.1\"" + Environment.NewLine + assignment);
+            var command = new SubmitCode("#r \"nuget:SixLabors.ImageSharp, 1.0.2\"" + Environment.NewLine + assignment);
             await kernel.SendAsync(command);
 
             events
@@ -449,8 +449,8 @@ Formatter.Register<DataFrame>((df, writer) =>
         }
 
         [Theory]
-        [InlineData(Language.CSharp, "using Microsoft.ML.AutoML;")]
-        [InlineData(Language.FSharp, "open Microsoft.ML.AutoML")]
+        //[InlineData(Language.CSharp, "using SixLabors.ImageSharp;")]
+        [InlineData(Language.FSharp, "open SixLabors.ImageSharp")]
         public async Task Pound_r_nuget_allows_duplicate_package_specifications_single_cell(Language language, string code)
         {
             var kernel = CreateKernel(language);
@@ -459,8 +459,8 @@ Formatter.Register<DataFrame>((df, writer) =>
 
             await kernel.SubmitCodeAsync(@"
 #!time
-#r ""nuget:Microsoft.ML.AutoML,0.16.0-preview""
-#r ""nuget:Microsoft.ML.AutoML,0.16.0-preview""
+#r ""nuget:SixLabors.ImageSharp,1.0.2""
+#r ""nuget:SixLabors.ImageSharp,1.0.2""
 ");
 
             await kernel.SubmitCodeAsync(code);
@@ -469,8 +469,8 @@ Formatter.Register<DataFrame>((df, writer) =>
         }
 
         [Theory]
-        [InlineData(Language.CSharp, "using Microsoft.ML.AutoML;")]
-        [InlineData(Language.FSharp, "open Microsoft.ML.AutoML")]
+        [InlineData(Language.CSharp, "using SixLabors.ImageSharp;")]
+        [InlineData(Language.FSharp, "open SixLabors.ImageSharp")]
         public async Task Pound_r_nuget_allows_duplicate_package_specifications_multiple_cells(Language language, string code)
         {
             var kernel = CreateKernel(language);
@@ -479,13 +479,13 @@ Formatter.Register<DataFrame>((df, writer) =>
 
             await kernel.SubmitCodeAsync(
                 @"
-#r ""nuget:Microsoft.ML.AutoML,0.16.0-preview"""
+#r ""nuget:SixLabors.ImageSharp,1.0.2"""
             );
             events.Should().NotContainErrors();
 
             await kernel.SubmitCodeAsync(
                 @"
-#r ""nuget:Microsoft.ML.AutoML,0.16.0-preview""
+#r ""nuget:SixLabors.ImageSharp,1.0.2""
 ");
 
             await kernel.SubmitCodeAsync(code);
@@ -494,34 +494,56 @@ Formatter.Register<DataFrame>((df, writer) =>
         }
 
         [Theory]
-        [InlineData(Language.CSharp, "using Microsoft.ML.AutoML;")]
-        [InlineData(Language.FSharp, "open Microsoft.ML.AutoML")]
-        public async Task Pound_r_nuget_disallows_package_specifications_with_different_versions_single_cell(Language language, string code)
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_r_nuget_disallows_package_specifications_with_different_versions_single_cell(Language language)
         {
             var kernel = CreateKernel(language);
 
-            using var events = kernel.KernelEvents.ToSubscribedList();
-
-            await kernel.SubmitCodeAsync(@"
+            var results = await kernel.SubmitCodeAsync(@"
 #!time
-#r ""nuget:Microsoft.ML.AutoML, 0.19.0""
-#r ""nuget:Microsoft.ML.AutoML, 0.19.1""
+#r ""nuget:SixLabors.ImageSharp, 1.0.1""
+#r ""nuget:SixLabors.ImageSharp, 1.0.2""
 ");
 
-            await kernel.SubmitCodeAsync(code);
+            var events = results.KernelEvents.ToSubscribedList();
 
             events.Should()
                   .ContainSingle<CommandFailed>()
                   .Which
                   .Message
                   .Should()
-                  .Be("Microsoft.ML.AutoML version 0.19.1 cannot be added because version 0.19.0 was added previously.");
+                  .Be("SixLabors.ImageSharp version 1.0.2 cannot be added because version 1.0.1 was added previously.");
 
         }
 
         [Theory]
-        [InlineData(Language.CSharp, "using Microsoft.ML.AutoML;")]
-        [InlineData(Language.FSharp, "open Microsoft.ML.AutoML")]
+        [InlineData(Language.CSharp, "using SixLabors.ImageSharp;", "*The type or namespace name 'SixLabors' could not be found*")]
+        [InlineData(Language.FSharp, "open SixLabors.ImageSharp", "*The namespace or module 'SixLabors' is not defined.")]
+        public async Task Pound_r_nuget_with_different_versions_in_a_single_cell_fails_package_restore(Language language, string code, string errorMessage)
+        {
+            var kernel = CreateKernel(language);
+
+            await kernel.SubmitCodeAsync(@"
+#!time
+#r ""nuget:SixLabors.ImageSharp, 1.0.1""
+#r ""nuget:SixLabors.ImageSharp, 1.0.2""
+");
+
+            var results = await kernel.SubmitCodeAsync(code);
+
+            var events = results.KernelEvents.ToSubscribedList();
+            events.Should()
+                .ContainSingle<CommandFailed>()
+                .Which
+                .Message
+                .Should()
+                .Match(errorMessage);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, "using SixLabors.ImageSharp;")]
+        [InlineData(Language.FSharp, "open SixLabors.ImageSharp")]
         public async Task Pound_r_nuget_disallows_package_specifications_with_different_versions_multiple_cells(Language language, string code)
         {
             var kernel = CreateKernel(language);
@@ -531,14 +553,14 @@ Formatter.Register<DataFrame>((df, writer) =>
             await kernel.SubmitCodeAsync(
                 @"
 #!time
-#r ""nuget:Microsoft.ML.AutoML, 0.19.0""
+#r ""nuget:SixLabors.ImageSharp, 1.0.1""
 ");
             events.Should().NotContainErrors();
 
             await kernel.SubmitCodeAsync(
                 @"
 #!time
-#r ""nuget:Microsoft.ML.AutoML, 0.19.1""
+#r ""nuget:SixLabors.ImageSharp, 1.0.2""
 ");
 
             await kernel.SubmitCodeAsync(code);
@@ -548,7 +570,7 @@ Formatter.Register<DataFrame>((df, writer) =>
                   .Which
                   .Message
                   .Should()
-                  .Be("Microsoft.ML.AutoML version 0.19.1 cannot be added because version 0.19.0 was added previously.");
+                  .Be("SixLabors.ImageSharp version 1.0.2 cannot be added because version 1.0.1 was added previously.");
         }
 
         [Theory]
@@ -771,7 +793,7 @@ using NodaTime.Extensions;");
                  .ContainAll(
                     // C# and F# should both fail, but the messages will be different because they handle it differently internally.
                     language switch
-                    { 
+                    {
                         Language.CSharp => new[] { "CS0006", "nugt:System.Text.Json" },
                         Language.FSharp => new[] { "interactive error", "nugt" }
                     }
@@ -802,7 +824,7 @@ using NodaTime.Extensions;");
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
-        public async Task it_can_load_assembly_referenced_from_refs_folder_in_nugetpackage(Language language)
+        public async Task it_can_load_assembly_referenced_from_refs_folder_in_nuget_package(Language language)
         {
             var kernel = CreateKernel(language);
 
@@ -919,7 +941,7 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
                 .Should()
                 .Be("Newtonsoft.Json");
 
-            kernel.FindKernel("csharp").As<CSharpKernel>()
+            kernel.FindKernelByName("csharp").As<CSharpKernel>()
                 .ResolvedPackageReferences
                 .Should()
                 .ContainSingle(p => p.PackageName == "Newtonsoft.Json");

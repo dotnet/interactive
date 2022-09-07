@@ -20,6 +20,8 @@ namespace Microsoft.DotNet.Interactive
 {
     public class KernelInvocationContext : IDisposable
     {
+        private bool _isFailed;
+        
         private static readonly AsyncLocal<KernelInvocationContext> _current = new();
 
         private readonly ReplaySubject<KernelEvent> _events = new();
@@ -31,7 +33,7 @@ namespace Microsoft.DotNet.Interactive
         private List<Action<KernelInvocationContext>> _onCompleteActions;
 
         private readonly CancellationTokenSource _cancellationTokenSource;
-        
+
         private KernelInvocationContext(KernelCommand command)
         {
             var operation = new OperationLogger(
@@ -63,7 +65,7 @@ namespace Microsoft.DotNet.Interactive
                     c.Error.Subscribe(s => this.DisplayStandardError(s, command))
                 };
             }));
-        
+
             _disposables.Add(operation);
         }
 
@@ -71,18 +73,13 @@ namespace Microsoft.DotNet.Interactive
 
         public bool IsComplete { get; private set; }
 
+        public bool IsFailed => IsComplete && _isFailed;
+
         public CancellationToken CancellationToken
         {
             get
             {
-                if (_cancellationTokenSource.IsCancellationRequested)
-                {
-                    return new CancellationToken(true);
-                }
-                else
-                {
-                    return _cancellationTokenSource.Token;
-                }
+                return _cancellationTokenSource.IsCancellationRequested ? new CancellationToken(true) : _cancellationTokenSource.Token;
             }
         }
 
@@ -126,7 +123,7 @@ namespace Microsoft.DotNet.Interactive
                 }
 
                 var completingMainCommand = CommandEqualityComparer.Instance.Equals(command, Command);
-                
+
                 if (succeed)
                 {
                     if (completingMainCommand)
@@ -163,6 +160,10 @@ namespace Microsoft.DotNet.Interactive
                 }
 
                 IsComplete = completingMainCommand;
+                if (completingMainCommand)
+                {
+                    _isFailed = !succeed;
+                }
             }
 
             void StopPublishingMainCommandEvents()
@@ -214,9 +215,9 @@ namespace Microsoft.DotNet.Interactive
 
             if (HandlingKernel is { })
             {
-                @event.RoutingSlip.TryAdd(HandlingKernel.GetKernelUri());
+                @event.TryAddToRoutingSlip(HandlingKernel.GetKernelUri());
             }
-            
+
             if (_childCommands.TryGetValue(command, out var events))
             {
                 events.OnNext(@event);
@@ -266,13 +267,23 @@ namespace Microsoft.DotNet.Interactive
                         command.Parent = _current.Value.Command;
                     }
 
-                    _current.Value._childCommands.GetOrAdd(command, _ =>
+                    var capturedEventStream = _current.Value._events;
+                    _current.Value._childCommands.GetOrAdd(command, innerCommand =>
                     {
                         var replaySubject = new ReplaySubject<KernelEvent>();
 
                         var subscription = replaySubject
-                                           .Where(e => e is not CommandSucceeded and not CommandFailed)
-                                           .Subscribe(e => _current.Value._events.OnNext(e));
+                                           .Where(e =>
+                                            {
+                                                if (innerCommand.OriginUri is { })
+                                                {
+                                                    // if executing on behalf of a proxy, don't swallow anything
+                                                    return true;
+                                                }
+
+                                                return e is not CommandSucceeded and not CommandFailed;
+                                            })
+                                           .Subscribe(e => capturedEventStream.OnNext(e));
 
                         _current.Value._disposables.Add(subscription);
                         _current.Value._disposables.Add(replaySubject);

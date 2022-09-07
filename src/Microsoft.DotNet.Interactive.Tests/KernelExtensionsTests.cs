@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.Tests
     public class KernelExtensionsTests
     {
         [Fact]
-        public void FindKernel_finds_a_subkernel_of_a_composite_kernel_by_name()
+        public void FindKernelByName_finds_a_subkernel_of_a_composite_kernel_by_name()
         {
             var one = new FakeKernel("one");
             var two = new FakeKernel("two");
@@ -20,13 +20,13 @@ namespace Microsoft.DotNet.Interactive.Tests
                 two,
             };
 
-            var found = compositeKernel.FindKernel("two");
+            var found = compositeKernel.FindKernelByName("two");
 
             found.Should().BeSameAs(two);
         }
 
         [Fact]
-        public void FindKernel_finds_a_subkernel_of_a_composite_kernel_by_alias()
+        public void FindKernelByName_finds_a_subkernel_of_a_composite_kernel_by_alias()
         {
             var one = new FakeKernel("one");
             var two = new FakeKernel("two");
@@ -34,13 +34,13 @@ namespace Microsoft.DotNet.Interactive.Tests
             compositeKernel.Add(one, aliases: new[] { "one-alias" });
             compositeKernel.Add(two);
 
-            var found = compositeKernel.FindKernel("one-alias");
+            var found = compositeKernel.FindKernelByName("one-alias");
 
             found.Should().BeSameAs(one);
         }
 
         [Fact]
-        public void FindKernel_finds_a_subkernel_of_a_parent_composite_kernel_by_name()
+        public void FindKernelByName_finds_a_subkernel_of_a_parent_composite_kernel_by_name()
         {
             var one = new FakeKernel("one");
             var two = new FakeKernel("two");
@@ -50,13 +50,13 @@ namespace Microsoft.DotNet.Interactive.Tests
                 two,
             };
 
-            var found = one.FindKernel("two");
+            var found = one.FindKernelByName("two");
 
             found.Should().BeSameAs(two);
         }
 
         [Fact]
-        public void FindKernel_returns_null_for_unknown_kernel()
+        public void FindKernelByName_returns_null_for_unknown_kernel()
         {
             var one = new FakeKernel("one");
             var two = new FakeKernel("two");
@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 two,
             };
 
-            var found = compositeKernel.FindKernel("three");
+            var found = compositeKernel.FindKernelByName("three");
 
             found.Should().BeNull();
         }

@@ -1227,14 +1227,14 @@ System.Threading.Thread.Sleep(1000);
 
             await kernel.SubmitCodeAsync(codeToSetVariable);
 
-            var languageKernel = kernel.ChildKernels.OfType<ISupportGetValue>().Single();
+            var languageKernel = kernel.ChildKernels.Single();
 
-            var succeeded = languageKernel.TryGetValue("x", out int x);
+            var (succeeded, valueProduced) = await languageKernel.TryRequestValueAsync("x");
 
             using var _ = new AssertionScope();
 
             succeeded.Should().BeTrue();
-            x.Should().Be(123);
+            valueProduced.Value.Should().Be(123);
         }
 
         [Theory]
@@ -1254,9 +1254,11 @@ System.Threading.Thread.Sleep(1000);
 
             await kernel.SubmitCodeAsync(codeToSetVariable);
 
-            var languageKernel = kernel.ChildKernels.OfType<ISupportGetValue>().Single();
+            var languageKernel = kernel.ChildKernels.Single();
 
-            languageKernel.GetValueInfos().Should().Contain(v => v.Name == "x");
+            var (success, valueInfosProduced) = await languageKernel.TryRequestValueInfosAsync();
+
+            valueInfosProduced.ValueInfos.Should().Contain(v => v.Name == "x");
         }
 
         [Theory]
@@ -1267,16 +1269,16 @@ System.Threading.Thread.Sleep(1000);
         {
             var kernel = CreateKernel(language);
 
-            var languageKernel = kernel.ChildKernels.OfType<ISupportSetClrValue>().Single();
+            var languageKernel = kernel.ChildKernels.Single();
 
-            await languageKernel.SetValueAsync("x", 123);
+            await ((ISupportSetClrValue)languageKernel).SetValueAsync("x", 123);
 
-            var succeeded = ((ISupportGetValue)languageKernel).TryGetValue("x", out int x);
+            var (succeeded, valueProduced) = await languageKernel.TryRequestValueAsync("x");
 
             using var _ = new AssertionScope();
 
             succeeded.Should().BeTrue();
-            x.Should().Be(123);
+            valueProduced.Value.Should().Be(123);
         }
 
         [Theory]
@@ -1287,17 +1289,17 @@ System.Threading.Thread.Sleep(1000);
         {
             var kernel = CreateKernel(language);
 
-            var languageKernel = kernel.ChildKernels.OfType<ISupportSetClrValue>().Single();
+            var languageKernel = kernel.ChildKernels.Single();
 
-            await languageKernel.SetValueAsync("x", 123);
-            await languageKernel.SetValueAsync("x", 456);
+            await ((ISupportSetClrValue)languageKernel).SetValueAsync("x", 123);
+            await ((ISupportSetClrValue)languageKernel).SetValueAsync("x", 456);
 
-            var succeeded = ((ISupportGetValue)languageKernel).TryGetValue("x", out int x);
+            var (succeeded, valueProduced) = await languageKernel.TryRequestValueAsync("x");
 
             using var _ = new AssertionScope();
 
             succeeded.Should().BeTrue();
-            x.Should().Be(456);
+            valueProduced.Value.Should().Be(456);
         }
 
         [Theory]
@@ -1308,33 +1310,33 @@ System.Threading.Thread.Sleep(1000);
         {
             var kernel = CreateKernel(language);
 
-            var languageKernel = kernel.ChildKernels.OfType<ISupportSetClrValue>().Single();
+            var languageKernel = kernel.ChildKernels.Single();
 
-            await languageKernel.SetValueAsync("x", 123);
-            await languageKernel.SetValueAsync("x", "hello");
+            await ((ISupportSetClrValue)languageKernel).SetValueAsync("x", 123);
+            await ((ISupportSetClrValue)languageKernel).SetValueAsync("x", "hello");
 
-            var succeeded = ((ISupportGetValue)languageKernel).TryGetValue("x", out string x);
+            var (succeeded, valueProduced) = await languageKernel.TryRequestValueAsync("x");
 
             using var _ = new AssertionScope();
 
             succeeded.Should().BeTrue();
-            x.Should().Be("hello");
+            valueProduced.Value.Should().Be("hello");
         }
 
         [Fact]
         public async Task FSharp_can_set_an_array_value_with_SetValueAsync()
         {
             var kernel = CreateKernel(Language.FSharp);
-            var languageKernel = kernel.ChildKernels.OfType<ISupportSetClrValue>().Single();
+            var languageKernel = kernel.ChildKernels.Single();
 
-            await languageKernel.SetValueAsync("x", new int[] { 42 });
+            await ((ISupportSetClrValue)languageKernel).SetValueAsync("x", new int[] { 42 });
 
-            var succeeded = ((ISupportGetValue)languageKernel).TryGetValue("x", out int[] x);
+            var (succeeded, valueProduced) = await languageKernel.TryRequestValueAsync("x");
 
             using var _ = new AssertionScope();
 
             succeeded.Should().BeTrue();
-            x.Should().BeEquivalentTo(new int[] { 42 });
+            valueProduced.Value.Should().BeEquivalentTo(new int[] { 42 });
         }
     }
 }

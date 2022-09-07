@@ -6,8 +6,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Parsing;
-using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
@@ -19,21 +17,17 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.ValueSharing;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Kernel>;
 using Pocket;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 using Disposable = System.Reactive.Disposables.Disposable;
-using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public abstract partial class Kernel : 
-        IKernelCommandHandler<RequestKernelInfo>, 
-        IKernelCommandHandler<RequestValue>, 
-        IKernelCommandHandler<RequestValueInfos>, 
+    public abstract partial class Kernel :
+        IKernelCommandHandler<RequestKernelInfo>,
         IDisposable
     {
         private static readonly ConcurrentDictionary<Type, IReadOnlyCollection<Type>> _declaredHandledCommandTypesByKernelType = new();
@@ -161,16 +155,16 @@ namespace Microsoft.DotNet.Interactive
                     return false;
                 }
 
-                if (command.DestinationUri is { } && handlingKernel.KernelInfo.Uri is {} && command.DestinationUri == handlingKernel.KernelInfo.Uri)
+                if (command.DestinationUri is { } && handlingKernel.KernelInfo.Uri is { } && command.DestinationUri == handlingKernel.KernelInfo.Uri)
                 {
                     command.SchedulingScope = handlingKernel.SchedulingScope;
                     command.TargetKernelName = handlingKernel.Name;
                 }
-                
+
                 command.SchedulingScope ??= handlingKernel.SchedulingScope;
                 command.TargetKernelName ??= handlingKernel.Name;
 
-                if (command.Parent is null && 
+                if (command.Parent is null &&
                     !CommandEqualityComparer.Instance.Equals(command, originalCommand))
                 {
                     command.Parent = originalCommand;
@@ -187,8 +181,8 @@ namespace Microsoft.DotNet.Interactive
         }
 
         private bool TryAdjustLanguageServiceCommandLinePositions(
-            LanguageServiceCommand command, 
-            KernelInvocationContext context, 
+            LanguageServiceCommand command,
+            KernelInvocationContext context,
             out LanguageServiceCommand adjustedCommand)
         {
             var tree = SubmissionParser.Parse(command.Code, command.TargetKernelName);
@@ -255,7 +249,7 @@ namespace Microsoft.DotNet.Interactive
         protected bool IsDisposed => _disposables.IsDisposed;
 
         public IObservable<KernelEvent> KernelEvents => _kernelEvents;
-      
+
         public string Name { get; }
 
         public KernelInfo KernelInfo => _kernelInfo;
@@ -282,7 +276,7 @@ namespace Microsoft.DotNet.Interactive
             if (_supportedCommandTypes.Add(typeof(TCommand)))
             {
                 var defaultHandler = CreateDefaultHandlerForCommandType<TCommand>() ?? throw new InvalidOperationException("CreateDefaultHandlerForCommandType should not return null");
-                
+
                 _dynamicHandlers[typeof(TCommand)] = (command, context) => defaultHandler((TCommand)command, context);
 
                 _kernelInfo.SupportedKernelCommands.Add(new(typeof(TCommand).Name));
@@ -291,7 +285,7 @@ namespace Microsoft.DotNet.Interactive
 
         protected virtual Func<TCommand, KernelInvocationContext, Task> CreateDefaultHandlerForCommandType<TCommand>() where TCommand : KernelCommand
         {
-            return (_,_) => Task.CompletedTask;
+            return (_, _) => Task.CompletedTask;
         }
 
         internal virtual async Task HandleAsync(
@@ -335,7 +329,7 @@ namespace Microsoft.DotNet.Interactive
             if (TryPreprocessCommands(command, context, out var commands))
             {
                 SetHandlingKernel(command, context);
-          
+
                 foreach (var c in commands)
                 {
                     switch (c)
@@ -357,41 +351,41 @@ namespace Microsoft.DotNet.Interactive
                             break;
 
                         case RequestDiagnostics _:
-                        {
-                            if (_countOfLanguageServiceCommandsInFlight > 0)
                             {
-                                context.CancelWithSuccess();
-                                return context.Result;
+                                if (_countOfLanguageServiceCommandsInFlight > 0)
+                                {
+                                    context.CancelWithSuccess();
+                                    return context.Result;
+                                }
+
+                                if (_inFlightContext is { } inflight)
+                                {
+                                    inflight.Complete(inflight.Command);
+                                }
+
+                                _inFlightContext = context;
+
+                                await RunOnFastPath(context, c, cancellationToken);
+
+                                _inFlightContext = null;
                             }
-
-                            if (_inFlightContext is { } inflight)
-                            {
-                                inflight.Complete(inflight.Command);
-                            }
-
-                            _inFlightContext = context;
-
-                            await RunOnFastPath(context, c, cancellationToken);
-
-                            _inFlightContext = null;
-                        }
                             break;
 
                         case RequestHoverText _:
                         case RequestCompletions _:
                         case RequestSignatureHelp _:
-                        {
-                            if (_inFlightContext is { } inflight)
                             {
-                                inflight.CancelWithSuccess();
+                                if (_inFlightContext is { } inflight)
+                                {
+                                    inflight.CancelWithSuccess();
+                                }
+
+                                Interlocked.Increment(ref _countOfLanguageServiceCommandsInFlight);
+
+                                await RunOnFastPath(context, c, cancellationToken);
+
+                                Interlocked.Decrement(ref _countOfLanguageServiceCommandsInFlight);
                             }
-
-                            Interlocked.Increment(ref _countOfLanguageServiceCommandsInFlight);
-
-                            await RunOnFastPath(context, c, cancellationToken);
-
-                            Interlocked.Decrement(ref _countOfLanguageServiceCommandsInFlight);
-                        }
                             break;
 
                         case DisplayError _:
@@ -405,18 +399,21 @@ namespace Microsoft.DotNet.Interactive
                             break;
 
                         default:
-                            await Scheduler.RunAsync(
-                                               c,
-                                               InvokePipelineAndCommandHandler,
-                                               c.SchedulingScope.ToString(),
-                                               cancellationToken: cancellationToken)
-                                           .ContinueWith(t =>
-                                           {
-                                               if (t.IsCanceled)
+                            if (!context.IsFailed)
+                            {
+                                await Scheduler.RunAsync(
+                                                   c,
+                                                   InvokePipelineAndCommandHandler,
+                                                   c.SchedulingScope.ToString(),
+                                                   cancellationToken: cancellationToken)
+                                               .ContinueWith(t =>
                                                {
-                                                   context.Cancel();
-                                               }
-                                           }, cancellationToken);
+                                                   if (t.IsCanceled)
+                                                   {
+                                                       context.Cancel();
+                                                   }
+                                               }, cancellationToken);
+                            }
                             break;
                     }
                 }
@@ -447,7 +444,7 @@ namespace Microsoft.DotNet.Interactive
 
         private async Task RunOnFastPath(
             KernelInvocationContext context,
-            KernelCommand command, 
+            KernelCommand command,
             CancellationToken cancellationToken)
         {
             await RunDeferredCommandsAsync(context);
@@ -483,7 +480,7 @@ namespace Microsoft.DotNet.Interactive
         private class UndeferScheduledCommands : AnonymousKernelCommand
         {
             public UndeferScheduledCommands(
-                string targetKernelName, 
+                string targetKernelName,
                 KernelCommand parent) : base((_, _) =>
             {
                 Log.Info("Undeferring commands ahead of {command}", parent);
@@ -509,7 +506,7 @@ namespace Microsoft.DotNet.Interactive
                 {
                     context.Complete(command);
                 }
-                
+
                 return context.ResultFor(command);
             }
             catch (Exception exception)
@@ -529,7 +526,18 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (_commandScheduler is null)
                 {
-                    var scheduler = new KernelScheduler<KernelCommand, KernelCommandResult>();
+                    var scheduler = new KernelScheduler<KernelCommand, KernelCommandResult>(
+                        (outer, inner) =>
+                        {
+                            if (outer is null)
+                            {
+                                return false;
+                            }
+
+                            return inner.IsChildCommand(outer);
+                          
+                        }
+                        );
                     RegisterForDisposal(scheduler);
                     SetScheduler(scheduler);
                 }
@@ -543,7 +551,7 @@ namespace Microsoft.DotNet.Interactive
             _commandScheduler = scheduler;
 
             _commandScheduler.RegisterDeferredOperationSource(
-                GetDeferredCommands, 
+                GetDeferredCommands,
                 InvokePipelineAndCommandHandler);
         }
 
@@ -558,10 +566,10 @@ namespace Microsoft.DotNet.Interactive
 
             while (_deferredCommands.TryDequeue(out var kernelCommand))
             {
+                var currentInvocationContext = KernelInvocationContext.Current;
                 kernelCommand.TargetKernelName = Name;
                 kernelCommand.SchedulingScope = SchedulingScope;
-
-                var currentInvocationContext = KernelInvocationContext.Current;
+                kernelCommand.Parent = currentInvocationContext?.Command;
 
                 if (TryPreprocessCommands(kernelCommand, currentInvocationContext, out var commands))
                 {
@@ -579,57 +587,6 @@ namespace Microsoft.DotNet.Interactive
             context.Publish(new KernelInfoProduced(KernelInfo, command));
 
             return Task.CompletedTask;
-        }
-
-        public virtual Task HandleAsync(
-            RequestValue command,
-            KernelInvocationContext context)
-        {
-            if (this is ISupportGetValue supportsGetValue)
-            {
-                if (supportsGetValue.TryGetValue(command.Name, out object value))
-                {
-                    if (value is { })
-                    {
-                        var valueType = value.GetType();
-                        var formatter = Formatter.GetPreferredFormatterFor(valueType, command.MimeType);
-
-                        using var writer = new StringWriter(CultureInfo.InvariantCulture);
-                        formatter.Format(value, writer);
-                        var formatted = new FormattedValue(command.MimeType, writer.ToString());
-                        context.Publish(new ValueProduced(value, command.Name, formatted, command));
-                    }
-                    else
-                    {
-                        var formatted = new FormattedValue(command.MimeType, "null");
-
-                        context.Publish(new ValueProduced(value, command.Name, formatted, command));
-                    }
-                }
-                else
-                {
-                    throw new InvalidOperationException($"Cannot find value named: {command.Name}");
-                }
-            }
-            else
-            {
-                context.Fail(command, message: $"Value '{command.Name}' not found in kernel {this}");
-            }
-
-            return Task.CompletedTask;
-        }
-
-        public virtual Task HandleAsync(
-            RequestValueInfos command,
-            KernelInvocationContext context)
-        {
-            if (context.HandlingKernel is ISupportGetValue supportsGetValue)
-            {
-                context.Publish(new ValueInfosProduced(supportsGetValue.GetValueInfos(), command));
-                return Task.CompletedTask;
-            }
-
-            throw new InvalidOperationException($"Kernel {context.HandlingKernel.Name} doesn't support command {nameof(RequestValueInfos)}");
         }
 
         private protected bool CanHandle(KernelCommand command)
@@ -678,8 +635,8 @@ namespace Microsoft.DotNet.Interactive
             {
                 throw new ArgumentNullException(nameof(kernelEvent));
             }
-            
-            kernelEvent.RoutingSlip.TryAdd(this.GetKernelUri());
+
+            kernelEvent.TryAddToRoutingSlip(this.GetKernelUri());
             _kernelEvents.OnNext(kernelEvent);
         }
 
@@ -794,7 +751,7 @@ namespace Microsoft.DotNet.Interactive
                         SetHandler(submitCode, submitCodeHandler);
                         break;
 
-                    case (RequestCompletions {LanguageNode: DirectiveNode} rq, _):
+                    case (RequestCompletions { LanguageNode: DirectiveNode } rq, _):
                         rq.Handler = (_, _) => HandleRequestCompletionsAsync(rq, context);
                         break;
 
@@ -816,11 +773,11 @@ namespace Microsoft.DotNet.Interactive
                         requestSignatureHelpHandler):
                         SetHandler(requestSignatureHelp, requestSignatureHelpHandler);
                         break;
-                    
+
                     case (RequestValue requestValue, IKernelCommandHandler<RequestValue>
                         requestValueHandler):
                         SetHandler(requestValue, requestValueHandler);
-                        break; 
+                        break;
 
                     case (RequestValueInfos requestValueInfos, IKernelCommandHandler<RequestValueInfos>
                         requestValueInfosHandler):
@@ -897,7 +854,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        internal bool SupportsCommandType(Type commandType)
+        public bool SupportsCommandType(Type commandType)
         {
             if (KernelInfo.SupportsCommand(commandType.Name))
             {

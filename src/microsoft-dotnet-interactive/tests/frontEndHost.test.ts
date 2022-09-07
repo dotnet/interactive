@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { expect } from "chai";
+import { CompositeKernel } from '../src/compositeKernel';
 import * as connection from "../src/connection";
 import * as contracts from "../src/contracts";
 import { clearTokenAndId } from "./testSupport";
@@ -50,59 +51,187 @@ describe("frontEndHost", () => {
             next: message => {
                 seenMessages.push(clearTokenAndId(message));
             }
-        })
+        });
         frontEndHost.createHost(testGlobal, 'testKernel', noop, noop, localToRemote, remoteToLocal, noop);
-        expect(seenMessages).to.deep.equal([
+        expect(seenMessages).to.deep.equal([{
+            event: {},
+            eventType: 'KernelReady',
+            routingSlip: ['kernel://testKernel']
+        },
+        {
+            event:
             {
-                event: {},
-                eventType: contracts.KernelReadyType,
+                kernelInfo:
+                {
+                    aliases: [],
+                    languageName: undefined,
+                    languageVersion: undefined,
+                    localName: 'testKernel',
+                    supportedDirectives: [],
+                    supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
+                    uri: 'kernel://testKernel'
+                }
             },
+            eventType: 'KernelInfoProduced',
+            routingSlip: ['kernel://testKernel']
+        },
+        {
+            event:
             {
-                event: {
-                    kernelInfo: {
-                        aliases: [],
-                        languageName: undefined,
-                        languageVersion: undefined,
-                        localName: 'testKernel',
-                        supportedDirectives: [],
-                        supportedKernelCommands: [
-                            {
-                                name: contracts.RequestKernelInfoType,
-                            }
-                        ],
-                        uri: 'kernel://testKernel',
-                    }
-                },
-                eventType: contracts.KernelInfoProducedType,
+                kernelInfo:
+                {
+                    aliases: ['js'],
+                    languageName: 'Javascript',
+                    languageVersion: undefined,
+                    localName: 'javascript',
+                    supportedDirectives: [],
+                    supportedKernelCommands:
+                        [{ name: 'RequestKernelInfo' },
+                        { name: 'SubmitCode' },
+                        { name: 'RequestValueInfos' },
+                        { name: 'RequestValue' }],
+                    uri: 'kernel://testKernel/javascript'
+                }
             },
-            {
-                event: {
-                    kernelInfo: {
-                        aliases: ['js'],
-                        languageName: 'Javascript',
-                        languageVersion: undefined,
-                        localName: 'javascript',
-                        supportedDirectives: [],
-                        supportedKernelCommands: [
-                            {
-                                name: contracts.RequestKernelInfoType,
-                            },
-                            {
-                                name: contracts.SubmitCodeType,
-                            },
-                            {
-                                name: contracts.RequestValueInfosType,
-                            },
-                            {
-                                name: contracts.RequestValueType,
-                            },
-                        ],
-                        uri: 'kernel://testKernel/javascript',
-                    }
-                },
-                eventType: contracts.KernelInfoProducedType,
+            eventType: 'KernelInfoProduced',
+            routingSlip: ['kernel://testKernel/javascript']
+        }]);
+    });
+
+    it("front end kernel adds proxy when new kernel info is seen", () => {
+        const remoteToLocal = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
+        const localToRemote = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
+        const testGlobal: any = {};
+        frontEndHost.createHost(testGlobal, 'testKernel', noop, noop, localToRemote, remoteToLocal, noop);
+        const compositeKernel = <CompositeKernel>testGlobal['testKernel'].compositeKernel;
+        remoteToLocal.next({
+            eventType: contracts.KernelInfoProducedType,
+            event: <contracts.KernelInfoProduced>{
+                kernelInfo: {
+                    localName: 'sql',
+                    uri: 'kernel://remote/sql',
+                    aliases: [],
+                    languageName: 'SQL',
+                    languageVersion: '10',
+                    supportedDirectives: [],
+                    supportedKernelCommands: [
+                        {
+                            name: contracts.RequestKernelInfoType
+                        },
+                        {
+                            name: contracts.SubmitCodeType
+                        },
+                        {
+                            name: contracts.RequestValueInfosType
+                        },
+                        {
+                            name: contracts.RequestValueType
+                        }
+                    ]
+                }
             }
-        ]);
+        });
+        const kernel = compositeKernel.findKernelByName('sql');
+        expect(kernel).to.not.be.undefined;
+        expect(kernel!.kernelInfo).to.deep.equal({
+            localName: 'sql',
+            uri: 'kernel://testKernel/sql',
+            remoteUri: 'kernel://remote/sql',
+            aliases: [],
+            languageName: 'SQL',
+            languageVersion: '10',
+            supportedDirectives: [],
+            supportedKernelCommands: [
+                {
+                    name: contracts.RequestKernelInfoType
+                },
+                {
+                    name: contracts.SubmitCodeType
+                },
+                {
+                    name: contracts.RequestValueInfosType
+                },
+                {
+                    name: contracts.RequestValueType
+                }
+            ]
+        });
+    });
+
+    it("front end kernel updates proxy when new kernel info is seen", () => {
+        const remoteToLocal = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
+        const localToRemote = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
+        const testGlobal: any = {};
+        frontEndHost.createHost(testGlobal, 'testKernel', noop, noop, localToRemote, remoteToLocal, noop);
+        const compositeKernel = <CompositeKernel>testGlobal['testKernel'].compositeKernel;
+        remoteToLocal.next({
+            eventType: contracts.KernelInfoProducedType,
+            event: <contracts.KernelInfoProduced>{
+                kernelInfo: {
+                    localName: 'sql',
+                    uri: 'kernel://remote/sql',
+                    aliases: [],
+                    supportedDirectives: [],
+                    supportedKernelCommands: [
+                        {
+                            name: contracts.RequestKernelInfoType
+                        }
+                    ]
+                }
+            }
+        });
+        remoteToLocal.next({
+            eventType: contracts.KernelInfoProducedType,
+            event: <contracts.KernelInfoProduced>{
+                kernelInfo: {
+                    localName: 'sql',
+                    uri: 'kernel://remote/sql',
+                    aliases: [],
+                    languageName: 'SQL',
+                    languageVersion: '10',
+                    supportedDirectives: [],
+                    supportedKernelCommands: [
+                        {
+                            name: contracts.RequestKernelInfoType
+                        },
+                        {
+                            name: contracts.SubmitCodeType
+                        },
+                        {
+                            name: contracts.RequestValueInfosType
+                        },
+                        {
+                            name: contracts.RequestValueType
+                        }
+                    ]
+                }
+            }
+        });
+        const kernel = compositeKernel.findKernelByName('sql');
+        expect(kernel).to.not.be.undefined;
+        expect(kernel!.kernelInfo).to.deep.equal({
+            localName: 'sql',
+            uri: 'kernel://testKernel/sql',
+            remoteUri: 'kernel://remote/sql',
+            aliases: [],
+            languageName: 'SQL',
+            languageVersion: '10',
+            supportedDirectives: [],
+            supportedKernelCommands: [
+                {
+                    name: contracts.RequestKernelInfoType
+                },
+                {
+                    name: contracts.SubmitCodeType
+                },
+                {
+                    name: contracts.RequestValueInfosType
+                },
+                {
+                    name: contracts.RequestValueType
+                }
+            ]
+        });
     });
 
 });

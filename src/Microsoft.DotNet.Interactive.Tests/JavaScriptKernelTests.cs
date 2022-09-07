@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 new JavaScriptKernel(client)
             };
             
-            kernel.FindKernel(JavaScriptKernel.DefaultKernelName).RegisterCommandType<CustomCommand>();
+            kernel.FindKernelByName(JavaScriptKernel.DefaultKernelName).RegisterCommandType<CustomCommand>();
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 

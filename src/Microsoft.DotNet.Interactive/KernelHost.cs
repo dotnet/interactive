@@ -7,8 +7,11 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
@@ -17,13 +20,14 @@ namespace Microsoft.DotNet.Interactive
 {
     public class KernelHost : IDisposable
     {
-        private readonly CancellationTokenSource _cancellationTokenSource = new ();
+        private readonly CancellationTokenSource _cancellationTokenSource = new();
         private readonly TaskCompletionSource<Unit> _disposed = new();
         private readonly CompositeKernel _kernel;
         private readonly IKernelCommandAndEventSender _defaultSender;
         private readonly IKernelCommandAndEventReceiver _receiver;
         private IDisposable? _kernelEventSubscription;
         private readonly IKernelConnector _defaultConnector;
+        private EventLoopScheduler? _eventLoop;
 
         internal KernelHost(
             CompositeKernel kernel,
@@ -61,13 +65,19 @@ namespace Microsoft.DotNet.Interactive
                     _sender,
                     _receiver,
                     new Uri(_sender.RemoteHostUri, kernelName));
-                
+
                 return Task.FromResult<Kernel>(proxy);
             }
         }
 
         public async Task ConnectAsync()
         {
+            _eventLoop = new EventLoopScheduler(a => new Thread(a)
+            {
+                Name = "KernelHost command dispatcher"
+            }); 
+
+            
             _kernelEventSubscription = _kernel.KernelEvents.Subscribe(e =>
             {
                 if (e is ReturnValueProduced { Value: DisplayedValue })
@@ -92,31 +102,40 @@ namespace Microsoft.DotNet.Interactive
                 var _ = _defaultSender.SendAsync(e, _cancellationTokenSource.Token);
             });
 
-            _receiver.Subscribe(commandOrEvent =>
+            _receiver.Subscribe( commandOrEvent =>
             {
                 if (commandOrEvent.IsParseError)
                 {
-                    var _ = _defaultSender.SendAsync(commandOrEvent.Event, _cancellationTokenSource.Token);
+                    var _= _defaultSender.SendAsync(commandOrEvent.Event, _cancellationTokenSource.Token);
                 }
                 else if (commandOrEvent.Command is { })
                 {
                     // this needs to be dispatched this way so that it does not block the current thread, which we see in certain bidirectional command scenarios (RequestInput sent by the SubmissionParser during magic command token interpolation) in stdio mode only (i.e. System.Console.In implementation details), and it has proven non-reproducible in tests.
-                    var _ = Task.Run(() => _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token));
+                    _eventLoop?.Schedule(async () =>
+                    {
+                        await _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
+                    });
                 }
+                
             });
 
             await _defaultSender.SendAsync(
                 new KernelReady(),
                 _cancellationTokenSource.Token);
 
+            var infoProduced = new KernelInfoProduced(_kernel.KernelInfo, KernelCommand.None);
+            infoProduced.TryAddToRoutingSlip(_kernel.KernelInfo.Uri);
+
             await _defaultSender.SendAsync(
-                new KernelInfoProduced(_kernel.KernelInfo, KernelCommand.None),
+                infoProduced,
                 _cancellationTokenSource.Token);
-            
+
             foreach (var kernel in _kernel.ChildKernels.Where(k => k is not ProxyKernel))
             {
+                infoProduced = new KernelInfoProduced(kernel.KernelInfo, KernelCommand.None);
+                infoProduced.TryAddToRoutingSlip(kernel.KernelInfo.Uri);
                 await _defaultSender.SendAsync(
-                    new KernelInfoProduced(kernel.KernelInfo, KernelCommand.None),
+                    infoProduced,
                     _cancellationTokenSource.Token);
             }
         }
@@ -130,6 +149,7 @@ namespace Microsoft.DotNet.Interactive
 
         public void Dispose()
         {
+            _eventLoop?.Dispose();
             _kernelEventSubscription?.Dispose();
 
             if (_cancellationTokenSource.Token.CanBeCanceled)

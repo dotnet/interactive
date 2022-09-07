@@ -5,6 +5,7 @@ import * as frontEndHost from './frontEndHost';
 import * as rxjs from "rxjs";
 import * as connection from "../connection";
 import { Logger } from "../logger";
+import { KernelHost } from '../kernelHost';
 
 export function configure(global?: any) {
     if (!global) {
@@ -44,14 +45,11 @@ export function configure(global?: any) {
         localToRemote,
         remoteToLocal,
         () => {
-            global.webview.kernelHost.connectProxyKernelOnDefaultConnector('csharp', undefined, ['c#', 'C#']);
-            global.webview.kernelHost.connectProxyKernelOnDefaultConnector('fsharp', undefined, ['fs', 'F#']);
-            global.webview.kernelHost.connectProxyKernelOnDefaultConnector('pwsh', undefined, ['powershell']);
-            global.webview.kernelHost.connectProxyKernelOnDefaultConnector('mermaid', undefined, []);
-            global.webview.kernelHost.connectProxyKernelOnDefaultConnector('vscode', "kernel://vscode/vscode");
-
+            const kernelInfoProduced = (<KernelHost>(global['webview'].kernelHost)).getKernelInfoProduced();
+            const hostUri = (<KernelHost>(global['webview'].kernelHost)).uri;
             // @ts-ignore
-            postKernelMessage({ preloadCommand: '#!connect' });
+            postKernelMessage({ preloadCommand: '#!connect', kernelInfoProduced, hostUri });
+
         }
     );
 }

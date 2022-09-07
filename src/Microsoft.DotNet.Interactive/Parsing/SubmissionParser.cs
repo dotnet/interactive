@@ -247,7 +247,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             foreach (var kernelName in nugetRestoreOnKernels)
             {
-                var kernel = _kernel.FindKernel(kernelName);
+                var kernel = _kernel.FindKernelByName(kernelName);
 
                 if (kernel?.SubmissionParser.GetDirectiveParser() is { } parser)
                 {
@@ -316,7 +316,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 var kernel = _kernel switch
                 {
                     // The parent kernel is the one where a directive would be defined, and therefore the one that should decide whether to accept this submission. 
-                    CompositeKernel composite => composite.FindKernel(node.ParentKernelName),
+                    CompositeKernel composite => composite.FindKernelByName(node.ParentKernelName),
                     _ => _kernel
                 };
 

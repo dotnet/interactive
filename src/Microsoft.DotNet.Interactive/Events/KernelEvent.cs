@@ -5,26 +5,30 @@ using System;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Events
+namespace Microsoft.DotNet.Interactive.Events;
+
+public abstract class KernelEvent
 {
-    public abstract class KernelEvent
+    protected KernelEvent(KernelCommand command)
     {
-        protected KernelEvent(KernelCommand command)
-        {
-            Command = command ?? throw new ArgumentNullException(nameof(command));
-            RoutingSlip = new RoutingSlip();
-        }
+        Command = command ?? throw new ArgumentNullException(nameof(command));
+        RoutingSlip = new RoutingSlip();
+    }
 
 
-        [JsonIgnore]
-        public KernelCommand Command { get; }
+    [JsonIgnore]
+    public KernelCommand Command { get; }
 
-        [JsonIgnore] 
-        public RoutingSlip RoutingSlip { get; }
+    [JsonIgnore]
+    public RoutingSlip RoutingSlip { get; }
 
-        public override string ToString()
-        {
-            return $"{GetType().Name}";
-        }
+    public override string ToString()
+    {
+        return $"{GetType().Name}";
+    }
+
+    public bool TryAddToRoutingSlip(Uri uri)
+    {
+        return RoutingSlip.TryAdd(uri);
     }
 }

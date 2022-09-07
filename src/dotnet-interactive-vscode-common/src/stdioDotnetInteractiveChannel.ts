@@ -121,7 +121,9 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
         if (isKernelEventEnvelope(envelope)) {
             switch (envelope.eventType) {
                 case DiagnosticLogEntryProducedType:
-                    this.diagnosticChannel.appendLine((<DiagnosticLogEntryProduced>envelope.event).message);
+                    const diagnosticMessage = (<DiagnosticLogEntryProduced>envelope.event).message;
+                    this.diagnosticChannel.appendLine(diagnosticMessage);
+                    Logger.default.warn(diagnosticMessage);
                     break;
                 case CommandFailedType:
                 case CommandSucceededType:

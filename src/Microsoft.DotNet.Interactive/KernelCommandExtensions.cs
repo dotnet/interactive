@@ -54,8 +54,8 @@ namespace Microsoft.DotNet.Interactive
                 command.SetToken(token);
                 return token;
             }
-            
-            if (KernelInvocationContext.Current?.Command is { } contextCommand && 
+
+            if (KernelInvocationContext.Current?.Command is { } contextCommand &&
                 !CommandEqualityComparer.Instance.Equals(contextCommand, command))
             {
                 var token = contextCommand.GetOrCreateToken();
@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.Interactive
 
             if (command.Properties.TryGetValue(IdKey, out var value))
             {
-                return (string)value;
+                return (string) value;
             }
 
             var id = Guid.NewGuid().ToString("N");
@@ -90,6 +90,7 @@ namespace Microsoft.DotNet.Interactive
             return id;
 
         }
+
         private static string GetNextToken(this KernelCommand command)
         {
             if (command.Properties.TryGetValue(TokenKey, out var value) &&
@@ -148,6 +149,12 @@ namespace Microsoft.DotNet.Interactive
                 return Convert.ToBase64String(hash);
             }
         }
+
+        public static bool IsChildCommand(this KernelCommand src, KernelCommand candidateParentCommand)
+        {
+            return src.Parent == candidateParentCommand || src.RoutingSlip.Contains(candidateParentCommand.RoutingSlip);
+        }
+    
 
         internal static bool IsEquivalentTo(this KernelCommand src, KernelCommand other)
         {

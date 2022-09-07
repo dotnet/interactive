@@ -262,7 +262,7 @@ i");
                 new Option<bool>("--loudness")
             };
 
-            var kernel = compositeKernel.FindKernel(kernelName);
+            var kernel = compositeKernel.FindKernelByName(kernelName);
 
             kernel.AddDirective(command);
 

@@ -90,9 +90,10 @@ StormEvents | take 10
 StormEvents | take 10
             ");
 
-            var kqlKernel = kernel.FindKernel("kql-KustoHelp") as ISupportGetValue;
-            kqlKernel.TryGetValue("my_data_result", out object variable).Should().BeTrue();
-            variable.Should().BeAssignableTo<IEnumerable<TabularDataResource>>();
+            var kqlKernel = kernel.FindKernelByName("kql-KustoHelp");
+            var (success, valueProduced) = await kqlKernel.TryRequestValueAsync("my_data_result");
+            success.Should().BeTrue();
+            valueProduced.Value.Should().BeAssignableTo<IEnumerable<TabularDataResource>>();
         }
 
         [KqlFact]

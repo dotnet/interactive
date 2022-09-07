@@ -3,6 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.CommandLine;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
@@ -96,6 +99,25 @@ namespace Microsoft.DotNet.Interactive
                 new StandardErrorValueProduced(
                     command ?? context.Command,
                     formattedValues));
+        }
+
+        public static void PublishValueProduced(this KernelInvocationContext context, RequestValue command, object value)
+        {
+            if (value is { })
+            {
+                var valueType = value.GetType();
+                var formatter = Formatter.GetPreferredFormatterFor(valueType, command.MimeType);
+
+                using var writer = new StringWriter(CultureInfo.InvariantCulture);
+                formatter.Format(value, writer);
+                var formatted = new FormattedValue(command.MimeType, writer.ToString());
+                context.Publish(new ValueProduced(value, command.Name, formatted, command));
+            }
+            else
+            {
+                var formatted = new FormattedValue(command.MimeType, "null");
+                context.Publish(new ValueProduced(value, command.Name, formatted, command));
+            }
         }
     }
 }

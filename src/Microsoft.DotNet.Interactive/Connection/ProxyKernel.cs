@@ -53,10 +53,10 @@ public sealed class ProxyKernel : Kernel
         {
             if (coe.Event is { } e)
             {
-                if (e is KernelInfoProduced kip && e.Command is NoCommand)
+                if (e is KernelInfoProduced kip && e.RoutingSlip.Count > 0 && e.RoutingSlip.FirstOrDefault() == _remoteUri)
                 {
                     UpdateKernelInfoFromEvent(kip);
-                    PublishEvent(new KernelInfoProduced(KernelInfo, KernelCommand.None));
+                    PublishEvent(new KernelInfoProduced(KernelInfo, e.Command));
                 }
                 else
                 {
@@ -127,6 +127,7 @@ public sealed class ProxyKernel : Kernel
         return completionSource.Task.ContinueWith(te =>
         {
             command.TargetKernelName = targetKernelName;
+          
             if (te.Result is CommandFailed cf)
             {
                 context.Fail(command, cf.Exception, cf.Message);
@@ -177,13 +178,13 @@ public sealed class ProxyKernel : Kernel
                     _inflight.Remove(token);
                     pending.completionSource.TrySetResult(cs);
                     break;
-                case KernelInfoProduced kip:
+                case KernelInfoProduced kip when kip.KernelInfo.Uri == KernelInfo.RemoteUri:
                     {
                         UpdateKernelInfoFromEvent(kip);
                         var newEvent = new KernelInfoProduced(KernelInfo, kernelEvent.Command);
                         foreach (var kernelUri in kip.RoutingSlip)
                         {
-                            newEvent.RoutingSlip.TryAdd(kernelUri);
+                            newEvent.TryAddToRoutingSlip(kernelUri);
                         }
                         if (pending.executionContext is { } ec)
                         {
@@ -220,7 +221,7 @@ public sealed class ProxyKernel : Kernel
     {
         foreach (var kernelOrKernelHostUri in commandFromRemoteKernel.RoutingSlip.Skip(command.RoutingSlip.Count))
         {
-            command.RoutingSlip.TryAdd(kernelOrKernelHostUri);
+            command.TryAddToRoutingSlip(kernelOrKernelHostUri);
         }
     }
 

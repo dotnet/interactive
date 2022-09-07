@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
@@ -55,28 +56,12 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public static Kernel FindKernel(this Kernel kernel, string name)
-        {
-            var root = kernel
-                       .RecurseWhileNotNull(k => k switch
-                       {
-                           { } kb => kb.ParentKernel,
-                           _ => null
-                       })
-                       .LastOrDefault();
+        [Obsolete("Use `FindKernelByName`")]
+        public static Kernel FindKernel(this Kernel kernel, string name) => FindKernelByName(kernel, name);
 
-            return root switch
-            {
-                _ when kernel.Name == name => kernel,
-                CompositeKernel c =>
-                c.Directives
-                 .OfType<ChooseKernelDirective>()
-                 .Where(d => d.HasAlias($"#!{name}"))
-                 .Select(d => d.Kernel)
-                 .SingleOrDefault(),
-                _ => null
-            };
-        }
+        public static Kernel FindKernelByName(this Kernel kernel, string name) => FindKernel(kernel, kernel => kernel.KernelInfo.NameAndAliases.Contains(name));
+
+        public static Kernel FindKernel(this Kernel kernel, Func<Kernel, bool> predicate) => FindKernels(kernel, predicate).FirstOrDefault();
 
         public static IEnumerable<Kernel> FindKernels(this Kernel kernel, Func<Kernel, bool> predicate)
         {
@@ -88,13 +73,43 @@ namespace Microsoft.DotNet.Interactive
                 })
                 .LastOrDefault();
 
+          
             return root switch
             {
-               
-                CompositeKernel c => c.ChildKernels.Where(predicate),
+                CompositeKernel c => predicate(c) ? new[] { kernel }.Concat(c.ChildKernels.Where(predicate)) :  c.ChildKernels.Where(predicate),
                 _ when predicate(kernel) => new[] { kernel },
                 _ => Enumerable.Empty<Kernel>()
             };
+        }
+
+        public static async Task<(bool success, ValueInfosProduced valueInfosProduced)> TryRequestValueInfosAsync(this Kernel kernel)
+        {
+            if (kernel.SupportsCommandType(typeof(RequestValueInfos)))
+            {
+                var commandResult = await kernel.SendAsync(new RequestValueInfos());
+                var candidateResult = await commandResult.KernelEvents.OfType<ValueInfosProduced>().FirstOrDefaultAsync();
+                if (candidateResult is { })
+                {
+                    return (true, candidateResult);
+                }
+            }
+
+            return (false, default);
+        }
+
+        public static async Task<(bool success, ValueProduced valueProduced)> TryRequestValueAsync(this Kernel kernel, string valueName)
+        {
+            if (kernel.SupportsCommandType(typeof(RequestValue)))
+            {
+                var commandResult = await kernel.SendAsync(new RequestValue(valueName));
+                var candidateResult = await commandResult.KernelEvents.OfType<ValueProduced>().FirstOrDefaultAsync();
+                if (candidateResult is { })
+                {
+                    return (true, candidateResult);
+                }
+            }
+
+            return (false, default);
         }
 
         [DebuggerStepThrough]
@@ -206,15 +221,29 @@ namespace Microsoft.DotNet.Interactive
                 "name",
                 "The name of the variable to create in the destination kernel");
 
+            if (kernel.ParentKernel is { } composite)
+            {
+                
+            }
+
             valueNameArg.AddCompletions(_ =>
             {
                 if (kernel.ParentKernel is { } composite)
                 {
-                    return composite.ChildKernels
-                                    .OfType<ISupportGetValue>()
-                                    .SelectMany(k => k.GetValueInfos().Select(vd => vd.Name))
-                                    .Select(n => new CompletionItem(n))
-                                    .ToArray();
+                    var valueInfos = new ConcurrentQueue<ValueInfosProduced>();
+                    var getValueTasks = composite.ChildKernels.Where(k => k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)))
+                        .Select(async k =>
+                        {
+                            var result = await k.SendAsync(new RequestValueInfos());
+                            result.KernelEvents.OfType<ValueInfosProduced>().Subscribe(e => valueInfos.Enqueue(e));
+                        });
+                    Task.WhenAll(getValueTasks).GetAwaiter().GetResult();
+
+                    return valueInfos
+                        .SelectMany(k => k.ValueInfos.Select(vn => vn.Name))
+                        .OrderBy(x => x)
+                        .Select(n => new CompletionItem(n))
+                        .ToArray();
                 }
 
                 return Array.Empty<CompletionItem>();
@@ -229,7 +258,8 @@ namespace Microsoft.DotNet.Interactive
                 if (kernel.ParentKernel is { } composite)
                 {
                     return composite.ChildKernels
-                                    .Where(k => k is ISupportGetValue)
+                                    .Where(k => k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)) &&
+                                                k.KernelInfo.SupportsCommand(nameof(RequestValue)))
                                     .Select(k => new CompletionItem(k.Name));
                 }
 
@@ -260,7 +290,7 @@ namespace Microsoft.DotNet.Interactive
                 var mimeType = cmdLineContext.ParseResult.GetValueForOption(mimeTypeOption);
                 var importAsName = cmdLineContext.ParseResult.GetValueForOption(asOption);
 
-                if (kernel.FindKernel(from) is { } fromKernel)
+                if (kernel.FindKernelByName(from) is { } fromKernel)
                 {
                     await fromKernel.GetValueAndImportTo(kernel, valueName, mimeType, importAsName);
                 }
@@ -397,9 +427,8 @@ namespace Microsoft.DotNet.Interactive
         private static async Task DisplayValues(KernelInvocationContext context, bool detailed)
         {
             if (context.Command is SubmitCode &&
-                (context.HandlingKernel is ISupportGetValue
-                || (context.HandlingKernel.KernelInfo.SupportsCommand(nameof(RequestValueInfos)) 
-                    && context.HandlingKernel.KernelInfo.SupportsCommand(nameof(RequestValue)))))
+                context.HandlingKernel.KernelInfo.SupportsCommand(nameof(RequestValueInfos)) &&
+                context.HandlingKernel.KernelInfo.SupportsCommand(nameof(RequestValue)))
             {
                 var nameEvents = new List<ValueInfosProduced>();
 

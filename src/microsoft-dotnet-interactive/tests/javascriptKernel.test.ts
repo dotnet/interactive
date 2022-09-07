@@ -43,7 +43,7 @@ describe("javascriptKernel", () => {
         const valueName = `value_${Guid.create().toString().replace(/-/g, "_")}`; //?
         await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: `${valueName} = 42;` } });
         await kernel.send({ commandType: contracts.RequestValueInfosType, command: <contracts.RequestValueInfos>{} });
-        expect((<contracts.ValueInfosProduced>events.find(e => e.eventType === contracts.ValueInfosProducedType)!.event).valueInfos).to.deep.equal([{ name: `${valueName}` }]);
+        expect((<contracts.ValueInfosProduced>events.find(e => e.eventType === contracts.ValueInfosProducedType)!.event).valueInfos).to.deep.equal([{ name: `${valueName}`, preferredMimeTypes: [] }]);
     });
 
     it("returns values from RequestValue", async () => {

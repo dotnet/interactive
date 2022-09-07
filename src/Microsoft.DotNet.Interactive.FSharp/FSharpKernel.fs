@@ -371,6 +371,25 @@ type FSharpKernel () as this =
             context.Publish(DiagnosticsProduced(diagnostics, requestDiagnostics))
         }
 
+    let handleGetValueValueInfos (requestValueInfos: RequestValueInfos) (context: KernelInvocationContext) =
+        task {
+            let valueInfos =
+                script.Value.Fsi.GetBoundValues()
+                |> List.filter (fun x -> x.Name <> "it") // don't report special variable `it`
+                |> List.map (fun x -> new KernelValueInfo(x.Name, this.getValueType(x.Name)))
+                :> IReadOnlyCollection<KernelValueInfo>
+            context.Publish(new ValueInfosProduced(valueInfos, requestValueInfos))
+        }
+
+    let handleGetValue (requestValue: RequestValue) (context: KernelInvocationContext) =
+        task {
+            match script.Value.Fsi.TryFindBoundValue(requestValue.Name) with
+            | Some cv ->
+                context.PublishValueProduced(requestValue, cv.Value.ReflectionValue)
+            | _ ->
+                context.Fail(requestValue, message=(sprintf "Value '%s' not found in kernel %s" requestValue.Name this.Name))
+        }
+
     let createPackageRestoreContext registerForDisposal =
         let packageRestoreContext = new PackageRestoreContext()
         do registerForDisposal(fun () -> packageRestoreContext.Dispose())
@@ -383,16 +402,10 @@ type FSharpKernel () as this =
         |> List.filter (fun x -> x.Name <> "it") // don't report special variable `it`
         |> List.map (fun x -> KernelValue( new KernelValueInfo(x.Name, x.Value.ReflectionType), x.Value.ReflectionValue, this.Name))
 
-
-    member this.handleGetValueValueInfos() =
-        this.GetValues()
-        |> List.map (fun x -> new KernelValueInfo( x.Name, this.getValueType(x.Name)))
-        :> IReadOnlyCollection<KernelValueInfo>
-
     member this.getValueType(name:string) = 
         match script.Value.Fsi.TryFindBoundValue(name) with
         | Some cv ->
-            cv.Value.ReflectionValue.GetType()            
+            cv.Value.ReflectionValue.GetType()
         | _ ->
             null
 
@@ -424,6 +437,12 @@ type FSharpKernel () as this =
 
     interface IKernelCommandHandler<RequestHoverText> with
         member this.HandleAsync(command: RequestHoverText, context: KernelInvocationContext) = handleRequestHoverText command context 
+
+    interface IKernelCommandHandler<RequestValueInfos> with
+        member this.HandleAsync(command: RequestValueInfos, context: KernelInvocationContext) = handleGetValueValueInfos command context 
+
+    interface IKernelCommandHandler<RequestValue> with
+        member this.HandleAsync(command: RequestValue, context: KernelInvocationContext) = handleGetValue command context 
 
     interface IKernelCommandHandler<SubmitCode> with
         member this.HandleAsync(command: SubmitCode, context: KernelInvocationContext) = handleSubmitCode command context
@@ -471,10 +490,6 @@ type FSharpKernel () as this =
                             sb.Append(Environment.NewLine) |> ignore
             let command = new SubmitCode(sb.ToString(), "fsharp")
             this.DeferCommand(command)
-
-    interface ISupportGetValue with
-        member _.GetValueInfos() = this.handleGetValueValueInfos()
-        member _.TryGetValue<'a>(name: string, [<Out>] value: 'a byref)  = this.handleTryGetValue(name, &value)
 
     interface ISupportSetClrValue with
         member _.SetValueAsync(name: string, value: obj, declaredType: Type): Task = this.handleSetValueAsync(name, value, declaredType)

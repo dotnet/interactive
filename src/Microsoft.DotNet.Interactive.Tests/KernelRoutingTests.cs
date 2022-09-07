@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
@@ -26,6 +27,32 @@ public class KernelRoutingTests : IDisposable
     }
 
     public void Dispose() => _disposables.Dispose();
+
+    [Fact]
+    public void RoutingSlip_includes_parent_RoutingSlip()
+    {
+        var parent = new RoutingSlip();
+        parent.TryAdd(new Uri("kernel://a"));
+
+        var child = new RoutingSlip(parent);
+        child.TryAdd(new Uri("kernel://b"));
+
+        child.Contains(parent).Should().BeTrue();
+    }
+
+    [Fact]
+    public void RoutingSlip_identifies_childCommands()
+    {
+        var parent = new SubmitCode("code1");
+        parent.RoutingSlip.TryAdd(new Uri("kernel://1"));
+        parent.RoutingSlip.TryAdd(new Uri("kernel://2"));
+        var child = new SubmitCode("code2");
+        child.RoutingSlip.TryAdd(new Uri("kernel://1"));
+        child.RoutingSlip.TryAdd(new Uri("kernel://2"));
+        child.RoutingSlip.TryAdd(new Uri("kernel://5"));
+
+        child.IsChildCommand(parent).Should().BeTrue();
+    }
 
     [Fact]
     public async Task When_target_kernel_name_is_specified_then_ProxyKernel_does_not_split_magics()
@@ -187,6 +214,38 @@ Console.WriteLine(1);";
             {
                 new Uri("kernel://local/.NET", UriKind.Absolute), 
                 new Uri("kernel://local/csharp", UriKind.Absolute)
+            });
+    }
+
+    [Fact]
+    public async Task commands_routing_slip_contains_the_uris_of_parent_command()
+    {
+        using var compositeKernel = new CompositeKernel
+        {
+            new CSharpKernel(),
+            new FSharpKernel()
+        };
+
+        compositeKernel.DefaultKernelName = "fsharp";
+
+        var command = new SubmitCode(@"
+using Microsoft.DotNet.Interactive;
+using Microsoft.DotNet.Interactive.Commands;
+var command = new SubmitCode(@""1+1"", targetKernelName: ""fsharp"");
+await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
+
+        var result = await compositeKernel.SendAsync(command);
+
+        var events = result.KernelEvents.ToSubscribedList();
+
+        var fsharpEvent = events.OfType<ReturnValueProduced>().First();
+
+        fsharpEvent.Command.RoutingSlip.Should().BeEquivalentTo(
+            new[]
+            {
+                new Uri("kernel://local/.NET", UriKind.Absolute),
+                new Uri("kernel://local/csharp", UriKind.Absolute),
+                new Uri("kernel://local/fsharp", UriKind.Absolute)
             });
     }
 

@@ -117,7 +117,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
         {
             // declare a variable in deferred code
             using var kernel = CreateKernel(language);
-            var languageKernel = kernel.FindKernel(language.LanguageName());
+            var languageKernel = kernel.FindKernelByName(language.LanguageName());
             languageKernel.DeferCommand(new SubmitCode(deferredCode));
 
             // send the actual language service request that depends on the deferred code

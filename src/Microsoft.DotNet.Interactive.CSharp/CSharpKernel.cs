@@ -31,12 +31,13 @@ namespace Microsoft.DotNet.Interactive.CSharp
         Kernel,
         IExtensibleKernel,
         ISupportNuget,
-        ISupportGetValue,
         ISupportSetClrValue,
         IKernelCommandHandler<RequestCompletions>,
         IKernelCommandHandler<RequestDiagnostics>,
         IKernelCommandHandler<RequestHoverText>,
         IKernelCommandHandler<RequestSignatureHelp>,
+        IKernelCommandHandler<RequestValue>,
+        IKernelCommandHandler<RequestValueInfos>,
         IKernelCommandHandler<SubmitCode>,
         IKernelCommandHandler<ChangeWorkingDirectory>
     {
@@ -115,6 +116,27 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return Task.FromResult(SyntaxFactory.IsCompleteSubmission(syntaxTree));
         }
 
+        public Task HandleAsync(RequestValueInfos command, KernelInvocationContext context)
+        {
+            var valueInfos = GetValueInfos();
+            context.Publish(new ValueInfosProduced(valueInfos, command));
+            return Task.CompletedTask;
+        }
+
+        public Task HandleAsync(RequestValue command, KernelInvocationContext context)
+        {
+            if (TryGetValue<object>(command.Name, out var value))
+            {
+                context.PublishValueProduced(command, value);
+            }
+            else
+            {
+                context.Fail(command, message: $"Value '{command.Name}' not found in kernel {Name}");
+            }
+
+            return Task.CompletedTask;
+        }
+
         public IReadOnlyCollection<KernelValueInfo> GetValueInfos() =>
             ScriptState?.Variables
                        .GroupBy(v => v.Name)
@@ -139,13 +161,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 rawValue = default;
                 ret = false;
             }
-
             if (ret)
             {
                 value = (T)rawValue;
                 return true;
             }
-
             value = default;
             return false;
         }

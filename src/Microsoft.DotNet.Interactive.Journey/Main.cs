@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -15,9 +16,12 @@ namespace Microsoft.DotNet.Interactive.Journey
             if (kernel is CompositeKernel compositeKernel)
             {
                 Lesson.ResetChallenge();
-                compositeKernel.UseProgressiveLearning(httpClient)
+                if(compositeKernel.Directives.FirstOrDefault(d => d.Name == "#!start-lesson") is null)
+                {
+                    compositeKernel.UseProgressiveLearning(httpClient)
                     .UseProgressiveLearningMiddleware()
                     .UseModelAnswerValidation();
+                }
             }
             else
             {

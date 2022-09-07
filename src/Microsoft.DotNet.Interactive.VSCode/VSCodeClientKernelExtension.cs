@@ -17,7 +17,7 @@ public class VSCodeClientKernelExtension : IKernelExtension
         {
             var hostKernel = await root.Host.ConnectProxyKernelOnDefaultConnectorAsync(
                 "vscode",
-                new Uri("kernel://vscode/vscode"),
+                new Uri("kernel://vscode"),
                 new[] { "frontend" });
             hostKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestInput)));
             root.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), "vscode");

@@ -4,24 +4,35 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.DotNet.Interactive;
 
 public class RoutingSlip : IReadOnlyList<Uri>
 {
+    private readonly HashSet<Uri> _uniqueUris ;
     private readonly List<Uri> _uris;
     private readonly object _lock = new();
 
-    public RoutingSlip()
+    public RoutingSlip(RoutingSlip source = null)
     {
-        _uris = new List<Uri>();
+        if (source is { })
+        {
+            _uniqueUris = new HashSet<Uri>(source);
+            _uris = new List<Uri>(source);
+        }
+        else
+        {
+            _uniqueUris = new HashSet<Uri>();
+            _uris = new List<Uri>();
+        }
     }
 
     public bool TryAdd(Uri kernelOrKernelHostUri)
     {
         lock (_lock)
         {
-            if (!_uris.Contains(kernelOrKernelHostUri))
+            if (_uniqueUris.Add(kernelOrKernelHostUri))
             {
                 _uris.Add(kernelOrKernelHostUri);
                 return true;
@@ -31,15 +42,17 @@ public class RoutingSlip : IReadOnlyList<Uri>
         return false;
     }
 
-    IEnumerator<Uri> IEnumerable<Uri>.GetEnumerator()
+    public bool Contains(Uri kernelOrKernelHostUri) => _uniqueUris.Contains(kernelOrKernelHostUri);
+
+    public bool Contains(RoutingSlip other)
     {
-        return _uris.GetEnumerator();
+        var contains =  this.Zip(other, (o, i) => o.Equals(i)).All(x => x);
+        return contains;
     }
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return _uris.GetEnumerator();
-    }
+    IEnumerator<Uri> IEnumerable<Uri>.GetEnumerator() => _uris.GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator() => _uris.GetEnumerator();
 
     public Uri this[int index] => _uris[index];
     public int Count => _uris.Count;

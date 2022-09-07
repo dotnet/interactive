@@ -7,6 +7,7 @@ import { ClientMapper } from './clientMapper';
 import * as contracts from './dotnet-interactive/contracts';
 import { getNotebookSpecificLanguage } from './interactiveNotebook';
 import { VariableGridRow } from './dotnet-interactive/webview/variableGridInterfaces';
+import * as utilities from './utilities';
 import * as versionSpecificFunctions from '../versionSpecificFunctions';
 import { DisposableSubscription } from './dotnet-interactive/disposables';
 import { isKernelEventEnvelope } from './dotnet-interactive';
@@ -20,6 +21,10 @@ const languageIdToAliasMap = new Map(
         .filter(l => typeof l.id === 'string' && (l.aliases?.length ?? 0) > 0 && typeof l.aliases[0] === 'string')
         .map(l => <[string, string]>[<string>l.id, <string>l.aliases[0]])
 );
+
+function debounce(callback: () => void) {
+    utilities.debounce('variable-explorer', 500, callback);
+}
 
 export function registerVariableExplorer(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.shareValueTo', async (variableInfo: { kernelName: string, valueName: string } | undefined) => {
@@ -67,7 +72,7 @@ export function registerVariableExplorer(context: vscode.ExtensionContext, clien
 
     vscode.window.onDidChangeActiveNotebookEditor(async _editor => {
         // TODO: update on client process restart
-        webViewProvider.refresh();
+        debounce(() => webViewProvider.refresh());
     });
 }
 
@@ -146,7 +151,7 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
         </html>
         `;
         this.webview.html = html;
-        this.refresh();
+        debounce(() => this.refresh());
     }
 
     private setRows(rows: VariableGridRow[]) {
@@ -171,7 +176,7 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                             case contracts.CommandFailedType:
                             case contracts.CommandCancelledType:
                                 if (envelope.command?.commandType === contracts.SubmitCodeType) {
-                                    this.refresh();
+                                    debounce(() => this.refresh());
                                 }
                                 break;
                         }
@@ -181,8 +186,7 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
 
             this.currentNotebookSubscription = { dispose: () => sub.unsubscribe() };
 
-            const kernelNames = [...client.kernel.childKernels.map(k => k.name)];
-            kernelNames.push('value');
+            const kernelNames = Array.from(client.kernel.childKernels.filter(k => k.kernelInfo.supportedKernelCommands.find(ci => ci.name === contracts.RequestValueInfosType)).map(k => k.name));
 
             for (const name of kernelNames) {
                 try {

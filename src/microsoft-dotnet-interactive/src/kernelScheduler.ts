@@ -1,20 +1,23 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+import { Logger } from "./logger";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
-
 
 interface SchedulerOperation<T> {
     value: T;
     executor: (value: T) => Promise<void>;
     promiseCompletionSource: PromiseCompletionSource<void>;
 }
-
 export class KernelScheduler<T> {
-    private operationQueue: Array<SchedulerOperation<T>> = [];
-    private inFlightOperation?: SchedulerOperation<T>;
+    private _operationQueue: Array<SchedulerOperation<T>> = [];
+    private _inFlightOperation?: SchedulerOperation<T>;
 
     constructor() {
+    }
+
+    public cancelCurrentOperation(): void {
+        this._inFlightOperation?.promiseCompletionSource.reject(new Error("Operation cancelled"));
     }
 
     runAsync(value: T, executor: (value: T) => Promise<void>): Promise<void> {
@@ -24,19 +27,24 @@ export class KernelScheduler<T> {
             promiseCompletionSource: new PromiseCompletionSource<void>(),
         };
 
-        if (this.inFlightOperation) {
+        if (this._inFlightOperation) {
+            Logger.default.info(`kernelScheduler: starting immediate execution of ${JSON.stringify(operation.value)}`);
+
             // invoke immediately
             return operation.executor(operation.value)
                 .then(() => {
+                    Logger.default.info(`kernelScheduler: immediate execution completed: ${JSON.stringify(operation.value)}`);
                     operation.promiseCompletionSource.resolve();
                 })
                 .catch(e => {
+                    Logger.default.info(`kernelScheduler: immediate execution failed: ${JSON.stringify(e)} - ${JSON.stringify(operation.value)}`);
                     operation.promiseCompletionSource.reject(e);
                 });
         }
 
-        this.operationQueue.push(operation);
-        if (this.operationQueue.length === 1) {
+        Logger.default.info(`kernelScheduler: scheduling execution of ${JSON.stringify(operation.value)}`);
+        this._operationQueue.push(operation);
+        if (this._operationQueue.length === 1) {
             this.executeNextCommand();
         }
 
@@ -44,20 +52,23 @@ export class KernelScheduler<T> {
     }
 
     private executeNextCommand(): void {
-        const nextOperation = this.operationQueue.length > 0 ? this.operationQueue[0] : undefined;
+        const nextOperation = this._operationQueue.length > 0 ? this._operationQueue[0] : undefined;
         if (nextOperation) {
-            this.inFlightOperation = nextOperation;
+            this._inFlightOperation = nextOperation;
+            Logger.default.info(`kernelScheduler: starting scheduled execution of ${JSON.stringify(nextOperation.value)}`);
             nextOperation.executor(nextOperation.value)
                 .then(() => {
-                    this.inFlightOperation = undefined;
+                    this._inFlightOperation = undefined;
+                    Logger.default.info(`kernelScheduler: completing inflight operation: success ${JSON.stringify(nextOperation.value)}`);
                     nextOperation.promiseCompletionSource.resolve();
                 })
                 .catch(e => {
-                    this.inFlightOperation = undefined;
+                    this._inFlightOperation = undefined;
+                    Logger.default.info(`kernelScheduler: completing inflight operation: failure ${JSON.stringify(e)} - ${JSON.stringify(nextOperation.value)}`);
                     nextOperation.promiseCompletionSource.reject(e);
                 })
                 .finally(() => {
-                    this.operationQueue.shift();
+                    this._operationQueue.shift();
                     this.executeNextCommand();
                 });
         }

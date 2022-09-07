@@ -52,11 +52,25 @@ console.log(`The value is ${x}.`);
 
 #!markdown
 
+# Execude the next cell. After execution, the output immediately below should be:
+
+```
+1234
+```
+
+And the .NET ITERACTIVE: VALUES window should contain a variable with name `asdf`, value `1234` and kernel Name `csharp`
+
+#!javascript
+
+await kernel.root.send({ commandType: 'SubmitCode', command: { code: 'var asdf = 1234; Console.WriteLine(asdf);', targetKernelName: 'csharp' } });
+
+#!markdown
+
 # Execute the next cell, the output should be displayed as HTML like so:
 
 | Name | Salary |
  :---|---: |
-| Developer | 24 |
+| Developer | 42 |
 
 change the renderer using the `...` element, choose the json and the output should look like so:
 

@@ -392,7 +392,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             var executionList = new List<string>();
 
-            using var scheduler = new KernelScheduler<string, string>();
+            using var scheduler = new KernelScheduler<string, string>( (o,i) => o == "outer" && i == "inner");
 
             await scheduler.RunAsync("outer", async _ =>
             {

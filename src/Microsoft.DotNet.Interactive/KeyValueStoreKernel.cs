@@ -3,12 +3,12 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.ValueSharing;
 using static Microsoft.DotNet.Interactive.ChooseKeyValueStoreKernelDirective;
 
@@ -16,8 +16,9 @@ namespace Microsoft.DotNet.Interactive
 {
     public class KeyValueStoreKernel :
         Kernel,
-        ISupportGetValue,
         ISupportSetClrValue,
+        IKernelCommandHandler<RequestValueInfos>,
+        IKernelCommandHandler<RequestValue>,
         IKernelCommandHandler<SubmitCode>
     {
         internal const string DefaultKernelName = "value";
@@ -36,22 +37,25 @@ namespace Microsoft.DotNet.Interactive
             return Task.CompletedTask;
         }
 
-        public IReadOnlyCollection<KernelValueInfo> GetValueInfos() =>
-            _values.Select(e => new KernelValueInfo(e.Key, typeof(string))).ToArray();
-
-        public bool TryGetValue<T>(string name, out T value)
+        public Task HandleAsync(RequestValueInfos command, KernelInvocationContext context)
         {
-            if (_values.TryGetValue(name, out var obj) &&
-                obj is T t)
+            var valueInfos = _values.Select(e => new KernelValueInfo(e.Key, typeof(string))).ToArray();
+            context.Publish(new ValueInfosProduced(valueInfos, command));
+            return Task.CompletedTask;
+        }
+
+        public Task HandleAsync(RequestValue command, KernelInvocationContext context)
+        {
+            if (_values.TryGetValue(command.Name, out var value))
             {
-                value = t;
-                return true;
+                context.PublishValueProduced(command, value);
             }
             else
             {
-                value = default;
-                return false;
+                context.Fail(command, message: $"Value '{command.Name}' not found in kernel {Name}");
             }
+
+            return Task.CompletedTask;
         }
 
         // todo: change to ChooseKeyValueStoreKernelDirective after removing NetStandardc2.0 dependency
@@ -100,7 +104,7 @@ namespace Microsoft.DotNet.Interactive
 
             if (loadedFromOptions)
             {
-                var hadValue = TryGetValue(options.Name, out object previousValue);
+                var hadValue = _values.TryGetValue(options.Name, out var previousValue);
 
                 _lastOperation = (hadValue, previousValue, newValue);
 

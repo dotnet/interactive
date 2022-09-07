@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.Journey.Tests
             var capturedCommands = new List<SendEditableCode>();
             var client = new HttpClient(new FakeHttpMessageHandlerForNotebookLoading());
             var kernel = await CreateKernel(LessonMode.StudentMode, client);
-            var vscodeKernel = kernel.FindKernel("vscode");
+            var vscodeKernel = kernel.FindKernelByName("vscode");
             vscodeKernel.RegisterCommandHandler<SendEditableCode>((command, _) =>
             {
                 capturedCommands.Add(command);
@@ -130,7 +130,7 @@ namespace Microsoft.DotNet.Interactive.Journey.Tests
         {
             var capturedCommands = new List<SendEditableCode>();
             var kernel = await CreateKernel(LessonMode.StudentMode);
-            var vscodeKernel = kernel.FindKernel("vscode");
+            var vscodeKernel = kernel.FindKernelByName("vscode");
             vscodeKernel.RegisterCommandHandler<SendEditableCode>((command, _) =>
             {
                 capturedCommands.Add(command);
@@ -150,7 +150,7 @@ namespace Microsoft.DotNet.Interactive.Journey.Tests
         {
             var capturedCommands = new List<SendEditableCode>();
             var kernel = await CreateKernel(LessonMode.StudentMode);
-            var vscodeKernel = kernel.FindKernel("vscode");
+            var vscodeKernel = kernel.FindKernelByName("vscode");
             vscodeKernel.RegisterCommandHandler<SendEditableCode>((command, _) =>
             {
                 capturedCommands.Add(command);
@@ -169,7 +169,7 @@ namespace Microsoft.DotNet.Interactive.Journey.Tests
         {
             var capturedCommands = new List<SendEditableCode>();
             var kernel = await CreateKernel(LessonMode.StudentMode);
-            var vscodeKernel = kernel.FindKernel("vscode");
+            var vscodeKernel = kernel.FindKernelByName("vscode");
             vscodeKernel.RegisterCommandHandler<SendEditableCode>((command, _) =>
             {
                 capturedCommands.Add(command);
@@ -250,7 +250,7 @@ namespace Microsoft.DotNet.Interactive.Journey.Tests
         {
             var capturedCommands = new List<SendEditableCode>();
             var kernel = await CreateKernel(LessonMode.StudentMode);
-            var vscodeKernel = kernel.FindKernel("vscode");
+            var vscodeKernel = kernel.FindKernelByName("vscode");
             vscodeKernel.RegisterCommandHandler<SendEditableCode>((command, _) =>
             {
                 capturedCommands.Add(command);
@@ -272,7 +272,7 @@ namespace Microsoft.DotNet.Interactive.Journey.Tests
         {
             var capturedCommands = new List<SendEditableCode>();
             var kernel = await CreateKernel(LessonMode.StudentMode);
-            var vscodeKernel = kernel.FindKernel("vscode");
+            var vscodeKernel = kernel.FindKernelByName("vscode");
             vscodeKernel.RegisterCommandHandler<SendEditableCode>((command, _) =>
             {
                 capturedCommands.Add(command);
@@ -294,7 +294,7 @@ namespace Microsoft.DotNet.Interactive.Journey.Tests
         {
             var capturedCommands = new List<SendEditableCode>();
             var kernel = await CreateKernel(LessonMode.StudentMode);
-            var vscodeKernel = kernel.FindKernel("vscode");
+            var vscodeKernel = kernel.FindKernelByName("vscode");
             vscodeKernel.RegisterCommandHandler<SendEditableCode>((command, _) =>
             {
                 capturedCommands.Add(command);

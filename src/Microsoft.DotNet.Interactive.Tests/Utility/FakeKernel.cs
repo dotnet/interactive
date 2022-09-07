@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
         Kernel,
         IKernelCommandHandler<SubmitCode>
     {
-        public FakeKernel([CallerMemberName] string name = null) : base(name, name)
+        public FakeKernel([CallerMemberName] string name = null, string languageName = null) : base(name, languageName??name)
         {
         }
 
