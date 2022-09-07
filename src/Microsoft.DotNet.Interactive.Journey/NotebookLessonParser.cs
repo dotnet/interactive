@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.Interactive.Journey
             var notebook = file.Extension.ToLowerInvariant() switch
             {
                 ".ipynb" => await Notebook.ReadAsync(stream, kernelNames),
-                ".dib" => await CodeSubmission.ReadAsync(stream, "csharp", kernelNames),
+                ".dib" => await CodeSubmission.ReadAsync(stream, kernelNames),
                 _ => throw new InvalidOperationException($"Unrecognized extension for a notebook: {file.Extension}"),
             };
 
@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.Interactive.Journey
 
             // FIX: (LoadNotebookFromUrl) differentiate file formats
 
-            return CodeSubmission.Parse(content, "csharp", GetKernelNames(kernel));
+            return CodeSubmission.Parse(content, GetKernelNames(kernel));
         }
 
         private static KernelNameCollection GetKernelNames(CompositeKernel? kernel)

@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -12,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
     {
         public InteractiveDocument ParseDib(string content)
         {
-            return CodeSubmission.Parse(content, "csharp", KernelNames);
+            return CodeSubmission.Parse(content, KernelNames);
         }
 
         public string SerializeDib(InteractiveDocument interactive, string newLine)
@@ -31,8 +32,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .Should()
                 .Match<InteractiveDocumentElement>(cell =>
                     cell.Language == "csharp" &&
-                    cell.Contents == string.Empty
-                );
+                    cell.Contents == string.Empty);
         }
 
         [Fact]
@@ -316,9 +316,9 @@ var x = 1;
         {
             var notebook = new InteractiveDocument
             {
-                new InteractiveDocumentElement("", "csharp"),
-                new InteractiveDocumentElement("// this is fsharp", "fsharp"),
-                new InteractiveDocumentElement("", "csharp")
+                new("", "csharp"),
+                new("// this is fsharp", "fsharp"),
+                new("", "csharp")
             };
             var serialized = SerializeDib(notebook, "\n");
             var expectedLines = new[]
@@ -339,11 +339,11 @@ var x = 1;
         [InlineData("\r\n")]
         public void multiple_cells_are_serialized_with_appropriate_separators(string newline)
         {
-            var cells = new List<InteractiveDocumentElement>()
+            var cells = new List<InteractiveDocumentElement>
             {
-                new InteractiveDocumentElement($"// C# line 1{newline}// C# line 2", "csharp"),
-                new InteractiveDocumentElement($"// F# line 1{newline}// F# line 2", "fsharp"),
-                new InteractiveDocumentElement("This is `markdown`.", "markdown")
+                new($"// C# line 1{newline}// C# line 2", "csharp"),
+                new($"// F# line 1{newline}// F# line 2", "fsharp"),
+                new("This is `markdown`.", "markdown")
             };
             var notebook = new InteractiveDocument(cells);
             var serialized = SerializeDib(notebook, newline);
@@ -368,6 +368,29 @@ var x = 1;
             serialized
                 .Should()
                 .Be(expected);
+        }
+
+        [Fact]
+        public void Default_language_can_be_specified_in_metadata()
+        {
+            var content = @"""";
+
+            var document = CodeSubmission.Parse(content);
+
+
+
+
+            // TODO (Default_language_can_be_specified_in_metadata) write test
+            throw new NotImplementedException();
+        }
+        
+        [Fact]
+        public void Kernel_languages_can_be_specified_in_metadata()
+        {
+            
+
+            // TODO (Kernel_languages_can_be_specified_in_metadata) write test
+            throw new NotImplementedException();
         }
     }
 }

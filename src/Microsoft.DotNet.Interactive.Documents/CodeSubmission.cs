@@ -19,52 +19,23 @@ namespace Microsoft.DotNet.Interactive.Documents
 
         public static InteractiveDocument Parse(
             string content,
-            string defaultLanguage,
-            KernelNameCollection kernelNames)
+            KernelNameCollection? kernelNames = default)
         {
-            if (kernelNames == null)
-            {
-                throw new ArgumentNullException(nameof(kernelNames));
-            }
+            kernelNames ??= new();
 
             var lines = content.SplitIntoLines();
 
             var elements = new List<InteractiveDocumentElement>();
-            var currentLanguage = defaultLanguage;
+            var currentLanguage = kernelNames.DefaultKernelName;
             var currentElementLines = new List<string>();
 
-            InteractiveDocumentElement CreateElement(string elementLanguage, IEnumerable<string> elementLines)
-            {
-                return new(string.Join("\n", elementLines), elementLanguage);
-            }
-
-            void AddElement()
-            {
-                // trim leading blank lines
-                while (currentElementLines.Count > 0 && string.IsNullOrEmpty(currentElementLines[0]))
-                {
-                    currentElementLines.RemoveAt(0);
-                }
-
-                // trim trailing blank lines
-                while (currentElementLines.Count > 0 && string.IsNullOrEmpty(currentElementLines[^1]))
-                {
-                    currentElementLines.RemoveAt(currentElementLines.Count - 1);
-                }
-
-                if (currentElementLines.Count > 0)
-                {
-                    elements.Add(CreateElement(currentLanguage, currentElementLines));
-                }
-            }
-            
             // not a kernel language, but still a valid cell splitter
             if (!kernelNames.Contains("markdown"))
             {
                 kernelNames = kernelNames.Clone();
                 kernelNames.Add(new KernelName("markdown", new[] { "md" }));
-            }            
-          
+            }
+
             foreach (var line in lines)
             {
                 if (line.StartsWith(InteractiveNotebookCellSpecifier))
@@ -98,30 +69,53 @@ namespace Microsoft.DotNet.Interactive.Documents
             // ensure there's at least one element available
             if (elements.Count == 0)
             {
-                elements.Add(CreateElement(defaultLanguage, Array.Empty<string>()));
+                elements.Add(CreateElement(kernelNames.DefaultKernelName, Array.Empty<string>()));
+            }
+
+            InteractiveDocumentElement CreateElement(string elementLanguage, IEnumerable<string> elementLines)
+            {
+                return new(string.Join("\n", elementLines), elementLanguage);
             }
 
             return new InteractiveDocument(elements);
+
+            void AddElement()
+            {
+                // trim leading blank lines
+                while (currentElementLines.Count > 0 && string.IsNullOrEmpty(currentElementLines[0]))
+                {
+                    currentElementLines.RemoveAt(0);
+                }
+
+                // trim trailing blank lines
+                while (currentElementLines.Count > 0 && string.IsNullOrEmpty(currentElementLines[^1]))
+                {
+                    currentElementLines.RemoveAt(currentElementLines.Count - 1);
+                }
+
+                if (currentElementLines.Count > 0)
+                {
+                    elements.Add(CreateElement(currentLanguage, currentElementLines));
+                }
+            }
         }
 
         public static InteractiveDocument Read(
             Stream stream,
-            string defaultLanguage,
             KernelNameCollection kernelNames)
         {
             using var reader = new StreamReader(stream, Encoding);
             var content = reader.ReadToEnd();
-            return Parse(content, defaultLanguage, kernelNames);
+            return Parse(content, kernelNames);
         }
 
         public static async Task<InteractiveDocument> ReadAsync(
             Stream stream,
-            string defaultLanguage,
             KernelNameCollection kernelNames)
         {
             using var reader = new StreamReader(stream, Encoding);
             var content = await reader.ReadToEndAsync();
-            return Parse(content, defaultLanguage, kernelNames);
+            return Parse(content, kernelNames);
         }
 
         public static string ToCodeSubmissionContent(this InteractiveDocument interactiveDocument, string newline = "\n")

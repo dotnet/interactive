@@ -80,7 +80,7 @@ namespace Microsoft.DotNet.Interactive.Documents.ParserServer
                             using var contentStream = new MemoryStream(parse.RawData);
                             var document = request.SerializationType switch
                             {
-                                DocumentSerializationType.Dib => CodeSubmission.Read(contentStream, request.DefaultLanguage, WellKnownKernelNames),
+                                DocumentSerializationType.Dib => CodeSubmission.Read(contentStream, WellKnownKernelNames),
                                 DocumentSerializationType.Ipynb => Notebook.Read(contentStream, WellKnownKernelNames),
                                 _ => throw new NotSupportedException($"Unable to parse an interactive document with type '{request.SerializationType }'"),
                             };
