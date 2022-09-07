@@ -98,7 +98,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 switch (node)
                 {
                     case DirectiveNode directiveNode:
-
                         if (KernelInvocationContext.Current is {} context)
                         {
                             context.CurrentlyParsingDirectiveNode = directiveNode;
