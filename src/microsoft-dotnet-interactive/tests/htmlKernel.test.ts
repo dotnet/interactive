@@ -13,7 +13,9 @@ describe("htmlKernel", () => {
         const dom = new jd.JSDOM(`<!DOCTYPE html>`);
         let htmlFragmentProcessorConfiguration = {
             getOrCreateContainer: () => {
-                return dom.window.document.createElement("div");
+                const container = dom.window.document.createElement("div");
+                dom.window.document.body.appendChild(container);
+                return container;
             },
             mutateContainerContent: (container: HTMLElement, htmlFragment: string) => {
                 container.innerHTML = htmlFragment;
@@ -82,7 +84,7 @@ describe("htmlKernel", () => {
         await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="1">a</div>' } });
         await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="2">b</div>' } });
 
-        expect(container.innerHTML).to.be.eql('<div id="1">a</div><div id="2">b</div>');
+        expect(dom.window.document.body.innerHTML).to.be.eql('<div id="1">a</div><div id="2">b</div>');
     });
 
     it("can submit html fragment with multiple elements", async () => {
@@ -107,7 +109,7 @@ describe("htmlKernel", () => {
 
         await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="1">a</div><div id="2">b</div>' } });
 
-        expect(container.innerHTML).to.be.eql('<div id="1">a</div><div id="2">b</div>');
+        expect(dom.window.document.body.innerHTML).to.be.eql('<div id="1">a</div><div id="2">b</div>');
     });
 
     it("can replace container content with html fragment", async () => {
@@ -143,6 +145,6 @@ describe("htmlKernel", () => {
         });
         await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="1">a</div><div id="2">b</div>' } });
 
-        expect(container.innerHTML).to.be.eql('<div id="1">a</div><div id="2">b</div>');
+        expect(dom.window.document.body.innerHTML).to.be.eql('<div id="1">a</div><div id="2">b</div>');
     });
 });
