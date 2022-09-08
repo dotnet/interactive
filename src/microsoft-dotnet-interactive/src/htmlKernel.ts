@@ -46,10 +46,6 @@ export function htmlDomFragmentProcessor(htmlFragment: string, configuration?: H
 
     let container = getOrCreateContainer();
 
-    if (!container.id) {
-        container.id = "html_kernel_container" + Math.floor(Math.random() * 1000000);
-    }
-
     const completionPromise = new PromiseCompletionSource<void>();
     const mutationObserver = mutationObserverFactory((mutations: MutationRecord[], observer: MutationObserver) => {
 
@@ -61,7 +57,7 @@ export function htmlDomFragmentProcessor(htmlFragment: string, configuration?: H
                     const element = addedNode as HTMLDivElement;
                     element.parentElement?.id;//?
                     container.id;//?
-                    if (element.parentElement?.id === container.id) {
+                    if (element.parentElement === container) {
                         completionPromise.resolve();
                         mutationObserver.disconnect();
 
