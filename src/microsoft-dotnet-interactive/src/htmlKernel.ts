@@ -9,7 +9,7 @@ export class HtmlKernel extends Kernel {
     constructor(kernelName?: string, private readonly htmlFragmentProcessor?: (htmlFragment: string) => Promise<void>, languageName?: string, languageVersion?: string) {
         super(kernelName ?? "html", languageName ?? "HTML");
         if (!this.htmlFragmentProcessor) {
-            this.htmlFragmentProcessor = domHtmlFragmentProcessor;
+            this.htmlFragmentProcessor = htmlDomFragmentProcessor;
         }
         this.registerCommandHandler({ commandType: contracts.SubmitCodeType, handle: invocation => this.handleSubmitCode(invocation) });
     }
@@ -32,13 +32,13 @@ export class HtmlKernel extends Kernel {
     }
 }
 
-export interface HtmlKernelConfiguration {
+export type HtmlDomFragmentProcessor = {
     getOrCreateContainer?: () => HTMLElement,
     mutateContainerContent?: (container: HTMLElement, htmlFragment: string) => void,
     mutationObserverFactory?: (callback: MutationCallback) => MutationObserver
 };
 
-export function domHtmlFragmentProcessor(htmlFragment: string, configuration?: HtmlKernelConfiguration): Promise<void> {
+export function htmlDomFragmentProcessor(htmlFragment: string, configuration?: HtmlDomFragmentProcessor): Promise<void> {
 
     const getOrCreateContainer: () => HTMLElement = configuration?.getOrCreateContainer ?? (() => document.createElement("div"));
     const mutateContainerContent: (container: HTMLElement, htmlFragment: string) => void = configuration?.mutateContainerContent ?? ((container, htmlFragment) => container.append(htmlFragment));
