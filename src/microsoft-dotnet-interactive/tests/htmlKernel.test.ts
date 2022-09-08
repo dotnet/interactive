@@ -36,6 +36,7 @@ describe("htmlKernel", () => {
         let events: contracts.KernelEventEnvelope[] = [];
         const dom = new jd.JSDOM(`<!DOCTYPE html>`);
         const container = dom.window.document.createElement("div");
+        dom.window.document.body.appendChild(container);
         let htmlFragmentProcessorConfiguration = {
             getOrCreateContainer: () => {
                 return container;
@@ -55,7 +56,7 @@ describe("htmlKernel", () => {
         await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="1">a</div>' } });
         await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="2">b</div>' } });
 
-        expect(container.innerHTML).to.be.eql('<div id="1">a</div><div id="2">b</div>');
+        expect(dom.window.document.body.innerHTML).to.be.eql('<div><div id="1">a</div><div id="2">b</div></div>');
     });
 
     it("can use body as container", async () => {

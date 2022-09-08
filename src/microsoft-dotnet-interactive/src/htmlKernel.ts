@@ -40,8 +40,12 @@ export type HtmlDomFragmentProcessor = {
 
 export function htmlDomFragmentProcessor(htmlFragment: string, configuration?: HtmlDomFragmentProcessor): Promise<void> {
 
-    const getOrCreateContainer: () => HTMLElement = configuration?.getOrCreateContainer ?? (() => document.createElement("div"));
-    const mutateContainerContent: (container: HTMLElement, htmlFragment: string) => void = configuration?.mutateContainerContent ?? ((container, htmlFragment) => container.append(htmlFragment));
+    const getOrCreateContainer: () => HTMLElement = configuration?.getOrCreateContainer ?? (() => {
+        const container = document.createElement("div");
+        document.body.appendChild(container);
+        return container;
+    });
+    const mutateContainerContent: (container: HTMLElement, htmlFragment: string) => void = configuration?.mutateContainerContent ?? ((container, htmlFragment) => container.innerHTML = htmlFragment);
     const mutationObserverFactory = configuration?.mutationObserverFactory ?? (callback => new MutationObserver(callback));
 
     let container = getOrCreateContainer();
