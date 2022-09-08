@@ -32,25 +32,24 @@ export class HtmlKernel extends Kernel {
     }
 }
 
-export function domHtmlFragmentProcessor(htmlFragment: string, configuration?: {
-    containerFactory?: () => HTMLDivElement,
-    elementToObserve?: () => HTMLElement,
-    addToDom?: (element: HTMLElement) => void,
+export interface HtmlKernelConfiguration {
+    getOrCreateContainer?: () => HTMLElement,
+    mutateContainerContent?: (container: HTMLElement, htmlFragment: string) => void,
     mutationObserverFactory?: (callback: MutationCallback) => MutationObserver
-}): Promise<void> {
+};
 
-    const factory: () => HTMLDivElement = configuration?.containerFactory ?? (() => document.createElement("div"));
-    const elementToObserve: () => HTMLElement = configuration?.elementToObserve ?? (() => document.body);
-    const addToDom: (element: HTMLElement) => void = configuration?.addToDom ?? ((element) => document.body.appendChild(element));
+export function domHtmlFragmentProcessor(htmlFragment: string, configuration?: HtmlKernelConfiguration): Promise<void> {
+
+    const getOrCreateContainer: () => HTMLElement = configuration?.getOrCreateContainer ?? (() => document.createElement("div"));
+    const mutateContainerContent: (container: HTMLElement, htmlFragment: string) => void = configuration?.mutateContainerContent ?? ((container, htmlFragment) => container.append(htmlFragment));
     const mutationObserverFactory = configuration?.mutationObserverFactory ?? (callback => new MutationObserver(callback));
 
-    let container = factory();
+    let container = getOrCreateContainer();
 
     if (!container.id) {
         container.id = "html_kernel_container" + Math.floor(Math.random() * 1000000);
     }
 
-    container.innerHTML = htmlFragment;
     const completionPromise = new PromiseCompletionSource<void>();
     const mutationObserver = mutationObserverFactory((mutations: MutationRecord[], observer: MutationObserver) => {
 
@@ -60,9 +59,9 @@ export function domHtmlFragmentProcessor(htmlFragment: string, configuration?: {
                 const nodes = Array.from(mutation.addedNodes);
                 for (const addedNode of nodes) {
                     const element = addedNode as HTMLDivElement;
-                    element.id;//?
+                    element.parentElement?.id;//?
                     container.id;//?
-                    if (element?.id === container.id) {//?
+                    if (element.parentElement?.id === container.id) {
                         completionPromise.resolve();
                         mutationObserver.disconnect();
 
@@ -74,8 +73,8 @@ export function domHtmlFragmentProcessor(htmlFragment: string, configuration?: {
         }
     });
 
-    mutationObserver.observe(elementToObserve(), { childList: true, subtree: true });
-    addToDom(container);
+    mutationObserver.observe(container, { childList: true, subtree: true });
+    mutateContainerContent(container, htmlFragment);
     return completionPromise.promise;
 
 }
