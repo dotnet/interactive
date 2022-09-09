@@ -4,34 +4,74 @@
 import { expect } from "chai";
 import { describe } from "mocha";
 import * as contracts from "../src/contracts";
-import { htmlDomFragmentProcessor, HtmlKernel } from "../src/htmlKernel";
+import { htmlDomFragmentInserter, HtmlDomFragmentInserterConfiguration, HtmlKernel } from "../src/htmlKernel";
 import * as jd from "jsdom";
 
 describe("htmlKernel", () => {
-    it("can handle SubmitCode", async () => {
+    it("can create a container for each code submission", async () => {
         let events: contracts.KernelEventEnvelope[] = [];
         const dom = new jd.JSDOM(`<!DOCTYPE html>`);
-        let htmlFragmentProcessorConfiguration = {
+        let htmlDomFragmentInserterConfiguration: HtmlDomFragmentInserterConfiguration = {
             getOrCreateContainer: () => {
                 const container = dom.window.document.createElement("div");
+                container.className = "html_kernel_container";
                 dom.window.document.body.appendChild(container);
                 return container;
             },
-            mutateContainerContent: (container: HTMLElement, htmlFragment: string) => {
+            nomarliseHtmlFragment: (htmlFragment: string) => {
+                const container = dom.window.document.createElement("div");
                 container.innerHTML = htmlFragment;
+                return container.innerHTML;
             },
-            mutationObserverFactory: (callback: MutationCallback) => {
+            createMutationObserver: (callback: MutationCallback) => {
                 return new dom.window.MutationObserver(callback);
             }
         };
-        const kernel = new HtmlKernel("html", (fragment) => htmlDomFragmentProcessor(fragment, htmlFragmentProcessorConfiguration));
+        const kernel = new HtmlKernel("html", (fragment) => htmlDomFragmentInserter(fragment, htmlDomFragmentInserterConfiguration));
         kernel.subscribeToKernelEvents((e) => {
             events.push(e);
         });
 
         await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="0">a</div>' } });
+        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="0">b</div>' } });
 
         expect(events.find(e => e.eventType === contracts.CommandSucceededType)).to.not.be.undefined;
+        expect(dom.window.document.body.innerHTML).to.be.eql('<div class="html_kernel_container"><div id="0">a</div></div><div class="html_kernel_container"><div id="0">b</div></div>');
+    });
+
+    it("produces DisplayedValueProduced event with the content of the container", async () => {
+        let events: contracts.KernelEventEnvelope[] = [];
+        const dom = new jd.JSDOM(`<!DOCTYPE html>`);
+        const container = dom.window.document.createElement("div");
+        dom.window.document.body.appendChild(container);
+        let htmlDomFragmentInserterConfiguration: HtmlDomFragmentInserterConfiguration = {
+            getOrCreateContainer: () => {
+                return container;
+            },
+            updateContainerContent: (container: HTMLElement, htmlFragment: string) => {
+                container.innerHTML = container.innerHTML + htmlFragment;
+            },
+            nomarliseHtmlFragment: (htmlFragment: string) => {
+                const container = dom.window.document.createElement("div");
+                container.innerHTML = htmlFragment;
+                return container.innerHTML;
+            },
+            createMutationObserver: (callback: MutationCallback) => {
+                return new dom.window.MutationObserver(callback);
+            }
+        };
+        const kernel = new HtmlKernel("html", (fragment) => htmlDomFragmentInserter(fragment, htmlDomFragmentInserterConfiguration));
+        kernel.subscribeToKernelEvents((e) => {
+            events.push(e);
+        });
+
+        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="0">a</div>' } });
+        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="0">b</div>' } });
+
+        const lastDisplayedValueProducedEvent = events.filter(e => e.eventType === contracts.DisplayedValueProducedType).at(-1)?.event as contracts.DisplayedValueProduced;
+        expect(lastDisplayedValueProducedEvent).to.not.be.undefined;
+
+        expect(lastDisplayedValueProducedEvent).to.deep.equal({ displayedValueProduced: { formattedValues: [{ mimeType: 'text/html', value: '<div id="0">a</div><div id="0">b</div>' }] } });
     });
 
     it("can reuse container", async () => {
@@ -39,18 +79,23 @@ describe("htmlKernel", () => {
         const dom = new jd.JSDOM(`<!DOCTYPE html>`);
         const container = dom.window.document.createElement("div");
         dom.window.document.body.appendChild(container);
-        let htmlFragmentProcessorConfiguration = {
+        let htmlDomFragmentInserterConfiguration: HtmlDomFragmentInserterConfiguration = {
             getOrCreateContainer: () => {
                 return container;
             },
-            mutateContainerContent: (container: HTMLElement, htmlFragment: string) => {
+            updateContainerContent: (container: HTMLElement, htmlFragment: string) => {
                 container.innerHTML = container.innerHTML + htmlFragment;
             },
-            mutationObserverFactory: (callback: MutationCallback) => {
+            nomarliseHtmlFragment: (htmlFragment: string) => {
+                const container = dom.window.document.createElement("div");
+                container.innerHTML = htmlFragment;
+                return container.innerHTML;
+            },
+            createMutationObserver: (callback: MutationCallback) => {
                 return new dom.window.MutationObserver(callback);
             }
         };
-        const kernel = new HtmlKernel("html", (fragment) => htmlDomFragmentProcessor(fragment, htmlFragmentProcessorConfiguration));
+        const kernel = new HtmlKernel("html", (fragment) => htmlDomFragmentInserter(fragment, htmlDomFragmentInserterConfiguration));
         kernel.subscribeToKernelEvents((e) => {
             events.push(e);
         });
@@ -65,18 +110,23 @@ describe("htmlKernel", () => {
         let events: contracts.KernelEventEnvelope[] = [];
         const dom = new jd.JSDOM(`<!DOCTYPE html>`);
         const container = dom.window.document.body;
-        let htmlFragmentProcessorConfiguration = {
+        let htmlDomFragmentInserterConfiguration: HtmlDomFragmentInserterConfiguration = {
             getOrCreateContainer: () => {
                 return container;
             },
-            mutateContainerContent: (container: HTMLElement, htmlFragment: string) => {
+            updateContainerContent: (container: HTMLElement, htmlFragment: string) => {
                 container.innerHTML = container.innerHTML + htmlFragment;
             },
-            mutationObserverFactory: (callback: MutationCallback) => {
+            nomarliseHtmlFragment: (htmlFragment: string) => {
+                const container = dom.window.document.createElement("div");
+                container.innerHTML = htmlFragment;
+                return container.innerHTML;
+            },
+            createMutationObserver: (callback: MutationCallback) => {
                 return new dom.window.MutationObserver(callback);
             }
         };
-        const kernel = new HtmlKernel("html", (fragment) => htmlDomFragmentProcessor(fragment, htmlFragmentProcessorConfiguration));
+        const kernel = new HtmlKernel("html", (fragment) => htmlDomFragmentInserter(fragment, htmlDomFragmentInserterConfiguration));
         kernel.subscribeToKernelEvents((e) => {
             events.push(e);
         });
@@ -91,18 +141,23 @@ describe("htmlKernel", () => {
         let events: contracts.KernelEventEnvelope[] = [];
         const dom = new jd.JSDOM(`<!DOCTYPE html>`);
         const container = dom.window.document.body;
-        let htmlFragmentProcessorConfiguration = {
+        let htmlDomFragmentInserterConfiguration: HtmlDomFragmentInserterConfiguration = {
             getOrCreateContainer: () => {
                 return container;
             },
-            mutateContainerContent: (container: HTMLElement, htmlFragment: string) => {
+            updateContainerContent: (container: HTMLElement, htmlFragment: string) => {
                 container.innerHTML = container.innerHTML + htmlFragment;
             },
-            mutationObserverFactory: (callback: MutationCallback) => {
+            nomarliseHtmlFragment: (htmlFragment: string) => {
+                const container = dom.window.document.createElement("div");
+                container.innerHTML = htmlFragment;
+                return container.innerHTML;
+            },
+            createMutationObserver: (callback: MutationCallback) => {
                 return new dom.window.MutationObserver(callback);
             }
         };
-        const kernel = new HtmlKernel("html", (fragment) => htmlDomFragmentProcessor(fragment, htmlFragmentProcessorConfiguration));
+        const kernel = new HtmlKernel("html", (fragment) => htmlDomFragmentInserter(fragment, htmlDomFragmentInserterConfiguration));
         kernel.subscribeToKernelEvents((e) => {
             events.push(e);
         });
@@ -128,18 +183,20 @@ describe("htmlKernel", () => {
         </html>`);
         const container = dom.window.document.body;
 
-        let htmlFragmentProcessorConfiguration = {
+        let htmlDomFragmentInserterConfiguration: HtmlDomFragmentInserterConfiguration = {
             getOrCreateContainer: () => {
                 return container;
             },
-            mutateContainerContent: (container: HTMLElement, htmlFragment: string) => {
+            nomarliseHtmlFragment: (htmlFragment: string) => {
+                const container = dom.window.document.createElement("div");
                 container.innerHTML = htmlFragment;
+                return container.innerHTML;
             },
-            mutationObserverFactory: (callback: MutationCallback) => {
+            createMutationObserver: (callback: MutationCallback) => {
                 return new dom.window.MutationObserver(callback);
             }
         };
-        const kernel = new HtmlKernel("html", (fragment) => htmlDomFragmentProcessor(fragment, htmlFragmentProcessorConfiguration));
+        const kernel = new HtmlKernel("html", (fragment) => htmlDomFragmentInserter(fragment, htmlDomFragmentInserterConfiguration));
         kernel.subscribeToKernelEvents((e) => {
             events.push(e);
         });

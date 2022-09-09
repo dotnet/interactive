@@ -6,10 +6,10 @@ import { Kernel, IKernelCommandInvocation } from "./kernel";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
 
 export class HtmlKernel extends Kernel {
-    constructor(kernelName?: string, private readonly htmlFragmentProcessor?: (htmlFragment: string) => Promise<void>, languageName?: string, languageVersion?: string) {
+    constructor(kernelName?: string, private readonly htmlFragmentInserter?: (htmlFragment: string) => Promise<string>, languageName?: string, languageVersion?: string) {
         super(kernelName ?? "html", languageName ?? "HTML");
-        if (!this.htmlFragmentProcessor) {
-            this.htmlFragmentProcessor = htmlDomFragmentProcessor;
+        if (!this.htmlFragmentInserter) {
+            this.htmlFragmentInserter = htmlDomFragmentInserter;
         }
         this.registerCommandHandler({ commandType: contracts.SubmitCodeType, handle: invocation => this.handleSubmitCode(invocation) });
     }
@@ -20,61 +20,87 @@ export class HtmlKernel extends Kernel {
 
         invocation.context.publish({ eventType: contracts.CodeSubmissionReceivedType, event: { code }, command: invocation.commandEnvelope });
 
-        if (!this.htmlFragmentProcessor) {
+        if (!this.htmlFragmentInserter) {
             throw new Error("No HTML fragment processor registered");
         }
 
         try {
-            await this.htmlFragmentProcessor(code);
+            const formattedValue = await this.htmlFragmentInserter(code);
+            const displayedValueProduced: contracts.DisplayedValueProduced = {
+                formattedValues: [{
+                    mimeType: "text/html",
+                    value: formattedValue
+                }]
+            };
+
+            invocation.context.publish({ eventType: contracts.DisplayedValueProducedType, event: { displayedValueProduced }, command: invocation.commandEnvelope });
+
         } catch (e) {
             throw e;//?
         }
     }
 }
 
-export type HtmlDomFragmentProcessor = {
+export type HtmlDomFragmentInserterConfiguration = {
     getOrCreateContainer?: () => HTMLElement,
-    mutateContainerContent?: (container: HTMLElement, htmlFragment: string) => void,
-    mutationObserverFactory?: (callback: MutationCallback) => MutationObserver
+    updateContainerContent?: (container: HTMLElement, htmlFragment: string) => void,
+    createMutationObserver?: (callback: MutationCallback) => MutationObserver,
+    nomarliseHtmlFragment?: (htmlFragment: string) => string
 };
 
-export function htmlDomFragmentProcessor(htmlFragment: string, configuration?: HtmlDomFragmentProcessor): Promise<void> {
+export function htmlDomFragmentInserter(htmlFragment: string, configuration?: HtmlDomFragmentInserterConfiguration): Promise<string> {
 
-    const getOrCreateContainer: () => HTMLElement = configuration?.getOrCreateContainer ?? (() => {
+    const getOrCreateContainer = configuration?.getOrCreateContainer ?? (() => {
         const container = document.createElement("div");
         document.body.appendChild(container);
         return container;
     });
-    const mutateContainerContent: (container: HTMLElement, htmlFragment: string) => void = configuration?.mutateContainerContent ?? ((container, htmlFragment) => container.innerHTML = htmlFragment);
-    const mutationObserverFactory = configuration?.mutationObserverFactory ?? (callback => new MutationObserver(callback));
+    const nomarliseFragment = configuration?.nomarliseHtmlFragment ?? ((htmlFragment: string) => {
+        const container = document.createElement("div");
+        container.innerHTML = htmlFragment;
+        return container.innerHTML;
+    });
+    const updateContainerContent = configuration?.updateContainerContent ?? ((container, htmlFragment) => container.innerHTML = htmlFragment);
+    const createMutationObserver = configuration?.createMutationObserver ?? (callback => new MutationObserver(callback));
 
     let container = getOrCreateContainer();
 
+    const normalisedHtmlFragment = nomarliseFragment(htmlFragment);
     const completionPromise = new PromiseCompletionSource<void>();
-    const mutationObserver = mutationObserverFactory((mutations: MutationRecord[], observer: MutationObserver) => {
+    const mutationObserver = createMutationObserver((mutations: MutationRecord[], observer: MutationObserver) => {
 
         for (const mutation of mutations) {
             if (mutation.type === "childList") {
-
-                const nodes = Array.from(mutation.addedNodes);
-                for (const addedNode of nodes) {
-                    const element = addedNode as HTMLDivElement;
-                    element.parentElement?.id;//?
-                    container.id;//?
-                    if (element.parentElement === container) {
-                        completionPromise.resolve();
-                        mutationObserver.disconnect();
-
-                        return;
-                    }
+                const done = container.innerHTML.includes(normalisedHtmlFragment);
+                done;//?
+                if (done) {
+                    completionPromise.resolve();
+                    mutationObserver.disconnect();
+                    return;
                 }
-
             }
         }
     });
 
     mutationObserver.observe(container, { childList: true, subtree: true });
-    mutateContainerContent(container, htmlFragment);
-    return completionPromise.promise;
+    updateContainerContent(container, normalisedHtmlFragment);
+    return completionPromise.promise.then(() => container.innerHTML);
+}
 
+export function createHtmlKernelThatWorksWithPageDomInBrowser(config: { kernelName: string, container: HTMLElement, contentBehaviour: "append" | "replace" }): Kernel {
+
+    const kernel = new HtmlKernel(
+        config.kernelName,
+        (htmlFragment: string) => htmlDomFragmentInserter(htmlFragment, {
+            getOrCreateContainer: () => config.container,
+            updateContainerContent: (container, htmlFragment) => {
+                if (config.contentBehaviour === "append") {
+                    container.innerHTML += htmlFragment;
+                } else {
+                    container.innerHTML = htmlFragment;
+                }
+            }
+        }));
+
+    return kernel;
 }
