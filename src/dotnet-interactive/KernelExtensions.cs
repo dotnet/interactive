@@ -119,11 +119,15 @@ public static class KernelExtensions
 
             Dictionary<string, string> GetStandardProperties(KernelEvent kernelEvent)
             {
-                kernel.ChildKernels.TryGetByAlias(kernelEvent.Command.TargetKernelName, out var handlingKernel);
+                Kernel handlingKernel = null;
+                if (kernelEvent.Command.TargetKernelName is not null)
+                {
+                    kernel.ChildKernels.TryGetByAlias(kernelEvent.Command.TargetKernelName, out handlingKernel);
+                }
 
                 var properties = new Dictionary<string, string>
                 {
-                    ["KernelName"] = kernelEvent.Command.TargetKernelName.ToSha256Hash(),
+                    ["KernelName"] = kernelEvent.Command.TargetKernelName?.ToSha256Hash(),
                     ["KernelLanguageName"] = handlingKernel?.KernelInfo?.LanguageName?.ToSha256Hash(),
                     ["KernelSessionId"] = sessionId
                 };
