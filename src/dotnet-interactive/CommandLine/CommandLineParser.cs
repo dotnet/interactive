@@ -213,7 +213,7 @@ public static class CommandLineParser
             async Task<int> JupyterHandler(StartupOptions startupOptions, JupyterOptions options, IConsole console, InvocationContext context, CancellationToken cancellationToken)
             {
                 var frontendEnvironment = new HtmlNotebookFrontendEnvironment();
-                var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
+                var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions, telemetrySender);
 
                 await new JupyterClientKernelExtension().OnLoadAsync(kernel);
 
@@ -311,7 +311,8 @@ public static class CommandLineParser
                     var kernel = CreateKernel(
                         options.DefaultKernel, 
                         frontendEnvironment, 
-                        startupOptions);
+                        startupOptions,
+                        telemetrySender);
 
                     services.AddKernel(kernel);
 
@@ -430,10 +431,9 @@ public static class CommandLineParser
         }
     }
 
-    private static CompositeKernel CreateKernel(
-        string defaultKernelName,
+    private static CompositeKernel CreateKernel(string defaultKernelName,
         FrontendEnvironment frontendEnvironment,
-        StartupOptions startupOptions)
+        StartupOptions startupOptions, TelemetrySender telemetrySender)
     {
         using var _ = Log.OnEnterAndExit("Creating Kernels");
 
@@ -496,6 +496,11 @@ public static class CommandLineParser
         SetUpFormatters(frontendEnvironment);
 
         kernel.DefaultKernelName = defaultKernelName;
+
+        if (telemetrySender is { })
+        {
+            kernel.UseTelemetrySender(telemetrySender);
+        }
 
         return kernel;
     }
