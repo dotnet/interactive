@@ -41,7 +41,7 @@ export class HtmlKernel extends Kernel {
     }
 }
 
-export type HtmlDomFragmentInserterConfiguration = {
+export interface HtmlDomFragmentInserterConfiguration {
     getOrCreateContainer?: () => HTMLElement,
     updateContainerContent?: (container: HTMLElement, htmlFragment: string) => void,
     createMutationObserver?: (callback: MutationCallback) => MutationObserver,
@@ -87,20 +87,27 @@ export function htmlDomFragmentInserter(htmlFragment: string, configuration?: Ht
     return completionPromise.promise.then(() => container.innerHTML);
 }
 
-export function createHtmlKernelThatWorksWithPageDomInBrowser(config: { kernelName: string, container: HTMLElement, contentBehaviour: "append" | "replace" }): Kernel {
+export function createHtmlKernelThatWorksWithPageDomInBrowser(config: { kernelName: string, container: HTMLElement, contentBehaviour: "append" | "replace" } | { kernelName: string, htmlDomFragmentInserterConfiguration: HtmlDomFragmentInserterConfiguration }): Kernel {
 
-    const kernel = new HtmlKernel(
-        config.kernelName,
-        (htmlFragment: string) => htmlDomFragmentInserter(htmlFragment, {
-            getOrCreateContainer: () => config.container,
-            updateContainerContent: (container, htmlFragment) => {
-                if (config.contentBehaviour === "append") {
-                    container.innerHTML += htmlFragment;
-                } else {
-                    container.innerHTML = htmlFragment;
+    if (withfragmentInserterConfiguration(config)) {
+        return new HtmlKernel(config.kernelName, (fragment) => htmlDomFragmentInserter(fragment, config.htmlDomFragmentInserterConfiguration));
+    } else {
+        const kernel = new HtmlKernel(
+            config.kernelName,
+            (htmlFragment: string) => htmlDomFragmentInserter(htmlFragment, {
+                getOrCreateContainer: () => config.container,
+                updateContainerContent: (container, htmlFragment) => {
+                    if (config.contentBehaviour === "append") {
+                        container.innerHTML += htmlFragment;
+                    } else {
+                        container.innerHTML = htmlFragment;
+                    }
                 }
-            }
-        }));
+            }));
+        return kernel;
+    }
+}
 
-    return kernel;
+function withfragmentInserterConfiguration(config: any): config is { kernelName: string, htmlDomFragmentInserterConfiguration: HtmlDomFragmentInserterConfiguration } {
+    return config?.htmlDomFragmentInserterConfiguration !== undefined;
 }
