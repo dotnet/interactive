@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as contracts from "./contracts";
-import { createHtmlKernelThatWorksWithPageDomInBrowser, HtmlKernel, HtmlKernelInBrowserConfiguration } from "./htmlKernel";
+import { createHtmlKernelForBrowserHosting, HtmlKernel, HtmlKernelInBrowserConfiguration } from "./htmlKernel";
 import * as frontEndHost from './webview/frontEndHost';
 import * as rxjs from "rxjs";
 import * as connection from "./connection";
@@ -43,7 +43,7 @@ export function setup(configuration?: SetupConfiguration) {
         localToRemote,
         remoteToLocal,
         () => {
-            const htmlKernel = configuration?.htmlKernelConfiguration === undefined ? new HtmlKernel() : createHtmlKernelThatWorksWithPageDomInBrowser(configuration.htmlKernelConfiguration);
+            const htmlKernel = configuration?.htmlKernelConfiguration === undefined ? new HtmlKernel() : createHtmlKernelForBrowserHosting(configuration.htmlKernelConfiguration);
             global[compositeKernelName].compositeKernel.add(htmlKernel);
         }
     );

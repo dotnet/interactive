@@ -89,7 +89,7 @@ export function htmlDomFragmentInserter(htmlFragment: string, configuration?: Ht
 
 export type HtmlKernelInBrowserConfiguration = { kernelName: string, container: HTMLElement | string, contentBehaviour: "append" | "replace" } | { kernelName: string, htmlDomFragmentInserterConfiguration: HtmlDomFragmentInserterConfiguration };
 
-export function createHtmlKernelThatWorksWithPageDomInBrowser(config: HtmlKernelInBrowserConfiguration): Kernel {
+export function createHtmlKernelForBrowserHosting(config: HtmlKernelInBrowserConfiguration): Kernel {
 
     if (withfragmentInserterConfiguration(config)) {
         return new HtmlKernel(config.kernelName, (fragment) => htmlDomFragmentInserter(fragment, config.htmlDomFragmentInserterConfiguration));

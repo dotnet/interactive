@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import { describe } from "mocha";
 import * as contracts from "../src/contracts";
-import { createHtmlKernelThatWorksWithPageDomInBrowser, htmlDomFragmentInserter, HtmlDomFragmentInserterConfiguration, HtmlKernel } from "../src/htmlKernel";
+import { createHtmlKernelForBrowserHosting, htmlDomFragmentInserter, HtmlDomFragmentInserterConfiguration, HtmlKernel } from "../src/htmlKernel";
 import * as jd from "jsdom";
 
 describe("htmlKernel", () => {
@@ -27,7 +27,7 @@ describe("htmlKernel", () => {
                 return new dom.window.MutationObserver(callback);
             }
         };
-        const kernel = createHtmlKernelThatWorksWithPageDomInBrowser({ kernelName: "html", htmlDomFragmentInserterConfiguration });
+        const kernel = createHtmlKernelForBrowserHosting({ kernelName: "html", htmlDomFragmentInserterConfiguration });
         kernel.subscribeToKernelEvents((e) => {
             events.push(e);
         });
@@ -60,7 +60,7 @@ describe("htmlKernel", () => {
                 return new dom.window.MutationObserver(callback);
             }
         };
-        const kernel = createHtmlKernelThatWorksWithPageDomInBrowser({ kernelName: "html", htmlDomFragmentInserterConfiguration });
+        const kernel = createHtmlKernelForBrowserHosting({ kernelName: "html", htmlDomFragmentInserterConfiguration });
         kernel.subscribeToKernelEvents((e) => {
             events.push(e);
         });
@@ -95,7 +95,7 @@ describe("htmlKernel", () => {
                 return new dom.window.MutationObserver(callback);
             }
         };
-        const kernel = createHtmlKernelThatWorksWithPageDomInBrowser({ kernelName: "html", htmlDomFragmentInserterConfiguration });
+        const kernel = createHtmlKernelForBrowserHosting({ kernelName: "html", htmlDomFragmentInserterConfiguration });
         kernel.subscribeToKernelEvents((e) => {
             events.push(e);
         });
@@ -126,7 +126,7 @@ describe("htmlKernel", () => {
                 return new dom.window.MutationObserver(callback);
             }
         };
-        const kernel = createHtmlKernelThatWorksWithPageDomInBrowser({ kernelName: "html", htmlDomFragmentInserterConfiguration });
+        const kernel = createHtmlKernelForBrowserHosting({ kernelName: "html", htmlDomFragmentInserterConfiguration });
         kernel.subscribeToKernelEvents((e) => {
             events.push(e);
         });
@@ -157,7 +157,7 @@ describe("htmlKernel", () => {
                 return new dom.window.MutationObserver(callback);
             }
         };
-        const kernel = createHtmlKernelThatWorksWithPageDomInBrowser({ kernelName: "html", htmlDomFragmentInserterConfiguration });
+        const kernel = createHtmlKernelForBrowserHosting({ kernelName: "html", htmlDomFragmentInserterConfiguration });
         kernel.subscribeToKernelEvents((e) => {
             events.push(e);
         });
@@ -197,7 +197,7 @@ describe("htmlKernel", () => {
             }
         };
 
-        const kernel = createHtmlKernelThatWorksWithPageDomInBrowser({ kernelName: "html", htmlDomFragmentInserterConfiguration });
+        const kernel = createHtmlKernelForBrowserHosting({ kernelName: "html", htmlDomFragmentInserterConfiguration });
         kernel.subscribeToKernelEvents((e) => {
             events.push(e);
         });
