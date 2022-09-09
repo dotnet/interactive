@@ -87,7 +87,9 @@ export function htmlDomFragmentInserter(htmlFragment: string, configuration?: Ht
     return completionPromise.promise.then(() => container.innerHTML);
 }
 
-export function createHtmlKernelThatWorksWithPageDomInBrowser(config: { kernelName: string, container: HTMLElement, contentBehaviour: "append" | "replace" } | { kernelName: string, htmlDomFragmentInserterConfiguration: HtmlDomFragmentInserterConfiguration }): Kernel {
+export type HtmlKernelInBrowserConfiguration = { kernelName: string, container: HTMLElement | string, contentBehaviour: "append" | "replace" } | { kernelName: string, htmlDomFragmentInserterConfiguration: HtmlDomFragmentInserterConfiguration };
+
+export function createHtmlKernelThatWorksWithPageDomInBrowser(config: HtmlKernelInBrowserConfiguration): Kernel {
 
     if (withfragmentInserterConfiguration(config)) {
         return new HtmlKernel(config.kernelName, (fragment) => htmlDomFragmentInserter(fragment, config.htmlDomFragmentInserterConfiguration));
@@ -95,7 +97,17 @@ export function createHtmlKernelThatWorksWithPageDomInBrowser(config: { kernelNa
         const kernel = new HtmlKernel(
             config.kernelName,
             (htmlFragment: string) => htmlDomFragmentInserter(htmlFragment, {
-                getOrCreateContainer: () => config.container,
+                getOrCreateContainer: () => {
+                    if (isHtmlElement(config.container)) {
+                        return config.container;
+                    } else {
+                        const container = document.querySelector(config.container);
+                        if (!container) {
+                            throw new Error(`Container ${config.container} not found`);
+                        }
+                        return container as HTMLElement;
+                    }
+                },
                 updateContainerContent: (container, htmlFragment) => {
                     if (config.contentBehaviour === "append") {
                         container.innerHTML += htmlFragment;
@@ -106,6 +118,10 @@ export function createHtmlKernelThatWorksWithPageDomInBrowser(config: { kernelNa
             }));
         return kernel;
     }
+}
+
+function isHtmlElement(element: HTMLElement | string): element is HTMLElement {
+    return typeof element === "object";
 }
 
 function withfragmentInserterConfiguration(config: any): config is { kernelName: string, htmlDomFragmentInserterConfiguration: HtmlDomFragmentInserterConfiguration } {

@@ -2,12 +2,18 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as contracts from "./contracts";
-import { HtmlKernel } from "./htmlKernel";
+import { createHtmlKernelThatWorksWithPageDomInBrowser, HtmlKernel, HtmlKernelInBrowserConfiguration } from "./htmlKernel";
 import * as frontEndHost from './webview/frontEndHost';
 import * as rxjs from "rxjs";
 import * as connection from "./connection";
 
-export function setup(configuration?: { global?: any, hostName: string }) {
+export type SetupConfiguration = {
+    global?: any,
+    hostName: string,
+    htmlKernelConfiguration?: HtmlKernelInBrowserConfiguration,
+};
+
+export function setup(configuration?: SetupConfiguration) {
 
     const remoteToLocal = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
     const localToRemote = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
@@ -37,7 +43,7 @@ export function setup(configuration?: { global?: any, hostName: string }) {
         localToRemote,
         remoteToLocal,
         () => {
-            const htmlKernel = new HtmlKernel();
+            const htmlKernel = configuration?.htmlKernelConfiguration === undefined ? new HtmlKernel() : createHtmlKernelThatWorksWithPageDomInBrowser(configuration.htmlKernelConfiguration);
             global[compositeKernelName].compositeKernel.add(htmlKernel);
         }
     );
