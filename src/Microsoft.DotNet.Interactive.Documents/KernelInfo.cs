@@ -2,34 +2,40 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.Documents;
 
-public class KernelName
+public class KernelInfo
 {
-    public override string ToString()
-    {
-        return Name;
-    }
-
-    public KernelName(string kernelName) : this(kernelName, Array.Empty<string>())
-    {
-    }
-
-    public KernelName(string name, IReadOnlyCollection<string> aliases)
+    public KernelInfo(string name, IReadOnlyCollection<string> aliases = null)
     {
         Validate(name);
         Name = name;
 
-        foreach (var alias in aliases)
+        if (aliases is not null)
         {
-            Validate(alias);
-        }
+            foreach (var alias in aliases)
+            {
+                Validate(alias);
+            }
 
-        var distinctAliases = new HashSet<string>(aliases) { name };
-        Aliases = distinctAliases;
+            var distinctAliases = new HashSet<string>(aliases) { name };
+            Aliases = distinctAliases;
+        }
+        else
+        {
+            Aliases = Array.Empty<string>();
+        }
+    }
+
+    public IReadOnlyCollection<string> Aliases { get; }
+
+    public string Name { get; }
+
+    public override string ToString()
+    {
+        return Name;
     }
 
     private static void Validate(string name)
@@ -44,8 +50,4 @@ public class KernelName
             throw new ArgumentException("Kernel names or aliases cannot begin with \"#\"");
         }
     }
-
-    public IReadOnlyCollection<string> Aliases { get; }
-
-    public string Name { get; }
 }

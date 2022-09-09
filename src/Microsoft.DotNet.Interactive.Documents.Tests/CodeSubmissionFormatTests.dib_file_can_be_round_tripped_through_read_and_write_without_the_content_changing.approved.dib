@@ -1,0 +1,27 @@
+#!meta
+
+{"kernelInfo":[{"Aliases":["cs","C#","c#","csharp"],"Name":"csharp"},{"Aliases":["fs","F#","f#","fsharp"],"Name":"fsharp"},{"Aliases":["powershell","pwsh"],"Name":"pwsh"},{"Aliases":["mermaid"],"Name":"mermaid"},{"Aliases":["javascript"],"Name":"javascript"}]}
+
+#!markdown
+
+* Markdown code
+
+#!csharp
+
+// C# code
+
+#!fsharp
+
+// F# code
+
+#!pwsh
+
+# PowerShell code
+
+#!javascript
+
+// JavaScript code
+
+#!mermaid
+
+%% Mermaid code

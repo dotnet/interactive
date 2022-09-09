@@ -24,14 +24,14 @@ public class InteractiveDocument  : IEnumerable
 
     public void Add(InteractiveDocumentElement element) => Elements.Add(element);
 
-    internal void NormalizeElementLanguages(KernelNameCollection kernelNames)
+    internal void NormalizeElementLanguages(KernelInfoCollection kernelInfos)
     {
-        var notebookDefaultKernelName = GetNotebookDefaultKernelName(kernelNames);
+        var notebookDefaultKernelName = GetNotebookDefaultKernelName(kernelInfos);
 
         foreach (var element in Elements)
         {
             if (element.InferredTargetKernelName is not null &&
-                kernelNames.TryGetByAlias(element.InferredTargetKernelName, out var byMagic))
+                kernelInfos.TryGetByAlias(element.InferredTargetKernelName, out var byMagic))
             {
                 element.Language = byMagic.Name;
             }
@@ -42,14 +42,14 @@ public class InteractiveDocument  : IEnumerable
             }
 
             if (element.Language is not null &&
-                kernelNames.TryGetByAlias(element.Language, out var n))
+                kernelInfos.TryGetByAlias(element.Language, out var n))
             {
                 element.Language = n.Name;
             }
         }
     }
 
-    internal string? GetNotebookDefaultKernelName(KernelNameCollection kernelNames)
+    internal string? GetNotebookDefaultKernelName(KernelInfoCollection kernelInfos)
     {
         string? notebookDefaultKernelName = null;
 
@@ -67,11 +67,11 @@ public class InteractiveDocument  : IEnumerable
 
         if (notebookDefaultKernelName is null)
         {
-            notebookDefaultKernelName = kernelNames.DefaultKernelName;
+            notebookDefaultKernelName = kernelInfos.DefaultKernelName;
         }
 
         if (notebookDefaultKernelName is not null &&
-            kernelNames.TryGetByAlias(notebookDefaultKernelName, out var name))
+            kernelInfos.TryGetByAlias(notebookDefaultKernelName, out var name))
         {
             notebookDefaultKernelName = name.Name;
         }

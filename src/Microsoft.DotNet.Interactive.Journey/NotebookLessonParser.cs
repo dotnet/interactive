@@ -68,11 +68,11 @@ namespace Microsoft.DotNet.Interactive.Journey
             return CodeSubmission.Parse(content, GetKernelNames(kernel));
         }
 
-        private static KernelNameCollection GetKernelNames(CompositeKernel? kernel)
+        private static KernelInfoCollection GetKernelNames(CompositeKernel? kernel)
         {
             if (kernel is { })
             {
-                KernelNameCollection kernelNames = new();
+                KernelInfoCollection kernelInfos = new();
 
                 var kernelChoosers = kernel.Directives.OfType<ChooseKernelDirective>();
 
@@ -80,19 +80,19 @@ namespace Microsoft.DotNet.Interactive.Journey
                 {
                     var kernelAliases = kernelChooser.Aliases.Select(alias => alias[2..]).ToList();
 
-                    kernelNames.Add(new KernelName(kernelChooser.Name[2..], kernelAliases));
+                    kernelInfos.Add(new Documents.KernelInfo(kernelChooser.Name[2..], kernelAliases));
                 }
 
-                if (kernelNames.All(n => n.Name != "markdown"))
+                if (kernelInfos.All(n => n.Name != "markdown"))
                 {
-                    kernelNames.Add(new KernelName("markdown", new[] { "md" }));
+                    kernelInfos.Add(new Documents.KernelInfo("markdown", new[] { "md" }));
                 }
 
-                return kernelNames;
+                return kernelInfos;
             }
             else
             {
-                var names = new KernelNameCollection
+                var names = new KernelInfoCollection
                 {
                     new("csharp", new[] { "cs", "C#", "c#" }),
                     new("fsharp", new[] { "fs", "F#", "f#" }),

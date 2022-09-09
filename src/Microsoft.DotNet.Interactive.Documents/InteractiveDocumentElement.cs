@@ -29,6 +29,7 @@ namespace Microsoft.DotNet.Interactive.Documents
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Id { get; set; }
 
+        // FIX: (InteractiveDocumentElement) rename this to KernelName
         public string? Language { get; set; }
 
         public string Contents { get; set; }

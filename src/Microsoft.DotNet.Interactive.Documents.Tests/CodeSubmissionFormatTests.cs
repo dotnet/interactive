@@ -3,6 +3,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Assent;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -11,9 +18,15 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
 {
     public class CodeSubmissionFormatTests : DocumentFormatTestsBase
     {
+        private readonly Configuration _assentConfiguration =
+            new Configuration()
+                .UsingExtension("dib")
+                .UsingSanitiser(s => s.Replace("\r\n", "\n"))
+                .SetInteractive(Debugger.IsAttached);
+
         public InteractiveDocument ParseDib(string content)
         {
-            return CodeSubmission.Parse(content, KernelNames);
+            return CodeSubmission.Parse(content, KernelInfos);
         }
 
         public string SerializeDib(InteractiveDocument interactive, string newLine)
@@ -373,24 +386,108 @@ var x = 1;
         [Fact]
         public void Default_language_can_be_specified_in_metadata()
         {
-            var content = @"""";
-
-            var document = CodeSubmission.Parse(content);
-
-
-
-
             // TODO (Default_language_can_be_specified_in_metadata) write test
             throw new NotImplementedException();
         }
-        
+
         [Fact]
         public void Kernel_languages_can_be_specified_in_metadata()
         {
+            var kernelInfo = KernelInfos;
+            kernelInfo.Add(new("mermaid"));
+            kernelInfo.Add(new("javascript"));
+
+            var metadata = new Dictionary<string, object>
+            {
+                ["kernelInfo"] = kernelInfo
+            };
+
+            var content = GetDibContent(metadata);
+
+            var document = CodeSubmission.Parse(content);
+
+            document.Elements
+                    .Select(e => e.Language)
+                    .Should()
+                    .BeEquivalentSequenceTo(new[]
+                    {
+                        "#!markdown",
+                        "#!csharp",
+                        "#!fsharp",
+                        "#!pwsh",
+                        "#!javascript",
+                        "#!mermaid",
+                    });
+        }
+
+        [Fact]
+        public void Metadata_section_is_not_added_as_a_document_element()
+        {
             
 
-            // TODO (Kernel_languages_can_be_specified_in_metadata) write test
+            // TODO (Metadata_section_is_not_added_as_a_document_element) write test
             throw new NotImplementedException();
         }
+
+        [Fact]
+        public async Task dib_file_can_be_round_tripped_through_read_and_write_without_the_content_changing()
+        {
+            var path = GetNotebookFilePath();
+
+            this.Assent(await RoundTripDib(path), _assentConfiguration);
+        }
+
+        private static string GetDibContent(Dictionary<string, object> metadata)
+        {
+            if (metadata == null)
+            {
+                throw new ArgumentNullException(nameof(metadata));
+            }
+
+            return $@"#!meta
+
+{JsonSerializer.Serialize(metadata)}
+
+#!markdown
+
+* Markdown code
+
+#!csharp
+
+// C# code
+
+#!fsharp
+
+// F# code
+
+#!pwsh
+
+# PowerShell code
+
+#!javascript
+
+// JavaScript code
+
+#!mermaid
+
+%% Mermaid code
+";
+        }
+
+        private async Task<string> RoundTripDib(string notebookFile)
+        {
+            var expectedContent = await File.ReadAllTextAsync(notebookFile);
+
+            var inputDoc = CodeSubmission.Parse(expectedContent);
+
+            var resultContent = inputDoc.ToCodeSubmissionContent();
+            
+            return resultContent;
+        }
+
+        private string GetNotebookFilePath([CallerMemberName] string testName = null) =>
+            Path.Combine(
+                Path.GetDirectoryName(PathToCurrentSourceFile()),
+                $"{GetType().Name}.{testName}.approved.dib");
     }
 }

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Documents
@@ -19,10 +20,10 @@ namespace Microsoft.DotNet.Interactive.Documents
 
         public static InteractiveDocument Parse(
             string content,
-            KernelNameCollection? kernelNames = default)
+            KernelInfoCollection? kernelNames = default)
         {
             kernelNames ??= new();
-
+            Dictionary<string, object> metadata = null;
             var lines = content.SplitIntoLines();
 
             var elements = new List<InteractiveDocumentElement>();
@@ -33,11 +34,43 @@ namespace Microsoft.DotNet.Interactive.Documents
             if (!kernelNames.Contains("markdown"))
             {
                 kernelNames = kernelNames.Clone();
-                kernelNames.Add(new KernelName("markdown", new[] { "md" }));
+                kernelNames.Add(new KernelInfo("markdown", new[] { "md" }));
             }
+          
+            var foundMetadata = false;
 
-            foreach (var line in lines)
+            for (var i = 0; i < lines.Length; i++)
             {
+                var line = lines[i];
+                
+                if (!foundMetadata && 
+                    line.StartsWith("#!meta"))
+                {
+                    foundMetadata = true;
+                    var sb = new StringBuilder();
+                
+                    // FIX: (Parse) 
+                    while (!(line = lines[++i]).StartsWith("#!"))
+                    {
+                        sb.AppendLine(line);
+                    }
+                
+                    var metadataString = sb.ToString();
+                
+                    metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(metadataString);
+                
+                    if (metadata.TryGetValue("kernelInfo", out var kernelInfoObj) && 
+                        kernelInfoObj is JsonElement kernelInfoJson)
+                    {
+                        var kernelInfo = kernelInfoJson.Deserialize<KernelInfoCollection>();
+                        // foreach (var item in kernelInfoJson.EnumerateArray())
+                        // {
+                        //     var ki = item.Deserialize<KernelInfo>();
+                        // }
+                
+                    }
+                }
+
                 if (line.StartsWith(InteractiveNotebookCellSpecifier))
                 {
                     var cellLanguage = line.Substring(InteractiveNotebookCellSpecifier.Length);
@@ -77,7 +110,14 @@ namespace Microsoft.DotNet.Interactive.Documents
                 return new(string.Join("\n", elementLines), elementLanguage);
             }
 
-            return new InteractiveDocument(elements);
+            var document = new InteractiveDocument(elements);
+
+            if (metadata is not null)
+            {
+                document.Metadata.MergeWith(metadata);
+            }
+
+            return document;
 
             void AddElement()
             {
@@ -102,20 +142,20 @@ namespace Microsoft.DotNet.Interactive.Documents
 
         public static InteractiveDocument Read(
             Stream stream,
-            KernelNameCollection kernelNames)
+            KernelInfoCollection kernelInfos)
         {
             using var reader = new StreamReader(stream, Encoding);
             var content = reader.ReadToEnd();
-            return Parse(content, kernelNames);
+            return Parse(content, kernelInfos);
         }
 
         public static async Task<InteractiveDocument> ReadAsync(
             Stream stream,
-            KernelNameCollection kernelNames)
+            KernelInfoCollection kernelInfos)
         {
             using var reader = new StreamReader(stream, Encoding);
             var content = await reader.ReadToEndAsync();
-            return Parse(content, kernelNames);
+            return Parse(content, kernelInfos);
         }
 
         public static string ToCodeSubmissionContent(this InteractiveDocument interactiveDocument, string newline = "\n")
@@ -132,8 +172,12 @@ namespace Microsoft.DotNet.Interactive.Documents
 
                 if (elementLines.Count > 0)
                 {
-                    lines.Add($"{InteractiveNotebookCellSpecifier}{element.Language}");
-                    lines.Add("");
+                    if (element.Language is not null)
+                    {
+                        lines.Add($"{InteractiveNotebookCellSpecifier}{element.Language}");
+                        lines.Add("");
+                    }
+
                     lines.AddRange(elementLines);
                     lines.Add("");
                 }

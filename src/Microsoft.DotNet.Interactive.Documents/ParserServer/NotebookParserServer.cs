@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.Documents.ParserServer
 
         public TextWriter Output { get; }
 
-        public static KernelNameCollection WellKnownKernelNames = new()
+        public static KernelInfoCollection WellKnownKernelInfos = new()
         {
             new("csharp", new[] { "c#", "C#", "cs" }),
             new("fsharp", new[] { "f#", "F#", "fs" }),
@@ -80,8 +80,8 @@ namespace Microsoft.DotNet.Interactive.Documents.ParserServer
                             using var contentStream = new MemoryStream(parse.RawData);
                             var document = request.SerializationType switch
                             {
-                                DocumentSerializationType.Dib => CodeSubmission.Read(contentStream, WellKnownKernelNames),
-                                DocumentSerializationType.Ipynb => Notebook.Read(contentStream, WellKnownKernelNames),
+                                DocumentSerializationType.Dib => CodeSubmission.Read(contentStream, WellKnownKernelInfos),
+                                DocumentSerializationType.Ipynb => Notebook.Read(contentStream, WellKnownKernelInfos),
                                 _ => throw new NotSupportedException($"Unable to parse an interactive document with type '{request.SerializationType }'"),
                             };
                             return new NotebookParseResponse(request.Id, document);
