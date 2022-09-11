@@ -2,10 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as contracts from "./contracts";
-import { createHtmlKernelForBrowserHosting, HtmlKernel, HtmlKernelInBrowserConfiguration } from "./htmlKernel";
+import { createHtmlKernelForBrowser, HtmlKernel, HtmlKernelInBrowserConfiguration } from "./htmlKernel";
 import * as frontEndHost from './webview/frontEndHost';
 import * as rxjs from "rxjs";
 import * as connection from "./connection";
+import { Kernel } from "./kernel";
 
 export type SetupConfiguration = {
     global?: any,
@@ -43,7 +44,14 @@ export function setup(configuration?: SetupConfiguration) {
         localToRemote,
         remoteToLocal,
         () => {
-            const htmlKernel = configuration?.htmlKernelConfiguration === undefined ? new HtmlKernel() : createHtmlKernelForBrowserHosting(configuration.htmlKernelConfiguration);
+            let htmlKernel: Kernel;
+
+            if (configuration?.htmlKernelConfiguration) {
+                htmlKernel = createHtmlKernelForBrowser(configuration.htmlKernelConfiguration);
+            } else {
+                htmlKernel = new HtmlKernel();
+            }
+
             global[compositeKernelName].compositeKernel.add(htmlKernel);
         }
     );

@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import { describe } from "mocha";
 import * as contracts from "../src/contracts";
-import { createHtmlKernelForBrowserHosting, htmlDomFragmentInserter, HtmlDomFragmentInserterConfiguration, HtmlKernel } from "../src/htmlKernel";
+import { createHtmlKernelForBrowser, htmlDomFragmentInserter, HtmlDomFragmentInserterConfiguration, HtmlKernel } from "../src/htmlKernel";
 import * as jd from "jsdom";
 
 describe("htmlKernel", () => {
@@ -18,7 +18,7 @@ describe("htmlKernel", () => {
                 dom.window.document.body.appendChild(container);
                 return container;
             },
-            nomarliseHtmlFragment: (htmlFragment: string) => {
+            normalizeHtmlFragment: (htmlFragment: string) => {
                 const container = dom.window.document.createElement("div");
                 container.innerHTML = htmlFragment;
                 return container.innerHTML;
@@ -27,7 +27,7 @@ describe("htmlKernel", () => {
                 return new dom.window.MutationObserver(callback);
             }
         };
-        const kernel = createHtmlKernelForBrowserHosting({ kernelName: "html", htmlDomFragmentInserterConfiguration });
+        const kernel = createHtmlKernelForBrowser({ kernelName: "html", htmlDomFragmentInserterConfiguration });
         kernel.subscribeToKernelEvents((e) => {
             events.push(e);
         });
@@ -51,7 +51,7 @@ describe("htmlKernel", () => {
             updateContainerContent: (container: HTMLElement, htmlFragment: string) => {
                 container.innerHTML = container.innerHTML + htmlFragment;
             },
-            nomarliseHtmlFragment: (htmlFragment: string) => {
+            normalizeHtmlFragment: (htmlFragment: string) => {
                 const container = dom.window.document.createElement("div");
                 container.innerHTML = htmlFragment;
                 return container.innerHTML;
@@ -60,7 +60,7 @@ describe("htmlKernel", () => {
                 return new dom.window.MutationObserver(callback);
             }
         };
-        const kernel = createHtmlKernelForBrowserHosting({ kernelName: "html", htmlDomFragmentInserterConfiguration });
+        const kernel = createHtmlKernelForBrowser({ kernelName: "html", htmlDomFragmentInserterConfiguration });
         kernel.subscribeToKernelEvents((e) => {
             events.push(e);
         });
@@ -86,7 +86,7 @@ describe("htmlKernel", () => {
             updateContainerContent: (container: HTMLElement, htmlFragment: string) => {
                 container.innerHTML = container.innerHTML + htmlFragment;
             },
-            nomarliseHtmlFragment: (htmlFragment: string) => {
+            normalizeHtmlFragment: (htmlFragment: string) => {
                 const container = dom.window.document.createElement("div");
                 container.innerHTML = htmlFragment;
                 return container.innerHTML;
@@ -95,7 +95,7 @@ describe("htmlKernel", () => {
                 return new dom.window.MutationObserver(callback);
             }
         };
-        const kernel = createHtmlKernelForBrowserHosting({ kernelName: "html", htmlDomFragmentInserterConfiguration });
+        const kernel = createHtmlKernelForBrowser({ kernelName: "html", htmlDomFragmentInserterConfiguration });
         kernel.subscribeToKernelEvents((e) => {
             events.push(e);
         });
@@ -117,7 +117,7 @@ describe("htmlKernel", () => {
             updateContainerContent: (container: HTMLElement, htmlFragment: string) => {
                 container.innerHTML = container.innerHTML + htmlFragment;
             },
-            nomarliseHtmlFragment: (htmlFragment: string) => {
+            normalizeHtmlFragment: (htmlFragment: string) => {
                 const container = dom.window.document.createElement("div");
                 container.innerHTML = htmlFragment;
                 return container.innerHTML;
@@ -126,7 +126,7 @@ describe("htmlKernel", () => {
                 return new dom.window.MutationObserver(callback);
             }
         };
-        const kernel = createHtmlKernelForBrowserHosting({ kernelName: "html", htmlDomFragmentInserterConfiguration });
+        const kernel = createHtmlKernelForBrowser({ kernelName: "html", htmlDomFragmentInserterConfiguration });
         kernel.subscribeToKernelEvents((e) => {
             events.push(e);
         });
@@ -148,7 +148,7 @@ describe("htmlKernel", () => {
             updateContainerContent: (container: HTMLElement, htmlFragment: string) => {
                 container.innerHTML = container.innerHTML + htmlFragment;
             },
-            nomarliseHtmlFragment: (htmlFragment: string) => {
+            normalizeHtmlFragment: (htmlFragment: string) => {
                 const container = dom.window.document.createElement("div");
                 container.innerHTML = htmlFragment;
                 return container.innerHTML;
@@ -157,7 +157,7 @@ describe("htmlKernel", () => {
                 return new dom.window.MutationObserver(callback);
             }
         };
-        const kernel = createHtmlKernelForBrowserHosting({ kernelName: "html", htmlDomFragmentInserterConfiguration });
+        const kernel = createHtmlKernelForBrowser({ kernelName: "html", htmlDomFragmentInserterConfiguration });
         kernel.subscribeToKernelEvents((e) => {
             events.push(e);
         });
@@ -187,7 +187,7 @@ describe("htmlKernel", () => {
             getOrCreateContainer: () => {
                 return container;
             },
-            nomarliseHtmlFragment: (htmlFragment: string) => {
+            normalizeHtmlFragment: (htmlFragment: string) => {
                 const container = dom.window.document.createElement("div");
                 container.innerHTML = htmlFragment;
                 return container.innerHTML;
@@ -197,7 +197,7 @@ describe("htmlKernel", () => {
             }
         };
 
-        const kernel = createHtmlKernelForBrowserHosting({ kernelName: "html", htmlDomFragmentInserterConfiguration });
+        const kernel = createHtmlKernelForBrowser({ kernelName: "html", htmlDomFragmentInserterConfiguration });
         kernel.subscribeToKernelEvents((e) => {
             events.push(e);
         });

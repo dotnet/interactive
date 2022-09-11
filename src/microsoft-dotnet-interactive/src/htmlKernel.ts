@@ -45,7 +45,7 @@ export interface HtmlDomFragmentInserterConfiguration {
     getOrCreateContainer?: () => HTMLElement,
     updateContainerContent?: (container: HTMLElement, htmlFragment: string) => void,
     createMutationObserver?: (callback: MutationCallback) => MutationObserver,
-    nomarliseHtmlFragment?: (htmlFragment: string) => string
+    normalizeHtmlFragment?: (htmlFragment: string) => string
 };
 
 export function htmlDomFragmentInserter(htmlFragment: string, configuration?: HtmlDomFragmentInserterConfiguration): Promise<string> {
@@ -55,7 +55,7 @@ export function htmlDomFragmentInserter(htmlFragment: string, configuration?: Ht
         document.body.appendChild(container);
         return container;
     });
-    const nomarliseFragment = configuration?.nomarliseHtmlFragment ?? ((htmlFragment: string) => {
+    const nomarliseFragment = configuration?.normalizeHtmlFragment ?? ((htmlFragment: string) => {
         const container = document.createElement("div");
         container.innerHTML = htmlFragment;
         return container.innerHTML;
@@ -89,7 +89,7 @@ export function htmlDomFragmentInserter(htmlFragment: string, configuration?: Ht
 
 export type HtmlKernelInBrowserConfiguration = { kernelName: string, container: HTMLElement | string, contentBehaviour: "append" | "replace" } | { kernelName: string, htmlDomFragmentInserterConfiguration: HtmlDomFragmentInserterConfiguration };
 
-export function createHtmlKernelForBrowserHosting(config: HtmlKernelInBrowserConfiguration): Kernel {
+export function createHtmlKernelForBrowser(config: HtmlKernelInBrowserConfiguration): Kernel {
 
     if (withfragmentInserterConfiguration(config)) {
         return new HtmlKernel(config.kernelName, (fragment) => htmlDomFragmentInserter(fragment, config.htmlDomFragmentInserterConfiguration));
