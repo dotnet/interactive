@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
         internal PSKernelHost(PowerShellKernel powerShell)
         {
             _powerShell = powerShell ?? throw new ArgumentNullException(nameof(powerShell));
-            _hostVersion = new Version("0.0.1");
+            _hostVersion = new Version("1.0.0");
             _instanceId = Guid.NewGuid();
             _ui = new PSKernelHostUserInterface(_powerShell);
             _consoleColorProxy = PSObject.AsPSObject(new ConsoleColorProxy(_ui));
