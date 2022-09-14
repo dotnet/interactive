@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.DotNet.Interactive.Documents.Utility;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,6 +8,8 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Documents.ParserServer;
+using Microsoft.DotNet.Interactive.Documents.Utility;
 
 namespace Microsoft.DotNet.Interactive.Documents
 {
@@ -20,54 +21,47 @@ namespace Microsoft.DotNet.Interactive.Documents
 
         public static InteractiveDocument Parse(
             string content,
-            KernelInfoCollection? kernelNames = default)
+            KernelInfoCollection? kernelInfo = default)
         {
-            kernelNames ??= new();
+            kernelInfo ??= new();
             Dictionary<string, object> metadata = null;
             var lines = content.SplitIntoLines();
 
-            var elements = new List<InteractiveDocumentElement>();
-            var currentLanguage = kernelNames.DefaultKernelName;
+            var document = new InteractiveDocument();
+            var currentLanguage = kernelInfo.DefaultKernelName;
             var currentElementLines = new List<string>();
 
             // not a kernel language, but still a valid cell splitter
-            if (!kernelNames.Contains("markdown"))
+            if (!kernelInfo.Contains("markdown"))
             {
-                kernelNames = kernelNames.Clone();
-                kernelNames.Add(new KernelInfo("markdown", new[] { "md" }));
+                kernelInfo = kernelInfo.Clone();
+                kernelInfo.Add(new KernelInfo("markdown", new[] { "md" }));
             }
-          
+
             var foundMetadata = false;
 
             for (var i = 0; i < lines.Length; i++)
             {
                 var line = lines[i];
-                
-                if (!foundMetadata && 
+
+                if (!foundMetadata &&
                     line.StartsWith("#!meta"))
                 {
                     foundMetadata = true;
                     var sb = new StringBuilder();
-                
-                    // FIX: (Parse) 
+
                     while (!(line = lines[++i]).StartsWith("#!"))
                     {
                         sb.AppendLine(line);
                     }
-                
+
                     var metadataString = sb.ToString();
-                
-                    metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(metadataString);
-                
-                    if (metadata.TryGetValue("kernelInfo", out var kernelInfoObj) && 
-                        kernelInfoObj is JsonElement kernelInfoJson)
+
+                    metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(metadataString, ParserServerSerializer.JsonSerializerOptions);
+
+                    if (InteractiveDocument.TryGetKernelInfoFromMetadata(metadata, out var kernelInfoFromMetadata))
                     {
-                        var kernelInfo = kernelInfoJson.Deserialize<KernelInfoCollection>();
-                        // foreach (var item in kernelInfoJson.EnumerateArray())
-                        // {
-                        //     var ki = item.Deserialize<KernelInfo>();
-                        // }
-                
+                        kernelInfo.AddRange(kernelInfoFromMetadata);
                     }
                 }
 
@@ -75,7 +69,7 @@ namespace Microsoft.DotNet.Interactive.Documents
                 {
                     var cellLanguage = line.Substring(InteractiveNotebookCellSpecifier.Length);
 
-                    if (kernelNames.TryGetByAlias(cellLanguage, out var name))
+                    if (kernelInfo.TryGetByAlias(cellLanguage, out var name))
                     {
                         // recognized language, finalize the current element
                         AddElement();
@@ -100,17 +94,15 @@ namespace Microsoft.DotNet.Interactive.Documents
             AddElement();
 
             // ensure there's at least one element available
-            if (elements.Count == 0)
+            if (document.Elements.Count == 0)
             {
-                elements.Add(CreateElement(kernelNames.DefaultKernelName, Array.Empty<string>()));
+                document.Elements.Add(CreateElement(kernelInfo.DefaultKernelName, Array.Empty<string>()));
             }
 
             InteractiveDocumentElement CreateElement(string elementLanguage, IEnumerable<string> elementLines)
             {
                 return new(string.Join("\n", elementLines), elementLanguage);
             }
-
-            var document = new InteractiveDocument(elements);
 
             if (metadata is not null)
             {
@@ -135,7 +127,7 @@ namespace Microsoft.DotNet.Interactive.Documents
 
                 if (currentElementLines.Count > 0)
                 {
-                    elements.Add(CreateElement(currentLanguage, currentElementLines));
+                    document.Elements.Add(CreateElement(currentLanguage, currentElementLines));
                 }
             }
         }
@@ -158,11 +150,23 @@ namespace Microsoft.DotNet.Interactive.Documents
             return Parse(content, kernelInfos);
         }
 
-        public static string ToCodeSubmissionContent(this InteractiveDocument interactiveDocument, string newline = "\n")
+        public static string ToCodeSubmissionContent(
+            this InteractiveDocument document,
+            string newline = "\n")
         {
+            // FIX: (ToCodeSubmissionContent) stringbuilderify this
+
             var lines = new List<string>();
 
-            foreach (var element in interactiveDocument.Elements)
+            if (document.Metadata.Count > 0)
+            {
+                lines.Add($"{InteractiveNotebookCellSpecifier}meta");
+                lines.Add("");
+                lines.Add(JsonSerializer.Serialize(document.Metadata, ParserServerSerializer.JsonSerializerOptions));
+                lines.Add("");
+            }
+
+            foreach (var element in document.Elements)
             {
                 var elementLines = element.Contents.SplitIntoLines().SkipWhile(l => l.Length == 0).ToList();
                 while (elementLines.Count > 0 && elementLines[^1].Length == 0)
@@ -172,9 +176,9 @@ namespace Microsoft.DotNet.Interactive.Documents
 
                 if (elementLines.Count > 0)
                 {
-                    if (element.Language is not null)
+                    if (element.KernelName is not null)
                     {
-                        lines.Add($"{InteractiveNotebookCellSpecifier}{element.Language}");
+                        lines.Add($"{InteractiveNotebookCellSpecifier}{element.KernelName}");
                         lines.Add("");
                     }
 
@@ -184,6 +188,7 @@ namespace Microsoft.DotNet.Interactive.Documents
             }
 
             var content = string.Join(newline, lines);
+
             return content;
         }
 

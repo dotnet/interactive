@@ -212,7 +212,6 @@ public class HtmlKernelTests : IDisposable
             .ContainSingle(v => v.Value.Contains("<div>hey there!</div>"));
     }
 
-    // FIX: (HtmlKernelTests) 
     private async Task<Kernel> CreateHtmlProxyKernelAsync()
     {
         var connector = new PlaywrightKernelConnector(!Debugger.IsAttached);

@@ -3,12 +3,17 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
+using Microsoft.DotNet.Interactive.Documents.ParserServer;
 
 namespace Microsoft.DotNet.Interactive.Documents;
 
+[JsonConverter(typeof(KernelInfoConverter))]
 public class KernelInfo
 {
-    public KernelInfo(string name, IReadOnlyCollection<string> aliases = null)
+    public KernelInfo(
+        string name, 
+        IReadOnlyCollection<string>? aliases = null)
     {
         Validate(name);
         Name = name;
@@ -20,18 +25,17 @@ public class KernelInfo
                 Validate(alias);
             }
 
-            var distinctAliases = new HashSet<string>(aliases) { name };
-            Aliases = distinctAliases;
+            Aliases = aliases;
         }
         else
         {
-            Aliases = Array.Empty<string>();
+            Aliases = new string[] { };
         }
     }
 
-    public IReadOnlyCollection<string> Aliases { get; }
-
     public string Name { get; }
+
+    public IReadOnlyCollection<string> Aliases { get; }
 
     public override string ToString()
     {

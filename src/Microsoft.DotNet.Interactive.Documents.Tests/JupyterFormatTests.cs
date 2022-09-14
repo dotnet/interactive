@@ -162,7 +162,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .Should()
                 .ContainSingle()
                 .Which
-                .Language
+                .KernelName
                 .Should()
                 .Be("fsharp");
         }
@@ -194,7 +194,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .Should()
                 .ContainSingle()
                 .Which
-                .Language
+                .KernelName
                 .Should()
                 .Be("fsharp");
         }
@@ -296,7 +296,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .Should()
                 .ContainSingle()
                 .Which
-                .Language
+                .KernelName
                 .Should()
                 .Be("pwsh");
         }
@@ -678,7 +678,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
-                    new InteractiveDocumentElement(language: "csharp")
+                    new InteractiveDocumentElement(kernelName: "csharp")
                 });
         }
 
@@ -942,7 +942,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     .ContainSingle()
                     .Which
                     .Should()
-                    .BeEquivalentToRespectingRuntimeTypes(new InteractiveDocumentElement(language: "markdown"));
+                    .BeEquivalentToRespectingRuntimeTypes(new InteractiveDocumentElement(kernelName: "markdown"));
         }
 
         [Fact]

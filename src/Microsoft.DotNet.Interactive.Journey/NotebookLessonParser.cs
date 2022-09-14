@@ -42,12 +42,12 @@ namespace Microsoft.DotNet.Interactive.Journey
         {
             await using var stream = file.OpenRead();
 
-            var kernelNames = GetKernelNames(kernel);
+            var kernelInfo = GetKernelInfoFromKernel(kernel);
 
             var notebook = file.Extension.ToLowerInvariant() switch
             {
-                ".ipynb" => await Notebook.ReadAsync(stream, kernelNames),
-                ".dib" => await CodeSubmission.ReadAsync(stream, kernelNames),
+                ".ipynb" => await Notebook.ReadAsync(stream, kernelInfo),
+                ".dib" => await CodeSubmission.ReadAsync(stream, kernelInfo),
                 _ => throw new InvalidOperationException($"Unrecognized extension for a notebook: {file.Extension}"),
             };
 
@@ -65,23 +65,22 @@ namespace Microsoft.DotNet.Interactive.Journey
 
             // FIX: (LoadNotebookFromUrl) differentiate file formats
 
-            return CodeSubmission.Parse(content, GetKernelNames(kernel));
+            return CodeSubmission.Parse(content, GetKernelInfoFromKernel(kernel));
         }
 
-        private static KernelInfoCollection GetKernelNames(CompositeKernel? kernel)
+        private static KernelInfoCollection GetKernelInfoFromKernel(CompositeKernel? kernel)
         {
             if (kernel is { })
             {
                 KernelInfoCollection kernelInfos = new();
 
-                var kernelChoosers = kernel.Directives.OfType<ChooseKernelDirective>();
-
-                foreach (var kernelChooser in kernelChoosers)
+                foreach (var subkernel in kernel)
                 {
-                    var kernelAliases = kernelChooser.Aliases.Select(alias => alias[2..]).ToList();
-
-                    kernelInfos.Add(new Documents.KernelInfo(kernelChooser.Name[2..], kernelAliases));
+                    var info = subkernel.KernelInfo;
+                    kernelInfos.Add(new(info.LocalName, info.Aliases));
                 }
+
+                kernelInfos.DefaultKernelName = kernel.DefaultKernelName;
 
                 if (kernelInfos.All(n => n.Name != "markdown"))
                 {
@@ -222,7 +221,7 @@ namespace Microsoft.DotNet.Interactive.Journey
             }
 
             var setup = rawSetup.Select(c => new SubmitCode(c.Contents)).ToList();
-            var contents = rawContents.Select(c => new SendEditableCode(c.Language, c.Contents)).ToList();
+            var contents = rawContents.Select(c => new SendEditableCode(c.KernelName, c.Contents)).ToList();
             var environmentSetup = rawEnvironmentSetup.Select(c => new SubmitCode(c.Contents)).ToList();
 
             return new ChallengeDefinition(name, setup, contents, environmentSetup);
@@ -268,7 +267,7 @@ namespace Microsoft.DotNet.Interactive.Journey
             afterDirective = null;
             remainingCell = null;
 
-            if (cell.Language != "markdown")
+            if (cell.KernelName != "markdown")
             {
                 return false;
             }
@@ -284,7 +283,7 @@ namespace Microsoft.DotNet.Interactive.Journey
 
             directive = match.Groups["directive"].Value;
             afterDirective = match.Groups["afterDirective"].Value;
-            remainingCell = new InteractiveDocumentElement(string.Join(Environment.NewLine, result.Skip(1)), cell.Language);
+            remainingCell = new InteractiveDocumentElement(string.Join(Environment.NewLine, result.Skip(1)), cell.KernelName);
             return true;
         }
     }

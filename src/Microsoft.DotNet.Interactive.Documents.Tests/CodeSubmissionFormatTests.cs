@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .Which
                 .Should()
                 .Match<InteractiveDocumentElement>(cell =>
-                    cell.Language == "csharp" &&
+                    cell.KernelName == "csharp" &&
                     cell.Contents == string.Empty);
         }
 
@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .Which
                 .Should()
                 .Match<InteractiveDocumentElement>(cell =>
-                    cell.Language == "csharp" &&
+                    cell.KernelName == "csharp" &&
                     cell.Contents == "var x = 1;"
                 );
         }
@@ -74,7 +74,7 @@ let x = 1");
                 .Which
                 .Should()
                 .Match<InteractiveDocumentElement>(cell =>
-                    cell.Language == "fsharp" &&
+                    cell.KernelName == "fsharp" &&
                     cell.Contents == "let x = 1"
                 );
         }
@@ -90,7 +90,7 @@ var x = 1;");
                 .Which
                 .Should()
                 .Match<InteractiveDocumentElement>(cell =>
-                    cell.Language == "csharp" &&
+                    cell.KernelName == "csharp" &&
                     cell.Contents == "#!probably-a-magic-command\nvar x = 1;"
                 );
         }
@@ -107,7 +107,7 @@ let x = 1");
                 .Which
                 .Should()
                 .Match<InteractiveDocumentElement>(cell =>
-                    cell.Language == "fsharp" &&
+                    cell.KernelName == "fsharp" &&
                     cell.Contents == "#!probably-a-magic-command\nlet x = 1"
                 );
         }
@@ -125,8 +125,8 @@ let x = 1");
             notebook.Elements
                 .Should()
                 .SatisfyRespectively(
-                    cell => cell.Should().Match(_ => cell.Language == "csharp" && cell.Contents == "#!connect named-pipe --kernel-name wpf --pipe-name some-pipe-name"),
-                    cell => cell.Should().Match(_ => cell.Language == "csharp" && cell.Contents == "#!wpf -h")
+                    cell => cell.Should().Match(_ => cell.KernelName == "csharp" && cell.Contents == "#!connect named-pipe --kernel-name wpf --pipe-name some-pipe-name"),
+                    cell => cell.Should().Match(_ => cell.KernelName == "csharp" && cell.Contents == "#!wpf -h")
                 );
         }
 
@@ -386,8 +386,21 @@ var x = 1;
         [Fact]
         public void Default_language_can_be_specified_in_metadata()
         {
-            // TODO (Default_language_can_be_specified_in_metadata) write test
-            throw new NotImplementedException();
+            var kernelInfo = KernelInfos;
+            KernelInfos.DefaultKernelName = "fsharp";
+
+            var metadata = new Dictionary<string, object>
+            {
+                ["kernelInfo"] = kernelInfo
+            };
+
+            var content = GetDibContent(metadata);
+
+            var document = CodeSubmission.Parse(content);
+
+            document.GetDefaultKernelName()
+                    .Should()
+                    .Be("fsharp");
         }
 
         [Fact]
@@ -407,26 +420,39 @@ var x = 1;
             var document = CodeSubmission.Parse(content);
 
             document.Elements
-                    .Select(e => e.Language)
+                    .Select(e => e.KernelName)
                     .Should()
                     .BeEquivalentSequenceTo(new[]
                     {
-                        "#!markdown",
-                        "#!csharp",
-                        "#!fsharp",
-                        "#!pwsh",
-                        "#!javascript",
-                        "#!mermaid",
+                        "markdown",
+                        "csharp",
+                        "fsharp",
+                        "pwsh",
+                        "javascript",
+                        "mermaid",
                     });
         }
 
         [Fact]
         public void Metadata_section_is_not_added_as_a_document_element()
         {
-            
+            var kernelInfo = KernelInfos;
+            kernelInfo.Add(new("mermaid"));
+            kernelInfo.Add(new("javascript"));
 
-            // TODO (Metadata_section_is_not_added_as_a_document_element) write test
-            throw new NotImplementedException();
+            var metadata = new Dictionary<string, object>
+            {
+                ["kernelInfo"] = kernelInfo
+            };
+
+            var content = GetDibContent(metadata);
+
+            var document = CodeSubmission.Parse(content);
+
+            document.Elements
+                    .Select(e => e.KernelName)
+                    .Should()
+                    .NotContain("meta");
         }
 
         [Fact]
@@ -434,7 +460,9 @@ var x = 1;
         {
             var path = GetNotebookFilePath();
 
-            this.Assent(await RoundTripDib(path), _assentConfiguration);
+            var roundTrippedDib = await RoundTripDib(path);
+
+            this.Assent(roundTrippedDib, _assentConfiguration);
         }
 
         private static string GetDibContent(Dictionary<string, object> metadata)
@@ -444,9 +472,11 @@ var x = 1;
                 throw new ArgumentNullException(nameof(metadata));
             }
 
+            var serializedMetadata = JsonSerializer.Serialize(metadata, ParserServer.ParserServerSerializer.JsonSerializerOptions);
+
             return $@"#!meta
 
-{JsonSerializer.Serialize(metadata)}
+{serializedMetadata}
 
 #!markdown
 
