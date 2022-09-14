@@ -150,7 +150,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
     const eol = getEol();
 
     const notebookFileFilters = {
-        '.NET Interactive Notebooks': ['dib', 'dotnet-interactive'],
+        'Microsoft Polyglot Notebooks': ['dib', 'dotnet-interactive'],
         'Jupyter Notebooks': ['ipynb'],
     };
 
@@ -302,7 +302,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
                 {}, // showOptions
                 undefined, // resource uri
                 `${context.extension.id}/dotnet-interactive-window`, // controllerId
-                '.NET Interactive', // title
+                'Microsoft Polyglot Notebook', // title
             ];
             const result = <any>(await vscode.commands.executeCommand('interactive.open', ...interactiveOpenArgs));
             if (result && result.notebookUri && typeof result.notebookUri.toString === 'function') {

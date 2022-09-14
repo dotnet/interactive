@@ -75,7 +75,7 @@ export function getLanguageInfoMetadata(metadata: any): LanguageInfoMetadata {
 export function mapIpynbLanguageName(name: string | undefined): string | undefined {
     if (name) {
         // The .NET Interactive Jupyter kernel serializes the language names as "C#", "F#", and "PowerShell"; these
-        // need to be normalized to .NET Interactive kernel language names.
+        // need to be normalized to Microsoft Polyglot Notebook kernel language names.
         switch (name.toLowerCase()) {
             case 'c#':
                 return 'csharp';

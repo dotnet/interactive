@@ -26,7 +26,7 @@ To create a new notebook, open the Command Palette(`Ctrl+Shift+P`), and select *
 
 ## Telemetry
 
-The Microsoft Polyglot extension for VS Code uses the `dotnet-interactive` tool which collects usage and sends telemetry to Microsoft to help us improve our products and services.  Read our [privacy statement](https://privacy.microsoft.com/privacystatement) to learn more.  See [here](https://github.com/dotnet/interactive/tree/main/docs#telemetry) to learn more about telemetry in .NET Interactive.
+The Microsoft Polyglot Notebooks extension for VS Code uses the `dotnet-interactive` tool which collects usage and sends telemetry to Microsoft to help us improve our products and services.  Read our [privacy statement](https://privacy.microsoft.com/privacystatement) to learn more.  See [here](https://github.com/dotnet/interactive/tree/main/docs#telemetry) to learn more about telemetry in .NET Interactive.
 
 ## License
 
