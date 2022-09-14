@@ -151,7 +151,7 @@ namespace Microsoft.DotNet.Interactive
         {
             _eventLoop?.Dispose();
             _kernelEventSubscription?.Dispose();
-
+            
             if (_cancellationTokenSource.Token.CanBeCanceled)
             {
                 _cancellationTokenSource.Cancel();
