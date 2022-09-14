@@ -154,8 +154,6 @@ namespace Microsoft.DotNet.Interactive.Documents
             this InteractiveDocument document,
             string newline = "\n")
         {
-            // FIX: (ToCodeSubmissionContent) stringbuilderify this
-
             var lines = new List<string>();
 
             if (document.Metadata.Count > 0)

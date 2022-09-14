@@ -32,7 +32,7 @@ export class NotebookParserServer {
                     // ensure at least one cell
                     notebookCells.push({
                         executionOrder: 0,
-                        language: defaultNotebookCellLanguage,
+                        kernelName: defaultNotebookCellLanguage,
                         contents: '',
                         outputs: [],
                     });
