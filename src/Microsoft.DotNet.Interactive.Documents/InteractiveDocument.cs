@@ -3,6 +3,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using Microsoft.DotNet.Interactive.Documents.ParserServer;
 
@@ -51,7 +52,7 @@ public class InteractiveDocument  : IEnumerable
         }
     }
 
-    public string GetDefaultKernelName()
+    public string? GetDefaultKernelName()
     {
         if (TryGetKernelInfoFromMetadata(Metadata, out var kernelInfo))
         {
@@ -94,8 +95,8 @@ public class InteractiveDocument  : IEnumerable
     }
 
     internal static bool TryGetKernelInfoFromMetadata(
-        IDictionary<string, object> metadata,
-        out KernelInfoCollection? kernelInfo)
+        IDictionary<string, object>? metadata,
+        [NotNullWhen(true)] out KernelInfoCollection? kernelInfo)
     {
         if (metadata?.TryGetValue("kernelInfo", out var kernelInfoObj) == true &&
             kernelInfoObj is JsonElement kernelInfoJson && kernelInfoJson.Deserialize<KernelInfoCollection>(ParserServerSerializer.JsonSerializerOptions) is

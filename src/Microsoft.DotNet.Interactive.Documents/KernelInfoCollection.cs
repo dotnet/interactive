@@ -15,13 +15,13 @@ public class KernelInfoCollection : ICollection<KernelInfo>
 {
     private readonly List<KernelInfo> _kernelNames = new();
     private readonly Dictionary<string, KernelInfo> _kernelInfoByNameOrAlias = new();
-    private string _defaultKernelName;
+    private string? _defaultKernelName;
 
     public int Count => _kernelNames.Count;
 
     public bool IsReadOnly => false;
 
-    public string DefaultKernelName
+    public string? DefaultKernelName
     {
         get => _defaultKernelName ?? (_kernelNames.Count == 1
                                           ? _kernelNames[0].Name

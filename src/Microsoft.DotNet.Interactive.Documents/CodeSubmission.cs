@@ -24,11 +24,11 @@ namespace Microsoft.DotNet.Interactive.Documents
             KernelInfoCollection? kernelInfo = default)
         {
             kernelInfo ??= new();
-            Dictionary<string, object> metadata = null;
+            Dictionary<string, object>? metadata = null;
             var lines = content.SplitIntoLines();
 
             var document = new InteractiveDocument();
-            var currentLanguage = kernelInfo.DefaultKernelName;
+            var currentLanguage = kernelInfo.DefaultKernelName ?? "csharp";
             var currentElementLines = new List<string>();
 
             // not a kernel language, but still a valid cell splitter
@@ -96,7 +96,7 @@ namespace Microsoft.DotNet.Interactive.Documents
             // ensure there's at least one element available
             if (document.Elements.Count == 0)
             {
-                document.Elements.Add(CreateElement(kernelInfo.DefaultKernelName, Array.Empty<string>()));
+                document.Elements.Add(CreateElement(currentLanguage, Array.Empty<string>()));
             }
 
             InteractiveDocumentElement CreateElement(string elementLanguage, IEnumerable<string> elementLines)

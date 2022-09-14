@@ -44,7 +44,7 @@ internal class KernelInfoConverter : JsonConverter<KernelInfo>
             }
         }
 
-        return new(name, aliases);
+        return new(name!, aliases);
     }
 
     public override void Write(Utf8JsonWriter writer, KernelInfo value, JsonSerializerOptions options)

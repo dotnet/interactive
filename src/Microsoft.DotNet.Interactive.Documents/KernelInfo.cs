@@ -46,7 +46,7 @@ public class KernelInfo
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            throw new ArgumentException("Value cannot be null or consist entirely of whitespace.");
+            throw new ArgumentException("KernelInfo name cannot be null or consist entirely of whitespace.");
         }
 
         if (name.StartsWith("#"))

@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
 
         public static async Task<InteractiveDocument> ReadAsync(
             Stream stream,
-            KernelInfoCollection kernelInfo = null)
+            KernelInfoCollection? kernelInfo = null)
         {
             using var reader = new StreamReader(stream, Encoding);
             var content = await reader.ReadToEndAsync();
