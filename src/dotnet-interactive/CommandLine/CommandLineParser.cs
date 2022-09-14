@@ -214,7 +214,8 @@ public static class CommandLineParser
             {
                 var frontendEnvironment = new HtmlNotebookFrontendEnvironment();
                 var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions, telemetrySender);
-
+                cancellationToken.Register(() => kernel.Dispose());
+                
                 await new JupyterClientKernelExtension().OnLoadAsync(kernel);
 
                 services.AddKernel(kernel);
@@ -231,7 +232,9 @@ public static class CommandLineParser
                     .AddSingleton(c => new JupyterRequestContextHandler(kernel))
                     .AddSingleton<IHostedService, Shell>()
                     .AddSingleton<IHostedService, Heartbeat>();
+
                 var result = await jupyter(startupOptions, console, startServer, context);
+                
                 return result;
             }
 
@@ -297,8 +300,8 @@ public static class CommandLineParser
                 workingDirOption
             };
 
-            stdIOCommand.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext>(
-                async (startupOptions, options, console, context) =>
+            stdIOCommand.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext,CancellationToken>(
+                async (startupOptions, options, console, context, cancellationToken) =>
                 {
                     Console.InputEncoding = Encoding.UTF8;
                     Console.OutputEncoding = Encoding.UTF8;
@@ -313,11 +316,13 @@ public static class CommandLineParser
                         frontendEnvironment, 
                         startupOptions,
                         telemetrySender);
-
+                    
                     services.AddKernel(kernel);
 
                     kernel.UseQuitCommand();
-
+                    
+                    cancellationToken.Register(() => kernel.Dispose());
+                    
                     var sender = KernelCommandAndEventSender.FromTextWriter(
                         Console.Out,
                         KernelHost.CreateHostUri("stdio"));
@@ -359,7 +364,6 @@ public static class CommandLineParser
                         {
                             var _ = host.ConnectAsync();
                         };
-
                         await startHttp(startupOptions, console, startServer, context);
                     }
                     else
@@ -370,7 +374,6 @@ public static class CommandLineParser
 
                             proxy.KernelInfo.SupportedKernelCommands.Add(new(nameof(SubmitCode)));
                         }
-
                         await startKernelHost(startupOptions, host, console);
                     }
 
