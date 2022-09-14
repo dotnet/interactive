@@ -66,7 +66,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
     const minDotNetSdkVersion = config.get<string>('minimumDotNetSdkVersion') || '6.0';
     const diagnosticsChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('Polyglot Notebook : diagnostics'));
-    const loggerChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('Microsoft Polyglot Notebook : logger'));
+    const loggerChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('Polyglot Notebook : logger'));
     DotNetPathManager.setOutputChannelAdapter(diagnosticsChannel);
 
     Logger.configure('extension host', logEntry => {

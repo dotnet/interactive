@@ -39,7 +39,7 @@ export class DotNetNotebookKernel {
         const dibController = vscode.notebooks.createNotebookController(
             'dotnet-interactive',
             viewType,
-            'Microsoft Polyglot Notebook',
+            'Polyglot Notebook',
             this.executeHandler.bind(this),
             preloads
         );
@@ -49,7 +49,7 @@ export class DotNetNotebookKernel {
         const legacyController = vscode.notebooks.createNotebookController(
             'dotnet-interactive-legacy',
             legacyViewType,
-            'Microsoft Polyglot Notebook',
+            'Polyglot Notebook',
             this.executeHandler.bind(this),
             preloads
         );
@@ -59,7 +59,7 @@ export class DotNetNotebookKernel {
         const jupyterController = vscode.notebooks.createNotebookController(
             'dotnet-interactive-for-jupyter',
             jupyterViewType,
-            'Microsoft Polyglot Notebook',
+            'Polyglot Notebook',
             this.executeHandler.bind(this),
             preloads
         );
@@ -75,7 +75,7 @@ export class DotNetNotebookKernel {
         const interactiveController = vscode.notebooks.createNotebookController(
             'dotnet-interactive-window',
             'interactive',
-            'Microsoft Polyglot Notebook',
+            'Polyglot Notebook',
             this.executeHandler.bind(this),
             preloads
         );

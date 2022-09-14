@@ -1,8 +1,8 @@
 {
   "name": "dotnet-interactive-vscode",
-  "displayName": "Microsoft Polyglot Notebooks",
+  "displayName": "Polyglot Notebooks",
   "//description": "During build, the description gets the git SHA appended to it.",
-  "description": "Microsoft Polyglot Notebooks for VS Code.",
+  "description": "Polyglot Notebooks for VS Code.",
   "icon": "images/icon.png",
   "publisher": "ms-dotnettools",
   "author": "Microsoft Corporation",
@@ -69,7 +69,7 @@
     "notebooks": [
       {
         "type": "dotnet-interactive",
-        "displayName": "Microsoft Polyglot Notebook",
+        "displayName": "Polyglot Notebook",
         "selector": [
           {
             "filenamePattern": "*.dib"
@@ -78,7 +78,7 @@
       },
       {
         "type": "dotnet-interactive-legacy",
-        "displayName": "Microsoft Polyglot Notebook",
+        "displayName": "Polyglot Notebook",
         "selector": [
           {
             "filenamePattern": "*.dotnet-interactive"
@@ -87,7 +87,7 @@
       },
       {
         "type": "dotnet-interactive-window",
-        "displayName": "Microsoft Polyglot Notebook",
+        "displayName": "Polyglot Notebook",
         "selector": []
       }
     ],
@@ -106,7 +106,7 @@
       }
     ],
     "configuration": {
-      "title": "Microsoft Polyglot Notebook",
+      "title": "Polyglot Notebook",
       "properties": {
         "dotnet-interactive.kernelTransportArgs": {
           "type": "array",
@@ -186,7 +186,7 @@
       "panel": [
         {
           "id": "dotnet-interactive-panel",
-          "title": "Microsoft Polyglot Notebook",
+          "title": "Polyglot Notebook",
           "icon": "resources/icons/notebook.svg"
         }
       ]
@@ -204,35 +204,35 @@
     "commands": [
       {
         "command": "dotnet-interactive.acquire",
-        "title": "Install Microsoft Polyglot Notebook"
+        "title": "Install Polyglot Notebook"
       },
       {
         "command": "dotnet-interactive.createNewInteractive",
-        "title": "Microsoft Polyglot Notebook: Create Interactive Window"
+        "title": "Polyglot Notebook: Create Interactive Window"
       },
       {
         "command": "dotnet-interactive.openNotebook",
-        "title": "Microsoft Polyglot Notebook: Open notebook"
+        "title": "Polyglot Notebook: Open notebook"
       },
       {
         "command": "dotnet-interactive.saveAsNotebook",
-        "title": "Microsoft Polyglot Notebook: Save notebook as..."
+        "title": "Polyglot Notebook: Save notebook as..."
       },
       {
         "command": "dotnet-interactive.newNotebook",
-        "title": "Microsoft Polyglot Notebook: Create new blank notebook"
+        "title": "Polyglot Notebook: Create new blank notebook"
       },
       {
         "command": "dotnet-interactive.restartCurrentNotebookKernel",
-        "title": "Microsoft Polyglot Notebook: Restart the current notebook's kernel"
+        "title": "Polyglot Notebook: Restart the current notebook's kernel"
       },
       {
         "command": "dotnet-interactive.stopCurrentNotebookKernel",
-        "title": "Microsoft Polyglot Notebook: Stop the current notebook's kernel"
+        "title": "Polyglot Notebook: Stop the current notebook's kernel"
       },
       {
         "command": "dotnet-interactive.stopAllNotebookKernels",
-        "title": "Microsoft Polyglot Notebook: Stop all notebook kernels"
+        "title": "Polyglot Notebook: Stop all notebook kernels"
       },
       {
         "command": "dotnet-interactive.shareValueTo",
