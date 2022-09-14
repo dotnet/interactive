@@ -535,7 +535,7 @@ namespace Microsoft.DotNet.Interactive
                             }
 
                             return inner.IsChildCommand(outer);
-                          
+
                         }
                         );
                     RegisterForDisposal(scheduler);
@@ -879,7 +879,7 @@ namespace Microsoft.DotNet.Interactive
             return false;
         }
 
-        internal virtual IKernelValueDeclarer GetValueDeclarer() => KernelValueDeclarer.Default;
+        public virtual IKernelValueDeclarer GetValueDeclarer() => KernelValueDeclarer.Default;
 
         public override string ToString()
         {
