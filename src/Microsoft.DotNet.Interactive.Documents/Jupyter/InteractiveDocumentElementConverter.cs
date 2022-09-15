@@ -28,7 +28,7 @@ internal class InteractiveDocumentElementConverter : JsonConverter<InteractiveDo
                         var cellType = reader.ReadString();
                         if (cellType == "markdown")
                         {
-                            element.Language = "markdown";
+                            element.KernelName = "markdown";
                         }
 
                         break;
@@ -51,7 +51,7 @@ internal class InteractiveDocumentElementConverter : JsonConverter<InteractiveDo
                             dotnet_interactive_dict.TryGetValue("language", out var languageStuff) &&
                             languageStuff is string language)
                         {
-                            element.Language = language;
+                            element.KernelName = language;
                         }
 
                         break;
@@ -114,7 +114,7 @@ internal class InteractiveDocumentElementConverter : JsonConverter<InteractiveDo
 
         writer.WritePropertyName("cell_type");
 
-        if (element.Language == "markdown")
+        if (element.KernelName == "markdown")
         {
             writer.WriteStringValue("markdown");
         }
@@ -144,18 +144,18 @@ internal class InteractiveDocumentElementConverter : JsonConverter<InteractiveDo
             element.Metadata = new Dictionary<string, object>();
         }
 
-        if (element.Language is not null &&
-            element.Language != "markdown")
+        if (element.KernelName is not null &&
+            element.KernelName != "markdown")
         {
             element.Metadata.GetOrAdd("dotnet_interactive",
                                       _ => new Dictionary<string, object>())
-                ["language"] = element.Language;
+                ["language"] = element.KernelName;
         }
 
         writer.WritePropertyName("metadata");
         JsonSerializer.Serialize(writer, element.Metadata, options);
 
-        if (element.Language != "markdown")
+        if (element.KernelName != "markdown")
         {
             writer.WritePropertyName("outputs");
             JsonSerializer.Serialize(writer, element.Outputs, options);

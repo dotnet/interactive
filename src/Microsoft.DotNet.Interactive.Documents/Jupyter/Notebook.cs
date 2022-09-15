@@ -42,14 +42,14 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
 
         public static InteractiveDocument Parse(
             string json,
-            KernelNameCollection? kernelNames = null)
+            KernelInfoCollection? kernelInfo = null)
         {
             var document = JsonSerializer.Deserialize<InteractiveDocument>(json, JsonSerializerOptions) ??
                            throw new JsonException($"Unable to parse as {typeof(InteractiveDocument)}:\n\n{json}");
 
-            if (kernelNames is not null)
+            if (kernelInfo is not null)
             {
-                document.NormalizeElementLanguages(kernelNames);
+                document.NormalizeElementKernelNames(kernelInfo);
             }
 
             return document;
@@ -57,20 +57,20 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
 
         public static InteractiveDocument Read(
             Stream stream,
-            KernelNameCollection kernelNames)
+            KernelInfoCollection kernelInfos)
         {
             using var reader = new StreamReader(stream, Encoding);
             var content = reader.ReadToEnd();
-            return Parse(content, kernelNames);
+            return Parse(content, kernelInfos);
         }
 
         public static async Task<InteractiveDocument> ReadAsync(
             Stream stream,
-            KernelNameCollection kernelNames)
+            KernelInfoCollection? kernelInfo = null)
         {
             using var reader = new StreamReader(stream, Encoding);
             var content = await reader.ReadToEndAsync();
-            return Parse(content, kernelNames);
+            return Parse(content, kernelInfo);
         }
 
         public static void Write(InteractiveDocument document, Stream stream)
@@ -80,7 +80,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             writer.Flush();
         }
 
-        public static string Serialize(
+        public static string SerializeToJupyter(
             this InteractiveDocument document,
             bool enforceJupyterMetadata = true)
         {
@@ -102,7 +102,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
 
         public static void Write(InteractiveDocument document, TextWriter writer)
         {
-            var content = document.Serialize();
+            var content = document.SerializeToJupyter();
             writer.Write(content);
         }
     }

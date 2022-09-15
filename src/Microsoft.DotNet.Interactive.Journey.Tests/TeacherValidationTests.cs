@@ -19,9 +19,9 @@ namespace Microsoft.DotNet.Interactive.Journey.Tests
         {
             var notebook = await NotebookLessonParser.ReadFileAsInteractiveDocument(file, kernel);
             
-            foreach (var cell in notebook.Elements.Where(e=> e.Language != "markdown"))
+            foreach (var cell in notebook.Elements.Where(e=> e.KernelName != "markdown"))
             {
-                await kernel.SendAsync(new SubmitCode(cell.Contents, cell.Language));
+                await kernel.SendAsync(new SubmitCode(cell.Contents, cell.KernelName));
             }
         }
 

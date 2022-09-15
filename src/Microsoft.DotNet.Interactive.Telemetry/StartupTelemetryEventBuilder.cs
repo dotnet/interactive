@@ -162,8 +162,6 @@ public sealed class StartupTelemetryEventBuilder
         }
     }
 
-  
-
     private TelemetryEvent CreateEntry(IEnumerable<KeyValuePair<string, string>> entryItems)
     {
         return new TelemetryEvent("command", new Dictionary<string, string>(entryItems));

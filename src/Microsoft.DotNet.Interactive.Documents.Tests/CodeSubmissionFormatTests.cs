@@ -1,7 +1,15 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Assent;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -10,9 +18,15 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
 {
     public class CodeSubmissionFormatTests : DocumentFormatTestsBase
     {
+        private readonly Configuration _assentConfiguration =
+            new Configuration()
+                .UsingExtension("dib")
+                .UsingSanitiser(s => s.Replace("\r\n", "\n"))
+                .SetInteractive(Debugger.IsAttached);
+
         public InteractiveDocument ParseDib(string content)
         {
-            return CodeSubmission.Parse(content, "csharp", KernelNames);
+            return CodeSubmission.Parse(content, KernelInfos);
         }
 
         public string SerializeDib(InteractiveDocument interactive, string newLine)
@@ -30,9 +44,8 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .Which
                 .Should()
                 .Match<InteractiveDocumentElement>(cell =>
-                    cell.Language == "csharp" &&
-                    cell.Contents == string.Empty
-                );
+                    cell.KernelName == "csharp" &&
+                    cell.Contents == string.Empty);
         }
 
         [Fact]
@@ -45,7 +58,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .Which
                 .Should()
                 .Match<InteractiveDocumentElement>(cell =>
-                    cell.Language == "csharp" &&
+                    cell.KernelName == "csharp" &&
                     cell.Contents == "var x = 1;"
                 );
         }
@@ -61,7 +74,7 @@ let x = 1");
                 .Which
                 .Should()
                 .Match<InteractiveDocumentElement>(cell =>
-                    cell.Language == "fsharp" &&
+                    cell.KernelName == "fsharp" &&
                     cell.Contents == "let x = 1"
                 );
         }
@@ -77,7 +90,7 @@ var x = 1;");
                 .Which
                 .Should()
                 .Match<InteractiveDocumentElement>(cell =>
-                    cell.Language == "csharp" &&
+                    cell.KernelName == "csharp" &&
                     cell.Contents == "#!probably-a-magic-command\nvar x = 1;"
                 );
         }
@@ -94,7 +107,7 @@ let x = 1");
                 .Which
                 .Should()
                 .Match<InteractiveDocumentElement>(cell =>
-                    cell.Language == "fsharp" &&
+                    cell.KernelName == "fsharp" &&
                     cell.Contents == "#!probably-a-magic-command\nlet x = 1"
                 );
         }
@@ -112,8 +125,8 @@ let x = 1");
             notebook.Elements
                 .Should()
                 .SatisfyRespectively(
-                    cell => cell.Should().Match(_ => cell.Language == "csharp" && cell.Contents == "#!connect named-pipe --kernel-name wpf --pipe-name some-pipe-name"),
-                    cell => cell.Should().Match(_ => cell.Language == "csharp" && cell.Contents == "#!wpf -h")
+                    cell => cell.Should().Match(_ => cell.KernelName == "csharp" && cell.Contents == "#!connect named-pipe --kernel-name wpf --pipe-name some-pipe-name"),
+                    cell => cell.Should().Match(_ => cell.KernelName == "csharp" && cell.Contents == "#!wpf -h")
                 );
         }
 
@@ -316,9 +329,9 @@ var x = 1;
         {
             var notebook = new InteractiveDocument
             {
-                new InteractiveDocumentElement("", "csharp"),
-                new InteractiveDocumentElement("// this is fsharp", "fsharp"),
-                new InteractiveDocumentElement("", "csharp")
+                new("", "csharp"),
+                new("// this is fsharp", "fsharp"),
+                new("", "csharp")
             };
             var serialized = SerializeDib(notebook, "\n");
             var expectedLines = new[]
@@ -339,11 +352,11 @@ var x = 1;
         [InlineData("\r\n")]
         public void multiple_cells_are_serialized_with_appropriate_separators(string newline)
         {
-            var cells = new List<InteractiveDocumentElement>()
+            var cells = new List<InteractiveDocumentElement>
             {
-                new InteractiveDocumentElement($"// C# line 1{newline}// C# line 2", "csharp"),
-                new InteractiveDocumentElement($"// F# line 1{newline}// F# line 2", "fsharp"),
-                new InteractiveDocumentElement("This is `markdown`.", "markdown")
+                new($"// C# line 1{newline}// C# line 2", "csharp"),
+                new($"// F# line 1{newline}// F# line 2", "fsharp"),
+                new("This is `markdown`.", "markdown")
             };
             var notebook = new InteractiveDocument(cells);
             var serialized = SerializeDib(notebook, newline);
@@ -369,5 +382,142 @@ var x = 1;
                 .Should()
                 .Be(expected);
         }
+
+        [Fact]
+        public void Default_language_can_be_specified_in_metadata()
+        {
+            var kernelInfo = KernelInfos;
+            KernelInfos.DefaultKernelName = "fsharp";
+
+            var metadata = new Dictionary<string, object>
+            {
+                ["kernelInfo"] = kernelInfo
+            };
+
+            var content = GetDibContent(metadata);
+
+            var document = CodeSubmission.Parse(content);
+
+            document.GetDefaultKernelName()
+                    .Should()
+                    .Be("fsharp");
+        }
+
+        [Fact]
+        public void Kernel_languages_can_be_specified_in_metadata()
+        {
+            var kernelInfo = KernelInfos;
+            kernelInfo.Add(new("mermaid"));
+            kernelInfo.Add(new("javascript"));
+
+            var metadata = new Dictionary<string, object>
+            {
+                ["kernelInfo"] = kernelInfo
+            };
+
+            var content = GetDibContent(metadata);
+
+            var document = CodeSubmission.Parse(content);
+
+            document.Elements
+                    .Select(e => e.KernelName)
+                    .Should()
+                    .BeEquivalentSequenceTo(new[]
+                    {
+                        "markdown",
+                        "csharp",
+                        "fsharp",
+                        "pwsh",
+                        "javascript",
+                        "mermaid",
+                    });
+        }
+
+        [Fact]
+        public void Metadata_section_is_not_added_as_a_document_element()
+        {
+            var kernelInfo = KernelInfos;
+            kernelInfo.Add(new("mermaid"));
+            kernelInfo.Add(new("javascript"));
+
+            var metadata = new Dictionary<string, object>
+            {
+                ["kernelInfo"] = kernelInfo
+            };
+
+            var content = GetDibContent(metadata);
+
+            var document = CodeSubmission.Parse(content);
+
+            document.Elements
+                    .Select(e => e.KernelName)
+                    .Should()
+                    .NotContain("meta");
+        }
+
+        [Fact]
+        public async Task dib_file_can_be_round_tripped_through_read_and_write_without_the_content_changing()
+        {
+            var path = GetNotebookFilePath();
+
+            var roundTrippedDib = await RoundTripDib(path);
+
+            this.Assent(roundTrippedDib, _assentConfiguration);
+        }
+
+        private static string GetDibContent(Dictionary<string, object> metadata)
+        {
+            if (metadata == null)
+            {
+                throw new ArgumentNullException(nameof(metadata));
+            }
+
+            var serializedMetadata = JsonSerializer.Serialize(metadata, ParserServer.ParserServerSerializer.JsonSerializerOptions);
+
+            return $@"#!meta
+
+{serializedMetadata}
+
+#!markdown
+
+* Markdown code
+
+#!csharp
+
+// C# code
+
+#!fsharp
+
+// F# code
+
+#!pwsh
+
+# PowerShell code
+
+#!javascript
+
+// JavaScript code
+
+#!mermaid
+
+%% Mermaid code
+";
+        }
+
+        private async Task<string> RoundTripDib(string notebookFile)
+        {
+            var expectedContent = await File.ReadAllTextAsync(notebookFile);
+
+            var inputDoc = CodeSubmission.Parse(expectedContent);
+
+            var resultContent = inputDoc.ToCodeSubmissionContent();
+            
+            return resultContent;
+        }
+
+        private string GetNotebookFilePath([CallerMemberName] string testName = null) =>
+            Path.Combine(
+                Path.GetDirectoryName(PathToCurrentSourceFile()),
+                $"{GetType().Name}.{testName}.approved.dib");
     }
 }

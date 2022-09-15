@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
     {
         private readonly Configuration _configuration =
             new Configuration()
-                .UsingExtension(".json")
+                .UsingExtension("json")
                 .SetInteractive(Debugger.IsAttached);
 
         [Fact]

@@ -442,7 +442,7 @@ export interface InteractiveDocument {
 
 export interface InteractiveDocumentElement {
     id?: string;
-    language?: string;
+    kernelName?: string;
     contents: string;
     outputs: Array<InteractiveDocumentOutputElement>;
     executionOrder: number;

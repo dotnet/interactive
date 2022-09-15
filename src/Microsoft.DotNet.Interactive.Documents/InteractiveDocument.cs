@@ -3,6 +3,9 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using Microsoft.DotNet.Interactive.Documents.ParserServer;
 
 namespace Microsoft.DotNet.Interactive.Documents;
 
@@ -24,58 +27,86 @@ public class InteractiveDocument  : IEnumerable
 
     public void Add(InteractiveDocumentElement element) => Elements.Add(element);
 
-    internal void NormalizeElementLanguages(KernelNameCollection kernelNames)
+    internal void NormalizeElementKernelNames(KernelInfoCollection kernelInfos)
     {
-        var notebookDefaultKernelName = GetNotebookDefaultKernelName(kernelNames);
+        var defaultKernelName = GetDefaultKernelName(kernelInfos);
 
         foreach (var element in Elements)
         {
             if (element.InferredTargetKernelName is not null &&
-                kernelNames.TryGetByAlias(element.InferredTargetKernelName, out var byMagic))
+                kernelInfos.TryGetByAlias(element.InferredTargetKernelName, out var byMagic))
             {
-                element.Language = byMagic.Name;
+                element.KernelName = byMagic.Name;
             }
 
-            if (element.Language is null)
+            if (element.KernelName is null)
             {
-                element.Language = notebookDefaultKernelName;
+                element.KernelName = defaultKernelName;
             }
 
-            if (element.Language is not null &&
-                kernelNames.TryGetByAlias(element.Language, out var n))
+            if (element.KernelName is not null &&
+                kernelInfos.TryGetByAlias(element.KernelName, out var n))
             {
-                element.Language = n.Name;
+                element.KernelName = n.Name;
             }
         }
     }
 
-    internal string? GetNotebookDefaultKernelName(KernelNameCollection kernelNames)
+    public string? GetDefaultKernelName()
     {
-        string? notebookDefaultKernelName = null;
+        if (TryGetKernelInfoFromMetadata(Metadata, out var kernelInfo))
+        {
+            return kernelInfo.DefaultKernelName;
+        }
 
-        if (Metadata?.TryGetValue("kernelspec", out var kernelspecObj) == true)
+        return null;
+    }
+
+    internal string? GetDefaultKernelName(KernelInfoCollection kernelInfos)
+    {
+        string? defaultKernelName = null;
+
+        if (Metadata is null)
+        {
+            return null;
+        }
+
+        if (Metadata.TryGetValue("kernelspec", out var kernelspecObj))
         {
             if (kernelspecObj is IDictionary<string, object> kernelspecDict)
             {
                 if (kernelspecDict.TryGetValue("language", out var languageObj) &&
                     languageObj is string defaultLanguage)
                 {
-                    notebookDefaultKernelName = defaultLanguage;
+                    return defaultLanguage;
                 }
             }
         }
 
-        if (notebookDefaultKernelName is null)
+        if (kernelInfos.DefaultKernelName is { } defaultFromKernelInfos)
         {
-            notebookDefaultKernelName = kernelNames.DefaultKernelName;
+            if (kernelInfos.TryGetByAlias(defaultFromKernelInfos, out var info))
+            {
+                return info.Name;
+            }
         }
 
-        if (notebookDefaultKernelName is not null &&
-            kernelNames.TryGetByAlias(notebookDefaultKernelName, out var name))
+        return defaultKernelName;
+    }
+
+    internal static bool TryGetKernelInfoFromMetadata(
+        IDictionary<string, object>? metadata,
+        [NotNullWhen(true)] out KernelInfoCollection? kernelInfo)
+    {
+        if (metadata?.TryGetValue("kernelInfo", out var kernelInfoObj) == true &&
+            kernelInfoObj is JsonElement kernelInfoJson && kernelInfoJson.Deserialize<KernelInfoCollection>(ParserServerSerializer.JsonSerializerOptions) is
+                { } kernelInfoDeserialized)
         {
-            notebookDefaultKernelName = name.Name;
+            kernelInfo = kernelInfoDeserialized;
+            return true;
         }
 
-        return notebookDefaultKernelName;
+        kernelInfo = null;
+        return false;
     }
 }
