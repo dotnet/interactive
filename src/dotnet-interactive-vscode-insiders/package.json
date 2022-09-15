@@ -256,67 +256,67 @@
       {
         "id": "dotnet-interactive.csharp",
         "aliases": [
-          "C# (.NET Interactive)"
+          "C# (Scripting)"
         ],
         "configuration": "./syntaxes/csharp.language-configuration.json"
       },
       {
         "id": "dotnet-interactive.fsharp",
         "aliases": [
-          "F# (.NET Interactive)"
+          "F#"
         ],
         "configuration": "./syntaxes/fsharp.language-configuration.json"
       },
       {
         "id": "dotnet-interactive.html",
         "aliases": [
-          "HTML (.NET Interactive)"
+          "HTML"
         ]
       },
       {
         "id": "dotnet-interactive.javascript",
         "aliases": [
-          "JavaScript (.NET Interactive)"
+          "JavaScript"
         ],
         "configuration": "./syntaxes/javascript.language-configuration.json"
       },
       {
         "id": "dotnet-interactive.magic-commands",
         "aliases": [
-          "Magic Commands (.NET Interactive)"
+          "Plyglot Notenook Magic Commands"
         ],
         "configuration": "./syntaxes/magic-commands.language-configuration.json"
       },
       {
         "id": "dotnet-interactive.markdown",
         "aliases": [
-          "Markdown (.NET Interactive)"
+          "Markdown"
         ]
       },
       {
         "id": "dotnet-interactive.mermaid",
         "aliases": [
-          "Mermaid (.NET Interactive)"
+          "Mermaid"
         ]
       },
       {
         "id": "dotnet-interactive.pwsh",
         "aliases": [
-          "PowerShell (.NET Interactive)"
+          "PowerShell"
         ],
         "configuration": "./syntaxes/powershell.language-configuration.json"
       },
       {
         "id": "dotnet-interactive.sql",
         "aliases": [
-          "SQL (.NET Interactive)"
+          "SQL"
         ],
         "configuration": "./syntaxes/sql.language-configuration.json"
       },
       {
         "id": "dotnet-interactive.kql",
         "aliases": [
-          "Kusto Query Language (KQL) (.NET Interactive)"
+          "Kusto Query Language (KQL)"
         ],
         "configuration": "./syntaxes/kql.language-configuration.json"
       }

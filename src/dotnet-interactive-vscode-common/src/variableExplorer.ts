@@ -13,7 +13,7 @@ import { DisposableSubscription } from './dotnet-interactive/disposables';
 import { isKernelEventEnvelope } from './dotnet-interactive';
 
 // creates a map of, e.g.:
-//   "dotnet-interactive.csharp" => "C# (.NET Interactive)""
+//   "dotnet-interactive.csharp" => "C#""
 const languageIdToAliasMap = new Map(
     vscode.extensions.all.map(e => <any[]>e.packageJSON?.contributes?.languages || [])
         .filter(l => l)
@@ -32,7 +32,7 @@ export function registerVariableExplorer(context: vscode.ExtensionContext, clien
             const client = await clientMapper.tryGetClient(versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor).uri);
             if (client) {
                 // creates a map of _only_ the available languages in this notebook, e.g.:
-                //   "C# (.NET Interactive)" => "dotnet-interactive.csharp"
+                //   "C#" => "dotnet-interactive.csharp"
                 const availableKernelDisplayNamesToLanguageNames = new Map(client.kernel.childKernels.map(k => {
                     const notebookLanguage = getNotebookSpecificLanguage(k.name);
                     let displayLanguage = notebookLanguage;
