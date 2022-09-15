@@ -52,7 +52,16 @@
     "onCommand:dotnet-interactive.newNotebook",
     "onCommand:dotnet-interactive.openNotebook",
     "onCommand:dotnet-interactive.saveAsNotebook",
-    "onView:dotnet-interactive-panel-values"
+    "onView:dotnet-interactive-panel-values",
+    "onNotebook:polyglot-notebook",
+    "onNotebook:polyglot-notebook-legacy",
+    "onNotebook:polyglot-notebook-window",
+    "onNotebook:jupyter-notebook",
+    "onCommand:polyglot-notebook.acquire",
+    "onCommand:polyglot-notebook.createNewInteractive",
+    "onCommand:polyglot-notebook.newNotebook",
+    "onCommand:polyglot-notebook.openNotebook",
+    "onCommand:polyglot-notebook.saveAsNotebook"
   ],
   "main": "./out/src/vscode-common/extension.js",
   "extensionDependencies": [
@@ -68,7 +77,7 @@
   "contributes": {
     "notebooks": [
       {
-        "type": "dotnet-interactive",
+        "type": "polyglot-notebook",
         "displayName": "Polyglot Notebook",
         "selector": [
           {
@@ -77,16 +86,7 @@
         ]
       },
       {
-        "type": "dotnet-interactive-legacy",
-        "displayName": "Polyglot Notebook",
-        "selector": [
-          {
-            "filenamePattern": "*.dotnet-interactive"
-          }
-        ]
-      },
-      {
-        "type": "dotnet-interactive-window",
+        "type": "polyglot-nortebook-window",
         "displayName": "Polyglot Notebook",
         "selector": []
       }
@@ -211,32 +211,60 @@
         "title": "Polyglot Notebook: Create Interactive Window"
       },
       {
-        "command": "dotnet-interactive.openNotebook",
+        "command": "polyglot-notebook.openNotebook",
         "title": "Polyglot Notebook: Open notebook"
       },
       {
-        "command": "dotnet-interactive.saveAsNotebook",
+        "command": "polyglot-notebook.saveAsNotebook",
         "title": "Polyglot Notebook: Save notebook as..."
       },
       {
-        "command": "dotnet-interactive.newNotebook",
+        "command": "polyglot-notebook.newNotebook",
         "title": "Polyglot Notebook: Create new blank notebook"
       },
       {
-        "command": "dotnet-interactive.restartCurrentNotebookKernel",
+        "command": "polyglot-notebook.restartCurrentNotebookKernel",
         "title": "Polyglot Notebook: Restart the current notebook's kernel"
       },
       {
-        "command": "dotnet-interactive.stopCurrentNotebookKernel",
+        "command": "polyglot-notebook.stopCurrentNotebookKernel",
         "title": "Polyglot Notebook: Stop the current notebook's kernel"
       },
       {
-        "command": "dotnet-interactive.stopAllNotebookKernels",
+        "command": "polyglot-notebook.stopAllNotebookKernels",
         "title": "Polyglot Notebook: Stop all notebook kernels"
       },
       {
-        "command": "dotnet-interactive.shareValueTo",
+        "command": "polyglot-notebook.shareValueTo",
         "title": "Share value to..."
+      },
+      {
+        "command": "dotnet-interactive.createNewInteractive",
+        "title": ".NET Interactive: Create Interactive Window"
+      },
+      {
+        "command": "dotnet-interactive.openNotebook",
+        "title": ".NET Interactive: Open notebook"
+      },
+      {
+        "command": "dotnet-interactive.saveAsNotebook",
+        "title": ".NET Interactive: Save notebook as..."
+      },
+      {
+        "command": "dotnet-interactive.newNotebook",
+        "title": ".NET Interactive: Create new blank notebook"
+      },
+      {
+        "command": "dotnet-interactive.restartCurrentNotebookKernel",
+        "title": ".NET Interactive: Restart the current notebook's kernel"
+      },
+      {
+        "command": "dotnet-interactive.stopCurrentNotebookKernel",
+        "title": ".NET Interactive: Stop the current notebook's kernel"
+      },
+      {
+        "command": "dotnet-interactive.stopAllNotebookKernels",
+        "title": ".NET Interactive: Stop all notebook kernels"
       }
     ],
     "keybindings": [
