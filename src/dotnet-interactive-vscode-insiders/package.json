@@ -204,7 +204,7 @@
     "commands": [
       {
         "command": "dotnet-interactive.acquire",
-        "title": "Install Polyglot Notebook"
+        "title": "Install .NET Interactive"
       },
       {
         "command": "dotnet-interactive.createNewInteractive",
