@@ -256,7 +256,7 @@
       {
         "id": "dotnet-interactive.csharp",
         "aliases": [
-          "C# (Scripting)"
+          "C# Script"
         ],
         "configuration": "./syntaxes/csharp.language-configuration.json"
       },

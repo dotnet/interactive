@@ -200,7 +200,7 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                             rows.push({
                                 name: valueName,
                                 value: valueValue,
-                                kernel: `#!${name}`,
+                                kernel: name,
                                 link: commandUrl,
                             });
                         } catch (e) {
