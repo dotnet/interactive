@@ -456,6 +456,36 @@ var x = 1;
         }
 
         [Fact]
+        public void Metadata_JSON_can_span_multiple_lines()
+        {
+            var dib = @"
+#!meta
+
+{
+  ""someProperty"": 123
+}
+
+#!markdown
+
+# Title
+
+#!csharp
+
+Console.Write(""hello"");
+
+";
+
+            var document = CodeSubmission.Parse(dib);
+
+            document.Metadata
+                    .Should()
+                    .ContainKey("someProperty")
+                    .WhoseValue
+                    .Should()
+                    .BeOfType<JsonElement>();
+        }
+
+        [Fact]
         public async Task dib_file_can_be_round_tripped_through_read_and_write_without_the_content_changing()
         {
             var path = GetNotebookFilePath();
