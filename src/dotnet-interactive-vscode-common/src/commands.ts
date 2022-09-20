@@ -104,19 +104,18 @@ export function registerAcquisitionCommands(context: vscode.ExtensionContext, di
 function registerLegacyKernelCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.restartCurrentNotebookKernel', async (notebook?: vscode.NotebookDocument | undefined) => {
-        // todo: put dialog here
+        vscode.window.showWarningMessage(`The command '.NET Interactive: Restart the current notebook's kernel' is deprecated.  Please use the 'Polyglot Notebook: Restart the current notebook's kernel' command instead.`);
         await await vscode.commands.executeCommand('polyglot-notebook.restartCurrentNotebookKernel', notebook);
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.stopCurrentNotebookKernel', async (notebook?: vscode.NotebookDocument | undefined) => {
-        // todo: put dialog here
+        vscode.window.showWarningMessage(`The command '.NET Interactive: Stop the current notebook's kernel' is deprecated.  Please use the 'Polyglot Notebook: Stop the current notebook's kernel' command instead.`);
         await await vscode.commands.executeCommand('polyglot-notebook.stopCurrentNotebookKernel', notebook);
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.stopAllNotebookKernels', async () => {
-        vscode.workspace.notebookDocuments
-            .filter(document => clientMapper.isDotNetClient(document.uri))
-            .forEach(async document => await vscode.commands.executeCommand('polyglot-notebook.stopCurrentNotebookKernel', document));
+        vscode.window.showWarningMessage(`The command '.NET Interactive: Stop the current notebook's kernel' is deprecated.  Please use the 'Polyglot Notebook: Stop the current notebook's kernel' command instead.`);
+        await await vscode.commands.executeCommand('polyglot-notebook.stopAllNotebookKernels');
     }));
 }
 
@@ -176,17 +175,17 @@ function registerLegacyFileCommands(context: vscode.ExtensionContext, parserServ
     };
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebook', async () => {
-        // todo: add dialog here
+        vscode.window.showWarningMessage(`The command '.NET Interactive: Create new blank notebook' is deprecated.  Please use the 'Polyglot Notebook: Create new blank notebook' command instead.`);
         await vscode.commands.executeCommand('polyglot-notebook.newNotebook');
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebookDib', async () => {
-        // todo: add dialog here
+        vscode.window.showWarningMessage(`The command '.NET Interactive: Create new blank notebook' is deprecated.  Please use the 'Polyglot Notebook: Create new blank notebook' command instead.`);
         await vscode.commands.executeCommand('polyglot-notebook.newNotebookDib');
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebookIpynb', async () => {
-        // todo: add dialog here
+        vscode.window.showWarningMessage(`The command '.NET Interactive: Create new blank notebook' is deprecated.  Please use the 'Polyglot Notebook: Create new blank notebook' command instead.`);
         await vscode.commands.executeCommand('polyglot-notebook.newNotebookIpynb');
     }));
 
@@ -194,7 +193,7 @@ function registerLegacyFileCommands(context: vscode.ExtensionContext, parserServ
 
     if (!isAzureDataStudio(context)) {
         context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.openNotebook', async (notebookUri: vscode.Uri | undefined) => {
-            // todo: add dialog here
+            vscode.window.showWarningMessage(`The command '.NET Interactive: Open notebook' is deprecated.  Please use the 'Polyglot Notebook: Open notebook' command instead.`);
             await vscode.commands.executeCommand('polyglot-notebook.openNotebook', notebookUri);
         }));
     }
@@ -203,14 +202,14 @@ function registerLegacyFileCommands(context: vscode.ExtensionContext, parserServ
 
     if (!isAzureDataStudio(context)) {
         context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.saveAsNotebook', async () => {
-            // todo: add dialog here
+            vscode.window.showWarningMessage(`The command '.NET Interactive: Save notebook as...' is deprecated.  Please use the 'Polyglot Notebook: Save notebook as...' command instead.`);
             await vscode.commands.executeCommand('polyglot-notebook.saveAsNotebook');
         }));
     }
 
     if (!isAzureDataStudio(context)) {
         context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.createNewInteractive', async () => {
-            // todo: add dialog here
+            vscode.window.showWarningMessage(`The command '.NET Interactive: Create Interactive Window' is deprecated.  Please use the 'Polyglot Notebook: Create Interactive Window' command instead.`);
             await vscode.commands.executeCommand('polyglot-notebook.createNewInteractive');
         }));
     }
@@ -262,7 +261,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
 
     async function newNotebook(extension: string): Promise<void> {
         const viewType = extension === '.dib' || extension === '.dotnet-interactive'
-            ? 'dotnet-interactive'
+            ? 'polyglot-notebook'
             : jupyterViewType;
 
         // get language
@@ -337,7 +336,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
     async function openNotebook(uri: vscode.Uri): Promise<void> {
         const extension = path.extname(uri.toString());
         const viewType = extension === '.dib' || extension === '.dotnet-interactive'
-            ? 'dotnet-interactive'
+            ? 'polyglot-notebook'
             : jupyterViewType;
         await vscode.commands.executeCommand('vscode.openWith', uri, viewType);
     }
@@ -375,7 +374,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
             const interactiveOpenArgs = [
                 {}, // showOptions
                 undefined, // resource uri
-                `${context.extension.id}/dotnet-interactive-window`, // controllerId
+                `${context.extension.id}/polyglot-notebook-window`, // controllerId
                 'Polyglot Notebook', // title
             ];
             const result = <any>(await vscode.commands.executeCommand('interactive.open', ...interactiveOpenArgs));

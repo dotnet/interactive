@@ -19,7 +19,7 @@ import * as rxjs from 'rxjs';
 
 const executionTasks: Map<string, vscode.NotebookCellExecution> = new Map();
 
-const viewType = 'dotnet-interactive';
+const viewType = 'polyglot-notebook';
 const legacyViewType = 'dotnet-interactive-legacy';
 
 export interface DotNetNotebookKernelConfiguration {
@@ -37,7 +37,7 @@ export class DotNetNotebookKernel {
 
         // .dib execution
         const dibController = vscode.notebooks.createNotebookController(
-            'dotnet-interactive',
+            'polyglot-notebook',
             viewType,
             'Polyglot Notebook',
             this.executeHandler.bind(this),
@@ -47,7 +47,7 @@ export class DotNetNotebookKernel {
 
         // .dotnet-interactive execution
         const legacyController = vscode.notebooks.createNotebookController(
-            'dotnet-interactive-legacy',
+            'polyglot-notebook-legacy',
             legacyViewType,
             'Polyglot Notebook',
             this.executeHandler.bind(this),
@@ -57,7 +57,7 @@ export class DotNetNotebookKernel {
 
         // .ipynb execution via Jupyter extension (optional)
         const jupyterController = vscode.notebooks.createNotebookController(
-            'dotnet-interactive-for-jupyter',
+            'polyglot-notebook-for-jupyter',
             jupyterViewType,
             'Polyglot Notebook',
             this.executeHandler.bind(this),
@@ -73,7 +73,7 @@ export class DotNetNotebookKernel {
 
         // interactive window controller
         const interactiveController = vscode.notebooks.createNotebookController(
-            'dotnet-interactive-window',
+            'polyglot-notebook-window',
             'interactive',
             'Polyglot Notebook',
             this.executeHandler.bind(this),

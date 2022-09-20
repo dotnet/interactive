@@ -35,7 +35,7 @@ import { NotebookParserServer } from './notebookParserServer';
 import { registerVariableExplorer } from './variableExplorer';
 import { KernelCommandAndEventChannel } from './DotnetInteractiveChannel';
 
-export const KernelIdForJupyter = 'dotnet-interactive-for-jupyter';
+export const KernelIdForJupyter = 'polyglot-notebook-for-jupyter';
 
 export class CachedDotNetPathManager {
     private dotNetPath: string = 'dotnet'; // default to global tool if possible

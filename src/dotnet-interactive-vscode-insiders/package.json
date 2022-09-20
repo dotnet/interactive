@@ -47,12 +47,10 @@
     "onNotebook:dotnet-interactive-legacy",
     "onNotebook:dotnet-interactive-window",
     "onNotebook:jupyter-notebook",
-    "onCommand:dotnet-interactive.acquire",
     "onCommand:dotnet-interactive.createNewInteractive",
     "onCommand:dotnet-interactive.newNotebook",
     "onCommand:dotnet-interactive.openNotebook",
     "onCommand:dotnet-interactive.saveAsNotebook",
-    "onView:dotnet-interactive-panel-values",
     "onNotebook:polyglot-notebook",
     "onNotebook:polyglot-notebook-legacy",
     "onNotebook:polyglot-notebook-window",
@@ -61,7 +59,8 @@
     "onCommand:polyglot-notebook.createNewInteractive",
     "onCommand:polyglot-notebook.newNotebook",
     "onCommand:polyglot-notebook.openNotebook",
-    "onCommand:polyglot-notebook.saveAsNotebook"
+    "onCommand:polyglot-notebook.saveAsNotebook",
+    "onView:polyglot-notebook-panel-values"
   ],
   "main": "./out/src/vscode-common/extension.js",
   "extensionDependencies": [
@@ -185,17 +184,17 @@
     "viewsContainers": {
       "panel": [
         {
-          "id": "dotnet-interactive-panel",
+          "id": "polyglot-notebook-panel",
           "title": "Polyglot Notebook",
           "icon": "resources/icons/notebook.svg"
         }
       ]
     },
     "views": {
-      "dotnet-interactive-panel": [
+      "polyglot-notebook-panel": [
         {
           "type": "webview",
-          "id": "dotnet-interactive-panel-values",
+          "id": "polyglot-notebook-panel-values",
           "name": "Values",
           "icon": "resources/icons/notebook.svg"
         }
@@ -203,11 +202,11 @@
     },
     "commands": [
       {
-        "command": "dotnet-interactive.acquire",
+        "command": "polyglot-notebook.acquire",
         "title": "Install .NET Interactive"
       },
       {
-        "command": "dotnet-interactive.createNewInteractive",
+        "command": "polyglot-notebook.createNewInteractive",
         "title": "Polyglot Notebook: Create Interactive Window"
       },
       {
@@ -235,8 +234,8 @@
         "title": "Polyglot Notebook: Stop all notebook kernels"
       },
       {
-        "command": "polyglot-notebook.shareValueTo",
-        "title": "Share value to..."
+        "command": "polyglot-notebook.shareValueWith",
+        "title": "Share value with..."
       },
       {
         "command": "dotnet-interactive.createNewInteractive",
@@ -269,7 +268,7 @@
     ],
     "keybindings": [
       {
-        "command": "dotnet-interactive.newNotebook",
+        "command": "polyglot-notebook.newNotebook",
         "key": "ctrl+alt+shift+n",
         "mac": "cmd+alt+shift+n"
       }
@@ -312,7 +311,6 @@
         "id": "dotnet-interactive.magic-commands",
         "aliases": [
           "Polyglot Notebook Magic Commands"
-
         ],
         "configuration": "./syntaxes/magic-commands.language-configuration.json"
       },
