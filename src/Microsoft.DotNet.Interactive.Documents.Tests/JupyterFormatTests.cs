@@ -1421,6 +1421,25 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
             this.Assent(await RoundTripIpynb(path), _assentConfiguration);
         }
 
+        [Fact]
+        public void Input_tokens_are_parsed_from_ipynb_files()
+        {
+            var ipynbJson = new InteractiveDocument
+            {
+                new("#!value --from-file @input:filename --name myfile")
+            }.SerializeToJupyter();
+
+            var document = Notebook.Parse(ipynbJson);
+
+            document.GetInputFields()
+                    .Should()
+                    .ContainSingle()
+                    .Which
+                    .Prompt
+                    .Should()
+                    .Be("filename");
+        }
+
         private async Task<string> RoundTripIpynb(string notebookFile)
         {
             var expectedContent = await File.ReadAllTextAsync(notebookFile);

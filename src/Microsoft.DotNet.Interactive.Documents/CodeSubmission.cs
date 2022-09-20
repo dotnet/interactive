@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Interactive.Documents
 {
     public static class CodeSubmission
     {
-        private const string InteractiveNotebookCellSpecifier = "#!";
+        internal const string MagicCommandPrefix = "#!";
 
         public static Encoding Encoding => new UTF8Encoding(false);
 
@@ -65,9 +65,9 @@ namespace Microsoft.DotNet.Interactive.Documents
                     }
                 }
 
-                if (line.StartsWith(InteractiveNotebookCellSpecifier))
+                if (line.StartsWith(MagicCommandPrefix))
                 {
-                    var cellLanguage = line.Substring(InteractiveNotebookCellSpecifier.Length);
+                    var cellLanguage = line.Substring(MagicCommandPrefix.Length);
 
                     if (kernelInfo.TryGetByAlias(cellLanguage, out var name))
                     {
@@ -82,6 +82,8 @@ namespace Microsoft.DotNet.Interactive.Documents
                     {
                         // unrecognized language, probably a magic command
                         currentElementLines.Add(line);
+
+                        document.AddMagicCommandLine(line);
                     }
                 }
                 else
@@ -97,11 +99,6 @@ namespace Microsoft.DotNet.Interactive.Documents
             if (document.Elements.Count == 0)
             {
                 document.Elements.Add(CreateElement(currentLanguage, Array.Empty<string>()));
-            }
-
-            InteractiveDocumentElement CreateElement(string elementLanguage, IEnumerable<string> elementLines)
-            {
-                return new(string.Join("\n", elementLines), elementLanguage);
             }
 
             if (metadata is not null)
@@ -129,6 +126,11 @@ namespace Microsoft.DotNet.Interactive.Documents
                 {
                     document.Elements.Add(CreateElement(currentLanguage, currentElementLines));
                 }
+            }
+
+            InteractiveDocumentElement CreateElement(string elementLanguage, IEnumerable<string> elementLines)
+            {
+                return new(string.Join("\n", elementLines), elementLanguage);
             }
         }
 
@@ -158,7 +160,7 @@ namespace Microsoft.DotNet.Interactive.Documents
 
             if (document.Metadata.Count > 0)
             {
-                lines.Add($"{InteractiveNotebookCellSpecifier}meta");
+                lines.Add($"{MagicCommandPrefix}meta");
                 lines.Add("");
                 lines.Add(JsonSerializer.Serialize(document.Metadata, ParserServerSerializer.JsonSerializerOptions));
                 lines.Add("");
@@ -176,7 +178,7 @@ namespace Microsoft.DotNet.Interactive.Documents
                 {
                     if (element.KernelName is not null)
                     {
-                        lines.Add($"{InteractiveNotebookCellSpecifier}{element.KernelName}");
+                        lines.Add($"{MagicCommandPrefix}{element.KernelName}");
                         lines.Add("");
                     }
 
