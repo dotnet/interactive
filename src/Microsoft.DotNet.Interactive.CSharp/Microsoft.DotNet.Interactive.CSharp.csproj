@@ -10,7 +10,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageDescription>Microsoft.DotNet.Interactive.Kernel implementation for C#</PackageDescription>
-    <PackageTags>interactive csharp</PackageTags>
+    <PackageTags>polyglot notebook dotnet interactive csharp</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

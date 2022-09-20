@@ -8,7 +8,7 @@
  <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageDescription>Support for dotnet-interactive</PackageDescription>
-    <PackageTags>dotnet-interactive KQL Kusto Data</PackageTags>
+    <PackageTags>polyglot notebook dotnet interactive KQL Kusto Data</PackageTags>
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <NoWarn>$(NoWarn);NU5100;VSTHRD002</NoWarn><!-- dll outside of lib/ folder -->
   </PropertyGroup>
