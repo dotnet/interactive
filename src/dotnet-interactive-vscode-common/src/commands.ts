@@ -179,17 +179,6 @@ function registerLegacyFileCommands(context: vscode.ExtensionContext, parserServ
         await vscode.commands.executeCommand('polyglot-notebook.newNotebook');
     }));
 
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebookDib', async () => {
-        vscode.window.showWarningMessage(`The command '.NET Interactive: Create new blank notebook' is deprecated.  Please use the 'Polyglot Notebook: Create new blank notebook' command instead.`);
-        await vscode.commands.executeCommand('polyglot-notebook.newNotebookDib');
-    }));
-
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebookIpynb', async () => {
-        vscode.window.showWarningMessage(`The command '.NET Interactive: Create new blank notebook' is deprecated.  Please use the 'Polyglot Notebook: Create new blank notebook' command instead.`);
-        await vscode.commands.executeCommand('polyglot-notebook.newNotebookIpynb');
-    }));
-
-
 
     if (!isAzureDataStudio(context)) {
         context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.openNotebook', async (notebookUri: vscode.Uri | undefined) => {
@@ -197,8 +186,6 @@ function registerLegacyFileCommands(context: vscode.ExtensionContext, parserServ
             await vscode.commands.executeCommand('polyglot-notebook.openNotebook', notebookUri);
         }));
     }
-
-
 
     if (!isAzureDataStudio(context)) {
         context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.saveAsNotebook', async () => {
