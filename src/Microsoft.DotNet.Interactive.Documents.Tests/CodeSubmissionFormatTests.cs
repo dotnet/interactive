@@ -504,6 +504,55 @@ var x = 1;
 ";
         }
 
+        [Fact]
+        public void Input_tokens_are_parsed_from_dib_files()
+        {
+            var dib = "#!value --from-file @input:filename --name myfile";
+
+            var document = CodeSubmission.Parse(dib);
+
+            document.GetInputFields()
+                    .Should()
+                    .ContainSingle()
+                    .Which
+                    .Prompt
+                    .Should()
+                    .Be("filename");
+        }
+
+        [Fact]
+        public void Password_tokens_are_parsed_from_dib_files()
+        {
+            var dib = "#!do-stuff --password @password:TOPSECRET";
+
+            var document = CodeSubmission.Parse(dib);
+
+            document.GetInputFields()
+                    .Should()
+                    .ContainSingle()
+                    .Which
+                    .Should()
+                    .BeEquivalentTo(new InputField("TOPSECRET", "password"));
+        }
+
+        [Fact]
+        public void When_an_input_field_name_is_repeated_then_only_one_is_created_in_the_document()
+        {
+            var dib = @"
+#!do-stuff @password:the-password
+#!do-more-stuff @password:the-password
+";
+
+            var document = CodeSubmission.Parse(dib);
+
+            document.GetInputFields()
+                    .Should()
+                    .ContainSingle()
+                    .Which
+                    .Should()
+                    .BeEquivalentTo(new InputField("the-password", "password"));
+        }
+
         private async Task<string> RoundTripDib(string notebookFile)
         {
             var expectedContent = await File.ReadAllTextAsync(notebookFile);
