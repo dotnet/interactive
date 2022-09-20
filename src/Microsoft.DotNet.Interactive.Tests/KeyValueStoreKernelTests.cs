@@ -6,11 +6,11 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.LanguageServices;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Microsoft.DotNet.Interactive.ValueSharing;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests
@@ -238,7 +238,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             using var kernel = CreateKernel();
 
             var file = Path.GetTempFileName();
-            File.WriteAllText(file, "1,2,3");
+            await File.WriteAllTextAsync(file, "1,2,3");
 
             var result = await kernel.SubmitCodeAsync($@"
 #!value --name hi --from-file {file}
@@ -271,6 +271,37 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .Message
                 .Should()
                 .Be("The --from-url option cannot be used in combination with a content submission.");
+        }
+
+        [Fact]
+        public async Task Multiple_value_kernel_invocations_can_be_submitted_together_when_from_options_are_used()
+        {
+            using var kernel = CreateKernel();
+
+            var file = Path.GetTempFileName();
+            await File.WriteAllTextAsync(file, "hello from file");
+            var url = $"http://example.com/{Guid.NewGuid():N}";
+
+            var result = await kernel.SubmitCodeAsync($@"
+#!value --name file --from-file {file}
+#!value --name url --from-url {url}
+#!value --name inline --from-value ""hello from value""
+
+// some content
+
+");
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            using var _ = new AssertionScope();
+
+            events.Should().NotContainErrors();
+
+            var valueKernel = kernel.ChildKernels.OfType<KeyValueStoreKernel>().Single();
+
+            valueKernel.Values.Should().ContainKey("file");
+            valueKernel.Values.Should().ContainKey("url");
+            valueKernel.Values.Should().ContainKey("inline");
         }
 
         [Fact]

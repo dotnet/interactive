@@ -99,16 +99,11 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 {
                     case DirectiveNode directiveNode:
 
-                        // FIX: (SplitSubmission) 
                         if (KernelInvocationContext.Current is {} context)
                         {
                             context.CurrentlyParsingDirectiveNode = directiveNode;
                         }
-                        else
-                        {
-
-                        }
-
+                       
                         var parseResult = directiveNode.GetDirectiveParseResult();
 
                         if (parseResult.Errors.Any())
@@ -422,14 +417,16 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                 if (context is { CurrentlyParsingDirectiveNode: { } currentDirectiveNode })
                 {
+                    var replaceMe = "{2AB89A6C-88D9-4C53-8392-A3A4F902A1CA}";
+
                     var fixedUpText = currentDirectiveNode
                                       .Text
-                                      .Replace($"@{tokenToReplace}", "REPLACE-ME")
+                                      .Replace($"@{tokenToReplace}", replaceMe)
                                       .Replace(" @", "");
 
                     var parseResult = currentDirectiveNode.DirectiveParser.Parse(fixedUpText);
 
-                    var c = parseResult.CommandResult.Children.FirstOrDefault(c => c.Tokens.Any(t => t.Value == "REPLACE-ME"));
+                    var c = parseResult.CommandResult.Children.FirstOrDefault(c => c.Tokens.Any(t => t.Value == replaceMe));
 
                     if (c is { Symbol: {} symbol })
                     {
