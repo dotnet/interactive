@@ -179,7 +179,6 @@ function registerLegacyFileCommands(context: vscode.ExtensionContext, parserServ
         await vscode.commands.executeCommand('polyglot-notebook.newNotebook');
     }));
 
-
     if (!isAzureDataStudio(context)) {
         context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.openNotebook', async (notebookUri: vscode.Uri | undefined) => {
             vscode.window.showWarningMessage(`The command '.NET Interactive: Open notebook' is deprecated.  Please use the 'Polyglot Notebook: Open notebook' command instead.`);
