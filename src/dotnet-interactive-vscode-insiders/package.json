@@ -311,7 +311,8 @@
       {
         "id": "dotnet-interactive.magic-commands",
         "aliases": [
-          "Plyglot Notenook Magic Commands"
+          "Polyglot Notebook Magic Commands"
+
         ],
         "configuration": "./syntaxes/magic-commands.language-configuration.json"
       },
