@@ -63,14 +63,14 @@ export const DotNetPathManager = new CachedDotNetPathManager();
 
 export async function activate(context: vscode.ExtensionContext) {
 
-    const config = vscode.workspace.getConfiguration('dotnet-interactive');
+    const config = vscode.workspace.getConfiguration('polyglot-notebook');
     const minDotNetSdkVersion = config.get<string>('minimumDotNetSdkVersion') || '6.0';
     const diagnosticsChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('Polyglot Notebook : diagnostics'));
     const loggerChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('Polyglot Notebook : logger'));
     DotNetPathManager.setOutputChannelAdapter(diagnosticsChannel);
 
     Logger.configure('extension host', logEntry => {
-        const config = vscode.workspace.getConfiguration('dotnet-interactive');
+        const config = vscode.workspace.getConfiguration('polyglot-notebook');
         const loggerLevelString = config.get<string>('logLevel') || LogLevel[LogLevel.Error];
         const loggerLevelKey = loggerLevelString as keyof typeof LogLevel;
         const logLevel = LogLevel[loggerLevelKey];
@@ -100,7 +100,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 
     async function kernelChannelCreator(notebookUri: vscodeLike.Uri): Promise<KernelCommandAndEventChannel> {
-        const config = vscode.workspace.getConfiguration('dotnet-interactive');
+        const config = vscode.workspace.getConfiguration('polyglot-notebook');
         const launchOptions = await getInteractiveLaunchOptions();
         if (!launchOptions) {
             throw new Error(`Unable to get interactive launch options.  Please see the '${diagnosticsChannel.getName()}' output window for details.`);

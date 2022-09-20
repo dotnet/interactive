@@ -19,7 +19,7 @@ import * as versionSpecificFunctions from '../versionSpecificFunctions';
 import { PromiseCompletionSource } from './dotnet-interactive/promiseCompletionSource';
 
 export function registerAcquisitionCommands(context: vscode.ExtensionContext, diagnosticChannel: ReportChannel) {
-    const config = vscode.workspace.getConfiguration('dotnet-interactive');
+    const config = vscode.workspace.getConfiguration('polyglot-notebook');
     const minDotNetInteractiveVersion = config.get<string>('minimumInteractiveToolVersion');
     const interactiveToolSource = config.get<string>('interactiveToolSource');
 

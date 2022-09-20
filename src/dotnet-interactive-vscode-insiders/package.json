@@ -107,7 +107,7 @@
     "configuration": {
       "title": "Polyglot Notebook",
       "properties": {
-        "dotnet-interactive.kernelTransportArgs": {
+        "polyglot-notebook.kernelTransportArgs": {
           "type": "array",
           "default": [
             "{dotnet_path}",
@@ -122,12 +122,12 @@
           ],
           "description": "Command and arguments used to start a notebook session."
         },
-        "dotnet-interactive.kernelEnvironmentVariables": {
+        "polyglot-notebook.kernelEnvironmentVariables": {
           "type": "object",
           "default": {},
           "description": "Environment variables to set when starting a notebook session."
         },
-        "dotnet-interactive.notebookParserArgs": {
+        "polyglot-notebook.notebookParserArgs": {
           "type": "array",
           "default": [
             "{dotnet_path}",
@@ -138,32 +138,32 @@
             "notebook-parser"
           ]
         },
-        "dotnet-interactive.kernelTransportWorkingDirectory": {
+        "polyglot-notebook.kernelTransportWorkingDirectory": {
           "type": "string",
           "default": "{global_storage_path}",
           "description": "The working directory in which the kernel transport process is started."
         },
-        "dotnet-interactive.languageServiceDelay": {
+        "polyglot-notebook.languageServiceDelay": {
           "type": "number",
           "default": 500,
           "description": "The delay in ms before language services are invoked."
         },
-        "dotnet-interactive.interactiveToolSource": {
+        "polyglot-notebook.interactiveToolSource": {
           "type": "string",
           "default": "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json",
           "description": "The NuGet source to use when acquiring the .NET Interactive tool."
         },
-        "dotnet-interactive.minimumDotNetSdkVersion": {
+        "polyglot-notebook.minimumDotNetSdkVersion": {
           "type": "string",
           "default": "6.0",
           "description": "The minimum required version of the .NET SDK."
         },
-        "dotnet-interactive.minimumInteractiveToolVersion": {
+        "polyglot-notebook.minimumInteractiveToolVersion": {
           "type": "string",
           "default": "1.0.345103",
           "description": "The minimum required version of the .NET Interactive tool."
         },
-        "dotnet-interactive.logLevel": {
+        "polyglot-notebook.logLevel": {
           "type": "string",
           "default": "Error",
           "enum": [
