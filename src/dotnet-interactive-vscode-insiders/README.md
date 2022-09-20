@@ -4,7 +4,7 @@ _The Visual Studio Code notebook support that this extension uses is also in pre
 
 # Polyglot Notebooks
 
-This extension adds support for using Polyglot in a Visual Studio Code notebook.
+This extension adds support for Polyglot Notebooks to Visual Studio Code.
 
 ## Getting Started
 
