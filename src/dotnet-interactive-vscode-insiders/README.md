@@ -16,7 +16,7 @@ This extension adds support for Polyglot Notebooks to Visual Studio Code.
 
 ## Opening and Creating notebooks
 
-To open an existing .NET notebook, bring up the Command Palette(`Ctrl+Shift+P`) and select **Polyglot: Open notebook**.  Now, navigate to a local `.ipynb` file.
+To open an existing .NET notebook, bring up the Command Palette(`Ctrl+Shift+P`) and select **Polyglot Notebook: Open notebook**.  Now, navigate to a local `.ipynb` file.
 
 ![opennotebook](https://user-images.githubusercontent.com/2546640/94441970-67d6e180-0171-11eb-8319-c12ba82c3d30.gif)
 
