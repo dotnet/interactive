@@ -41,7 +41,7 @@ public class InteractiveDocument : IEnumerable
 
         var inputFields = new List<InputField>();
 
-        foreach (var line in _magicCommandLines)
+        foreach (var line in _magicCommandLines!)
         {
             foreach (var field in ParseInputFields(line))
             {
@@ -50,6 +50,43 @@ public class InteractiveDocument : IEnumerable
         }
 
         return inputFields.Distinct().ToArray();
+
+        void EnsureMagicCommandLinesIsInitialized()
+        {
+            if (_magicCommandLines is null)
+            {
+                _magicCommandLines = new();
+
+                foreach (var element in Elements)
+                {
+                    _magicCommandLines.AddRange(element.Contents.SplitIntoLines());
+                }
+            }
+        }
+
+        static IReadOnlyCollection<InputField> ParseInputFields(string line)
+        {
+            var inputFields = new List<InputField>();
+            var result = _inputFieldsParser!.Parse(line);
+
+            if (result.GetValueForOption(_discoveredInputName!) is { } inputNames)
+            {
+                foreach (var inputName in inputNames.Distinct())
+                {
+                    inputFields.Add(new InputField(inputName, "text"));
+                }
+            }
+
+            if (result.GetValueForOption(_discoveredPasswordName!) is { } passwordNames)
+            {
+                foreach (var passwordName in passwordNames.Distinct())
+                {
+                    inputFields.Add(new InputField(passwordName, "password"));
+                }
+            }
+
+            return inputFields;
+        }
     }
 
     internal void AddMagicCommandLine(string line) => (_magicCommandLines ??= new()).Add(line);
@@ -188,42 +225,5 @@ public class InteractiveDocument : IEnumerable
                                  }
                              })
                              .Build();
-    }
-
-    private void EnsureMagicCommandLinesIsInitialized()
-    {
-        if (_magicCommandLines is null)
-        {
-            _magicCommandLines = new();
-
-            foreach (var element in Elements)
-            {
-                _magicCommandLines.AddRange(element.Contents.SplitIntoLines());
-            }
-        }
-    }
-
-    internal static IReadOnlyCollection<InputField> ParseInputFields(string line)
-    {
-        var inputFields = new List<InputField>();
-        var result = _inputFieldsParser.Parse(line);
-
-        if (result.GetValueForOption(_discoveredInputName) is { } inputNames)
-        {
-            foreach (var inputName in inputNames.Distinct())
-            {
-                inputFields.Add(new InputField(inputName, "text"));
-            }
-        }
-
-        if (result.GetValueForOption(_discoveredPasswordName) is { } passwordNames)
-        {
-            foreach (var passwordName in passwordNames.Distinct())
-            {
-                inputFields.Add(new InputField(passwordName, "password"));
-            }
-        }
-
-        return inputFields;
     }
 }
