@@ -3,7 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-
+using System.Diagnostics;
 using Assent;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
@@ -23,8 +23,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         {
             _configuration = new Configuration()
                 .UsingExtension("json");
-
-            _configuration = _configuration.SetInteractive(false);
+            
+            _configuration = _configuration.SetInteractive(Debugger.IsAttached);
         }
 
         [Fact]
@@ -177,7 +177,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 
             var metaData = new Dictionary<string, object>
             {
-                { "dotnet_interactive", new InputCellMetadata("fsharp") }
+                { "polyglot_notebook", new InputCellMetadata("fsharp") }
             };
 
             var replyMessage = new Message(header, content: executeResult, metaData: metaData);

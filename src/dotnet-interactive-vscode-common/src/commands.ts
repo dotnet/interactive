@@ -277,7 +277,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
         const cellMetadata = {
             custom: {
                 metadata: {
-                    dotnet_interactive: {
+                    polyglot_notebook: {
                         language: ipynbLanguageName
                     }
                 }

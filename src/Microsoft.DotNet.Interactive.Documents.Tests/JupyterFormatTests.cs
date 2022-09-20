@@ -129,7 +129,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         execution_count = 1,
                         metadata = new
                         {
-                            dotnet_interactive = new
+                            polyglot_notebook = new
                             {
                                 language = "fsharp"
                             }
@@ -180,7 +180,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         execution_count = 1,
                         metadata = new
                         {
-                            dotnet_interactive = new
+                            polyglot_notebook = new
                             {
                                 language = "fsharp"
                             }
@@ -257,7 +257,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         execution_count = 1,
                         metadata = new
                         {
-                            dotnet_interactive = new
+                            polyglot_notebook = new
                             {
                                 language = "fsharp"
                             }
@@ -628,7 +628,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         },
                         metadata = new
                         {
-                            dotnet_interactive = new
+                            polyglot_notebook = new
                             {
                                 not_a_language = "fsharp"
                             }
@@ -647,7 +647,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         {
                             Metadata = new Dictionary<string, object>
                             {
-                                ["dotnet_interactive"] = new Dictionary<string, object>
+                                ["polyglot_notebook"] = new Dictionary<string, object>
                                 {
                                     ["not_a_language"] = "fsharp"
                                 }
@@ -1004,7 +1004,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         execution_count = (int?)null,
                         metadata = new
                         {
-                            dotnet_interactive = new
+                            polyglot_notebook = new
                             {
                                 language = "csharp"
                             }
@@ -1054,7 +1054,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     execution_count = 123,
                     metadata = new
                     {
-                        dotnet_interactive = new
+                        polyglot_notebook = new
                         {
                             language = "fsharp"
                         }
