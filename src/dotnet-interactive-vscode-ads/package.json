@@ -1,8 +1,8 @@
 {
   "name": "dotnet-interactive-vscode",
-  "displayName": ".NET Interactive Notebooks",
+  "displayName": "Polyglot Notebooks",
   "//description": "During build, the description gets the git SHA appended to it.",
-  "description": ".NET Interactive Notebooks for VS Code.",
+  "description": "Polyglot Notebooks for VS Code.",
   "icon": "images/icon.png",
   "publisher": "ms-dotnettools",
   "author": "Microsoft Corporation",
@@ -45,9 +45,12 @@
     "onNotebook:dotnet-interactive",
     "onNotebook:dotnet-interactive-legacy",
     "onNotebook:jupyter-notebook",
-    "onCommand:dotnet-interactive.acquire",
     "onCommand:dotnet-interactive.newNotebook",
-    "onView:dotnet-interactive-panel-values"
+    "onView:dotnet-interactive-panel-values",
+    "onNotebook:polyglot-notebook",
+    "onNotebook:polyglot-notebook-legacy",
+    "onCommand:polyglot-notebook.acquire",
+    "onCommand:polyglot-notebook.newNotebook"
   ],
   "main": "./out/src/vscode-common/extension.js",
   "extensionDependencies": [
@@ -63,8 +66,8 @@
   "contributes": {
     "notebooks": [
       {
-        "type": "dotnet-interactive",
-        "displayName": ".NET Interactive Notebook",
+        "type": "polyglot-notebook",
+        "displayName": "Polyglot Notebook",
         "selector": [
           {
             "filenamePattern": "*.dib"
@@ -72,8 +75,8 @@
         ]
       },
       {
-        "type": "dotnet-interactive-legacy",
-        "displayName": ".NET Interactive Notebook",
+        "type": "polyglot-notebook-legacy",
+        "displayName": "Polyglot Notebook",
         "selector": [
           {
             "filenamePattern": "*.dotnet-interactive"
@@ -96,9 +99,9 @@
       }
     ],
     "configuration": {
-      "title": ".NET Interactive Notebook",
+      "title": "Polyglot Notebook",
       "properties": {
-        "dotnet-interactive.kernelTransportArgs": {
+        "polyglot-notebook.kernelTransportArgs": {
           "type": "array",
           "default": [
             "{dotnet_path}",
@@ -113,12 +116,12 @@
           ],
           "description": "Command and arguments used to start a notebook session."
         },
-        "dotnet-interactive.kernelEnvironmentVariables": {
+        "polyglot-notebook.kernelEnvironmentVariables": {
           "type": "object",
           "default": {},
           "description": "Environment variables to set when starting a notebook session."
         },
-        "dotnet-interactive.notebookParserArgs": {
+        "polyglot-notebook.notebookParserArgs": {
           "type": "array",
           "default": [
             "{dotnet_path}",
@@ -129,32 +132,32 @@
             "notebook-parser"
           ]
         },
-        "dotnet-interactive.kernelTransportWorkingDirectory": {
+        "polyglot-notebook.kernelTransportWorkingDirectory": {
           "type": "string",
           "default": "{global_storage_path}",
           "description": "The working directory in which the kernel transport process is started."
         },
-        "dotnet-interactive.languageServiceDelay": {
+        "polyglot-notebook.languageServiceDelay": {
           "type": "number",
           "default": 500,
           "description": "The delay in ms before language services are invoked."
         },
-        "dotnet-interactive.interactiveToolSource": {
+        "polyglot-notebook.interactiveToolSource": {
           "type": "string",
           "default": "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json",
           "description": "The NuGet source to use when acquiring the .NET Interactive tool."
         },
-        "dotnet-interactive.minimumDotNetSdkVersion": {
+        "polyglot-notebook.minimumDotNetSdkVersion": {
           "type": "string",
           "default": "6.0",
           "description": "The minimum required version of the .NET SDK."
         },
-        "dotnet-interactive.minimumInteractiveToolVersion": {
+        "polyglot-notebook.minimumInteractiveToolVersion": {
           "type": "string",
           "default": "1.0.345103",
           "description": "The minimum required version of the .NET Interactive tool."
         },
-        "dotnet-interactive.logLevel": {
+        "polyglot-notebook.logLevel": {
           "type": "string",
           "default": "Error",
           "enum": [
@@ -175,17 +178,17 @@
     "viewsContainers": {
       "panel": [
         {
-          "id": "dotnet-interactive-panel",
-          "title": ".NET Interactive",
+          "id": "polyglot-notebook-panel",
+          "title": "Polyglot Notebook",
           "icon": "resources/icons/notebook.svg"
         }
       ]
     },
     "views": {
-      "dotnet-interactive-panel": [
+      "polyglot-notebook-panel": [
         {
           "type": "webview",
-          "id": "dotnet-interactive-panel-values",
+          "id": "polyglot-notebook-panel-values",
           "name": "Values",
           "icon": "resources/icons/notebook.svg"
         }
@@ -193,7 +196,7 @@
     },
     "commands": [
       {
-        "command": "dotnet-interactive.acquire",
+        "command": "polyglot-notebook.acquire",
         "title": "Install .NET Interactive"
       },
       {
@@ -213,13 +216,29 @@
         "title": ".NET Interactive: Stop all notebook kernels"
       },
       {
-        "command": "dotnet-interactive.shareValueTo",
-        "title": "Share value to..."
+        "command": "polyglot-notebook.newNotebook",
+        "title": ".NET Interactive: Create new blank notebook"
+      },
+      {
+        "command": "polyglot-notebook.restartCurrentNotebookKernel",
+        "title": ".NET Interactive: Restart the current notebook's kernel"
+      },
+      {
+        "command": "polyglot-notebook.stopCurrentNotebookKernel",
+        "title": ".NET Interactive: Stop the current notebook's kernel"
+      },
+      {
+        "command": "polyglot-notebook.stopAllNotebookKernels",
+        "title": ".NET Interactive: Stop all notebook kernels"
+      },
+      {
+        "command": "polyglot-notebook.shareValueWith",
+        "title": "Share value with..."
       }
     ],
     "keybindings": [
       {
-        "command": "dotnet-interactive.newNotebook",
+        "command": "polyglot-notebook.newNotebook",
         "key": "ctrl+alt+shift+n",
         "mac": "cmd+alt+shift+n"
       }
@@ -261,7 +280,7 @@
       {
         "id": "dotnet-interactive.magic-commands",
         "aliases": [
-          "Magic Commands (.NET Interactive)"
+          "Polyglot Notebook Magic Commands"
         ],
         "configuration": "./syntaxes/magic-commands.language-configuration.json"
       },
