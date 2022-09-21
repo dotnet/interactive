@@ -415,8 +415,13 @@ namespace Microsoft.DotNet.Interactive.Parsing
             {
                 string typeHint = null;
 
-                if (context is { CurrentlyParsingDirectiveNode: { } currentDirectiveNode })
+                if (targetKernelName == "password")
                 {
+                    typeHint = "password";
+                }
+                else if (context is { CurrentlyParsingDirectiveNode: { } currentDirectiveNode })
+                {
+                    // use the parser to infer a type hint based on the expected type of the argument at the position of the input token
                     var replaceMe = "{2AB89A6C-88D9-4C53-8392-A3A4F902A1CA}";
 
                     var fixedUpText = currentDirectiveNode
@@ -435,7 +440,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 }
 
                 var inputRequest = new RequestInput(
-                    $"Please enter a value for field \"{valueName}\".", isPassword: targetKernelName == "password",
+                    valueName: valueName,
+                    prompt: $"Please enter a value for field \"{valueName}\".",
                     inputTypeHint: typeHint);
 
                 var result = _kernel.RootKernel.SendAsync(inputRequest).GetAwaiter().GetResult();
