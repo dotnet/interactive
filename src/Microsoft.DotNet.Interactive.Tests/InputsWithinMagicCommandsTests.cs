@@ -68,6 +68,22 @@ public class InputsWithinMagicCommandsTests : IDisposable
     }
 
     [Fact]
+    public async Task Input_token_in_magic_command_includes_requested_value_name()
+    {
+        await kernel.SendAsync(new SubmitCode("#!shim --string @input:input-please", "csharp"));
+
+        _receivedRequestInput.IsPassword.Should().BeFalse();
+
+        _receivedRequestInput
+            .Should()
+            .BeOfType<RequestInput>()
+            .Which
+            .ValueName
+            .Should()
+            .Be("input-please");
+    }
+
+    [Fact]
     public async Task Input_token_in_magic_command_prompts_user_passes_user_input_to_directive__to_handler()
     {
         await kernel.SendAsync(new SubmitCode("#!shim --string @input:input-please", "csharp"));

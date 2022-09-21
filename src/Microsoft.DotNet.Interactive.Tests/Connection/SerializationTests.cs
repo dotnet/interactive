@@ -198,7 +198,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
 
                 yield return new RequestValue("a", mimeType: HtmlFormatter.MimeType, targetKernelName: "csharp");
 
-                yield return new RequestInput(prompt:"provide answer", isPassword: true, targetKernelName: "vscode");
+                yield return new RequestInput(prompt:"provide answer", valueName: "yourPassword", inputTypeHint: "password", targetKernelName: "vscode");
             }
         }
 
@@ -381,7 +381,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
 
                 yield return new CommandCancelled( new Cancel() ,new SubmitCode("var value = 1;", "csharp"));
 
-                yield return new InputProduced("user input", new RequestInput("Input?", targetKernelName: "vscode"));
+                yield return new InputProduced("user input", new RequestInput(valueName: "logfile", prompt: "What is the path to the log file?", inputTypeHint: "file", targetKernelName: "vscode"));
             }
         }
 

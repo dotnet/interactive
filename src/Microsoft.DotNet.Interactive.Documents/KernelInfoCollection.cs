@@ -46,7 +46,7 @@ public class KernelInfoCollection : ICollection<KernelInfo>
         _kernelNames.Add(kernelInfo);
     }
 
-    internal void AddRange(IEnumerable<KernelInfo> collection)
+    public void AddRange(IEnumerable<KernelInfo> collection)
     {
         foreach (var info in collection)
         {
@@ -105,13 +105,13 @@ public class KernelInfoCollection : ICollection<KernelInfo>
         return _kernelInfoByNameOrAlias!.TryGetValue(alias, out info);
     }
 
-    public IEnumerator<KernelInfo> GetEnumerator()
+    IEnumerator<KernelInfo> IEnumerable<KernelInfo>.GetEnumerator()
     {
         return _kernelNames.GetEnumerator();
     }
 
     IEnumerator IEnumerable.GetEnumerator()
     {
-        return GetEnumerator();
+        return _kernelNames.GetEnumerator();
     }
 }

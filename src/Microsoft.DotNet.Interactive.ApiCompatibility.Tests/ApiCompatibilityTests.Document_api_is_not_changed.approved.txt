@@ -55,12 +55,12 @@ Microsoft.DotNet.Interactive.Documents
     public System.String DefaultKernelName { get; set;}
     public System.Boolean IsReadOnly { get;}
     public System.Void Add(KernelInfo kernelInfo)
+    public System.Void AddRange(System.Collections.Generic.IEnumerable<KernelInfo> collection)
     public System.Void Clear()
     public KernelInfoCollection Clone()
     public System.Boolean Contains(KernelInfo kernelInfo)
     public System.Boolean Contains(System.String nameOrAlias)
     public System.Void CopyTo(KernelInfo[] array, System.Int32 arrayIndex)
-    public System.Collections.Generic.IEnumerator<KernelInfo> GetEnumerator()
     public System.Boolean Remove(KernelInfo item)
     public System.Boolean TryGetByAlias(System.String alias, ref KernelInfo& info)
   public class ReturnValueElement : InteractiveDocumentOutputElement, IDataElement
