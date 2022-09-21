@@ -8,5 +8,5 @@ dotnet build
 dotnet pack  /p:PackageVersion=2.0.0
 
 # copy the dotnet-interactive packages to the temp directory
-Get-ChildItem -Recurse -Filter *.nupkg | Copy-Item -Destination c:\temp -Force
+Get-ChildItem -Recurse -Filter *.nupkg | Move-Item -Destination c:\temp\packages -Force
 

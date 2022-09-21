@@ -108,6 +108,7 @@ export interface RequestInput extends KernelCommand {
     prompt: string;
     isPassword: boolean;
     inputTypeHint: string;
+    valueName: string;
 }
 
 export interface RequestKernelInfo extends KernelCommand {
