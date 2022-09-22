@@ -277,33 +277,33 @@
       {
         "id": "dotnet-interactive",
         "aliases": [
-          ".NET Interactive"
+          "Polyglot Notebook"
         ]
       },
       {
         "id": "dotnet-interactive.csharp",
         "aliases": [
-          "C# Script"
+          "C# (Polyglot Notebook)"
         ],
         "configuration": "./syntaxes/csharp.language-configuration.json"
       },
       {
         "id": "dotnet-interactive.fsharp",
         "aliases": [
-          "F#"
+          "F# (Polyglot Notebook)"
         ],
         "configuration": "./syntaxes/fsharp.language-configuration.json"
       },
       {
         "id": "dotnet-interactive.html",
         "aliases": [
-          "HTML"
+          "HTML (Polyglot Notebook)"
         ]
       },
       {
         "id": "dotnet-interactive.javascript",
         "aliases": [
-          "JavaScript"
+          "JavaScript (Polyglot Notebook)"
         ],
         "configuration": "./syntaxes/javascript.language-configuration.json"
       },
@@ -317,33 +317,33 @@
       {
         "id": "dotnet-interactive.markdown",
         "aliases": [
-          "Markdown"
+          "Markdown (Polyglot Notebook)"
         ]
       },
       {
         "id": "dotnet-interactive.mermaid",
         "aliases": [
-          "Mermaid"
+          "Mermaid (Polyglot Notebook)"
         ]
       },
       {
         "id": "dotnet-interactive.pwsh",
         "aliases": [
-          "PowerShell"
+          "PowerShell (Polyglot Notebook)"
         ],
         "configuration": "./syntaxes/powershell.language-configuration.json"
       },
       {
         "id": "dotnet-interactive.sql",
         "aliases": [
-          "SQL"
+          "SQL (Polyglot Notebook)"
         ],
         "configuration": "./syntaxes/sql.language-configuration.json"
       },
       {
         "id": "dotnet-interactive.kql",
         "aliases": [
-          "Kusto Query Language (KQL)"
+          "Kusto Query Language (KQL)  (Polyglot Notebook)"
         ],
         "configuration": "./syntaxes/kql.language-configuration.json"
       }
