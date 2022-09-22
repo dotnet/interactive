@@ -1435,7 +1435,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     .Should()
                     .ContainSingle()
                     .Which
-                    .Prompt
+                    .ValueName
                     .Should()
                     .Be("filename");
         }

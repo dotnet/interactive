@@ -545,7 +545,7 @@ Console.Write(""hello"");
                     .Should()
                     .ContainSingle()
                     .Which
-                    .Prompt
+                    .ValueName
                     .Should()
                     .Be("filename");
         }
