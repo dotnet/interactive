@@ -20,9 +20,9 @@ Microsoft.DotNet.Interactive.Documents
     public System.String ErrorValue { get;}
     public System.String[] StackTrace { get;}
   public class InputField
-    .ctor(System.String prompt, System.String typeHint = text)
-    public System.String Prompt { get; set;}
+    .ctor(System.String valueName, System.String typeHint = text)
     public System.String TypeHint { get; set;}
+    public System.String ValueName { get; set;}
     protected System.Boolean Equals(InputField other)
     public System.Boolean Equals(System.Object obj)
     public System.Int32 GetHashCode()
