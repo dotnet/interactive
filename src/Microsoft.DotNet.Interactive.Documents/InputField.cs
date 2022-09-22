@@ -7,19 +7,19 @@ namespace Microsoft.DotNet.Interactive.Documents;
 
 public class InputField
 {
-    public InputField(string prompt, string typeHint = "text")
+    public InputField(string valueName, string typeHint = "text")
     {
-        Prompt = prompt;
+        ValueName = valueName;
         TypeHint = typeHint;
     }
 
-    public string Prompt { get; set; }
+    public string ValueName { get; set; }
 
     public string TypeHint { get; set; }
 
     protected bool Equals(InputField other)
     {
-        return Prompt == other.Prompt && TypeHint == other.TypeHint;
+        return ValueName == other.ValueName && TypeHint == other.TypeHint;
     }
 
     public override bool Equals(object? obj)
@@ -44,6 +44,6 @@ public class InputField
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(Prompt, TypeHint);
+        return HashCode.Combine(ValueName, TypeHint);
     }
 }
