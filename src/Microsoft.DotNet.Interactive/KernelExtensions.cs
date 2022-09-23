@@ -8,6 +8,7 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.NamingConventionBinder;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text.Json;
@@ -15,6 +16,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
+using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
@@ -135,6 +137,50 @@ namespace Microsoft.DotNet.Interactive
             }
 
             return kernel.SendAsync(new SubmitCode(code), CancellationToken.None);
+        }
+
+        public static T UseImportMagicCommand<T>(this T kernel)
+           where T : Kernel
+        {
+            var command = new Command("#!import", "Imports and runs another notebook.");
+            command.AddArgument(new Argument<FileInfo>("notebookFile").ExistingOnly());
+            command.Handler = CommandHandler.Create(
+                async (FileInfo notebookFile, KernelInvocationContext context)
+                =>
+            {
+                var document = await InteractiveDocument.LoadInteractiveDocumentAsync(notebookFile,
+                    CreateKernelInfos(kernel.RootKernel as CompositeKernel));
+                foreach(var element in document.Elements)
+                {
+                    var command = new SubmitCode(element.Contents, element.KernelName);
+                    await kernel.RootKernel.SendAsync(command);
+                }
+            });
+
+            kernel.AddDirective(command);
+
+            return kernel;
+
+            KernelInfoCollection CreateKernelInfos(CompositeKernel kernel)
+            {
+                KernelInfoCollection kernelInfos = new();
+
+                var kernelChoosers = kernel.Directives.OfType<ChooseKernelDirective>();
+
+                foreach (var kernelChooser in kernelChoosers)
+                {
+                    List<string> kernelAliases = new();
+
+                    foreach (var alias in kernelChooser.Aliases.Where(a => a != kernelChooser.Name))
+                    {
+                        kernelAliases.Add(alias[2..]);
+                    }
+
+                    kernelInfos.Add(new Documents.KernelInfo(kernelChooser.Name[2..], kernelAliases));
+                }
+
+                return kernelInfos;
+            }
         }
 
         public static T UseLogMagicCommand<T>(this T kernel)
