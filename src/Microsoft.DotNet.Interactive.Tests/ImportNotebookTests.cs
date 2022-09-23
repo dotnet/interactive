@@ -1,11 +1,14 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -13,36 +16,70 @@ namespace Microsoft.DotNet.Interactive.Tests
 {
     public class ImportNotebookTests
     {
-        [Fact]
-        public async Task It_imports_and_runs_ipynb()
+        [Theory]
+        [InlineData(".ipynb")]
+        [InlineData(".dib")]
+        public async Task It_imports_and_runs(string notebookExt)
         {
             using var kernel = new CompositeKernel { 
-                new CSharpKernel()
+                new CSharpKernel(),
+                new FSharpKernel(),
+                new HtmlKernel()
             }
                 .UseImportMagicCommand();
 
-            var document = new InteractiveDocument();
-            document.Add(new InteractiveDocumentElement
+            var document = new InteractiveDocument
             {
-                Contents = "1+1",
-                KernelName = "csharp"
-            });
+                new InteractiveDocumentElement
+                {
+                    Contents = "6+5",
+                    KernelName = "csharp"
+                },
+                new InteractiveDocumentElement
+                {
+                    Contents = "5+3",
+                    KernelName = "markdown" //should not evaluate to 8
+                },
+                new InteractiveDocumentElement
+                {
+                    Contents = "5+3",
+                    KernelName = "html" //should not evaluate to 8
+                },
+                new InteractiveDocumentElement
+                {
+                    Contents = "11*2",
+                    KernelName = "fsharp"
+                },
+                new InteractiveDocumentElement
+                {
+                    Contents = "11*3",
+                    KernelName = "csharp"
+                }
+            };
 
-            string filePath = @"c:\temp\testnotebook.ipynb";
+            string filePath = $@".\testnotebook{notebookExt}";
+            string notebookContents = notebookExt switch
+            {
+                ".ipynb" => document.SerializeToJupyter(),
+                ".dib" => document.ToCodeSubmissionContent(),
+                _ => throw new InvalidOperationException($"Unrecognized extension for a notebook: {notebookExt}")
+            };
 
-            File.WriteAllText(filePath, Notebook.SerializeToJupyter(document));
+            File.WriteAllText(filePath, notebookContents);
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
             await kernel.SubmitCodeAsync($"#!import {filePath}");
 
-            events.Should()
-                .ContainSingle<ReturnValueProduced>().Which.Value.Should().Be(2);
+            var returnedValues = events.Where(x => x.GetType() == typeof(ReturnValueProduced)).ToArray();
+            
+            int[] results = new int[] { 11, 22, 33 };
+            returnedValues.Length.Should().Be(results.Length);
 
-            //throw new NotImplementedException();
+            for (int i=0 ; i < results.Length; i++)
+            {
+                ((ReturnValueProduced)returnedValues[i]).Value.Should().Be(results[i]);
+            }
         }
-
-        //both ipynb and dib
-        //ignore markdown cells
     }
 }
