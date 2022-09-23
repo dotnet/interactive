@@ -27,7 +27,7 @@ function debounce(callback: () => void) {
 }
 
 export function registerVariableExplorer(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.shareValueWith', async (variableInfo: { kernelName: string, valueName: string } | undefined) => {
+    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.shareValueWith', async (variableInfo: { kernelName: string, valueName: string } | undefined) => {
         if (variableInfo && vscode.window.activeNotebookEditor) {
             const client = await clientMapper.tryGetClient(versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor).uri);
             if (client) {
@@ -196,7 +196,7 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                             const value = await client.requestValue(valueInfo.name, name);
                             const valueName = value.name;
                             const valueValue = value.formattedValue.value;
-                            const commandUrl = `command:dotnet-interactive.shareValueWith?${encodeURIComponent(JSON.stringify({ valueName, kernelName: name }))}`;
+                            const commandUrl = `command:polyglot-notebook.shareValueWith?${encodeURIComponent(JSON.stringify({ valueName, kernelName: name }))}`;
                             rows.push({
                                 name: valueName,
                                 value: valueValue,
