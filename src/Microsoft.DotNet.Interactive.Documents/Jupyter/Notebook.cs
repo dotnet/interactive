@@ -80,7 +80,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             writer.Flush();
         }
 
-        public static string SerializeToJupyter(
+        public static string ToJupyterJson(
             this InteractiveDocument document,
             bool enforceJupyterMetadata = true)
         {
@@ -102,7 +102,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
 
         public static void Write(InteractiveDocument document, TextWriter writer)
         {
-            var content = document.SerializeToJupyter();
+            var content = document.ToJupyterJson();
             writer.Write(content);
         }
     }

@@ -31,7 +31,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
     {
         var content = JsonConvert.SerializeObject(jupyter);
 
-        return Notebook.Parse(content, KernelInfos);
+        return Notebook.Parse(content, DefaultKernelInfos);
     }
 
     [Theory]
@@ -949,7 +949,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
     public void serialized_notebook_has_appropriate_metadata()
     {
         var notebook = new InteractiveDocument();
-        var serialized = notebook.SerializeToJupyter();
+        var serialized = notebook.ToJupyterJson();
         var jupyter = JToken.Parse(serialized);
 
         using var _ = new AssertionScope();
@@ -990,7 +990,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
             new("//", "csharp")
         };
         var notebook = new InteractiveDocument(cells);
-        var serialized = notebook.SerializeToJupyter();
+        var serialized = notebook.ToJupyterJson();
         var jupyter = JToken.Parse(serialized);
         jupyter["cells"]
             .Should()
@@ -1026,7 +1026,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
             new("var x = 1;", "csharp")
         };
         var notebook = new InteractiveDocument(cells);
-        var serialized = notebook.SerializeToJupyter();
+        var serialized = notebook.ToJupyterJson();
         var jupyter = JToken.Parse(serialized);
         jupyter["cells"][0]["source"]
             .Should()
@@ -1044,7 +1044,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
             new("let x = 1", "fsharp") { ExecutionOrder = 123 }
         };
         var notebook = new InteractiveDocument(cells);
-        var serialized = notebook.SerializeToJupyter();
+        var serialized = notebook.ToJupyterJson();
         var jupyter = JToken.Parse(serialized);
         jupyter["cells"][0]
             .Should()
@@ -1075,7 +1075,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
             new("var x = 1;\nvar y = 2;", "csharp")
         };
         var notebook = new InteractiveDocument(cells);
-        var serialized = notebook.SerializeToJupyter();
+        var serialized = notebook.ToJupyterJson();
         var jupyter = JToken.Parse(serialized);
         jupyter["cells"][0]["source"]
             .Should()
@@ -1094,7 +1094,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
             new("This is `markdown`.\nThis is more `markdown`.", "markdown")
         };
         var notebook = new InteractiveDocument(cells);
-        var serialized = notebook.SerializeToJupyter();
+        var serialized = notebook.ToJupyterJson();
         var jupyter = JToken.Parse(serialized);
         jupyter["cells"]
             .Should()
@@ -1126,7 +1126,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
             })
         };
         var notebook = new InteractiveDocument(cells);
-        var serialized = notebook.SerializeToJupyter();
+        var serialized = notebook.ToJupyterJson();
         var jupyter = JToken.Parse(serialized);
         jupyter["cells"]
             .Should()
@@ -1242,7 +1242,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
             })
         };
         var notebook = new InteractiveDocument(cells);
-        var serialized = notebook.SerializeToJupyter();
+        var serialized = notebook.ToJupyterJson();
         var jupyter = JToken.Parse(serialized);
         jupyter["cells"]
             .Should()
@@ -1319,7 +1319,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
             })
         };
         var notebook = new InteractiveDocument(cells);
-        var serialized = (string)notebook.SerializeToJupyter();
+        var serialized = (string)notebook.ToJupyterJson();
         var jupyter = JToken.Parse(serialized);
         jupyter["cells"]
             .Should()
@@ -1427,7 +1427,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
         var ipynbJson = new InteractiveDocument
         {
             new("#!value --from-file @input:filename --name myfile")
-        }.SerializeToJupyter();
+        }.ToJupyterJson();
 
         var document = Notebook.Parse(ipynbJson);
 
@@ -1446,7 +1446,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
             
         var inputDoc = Notebook.Parse(expectedContent);
 
-        var resultContent = inputDoc.SerializeToJupyter(enforceJupyterMetadata: false);
+        var resultContent = inputDoc.ToJupyterJson(enforceJupyterMetadata: false);
 
         if (expectedContent.EndsWith("\r\n"))
         {

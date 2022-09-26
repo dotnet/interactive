@@ -26,7 +26,7 @@ public class CodeSubmissionFormatTests : DocumentFormatTestsBase
 
     public InteractiveDocument ParseDib(string content)
     {
-        return CodeSubmission.Parse(content, KernelInfos);
+        return CodeSubmission.Parse(content, DefaultKernelInfos);
     }
 
     public string SerializeDib(InteractiveDocument interactive, string newLine)
@@ -386,8 +386,8 @@ var x = 1;
     [Fact]
     public void Default_language_can_be_specified_in_metadata()
     {
-        var kernelInfo = KernelInfos;
-        KernelInfos.DefaultKernelName = "fsharp";
+        var kernelInfo = DefaultKernelInfos;
+        DefaultKernelInfos.DefaultKernelName = "fsharp";
 
         var metadata = new Dictionary<string, object>
         {
@@ -406,7 +406,7 @@ var x = 1;
     [Fact]
     public void Kernel_languages_can_be_specified_in_metadata()
     {
-        var kernelInfo = KernelInfos;
+        var kernelInfo = DefaultKernelInfos;
         kernelInfo.Add(new("mermaid"));
         kernelInfo.Add(new("javascript"));
 
@@ -436,7 +436,7 @@ var x = 1;
     [Fact]
     public void Metadata_section_is_not_added_as_a_document_element()
     {
-        var kernelInfo = KernelInfos;
+        var kernelInfo = DefaultKernelInfos;
         kernelInfo.Add(new("mermaid"));
         kernelInfo.Add(new("javascript"));
 
