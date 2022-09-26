@@ -209,6 +209,7 @@ Microsoft.DotNet.Interactive
     public static System.Threading.Tasks.Task<KernelCommandResult> SubmitCodeAsync(System.String code)
     public static System.Threading.Tasks.Task<System.ValueTuple<System.Boolean,Microsoft.DotNet.Interactive.Events.ValueProduced>> TryRequestValueAsync(System.String valueName)
     public static System.Threading.Tasks.Task<System.ValueTuple<System.Boolean,Microsoft.DotNet.Interactive.Events.ValueInfosProduced>> TryRequestValueInfosAsync()
+    public static T UseImportMagicCommand<T>()
     public static T UseLogMagicCommand<T>()
     public static T UseQuitCommand<T>(System.Func<System.Threading.Tasks.Task> onQuitAsync = null)
     public static Microsoft.DotNet.Interactive.Connection.ProxyKernel UseValueSharing(Microsoft.DotNet.Interactive.ValueSharing.IKernelValueDeclarer kernelValueDeclarer)
