@@ -66,6 +66,19 @@ await kernel.root.send({ commandType: 'SubmitCode', command: { code: 'var asdf =
 
 #!markdown
 
+# Execude the next cell. After execution, the output immediately below should be:
+
+```
+javascript
+```
+
+#!javascript
+
+const jsKernel = kernel.root.findKernelByName('javascript');
+console.log(jsKernel.name);
+
+#!markdown
+
 # Execute the next cell, the output should be displayed as HTML like so:
 
 | Name | Salary |
