@@ -1,14 +1,18 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
+using Microsoft.DotNet.Interactive.Documents.Jupyter;
+using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Documents.ParserServer;
 using Microsoft.DotNet.Interactive.Documents.Utility;
 
@@ -128,6 +132,20 @@ public class InteractiveDocument : IEnumerable
         }
 
         return null;
+    }
+
+    public static async Task<InteractiveDocument> LoadInteractiveDocumentAsync(
+    FileInfo file,
+    KernelInfoCollection kernelInfos)
+    {
+        var fileContents = await File.ReadAllTextAsync(file.FullName);
+
+        return file.Extension.ToLowerInvariant() switch
+        {
+            ".ipynb" => Notebook.Parse(fileContents, kernelInfos),
+            ".dib" => CodeSubmission.Parse(fileContents, kernelInfos),
+            _ => throw new InvalidOperationException($"Unrecognized extension for a notebook: {file.Extension}"),
+        };
     }
 
     internal string? GetDefaultKernelName(KernelInfoCollection kernelInfos)

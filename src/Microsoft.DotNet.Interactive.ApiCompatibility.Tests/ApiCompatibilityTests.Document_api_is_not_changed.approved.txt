@@ -27,6 +27,7 @@ Microsoft.DotNet.Interactive.Documents
     public System.Boolean Equals(System.Object obj)
     public System.Int32 GetHashCode()
   public class InteractiveDocument, System.Collections.IEnumerable
+    public static System.Threading.Tasks.Task<InteractiveDocument> LoadInteractiveDocumentAsync(System.IO.FileInfo file, KernelInfoCollection kernelInfos)
     .ctor(System.Collections.Generic.IList<InteractiveDocumentElement> elements = null)
     public System.Collections.Generic.IList<InteractiveDocumentElement> Elements { get;}
     public System.Collections.Generic.IDictionary<System.String,System.Object> Metadata { get;}
