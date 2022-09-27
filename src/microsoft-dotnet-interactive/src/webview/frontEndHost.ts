@@ -42,14 +42,6 @@ export function createHost(
         }
     };
 
-    global.findKernelByName = (name: string) => {
-        return compositeKernel.findKernelByName(name);
-    }
-
-    global.findKernelByUri = (uri: string) => {
-        return compositeKernel.findKernelByUri(uri);
-    }
-
     global[compositeKernelName] = {
         compositeKernel,
         kernelHost,
