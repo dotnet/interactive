@@ -8,9 +8,10 @@
     "id": "command-id",
     "commandType": "RequestInput",
     "command": {
-      "prompt": "Input?",
+      "prompt": "What is the path to the log file?",
       "isPassword": false,
-      "inputTypeHint": "text",
+      "inputTypeHint": "file",
+      "valueName": "logfile",
       "targetKernelName": "vscode",
       "originUri": null,
       "destinationUri": null

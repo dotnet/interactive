@@ -456,6 +456,36 @@ var x = 1;
         }
 
         [Fact]
+        public void Metadata_JSON_can_span_multiple_lines()
+        {
+            var dib = @"
+#!meta
+
+{
+  ""someProperty"": 123
+}
+
+#!markdown
+
+# Title
+
+#!csharp
+
+Console.Write(""hello"");
+
+";
+
+            var document = CodeSubmission.Parse(dib);
+
+            document.Metadata
+                    .Should()
+                    .ContainKey("someProperty")
+                    .WhoseValue
+                    .Should()
+                    .BeOfType<JsonElement>();
+        }
+
+        [Fact]
         public async Task dib_file_can_be_round_tripped_through_read_and_write_without_the_content_changing()
         {
             var path = GetNotebookFilePath();
@@ -502,6 +532,55 @@ var x = 1;
 
 %% Mermaid code
 ";
+        }
+
+        [Fact]
+        public void Input_tokens_are_parsed_from_dib_files()
+        {
+            var dib = "#!value --from-file @input:filename --name myfile";
+
+            var document = CodeSubmission.Parse(dib);
+
+            document.GetInputFields()
+                    .Should()
+                    .ContainSingle()
+                    .Which
+                    .ValueName
+                    .Should()
+                    .Be("filename");
+        }
+
+        [Fact]
+        public void Password_tokens_are_parsed_from_dib_files()
+        {
+            var dib = "#!do-stuff --password @password:TOPSECRET";
+
+            var document = CodeSubmission.Parse(dib);
+
+            document.GetInputFields()
+                    .Should()
+                    .ContainSingle()
+                    .Which
+                    .Should()
+                    .BeEquivalentTo(new InputField("TOPSECRET", "password"));
+        }
+
+        [Fact]
+        public void When_an_input_field_name_is_repeated_then_only_one_is_created_in_the_document()
+        {
+            var dib = @"
+#!do-stuff @password:the-password
+#!do-more-stuff @password:the-password
+";
+
+            var document = CodeSubmission.Parse(dib);
+
+            document.GetInputFields()
+                    .Should()
+                    .ContainSingle()
+                    .Which
+                    .Should()
+                    .BeEquivalentTo(new InputField("the-password", "password"));
         }
 
         private async Task<string> RoundTripDib(string notebookFile)

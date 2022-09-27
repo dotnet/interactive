@@ -11,7 +11,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageDescription>Microsoft.DotNet.Interactive.Kernel implementation for PowerShell</PackageDescription>
-    <PackageTags>interactive PowerShell</PackageTags>
+    <PackageTags>polyglot notebook dotnet interactive PowerShell</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

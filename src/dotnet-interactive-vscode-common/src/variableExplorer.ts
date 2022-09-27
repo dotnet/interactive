@@ -13,7 +13,7 @@ import { DisposableSubscription } from './dotnet-interactive/disposables';
 import { isKernelEventEnvelope } from './dotnet-interactive';
 
 // creates a map of, e.g.:
-//   "dotnet-interactive.csharp" => "C# (.NET Interactive)""
+//   "dotnet-interactive.csharp" => "C#""
 const languageIdToAliasMap = new Map(
     vscode.extensions.all.map(e => <any[]>e.packageJSON?.contributes?.languages || [])
         .filter(l => l)
@@ -27,12 +27,12 @@ function debounce(callback: () => void) {
 }
 
 export function registerVariableExplorer(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.shareValueTo', async (variableInfo: { kernelName: string, valueName: string } | undefined) => {
+    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.shareValueWith', async (variableInfo: { kernelName: string, valueName: string } | undefined) => {
         if (variableInfo && vscode.window.activeNotebookEditor) {
             const client = await clientMapper.tryGetClient(versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor).uri);
             if (client) {
                 // creates a map of _only_ the available languages in this notebook, e.g.:
-                //   "C# (.NET Interactive)" => "dotnet-interactive.csharp"
+                //   "C#" => "dotnet-interactive.csharp"
                 const availableKernelDisplayNamesToLanguageNames = new Map(client.kernel.childKernels.map(k => {
                     const notebookLanguage = getNotebookSpecificLanguage(k.name);
                     let displayLanguage = notebookLanguage;
@@ -68,7 +68,7 @@ export function registerVariableExplorer(context: vscode.ExtensionContext, clien
     }));
 
     const webViewProvider = new WatchWindowTableViewProvider(clientMapper, context.extensionPath);
-    context.subscriptions.push(vscode.window.registerWebviewViewProvider('dotnet-interactive-panel-values', webViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
+    context.subscriptions.push(vscode.window.registerWebviewViewProvider('polyglot-notebook-panel-values', webViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
 
     vscode.window.onDidChangeActiveNotebookEditor(async _editor => {
         // TODO: update on client process restart
@@ -196,11 +196,11 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                             const value = await client.requestValue(valueInfo.name, name);
                             const valueName = value.name;
                             const valueValue = value.formattedValue.value;
-                            const commandUrl = `command:dotnet-interactive.shareValueTo?${encodeURIComponent(JSON.stringify({ valueName, kernelName: name }))}`;
+                            const commandUrl = `command:polyglot-notebook.shareValueWith?${encodeURIComponent(JSON.stringify({ valueName, kernelName: name }))}`;
                             rows.push({
                                 name: valueName,
                                 value: valueValue,
-                                kernel: `#!${name}`,
+                                kernel: name,
                                 link: commandUrl,
                             });
                         } catch (e) {

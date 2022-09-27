@@ -301,28 +301,6 @@ stages:
             testResultsFiles: '**/*.trx'
             searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults'
           condition: always()
-  # taking this out momentarily as there is an open issue in missing modules https://github.com/zeromq/pyzmq/issues/1763
-  # - template: /eng/common/templates/jobs/jobs.yml
-  #   parameters:
-  #     enableMicrobuild: true
-  #     enableSbom: false
-  #     jobs:
-  #     - job: Dockerfile_official_image
-  #       pool:
-  #         ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-  #           name: NetCore-Public
-  #           demands: ImageOverride -equals Build.Ubuntu.1804.Amd64.Open
-  #         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-  #           name: NetCore1ESPool-Internal
-  #           demands: ImageOverride -equals Build.Ubuntu.1804.Amd64
-  #       steps:
-  #       - checkout: self
-  #         clean: true
-  #       - task: Docker@2
-  #         displayName: Build official Dockerfile
-  #         inputs:
-  #           command: build
-  #           Dockerfile: "$(Build.SourcesDirectory)/samples/docker-image/Dockerfile"
 
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:

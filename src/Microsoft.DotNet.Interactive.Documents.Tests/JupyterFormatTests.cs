@@ -129,7 +129,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         execution_count = 1,
                         metadata = new
                         {
-                            dotnet_interactive = new
+                            polyglot_notebook = new
                             {
                                 language = "fsharp"
                             }
@@ -180,7 +180,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         execution_count = 1,
                         metadata = new
                         {
-                            dotnet_interactive = new
+                            polyglot_notebook = new
                             {
                                 language = "fsharp"
                             }
@@ -257,7 +257,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         execution_count = 1,
                         metadata = new
                         {
-                            dotnet_interactive = new
+                            polyglot_notebook = new
                             {
                                 language = "fsharp"
                             }
@@ -628,7 +628,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         },
                         metadata = new
                         {
-                            dotnet_interactive = new
+                            polyglot_notebook = new
                             {
                                 not_a_language = "fsharp"
                             }
@@ -647,7 +647,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         {
                             Metadata = new Dictionary<string, object>
                             {
-                                ["dotnet_interactive"] = new Dictionary<string, object>
+                                ["polyglot_notebook"] = new Dictionary<string, object>
                                 {
                                     ["not_a_language"] = "fsharp"
                                 }
@@ -1004,7 +1004,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                         execution_count = (int?)null,
                         metadata = new
                         {
-                            dotnet_interactive = new
+                            polyglot_notebook = new
                             {
                                 language = "csharp"
                             }
@@ -1054,7 +1054,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     execution_count = 123,
                     metadata = new
                     {
-                        dotnet_interactive = new
+                        polyglot_notebook = new
                         {
                             language = "fsharp"
                         }
@@ -1419,6 +1419,25 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
             var path = GetNotebookFilePath();
 
             this.Assent(await RoundTripIpynb(path), _assentConfiguration);
+        }
+
+        [Fact]
+        public void Input_tokens_are_parsed_from_ipynb_files()
+        {
+            var ipynbJson = new InteractiveDocument
+            {
+                new("#!value --from-file @input:filename --name myfile")
+            }.SerializeToJupyter();
+
+            var document = Notebook.Parse(ipynbJson);
+
+            document.GetInputFields()
+                    .Should()
+                    .ContainSingle()
+                    .Which
+                    .ValueName
+                    .Should()
+                    .Be("filename");
         }
 
         private async Task<string> RoundTripIpynb(string notebookFile)

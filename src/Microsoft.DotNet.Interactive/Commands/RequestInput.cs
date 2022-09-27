@@ -7,14 +7,15 @@ public class RequestInput : KernelCommand
 {
     public RequestInput(
         string prompt,
-        bool isPassword = false,
         string targetKernelName = null,
-        string inputTypeHint = null)
+        string inputTypeHint = null,
+        string valueName = null)
         : base(targetKernelName)
     {
+        ValueName = valueName;
         Prompt = prompt;
-        IsPassword = isPassword;
         InputTypeHint = inputTypeHint ?? "text";
+        IsPassword = InputTypeHint == "password";
     }
 
     public string Prompt { get; }
@@ -22,4 +23,6 @@ public class RequestInput : KernelCommand
     public bool IsPassword { get; }
 
     public string InputTypeHint { get; }
+
+    public string ValueName { get; }
 }

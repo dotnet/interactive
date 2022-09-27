@@ -19,7 +19,7 @@ function Build-VsCodeExtension([string] $packageDirectory, [string] $outputSubDi
     # set tool version
     if ($kernelVersionNumber -Ne "") {
         Write-Host "Setting tool version to $kernelVersionNumber"
-        $packageJsonContents.contributes.configuration.properties."dotnet-interactive.minimumInteractiveToolVersion"."default" = $kernelVersionNumber
+        $packageJsonContents.contributes.configuration.properties."polyglot-notebook.minimumInteractiveToolVersion"."default" = $kernelVersionNumber
     }
 
     SaveJson -packageJsonPath $packagejsonPath -packageJsonContents $packageJsonContents

@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -62,6 +63,8 @@ namespace Microsoft.DotNet.Interactive
         public override ChooseKernelDirective ChooseKernelDirective =>
             _chooseKernelDirective ??= new(this);
 
+        public IReadOnlyDictionary<string, object> Values => _values;
+
         public async Task HandleAsync(
             SubmitCode command,
             KernelInvocationContext context)
@@ -86,7 +89,7 @@ namespace Microsoft.DotNet.Interactive
 
             if (options.FromFile is { } file)
             {
-                newValue = File.ReadAllText(file.FullName);
+                newValue = await File.ReadAllTextAsync(file.FullName);
                 loadedFromOptions = true;
             }
             else if (options.FromUrl is { } uri)

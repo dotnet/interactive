@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         {
             var metaData = new Dictionary<string, object>
             {
-                { "dotnet_interactive", new InputCellMetadata("fsharp" ) }
+                { "polyglot_notebook", new InputCellMetadata("fsharp" ) }
             };
             var request = ZeroMQMessage.Create(new CompleteRequest("1+1"), metaData: metaData);
             var context = new JupyterRequestContext(JupyterMessageSender, request);

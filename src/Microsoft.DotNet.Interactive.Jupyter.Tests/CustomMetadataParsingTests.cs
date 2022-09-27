@@ -17,12 +17,12 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         {
             var rawMetadata = new
             {
-                dotnet_interactive = new InputCellMetadata("fsharp")
+                polyglot_notebook = new InputCellMetadata("fsharp")
             };
             var rawMetadataJson = JsonSerializer.Serialize(rawMetadata);
             var metadata = MetadataExtensions.DeserializeMetadataFromJsonString(rawMetadataJson);
             metadata.Should()
-                .ContainKey("dotnet_interactive")
+                .ContainKey("polyglot_notebook")
                 .WhoseValue
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata("fsharp"));
@@ -33,12 +33,12 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         {
             var rawMetadata = new
             {
-                dotnet_interactive = new InputCellMetadata()
+                polyglot_notebook = new InputCellMetadata()
             };
             var rawMetadataJson = JsonSerializer.Serialize(rawMetadata);
             var metadata = MetadataExtensions.DeserializeMetadataFromJsonString(rawMetadataJson);
             metadata.Should()
-                .ContainKey("dotnet_interactive")
+                .ContainKey("polyglot_notebook")
                 .WhoseValue
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata() );
@@ -49,12 +49,12 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         {
             var rawMetadata = new
             {
-                dotnet_interactive_but_not_the_right_shape = new InputCellMetadata("fsharp")
+                polyglot_notebook_but_not_the_right_shape = new InputCellMetadata("fsharp")
             };
             var rawMetadataJson = JsonSerializer.Serialize(rawMetadata);
             var metadata = MetadataExtensions.DeserializeMetadataFromJsonString(rawMetadataJson);
             metadata.Should()
-                .NotContainKey("dotnet_interactive");
+                .NotContainKey("polyglot_notebook");
         }
     }
 }

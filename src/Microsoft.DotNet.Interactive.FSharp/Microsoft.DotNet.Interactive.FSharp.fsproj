@@ -10,7 +10,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageDescription>Microsoft.DotNet.Interactive.Kernel implementation for F#</PackageDescription>
-    <PackageTags>interactive fsharp</PackageTags>
+    <PackageTags>polyglot notebook dotnet interactive fsharp</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

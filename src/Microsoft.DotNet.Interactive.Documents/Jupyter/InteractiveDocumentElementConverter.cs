@@ -46,9 +46,9 @@ internal class InteractiveDocumentElementConverter : JsonConverter<InteractiveDo
                         element.Metadata ??= new Dictionary<string, object>();
                         element.Metadata.MergeWith(metadata);
 
-                        if (element.Metadata?.TryGetValue("dotnet_interactive", out var dotnet_interactive) == true &&
-                            dotnet_interactive is IDictionary<string, object> dotnet_interactive_dict &&
-                            dotnet_interactive_dict.TryGetValue("language", out var languageStuff) &&
+                        if (element.Metadata?.TryGetValue("polyglot_notebook", out var polyglot_notebook) == true &&
+                            polyglot_notebook is IDictionary<string, object> polyglot_notebook_dict &&
+                            polyglot_notebook_dict.TryGetValue("language", out var languageStuff) &&
                             languageStuff is string language)
                         {
                             element.KernelName = language;
@@ -147,7 +147,7 @@ internal class InteractiveDocumentElementConverter : JsonConverter<InteractiveDo
         if (element.KernelName is not null &&
             element.KernelName != "markdown")
         {
-            element.Metadata.GetOrAdd("dotnet_interactive",
+            element.Metadata.GetOrAdd("polyglot_notebook",
                                       _ => new Dictionary<string, object>())
                 ["language"] = element.KernelName;
         }

@@ -108,7 +108,7 @@ Microsoft.DotNet.Interactive
     public static Kernel Root { get;}
     public static System.Void CSS(System.String content)
     public static DisplayedValue display(System.Object value, System.String[] mimeTypes)
-    public static System.Threading.Tasks.Task<System.String> GetInputAsync(System.String prompt = )
+    public static System.Threading.Tasks.Task<System.String> GetInputAsync(System.String prompt = , System.String typeHint = text)
     public static System.Threading.Tasks.Task<System.String> GetPasswordAsync(System.String prompt = )
     public static Microsoft.AspNetCore.Html.IHtmlContent HTML(System.String content)
     public static System.Void Javascript(System.String scriptContent)
@@ -209,6 +209,7 @@ Microsoft.DotNet.Interactive
     public static System.Threading.Tasks.Task<KernelCommandResult> SubmitCodeAsync(System.String code)
     public static System.Threading.Tasks.Task<System.ValueTuple<System.Boolean,Microsoft.DotNet.Interactive.Events.ValueProduced>> TryRequestValueAsync(System.String valueName)
     public static System.Threading.Tasks.Task<System.ValueTuple<System.Boolean,Microsoft.DotNet.Interactive.Events.ValueInfosProduced>> TryRequestValueInfosAsync()
+    public static T UseImportMagicCommand<T>()
     public static T UseLogMagicCommand<T>()
     public static T UseQuitCommand<T>(System.Func<System.Threading.Tasks.Task> onQuitAsync = null)
     public static Microsoft.DotNet.Interactive.Connection.ProxyKernel UseValueSharing(Microsoft.DotNet.Interactive.ValueSharing.IKernelValueDeclarer kernelValueDeclarer)
@@ -285,6 +286,7 @@ Microsoft.DotNet.Interactive
   public class KeyValueStoreKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValue>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValueInfos>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, Microsoft.DotNet.Interactive.ValueSharing.ISupportSetClrValue, System.IDisposable
     .ctor(System.String name = value)
     public ChooseKernelDirective ChooseKernelDirective { get;}
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Values { get;}
     public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.RequestValueInfos command, KernelInvocationContext context)
     public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.RequestValue command, KernelInvocationContext context)
     public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SubmitCode command, KernelInvocationContext context)
@@ -416,10 +418,11 @@ Microsoft.DotNet.Interactive.Commands
   public class RequestHoverText : LanguageServiceCommand
     .ctor(System.String code, Microsoft.DotNet.Interactive.LinePosition linePosition, System.String targetKernelName = null)
   public class RequestInput : KernelCommand
-    .ctor(System.String prompt, System.Boolean isPassword = False, System.String targetKernelName = null, System.String inputTypeHint = null)
+    .ctor(System.String prompt, System.String targetKernelName = null, System.String inputTypeHint = null, System.String valueName = null)
     public System.String InputTypeHint { get;}
     public System.Boolean IsPassword { get;}
     public System.String Prompt { get;}
+    public System.String ValueName { get;}
   public class RequestKernelInfo : KernelCommand
     .ctor(System.String targetKernelName = null)
     .ctor(System.Uri destinationUri)

@@ -22,9 +22,9 @@ export function getDotNetMetadata(metadata: any): DotNetCellMetadata {
     if (metadata &&
         metadata.custom &&
         metadata.custom.metadata &&
-        metadata.custom.metadata.dotnet_interactive &&
-        isDotNetCellMetadata(metadata.custom.metadata.dotnet_interactive)) {
-        return metadata.custom.metadata.dotnet_interactive;
+        metadata.custom.metadata.polyglot_notebook &&
+        isDotNetCellMetadata(metadata.custom.metadata.polyglot_notebook)) {
+        return metadata.custom.metadata.polyglot_notebook;
     }
 
     return {
@@ -36,8 +36,8 @@ export function withDotNetCellMetadata(metadata: { [key: string]: any, } | undef
     const newMetadata = { ...metadata };
     newMetadata.custom = newMetadata.custom || {};
     newMetadata.custom.metadata = newMetadata.custom.metadata || {};
-    newMetadata.custom.metadata.dotnet_interactive = newMetadata.custom.metadata.dotnet_interactive || {};
-    newMetadata.custom.metadata.dotnet_interactive.language = cellLanguage;
+    newMetadata.custom.metadata.polyglot_notebook = newMetadata.custom.metadata.polyglot_notebook || {};
+    newMetadata.custom.metadata.polyglot_notebook.language = cellLanguage;
     return newMetadata;
 }
 
@@ -75,7 +75,7 @@ export function getLanguageInfoMetadata(metadata: any): LanguageInfoMetadata {
 export function mapIpynbLanguageName(name: string | undefined): string | undefined {
     if (name) {
         // The .NET Interactive Jupyter kernel serializes the language names as "C#", "F#", and "PowerShell"; these
-        // need to be normalized to .NET Interactive kernel language names.
+        // need to be normalized to Polyglot Notebook kernel language names.
         switch (name.toLowerCase()) {
             case 'c#':
                 return 'csharp';
