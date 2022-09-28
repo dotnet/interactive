@@ -34,6 +34,7 @@ import { ChildProcessLineAdapter } from './childProcessLineAdapter';
 import { NotebookParserServer } from './notebookParserServer';
 import { registerVariableExplorer } from './variableExplorer';
 import { KernelCommandAndEventChannel } from './DotnetInteractiveChannel';
+import { handleRequestInput } from '../versionSpecificFunctions';
 
 export const KernelIdForJupyter = 'dotnet-interactive-for-jupyter';
 
@@ -146,10 +147,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 const prompt = requestInput.prompt;
                 const password = requestInput.isPassword;
 
-                const value = (requestInput.inputTypeHint === "file")
-                    ? await vscode.window.showOpenDialog({ canSelectFiles: true, canSelectFolders: false, title: prompt, canSelectMany: false })
-                        .then(v => typeof v?.[0].fsPath === 'undefined' ? null : v[0].fsPath)
-                    : await vscode.window.showInputBox({ prompt, password });
+                const value = await handleRequestInput(prompt, password, requestInput.inputTypeHint);
 
                 if (!value) {
                     commandInvocation.context.fail('Input request cancelled');

@@ -30,3 +30,11 @@ export async function replaceNotebookMetadata(notebookUri: vscode.Uri, documentM
     const succeeded = await vscode.workspace.applyEdit(edit);
     return succeeded;
 }
+
+export async function handleRequestInput(prompt: string, password: boolean, inputTypeHint: string): Promise<string | null | undefined> {
+    const value = (inputTypeHint === 'file')
+        ? await vscode.window.showOpenDialog({ canSelectFiles: true, canSelectFolders: false, title: prompt, canSelectMany: false })
+            .then(v => typeof v?.[0].fsPath === 'undefined' ? null : v[0].fsPath)
+        : await vscode.window.showInputBox({ prompt, password });
+    return value;
+}
