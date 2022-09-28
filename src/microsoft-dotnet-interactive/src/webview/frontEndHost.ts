@@ -3,7 +3,6 @@
 
 import { CompositeKernel } from "../compositeKernel";
 import { JavascriptKernel } from "../javascriptKernel";
-import { Kernel } from "../kernel";
 import { LogEntry, Logger } from "../logger";
 import { KernelHost } from "../kernelHost";
 import * as rxjs from "rxjs";
