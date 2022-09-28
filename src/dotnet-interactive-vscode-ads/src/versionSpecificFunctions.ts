@@ -31,7 +31,7 @@ export async function replaceNotebookMetadata(notebookUri: vscode.Uri, documentM
 
 export async function handleRequestInput(prompt: string, password: boolean, inputTypeHint: string): Promise<string | null | undefined> {
     let result: string | null | undefined;
-    if (inputTypeHint === 'connectionstring') {
+    if (inputTypeHint === 'connectionstring-mssql') {
         let connection = await azdata.connection.openConnectionDialog();
         if (connection) {
             result = await azdata.connection.getConnectionString(connection.connectionId, true);
