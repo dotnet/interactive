@@ -38,7 +38,6 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
     private _receiverSubject: Subject<KernelCommandOrEventEnvelope>;
     private _sender: IKernelCommandAndEventSender;
     private _receiver: IKernelCommandAndEventReceiver;
-    private _senderSubscription: any;
 
     constructor(
         notebookPath: string,
@@ -74,7 +73,6 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
             this.diagnosticChannel.appendLine(`Kernel for '${notebookPath}' started (${childProcess.pid}).`);
 
             childProcess.on('exit', (code: number, signal: string) => {
-                this._senderSubscription.unsubscribe();
                 const message = `Kernel for '${notebookPath}' ended (${pid})`;
                 const messageCodeSuffix = (code && code !== 0)
                     ? ` with code ${code}`

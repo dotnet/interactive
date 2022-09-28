@@ -16,11 +16,11 @@ namespace Microsoft.DotNet.Interactive.Documents
 
         public InteractiveDocumentElement(
             string? contents = null,
-            string? language = null,
+            string? kernelName = null,
             IEnumerable<InteractiveDocumentOutputElement>? outputs = null)
         {
             Contents = contents ?? "";
-            Language = language;
+            KernelName = kernelName;
             Outputs = outputs is { }
                           ? new(outputs)
                           : new();
@@ -29,7 +29,10 @@ namespace Microsoft.DotNet.Interactive.Documents
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Id { get; set; }
 
-        public string? Language { get; set; }
+        public string? KernelName { get; set; }
+
+        // FIX: (InteractiveDocumentElement) add this back
+       //  public string? Language { get; set; }
 
         public string Contents { get; set; }
 

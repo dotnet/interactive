@@ -108,6 +108,7 @@ export interface RequestInput extends KernelCommand {
     prompt: string;
     isPassword: boolean;
     inputTypeHint: string;
+    valueName: string;
 }
 
 export interface RequestKernelInfo extends KernelCommand {
@@ -442,7 +443,7 @@ export interface InteractiveDocument {
 
 export interface InteractiveDocumentElement {
     id?: string;
-    language?: string;
+    kernelName?: string;
     contents: string;
     outputs: Array<InteractiveDocumentOutputElement>;
     executionOrder: number;

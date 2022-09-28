@@ -14,7 +14,7 @@ function toInteractiveDocumentElement(cell: vscode.NotebookCellData): contracts.
     const outputs = cell.outputs || [];
     return {
         executionOrder: cell.executionSummary?.executionOrder ?? 0,
-        language: getSimpleLanguage(cell.languageId),
+        kernelName: getSimpleLanguage(cell.languageId),
         contents: cell.value,
         outputs: outputs.map(vsCodeCellOutputToContractCellOutput)
     };
@@ -61,9 +61,9 @@ export function createAndRegisterNotebookSerializers(context: vscode.ExtensionCo
 
 function toVsCodeNotebookCellData(cell: contracts.InteractiveDocumentElement): vscode.NotebookCellData {
     const cellData = new vscode.NotebookCellData(
-        <number>languageToCellKind(cell.language),
+        <number>languageToCellKind(cell.kernelName),
         cell.contents,
-        getNotebookSpecificLanguage(cell.language));
+        getNotebookSpecificLanguage(cell.kernelName));
     cellData.outputs = cell.outputs.map(outputElementToVsCodeCellOutput);
     return cellData;
 }

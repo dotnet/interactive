@@ -1,42 +1,112 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.DotNet.Interactive.Documents.Utility;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Documents.ParserServer;
+using Microsoft.DotNet.Interactive.Documents.Utility;
 
 namespace Microsoft.DotNet.Interactive.Documents
 {
     public static class CodeSubmission
     {
-        private const string InteractiveNotebookCellSpecifier = "#!";
+        internal const string MagicCommandPrefix = "#!";
 
         public static Encoding Encoding => new UTF8Encoding(false);
 
         public static InteractiveDocument Parse(
             string content,
-            string defaultLanguage,
-            KernelNameCollection kernelNames)
+            KernelInfoCollection? kernelInfo = default)
         {
-            if (kernelNames == null)
-            {
-                throw new ArgumentNullException(nameof(kernelNames));
-            }
-
+            kernelInfo ??= new();
+            Dictionary<string, object>? metadata = null;
             var lines = content.SplitIntoLines();
 
-            var elements = new List<InteractiveDocumentElement>();
-            var currentLanguage = defaultLanguage;
+            var document = new InteractiveDocument();
+            var currentLanguage = kernelInfo.DefaultKernelName ?? "csharp";
             var currentElementLines = new List<string>();
 
-            InteractiveDocumentElement CreateElement(string elementLanguage, IEnumerable<string> elementLines)
+            // not a kernel language, but still a valid cell splitter
+            if (!kernelInfo.Contains("markdown"))
             {
-                return new(string.Join("\n", elementLines), elementLanguage);
+                kernelInfo = kernelInfo.Clone();
+                kernelInfo.Add(new KernelInfo("markdown", new[] { "md" }));
             }
+
+            var foundMetadata = false;
+
+            for (var i = 0; i < lines.Length; i++)
+            {
+                var line = lines[i];
+
+                if (!foundMetadata &&
+                    line.StartsWith("#!meta"))
+                {
+                    foundMetadata = true;
+                    var sb = new StringBuilder();
+
+                    while (!(line = lines[++i]).StartsWith("#!"))
+                    {
+                        sb.AppendLine(line);
+                    }
+
+                    var metadataString = sb.ToString();
+
+                    metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(metadataString, ParserServerSerializer.JsonSerializerOptions);
+
+                    if (InteractiveDocument.TryGetKernelInfoFromMetadata(metadata, out var kernelInfoFromMetadata))
+                    {
+                        kernelInfo.AddRange(kernelInfoFromMetadata);
+                    }
+                }
+
+                if (line.StartsWith(MagicCommandPrefix))
+                {
+                    var cellLanguage = line.Substring(MagicCommandPrefix.Length);
+
+                    if (kernelInfo.TryGetByAlias(cellLanguage, out var name))
+                    {
+                        // recognized language, finalize the current element
+                        AddElement();
+
+                        // start a new element
+                        currentLanguage = name.Name;
+                        currentElementLines.Clear();
+                    }
+                    else
+                    {
+                        // unrecognized language, probably a magic command
+                        currentElementLines.Add(line);
+
+                        document.AddMagicCommandLine(line);
+                    }
+                }
+                else
+                {
+                    currentElementLines.Add(line);
+                }
+            }
+
+            // finalize last element
+            AddElement();
+
+            // ensure there's at least one element available
+            if (document.Elements.Count == 0)
+            {
+                document.Elements.Add(CreateElement(currentLanguage, Array.Empty<string>()));
+            }
+
+            if (metadata is not null)
+            {
+                document.Metadata.MergeWith(metadata);
+            }
+
+            return document;
 
             void AddElement()
             {
@@ -54,81 +124,49 @@ namespace Microsoft.DotNet.Interactive.Documents
 
                 if (currentElementLines.Count > 0)
                 {
-                    elements.Add(CreateElement(currentLanguage, currentElementLines));
-                }
-            }
-            
-            // not a kernel language, but still a valid cell splitter
-            if (!kernelNames.Contains("markdown"))
-            {
-                kernelNames = kernelNames.Clone();
-                kernelNames.Add(new KernelName("markdown", new[] { "md" }));
-            }            
-          
-            foreach (var line in lines)
-            {
-                if (line.StartsWith(InteractiveNotebookCellSpecifier))
-                {
-                    var cellLanguage = line.Substring(InteractiveNotebookCellSpecifier.Length);
-
-                    if (kernelNames.TryGetByAlias(cellLanguage, out var name))
-                    {
-                        // recognized language, finalize the current element
-                        AddElement();
-
-                        // start a new element
-                        currentLanguage = name.Name;
-                        currentElementLines.Clear();
-                    }
-                    else
-                    {
-                        // unrecognized language, probably a magic command
-                        currentElementLines.Add(line);
-                    }
-                }
-                else
-                {
-                    currentElementLines.Add(line);
+                    document.Elements.Add(CreateElement(currentLanguage, currentElementLines));
                 }
             }
 
-            // finalize last element
-            AddElement();
-
-            // ensure there's at least one element available
-            if (elements.Count == 0)
+            InteractiveDocumentElement CreateElement(string elementLanguage, IEnumerable<string> elementLines)
             {
-                elements.Add(CreateElement(defaultLanguage, Array.Empty<string>()));
+                return new(string.Join("\n", elementLines), elementLanguage);
             }
-
-            return new InteractiveDocument(elements);
         }
 
         public static InteractiveDocument Read(
             Stream stream,
-            string defaultLanguage,
-            KernelNameCollection kernelNames)
+            KernelInfoCollection kernelInfos)
         {
             using var reader = new StreamReader(stream, Encoding);
             var content = reader.ReadToEnd();
-            return Parse(content, defaultLanguage, kernelNames);
+            return Parse(content, kernelInfos);
         }
 
         public static async Task<InteractiveDocument> ReadAsync(
             Stream stream,
-            string defaultLanguage,
-            KernelNameCollection kernelNames)
+            KernelInfoCollection kernelInfos)
         {
             using var reader = new StreamReader(stream, Encoding);
             var content = await reader.ReadToEndAsync();
-            return Parse(content, defaultLanguage, kernelNames);
+            return Parse(content, kernelInfos);
         }
 
-        public static string ToCodeSubmissionContent(this InteractiveDocument interactiveDocument, string newline = "\n")
+        public static string ToCodeSubmissionContent(
+            this InteractiveDocument document,
+            string newline = "\n")
         {
             var lines = new List<string>();
 
-            foreach (var element in interactiveDocument.Elements)
+            if (document.Metadata.Count > 0)
+            {
+                lines.Add($"{MagicCommandPrefix}meta");
+                lines.Add("");
+                lines.Add(JsonSerializer.Serialize(document.Metadata, ParserServerSerializer.JsonSerializerOptions));
+                lines.Add("");
+            }
+
+            foreach (var element in document.Elements)
             {
                 var elementLines = element.Contents.SplitIntoLines().SkipWhile(l => l.Length == 0).ToList();
                 while (elementLines.Count > 0 && elementLines[^1].Length == 0)
@@ -138,14 +176,19 @@ namespace Microsoft.DotNet.Interactive.Documents
 
                 if (elementLines.Count > 0)
                 {
-                    lines.Add($"{InteractiveNotebookCellSpecifier}{element.Language}");
-                    lines.Add("");
+                    if (element.KernelName is not null)
+                    {
+                        lines.Add($"{MagicCommandPrefix}{element.KernelName}");
+                        lines.Add("");
+                    }
+
                     lines.AddRange(elementLines);
                     lines.Add("");
                 }
             }
 
             var content = string.Join(newline, lines);
+
             return content;
         }
 

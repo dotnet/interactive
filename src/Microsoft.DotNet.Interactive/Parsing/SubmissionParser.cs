@@ -99,16 +99,11 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 {
                     case DirectiveNode directiveNode:
 
-                        // FIX: (SplitSubmission) 
                         if (KernelInvocationContext.Current is {} context)
                         {
                             context.CurrentlyParsingDirectiveNode = directiveNode;
                         }
-                        else
-                        {
-
-                        }
-
+                       
                         var parseResult = directiveNode.GetDirectiveParseResult();
 
                         if (parseResult.Errors.Any())
@@ -420,16 +415,23 @@ namespace Microsoft.DotNet.Interactive.Parsing
             {
                 string typeHint = null;
 
-                if (context is { CurrentlyParsingDirectiveNode: { } currentDirectiveNode })
+                if (targetKernelName == "password")
                 {
+                    typeHint = "password";
+                }
+                else if (context is { CurrentlyParsingDirectiveNode: { } currentDirectiveNode })
+                {
+                    // use the parser to infer a type hint based on the expected type of the argument at the position of the input token
+                    var replaceMe = "{2AB89A6C-88D9-4C53-8392-A3A4F902A1CA}";
+
                     var fixedUpText = currentDirectiveNode
                                       .Text
-                                      .Replace($"@{tokenToReplace}", "REPLACE-ME")
+                                      .Replace($"@{tokenToReplace}", replaceMe)
                                       .Replace(" @", "");
 
                     var parseResult = currentDirectiveNode.DirectiveParser.Parse(fixedUpText);
 
-                    var c = parseResult.CommandResult.Children.FirstOrDefault(c => c.Tokens.Any(t => t.Value == "REPLACE-ME"));
+                    var c = parseResult.CommandResult.Children.FirstOrDefault(c => c.Tokens.Any(t => t.Value == replaceMe));
 
                     if (c is { Symbol: {} symbol })
                     {
@@ -438,7 +440,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 }
 
                 var inputRequest = new RequestInput(
-                    $"Please enter a value for field \"{valueName}\".", isPassword: targetKernelName == "password",
+                    valueName: valueName,
+                    prompt: $"Please enter a value for field \"{valueName}\".",
                     inputTypeHint: typeHint);
 
                 var result = _kernel.RootKernel.SendAsync(inputRequest).GetAwaiter().GetResult();

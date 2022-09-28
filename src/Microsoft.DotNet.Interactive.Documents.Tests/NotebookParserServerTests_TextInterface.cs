@@ -9,12 +9,15 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Documents.ParserServer;
 using Nerdbank.Streams;
+using Pocket;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Documents.Tests
 {
-    public class NotebookParserServerTests_TextInterface
+    public class NotebookParserServerTests_TextInterface : IDisposable
     {
+        private readonly CompositeDisposable _disposables = new();
+
         [Theory]
         [InlineData("\n")]
         [InlineData("\r\n")]
@@ -119,14 +122,13 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                 .Be("the-id");
         }
 
-        private static async IAsyncEnumerable<NotebookParserServerResponse> GetResponseObjectsEnumerable(string inputText)
+        private async IAsyncEnumerable<NotebookParserServerResponse> GetResponseObjectsEnumerable(string inputText)
         {
             using var input = new StringReader(inputText);
             var stream = new SimplexStream();
             var output = new StreamWriter(stream);
             var server = new NotebookParserServer(input, output);
-
-            // FIX: (GetResponseObjectsEnumerable) clean up properly
+            _disposables.Add(server);
 
             var _ = Task.Run(() => server.RunAsync()); // start server listener in the background
 
@@ -140,7 +142,16 @@ namespace Microsoft.DotNet.Interactive.Documents.Tests
                     var responseObject = NotebookParserServerResponse.FromJson(responseText);
                     yield return responseObject;
                 }
+                else
+                {
+                    break;
+                }
             }
+        }
+
+        public void Dispose()
+        {
+            _disposables.Dispose();
         }
     }
 
