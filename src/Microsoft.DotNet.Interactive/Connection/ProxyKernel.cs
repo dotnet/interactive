@@ -53,10 +53,6 @@ public sealed class ProxyKernel : Kernel
         {
             if (coe.Event is { } e)
             {
-                if (e is KernelInfoProduced)
-                {
-
-                }
                 if (e is KernelInfoProduced kip && e.RoutingSlip.Count > 0 && e.RoutingSlip.FirstOrDefault() == _remoteUri)
                 {
                     UpdateKernelInfoFromEvent(kip);
