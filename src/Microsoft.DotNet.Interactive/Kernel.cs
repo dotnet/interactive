@@ -298,7 +298,7 @@ namespace Microsoft.DotNet.Interactive
 
         public async Task<KernelCommandResult> SendAsync(
             KernelCommand command,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken = default)
         {
             using var disposable = new SerialDisposable();
 

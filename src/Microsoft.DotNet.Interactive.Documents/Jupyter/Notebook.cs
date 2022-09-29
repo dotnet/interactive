@@ -82,11 +82,11 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
 
         public static string ToJupyterJson(
             this InteractiveDocument document,
-            bool enforceJupyterMetadata = true)
+            string? defaultLanguage = null)
         {
-            if (enforceJupyterMetadata)
+            if (defaultLanguage is {})
             {
-                document.WithJupyterMetadataIfNotSet();
+                document.WithJupyterMetadata(defaultLanguage);
             }
 
             var json = JsonSerializer.Serialize(document, JsonSerializerOptions);

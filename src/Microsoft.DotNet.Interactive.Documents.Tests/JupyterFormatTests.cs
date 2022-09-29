@@ -949,7 +949,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
     public void serialized_notebook_has_appropriate_metadata()
     {
         var notebook = new InteractiveDocument();
-        var serialized = notebook.ToJupyterJson();
+        var serialized = notebook.ToJupyterJson("C#");
         var jupyter = JToken.Parse(serialized);
 
         using var _ = new AssertionScope();
@@ -969,7 +969,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                     mimetype = "text/x-csharp",
                     name = "C#",
                     pygments_lexer = "csharp",
-                    version = "8.0"
+                    version = "10.0"
                 }
             })));
         jupyter["nbformat"]
@@ -1446,7 +1446,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
             
         var inputDoc = Notebook.Parse(expectedContent);
 
-        var resultContent = inputDoc.ToJupyterJson(enforceJupyterMetadata: false);
+        var resultContent = inputDoc.ToJupyterJson();
 
         if (expectedContent.EndsWith("\r\n"))
         {
