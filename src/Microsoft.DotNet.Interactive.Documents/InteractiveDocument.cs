@@ -40,7 +40,7 @@ public class InteractiveDocument : IEnumerable
     public IDictionary<string, object> Metadata =>
         _metadata ??= new Dictionary<string, object>();
 
-    public async IAsyncEnumerable<InteractiveDocument> GetImportedDocumentsAsync()
+    public async IAsyncEnumerable<InteractiveDocument> GetImportsAsync(bool recursive = false)
     {
         EnsureImportFieldParserIsInitialized();
 
@@ -57,7 +57,17 @@ public class InteractiveDocument : IEnumerable
             {
                 var file = parseResult.GetValueForArgument(_importedFileArgument);
 
-                yield return await LoadAsync(file, kernelInfos);
+                var interactiveDocument = await LoadAsync(file, kernelInfos);
+
+                yield return interactiveDocument;
+
+                if (recursive)
+                {
+                    await foreach (var import in interactiveDocument.GetImportsAsync(recursive))
+                    {
+                        yield return import;
+                    }
+                }    
             }
         }
     }

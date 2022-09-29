@@ -18,7 +18,7 @@ public class ImportNotebookTests : DocumentFormatTestsBase
     [InlineData(".ipynb", ".dib")]
     [InlineData(".dib", ".ipynb")]
     [InlineData(".dib", ".dib")]
-    public async Task It_can_import_one_notebook_into_another(
+    public async Task It_can_read_one_notebooks_imports_into_another(
         string importingNotebookExtension,
         string importedNotebookExtension)
     {
@@ -60,7 +60,7 @@ public class ImportNotebookTests : DocumentFormatTestsBase
             ".ipynb" => Notebook.Parse(importingNotebookText, DefaultKernelInfos)
         };
 
-        var importedDocuments = await document.GetImportedDocumentsAsync().ToArrayAsync();
+        var importedDocuments = await document.GetImportsAsync().ToArrayAsync();
 
         importedDocuments.Should().ContainSingle()
                          .Which
@@ -70,33 +70,46 @@ public class ImportNotebookTests : DocumentFormatTestsBase
     }
 
     [Fact]
-    public void Imported_documents_override_parent_document_kernel_aliases()
+    public async Task It_can_import_a_file_that_imports_another_file()
     {
-        
+        // given notebook1 which imports notebook2 which imports notebook3...
 
+        var notebook3Path = Path.GetTempFileName() + ".dib";
+        var notebook3 = new InteractiveDocument
+        {
+            new InteractiveDocumentElement("// notebook3 content", "csharp")
+        };
+        await File.WriteAllTextAsync(notebook3Path, notebook3.ToCodeSubmissionContent());
 
+        var notebook2Path = Path.GetTempFileName() + ".dib";
+        var notebook2 =
+            new InteractiveDocument
+            {
+                new InteractiveDocumentElement($"#!import {notebook3Path}"),
+                new InteractiveDocumentElement("// notebook2 content", "csharp")
+            };
+        await File.WriteAllTextAsync(notebook2Path, notebook2.ToCodeSubmissionContent());
 
+        var notebook1 =
+            new InteractiveDocument
+            {
+                new InteractiveDocumentElement($"#!import {notebook2Path}"),
+                new InteractiveDocumentElement("// notebook1 content", "csharp")
+            };
 
-        // TODO (Imported_documents_override_parent_document_kernel_aliases) write test
-        throw new NotImplementedException();
-    }
+        // round trip notebook1 through the parser
+        notebook1 = CodeSubmission.Parse(notebook1.ToCodeSubmissionContent(), DefaultKernelInfos);
 
-    [Fact]
-    public void Imported_document_metadata_augments_parent_document_kernel_info()
-    {
-        
+        var importedDocuments = await notebook1.GetImportsAsync(recursive: true).ToArrayAsync();
 
-        // TODO (Imported_document_metadata_augments_parent_document_kernel_info) write test
-        throw new NotImplementedException();
-    }
+        importedDocuments.Should().HaveCount(2);
 
-    [Fact]
-    public void It_can_import_a_file_that_imports_another_file()
-    {
+        importedDocuments.ElementAt(0).Elements.Should().ContainSingle()
+                         .Which
+                         .Contents.Should().Contain("notebook2 content");
 
-
-
-        // TODO (It_can_import_a_file_that_imports_another_file) write test
-        throw new NotImplementedException();
+        importedDocuments.ElementAt(1).Elements.Should().ContainSingle()
+                         .Which
+                         .Contents.Should().Contain("notebook3 content");
     }
 }
