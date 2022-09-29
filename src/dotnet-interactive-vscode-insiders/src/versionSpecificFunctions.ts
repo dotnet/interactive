@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as vscode from 'vscode';
-import { CompositeKernel } from './vscode-common/dotnet-interactive/compositeKernel';
 
 export function getNotebookDocumentFromEditor(notebookEditor: vscode.NotebookEditor): vscode.NotebookDocument {
     return notebookEditor.notebook;
