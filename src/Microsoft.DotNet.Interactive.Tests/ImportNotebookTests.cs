@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Microsoft.AspNetCore.Http;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
@@ -22,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Theory]
         [InlineData(".ipynb")]
         [InlineData(".dib")]
-        public async Task It_imports_and_runs(string notebookExt)
+        public async Task It_imports_and_runs_well_known_polyglot_file_formats(string notebookExt)
         {
             using var kernel = new CompositeKernel { 
                 new CSharpKernel(),
@@ -60,15 +59,16 @@ namespace Microsoft.DotNet.Interactive.Tests
                 }
             };
 
-            string filePath = $@".\testnotebook{notebookExt}";
-            string notebookContents = notebookExt switch
+            var notebookContents = notebookExt switch
             {
-                ".ipynb" => document.SerializeToJupyter(),
+                ".ipynb" => document.ToJupyterJson(),
                 ".dib" => document.ToCodeSubmissionContent(),
                 _ => throw new InvalidOperationException($"Unrecognized extension for a notebook: {notebookExt}")
             };
+            
+            var filePath = $@".\testnotebook{notebookExt}";
 
-            File.WriteAllText(filePath, notebookContents);
+            await File.WriteAllTextAsync(filePath, notebookContents);
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 

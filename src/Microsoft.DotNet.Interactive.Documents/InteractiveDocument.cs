@@ -40,19 +40,24 @@ public class InteractiveDocument : IEnumerable
     public IDictionary<string, object> Metadata =>
         _metadata ??= new Dictionary<string, object>();
 
-    public IEnumerable<InteractiveDocument> GetImportedDocuments()
+    public async IAsyncEnumerable<InteractiveDocument> GetImportedDocumentsAsync()
     {
         EnsureImportFieldParserIsInitialized();
 
+        if (!TryGetKernelInfoFromMetadata(Metadata, out var kernelInfos))
+        {
+            kernelInfos = new();
+        }
+
         foreach (var line in GetMagicCommandLines())
         {
-            var parseResult = _importFieldsParser.Parse(line);
+            var parseResult = _importFieldsParser!.Parse(line);
 
             if (!parseResult.Errors.Any())
             {
                 var file = parseResult.GetValueForArgument(_importedFileArgument);
 
-                
+                yield return await LoadAsync(file, kernelInfos);
             }
         }
     }
@@ -138,9 +143,9 @@ public class InteractiveDocument : IEnumerable
         return null;
     }
 
-    public static async Task<InteractiveDocument> LoadInteractiveDocumentAsync(
-    FileInfo file,
-    KernelInfoCollection kernelInfos)
+    public static async Task<InteractiveDocument> LoadAsync(
+        FileInfo file,
+        KernelInfoCollection kernelInfos)
     {
         var fileContents = await File.ReadAllTextAsync(file.FullName);
 
@@ -148,6 +153,9 @@ public class InteractiveDocument : IEnumerable
         {
             ".ipynb" => Notebook.Parse(fileContents, kernelInfos),
             ".dib" => CodeSubmission.Parse(fileContents, kernelInfos),
+
+
+
             _ => throw new InvalidOperationException($"Unrecognized extension for a notebook: {file.Extension}"),
         };
     }
@@ -211,7 +219,7 @@ public class InteractiveDocument : IEnumerable
             return;
         }
 
-        _importedFileArgument = new Argument<FileInfo>("--name")
+        _importedFileArgument = new Argument<FileInfo>("file")
             .ExistingOnly();
 
         var importCommand = new Command("#!import")

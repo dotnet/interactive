@@ -3,6 +3,8 @@
 
 using System;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Xunit;
@@ -16,7 +18,7 @@ public class ImportNotebookTests : DocumentFormatTestsBase
     [InlineData(".ipynb", ".dib")]
     [InlineData(".dib", ".ipynb")]
     [InlineData(".dib", ".dib")]
-    public void It_can_import_one_notebook_into_another(
+    public async Task It_can_import_one_notebook_into_another(
         string importingNotebookExtension,
         string importedNotebookExtension)
     {
@@ -32,10 +34,10 @@ public class ImportNotebookTests : DocumentFormatTestsBase
         switch (importedNotebookExtension)
         {
             case ".dib":
-                File.WriteAllText(importedNotebookPath, importedNotebook.ToCodeSubmissionContent());
+                await File.WriteAllTextAsync(importedNotebookPath, importedNotebook.ToCodeSubmissionContent());
                 break;
             case ".ipynb":
-                File.WriteAllText(importedNotebookPath, importedNotebook.ToJupyterJson());
+                await File.WriteAllTextAsync(importedNotebookPath, importedNotebook.ToJupyterJson());
                 break;
         }
 
@@ -52,21 +54,28 @@ public class ImportNotebookTests : DocumentFormatTestsBase
             ".ipynb" => importingNotebook.ToJupyterJson()
         };
 
-        var document = CodeSubmission.Parse(
-            importingNotebookText, 
-            DefaultKernelInfos);
+        var document = importingNotebookExtension switch
+        {
+            ".dib" => CodeSubmission.Parse(importingNotebookText, DefaultKernelInfos),
+            ".ipynb" => Notebook.Parse(importingNotebookText, DefaultKernelInfos)
+        };
 
-        document.GetImportedDocuments().Should().ContainSingle()
-                .Which
-                .Elements.Should().ContainSingle()
-                .Which
-                .Contents.Should().Contain(importedCode);
+        var importedDocuments = await document.GetImportedDocumentsAsync().ToArrayAsync();
+
+        importedDocuments.Should().ContainSingle()
+                         .Which
+                         .Elements.Should().ContainSingle()
+                         .Which
+                         .Contents.Should().Contain(importedCode);
     }
 
     [Fact]
     public void Imported_documents_override_parent_document_kernel_aliases()
     {
         
+
+
+
 
         // TODO (Imported_documents_override_parent_document_kernel_aliases) write test
         throw new NotImplementedException();
@@ -84,6 +93,9 @@ public class ImportNotebookTests : DocumentFormatTestsBase
     [Fact]
     public void It_can_import_a_file_that_imports_another_file()
     {
+
+
+
         // TODO (It_can_import_a_file_that_imports_another_file) write test
         throw new NotImplementedException();
     }
