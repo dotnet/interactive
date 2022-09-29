@@ -3,6 +3,8 @@
 
 import * as vscode from 'vscode';
 import * as azdata from 'azdata';
+import { CompositeKernel } from './vscode-common/dotnet-interactive';
+import * as contracts from './vscode-common/dotnet-interactive/contracts';
 
 export function getNotebookDocumentFromEditor(notebookEditor: vscode.NotebookEditor): vscode.NotebookDocument {
     return notebookEditor.document;
@@ -29,18 +31,30 @@ export async function replaceNotebookMetadata(notebookUri: vscode.Uri, documentM
     return succeeded;
 }
 
-export async function handleRequestInput(prompt: string, password: boolean, inputTypeHint: string): Promise<string | null | undefined> {
-    let result: string | null | undefined;
-    if (inputTypeHint === 'connectionstring-mssql') {
-        let connection = await azdata.connection.openConnectionDialog();
-        if (connection) {
-            result = await azdata.connection.getConnectionString(connection.connectionId, true);
+export function addCommandHandlers(compositeKernel: CompositeKernel): void {
+    compositeKernel.registerCommandHandler({
+        commandType: contracts.RequestInputType, handle: async (commandInvocation) => {
+            const requestInput = <contracts.RequestInput>commandInvocation.commandEnvelope.command;
+            if (requestInput.inputTypeHint === 'connectionstring-mssql') {
+                let value: string | null | undefined;
+                let connection = await azdata.connection.openConnectionDialog();
+                if (connection) {
+                    value = await azdata.connection.getConnectionString(connection.connectionId, true);
+                }
+
+                if (!value) {
+                    commandInvocation.context.fail('Input request cancelled');
+                } else {
+                    commandInvocation.context.publish({
+                        eventType: contracts.InputProducedType,
+                        event: {
+                            value
+                        },
+                        command: commandInvocation.commandEnvelope,
+                    });
+                }
+            }
+
         }
-    } else {
-        result = (inputTypeHint === 'file')
-            ? await vscode.window.showOpenDialog({ canSelectFiles: true, canSelectFolders: false, title: prompt, canSelectMany: false })
-                .then(v => typeof v?.[0].fsPath === 'undefined' ? null : v[0].fsPath)
-            : await vscode.window.showInputBox({ prompt, password });
-    }
-    return result;
+    });
 }

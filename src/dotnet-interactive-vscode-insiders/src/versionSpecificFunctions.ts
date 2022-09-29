@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as vscode from 'vscode';
+import { CompositeKernel } from './vscode-common/dotnet-interactive/compositeKernel';
 
 export function getNotebookDocumentFromEditor(notebookEditor: vscode.NotebookEditor): vscode.NotebookDocument {
     return notebookEditor.notebook;
@@ -31,10 +32,5 @@ export async function replaceNotebookMetadata(notebookUri: vscode.Uri, documentM
     return succeeded;
 }
 
-export async function handleRequestInput(prompt: string, password: boolean, inputTypeHint: string): Promise<string | null | undefined> {
-    const value = (inputTypeHint === 'file')
-        ? await vscode.window.showOpenDialog({ canSelectFiles: true, canSelectFolders: false, title: prompt, canSelectMany: false })
-            .then(v => typeof v?.[0].fsPath === 'undefined' ? null : v[0].fsPath)
-        : await vscode.window.showInputBox({ prompt, password });
-    return value;
+export function addCommandHandlers(compositeKernel: CompositeKernel): void {
 }
