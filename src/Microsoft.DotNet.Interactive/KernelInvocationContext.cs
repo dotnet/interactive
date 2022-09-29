@@ -75,13 +75,7 @@ namespace Microsoft.DotNet.Interactive
 
         public bool IsFailed => IsComplete && _isFailed;
 
-        public CancellationToken CancellationToken
-        {
-            get
-            {
-                return _cancellationTokenSource.IsCancellationRequested ? new CancellationToken(true) : _cancellationTokenSource.Token;
-            }
-        }
+        public CancellationToken CancellationToken => _cancellationTokenSource.IsCancellationRequested ? new CancellationToken(true) : _cancellationTokenSource.Token;
 
         public void Complete(KernelCommand command)
         {
