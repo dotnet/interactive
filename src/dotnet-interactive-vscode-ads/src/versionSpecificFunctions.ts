@@ -3,8 +3,6 @@
 
 import * as vscode from 'vscode';
 import * as azdata from 'azdata';
-import { CompositeKernel } from './vscode-common/dotnet-interactive';
-import * as contracts from './vscode-common/dotnet-interactive/contracts';
 
 export function getNotebookDocumentFromEditor(notebookEditor: vscode.NotebookEditor): vscode.NotebookDocument {
     return notebookEditor.document;
