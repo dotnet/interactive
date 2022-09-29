@@ -114,19 +114,6 @@ namespace Microsoft.DotNet.Interactive
             return (false, default);
         }
 
-        [DebuggerStepThrough]
-        public static Task<KernelCommandResult> SendAsync(
-            this Kernel kernel,
-            KernelCommand command)
-        {
-            if (kernel is null)
-            {
-                throw new ArgumentNullException(nameof(kernel));
-            }
-
-            return kernel.SendAsync(command, CancellationToken.None);
-        }
-
         public static Task<KernelCommandResult> SubmitCodeAsync(
             this Kernel kernel,
             string code)
@@ -161,7 +148,7 @@ namespace Microsoft.DotNet.Interactive
 
             return kernel;
 
-            KernelInfoCollection CreateKernelInfos(CompositeKernel kernel)
+            static KernelInfoCollection CreateKernelInfos(CompositeKernel kernel)
             {
                 KernelInfoCollection kernelInfos = new();
 
