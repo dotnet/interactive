@@ -11,89 +11,88 @@ using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Documents.ParserServer;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Documents.Tests
+namespace Microsoft.DotNet.Interactive.Documents.Tests;
+
+public class NotebookParserServerTests_Serialization
 {
-    public class NotebookParserServerTests_Serialization
+    private readonly Configuration _configuration =
+        new Configuration()
+            .UsingExtension("json")
+            .SetInteractive(Debugger.IsAttached);
+
+    [Fact]
+    public void NotebookParseRequest_deserialization_contract()
     {
-        private readonly Configuration _configuration =
-            new Configuration()
-                .UsingExtension("json")
-                .SetInteractive(Debugger.IsAttached);
+        var requestJson = GetTestFileContents();
+        var request = NotebookParseOrSerializeRequest.FromJson(requestJson);
+        using var _ = new AssertionScope();
 
-        [Fact]
-        public void NotebookParseRequest_deserialization_contract()
+        request.Type.Should().Be(RequestType.Parse);
+        request.Id.Should().Be("the-id");
+        request.SerializationType.Should().Be(DocumentSerializationType.Dib);
+        request.DefaultLanguage.Should().Be("csharp");
+        request
+            .Should()
+            .BeOfType<NotebookParseRequest>()
+            .Which
+            .RawData
+            .Should()
+            .Equal(new byte[] { 0x01, 0x02, 0x03 });
+    }
+
+    [Fact]
+    public void NotebookSerializeRequest_deserialization_contract()
+    {
+        var requestJson = GetTestFileContents();
+
+        var request = NotebookParseOrSerializeRequest.FromJson(requestJson);
+
+        var json = request.ToJson();
+
+        this.Assent(json, _configuration);
+    }
+
+    [Fact]
+    public void NotebookParseResponse_serialization_contract()
+    {
+        var response = new NotebookParseResponse("the-id", new InteractiveDocument(new List<InteractiveDocumentElement>
         {
-            var requestJson = GetTestFileContents();
-            var request = NotebookParseOrSerializeRequest.FromJson(requestJson);
-            using var _ = new AssertionScope();
+            new("var x = 1;", "csharp")
+        }));
 
-            request.Type.Should().Be(RequestType.Parse);
-            request.Id.Should().Be("the-id");
-            request.SerializationType.Should().Be(DocumentSerializationType.Dib);
-            request.DefaultLanguage.Should().Be("csharp");
-            request
-                .Should()
-                .BeOfType<NotebookParseRequest>()
-                .Which
-                .RawData
-                .Should()
-                .Equal(new byte[] { 0x01, 0x02, 0x03 });
-        }
+        response.Document.Metadata.Add("some-metadata-value", 123);
 
-        [Fact]
-        public void NotebookSerializeRequest_deserialization_contract()
-        {
-            var requestJson = GetTestFileContents();
+        var json = response.ToJson();
 
-            var request = NotebookParseOrSerializeRequest.FromJson(requestJson);
+        this.Assent(json, _configuration);
+    }
 
-            var json = request.ToJson();
+    [Fact]
+    public void NotebookSerializeResponse_serialization_contract()
+    {
+        var response = new NotebookSerializeResponse("the-id", new byte[] { 0x01, 0x02, 0x03 });
 
-            this.Assent(json, _configuration);
-        }
+        var json = response.ToJson();
 
-        [Fact]
-        public void NotebookParseResponse_serialization_contract()
-        {
-            var response = new NotebookParseResponse("the-id", new InteractiveDocument(new List<InteractiveDocumentElement>
-            {
-                new("var x = 1;", "csharp")
-            }));
+        this.Assent(json, _configuration);
+    }
 
-            response.Document.Metadata.Add("some-metadata-value", 123);
+    [Fact]
+    public void NotebookErrorResponse_serialization_contract()
+    {
+        var response = new NotebookErrorResponse("the-id", "some error message");
 
-            var json = response.ToJson();
+        var json = response.ToJson();
 
-            this.Assent(json, _configuration);
-        }
+        this.Assent(json, _configuration);
+    }
 
-        [Fact]
-        public void NotebookSerializeResponse_serialization_contract()
-        {
-            var response = new NotebookSerializeResponse("the-id", new byte[] { 0x01, 0x02, 0x03 });
-
-            var json = response.ToJson();
-
-            this.Assent(json, _configuration);
-        }
-
-        [Fact]
-        public void NotebookErrorResponse_serialization_contract()
-        {
-            var response = new NotebookErrorResponse("the-id", "some error message");
-
-            var json = response.ToJson();
-
-            this.Assent(json, _configuration);
-        }
-
-        private string GetTestFileContents(string extension = "json", [CallerFilePath] string thisFilePath = null, [CallerMemberName] string testName = null)
-        {
-            var fileName = $"{GetType().Name}.{testName}.approved.{extension}";
-            var thisFileDirectory = Path.GetDirectoryName(thisFilePath);
-            var fullFilePath = Path.Combine(thisFileDirectory, fileName);
-            var contents = File.ReadAllText(fullFilePath);
-            return contents;
-        }
+    private string GetTestFileContents(string extension = "json", [CallerFilePath] string thisFilePath = null, [CallerMemberName] string testName = null)
+    {
+        var fileName = $"{GetType().Name}.{testName}.approved.{extension}";
+        var thisFileDirectory = Path.GetDirectoryName(thisFilePath);
+        var fullFilePath = Path.Combine(thisFileDirectory, fileName);
+        var contents = File.ReadAllText(fullFilePath);
+        return contents;
     }
 }
