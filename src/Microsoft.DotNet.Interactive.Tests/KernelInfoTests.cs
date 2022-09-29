@@ -240,7 +240,7 @@ public class KernelInfoTests
             var events = result.KernelEvents.ToSubscribedList();
 
             events.Should()
-                  .ContainSingle<KernelInfoProduced>()
+                  .ContainSingle<KernelInfoProduced>(k => k.KernelInfo.LocalName == "csharp")
                   .Which
                   .KernelInfo
                   .Uri
