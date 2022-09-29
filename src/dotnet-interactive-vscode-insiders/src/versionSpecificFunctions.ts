@@ -32,5 +32,6 @@ export async function replaceNotebookMetadata(notebookUri: vscode.Uri, documentM
     return succeeded;
 }
 
-export function addCommandHandlers(compositeKernel: CompositeKernel): void {
+export async function handleCustomInputRequest(prompt: string, inputTypeHint: string, password: boolean): Promise<{ handled: boolean, result: string | null | undefined }> {
+    return { handled: false, result: undefined };
 }
