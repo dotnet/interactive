@@ -182,6 +182,64 @@ public class KernelInfoTests
         }
 
         [Fact]
+        public async Task when_hosts_have_bidirectional_proxies_RequestKernelInfo_is_not_forwarded_back_to_the_host_that_initiated_the_request()
+        {
+            using var localCompositeKernel = new CompositeKernel("LOCAL")
+            {
+                new FakeKernel("fsharp")
+            };
+
+            
+            using var remoteCompositeKernel = new CompositeKernel("REMOTE")
+            {
+                new CSharpKernel(),
+                new FakeKernel("fsharp", languageName: "fsharp")
+            };
+
+            ConnectHost.ConnectInProcessHost(
+                localCompositeKernel,
+                remoteCompositeKernel);
+
+            var remoteKernelUri = new Uri("kernel://remote/fsharp");
+
+            await localCompositeKernel
+                .Host
+                .ConnectProxyKernelOnDefaultConnectorAsync(
+                    "proxied-fsharp",
+                    remoteKernelUri);
+
+            // make a proxy from local to the remote composite kernel
+            await localCompositeKernel
+                .Host
+                .ConnectProxyKernelOnDefaultConnectorAsync(
+                    "proxied-remote",
+                    remoteCompositeKernel.KernelInfo.Uri);
+            
+            // make a proxy from remote to the local composite kernel
+            await remoteCompositeKernel
+                .Host
+                .ConnectProxyKernelOnDefaultConnectorAsync(
+                    "proxied-local",
+                    localCompositeKernel.KernelInfo.Uri);
+
+            var result = await localCompositeKernel.SendAsync(
+                new RequestKernelInfo());
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should()
+                .ContainSingle<KernelInfoProduced>(e => e.KernelInfo.LocalName == "proxied-fsharp")
+                .Which
+                .KernelInfo
+                .Should()
+                .BeEquivalentTo(new
+                {
+                    LanguageName = "fsharp",
+                    RemoteUri = remoteKernelUri
+                }, c => c.ExcludingMissingMembers());
+        }
+
+        [Fact]
         public async Task It_returns_info_about_unproxied_subkernels_of_remote_composite()
         {
             using var localCompositeKernel = new CompositeKernel("LOCAL-COMPOSITE")
