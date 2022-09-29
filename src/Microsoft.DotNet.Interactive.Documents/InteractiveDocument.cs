@@ -53,21 +53,28 @@ public class InteractiveDocument : IEnumerable
         {
             var parseResult = _importFieldsParser!.Parse(line);
 
-            if (!parseResult.Errors.Any())
+            if (parseResult.CommandResult.Command.Name == "#!import")
             {
-                var file = parseResult.GetValueForArgument(_importedFileArgument);
-
-                var interactiveDocument = await LoadAsync(file, kernelInfos);
-
-                yield return interactiveDocument;
-
-                if (recursive)
+                if (!parseResult.Errors.Any())
                 {
-                    await foreach (var import in interactiveDocument.GetImportsAsync(recursive))
+                    var file = parseResult.GetValueForArgument(_importedFileArgument!);
+
+                    var interactiveDocument = await LoadAsync(file, kernelInfos);
+
+                    yield return interactiveDocument;
+
+                    if (recursive)
                     {
-                        yield return import;
+                        await foreach (var import in interactiveDocument.GetImportsAsync(recursive))
+                        {
+                            yield return import;
+                        }
                     }
-                }    
+                }
+                else if (parseResult.GetValueForArgument(_importedFileArgument!).FullName is { } file)
+                {
+                    throw new FileNotFoundException(file);
+                }
             }
         }
     }

@@ -112,4 +112,25 @@ public class ImportNotebookTests : DocumentFormatTestsBase
                          .Which
                          .Contents.Should().Contain("notebook3 content");
     }
+
+    [Fact]
+    public async Task When_imported_document_does_not_exist_then_it_throws()
+    {
+        var missingNotebookPath = "not-found.dib";
+
+        var notebook1 =
+            new InteractiveDocument
+            {
+                new InteractiveDocumentElement($"#!import {missingNotebookPath}"),
+                new InteractiveDocumentElement("// notebook1 content", "csharp")
+            };
+
+        // round trip notebook1 through the parser
+        notebook1 = CodeSubmission.Parse(notebook1.ToCodeSubmissionContent(), DefaultKernelInfos);
+
+        await notebook1.Invoking(async n => await n.GetImportsAsync().ToArrayAsync())
+                       .Should()
+                       .ThrowAsync<FileNotFoundException>()
+                       .WithMessage("*not-found.dib");
+    }
 }
