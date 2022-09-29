@@ -34,7 +34,6 @@ import { ChildProcessLineAdapter } from './childProcessLineAdapter';
 import { NotebookParserServer } from './notebookParserServer';
 import { registerVariableExplorer } from './variableExplorer';
 import { KernelCommandAndEventChannel } from './DotnetInteractiveChannel';
-import { handleRequestInput } from '../versionSpecificFunctions';
 
 export const KernelIdForJupyter = 'dotnet-interactive-for-jupyter';
 
