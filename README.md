@@ -88,7 +88,7 @@ Full example [here](https://github.com/dotnet/interactive/blob/main/samples/note
 
 There are several ways to get started using .NET with Jupyter, including Jupyter Notebook, JupyterLab, and nteract.
 
-- [Try sample .NET notebooks online using Binder](docs/NotebooksOnBinder.md). This also allows you try out our daily builds, which include preview features of F#.
+- [Try sample .NET notebooks online using Binder](docs/NotebooksOnBinder.md). This also allows you try out our daily builds, including preview features.
 - [Install .NET Interactive](docs/NotebookswithJupyter.md) to create and run .NET notebooks on your machine.
 - [Share your own .NET notebooks with others online using Binder](docs/CreateBinder.md).
 - [Use .NET Interactive with nteract](https://nteract.io/kernels/dotnet)
