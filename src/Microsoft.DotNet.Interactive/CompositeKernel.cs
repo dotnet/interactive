@@ -235,15 +235,28 @@ namespace Microsoft.DotNet.Interactive
             RequestKernelInfo command,
             KernelInvocationContext context)
         {
+            if (command.RoutingSlip.TryAdd(KernelInfo.Uri))
+            {
                 context.Publish(new KernelInfoProduced(KernelInfo, command));
 
                 foreach (var childKernel in ChildKernels)
                 {
-                    if (childKernel.SupportsCommand(command))
+                    var cr = new RequestKernelInfo(targetKernelName: childKernel.KernelInfo.LocalName)
                     {
-                        await childKernel.HandleAsync(command, context);
+                        OriginUri = childKernel.KernelInfo.Uri,
+                        DestinationUri = childKernel.KernelInfo.RemoteUri,
+                        Parent = command
+                    };
+                    if (childKernel.SupportsCommand(cr))
+                    {
+                        await childKernel.HandleAsync(cr, context);
                     }
                 }
+            }
+            else
+            {
+
+            }
         }
 
         private protected override IEnumerable<Parser> GetDirectiveParsersForCompletion(
