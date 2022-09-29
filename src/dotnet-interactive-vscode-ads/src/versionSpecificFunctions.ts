@@ -31,30 +31,15 @@ export async function replaceNotebookMetadata(notebookUri: vscode.Uri, documentM
     return succeeded;
 }
 
-export function addCommandHandlers(compositeKernel: CompositeKernel): void {
-    compositeKernel.registerCommandHandler({
-        commandType: contracts.RequestInputType, handle: async (commandInvocation) => {
-            const requestInput = <contracts.RequestInput>commandInvocation.commandEnvelope.command;
-            if (requestInput.inputTypeHint === 'connectionstring-mssql') {
-                let value: string | null | undefined;
-                let connection = await azdata.connection.openConnectionDialog();
-                if (connection) {
-                    value = await azdata.connection.getConnectionString(connection.connectionId, true);
-                }
-
-                if (!value) {
-                    commandInvocation.context.fail('Input request cancelled');
-                } else {
-                    commandInvocation.context.publish({
-                        eventType: contracts.InputProducedType,
-                        event: {
-                            value
-                        },
-                        command: commandInvocation.commandEnvelope,
-                    });
-                }
-            }
-
+export async function handleCustomInputRequest(prompt: string, inputTypeHint: string, password: boolean): Promise<{ handled: boolean, result: string | null | undefined }> {
+    let result = undefined;
+    let handled = false;
+    if (inputTypeHint === 'connectionstring-mssql') {
+        handled = true;
+        let connection = await azdata.connection.openConnectionDialog();
+        if (connection) {
+            result = await azdata.connection.getConnectionString(connection.connectionId, true);
         }
-    });
+    }
+    return { handled, result };
 }
