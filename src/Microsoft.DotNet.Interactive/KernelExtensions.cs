@@ -139,21 +139,21 @@ namespace Microsoft.DotNet.Interactive
             return kernel.SendAsync(new SubmitCode(code), CancellationToken.None);
         }
 
-        public static T UseImportMagicCommand<T>(this T kernel) 
+        public static T UseImportMagicCommand<T>(this T kernel)
             where T : Kernel
         {
             var command = new Command("#!import", "Imports and runs another notebook.");
             command.AddArgument(new Argument<FileInfo>("notebookFile").ExistingOnly());
             command.Handler = CommandHandler.Create(
-                async (FileInfo notebookFile, KernelInvocationContext context)
-                =>
+                async (FileInfo notebookFile, KernelInvocationContext _) =>
                 {
-                    var document = await InteractiveDocument.LoadInteractiveDocumentAsync(notebookFile,
-                        CreateKernelInfos(kernel.RootKernel as CompositeKernel));
+                    var document = await InteractiveDocument.LoadAsync(
+                                       notebookFile,
+                                       CreateKernelInfos(kernel.RootKernel as CompositeKernel));
+
                     foreach (var element in document.Elements)
                     {
-                        var command = new SubmitCode(element.Contents, element.KernelName);
-                        await kernel.RootKernel.SendAsync(command);
+                        await kernel.RootKernel.SendAsync(new SubmitCode(element.Contents, element.KernelName));
                     }
                 });
 

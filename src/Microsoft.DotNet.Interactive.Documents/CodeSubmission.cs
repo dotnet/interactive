@@ -82,8 +82,6 @@ namespace Microsoft.DotNet.Interactive.Documents
                     {
                         // unrecognized language, probably a magic command
                         currentElementLines.Add(line);
-
-                        document.AddMagicCommandLine(line);
                     }
                 }
                 else
