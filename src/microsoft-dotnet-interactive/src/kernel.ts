@@ -76,6 +76,7 @@ export class Kernel {
     }
 
     protected async handleRequestKernelInfo(invocation: IKernelCommandInvocation): Promise<void> {
+        this.kernelInfo.localName;//?
         const eventEnvelope: contracts.KernelEventEnvelope = {
             eventType: contracts.KernelInfoProducedType,
             command: invocation.commandEnvelope,
@@ -129,10 +130,12 @@ export class Kernel {
     // nothing is ever going to look at the promise we return here.
     async send(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         this.ensureCommandTokenAndId(commandEnvelope);
-        tryAddUriToRoutingSlip(commandEnvelope, getKernelUri(this));
-        commandEnvelope.routingSlip;//?
         KernelInvocationContext.establish(commandEnvelope);
-        return this.getScheduler().runAsync(commandEnvelope, (value) => this.executeCommand(value));
+        return this.getScheduler().runAsync(commandEnvelope, (value) => {
+            return this.executeCommand(value).finally(() => {
+                tryAddUriToRoutingSlip(commandEnvelope, getKernelUri(this));
+            });
+        });
     }
 
     private async executeCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
@@ -155,6 +158,9 @@ export class Kernel {
     }
 
     handleCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
+        if (!commandEnvelope.routingSlip) {
+            commandEnvelope.routingSlip = [];
+        }
         return new Promise<void>(async (resolve, reject) => {
             let context = KernelInvocationContext.establish(commandEnvelope);
 
@@ -162,14 +168,13 @@ export class Kernel {
             context.handlingKernel = this;
             let isRootCommand = areCommandsTheSame(context.commandEnvelope, commandEnvelope);
 
-            let eventSubscription: rxjs.Subscription | undefined = undefined;//?
+            let eventSubscription: rxjs.Subscription | undefined = undefined;
 
             if (isRootCommand) {
                 this.name;//?
                 Logger.default.info(`kernel ${this.name} of type ${KernelType[this.kernelType]} subscribing to context events`);
                 eventSubscription = context.kernelEvents.pipe(rxjs.map(e => {
-                    const message = `kernel ${this.name} of type ${KernelType[this.kernelType]} saw event ${e.eventType} with token ${e.command?.token}`;
-                    message;//?
+                    const message = `kernel ${this.name} of type ${KernelType[this.kernelType]} saw event ${e.eventType} with token ${e.command?.token}`; Logger.default.info(message);
                     Logger.default.info(message);
                     tryAddUriToRoutingSlip(e, getKernelUri(this));
                     return e;
