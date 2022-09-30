@@ -117,10 +117,16 @@ export class CompositeKernel extends Kernel {
     }
 
     findKernelByUri(uri: string): Kernel | undefined {
+        if (this.kernelInfo.uri === uri) {
+            return this;
+        }
         return this._childKernels.tryGetByUri(uri);
     }
 
     findKernelByName(name: string): Kernel | undefined {
+        if (this.kernelInfo.localName === name) {
+            return this;
+        }
         return this._childKernels.tryGetByAlias(name);
     }
 
