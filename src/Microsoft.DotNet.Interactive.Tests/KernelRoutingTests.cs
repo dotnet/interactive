@@ -244,7 +244,6 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
             new[]
             {
                 new Uri("kernel://local/.NET", UriKind.Absolute),
-                new Uri("kernel://local/csharp", UriKind.Absolute),
                 new Uri("kernel://local/fsharp", UriKind.Absolute)
             });
     }
