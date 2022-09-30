@@ -33,7 +33,7 @@ We recently introduced the [.NET Interactive Notebooks](https://marketplace.visu
 - JavaScript
 - HTML 
 - [Mermaid](https://mermaid-js.github.io/mermaid/#/)
-- SQL and KQL (Kuito), built in collaboration with the  Azure Data / SQL team 💙
+- SQL and KQL (Kusto), built in collaboration with the  Azure Data / SQL team 💙
 
 **What languages are we exploring?** 
 - Python, Julia, and R 
