@@ -118,12 +118,10 @@ export class KernelInvocationContext implements Disposable {
 
         if (this.handlingKernel) {
             tryAddUriToRoutingSlip(kernelEvent, getKernelUri(this.handlingKernel));
-            kernelEvent.routingSlip;//?
 
         } else {
             kernelEvent;//?
         }
-        this._commandEnvelope;//?
         if (command === null ||
             command === undefined ||
             areCommandsTheSame(command!, this._commandEnvelope) ||
@@ -146,9 +144,8 @@ export class KernelInvocationContext implements Disposable {
 }
 
 export function areCommandsTheSame(envelope1: contracts.KernelCommandEnvelope, envelope2: contracts.KernelCommandEnvelope): boolean {
-    envelope1;//?
-    envelope2;//?
-    envelope1 === envelope2;//?
-    return envelope1 === envelope2
-        || (envelope1?.commandType === envelope2?.commandType && envelope1?.token === envelope2?.token && envelope1?.id === envelope2?.id);
+    const sameReference = envelope1 === envelope2;//?
+    const sameCommandType = envelope1?.commandType === envelope2?.commandType;//?
+    return sameReference
+        || (sameCommandType && envelope1?.token === envelope2?.token && envelope1?.id === envelope2?.id);
 }
