@@ -38,6 +38,15 @@ export class CompositeKernel extends Kernel {
     }
 
     protected override async handleRequestKernelInfo(invocation: IKernelCommandInvocation): Promise<void> {
+
+        const eventEnvelope: contracts.KernelEventEnvelope = {
+            eventType: contracts.KernelInfoProducedType,
+            command: invocation.commandEnvelope,
+            event: <contracts.KernelInfoProduced>{ kernelInfo: this.kernelInfo }
+        };//?
+
+        invocation.context.publish(eventEnvelope);
+
         for (let kernel of this._childKernels) {
             if (kernel.supportsCommand(invocation.commandEnvelope.commandType)) {
                 await kernel.handleCommand({ command: {}, commandType: contracts.RequestKernelInfoType });
