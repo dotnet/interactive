@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Connection
 {
-    internal interface IJupyterKernelConnection : IDisposable
+    public interface IJupyterKernelConnection : IDisposable
     {
         Task StartAsync();
 

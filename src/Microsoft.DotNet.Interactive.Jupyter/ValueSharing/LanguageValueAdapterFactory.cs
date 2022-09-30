@@ -1,6 +1,7 @@
 ﻿using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging.Comms;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
+using Microsoft.DotNet.Interactive.Utility;
 using System;
 using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
@@ -66,7 +67,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing
 
         private async Task<bool> RunOnKernelAsync(string code)
         {
-            var executeRequest = Messaging.Message.Create(new ExecuteRequest(code,
+            var executeRequest = Messaging.Message.Create(new ExecuteRequest(code.NormalizeLineEndings(),
                                                                              silent: true,
                                                                              storeHistory: false));
 

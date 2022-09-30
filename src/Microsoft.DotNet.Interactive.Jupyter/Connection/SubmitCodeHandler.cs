@@ -1,6 +1,7 @@
 ﻿using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using System.Linq;
@@ -19,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
 
         public override async Task HandleCommandAsync(SubmitCode command, ICommandExecutionContext context, CancellationToken token)
         {
-            var executeRequest = Messaging.Message.Create(new ExecuteRequest(command.Code));
+            var executeRequest = Messaging.Message.Create(new ExecuteRequest(command.Code.NormalizeLineEndings()));
             var executeReply = Receiver.Messages.ChildOf(executeRequest)
                                     .SelectContent()
                                     .Do(replyMessage => HandleReplyMessage(replyMessage, command, context))

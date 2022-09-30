@@ -3,9 +3,7 @@ using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging.Comms;
 using Microsoft.DotNet.Interactive.Jupyter.ValueSharing;
-using Microsoft.DotNet.Interactive.ValueSharing;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
@@ -13,20 +11,20 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Connection
 {
-    internal class JupyterKernelConnector : IKernelConnector
+    public class JupyterKernelConnector : IKernelConnector
     {
         private readonly IJupyterConnection _jupyterConnection;
-        private readonly string _kernelType;
+        private readonly string _kernelSpecName;
 
-        public JupyterKernelConnector(IJupyterConnection jupyterConnection, string kernelType)
+        public JupyterKernelConnector(IJupyterConnection jupyterConnection, string kernelSpecName)
         {
             _jupyterConnection = jupyterConnection;
-            _kernelType = kernelType;
+            _kernelSpecName = kernelSpecName;
         }
 
         public async Task<Kernel> CreateKernelAsync(string kernelName)
         {
-            var kernelConnection = await _jupyterConnection.CreateKernelConnectionAsync(_kernelType);
+            var kernelConnection = await _jupyterConnection.CreateKernelConnectionAsync(_kernelSpecName);
             var remoteUri = _jupyterConnection.TargetUri;
             var sender = kernelConnection.Sender;
             var receiver = kernelConnection.Receiver;

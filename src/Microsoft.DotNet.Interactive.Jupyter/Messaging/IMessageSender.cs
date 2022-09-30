@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Messaging
 {
-    internal interface IMessageSender
+    public interface IMessageSender
     {
         Task SendAsync(Message message);
     }
