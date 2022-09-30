@@ -29,16 +29,14 @@ We recently introduced the [.NET Interactive Notebooks](https://marketplace.visu
 
 **Languages supported**
 - C# and F# 
-- PowerShell built in collaboration with the PowerShell team 💙
+- PowerShell, built in collaboration with the PowerShell team 💙
 - JavaScript
 - HTML 
-- SQL built in collaboration with the  Azure Data / SQL team 💙
-
-**Coming soon**
-- Kusto 
+- [Mermaid](https://mermaid-js.github.io/mermaid/#/)
+- SQL and KQL (Kuito), built in collaboration with the  Azure Data / SQL team 💙
 
 **What languages are we exploring?** 
-- Python and R 
+- Python, Julia, and R 
 
 ### Variable Sharing 
 
