@@ -38,18 +38,26 @@ export class CompositeKernel extends Kernel {
     }
 
     protected override async handleRequestKernelInfo(invocation: IKernelCommandInvocation): Promise<void> {
+        const kernelUri = getKernelUri(this);
+        if (tryAddUriToRoutingSlip(invocation.commandEnvelope, kernelUri)) {
+            const eventEnvelope: contracts.KernelEventEnvelope = {
+                eventType: contracts.KernelInfoProducedType,
+                command: invocation.commandEnvelope,
+                event: <contracts.KernelInfoProduced>{ kernelInfo: this.kernelInfo }
+            };
 
-        const eventEnvelope: contracts.KernelEventEnvelope = {
-            eventType: contracts.KernelInfoProducedType,
-            command: invocation.commandEnvelope,
-            event: <contracts.KernelInfoProduced>{ kernelInfo: this.kernelInfo }
-        };//?
+            tryAddUriToRoutingSlip(eventEnvelope, kernelUri);
+            invocation.context.publish(eventEnvelope);
 
-        invocation.context.publish(eventEnvelope);
-
-        for (let kernel of this._childKernels) {
-            if (kernel.supportsCommand(invocation.commandEnvelope.commandType)) {
-                await kernel.handleCommand({ command: {}, commandType: contracts.RequestKernelInfoType });
+            for (let kernel of this._childKernels) {
+                const commandEnvelope = <contracts.KernelCommandEnvelope>JSON.parse(JSON.stringify(invocation.commandEnvelope));
+                commandEnvelope.command.targetKernelName = kernel.name;
+                commandEnvelope.command.originUri = kernel.kernelInfo.uri;
+                commandEnvelope.command.destinationUri = kernel.kernelInfo.remoteUri;
+                commandEnvelope.id = undefined;
+                if (kernel.supportsCommand(commandEnvelope.commandType)) {
+                    await kernel.handleCommand(commandEnvelope);
+                }
             }
         }
     }
@@ -70,7 +78,6 @@ export class CompositeKernel extends Kernel {
             next: (event) => {
                 event;//?
                 tryAddUriToRoutingSlip(event, getKernelUri(this));
-                event;//?
                 this.publishEvent(event);
             }
         });
@@ -92,7 +99,6 @@ export class CompositeKernel extends Kernel {
         const invocationContext = KernelInvocationContext.current;
 
         if (invocationContext) {
-            invocationContext.commandEnvelope;//?
             invocationContext.publish({
                 eventType: contracts.KernelInfoProducedType,
                 event: <contracts.KernelInfoProduced>{
@@ -222,7 +228,7 @@ class KernelCollection implements Iterable<Kernel> {
             next: () => {
                 return {
                     value: this._kernels[counter++],
-                    done: counter > this._kernels.length //?
+                    done: counter > this._kernels.length
                 };
             }
         };
@@ -281,7 +287,7 @@ class KernelCollection implements Iterable<Kernel> {
         });
 
         if (this._compositeKernel.host) {
-            kernel.kernelInfo.uri = `${this._compositeKernel.host.uri}/${kernel.name}`;//?
+            kernel.kernelInfo.uri = `${this._compositeKernel.host.uri}/${kernel.name}`;
             this._kernelsByLocalUri.set(kernel.kernelInfo.uri, kernel);
         }
 

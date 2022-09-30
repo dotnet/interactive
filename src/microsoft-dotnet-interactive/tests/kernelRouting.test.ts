@@ -34,8 +34,8 @@ describe("kernelRouting", () => {
 
         expect(Array.from(command.routingSlip!.values())).to.deep.equal(
             [
-                'kernel://local/vscode',
-                'kernel://local/javascript'
+                'kernel://local/javascript',
+                'kernel://local/vscode'
             ]);
     });
 
@@ -107,11 +107,52 @@ describe("kernelRouting", () => {
 
         expect(Array.from(command.routingSlip!.values())).to.deep.equal(
             [
-                'kernel://local',
                 'kernel://local/javascript',
+                'kernel://remote/javascript',
                 'kernel://remote',
-                'kernel://remote/javascript']);
+                'kernel://local'
+            ]);
     });
+
+    // it.only("when hosts have bidirectional proxies RequestKernelInfo is not forwarded back to the host that initiated the request", async () => {
+    //     const inMemory = createInMemoryChannels();
+
+    //     let remoteCompositeKernel = new CompositeKernel("remote-kernel");
+    //     remoteCompositeKernel.add(new JavascriptKernel("javascript"));
+    //     remoteCompositeKernel.defaultKernelName = "javascript";
+
+
+    //     const remoteHost = new KernelHost(remoteCompositeKernel, inMemory.remote.sender, inMemory.remote.receiver, "kernel://remote");
+
+    //     let localCompositeKernel = new CompositeKernel("local-kernel");
+    //     localCompositeKernel.add(new JavascriptKernel("typescript"));
+    //     localCompositeKernel.defaultKernelName = "typescript";
+
+    //     const localHost = new KernelHost(localCompositeKernel, inMemory.local.sender, inMemory.local.receiver, "kernel://local");
+
+    //     localHost.connectProxyKernelOnDefaultConnector("remote-kernel-proxy", "kernel://remote");
+    //     remoteHost.connectProxyKernelOnDefaultConnector("local-kernel-proxy", "kernel://local");
+
+    //     remoteHost.connect();
+    //     localHost.connect();
+
+    //     let events: contracts.KernelEventEnvelope[] = [];
+    //     let command: contracts.KernelCommandEnvelope = {
+    //         commandType: contracts.RequestKernelInfoType,
+    //         command: <contracts.RequestKernelInfo>{
+    //             targetKernelName: localCompositeKernel.name
+    //         }
+    //     };
+
+    //     localCompositeKernel.kernelEvents.subscribe(e => events.push(e));
+
+    //     await localCompositeKernel.send(command);
+
+    //     expect(command.routingSlip).not.to.be.undefined;
+
+    //     expect(Array.from(command.routingSlip!.values())).to.deep.equal(
+    //         ['kernel://local']);
+    // });
 
     it.skip("event routing slip contains proxy kernels that have been traversed", async () => {
         let remoteCompositeKernel = new CompositeKernel("remote-kernel");
