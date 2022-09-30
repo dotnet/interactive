@@ -4,10 +4,10 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Connection
 {
-    internal interface IJupyterConnection : IDisposable
+    public interface IJupyterConnection : IDisposable
     {
         Uri TargetUri { get; }
 
-        Task<IJupyterKernelConnection> CreateKernelConnectionAsync(string kernelType);
+        Task<IJupyterKernelConnection> CreateKernelConnectionAsync(string kernelSpec);
     }
 }

@@ -93,10 +93,8 @@ library(jsonlite);
         {
             StringBuilder builder = new StringBuilder(_commTargetDefinition);
             builder.Append($"comm_manager()$register_target('{targetName}', .value_adapter_comm_env$value_adapter_connect_to_comm);");
-            
 
-            var minifiedr = builder.Replace(Environment.NewLine, "").Replace("  ", "").ToString();
-            return minifiedr;
+            return builder.ToString();
         }
     }
 }
