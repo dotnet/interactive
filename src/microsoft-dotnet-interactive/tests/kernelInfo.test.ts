@@ -31,7 +31,9 @@ describe("kernelInfo", () => {
                 languageVersion: undefined,
                 localName: 'root',
                 supportedDirectives: [],
-                supportedKernelCommands: [{ name: 'RequestKernelInfo' }]
+                supportedKernelCommands: [
+                    { name: 'RequestKernelInfo' }
+                ]
             },
             {
                 aliases: ['child1Js'],
@@ -76,9 +78,11 @@ describe("kernelInfo", () => {
             const kernelInfos = events.filter(e => e.eventType === contracts.KernelInfoProducedType).map(e => (<contracts.KernelInfoProduced>(e.event)).kernelInfo.uri);
 
             expect(kernelInfos.length).to.equal(3);
-            expect(kernelInfos).to.deep.equal(['kernel://local',
+            expect(kernelInfos).to.deep.equal([
+                'kernel://local',
                 'kernel://local/child1',
-                'kernel://local/child2']);
+                'kernel://local/child2'
+            ]);
         });
 
         it("when kernels are added it produces KernelInfoProduced events", () => {
