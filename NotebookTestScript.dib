@@ -1,5 +1,15 @@
 #!markdown
 
+# Verify execution count.
+
+The next code cell should have empty square brackets on the left, e.g., "`[ ]`".  Execute the cell and upon completion there should be a number there; probably "`[1]`".  Execute the cell again and verify that the number in the brackets increments by one, e.g., "`[2]`".
+
+#!csharp
+
+1+1
+
+#!markdown
+
 # Execute the following cell.
 
 You'll notice a counter that appears and starts incrementing.  After a second or two, stop the cell.  Your output should look similar to:
