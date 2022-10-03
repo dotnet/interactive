@@ -157,12 +157,13 @@ namespace Microsoft.DotNet.Interactive
 
                         TryCancel();
                     }
+
+                    _isFailed = true;
                 }
 
-                IsComplete = completingMainCommand;
                 if (completingMainCommand)
                 {
-                    _isFailed = !succeed;
+                    IsComplete = true;
                 }
             }
 

@@ -30,7 +30,6 @@ public class VSCodeClientKernelExtension : IKernelExtension
             jsKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(SubmitCode)));
             jsKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValue)));
             jsKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValueInfos)));
-            jsKernel.UseValueSharing(new JavaScriptValueDeclarer());
 
             root.VisitSubkernels(subkernel =>
             {

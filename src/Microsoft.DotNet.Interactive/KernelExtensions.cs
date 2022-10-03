@@ -234,32 +234,13 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
-        public static ProxyKernel UseValueSharing(
-            this ProxyKernel kernel,
-            IKernelValueDeclarer kernelValueDeclarer)
-        {
-            if (kernelValueDeclarer is null)
-            {
-                throw new ArgumentNullException(nameof(kernelValueDeclarer));
-            }
-
-            kernel.UseValueSharing();
-            kernel.ValueDeclarer = kernelValueDeclarer;
-            return kernel;
-        }
-
         public static T UseValueSharing<T>(this T kernel) where T : Kernel
         {
-            var valueNameArg = new Argument<string>(
+            var sourceValueNameArg = new Argument<string>(
                 "name",
-                "The name of the variable to create in the destination kernel");
-
-            if (kernel.ParentKernel is { } composite)
-            {
-                
-            }
-
-            valueNameArg.AddCompletions(_ =>
+                "The name of the value to share. (This is also the default name value created in the destination kernel, unless --as is used to specify a different one.)");
+            
+            sourceValueNameArg.AddCompletions(_ =>
             {
                 if (kernel.ParentKernel is { } composite)
                 {
@@ -284,7 +265,7 @@ namespace Microsoft.DotNet.Interactive
 
             var fromKernelOption = new Option<string>(
                 "--from",
-                "The name of the kernel where the variable has been previously declared");
+                "The name of the kernel to get the value from.");
 
             fromKernelOption.AddCompletions(_ =>
             {
@@ -305,12 +286,12 @@ namespace Microsoft.DotNet.Interactive
                     HtmlFormatter.MimeType, 
                     PlainTextFormatter.MimeType);
 
-            var asOption = new Option<string>("--as", "The name of the value in the importing kernel.");
+            var asOption = new Option<string>("--as", "The name to give the the value in the importing kernel.");
 
-            var share = new Command("#!share", "Share a value between subkernels")
+            var share = new Command("#!share", "Get a value from one kernel and create a copy (or a reference if the kernels are in the same process) in another.")
             {
                 fromKernelOption,
-                valueNameArg,
+                sourceValueNameArg,
                 mimeTypeOption,
                 asOption
             };
@@ -318,7 +299,7 @@ namespace Microsoft.DotNet.Interactive
             share.SetHandler(async cmdLineContext =>
             {
                 var from = cmdLineContext.ParseResult.GetValueForOption(fromKernelOption);
-                var valueName = cmdLineContext.ParseResult.GetValueForArgument(valueNameArg);
+                var valueName = cmdLineContext.ParseResult.GetValueForArgument(sourceValueNameArg);
                 var context = cmdLineContext.GetService<KernelInvocationContext>();
                 var mimeType = cmdLineContext.ParseResult.GetValueForOption(mimeTypeOption);
                 var importAsName = cmdLineContext.ParseResult.GetValueForOption(asOption);
@@ -399,22 +380,17 @@ namespace Microsoft.DotNet.Interactive
                         value = valueProduced.FormattedValue.Value;
                     }
                 }
-          
+
                 await toInProcessKernel.SetValueAsync(declarationName, value);
 
                 return;
             }
 
-            var declarer = importingKernel.GetValueDeclarer();
-
-            if (declarer.TryGetValueDeclaration(valueProduced, declarationName, out KernelCommand command))
-            {
-                await importingKernel.SendAsync(command);
-            }
-            else
-            {
-                throw new ArgumentException($"Value '{declarationName}' cannot be declared in kernel '{importingKernel.Name}'");
-            }
+            await importingKernel.SendAsync(
+                new SendValue(
+                    valueProduced.Name,
+                    valueProduced.Value,
+                    valueProduced.FormattedValue));
         }
 
         public static TKernel UseWho<TKernel>(this TKernel kernel)

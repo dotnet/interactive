@@ -3,32 +3,31 @@
 
 using System;
 using System.Text.Json.Serialization;
-using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Events;
+namespace Microsoft.DotNet.Interactive.Commands;
 
-public class ValueProduced : KernelEvent
+public class SendValue : KernelCommand
 {
-    public ValueProduced(
-        object value,
+    public SendValue(
         string name,
+        object value,
         FormattedValue formattedValue,
-        RequestValue command) : base(command)
+        string targetKernelName = null) : base(targetKernelName)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
         }
 
-        Value = value;
         Name = name;
-        FormattedValue = formattedValue ?? throw new ArgumentNullException(nameof(formattedValue));
+        Value = value;
+        FormattedValue = formattedValue;
     }
 
-    [JsonIgnore] 
-    public object Value { get; }
+    public FormattedValue FormattedValue { get; }
 
     public string Name { get; }
 
-    public FormattedValue FormattedValue { get; }
+    [JsonIgnore] 
+    public object Value { get; }
 }

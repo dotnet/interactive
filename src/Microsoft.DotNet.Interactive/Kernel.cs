@@ -18,7 +18,6 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Parsing;
-using Microsoft.DotNet.Interactive.ValueSharing;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Kernel>;
 using Pocket;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
@@ -791,6 +790,10 @@ namespace Microsoft.DotNet.Interactive
                     case (RequestKernelInfo requestKernelInfo, IKernelCommandHandler<RequestKernelInfo> requestKernelInfoHandler):
                         SetHandler(requestKernelInfo, requestKernelInfoHandler);
                         break;
+
+                    default:
+                        // FIX: (TrySetHandler) 
+                        break;
                 }
             }
         }
@@ -878,8 +881,6 @@ namespace Microsoft.DotNet.Interactive
 
             return false;
         }
-
-        internal virtual IKernelValueDeclarer GetValueDeclarer() => KernelValueDeclarer.Default;
 
         public override string ToString()
         {

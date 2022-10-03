@@ -8,44 +8,45 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
-namespace Microsoft.DotNet.Interactive.ValueSharing
+namespace Microsoft.DotNet.Interactive.ValueSharing;
+
+internal class JavaScriptValueDeclarer 
 {
-    public class JavaScriptValueDeclarer : IKernelValueDeclarer
+    // FIX: (JavaScriptValueDeclarer) refactor away / make internal
+
+    private static readonly JsonSerializerOptions _serializerOptions;
+
+    static JavaScriptValueDeclarer()
     {
-        private static readonly JsonSerializerOptions _serializerOptions;
-
-        static JavaScriptValueDeclarer()
+        _serializerOptions = new JsonSerializerOptions
         {
-            _serializerOptions = new JsonSerializerOptions
+            WriteIndented = false,
+            DefaultIgnoreCondition = JsonIgnoreCondition.Never,
+            NumberHandling = JsonNumberHandling.AllowReadingFromString |
+                             JsonNumberHandling.AllowNamedFloatingPointLiterals,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            Converters =
             {
-                WriteIndented = false,
-                DefaultIgnoreCondition = JsonIgnoreCondition.Never,
-                NumberHandling = JsonNumberHandling.AllowReadingFromString |
-                                 JsonNumberHandling.AllowNamedFloatingPointLiterals,
-                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                Converters =
-                {
-                    new TableSchemaFieldTypeConverter(),
-                    new TabularDataResourceConverter(),
-                    new DataDictionaryConverter()
-                }
-            };
-        }
-
-        public bool TryGetValueDeclaration(
-            ValueProduced valueProduced,
-            string declareAsName,
-            out KernelCommand command)
-        {
-            if (valueProduced.Value is { } value)
-            {
-                var code = $"{valueProduced.Name} = {JsonSerializer.Serialize(value, _serializerOptions)};";
-                command = new SubmitCode(code);
-                return true;
+                new TableSchemaFieldTypeConverter(),
+                new TabularDataResourceConverter(),
+                new DataDictionaryConverter()
             }
+        };
+    }
 
-            command = null;
-            return false;
+    public bool TryGetValueDeclaration(
+        ValueProduced valueProduced,
+        string declareAsName,
+        out KernelCommand command)
+    {
+        if (valueProduced.Value is { } value)
+        {
+            var code = $"{valueProduced.Name} = {JsonSerializer.Serialize(value, _serializerOptions)};";
+            command = new SubmitCode(code);
+            return true;
         }
+
+        command = null;
+        return false;
     }
 }

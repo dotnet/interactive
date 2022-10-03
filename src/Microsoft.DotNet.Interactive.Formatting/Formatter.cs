@@ -209,14 +209,17 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     .Select((x, index) => (x.type, x.mimeType, index))
                     .ToArray();
 
-            if (candidates.Length > 0)
+            switch (candidates.Length)
             {
-                Array.Sort(candidates, new SortByRelevanceAndOrder<(Type type, string mimeType, int index)>(tup => tup.type, tup => tup.index));
-                return candidates[0].mimeType;
-            }
-            else
-            {
-                return null;
+                case 0:
+                    return null;
+
+                case 1:
+                    return candidates[0].mimeType;
+
+                default:
+                    Array.Sort(candidates, new SortByRelevanceAndOrder<(Type type, string mimeType, int index)>(tup => tup.type, tup => tup.index));
+                    return candidates[0].mimeType;
             }
         }
 
@@ -229,14 +232,17 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     .Select((x, index) => (x.type, x.mimeTypes, index))
                     .ToArray();
 
-            if (candidates.Length > 0)
+            switch (candidates.Length)
             {
-                Array.Sort(candidates, new SortByRelevanceAndOrder<(Type type, HashSet<string> mimeTypes, int index)>(tup => tup.type, tup => tup.index));
-                return candidates[0].mimeTypes;
-            }
-            else
-            {
-                return null;
+                case 0:
+                    return null;
+
+                case 1:
+                    return candidates[0].mimeTypes;
+
+                default:
+                    Array.Sort(candidates, new SortByRelevanceAndOrder<(Type type, HashSet<string> mimeTypes, int index)>(tup => tup.type, tup => tup.index));
+                    return candidates[0].mimeTypes;
             }
         }
 
@@ -648,10 +654,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             switch (candidates.Length)
             {
+                case 0:
+                    return null;
+
                 case 1:
                     return candidates[0].formatter;
 
-                case > 0:
+                default:
                     Array.Sort(candidates, new SortByRelevanceAndOrder<(ITypeFormatter formatter, int index)>(tup => tup.formatter.Type, tup => tup.index));
 
                     // Compose the possible formatters into one formatter, trying each in turn
@@ -668,9 +677,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                         return false;
                     }, mimeType, candidates[0].formatter.Type);
-
-                default:
-                    return null;
             }
         }
 

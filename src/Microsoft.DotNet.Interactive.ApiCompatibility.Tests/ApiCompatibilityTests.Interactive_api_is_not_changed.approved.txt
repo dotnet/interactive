@@ -211,7 +211,6 @@ Microsoft.DotNet.Interactive
     public static T UseImportMagicCommand<T>()
     public static T UseLogMagicCommand<T>()
     public static T UseQuitCommand<T>(System.Func<System.Threading.Tasks.Task> onQuitAsync = null)
-    public static Microsoft.DotNet.Interactive.Connection.ProxyKernel UseValueSharing(Microsoft.DotNet.Interactive.ValueSharing.IKernelValueDeclarer kernelValueDeclarer)
     public static T UseValueSharing<T>()
     public static TKernel UseWho<TKernel>()
     public static System.Void VisitSubkernels(System.Action<Kernel> onVisit, System.Boolean recursive = False)
@@ -437,6 +436,11 @@ Microsoft.DotNet.Interactive.Commands
     .ctor(System.String language, System.String code, System.String targetKernelName = vscode)
     public System.String Code { get;}
     public System.String Language { get;}
+  public class SendValue : KernelCommand
+    .ctor(System.String name, System.Object value, Microsoft.DotNet.Interactive.FormattedValue formattedValue, System.String targetKernelName = null)
+    public Microsoft.DotNet.Interactive.FormattedValue FormattedValue { get;}
+    public System.String Name { get;}
+    public System.Object Value { get;}
   public enum SubmissionType : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
     Run=0
     Diagnose=1
@@ -939,11 +943,9 @@ Microsoft.DotNet.Interactive.Utility
     public static Microsoft.DotNet.Interactive.LinePositionSpan GetLinePositionSpanFromStartAndEndIndices(System.String code, System.Int32 startIndex, System.Int32 endIndex)
     public static Microsoft.DotNet.Interactive.LinePosition GetPositionFromCursorOffset(System.String code, System.Int32 cursorOffset)
 Microsoft.DotNet.Interactive.ValueSharing
-  public abstract class IKernelValueDeclarer
-    public System.Boolean TryGetValueDeclaration(Microsoft.DotNet.Interactive.Events.ValueProduced valueProduced, System.String declareAsName, ref Microsoft.DotNet.Interactive.Commands.KernelCommand& command)
   public abstract class ISupportSetClrValue
     public System.Threading.Tasks.Task SetValueAsync(System.String name, System.Object value, System.Type declaredType = null)
-  public class JavaScriptValueDeclarer, IKernelValueDeclarer
+  public class JavaScriptValueDeclarer
     .ctor()
     public System.Boolean TryGetValueDeclaration(Microsoft.DotNet.Interactive.Events.ValueProduced valueProduced, System.String declareAsName, ref Microsoft.DotNet.Interactive.Commands.KernelCommand& command)
   public class KernelValue

@@ -221,14 +221,21 @@ namespace Microsoft.DotNet.Interactive.Tests
             var submitCode = new SubmitCode(@"
 #!javascript
 #!share --from csharp csharpVariable");
-            await compositeKernel.SendAsync(submitCode);
+            var result = await compositeKernel.SendAsync(submitCode);
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should().NotContainErrors();
 
             remoteCommands.Should()
-                          .ContainSingle<SubmitCode>()
+                          .ContainSingle<SendValue>()
                           .Which
-                          .Code
+                          .Name
                           .Should()
-                          .Be("csharpVariable = 123;");
+                          .Be("csharpVariable");
+
+            // FIX: (JavaScript_ProxyKernel_can_share_a_value_from_csharp) should this still use the codegen approach or should it rely on the JS kernel to do that part?
+            throw new NotImplementedException();
         }
 
         [Fact]
@@ -391,6 +398,7 @@ y");
                 remoteCompositeKernel);
 
             var remoteKernelUri = new Uri("kernel://remote/remote-javascript");
+
             var javascriptKernel =
                 await localCompositeKernel
                       .Host
@@ -399,8 +407,8 @@ y");
                           remoteKernelUri);
 
             await localCompositeKernel.SendAsync(new RequestKernelInfo(remoteKernelUri));
-
-            javascriptKernel.UseValueSharing(new JavaScriptValueDeclarer());
+            
+            javascriptKernel.UseValueSharing();
 
             _disposables.Add(remoteCompositeKernel);
 
