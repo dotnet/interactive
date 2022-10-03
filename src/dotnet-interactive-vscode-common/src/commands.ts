@@ -131,7 +131,12 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
 
         if (notebook) {
             for (const cell of notebook.getCells()) {
-                notebookControllers.endExecution(cell, false);
+                notebookControllers.endExecution(undefined, cell, false);
+            }
+
+            const client = await clientMapper.tryGetClient(notebook.uri);
+            if (client) {
+                client.resetExecutionCount();
             }
 
             clientMapper.closeClient(notebook.uri);
