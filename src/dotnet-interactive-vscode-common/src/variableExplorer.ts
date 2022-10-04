@@ -69,6 +69,12 @@ export function registerVariableExplorer(context: vscode.ExtensionContext, clien
 
     const webViewProvider = new WatchWindowTableViewProvider(clientMapper, context.extensionPath);
     context.subscriptions.push(vscode.window.registerWebviewViewProvider('dotnet-interactive-panel-values', webViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.clearValueExplorer', () => {
+        webViewProvider.clearRows();
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.resetValueExplorerSubscriptions', async () => {
+        await webViewProvider.refreshSubscriptions();
+    }));
 
     vscode.window.onDidChangeActiveNotebookEditor(async _editor => {
         // TODO: update on client process restart
@@ -157,6 +163,37 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
     private setRows(rows: VariableGridRow[]) {
         if (this.webview) {
             this.webview.postMessage({ command: 'set-rows', rows });
+        }
+    }
+
+    clearRows() {
+        this.setRows([]);
+    }
+
+    async refreshSubscriptions(): Promise<void> {
+        this.currentNotebookSubscription?.dispose();
+        this.currentNotebookSubscription = undefined;
+        if (vscode.window.activeNotebookEditor) {
+            const notebook = versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
+            const client = await this.clientMapper.getOrAddClient(notebook.uri);
+
+            let sub = client.channel.receiver.subscribe({
+                next: (envelope) => {
+                    if (isKernelEventEnvelope(envelope)) {
+                        switch (envelope.eventType) {
+                            case contracts.CommandSucceededType:
+                            case contracts.CommandFailedType:
+                            case contracts.CommandCancelledType:
+                                if (envelope.command?.commandType === contracts.SubmitCodeType) {
+                                    debounce(() => this.refresh());
+                                }
+                                break;
+                        }
+                    }
+                }
+            });
+
+            this.currentNotebookSubscription = { dispose: () => sub.unsubscribe() };
         }
     }
 

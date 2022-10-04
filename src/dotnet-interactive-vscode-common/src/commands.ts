@@ -114,6 +114,9 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
         }
 
         if (notebook) {
+            // clear the value explorer view
+            await vscode.commands.executeCommand('dotnet-interactive.clearValueExplorer');
+
             // notifty the client that the kernel is about to restart
             const restartCompletionSource = new PromiseCompletionSource<void>();
             vscode.window.withProgress({
@@ -125,6 +128,9 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
             const _client = await clientMapper.getOrAddClient(notebook.uri);
             restartCompletionSource.resolve();
             vscode.window.showInformationMessage('Kernel restarted.');
+
+            // notify the ValueExplorer that the kernel has restarted
+            await vscode.commands.executeCommand('dotnet-interactive.resetValueExplorerSubscriptions');
         }
     }));
 
