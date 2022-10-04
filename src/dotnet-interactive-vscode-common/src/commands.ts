@@ -114,8 +114,17 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
         }
 
         if (notebook) {
+            // notifty the client that the kernel is about to restart
+            const restartCompletionSource = new PromiseCompletionSource<void>();
+            vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: 'Restarting kernel...'
+            },
+                (_progress, _token) => restartCompletionSource.promise);
             await vscode.commands.executeCommand('dotnet-interactive.stopCurrentNotebookKernel', notebook);
             const _client = await clientMapper.getOrAddClient(notebook.uri);
+            restartCompletionSource.resolve();
+            vscode.window.showInformationMessage('Kernel restarted.');
         }
     }));
 
