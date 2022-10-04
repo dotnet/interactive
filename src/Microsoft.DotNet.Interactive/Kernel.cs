@@ -535,8 +535,7 @@ namespace Microsoft.DotNet.Interactive
 
                             return inner.IsChildCommand(outer);
                           
-                        }
-                        );
+                        });
                     RegisterForDisposal(scheduler);
                     SetScheduler(scheduler);
                 }

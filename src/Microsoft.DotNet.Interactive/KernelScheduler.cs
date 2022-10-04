@@ -27,7 +27,9 @@ namespace Microsoft.DotNet.Interactive
 
         public KernelScheduler(Func<T, T, bool> isInnerSchedule = null)
         {
-            _isInnerSchedule = isInnerSchedule ?? ((_, __) => false);
+            // FIX: (KernelScheduler) replace this with something more explicit
+            _isInnerSchedule = isInnerSchedule ?? IsInnerScheduleDefault;
+            
             _runLoopTask = Task.Factory.StartNew(
                 ScheduledOperationRunLoop,
                 TaskCreationOptions.LongRunning,
@@ -36,8 +38,13 @@ namespace Microsoft.DotNet.Interactive
             _disposables = new CompositeDisposable
             {
                 _topLevelScheduledOperations,
-                () => { _schedulerDisposalSource.Cancel(); }
+                () => _schedulerDisposalSource.Cancel()
             };
+        }
+
+        private bool IsInnerScheduleDefault(T one, T two)
+        {
+            return false;
         }
 
         public void CancelCurrentOperation(Action<T> onCancellation = null)
@@ -65,22 +72,22 @@ namespace Microsoft.DotNet.Interactive
                 operation = new ScheduledOperation(
                     value,
                     onExecuteAsync,
-                    false,
-                    null,
+                    isDeferred: false,
+                    executionContext: null,
                     scope,
                     cancellationToken);
-                RunPreemptively(operation);
+                RunNow(operation);
             }
             else
             {
                 operation = new ScheduledOperation(
                     value,
                     onExecuteAsync,
-                    false,
+                    isDeferred: false,
                     ExecutionContext.Capture(),
                     scope: scope,
                     cancellationToken: cancellationToken);
-                _topLevelScheduledOperations.Add(operation, cancellationToken);
+                RunAfterOtherWork(cancellationToken, operation);
             }
 
             return operation.TaskCompletionSource.Task;
@@ -106,7 +113,7 @@ namespace Microsoft.DotNet.Interactive
                 {
                     ExecutionContext.Run(
                         executionContext!,
-                        _ => RunScheduledOperationAndDeferredOperations(operation),
+                        _ => RunNow(operation),
                         operation);
 
                     operation.TaskCompletionSource.Task.Wait(_schedulerDisposalSource.Token);
@@ -161,7 +168,12 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private void RunScheduledOperationAndDeferredOperations(ScheduledOperation operation)
+        private void RunAfterOtherWork(CancellationToken cancellationToken, ScheduledOperation operation)
+        {
+            _topLevelScheduledOperations.Add(operation, cancellationToken);
+        }
+
+        private void RunNow(ScheduledOperation operation)
         {
             try
             {
@@ -171,24 +183,15 @@ namespace Microsoft.DotNet.Interactive
                 }
 
                 Run(operation);
+
+                operation.TaskCompletionSource.Task.Wait(_schedulerDisposalSource.Token);
             }
             catch (Exception exception)
             {
                 Log.Error(exception);
             }
         }
-
-        private void RunPreemptively(ScheduledOperation operation)
-        {
-            foreach (var deferredOperation in OperationsToRunBefore(operation))
-            {
-                Run(deferredOperation);
-            }
-            
-            Run(operation);
-            operation.TaskCompletionSource.Task.Wait(_schedulerDisposalSource.Token);
-        }
-
+        
         private IEnumerable<ScheduledOperation> OperationsToRunBefore(
             ScheduledOperation operation)
         {

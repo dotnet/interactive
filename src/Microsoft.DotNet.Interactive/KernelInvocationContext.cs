@@ -109,6 +109,8 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly object _lockObj = new();
 
+        private string _failureMessage = null;
+
         private void SucceedOrFail(
             bool succeed,
             KernelCommand command,
@@ -124,7 +126,9 @@ namespace Microsoft.DotNet.Interactive
 
                 var completingMainCommand = CommandEqualityComparer.Instance.Equals(command, Command);
 
+                // FIX: (SucceedOrFail) 
                 if (succeed)
+                // if (succeed && !_isFailed)
                 {
                     if (completingMainCommand)
                     {
@@ -143,15 +147,17 @@ namespace Microsoft.DotNet.Interactive
                 }
                 else
                 {
+                    _failureMessage ??= message;
+
                     if (!completingMainCommand && command.ShouldPublishCompletionEvent == true)
                     {
-                        Publish(new CommandFailed(exception, command, message));
+                        Publish(new CommandFailed(exception, command, message ?? _failureMessage));
 
                         StopPublishingChildCommandEvents();
                     }
                     else
                     {
-                        Publish(new CommandFailed(exception, Command, message));
+                        Publish(new CommandFailed(exception, Command, message ?? _failureMessage));
 
                         StopPublishingMainCommandEvents();
 
