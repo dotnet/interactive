@@ -140,12 +140,11 @@ export function ensureOrUpdateProxyForKernelInfo(kernelInfoProduced: contracts.K
             } else {
                 throw new Error('no kernel host found');
             }
-        } else {
-            Logger.default.info(`patching proxy for uri [${uriToLookup}] with info ${JSON.stringify(kernelInfoProduced)}`);
         }
 
         if (kernel.kernelType === KernelType.proxy) {
             // patch
+            Logger.default.info(`patching proxy for uri [${uriToLookup}] with info ${JSON.stringify(kernelInfoProduced)}`);
             updateKernelInfo(kernel.kernelInfo, kernelInfoProduced.kernelInfo);
         }
     }

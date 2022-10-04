@@ -8,6 +8,7 @@ import * as connection from "./connection";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
 import { KernelInvocationContext } from "./kernelInvocationContext";
 
+
 export class ProxyKernel extends Kernel {
 
     constructor(override readonly name: string, private readonly _sender: connection.IKernelCommandAndEventSender, private readonly _receiver: connection.IKernelCommandAndEventReceiver) {
@@ -57,6 +58,15 @@ export class ProxyKernel extends Kernel {
         const commandToken = commandEnvelope.token;
         const commandId = commandEnvelope.id;
         const completionSource = new PromiseCompletionSource<contracts.KernelEventEnvelope>();
+
+        if (!commandEnvelope.command.destinationUri || !commandEnvelope.command.originUri) {
+            commandEnvelope.command.originUri ??= this.kernelInfo.uri;
+            commandEnvelope.command.destinationUri ??= this.kernelInfo.remoteUri;
+        }
+
+        commandEnvelope.command.originUri; //?
+        commandEnvelope.command.destinationUri;//?
+        commandEnvelope.routingSlip;//?
 
         // fix : is this the right way? We are trying to avoid forwarding events we just did forward
         let eventSubscription = this._receiver.subscribe({
@@ -120,14 +130,9 @@ export class ProxyKernel extends Kernel {
         commandEnvelope;//?
 
         try {
-            if (!commandEnvelope.command.destinationUri || !commandEnvelope.command.originUri) {
-                commandEnvelope.command.originUri ??= this.kernelInfo.uri;
-                commandEnvelope.command.destinationUri ??= this.kernelInfo.remoteUri;
-            }
-            commandEnvelope.command.originUri; //?
-            commandEnvelope.command.destinationUri;//?
-            commandEnvelope.routingSlip;//?
+
             Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] forwarding command ${commandEnvelope.commandType} to ${commandEnvelope.command.destinationUri}`);
+            connection.tryAddUriToRoutingSlip(commandEnvelope, getKernelUri(this));
             this._sender.send(commandEnvelope);
             Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] about to await with token ${commandToken}`);
             const enventEnvelope = await completionSource.promise;
