@@ -235,7 +235,7 @@ namespace Microsoft.DotNet.Interactive
             RequestKernelInfo command,
             KernelInvocationContext context)
         {
-            if (command.RoutingSlip.TryAdd(KernelInfo.Uri))
+            if (command.RoutingSlip.HasProcessed(KernelInfo.Uri))
             {
                 context.Publish(new KernelInfoProduced(KernelInfo, command));
 

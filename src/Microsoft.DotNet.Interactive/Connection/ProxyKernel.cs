@@ -78,7 +78,6 @@ public sealed class ProxyKernel : Kernel
 
     private Task HandleByForwardingToRemoteAsync(KernelCommand command, KernelInvocationContext context)
     {
-
         if (command.OriginUri is null)
         {
             if (context.HandlingKernel == this)
@@ -90,6 +89,17 @@ public sealed class ProxyKernel : Kernel
         if (command.DestinationUri is null)
         {
             command.OriginUri = KernelInfo.RemoteUri;
+        }
+
+        if (command is RequestKernelInfo rki && rki.OriginUri is { } origin && KernelInfo.RemoteUri is { } remoteUri)
+        {
+            var originHost = $"{origin.Scheme}://{origin.Authority}";
+            var remoteHost = $"{remoteUri.Scheme}://{remoteUri.Authority}";
+            if (StringComparer.InvariantCultureIgnoreCase.Equals( originHost,remoteHost))
+            {
+                return Task.CompletedTask;
+            }
+
         }
 
         _executionContext = ExecutionContext.Capture();
@@ -104,7 +114,7 @@ public sealed class ProxyKernel : Kernel
         _inflight[token] = (command, _executionContext, completionSource, context);
 
         ExecutionContext.SuppressFlow();
-
+        
         var t = _sender.SendAsync(command, context.CancellationToken);
         t.ContinueWith(task =>
         {
@@ -197,7 +207,7 @@ public sealed class ProxyKernel : Kernel
                         var newEvent = new KernelInfoProduced(KernelInfo, kernelEvent.Command);
                         foreach (var kernelUri in kip.RoutingSlip)
                         {
-                            newEvent.TryAddToRoutingSlip(kernelUri);
+                            newEvent.RoutingSlip.TryMarkHandled(kernelUri);
                         }
                         if (pending.executionContext is { } ec)
                         {

@@ -32,10 +32,10 @@ public class KernelRoutingTests : IDisposable
     public void RoutingSlip_includes_parent_RoutingSlip()
     {
         var parent = new RoutingSlip();
-        parent.TryAdd(new Uri("kernel://a"));
+        parent.TryMarkArrival(new Uri("kernel://a"));
 
         var child = new RoutingSlip(parent);
-        child.TryAdd(new Uri("kernel://b"));
+        child.TryMarkArrival(new Uri("kernel://b"));
 
         child.Contains(parent).Should().BeTrue();
     }
@@ -44,12 +44,12 @@ public class KernelRoutingTests : IDisposable
     public void RoutingSlip_identifies_childCommands()
     {
         var parent = new SubmitCode("code1");
-        parent.RoutingSlip.TryAdd(new Uri("kernel://1"));
-        parent.RoutingSlip.TryAdd(new Uri("kernel://2"));
+        parent.RoutingSlip.TryMarkArrival(new Uri("kernel://1"));
+        parent.RoutingSlip.TryMarkArrival(new Uri("kernel://2"));
         var child = new SubmitCode("code2");
-        child.RoutingSlip.TryAdd(new Uri("kernel://1"));
-        child.RoutingSlip.TryAdd(new Uri("kernel://2"));
-        child.RoutingSlip.TryAdd(new Uri("kernel://5"));
+        child.RoutingSlip.TryMarkArrival(new Uri("kernel://1"));
+        child.RoutingSlip.TryMarkArrival(new Uri("kernel://2"));
+        child.RoutingSlip.TryMarkArrival(new Uri("kernel://5"));
 
         child.IsChildCommand(parent).Should().BeTrue();
     }
@@ -342,13 +342,13 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
 
         compositeKernel.DefaultKernelName = "fsharp";
 
-        var command = new SubmitCode(@"Console.WriteLine(1);", targetKernelName: "csharp");
+        var command = new SubmitCode(@"1", targetKernelName: "csharp");
 
         var result = await compositeKernel.SendAsync(command);
 
         var events = result.KernelEvents.ToSubscribedList();
 
-        events.Should().ContainSingle<StandardOutputValueProduced>()
+        events.Should().ContainSingle<ReturnValueProduced>()
             .Which
             .RoutingSlip.Should().ContainInOrder(
             new[]

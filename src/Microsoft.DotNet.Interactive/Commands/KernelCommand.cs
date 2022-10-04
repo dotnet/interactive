@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -35,11 +35,11 @@ public abstract class KernelCommand
         internal set
         {
             _parent = value;
-            var currentSlip = RoutingSlip;
+            var currentSlip = RoutingSlip ?? new RoutingSlip();
             RoutingSlip = new RoutingSlip(_parent?.RoutingSlip);
             foreach (var uri in currentSlip)
             {
-                RoutingSlip.TryAdd(uri);
+                RoutingSlip.TryMarkArrival(uri);
             }
         }
     }
@@ -77,5 +77,5 @@ public abstract class KernelCommand
         return Handler(this, context);
     }
 
-    public bool TryAddToRoutingSlip(Uri uri) => Parent?.RoutingSlip.Contains(uri) != true && RoutingSlip.TryAdd(uri);
+    public bool TryAddToRoutingSlip(Uri uri) => Parent?.RoutingSlip.Contains(uri) != true && RoutingSlip.TryMarkArrival(uri);
 }

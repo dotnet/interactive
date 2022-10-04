@@ -179,7 +179,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
             {
                 e.Command.Properties["id"] = "command-id";
                 e.Command.TryAddToRoutingSlip(new Uri("kernel://somelocation/kernelName"));
-                e.TryAddToRoutingSlip(new Uri("kernel://somelocation/kernelName"));
+                e.RoutingSlip.TryMarkHandled(new Uri("kernel://somelocation/kernelName"));
                 return e;
             }))
             {

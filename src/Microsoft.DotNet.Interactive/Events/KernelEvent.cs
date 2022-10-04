@@ -26,9 +26,5 @@ public abstract class KernelEvent
     {
         return $"{GetType().Name}";
     }
-
-    public bool TryAddToRoutingSlip(Uri uri)
-    {
-        return RoutingSlip.TryAdd(uri);
-    }
+    
 }
