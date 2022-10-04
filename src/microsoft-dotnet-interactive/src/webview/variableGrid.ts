@@ -92,7 +92,8 @@ function setDataRows(container: HTMLElement, rows: VariableGridRow[]): Displayed
         dataRow.appendChild(dataKernel);
 
         const dataShare = document.createElement('td');
-        dataShare.innerHTML = `<a href="${row.link}">Share to...</a>`;
+        dataShare.classList.add('share-data');
+        dataShare.innerHTML = `<a href="${row.link}"><svg width="16" height="16"><use xlink:href="#share-icon"></use></svg></a>`;
         dataRow.appendChild(dataShare);
 
         displayedRows.push({

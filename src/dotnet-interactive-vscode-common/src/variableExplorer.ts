@@ -141,7 +141,24 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                     .share-column {
                         width: 10%;
                     }
+
+                    .share-data {
+                        text-align: center;
+                    }
                 </style>
+                <svg style="display: none">
+                  <symbol id="share-icon" viewBox="0 0 16 16">
+                    <title>Share to</title>
+                    <g id="canvas">
+                      <path d="M16,16H0V0H16Z" fill="none" opacity="0" />
+                    </g>
+                    <g id="level-1">
+                      <path d="M10.5,9.5v-2a9.556,9.556,0,0,0-7,3c0-7,7-7,7-7v-2l4,4Z" fill="#1f801f" opacity="0.1" />
+                      <path d="M15.207,5.5,10,.293V3.032C8.322,3.2,3,4.223,3,10.5v1.371l.883-1.05A9.133,9.133,0,0,1,10,8.014v2.693ZM4.085,9.26C4.834,4.081,10.254,4,10.5,4L11,4V2.707L13.793,5.5,11,8.293V7h-.5A10.141,10.141,0,0,0,4.085,9.26Z" fill="#1f801f" />
+                      <path d="M12,10.121V15H0V4H1V14H11V11.121Z" fill="#212121" />
+                    </g>
+                  </symbol>
+                </svg>
                 <script defer type="text/javascript" src="${apiFileUri.toString()}"></script>
                 <label for="filter">Filter</label>
                 <input id="filter" type="text" />
