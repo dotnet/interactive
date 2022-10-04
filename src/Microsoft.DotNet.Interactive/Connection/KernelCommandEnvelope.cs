@@ -227,6 +227,12 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
         return serializationModel;
     }
 
+    internal class RoutingSlipSerializationModel
+    {
+        public string kernelUri { get; set; }
+        public bool handled { get; set; }
+    }
+
     internal class SerializationModel
     {
         public string token { get; set; }
