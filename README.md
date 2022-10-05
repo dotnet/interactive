@@ -3,7 +3,7 @@
 
 [![Discord](https://img.shields.io/discord/732297728826277939?label=discord)](https://discord.gg/3pvut9YujN) [![Build Status](https://dev.azure.com/dnceng-public/public/_apis/build/status/dotnet/interactive/interactive-ci?branchName=main)](https://dev.azure.com/dnceng-public/public/_build?definitionId=71&branchName=main) [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dotnet/interactive/main?urlpath=lab) 
 
-.NET Interactive takes the power of .NET and embeds it into *your* interactive experiences. Share code, explore data, write, and learn across your apps in ways you couldn't before.
+.NET Interactive takes the power of .NET and embeds it into various interactive experiences. Share code, explore data, write, and learn across your apps in ways you couldn't before.
 
 * [Notebooks](#notebooks-with-net): Jupyter, nteract, and Visual Studio Code 
 * [Code bots](https://github.com/CodeConversations/CodeConversations)
@@ -17,28 +17,26 @@
 
 ## Visual Studio Code
 
-We recently introduced the [.NET Interactive Notebooks](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode) extension for Visual Studio Code, which adds support for .NET Interactive using the new Visual Studio Code [native notebook feature](https://code.visualstudio.com/updates/v1_45#_github-issue-notebook). We encourage you to [try it out](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode). If you'd like to contribute, you can start [here](CONTRIBUTING.md). 
+The [.NET Interactive Notebooks](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode) extension for Visual Studio Code brings support for polyglot notebooks to Visual Studio Code, powered by .NET Interactive. We encourage you to [try it out](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode). If you'd like to contribute, you can start [here](CONTRIBUTING.md). 
 
 ![newnotebook](https://user-images.githubusercontent.com/2546640/130660742-deb5c33b-020d-4d03-8034-7f11532c3201.gif)
 
 ---
 
 ## Features
-### Multi-language notebooks 
-.NET Interactive enables users to mix languages in a single notebook or cell without a wrapper. The multi-language experience opens up doors for users to use the best language for the task at hand.
+### Polyglot notebooks 
+.NET Interactive enables users to mix languages in a single notebook or cell without a wrapper. The multi-language experience enables users to use the best language for the task at hand.
 
 **Languages supported**
 - C# and F# 
-- PowerShell built in collaboration with the PowerShell team 💙
+- PowerShell, built in collaboration with the PowerShell team 💙
 - JavaScript
 - HTML 
-- SQL built in collaboration with the  Azure Data / SQL team 💙
-
-**Coming soon**
-- Kusto 
+- [Mermaid](https://mermaid-js.github.io/mermaid/#/)
+- SQL and KQL (Kusto), built in collaboration with the  Azure Data / SQL team 💙
 
 **What languages are we exploring?** 
-- Python and R 
+- Python, Julia, and R 
 
 ### Variable Sharing 
 
@@ -88,7 +86,7 @@ Full example [here](https://github.com/dotnet/interactive/blob/main/samples/note
 
 There are several ways to get started using .NET with Jupyter, including Jupyter Notebook, JupyterLab, and nteract.
 
-- [Try sample .NET notebooks online using Binder](docs/NotebooksOnBinder.md). This also allows you try out our daily builds, which include preview features of F# 5.
+- [Try sample .NET notebooks online using Binder](docs/NotebooksOnBinder.md). This also allows you try out our daily builds, including preview features.
 - [Install .NET Interactive](docs/NotebookswithJupyter.md) to create and run .NET notebooks on your machine.
 - [Share your own .NET notebooks with others online using Binder](docs/CreateBinder.md).
 - [Use .NET Interactive with nteract](https://nteract.io/kernels/dotnet)

@@ -2,10 +2,12 @@
 trigger:
 - main
 - feature/*
+- hotfix/*
 - release/*
 pr:
 - main
 - feature/*
+- hotfix/*
 - release/*
 
 # Variables

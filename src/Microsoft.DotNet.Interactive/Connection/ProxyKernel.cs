@@ -78,18 +78,6 @@ public sealed class ProxyKernel : Kernel
 
     private Task HandleByForwardingToRemoteAsync(KernelCommand command, KernelInvocationContext context)
     {
-        switch (command)
-        {
-            case AnonymousKernelCommand:
-                return base.HandleAsync(command, context);
-            case DirectiveCommand:
-                return base.HandleAsync(command, context);
-        }
-
-        if (CanHandleLocally(command))
-        {
-            return base.HandleAsync(command, context);
-        }
 
         if (command.OriginUri is null)
         {
@@ -150,10 +138,30 @@ public sealed class ProxyKernel : Kernel
         return false;
     }
 
+    protected override Func<TCommand, KernelInvocationContext, Task> CreateDefaultHandlerForCommandType<TCommand>()
+    {
+        return HandleByForwardingToRemoteAsync;
+    }
+
     internal override Task HandleAsync(
         KernelCommand command,
-        KernelInvocationContext context) =>
-        HandleByForwardingToRemoteAsync(command, context);
+        KernelInvocationContext context)
+    {
+        switch (command)
+        {
+            case AnonymousKernelCommand:
+                return base.HandleAsync(command, context);
+            case DirectiveCommand:
+                return base.HandleAsync(command, context);
+        }
+
+        if (CanHandleLocally(command))
+        {
+            return base.HandleAsync(command, context);
+        }
+        
+        return HandleByForwardingToRemoteAsync(command, context);
+    }
 
     public override Task HandleAsync(RequestKernelInfo command, KernelInvocationContext context) =>
         // override the default handler on Kernel and forward the command instead

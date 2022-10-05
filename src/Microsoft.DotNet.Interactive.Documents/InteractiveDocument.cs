@@ -20,32 +20,72 @@ namespace Microsoft.DotNet.Interactive.Documents;
 
 public class InteractiveDocument : IEnumerable
 {
+    private static Parser? _importFieldsParser;
+    private static Argument<FileInfo>? _importedFileArgument;
+
     private static Parser? _inputFieldsParser;
     private static Option<string>? _valueNameOption;
     private static Option<string[]>? _discoveredInputName;
     private static Option<string[]>? _discoveredPasswordName;
 
     private IDictionary<string, object>? _metadata;
-    private List<string>? _magicCommandLines;
 
     public InteractiveDocument(IList<InteractiveDocumentElement>? elements = null)
     {
         Elements = elements ?? new List<InteractiveDocumentElement>();
     }
 
-    public IList<InteractiveDocumentElement> Elements { get; internal set; } = new List<InteractiveDocumentElement>();
+    public IList<InteractiveDocumentElement> Elements { get; } = new List<InteractiveDocumentElement>();
 
     public IDictionary<string, object> Metadata =>
         _metadata ??= new Dictionary<string, object>();
 
-    public IReadOnlyCollection<InputField> GetInputFields()
+    public async IAsyncEnumerable<InteractiveDocument> GetImportsAsync(bool recursive = false)
+    {
+        EnsureImportFieldParserIsInitialized();
+
+        if (!TryGetKernelInfoFromMetadata(Metadata, out var kernelInfos))
+        {
+            kernelInfos = new();
+        }
+
+        foreach (var line in GetMagicCommandLines())
+        {
+            var parseResult = _importFieldsParser!.Parse(line);
+
+            if (parseResult.CommandResult.Command.Name == "#!import")
+            {
+                if (!parseResult.Errors.Any())
+                {
+                    var file = parseResult.GetValueForArgument(_importedFileArgument!);
+
+                    var interactiveDocument = await LoadAsync(file, kernelInfos);
+
+                    yield return interactiveDocument;
+
+                    if (recursive)
+                    {
+                        await foreach (var import in interactiveDocument.GetImportsAsync(recursive))
+                        {
+                            yield return import;
+                        }
+                    }
+                }
+                else if (parseResult.GetValueForArgument(_importedFileArgument!).FullName is { } file)
+                {
+                    throw new FileNotFoundException(file);
+                }
+            }
+        }
+    }
+
+    public IEnumerable<InputField> GetInputFields()
     {
         EnsureInputFieldParserIsInitialized();
-        EnsureMagicCommandLinesIsInitialized();
 
         var inputFields = new List<InputField>();
 
-        foreach (var line in _magicCommandLines!)
+        foreach (var line in GetMagicCommandLines())
         {
             foreach (var field in ParseInputFields(line))
             {
@@ -55,18 +95,6 @@ public class InteractiveDocument : IEnumerable
 
         return inputFields.Distinct().ToArray();
 
-        void EnsureMagicCommandLinesIsInitialized()
-        {
-            if (_magicCommandLines is null)
-            {
-                _magicCommandLines = new();
-
-                foreach (var element in Elements)
-                {
-                    _magicCommandLines.AddRange(element.Contents.SplitIntoLines());
-                }
-            }
-        }
 
         static IReadOnlyCollection<InputField> ParseInputFields(string line)
         {
@@ -92,9 +120,7 @@ public class InteractiveDocument : IEnumerable
             return inputFields;
         }
     }
-
-    internal void AddMagicCommandLine(string line) => (_magicCommandLines ??= new()).Add(line);
-
+    
     public IEnumerator GetEnumerator() => Elements.GetEnumerator();
 
     public void Add(InteractiveDocumentElement element) => Elements.Add(element);
@@ -134,9 +160,9 @@ public class InteractiveDocument : IEnumerable
         return null;
     }
 
-    public static async Task<InteractiveDocument> LoadInteractiveDocumentAsync(
-    FileInfo file,
-    KernelInfoCollection kernelInfos)
+    public static async Task<InteractiveDocument> LoadAsync(
+        FileInfo file,
+        KernelInfoCollection kernelInfos)
     {
         var fileContents = await File.ReadAllTextAsync(file.FullName);
 
@@ -144,6 +170,9 @@ public class InteractiveDocument : IEnumerable
         {
             ".ipynb" => Notebook.Parse(fileContents, kernelInfos),
             ".dib" => CodeSubmission.Parse(fileContents, kernelInfos),
+
+
+
             _ => throw new InvalidOperationException($"Unrecognized extension for a notebook: {file.Extension}"),
         };
     }
@@ -196,6 +225,33 @@ public class InteractiveDocument : IEnumerable
         return false;
     }
 
+    public IEnumerable<string> GetMagicCommandLines() =>
+        Elements.SelectMany(e => e.Contents.SplitIntoLines())
+                .Where(line => line.StartsWith("#!"));
+
+    private static void EnsureImportFieldParserIsInitialized()
+    {
+        if (_importFieldsParser is not null)
+        {
+            return;
+        }
+
+        _importedFileArgument = new Argument<FileInfo>("file")
+            .ExistingOnly();
+
+        var importCommand = new Command("#!import")
+        {
+            _importedFileArgument
+        };
+
+        var rootCommand = new RootCommand
+        {
+            importCommand
+        };
+
+        _importFieldsParser = new CommandLineBuilder(rootCommand).Build();
+    }
+
     private static void EnsureInputFieldParserIsInitialized()
     {
         if (_inputFieldsParser is not null)
@@ -205,14 +261,14 @@ public class InteractiveDocument : IEnumerable
 
         _valueNameOption = new Option<string>("--name");
 
-        var valueKernel = new Command("#!value")
+        var valueCommand = new Command("#!value")
         {
             _valueNameOption
         };
 
         var rootCommand = new RootCommand
         {
-            valueKernel
+            valueCommand
         };
 
         _discoveredInputName = new Option<string[]>("--discovered-input-name");
@@ -244,4 +300,5 @@ public class InteractiveDocument : IEnumerable
                              })
                              .Build();
     }
+
 }

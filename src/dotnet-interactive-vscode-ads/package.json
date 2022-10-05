@@ -154,7 +154,7 @@
         },
         "polyglot-notebook.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.345103",
+          "default": "1.0.350401",
           "description": "The minimum required version of the .NET Interactive tool."
         },
         "polyglot-notebook.logLevel": {

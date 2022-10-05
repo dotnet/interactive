@@ -29,7 +29,10 @@ internal class InteractiveDocumentConverter : JsonConverter<InteractiveDocument>
 
                         if (cells is not null)
                         {
-                            document.Elements = cells;
+                            foreach (var cell in cells)
+                            {
+                                document.Elements.Add(cell);
+                            }
                         }
 
                         break;
