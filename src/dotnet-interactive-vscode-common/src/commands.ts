@@ -101,18 +101,25 @@ export function registerAcquisitionCommands(context: vscode.ExtensionContext, di
     }
 }
 
+function getCurrentNotebookDocument(): vscode.NotebookDocument | undefined {
+    if (!vscode.window.activeNotebookEditor) {
+        return undefined;
+    }
+
+    return versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
+}
+
 export function registerKernelCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
 
+    // azure data studio doesn't support the notebook toolbar
+    if (!isAzureDataStudio(context)) {
+        context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.notebookEditor.restartKernel', async (_notebookEditor) => {
+            await vscode.commands.executeCommand('dotnet-interactive.restartCurrentNotebookKernel');
+        }));
+    }
+
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.restartCurrentNotebookKernel', async (notebook?: vscode.NotebookDocument | undefined) => {
-        if (!notebook) {
-            if (!vscode.window.activeNotebookEditor) {
-                // no notebook to operate on
-                return;
-            }
-
-            notebook = versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
-        }
-
+        notebook = notebook || getCurrentNotebookDocument();
         if (notebook) {
             // clear the value explorer view
             await vscode.commands.executeCommand('dotnet-interactive.clearValueExplorer');
@@ -135,15 +142,7 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.stopCurrentNotebookKernel', async (notebook?: vscode.NotebookDocument | undefined) => {
-        if (!notebook) {
-            if (!vscode.window.activeNotebookEditor) {
-                // no notebook to operate on
-                return;
-            }
-
-            notebook = versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
-        }
-
+        notebook = notebook || getCurrentNotebookDocument();
         if (notebook) {
             for (const cell of notebook.getCells()) {
                 notebookControllers.endExecution(undefined, cell, false);

@@ -227,6 +227,14 @@
         "title": ".NET Interactive: Restart the current notebook's kernel"
       },
       {
+        "command": "dotnet-interactive.notebookEditor.restartKernel",
+        "title": "Restart",
+        "icon": {
+          "light": "resources/light/restart-kernel.svg",
+          "dark": "resources/dark/restart-kernel.svg"
+        }
+      },
+      {
         "command": "dotnet-interactive.stopCurrentNotebookKernel",
         "title": ".NET Interactive: Stop the current notebook's kernel"
       },
@@ -321,6 +329,15 @@
         "configuration": "./syntaxes/kql.language-configuration.json"
       }
     ],
+    "menus": {
+      "notebook/toolbar": [
+        {
+          "command": "dotnet-interactive.notebookEditor.restartKernel",
+          "group": "navigation/execute@1",
+          "when": "notebookKernel =~ /dotnet-interactive/ && isWorkspaceTrusted"
+        }
+      ]
+    },
     "grammars": [
       {
         "language": "dotnet-interactive",
