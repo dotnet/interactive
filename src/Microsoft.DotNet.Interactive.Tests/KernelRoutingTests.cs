@@ -250,6 +250,53 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
     }
 
     [Fact]
+    public async Task proxy_kernel_can_register_command_types_handled_by_remote()
+    {
+        using var localCompositeKernel = new CompositeKernel("vscode");
+        using var remoteCompositeKernel = new CompositeKernel(".NET")
+        {
+            new CSharpKernel(),
+            new FSharpKernel()
+        };
+        RemoteCommand remoteCommandHandled = null;
+        remoteCompositeKernel.FindKernelByName("csharp").RegisterCommandHandler<RemoteCommand>((command, context) =>
+        {
+            remoteCommandHandled = command;
+            
+            return Task.CompletedTask;
+        });
+
+        remoteCompositeKernel.DefaultKernelName = "fsharp";
+
+        ConnectHost.ConnectInProcessHost(
+            localCompositeKernel,
+            remoteCompositeKernel);
+
+        await localCompositeKernel
+            .Host
+            .ConnectProxyKernelOnDefaultConnectorAsync(
+                "csharp-proxy",
+                new(remoteCompositeKernel.Host.Uri, "csharp"));
+        
+        localCompositeKernel.FindKernelByName("csharp-proxy").RegisterCommandType<RemoteCommand>();
+
+        var command = new RemoteCommand("csharp-proxy");
+
+        await localCompositeKernel.SendAsync(command);
+
+        remoteCommandHandled.Should().NotBeNull();
+    }
+
+    public class RemoteCommand : KernelCommand
+    {
+        public RemoteCommand(string targetKernelName) : base(targetKernelName)
+        {
+        }
+        
+    }
+
+
+    [Fact]
     public async Task commands_routing_slip_contains_proxy_kernels_that_have_been_traversed()
     {
         using var localCompositeKernel = new CompositeKernel("vscode");

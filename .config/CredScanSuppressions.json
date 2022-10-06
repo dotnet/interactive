@@ -1,0 +1,9 @@
+{
+  "tool": "Credential Scanner",
+  "suppressions": [
+    {
+      "file": "/src/dotnet-interactive-vscode-ads/src/azdata.d.ts",
+      "_justification": "False positives on lines 602 and 625 in an enum: password = 'password'"
+    }
+  ]
+}

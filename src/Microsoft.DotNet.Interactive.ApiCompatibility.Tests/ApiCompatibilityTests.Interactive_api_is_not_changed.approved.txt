@@ -138,7 +138,7 @@ Microsoft.DotNet.Interactive
     public System.Void RegisterCommandType<TCommand>()
     public System.Void RegisterForDisposal(System.Action dispose)
     public System.Void RegisterForDisposal(System.IDisposable disposable)
-    public System.Threading.Tasks.Task<KernelCommandResult> SendAsync(Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Threading.CancellationToken cancellationToken)
+    public System.Threading.Tasks.Task<KernelCommandResult> SendAsync(Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Threading.CancellationToken cancellationToken = null)
     protected System.Void SetHandlingKernel(Microsoft.DotNet.Interactive.Commands.KernelCommand command, KernelInvocationContext context)
      System.Void SetScheduler(KernelScheduler<Microsoft.DotNet.Interactive.Commands.KernelCommand,KernelCommandResult> scheduler)
     public System.Boolean SupportsCommandType(System.Type commandType)
@@ -203,7 +203,6 @@ Microsoft.DotNet.Interactive
     public static System.Collections.Generic.IEnumerable<Kernel> FindKernels(System.Func<Kernel,System.Boolean> predicate)
     public static T LogCommandsToPocketLogger<T>()
     public static T LogEventsToPocketLogger<T>()
-    public static System.Threading.Tasks.Task<KernelCommandResult> SendAsync(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public static System.Collections.Generic.IEnumerable<Kernel> Subkernels(System.Boolean recursive = False)
     public static System.Collections.Generic.IEnumerable<Kernel> SubkernelsAndSelf(System.Boolean recursive = False)
     public static System.Threading.Tasks.Task<KernelCommandResult> SubmitCodeAsync(System.String code)
@@ -548,6 +547,7 @@ Microsoft.DotNet.Interactive.Connection
     public System.Void Dispose()
   public class ProxyKernel : Microsoft.DotNet.Interactive.Kernel, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, System.IDisposable
     .ctor(System.String name, IKernelCommandAndEventSender sender, IKernelCommandAndEventReceiver receiver, System.Uri remoteUri = null)
+    protected Func<TCommand,Microsoft.DotNet.Interactive.KernelInvocationContext,System.Threading.Tasks.Task> CreateDefaultHandlerForCommandType<TCommand>()
     public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.RequestKernelInfo command, Microsoft.DotNet.Interactive.KernelInvocationContext context)
   public delegate ReadCommandOrEvent : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable
     .ctor(System.Object object, System.IntPtr method)

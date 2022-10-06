@@ -3,7 +3,6 @@
 
 import { CompositeKernel } from "../compositeKernel";
 import { JavascriptKernel } from "../javascriptKernel";
-import { Kernel } from "../kernel";
 import { LogEntry, Logger } from "../logger";
 import { KernelHost } from "../kernelHost";
 import * as rxjs from "rxjs";
@@ -23,12 +22,6 @@ export function createHost(
     global.interactive = {};
     configureRequire(global.interactive);
 
-    global.kernel = {
-        get root() {
-            return Kernel.root;
-        }
-    };
-
     const compositeKernel = new CompositeKernel(compositeKernelName);
     const kernelHost = new KernelHost(compositeKernel, connection.KernelCommandAndEventSender.FromObserver(localToRemote), connection.KernelCommandAndEventReceiver.FromObservable(remoteToLocal), `kernel://${compositeKernelName}`);
     remoteToLocal.subscribe({
@@ -39,6 +32,14 @@ export function createHost(
             }
         }
     });
+
+    // use composite kernel as root
+
+    global.kernel = {
+        get root() {
+            return compositeKernel;
+        }
+    };
 
     global[compositeKernelName] = {
         compositeKernel,

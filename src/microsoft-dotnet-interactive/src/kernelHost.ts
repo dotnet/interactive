@@ -114,12 +114,14 @@ export class KernelHost {
 
     public connect() {
         this._kernel.subscribeToKernelEvents(e => {
+            Logger.default.info(`KernelHost forwarding event: ${JSON.stringify(e)}`);
             this._defaultConnector.sender.send(e);
         });
 
         this._defaultConnector.receiver.subscribe({
             next: (kernelCommandOrEventEnvelope: connection.KernelCommandOrEventEnvelope) => {
                 if (connection.isKernelCommandEnvelope(kernelCommandOrEventEnvelope)) {
+                    Logger.default.info(`KernelHost dispacthing command: ${JSON.stringify(kernelCommandOrEventEnvelope)}`);
                     this._scheduler.runAsync(kernelCommandOrEventEnvelope, commandEnvelope => {
                         const kernel = this._kernel;
                         return kernel.send(commandEnvelope);

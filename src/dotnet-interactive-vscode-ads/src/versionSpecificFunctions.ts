@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as vscode from 'vscode';
+import * as azdata from 'azdata';
 
 export function getNotebookDocumentFromEditor(notebookEditor: vscode.NotebookEditor): vscode.NotebookDocument {
     return notebookEditor.document;
@@ -26,4 +27,17 @@ export async function replaceNotebookMetadata(notebookUri: vscode.Uri, documentM
     edit.replaceNotebookMetadata(notebookUri, documentMetadata);
     const succeeded = await vscode.workspace.applyEdit(edit);
     return succeeded;
+}
+
+export async function handleCustomInputRequest(prompt: string, inputTypeHint: string, password: boolean): Promise<{ handled: boolean, result: string | null | undefined }> {
+    let result = undefined;
+    let handled = false;
+    if (inputTypeHint === 'connectionstring-mssql') {
+        handled = true;
+        let connection = await azdata.connection.openConnectionDialog();
+        if (connection) {
+            result = await azdata.connection.getConnectionString(connection.connectionId, true);
+        }
+    }
+    return { handled, result };
 }

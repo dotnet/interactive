@@ -134,8 +134,23 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
         }
 
         if (notebook) {
+            // clear the value explorer view
+            await vscode.commands.executeCommand('polyglot-notebook.clearValueExplorer');
+
+            // notifty the client that the kernel is about to restart
+            const restartCompletionSource = new PromiseCompletionSource<void>();
+            vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: 'Restarting kernel...'
+            },
+                (_progress, _token) => restartCompletionSource.promise);
             await vscode.commands.executeCommand('polyglot-notebook.stopCurrentNotebookKernel', notebook);
             const _client = await clientMapper.getOrAddClient(notebook.uri);
+            restartCompletionSource.resolve();
+            vscode.window.showInformationMessage('Kernel restarted.');
+
+            // notify the ValueExplorer that the kernel has restarted
+            await vscode.commands.executeCommand('polyglot-notebook.resetValueExplorerSubscriptions');
         }
     }));
 
@@ -151,7 +166,12 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
 
         if (notebook) {
             for (const cell of notebook.getCells()) {
-                notebookControllers.endExecution(cell, false);
+                notebookControllers.endExecution(undefined, cell, false);
+            }
+
+            const client = await clientMapper.tryGetClient(notebook.uri);
+            if (client) {
+                client.resetExecutionCount();
             }
 
             clientMapper.closeClient(notebook.uri);
