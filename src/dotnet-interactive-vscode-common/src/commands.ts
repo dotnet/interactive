@@ -116,6 +116,11 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
         context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.notebookEditor.restartKernel', async (_notebookEditor) => {
             await vscode.commands.executeCommand('dotnet-interactive.restartCurrentNotebookKernel');
         }));
+
+        context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.notebookEditor.openValueViewer', async () => {
+            // vscode creates a command named `<viewId>.focus` for all contributed views, so we need to match the id
+            await vscode.commands.executeCommand('dotnet-interactive-panel-values.focus');
+        }));
     }
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.restartCurrentNotebookKernel', async (notebook?: vscode.NotebookDocument | undefined) => {

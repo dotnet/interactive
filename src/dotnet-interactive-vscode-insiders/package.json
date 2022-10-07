@@ -245,6 +245,11 @@
       {
         "command": "dotnet-interactive.shareValueTo",
         "title": "Share value to..."
+      },
+      {
+        "command": "dotnet-interactive.notebookEditor.openValueViewer",
+        "title": "Values",
+        "icon": "$(variable-group)"
       }
     ],
     "keybindings": [
@@ -334,6 +339,11 @@
         {
           "command": "dotnet-interactive.notebookEditor.restartKernel",
           "group": "navigation/execute@1",
+          "when": "notebookKernel =~ /dotnet-interactive/ && isWorkspaceTrusted"
+        },
+        {
+          "command": "dotnet-interactive.notebookEditor.openValueViewer",
+          "group": "navigation@1",
           "when": "notebookKernel =~ /dotnet-interactive/ && isWorkspaceTrusted"
         }
       ]
