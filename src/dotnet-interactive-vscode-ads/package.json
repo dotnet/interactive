@@ -49,7 +49,7 @@
     "onView:dotnet-interactive-panel-values",
     "onNotebook:polyglot-notebook",
     "onNotebook:polyglot-notebook-legacy",
-    "onCommand:polyglot-notebook.acquire",
+    "onCommand:dotnet-interactive.acquire",
     "onCommand:polyglot-notebook.newNotebook"
   ],
   "main": "./out/src/vscode-common/extension.js",
@@ -196,7 +196,7 @@
     },
     "commands": [
       {
-        "command": "polyglot-notebook.acquire",
+        "command": "dotnet-interactive.acquire",
         "title": "Install .NET Interactive"
       },
       {

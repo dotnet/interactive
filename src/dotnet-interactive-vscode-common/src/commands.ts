@@ -26,7 +26,7 @@ export function registerAcquisitionCommands(context: vscode.ExtensionContext, di
     let cachedInstallArgs: InstallInteractiveArgs | undefined = undefined;
     let acquirePromise: Promise<InteractiveLaunchOptions> | undefined = undefined;
 
-    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.acquire', async (args?: InstallInteractiveArgs | string | undefined): Promise<InteractiveLaunchOptions | undefined> => {
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.acquire', async (args?: InstallInteractiveArgs | string | undefined): Promise<InteractiveLaunchOptions | undefined> => {
         try {
             const installArgs = computeToolInstallArguments(args);
             DotNetPathManager.setDotNetPath(installArgs.dotnetPath);

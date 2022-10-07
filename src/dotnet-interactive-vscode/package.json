@@ -55,7 +55,7 @@
     "onNotebook:polyglot-notebook-legacy",
     "onNotebook:polyglot-notebook-window",
     "onNotebook:jupyter-notebook",
-    "onCommand:polyglot-notebook.acquire",
+    "onCommand:dotnet-interactive.acquire",
     "onCommand:polyglot-notebook.createNewInteractive",
     "onCommand:polyglot-notebook.newNotebook",
     "onCommand:polyglot-notebook.openNotebook",
@@ -202,7 +202,7 @@
     },
     "commands": [
       {
-        "command": "polyglot-notebook.acquire",
+        "command": "dotnet-interactive.acquire",
         "title": "Install .NET Interactive"
       },
       {
