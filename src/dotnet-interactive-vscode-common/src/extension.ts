@@ -246,7 +246,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     //   vscode://ms-dotnettools.dotnet-interactive-vscode/newNotebook?as=dib
                     //   vscode://ms-dotnettools.dotnet-interactive-vscode/newNotebook?as=ipynb
                     const asType = params.get('as');
-                    vscode.commands.executeCommand('polyglot-notebook.acquire').then(() => {
+                    vscode.commands.executeCommand('dotnet-interactive.acquire').then(() => {
                         const commandName = asType === 'ipynb'
                             ? 'polyglot-notebook.newNotebookIpynb'
                             : 'polyglot-notebook.newNotebookDib';
@@ -262,7 +262,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     const url = params.get('url');
                     const notebookFormat = params.get('notebookFormat');
                     if (notebookPath) {
-                        vscode.commands.executeCommand('polyglot-notebook.acquire').then(() => {
+                        vscode.commands.executeCommand('dotnet-interactive.acquire').then(() => {
                             vscode.commands.executeCommand('polyglot-notebook.openNotebook', vscode.Uri.file(notebookPath)).then(() => { });
                         });
                     } else if (url) {
@@ -319,7 +319,7 @@ function registerWithVsCode(context: vscode.ExtensionContext, clientMapper: Clie
 }
 
 async function openNotebookFromUrl(notebookUrl: string, notebookFormat: string | null, serializerMap: Map<string, vscode.NotebookSerializer>, diagnosticsChannel: OutputChannelAdapter): Promise<void> {
-    await vscode.commands.executeCommand('polyglot-notebook.acquire');
+    await vscode.commands.executeCommand('dotnet-interactive.acquire');
 
     try {
         Logger.default.info(`Opening notebook from URL: ${notebookUrl}`);
@@ -427,6 +427,6 @@ async function getInteractiveLaunchOptions(): Promise<InteractiveLaunchOptions |
     const installArgs: InstallInteractiveArgs = {
         dotnetPath: DotNetPathManager.getDotNetPath(),
     };
-    const launchOptions = await vscode.commands.executeCommand<InteractiveLaunchOptions>('polyglot-notebook.acquire', installArgs);
+    const launchOptions = await vscode.commands.executeCommand<InteractiveLaunchOptions>('dotnet-interactive.acquire', installArgs);
     return launchOptions;
 }
