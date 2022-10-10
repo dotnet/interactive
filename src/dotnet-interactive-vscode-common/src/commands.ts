@@ -6,7 +6,7 @@ import * as path from 'path';
 import { acquireDotnetInteractive } from './acquisition';
 import { InstallInteractiveArgs, InteractiveLaunchOptions } from './interfaces';
 import { ClientMapper } from './clientMapper';
-import { getEol, isAzureDataStudio, toNotebookDocument } from './vscodeUtilities';
+import { getEol, isAzureDataStudio, isInsidersBuild, toNotebookDocument } from './vscodeUtilities';
 import { DotNetPathManager, KernelIdForJupyter } from './extension';
 import { computeToolInstallArguments, executeSafe, executeSafeAndLog, extensionToDocumentType, getVersionNumber } from './utilities';
 
@@ -139,7 +139,7 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
             await vscode.commands.executeCommand('dotnet-interactive.stopCurrentNotebookKernel', notebook);
             const _client = await clientMapper.getOrAddClient(notebook.uri);
             restartCompletionSource.resolve();
-            if (!isAzureDataStudio(context)) {
+            if (!isAzureDataStudio(context) && isInsidersBuild()) {
                 await vscode.commands.executeCommand('workbench.notebook.layout.webview.reset', notebook.uri);
             }
             vscode.window.showInformationMessage('Kernel restarted.');
