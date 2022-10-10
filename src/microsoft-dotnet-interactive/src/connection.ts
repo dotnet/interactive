@@ -51,11 +51,19 @@ export class KernelCommandAndEventReceiver implements IKernelCommandAndEventRece
 
     public static FromEventListener(args: { map: (data: Event) => KernelCommandOrEventEnvelope, eventTarget: EventTarget, event: string }): IKernelCommandAndEventReceiver {
         let subject = new rxjs.Subject<KernelCommandOrEventEnvelope>();
-        args.eventTarget.addEventListener(args.event, (e: Event) => {
+        const listener = (e: Event) => {
             let mapped = args.map(e);
             subject.next(mapped);
+        };
+        args.eventTarget.addEventListener(args.event, listener);
+        const ret = new KernelCommandAndEventReceiver(subject);
+        ret._disposables.push({
+            dispose: () => {
+                args.eventTarget.removeEventListener(args.event, listener);
+            }
         });
-        return new KernelCommandAndEventReceiver(subject);
+        args.eventTarget.removeEventListener(args.event, listener);
+        return ret;
     }
 }
 

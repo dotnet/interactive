@@ -139,6 +139,9 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
             await vscode.commands.executeCommand('dotnet-interactive.stopCurrentNotebookKernel', notebook);
             const _client = await clientMapper.getOrAddClient(notebook.uri);
             restartCompletionSource.resolve();
+            if (!isAzureDataStudio(context)) {
+                await vscode.commands.executeCommand('workbench.notebook.layout.webview.reset', notebook.uri);
+            }
             vscode.window.showInformationMessage('Kernel restarted.');
 
             // notify the ValueExplorer that the kernel has restarted
