@@ -13,9 +13,9 @@ import { reshapeOutputValueForVsCode } from './vscode-common/interfaces/utilitie
 import { selectDotNetInteractiveKernelForJupyter } from './vscode-common/commands';
 import { ErrorOutputCreator, InteractiveClient } from './vscode-common/interactiveClient';
 import { LogEntry, Logger } from './vscode-common/dotnet-interactive/logger';
-import * as notebookMessageHandler from './vscode-common/notebookMessageHandler';
 import { KernelCommandOrEventEnvelope } from './vscode-common/dotnet-interactive/connection';
 import * as rxjs from 'rxjs';
+import * as versionSpecificFunctions from './versionSpecificFunctions';
 
 const executionTasks: Map<string, vscode.NotebookCellExecution> = new Map();
 
@@ -108,7 +108,7 @@ export class DotNetNotebookKernel {
                     this.config.clientMapper.getOrAddClient(documentUri).then(() => {
                         const kernelInfoProduced = (<contracts.KernelEventEnvelope[]>(e.message.kernelInfoProduced)).map(e => <contracts.KernelInfoProduced>e.event);
                         const hostUri = e.message.hostUri;
-                        notebookMessageHandler.hashBangConnect(this.config.clientMapper, hostUri, kernelInfoProduced, this.uriMessageHandlerMap, (arg) => controller.postMessage(arg), documentUri);
+                        versionSpecificFunctions.hashBangConnect(this.config.clientMapper, hostUri, kernelInfoProduced, this.uriMessageHandlerMap, (arg) => controller.postMessage(arg), documentUri);
                     });
                     break;
             }
