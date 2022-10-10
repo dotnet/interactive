@@ -126,4 +126,3 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, ker
     });
 }
 
-

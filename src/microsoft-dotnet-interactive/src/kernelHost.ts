@@ -89,6 +89,21 @@ export class KernelHost {
         }
     }
 
+    public tryRemoveConnector(connector: { remoteUris?: string[] }) {
+        if (!connector.remoteUris) {
+            for (let uri of connector.remoteUris!) {
+                const index = this._connectors.findIndex(c => c.canReach(uri));
+                if (index >= 0) {
+                    this._connectors.splice(index, 1);
+                }
+            }
+            return true;
+        } else {
+
+            return false;
+        }
+    }
+
     public connectProxyKernel(localName: string, remoteKernelUri: string, aliases?: string[]): ProxyKernel {
         this._connectors;//?
         const connector = this._connectors.find(c => c.canReach(remoteKernelUri));
