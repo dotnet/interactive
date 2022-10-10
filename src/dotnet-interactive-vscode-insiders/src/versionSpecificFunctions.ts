@@ -42,8 +42,6 @@ export async function handleCustomInputRequest(prompt: string, inputTypeHint: st
     return { handled: false, result: undefined };
 }
 
-
-
 export function hashBangConnect(clientMapper: ClientMapper, hostUri: string, kernelInfoProduced: contracts.KernelInfoProduced[], messageHandlerMap: Map<string, rxjs.Subject<KernelCommandOrEventEnvelope>>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
     Logger.default.info(`handling #!connect for ${documentUri.toString()}`);
     hashBangConnectPrivate(clientMapper, hostUri, kernelInfoProduced, messageHandlerMap, controllerPostMessage, documentUri);
@@ -157,5 +155,3 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, ker
         }
     });
 }
-
-
