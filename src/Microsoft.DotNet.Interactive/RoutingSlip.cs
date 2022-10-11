@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Interactive;
 
-public class RoutingSlip : IReadOnlyList<Uri>
+public class RoutingSlip 
 {
     private readonly HashSet<Uri> _uniqueUris ;
     private readonly List<Uri> _uris;
@@ -18,8 +18,8 @@ public class RoutingSlip : IReadOnlyList<Uri>
     {
         if (source is { })
         {
-            _uniqueUris = new HashSet<Uri>(source);
-            _uris = new List<Uri>(source);
+            _uniqueUris = new HashSet<Uri>(source._uniqueUris);
+            _uris = new List<Uri>(source._uris);
         }
         else
         {
@@ -28,32 +28,51 @@ public class RoutingSlip : IReadOnlyList<Uri>
         }
     }
 
-    public bool TryAdd(Uri kernelOrKernelHostUri)
+    public void MarkAsReceived(Uri kernelOrKernelHostUri)
     {
         lock (_lock)
         {
             if (_uniqueUris.Add(kernelOrKernelHostUri))
             {
                 _uris.Add(kernelOrKernelHostUri);
-                return true;
+                
+            }
+            else
+            {
+                throw new InvalidOperationException($"The routing slip already contains {kernelOrKernelHostUri}");
             }
         }
-
-        return false;
+        
+    }
+    
+    public bool StartsWith(RoutingSlip other)
+    {
+        return StartsWith(other._uris.ToArray());
+       
     }
 
-    public bool Contains(Uri kernelOrKernelHostUri) => _uniqueUris.Contains(kernelOrKernelHostUri);
-
-    public bool Contains(RoutingSlip other)
+    public bool StartsWith(params Uri[] kernelUris)
     {
-        var contains =  this.Zip(other, (o, i) => o.Equals(i)).All(x => x);
+        if (kernelUris.Length > _uris.Count)
+        {
+            return false;
+        }
+        var contains = _uris.Zip(kernelUris, (o, i) => o.Equals(i)).All(x => x);
         return contains;
     }
+    
+    public void Append(RoutingSlip other)
+    {
+        throw new NotImplementedException();
+    }
 
-    IEnumerator<Uri> IEnumerable<Uri>.GetEnumerator() => _uris.GetEnumerator();
+    public Uri[] ToUriArray()
+    {
+        return _uris.ToArray();
+    }
 
-    IEnumerator IEnumerable.GetEnumerator() => _uris.GetEnumerator();
-
-    public Uri this[int index] => _uris[index];
-    public int Count => _uris.Count;
+    public void MarkAsCompleted(Uri uri)
+    {
+        throw new NotImplementedException();
+    }
 }

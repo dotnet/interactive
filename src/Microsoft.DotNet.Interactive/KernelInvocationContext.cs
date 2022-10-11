@@ -209,7 +209,7 @@ namespace Microsoft.DotNet.Interactive
 
             if (HandlingKernel is { })
             {
-                @event.TryAddToRoutingSlip(HandlingKernel.GetKernelUri());
+                @event.RoutingSlip.MarkAsReceived(HandlingKernel.GetKernelUri());
             }
 
             if (_childCommands.TryGetValue(command, out var events))

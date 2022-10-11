@@ -15,20 +15,14 @@ public abstract class KernelEvent
         RoutingSlip = new RoutingSlip();
     }
 
-
     [JsonIgnore]
     public KernelCommand Command { get; }
 
     [JsonIgnore]
-    public RoutingSlip RoutingSlip { get; }
+    public RoutingSlip RoutingSlip { get; internal set; }
 
     public override string ToString()
     {
         return $"{GetType().Name}";
-    }
-
-    public bool TryAddToRoutingSlip(Uri uri)
-    {
-        return RoutingSlip.TryAdd(uri);
     }
 }

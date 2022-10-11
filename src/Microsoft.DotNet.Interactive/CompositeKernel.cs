@@ -235,27 +235,20 @@ namespace Microsoft.DotNet.Interactive
             RequestKernelInfo command,
             KernelInvocationContext context)
         {
-            if (command.RoutingSlip.TryAdd(KernelInfo.Uri))
+            command.RoutingSlip.MarkAsReceived(KernelInfo.Uri);
+            context.Publish(new KernelInfoProduced(KernelInfo, command));
+            foreach (var childKernel in ChildKernels)
             {
-                context.Publish(new KernelInfoProduced(KernelInfo, command));
-
-                foreach (var childKernel in ChildKernels)
+                var cr = new RequestKernelInfo(targetKernelName: childKernel.KernelInfo.LocalName)
                 {
-                    var cr = new RequestKernelInfo(targetKernelName: childKernel.KernelInfo.LocalName)
-                    {
-                        OriginUri = childKernel.KernelInfo.Uri,
-                        DestinationUri = childKernel.KernelInfo.RemoteUri,
-                        Parent = command
-                    };
-                    if (childKernel.SupportsCommand(cr))
-                    {
-                        await childKernel.HandleAsync(cr, context);
-                    }
+                    OriginUri = childKernel.KernelInfo.Uri,
+                    DestinationUri = childKernel.KernelInfo.RemoteUri,
+                    Parent = command
+                };
+                if (childKernel.SupportsCommand(cr))
+                {
+                    await childKernel.HandleAsync(cr, context);
                 }
-            }
-            else
-            {
-
             }
         }
 

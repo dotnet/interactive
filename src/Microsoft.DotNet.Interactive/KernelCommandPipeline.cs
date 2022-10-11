@@ -40,12 +40,12 @@ namespace Microsoft.DotNet.Interactive
             try
             {
                 await _pipeline(command, context, (_, __) => Task.CompletedTask);
-                command.TryAddToRoutingSlip(_kernel.GetKernelUri());
+                command.RoutingSlip.MarkAsReceived(_kernel.GetKernelUri());
             }
             catch (Exception exception)
             {
                 context.Fail(command, exception);
-                command.TryAddToRoutingSlip(_kernel.GetKernelUri());
+                command.RoutingSlip.MarkAsReceived(_kernel.GetKernelUri());
             }
         }
 

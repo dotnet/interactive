@@ -156,7 +156,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
             foreach (var command in commands().Select(c =>
             {
                 c.Properties["id"] = "command-id";
-                c.TryAddToRoutingSlip(new Uri("kernel://somelocation/kernelName"));
+                c.RoutingSlip.MarkAsReceived(new Uri("kernel://somelocation/kernelName"));
                 return c;
             }))
             {
@@ -178,8 +178,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
             foreach (var @event in events().Select(e =>
             {
                 e.Command.Properties["id"] = "command-id";
-                e.Command.TryAddToRoutingSlip(new Uri("kernel://somelocation/kernelName"));
-                e.TryAddToRoutingSlip(new Uri("kernel://somelocation/kernelName"));
+                e.Command.RoutingSlip.MarkAsReceived(new Uri("kernel://somelocation/kernelName"));
+                e.RoutingSlip.MarkAsReceived(new Uri("kernel://somelocation/kernelName"));
                 return e;
             }))
             {

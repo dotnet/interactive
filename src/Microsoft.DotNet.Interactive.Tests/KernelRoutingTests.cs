@@ -32,26 +32,12 @@ public class KernelRoutingTests : IDisposable
     public void RoutingSlip_includes_parent_RoutingSlip()
     {
         var parent = new RoutingSlip();
-        parent.TryAdd(new Uri("kernel://a"));
+        parent.MarkAsReceived(new Uri("kernel://a"));
 
         var child = new RoutingSlip(parent);
-        child.TryAdd(new Uri("kernel://b"));
+        child.MarkAsReceived(new Uri("kernel://b"));
 
-        child.Contains(parent).Should().BeTrue();
-    }
-
-    [Fact]
-    public void RoutingSlip_identifies_childCommands()
-    {
-        var parent = new SubmitCode("code1");
-        parent.RoutingSlip.TryAdd(new Uri("kernel://1"));
-        parent.RoutingSlip.TryAdd(new Uri("kernel://2"));
-        var child = new SubmitCode("code2");
-        child.RoutingSlip.TryAdd(new Uri("kernel://1"));
-        child.RoutingSlip.TryAdd(new Uri("kernel://2"));
-        child.RoutingSlip.TryAdd(new Uri("kernel://5"));
-
-        child.IsChildCommand(parent).Should().BeTrue();
+        child.StartsWith(parent).Should().BeTrue();
     }
 
     [Fact]
@@ -350,7 +336,7 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
 
         events.Should().ContainSingle<StandardOutputValueProduced>()
             .Which
-            .RoutingSlip.Should().ContainInOrder(
+            .RoutingSlip.ToUriArray().Should().ContainInOrder(
             new[]
             {
                 new Uri("kernel://local/csharp", UriKind.Absolute),
@@ -389,7 +375,7 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
 
         events.Should().ContainSingle<ReturnValueProduced>()
             .Which
-            .RoutingSlip.Should().ContainInOrder(
+            .RoutingSlip.ToUriArray().Should().ContainInOrder(
             new[]
             {
                 new Uri("kernel://remote/csharp", UriKind.Absolute),

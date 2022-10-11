@@ -150,11 +150,6 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public static bool IsChildCommand(this KernelCommand src, KernelCommand candidateParentCommand)
-        {
-            return src.Parent == candidateParentCommand || src.RoutingSlip.Contains(candidateParentCommand.RoutingSlip);
-        }
-    
 
         internal static bool IsEquivalentTo(this KernelCommand src, KernelCommand other)
         {

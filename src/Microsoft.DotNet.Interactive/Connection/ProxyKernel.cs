@@ -53,7 +53,7 @@ public sealed class ProxyKernel : Kernel
         {
             if (coe.Event is { } e)
             {
-                if (e is KernelInfoProduced kip && e.RoutingSlip.Count > 0 && e.RoutingSlip.FirstOrDefault() == _remoteUri)
+                if (e is KernelInfoProduced kip && e.RoutingSlip.StartsWith(_remoteUri))
                 {
                     UpdateKernelInfoFromEvent(kip);
                     PublishEvent(new KernelInfoProduced(KernelInfo, e.Command));
@@ -180,7 +180,7 @@ public sealed class ProxyKernel : Kernel
 
         if (hasPending && HasSameOrigin(kernelEvent, KernelInfo))
         {
-            PatchRoutingSlip(pending.command, kernelEvent.Command);
+            pending.command.RoutingSlip.Append(kernelEvent.Command.RoutingSlip);
             switch (kernelEvent)
             {
                 case CommandFailed cf when pending.command.IsEquivalentTo(kernelEvent.Command):
@@ -195,10 +195,8 @@ public sealed class ProxyKernel : Kernel
                     {
                         UpdateKernelInfoFromEvent(kip);
                         var newEvent = new KernelInfoProduced(KernelInfo, kernelEvent.Command);
-                        foreach (var kernelUri in kip.RoutingSlip)
-                        {
-                            newEvent.TryAddToRoutingSlip(kernelUri);
-                        }
+                        newEvent.RoutingSlip = new RoutingSlip(kip.RoutingSlip);
+                       
                         if (pending.executionContext is { } ec)
                         {
                             ExecutionContext.Run(ec, _ =>
@@ -229,15 +227,7 @@ public sealed class ProxyKernel : Kernel
             }
         }
     }
-
-    private void PatchRoutingSlip(KernelCommand command, KernelCommand commandFromRemoteKernel)
-    {
-        foreach (var kernelOrKernelHostUri in commandFromRemoteKernel.RoutingSlip.Skip(command.RoutingSlip.Count))
-        {
-            command.TryAddToRoutingSlip(kernelOrKernelHostUri);
-        }
-    }
-
+    
     private bool HasSameOrigin(KernelEvent kernelEvent, KernelInfo kernelInfo)
     {
         var commandOriginUri = kernelEvent.Command.OriginUri;

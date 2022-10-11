@@ -23,7 +23,7 @@ internal static partial class DictionaryExtensions
     }
 
 #if NETSTANDARD2_0
-    public static bool TryAdd<TKey, TValue>(
+    public static bool MarkAsReceived<TKey, TValue>(
         this IDictionary<TKey, TValue> source, 
         TKey key,
         TValue value)

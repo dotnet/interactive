@@ -199,7 +199,7 @@ namespace Microsoft.DotNet.Interactive
                 return false;
             }
 
-            // TextSpan.Contains only checks `[start, end)`, but we need to allow for `[start, end]`
+            // TextSpan.StartsWith only checks `[start, end)`, but we need to allow for `[start, end]`
             var absolutePosition = tree.GetAbsolutePosition(command.LinePosition);
 
             if (absolutePosition >= tree.Length)
@@ -533,9 +533,8 @@ namespace Microsoft.DotNet.Interactive
                             {
                                 return false;
                             }
-
-                            return inner.IsChildCommand(outer);
-                          
+                            
+                            return inner.Parent == outer || inner.RoutingSlip.StartsWith(outer.RoutingSlip);
                         }
                         );
                     RegisterForDisposal(scheduler);
@@ -636,7 +635,7 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentNullException(nameof(kernelEvent));
             }
 
-            kernelEvent.TryAddToRoutingSlip(this.GetKernelUri());
+            kernelEvent.RoutingSlip.MarkAsReceived(this.GetKernelUri());
             _kernelEvents.OnNext(kernelEvent);
         }
 
