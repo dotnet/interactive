@@ -9,16 +9,16 @@ public abstract class DocumentFormatTestsBase
 {
     protected DocumentFormatTestsBase()
     {
-        KernelInfos = new KernelInfoCollection
+        DefaultKernelInfos = new KernelInfoCollection
         {
             new("csharp", new[] { "cs", "C#", "c#" }),
             new("fsharp", new[] { "fs", "F#", "f#" }),
             new("pwsh", new[] { "powershell" }),
         };
-        KernelInfos.DefaultKernelName = "csharp";
+        DefaultKernelInfos.DefaultKernelName = "csharp";
     }
 
-    public KernelInfoCollection KernelInfos { get; }
+    public KernelInfoCollection DefaultKernelInfos { get; }
 
     protected static string PathToCurrentSourceFile([CallerFilePath] string path = null)
     {

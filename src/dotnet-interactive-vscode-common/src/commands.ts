@@ -6,7 +6,7 @@ import * as path from 'path';
 import { acquireDotnetInteractive } from './acquisition';
 import { InstallInteractiveArgs, InteractiveLaunchOptions } from './interfaces';
 import { ClientMapper } from './clientMapper';
-import { getEol, isAzureDataStudio, toNotebookDocument } from './vscodeUtilities';
+import { getEol, isAzureDataStudio, isInsidersBuild, toNotebookDocument } from './vscodeUtilities';
 import { DotNetPathManager, KernelIdForJupyter } from './extension';
 import { computeToolInstallArguments, executeSafe, executeSafeAndLog, extensionToDocumentType, getVersionNumber } from './utilities';
 
@@ -101,37 +101,64 @@ export function registerAcquisitionCommands(context: vscode.ExtensionContext, di
     }
 }
 
+function getCurrentNotebookDocument(): vscode.NotebookDocument | undefined {
+    if (!vscode.window.activeNotebookEditor) {
+        return undefined;
+    }
+
+    return versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
+}
+
 export function registerKernelCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
 
+    // azure data studio doesn't support the notebook toolbar
+    if (!isAzureDataStudio(context)) {
+        context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.notebookEditor.restartKernel', async (_notebookEditor) => {
+            await vscode.commands.executeCommand('dotnet-interactive.restartCurrentNotebookKernel');
+        }));
+
+        context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.notebookEditor.openValueViewer', async () => {
+            // vscode creates a command named `<viewId>.focus` for all contributed views, so we need to match the id
+            await vscode.commands.executeCommand('dotnet-interactive-panel-values.focus');
+        }));
+    }
+
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.restartCurrentNotebookKernel', async (notebook?: vscode.NotebookDocument | undefined) => {
-        if (!notebook) {
-            if (!vscode.window.activeNotebookEditor) {
-                // no notebook to operate on
-                return;
-            }
-
-            notebook = versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
-        }
-
+        notebook = notebook || getCurrentNotebookDocument();
         if (notebook) {
+            // clear the value explorer view
+            await vscode.commands.executeCommand('dotnet-interactive.clearValueExplorer');
+
+            // notifty the client that the kernel is about to restart
+            const restartCompletionSource = new PromiseCompletionSource<void>();
+            vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: 'Restarting kernel...'
+            },
+                (_progress, _token) => restartCompletionSource.promise);
             await vscode.commands.executeCommand('dotnet-interactive.stopCurrentNotebookKernel', notebook);
             const _client = await clientMapper.getOrAddClient(notebook.uri);
+            restartCompletionSource.resolve();
+            if (!isAzureDataStudio(context) && isInsidersBuild()) {
+                await vscode.commands.executeCommand('workbench.notebook.layout.webview.reset', notebook.uri);
+            }
+            vscode.window.showInformationMessage('Kernel restarted.');
+
+            // notify the ValueExplorer that the kernel has restarted
+            await vscode.commands.executeCommand('dotnet-interactive.resetValueExplorerSubscriptions');
         }
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.stopCurrentNotebookKernel', async (notebook?: vscode.NotebookDocument | undefined) => {
-        if (!notebook) {
-            if (!vscode.window.activeNotebookEditor) {
-                // no notebook to operate on
-                return;
-            }
-
-            notebook = versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
-        }
-
+        notebook = notebook || getCurrentNotebookDocument();
         if (notebook) {
             for (const cell of notebook.getCells()) {
-                notebookControllers.endExecution(cell, false);
+                notebookControllers.endExecution(undefined, cell, false);
+            }
+
+            const client = await clientMapper.tryGetClient(notebook.uri);
+            if (client) {
+                client.resetExecutionCount();
             }
 
             clientMapper.closeClient(notebook.uri);

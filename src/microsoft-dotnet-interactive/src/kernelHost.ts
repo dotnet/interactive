@@ -89,6 +89,21 @@ export class KernelHost {
         }
     }
 
+    public tryRemoveConnector(connector: { remoteUris?: string[] }) {
+        if (!connector.remoteUris) {
+            for (let uri of connector.remoteUris!) {
+                const index = this._connectors.findIndex(c => c.canReach(uri));
+                if (index >= 0) {
+                    this._connectors.splice(index, 1);
+                }
+            }
+            return true;
+        } else {
+
+            return false;
+        }
+    }
+
     public connectProxyKernel(localName: string, remoteKernelUri: string, aliases?: string[]): ProxyKernel {
         this._connectors;//?
         const connector = this._connectors.find(c => c.canReach(remoteKernelUri));
@@ -114,12 +129,14 @@ export class KernelHost {
 
     public connect() {
         this._kernel.subscribeToKernelEvents(e => {
+            Logger.default.info(`KernelHost forwarding event: ${JSON.stringify(e)}`);
             this._defaultConnector.sender.send(e);
         });
 
         this._defaultConnector.receiver.subscribe({
             next: (kernelCommandOrEventEnvelope: connection.KernelCommandOrEventEnvelope) => {
                 if (connection.isKernelCommandEnvelope(kernelCommandOrEventEnvelope)) {
+                    Logger.default.info(`KernelHost dispacthing command: ${JSON.stringify(kernelCommandOrEventEnvelope)}`);
                     this._scheduler.runAsync(kernelCommandOrEventEnvelope, commandEnvelope => {
                         const kernel = this._kernel;
                         return kernel.send(commandEnvelope);

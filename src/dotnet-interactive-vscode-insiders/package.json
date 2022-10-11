@@ -14,7 +14,7 @@
   "//version": "The version '42.42.42' is auto-set during CI package creation.",
   "version": "42.42.42",
   "engines": {
-    "vscode": "1.72.0-insider"
+    "vscode": "1.73.0-insider"
   },
   "bugs": {
     "url": "https://github.com/dotnet/interactive/issues"
@@ -161,7 +161,7 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.345103",
+          "default": "1.0.350406",
           "description": "The minimum required version of the .NET Interactive tool."
         },
         "dotnet-interactive.logLevel": {
@@ -227,6 +227,14 @@
         "title": ".NET Interactive: Restart the current notebook's kernel"
       },
       {
+        "command": "dotnet-interactive.notebookEditor.restartKernel",
+        "title": "Restart",
+        "icon": {
+          "light": "resources/light/restart-kernel.svg",
+          "dark": "resources/dark/restart-kernel.svg"
+        }
+      },
+      {
         "command": "dotnet-interactive.stopCurrentNotebookKernel",
         "title": ".NET Interactive: Stop the current notebook's kernel"
       },
@@ -237,6 +245,11 @@
       {
         "command": "dotnet-interactive.shareValueTo",
         "title": "Share value to..."
+      },
+      {
+        "command": "dotnet-interactive.notebookEditor.openValueViewer",
+        "title": "Values",
+        "icon": "$(variable-group)"
       }
     ],
     "keybindings": [
@@ -321,6 +334,20 @@
         "configuration": "./syntaxes/kql.language-configuration.json"
       }
     ],
+    "menus": {
+      "notebook/toolbar": [
+        {
+          "command": "dotnet-interactive.notebookEditor.restartKernel",
+          "group": "navigation/execute@1",
+          "when": "notebookKernel =~ /dotnet-interactive/ && isWorkspaceTrusted"
+        },
+        {
+          "command": "dotnet-interactive.notebookEditor.openValueViewer",
+          "group": "navigation@1",
+          "when": "notebookKernel =~ /dotnet-interactive/ && isWorkspaceTrusted"
+        }
+      ]
+    },
     "grammars": [
       {
         "language": "dotnet-interactive",

@@ -70,6 +70,8 @@ export interface InteractiveClientConfiguration {
 }
 
 export class InteractiveClient {
+    private disposables: (() => void)[] = [];
+    private nextExecutionCount = 1;
     private nextOutputId: number = 1;
     private nextToken: number = 1;
     private tokenEventObservers: Map<string, Array<KernelEventEnvelopeObserver>> = new Map<string, Array<KernelEventEnvelopeObserver>>();
@@ -330,6 +332,14 @@ export class InteractiveClient {
 
     dispose() {
         this.config.channel.dispose();
+        for (let disposable of this.disposables) {
+            disposable();
+        }
+
+    }
+
+    public registerForDisposal(disposable: () => void) {
+        this.disposables.push(disposable);
     }
 
     private submitCommandAndGetResult<TEvent extends KernelEvent>(command: KernelCommand, commandType: KernelCommandType, expectedEventType: KernelEventType, token: string | undefined): Promise<TEvent> {
@@ -488,6 +498,16 @@ export class InteractiveClient {
     private IsEncodedMimeType(mimeType: string): boolean {
         const encdodedMimetypes = new Set<string>(["image/png", "image/jpeg", "image/gif"]);
         return encdodedMimetypes.has(mimeType);
+    }
+
+    resetExecutionCount() {
+        this.nextExecutionCount = 1;
+    }
+
+    getNextExecutionCount(): number {
+        const next = this.nextExecutionCount;
+        this.nextExecutionCount++;
+        return next;
     }
 
     private getNextOutputId(): string {

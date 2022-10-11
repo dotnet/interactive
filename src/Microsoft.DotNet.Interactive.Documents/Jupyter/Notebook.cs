@@ -80,13 +80,13 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
             writer.Flush();
         }
 
-        public static string SerializeToJupyter(
+        public static string ToJupyterJson(
             this InteractiveDocument document,
-            bool enforceJupyterMetadata = true)
+            string? defaultLanguage = null)
         {
-            if (enforceJupyterMetadata)
+            if (defaultLanguage is {})
             {
-                document.WithJupyterMetadataIfNotSet();
+                document.WithJupyterMetadata(defaultLanguage);
             }
 
             var json = JsonSerializer.Serialize(document, JsonSerializerOptions);
@@ -102,7 +102,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
 
         public static void Write(InteractiveDocument document, TextWriter writer)
         {
-            var content = document.SerializeToJupyter();
+            var content = document.ToJupyterJson();
             writer.Write(content);
         }
     }
