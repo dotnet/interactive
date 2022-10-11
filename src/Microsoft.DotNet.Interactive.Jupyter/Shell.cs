@@ -36,7 +36,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         private readonly string _controlAddress;
         private readonly RouterSocket _stdIn;
         private readonly RouterSocket _control;
-        private readonly RequestReplyChannel _controllChannel;
+        private readonly RequestReplyChannel _controlChannel;
+        private string _kernelIdentity =  Guid.NewGuid().ToString();
 
         public Shell(
             Kernel kernel,
@@ -66,7 +67,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             _control = new RouterSocket();
 
             _shellChannel = new RequestReplyChannel(new MessageSender(_shell, signatureValidator));
-            _controllChannel = new RequestReplyChannel(new MessageSender(_control, signatureValidator));
+            _controlChannel = new RequestReplyChannel(new MessageSender(_control, signatureValidator));
             _ioPubChannel = new PubSubChannel(new MessageSender(_ioPubSocket, signatureValidator));
             _stdInChannel = new StdInChannel(new MessageSender(_stdIn, signatureValidator), new MessageReceiver(_stdIn));
 
@@ -85,10 +86,44 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             _ioPubSocket.Bind(_ioPubAddress);
             _stdIn.Bind(_stdInAddress);
             _control.Bind(_controlAddress);
-            var kernelIdentity = Guid.NewGuid().ToString();
+            
+            ShellChannelLoop(cancellationToken);
+
+            ControlChannelLoop(cancellationToken);
+
+            return Task.CompletedTask;
+        }
+
+        private void ControlChannelLoop(CancellationToken cancellationToken)
+        {
+            Task.Run(() =>
+            {
+                using var activity = Log.OnEnterAndExit();
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    var request = _control.GetMessage();
+
+                    activity.Info("Received: {message}", request.ToJson());
+
+                    SetBusy(request);
+
+                    switch (request.Header.MessageType)
+                    {
+                        case JupyterMessageContentTypes.KernelShutdownRequest:
+                            _controlChannel.Reply(new KernelShutdownReply(), request);
+                            SetIdle(request);
+                            _applicationLifetime.StopApplication();
+                            break;
+                    }
+                }
+            }, cancellationToken);
+        }
+
+        private void ShellChannelLoop(CancellationToken cancellationToken)
+        {
             Task.Run(async () =>
             {
-                using var activity = Log.OnEnterAndExit("jupyter shell channel");
+                using var activity = Log.OnEnterAndExit();
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     var request = _shell.GetMessage();
@@ -100,7 +135,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                     switch (request.Header.MessageType)
                     {
                         case JupyterMessageContentTypes.KernelInfoRequest:
-                            kernelIdentity = Encoding.Unicode.GetString(request.Identifiers[0].ToArray());
+                            _kernelIdentity = Encoding.Unicode.GetString(request.Identifiers[0].ToArray());
                             HandleKernelInfoRequest(request);
                             SetIdle(request);
                             break;
@@ -117,7 +152,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                                 _ioPubChannel,
                                 _stdInChannel,
                                 request,
-                                kernelIdentity);
+                                _kernelIdentity);
 
                             await _scheduler.Schedule(context);
 
@@ -129,35 +164,12 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                     }
                 }
             }, cancellationToken);
-
-            Task.Run(() =>
-            {
-                using var activity = Log.OnEnterAndExit("jupyter control channel");
-                while (!cancellationToken.IsCancellationRequested)
-                {
-                    var request = _control.GetMessage();
-
-                    activity.Info("Received: {message}", request.ToJson());
-
-                    SetBusy(request);
-
-                    switch (request.Header.MessageType)
-                    {
-                        case JupyterMessageContentTypes.KernelShutdownRequest:
-                            _controllChannel.Reply(new KernelShutdownReply(), request);
-                            SetIdle(request);
-                            _applicationLifetime.StopApplication();
-                            break;
-                    }
-                }
-            }, cancellationToken);
-
-            void SetBusy(ZeroMQMessage request) => _ioPubChannel.Publish(new Status(StatusValues.Busy), request, kernelIdentity);
-            void SetIdle(ZeroMQMessage request) => _ioPubChannel.Publish(new Status(StatusValues.Idle), request, kernelIdentity);
-
-            return Task.CompletedTask;
         }
 
+
+        private void SetBusy(ZeroMQMessage request) => _ioPubChannel.Publish(new Status(StatusValues.Busy), request, _kernelIdentity);
+        private void SetIdle(ZeroMQMessage request) => _ioPubChannel.Publish(new Status(StatusValues.Idle), request, _kernelIdentity);
+        
         public Task StopAsync(CancellationToken cancellationToken)
         {
             _disposables.Dispose();
