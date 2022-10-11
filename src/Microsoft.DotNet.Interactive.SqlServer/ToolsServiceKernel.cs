@@ -23,6 +23,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         IKernelCommandHandler<RequestCompletions>,
         IKernelCommandHandler<RequestValueInfos>,
         IKernelCommandHandler<RequestValue>,
+        IKernelCommandHandler<SendValue>,
         ISupportSetClrValue
     {
 
@@ -387,6 +388,15 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         /// <returns></returns>
         protected abstract bool CanDeclareVariable(string name, object value, out string msg);
 
+        public async Task HandleAsync(
+            SendValue command,
+            KernelInvocationContext context)
+        {
+            await SetValueAsync(
+                command.Name,
+                command.Value ?? command.FormattedValue.Value);
+        }
+
         public Task SetValueAsync(string name, object value, Type declaredType = null)
         {
             if (value == null)
@@ -398,6 +408,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             {
                 throw new ArgumentException($"Cannot support value of Type {value.GetType()}. {msg}");
             }
+
             _variables[name] = value;
             return Task.CompletedTask;
         }

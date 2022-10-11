@@ -302,7 +302,7 @@ namespace Microsoft.DotNet.Interactive
 
                 if (kernel.FindKernelByName(from) is { } fromKernel)
                 {
-                    await fromKernel.GetValueAndImportTo(kernel, valueName, mimeType, importAsName);
+                    await fromKernel.GetValueAndSendTo(kernel, valueName, mimeType, importAsName);
                 }
                 else
                 {
@@ -315,7 +315,7 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
-        internal static async Task GetValueAndImportTo(
+        internal static async Task GetValueAndSendTo(
             this Kernel fromKernel,
             Kernel toKernel,
             string fromName,
@@ -333,91 +333,53 @@ namespace Microsoft.DotNet.Interactive
 
             if (requestValueResult.KernelEvents.ToEnumerable().OfType<ValueProduced>().SingleOrDefault() is { } valueProduced)
             {
-                await SendValue(
-                    toKernel,
-                    valueProduced,
-                    toName ?? fromName,
-                    allowShareByRef: mimeType is null);
-            }
-        }
+                var declarationName = toName ?? fromName;
 
-        private static async Task SendValue(
-            Kernel importingKernel,
-            ValueProduced valueProduced,
-            string declarationName,
-            bool allowShareByRef)
-        {
-            if (importingKernel is not ISupportSetClrValue toInProcessKernel ||
-                importingKernel.SupportsCommandType(typeof(SendValue)))
-            {
-                if (allowShareByRef)
+                if (mimeType is null)
                 {
-                    await importingKernel.SendAsync(
+                    await toKernel.SendAsync(
                         new SendValue(
                             declarationName,
                             valueProduced.Value));
                 }
                 else
                 {
-                    await importingKernel.SendAsync(
+                    await toKernel.SendAsync(
                         new SendValue(
                             declarationName,
                             valueProduced.FormattedValue));
                 }
             }
+        }
+
+        static bool TryMaterialize(ValueProduced valueProduced, out object materializedValue)
+        {
+            if (valueProduced.FormattedValue.MimeType == JsonFormatter.MimeType)
+            {
+                // FIX: (DeclareValue) generalize
+                var jsonDoc = JsonDocument.Parse(valueProduced.FormattedValue.Value);
+
+                materializedValue = jsonDoc.RootElement.ValueKind switch
+                {
+                    JsonValueKind.Object => jsonDoc,
+                    JsonValueKind.Array => jsonDoc,
+
+                    JsonValueKind.Undefined => null,
+                    JsonValueKind.True => true,
+                    JsonValueKind.False => false,
+                    JsonValueKind.Null => null,
+                    JsonValueKind.String => jsonDoc.Deserialize<string>(),
+                    JsonValueKind.Number => jsonDoc.Deserialize<double>(),
+
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+
+                return true;
+            }
             else
             {
-                // FIX: (SendValue) remove this code path
-                object valueToSet;
-
-                if (!allowShareByRef || valueProduced.Value is null)
-                {
-                    if (TryMaterialize(valueProduced, out var materializedValue))
-                    {
-                        valueToSet = materializedValue;
-                    }
-                    else
-                    {
-                        valueToSet = valueProduced.FormattedValue.Value;
-                    }
-                }
-                else
-                {
-                    valueToSet = valueProduced.Value;
-                }
-
-                await toInProcessKernel.SetValueAsync(declarationName, valueToSet);
-            }
-
-            static bool TryMaterialize(ValueProduced valueProduced, out object materializedValue)
-            {
-                if (valueProduced.FormattedValue.MimeType == JsonFormatter.MimeType)
-                {
-                    // FIX: (DeclareValue) generalize
-                    var jsonDoc = JsonDocument.Parse(valueProduced.FormattedValue.Value);
-
-                    materializedValue = jsonDoc.RootElement.ValueKind switch
-                    {
-                        JsonValueKind.Object => jsonDoc,
-                        JsonValueKind.Array => jsonDoc,
-
-                        JsonValueKind.Undefined => null,
-                        JsonValueKind.True => true,
-                        JsonValueKind.False => false,
-                        JsonValueKind.Null => null,
-                        JsonValueKind.String => jsonDoc.Deserialize<string>(),
-                        JsonValueKind.Number => jsonDoc.Deserialize<double>(),
-
-                        _ => throw new ArgumentOutOfRangeException()
-                    };
-
-                    return true;
-                }
-                else
-                {
-                    materializedValue = null;
-                    return false;
-                }
+                materializedValue = null;
+                return false;
             }
         }
 

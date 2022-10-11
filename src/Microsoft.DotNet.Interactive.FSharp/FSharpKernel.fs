@@ -371,7 +371,7 @@ type FSharpKernel () as this =
             context.Publish(DiagnosticsProduced(diagnostics, requestDiagnostics))
         }
 
-    let handleGetValueValueInfos (requestValueInfos: RequestValueInfos) (context: KernelInvocationContext) =
+    let handleRequestValueValueInfos (requestValueInfos: RequestValueInfos) (context: KernelInvocationContext) =
         task {
             let valueInfos =
                 script.Value.Fsi.GetBoundValues()
@@ -381,7 +381,7 @@ type FSharpKernel () as this =
             context.Publish(new ValueInfosProduced(valueInfos, requestValueInfos))
         }
 
-    let handleGetValue (requestValue: RequestValue) (context: KernelInvocationContext) =
+    let handleRequestValue (requestValue: RequestValue) (context: KernelInvocationContext) =
         task {
             match script.Value.Fsi.TryFindBoundValue(requestValue.Name) with
             | Some cv ->
@@ -389,6 +389,16 @@ type FSharpKernel () as this =
             | _ ->
                 context.Fail(requestValue, message=(sprintf "Value '%s' not found in kernel %s" requestValue.Name this.Name))
         }
+
+    member this.handleSetValueAsync(name: string, value: Object, [<Optional>] declaredType: Type) : Task = 
+        script.Value.Fsi.AddBoundValue(name, value) |> ignore
+        Task.CompletedTask
+
+    let handleSendValue (sendValue: SendValue) (context: KernelInvocationContext) =
+        if (sendValue.Value <> null) then
+            this.handleSetValueAsync (sendValue.Name, sendValue.Value, null)
+        else
+            this.handleSetValueAsync (sendValue.Name, sendValue.FormattedValue.Value, null)
 
     let createPackageRestoreContext registerForDisposal =
         let packageRestoreContext = new PackageRestoreContext()
@@ -417,10 +427,6 @@ type FSharpKernel () as this =
         | _ ->
             false
 
-    member this.handleSetValueAsync(name: string, value: Object, [<Optional>] declaredType: Type) : Task = 
-        script.Value.Fsi.AddBoundValue(name, value) |> ignore
-        Task.CompletedTask
-
     member _.RestoreSources = _packageRestoreContext.Value.RestoreSources;
 
     member _.RequestedPackageReferences = _packageRestoreContext.Value.RequestedPackageReferences;
@@ -439,10 +445,13 @@ type FSharpKernel () as this =
         member this.HandleAsync(command: RequestHoverText, context: KernelInvocationContext) = handleRequestHoverText command context 
 
     interface IKernelCommandHandler<RequestValueInfos> with
-        member this.HandleAsync(command: RequestValueInfos, context: KernelInvocationContext) = handleGetValueValueInfos command context 
+        member this.HandleAsync(command: RequestValueInfos, context: KernelInvocationContext) = handleRequestValueValueInfos command context 
 
     interface IKernelCommandHandler<RequestValue> with
-        member this.HandleAsync(command: RequestValue, context: KernelInvocationContext) = handleGetValue command context 
+        member this.HandleAsync(command: RequestValue, context: KernelInvocationContext) = handleRequestValue command context 
+
+    interface IKernelCommandHandler<SendValue> with
+        member this.HandleAsync(command: SendValue, context: KernelInvocationContext) = handleSendValue command context 
 
     interface IKernelCommandHandler<SubmitCode> with
         member this.HandleAsync(command: SubmitCode, context: KernelInvocationContext) = handleSubmitCode command context

@@ -33,6 +33,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         IKernelCommandHandler<RequestDiagnostics>,
         IKernelCommandHandler<RequestValueInfos>,
         IKernelCommandHandler<RequestValue>,
+        IKernelCommandHandler<SendValue>,
         IKernelCommandHandler<SubmitCode>
     {
         private const string PSTelemetryEnvName = "POWERSHELL_DISTRIBUTION_CHANNEL";
@@ -58,7 +59,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
         internal int DefaultRunspaceId => _lazyPwsh.IsValueCreated ? pwsh.Runspace.Id : -1;
 
-        private HashSet<string> _suppressedValueInfoNames;
+        private readonly HashSet<string> _suppressedValueInfoNames;
 
         static PowerShellKernel()
         {
@@ -193,7 +194,16 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             return Task.CompletedTask;
         }
 
-        public Task SetValueAsync(string name, object value, Type declaredType)
+        public async Task HandleAsync(
+            SendValue command,
+            KernelInvocationContext context)
+        {
+            await SetValueAsync(
+                command.Name,
+                command.Value ?? command.FormattedValue.Value);
+        }
+
+        public Task SetValueAsync(string name, object value, Type declaredType = null)
         {
             _lazyPwsh.Value.Runspace.SessionStateProxy.PSVariable.Set(name, value);
             return Task.CompletedTask;

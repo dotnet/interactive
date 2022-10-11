@@ -69,25 +69,22 @@ namespace Microsoft.DotNet.Interactive
                 _declaredHandledCommandTypesByKernelType
                     .GetOrAdd(
                         GetType(),
-                        InitializeSupportedCommandTypes));
+                        GetImplementedCommandHandlerTypesFor));
 
+            _kernelInfo = InitializeKernelInfo(name, languageName, languageVersion);
+        }
+
+        private KernelInfo InitializeKernelInfo(string name, string languageName, string languageVersion)
+        {
             var supportedKernelCommands = _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)).ToArray();
 
             var supportedDirectives = Directives.Select(d => new KernelDirectiveInfo(d.Name)).ToArray();
 
-            _kernelInfo = new KernelInfo(name, languageName, languageVersion)
+            return new KernelInfo(name, languageName, languageVersion)
             {
                 SupportedKernelCommands = supportedKernelCommands,
                 SupportedDirectives = supportedDirectives,
             };
-
-            IReadOnlyCollection<Type> InitializeSupportedCommandTypes(Type kernelType)
-            {
-                return kernelType.GetInterfaces()
-                                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IKernelCommandHandler<>))
-                                 .SelectMany(i => i.GenericTypeArguments)
-                                 .ToArray();
-            }
         }
 
         internal KernelCommandPipeline Pipeline { get; }
@@ -114,7 +111,7 @@ namespace Microsoft.DotNet.Interactive
             _deferredCommands.Enqueue(command);
         }
 
-        private bool TryPreprocessCommands(
+        private bool TrySplitCommand(
             KernelCommand originalCommand,
             KernelInvocationContext context,
             out IReadOnlyList<KernelCommand> commands)
@@ -325,7 +322,7 @@ namespace Microsoft.DotNet.Interactive
                 }
             }
 
-            if (TryPreprocessCommands(command, context, out var commands))
+            if (TrySplitCommand(command, context, out var commands))
             {
                 SetHandlingKernel(command, context);
 
@@ -569,7 +566,7 @@ namespace Microsoft.DotNet.Interactive
                 kernelCommand.SchedulingScope = SchedulingScope;
                 kernelCommand.Parent = currentInvocationContext?.Command;
 
-                if (TryPreprocessCommands(kernelCommand, currentInvocationContext, out var commands))
+                if (TrySplitCommand(kernelCommand, currentInvocationContext, out var commands))
                 {
                     deferredCommands.AddRange(commands);
                 }
