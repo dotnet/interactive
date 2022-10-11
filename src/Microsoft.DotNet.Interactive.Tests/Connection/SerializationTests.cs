@@ -208,8 +208,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
 
                 yield return new SendValue(
                     "name",
-                    "raw value",
-                    new FormattedValue("text/plain", "raw value"),
+                    new FormattedValue("text/plain", "formatted value"),
                     targetKernelName: "fsharp");
             }
         }

@@ -38,6 +38,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         IKernelCommandHandler<RequestSignatureHelp>,
         IKernelCommandHandler<RequestValue>,
         IKernelCommandHandler<RequestValueInfos>,
+        IKernelCommandHandler<SendValue>,
         IKernelCommandHandler<SubmitCode>,
         IKernelCommandHandler<ChangeWorkingDirectory>
     {
@@ -168,6 +169,15 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }
             value = default;
             return false;
+        }
+
+        public async Task HandleAsync(
+            SendValue command,
+            KernelInvocationContext context)
+        {
+            await SetValueAsync(
+                command.Name,
+                command.Value ?? command.FormattedValue.Value);
         }
 
         public async Task SetValueAsync(string name, object value, Type declaredType = null)

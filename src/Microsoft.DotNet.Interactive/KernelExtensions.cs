@@ -15,7 +15,6 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -24,7 +23,6 @@ using Microsoft.DotNet.Interactive.ValueSharing;
 using Pocket;
 using CompletionItem = System.CommandLine.Completions.CompletionItem;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
-using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -201,9 +199,7 @@ namespace Microsoft.DotNet.Interactive
                     {
                         if (KernelInvocationContext.Current is {} currentContext)
                         {
-                            if (e is DiagnosticEvent ||
-                                e is DisplayEvent ||
-                                e is DiagnosticsProduced)
+                            if (e is DiagnosticEvent or DisplayEvent or DiagnosticsProduced)
                             {
                                 return;
                             }
@@ -337,7 +333,7 @@ namespace Microsoft.DotNet.Interactive
 
             if (requestValueResult.KernelEvents.ToEnumerable().OfType<ValueProduced>().SingleOrDefault() is { } valueProduced)
             {
-                await DeclareValue(
+                await SendValue(
                     toKernel,
                     valueProduced,
                     toName ?? fromName,
@@ -345,52 +341,84 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private static async Task DeclareValue(
+        private static async Task SendValue(
             Kernel importingKernel,
             ValueProduced valueProduced,
             string declarationName,
             bool allowShareByRef)
         {
-            if (importingKernel is ISupportSetClrValue toInProcessKernel)
+            if (importingKernel is not ISupportSetClrValue toInProcessKernel ||
+                importingKernel.SupportsCommandType(typeof(SendValue)))
             {
-                if (!allowShareByRef || 
-                    valueProduced.Value is not { } value)
+                if (allowShareByRef)
                 {
-                    if (valueProduced.FormattedValue.MimeType == JsonFormatter.MimeType)
+                    await importingKernel.SendAsync(
+                        new SendValue(
+                            declarationName,
+                            valueProduced.Value));
+                }
+                else
+                {
+                    await importingKernel.SendAsync(
+                        new SendValue(
+                            declarationName,
+                            valueProduced.FormattedValue));
+                }
+            }
+            else
+            {
+                // FIX: (SendValue) remove this code path
+                object valueToSet;
+
+                if (!allowShareByRef || valueProduced.Value is null)
+                {
+                    if (TryMaterialize(valueProduced, out var materializedValue))
                     {
-                        var jsonDoc = JsonDocument.Parse(valueProduced.FormattedValue.Value);
-
-                        value = jsonDoc.RootElement.ValueKind switch
-                        {
-                            JsonValueKind.Object => jsonDoc,
-                            JsonValueKind.Array => jsonDoc,
-
-                            JsonValueKind.Undefined => null,
-                            JsonValueKind.True => true,
-                            JsonValueKind.False => false,
-                            JsonValueKind.Null => null,
-                            JsonValueKind.String => jsonDoc.Deserialize<string>(),
-                            JsonValueKind.Number => jsonDoc.Deserialize<double>(),
-
-                            _ => throw new ArgumentOutOfRangeException()
-                        };
+                        valueToSet = materializedValue;
                     }
                     else
                     {
-                        value = valueProduced.FormattedValue.Value;
+                        valueToSet = valueProduced.FormattedValue.Value;
                     }
                 }
+                else
+                {
+                    valueToSet = valueProduced.Value;
+                }
 
-                await toInProcessKernel.SetValueAsync(declarationName, value);
-
-                return;
+                await toInProcessKernel.SetValueAsync(declarationName, valueToSet);
             }
 
-            await importingKernel.SendAsync(
-                new SendValue(
-                    valueProduced.Name,
-                    valueProduced.Value,
-                    valueProduced.FormattedValue));
+            static bool TryMaterialize(ValueProduced valueProduced, out object materializedValue)
+            {
+                if (valueProduced.FormattedValue.MimeType == JsonFormatter.MimeType)
+                {
+                    // FIX: (DeclareValue) generalize
+                    var jsonDoc = JsonDocument.Parse(valueProduced.FormattedValue.Value);
+
+                    materializedValue = jsonDoc.RootElement.ValueKind switch
+                    {
+                        JsonValueKind.Object => jsonDoc,
+                        JsonValueKind.Array => jsonDoc,
+
+                        JsonValueKind.Undefined => null,
+                        JsonValueKind.True => true,
+                        JsonValueKind.False => false,
+                        JsonValueKind.Null => null,
+                        JsonValueKind.String => jsonDoc.Deserialize<string>(),
+                        JsonValueKind.Number => jsonDoc.Deserialize<double>(),
+
+                        _ => throw new ArgumentOutOfRangeException()
+                    };
+
+                    return true;
+                }
+                else
+                {
+                    materializedValue = null;
+                    return false;
+                }
+            }
         }
 
         public static TKernel UseWho<TKernel>(this TKernel kernel)

@@ -12,7 +12,6 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Microsoft.DotNet.Interactive.ValueSharing;
 using Pocket;
 using Pocket.For.Xunit;
 using Xunit;

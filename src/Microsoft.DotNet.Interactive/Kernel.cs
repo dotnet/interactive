@@ -398,7 +398,7 @@ namespace Microsoft.DotNet.Interactive
                             break;
 
                         default:
-                            if (!context.IsFailed)
+                            if (!context.IsComplete)
                             {
                                 await Scheduler.RunAsync(
                                                    c,
@@ -777,6 +777,11 @@ namespace Microsoft.DotNet.Interactive
                         SetHandler(requestValue, requestValueHandler);
                         break;
 
+                    case (SendValue sendValue, IKernelCommandHandler<SendValue>
+                        sendValueHandler):
+                        SetHandler(sendValue, sendValueHandler);
+                        break;
+
                     case (RequestValueInfos requestValueInfos, IKernelCommandHandler<RequestValueInfos>
                         requestValueInfosHandler):
                         SetHandler(requestValueInfos, requestValueInfosHandler);
@@ -788,10 +793,6 @@ namespace Microsoft.DotNet.Interactive
 
                     case (RequestKernelInfo requestKernelInfo, IKernelCommandHandler<RequestKernelInfo> requestKernelInfoHandler):
                         SetHandler(requestKernelInfo, requestKernelInfoHandler);
-                        break;
-
-                    default:
-                        // FIX: (TrySetHandler) 
                         break;
                 }
             }

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
@@ -70,6 +71,33 @@ await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
             kernelEvents
                 .Should()
                 .NotContain(e => e is CommandFailed);
+        }
+
+        [Fact]
+        public async Task Commands_sent_within_the_code_of_another_command_publish_error_events_for_failures()
+        {
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel ( "cs1" ),
+                new CSharpKernel ( "cs2" )
+            };
+
+            var command = new SubmitCode($@"
+#!cs1
+using {typeof(Kernel).Namespace};
+using {typeof(KernelCommand).Namespace};
+await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
+");
+            var result = await kernel.SendAsync(command);
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should()
+                  .ContainSingle<ErrorProduced>()
+                  .Which
+                  .Message
+                  .Should()
+                  .Be("Error: (1,1): error CS0103: The name 'error' does not exist in the current context");
         }
 
         [Fact]

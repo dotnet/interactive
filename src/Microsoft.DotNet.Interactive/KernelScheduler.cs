@@ -68,7 +68,6 @@ namespace Microsoft.DotNet.Interactive
             ScheduledOperation operation;
             if (_isInnerSchedule(_currentTopLevelOperation, value))
             {
-                // recursive scheduling
                 operation = new ScheduledOperation(
                     value,
                     onExecuteAsync,
@@ -76,7 +75,7 @@ namespace Microsoft.DotNet.Interactive
                     executionContext: null,
                     scope,
                     cancellationToken);
-                RunNow(operation);
+                RunPreemptivelyAsync(operation);
             }
             else
             {
@@ -113,7 +112,7 @@ namespace Microsoft.DotNet.Interactive
                 {
                     ExecutionContext.Run(
                         executionContext!,
-                        _ => RunNow(operation),
+                        _ => RunPreemptivelyAsync(operation),
                         operation);
 
                     operation.TaskCompletionSource.Task.Wait(_schedulerDisposalSource.Token);
@@ -173,7 +172,7 @@ namespace Microsoft.DotNet.Interactive
             _topLevelScheduledOperations.Add(operation, cancellationToken);
         }
 
-        private void RunNow(ScheduledOperation operation)
+        private void RunPreemptivelyAsync(ScheduledOperation operation)
         {
             try
             {

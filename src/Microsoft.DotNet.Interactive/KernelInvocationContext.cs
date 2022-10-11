@@ -72,20 +72,14 @@ namespace Microsoft.DotNet.Interactive
         public KernelCommand Command { get; }
 
         public bool IsComplete { get; private set; }
-
-        public bool IsFailed => IsComplete && _isFailed;
-
-        public CancellationToken CancellationToken
-        {
-            get
-            {
-                return _cancellationTokenSource.IsCancellationRequested ? new CancellationToken(true) : _cancellationTokenSource.Token;
-            }
-        }
+        
+        public CancellationToken CancellationToken => _cancellationTokenSource.IsCancellationRequested
+                                                          ? new CancellationToken(true) 
+                                                          : _cancellationTokenSource.Token;
 
         public void Complete(KernelCommand command)
         {
-            SucceedOrFail(true, command);
+            SucceedOrFail(!_isFailed, command);
         }
 
         public void Fail(
@@ -109,8 +103,6 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly object _lockObj = new();
 
-        private string _failureMessage = null;
-
         private void SucceedOrFail(
             bool succeed,
             KernelCommand command,
@@ -125,10 +117,8 @@ namespace Microsoft.DotNet.Interactive
                 }
 
                 var completingMainCommand = CommandEqualityComparer.Instance.Equals(command, Command);
-
-                // FIX: (SucceedOrFail) 
-                if (succeed)
-                // if (succeed && !_isFailed)
+                
+                if (succeed && !_isFailed)
                 {
                     if (completingMainCommand)
                     {
@@ -147,17 +137,16 @@ namespace Microsoft.DotNet.Interactive
                 }
                 else
                 {
-                    _failureMessage ??= message;
 
                     if (!completingMainCommand && command.ShouldPublishCompletionEvent == true)
                     {
-                        Publish(new CommandFailed(exception, command, message ?? _failureMessage));
+                        Publish(new CommandFailed(exception, command, message));
 
                         StopPublishingChildCommandEvents();
                     }
                     else
                     {
-                        Publish(new CommandFailed(exception, Command, message ?? _failureMessage));
+                        Publish(new CommandFailed(exception, Command, message ));
 
                         StopPublishingMainCommandEvents();
 
@@ -269,9 +258,9 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (!CommandEqualityComparer.Instance.Equals(_current.Value.Command, command))
                 {
-                    if (command.Parent is null)
+                    if (command.Parent is null && _current.Value.Command is {} cmd)
                     {
-                        command.Parent = _current.Value.Command;
+                        command.Parent = cmd;
                     }
 
                     var capturedEventStream = _current.Value._events;
