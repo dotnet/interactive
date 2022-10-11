@@ -23,6 +23,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
     {
         private readonly Kernel _kernel;
         private readonly JupyterRequestContextScheduler _scheduler;
+        private readonly IHostApplicationLifetime _applicationLifetime;
         private readonly RouterSocket _shell;
         private readonly PublisherSocket _ioPubSocket;
         private readonly string _shellAddress;
@@ -35,11 +36,13 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         private readonly string _controlAddress;
         private readonly RouterSocket _stdIn;
         private readonly RouterSocket _control;
+        private readonly RequestReplyChannel _controllChannel;
 
         public Shell(
             Kernel kernel,
             JupyterRequestContextScheduler scheduler,
-            ConnectionInformation connectionInformation)
+            ConnectionInformation connectionInformation,
+            IHostApplicationLifetime applicationLifetime)
         {
             if (connectionInformation is null)
             {
@@ -48,6 +51,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
             _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
             _scheduler = scheduler ?? throw new ArgumentNullException(nameof(scheduler));
+            _applicationLifetime = applicationLifetime;
 
             _shellAddress = $"{connectionInformation.Transport}://{connectionInformation.IP}:{connectionInformation.ShellPort}";
             _ioPubAddress = $"{connectionInformation.Transport}://{connectionInformation.IP}:{connectionInformation.IOPubPort}";
@@ -62,6 +66,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             _control = new RouterSocket();
 
             _shellChannel = new RequestReplyChannel(new MessageSender(_shell, signatureValidator));
+            _controllChannel = new RequestReplyChannel(new MessageSender(_control, signatureValidator));
             _ioPubChannel = new PubSubChannel(new MessageSender(_ioPubSocket, signatureValidator));
             _stdInChannel = new StdInChannel(new MessageSender(_stdIn, signatureValidator), new MessageReceiver(_stdIn));
 
@@ -83,7 +88,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             var kernelIdentity = Guid.NewGuid().ToString();
             Task.Run(async () =>
             {
-                using var activity = Log.OnEnterAndExit();
+                using var activity = Log.OnEnterAndExit("jupyter shell channel");
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     var request = _shell.GetMessage();
@@ -101,7 +106,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                             break;
 
                         case JupyterMessageContentTypes.KernelShutdownRequest:
+                            _shellChannel.Reply(new KernelShutdownReply(), request);
                             SetIdle(request);
+                            _applicationLifetime.StopApplication();
                             break;
 
                         default:
@@ -118,6 +125,28 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
                             SetIdle(request);
 
+                            break;
+                    }
+                }
+            }, cancellationToken);
+
+            Task.Run(() =>
+            {
+                using var activity = Log.OnEnterAndExit("jupyter control channel");
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    var request = _control.GetMessage();
+
+                    activity.Info("Received: {message}", request.ToJson());
+
+                    SetBusy(request);
+
+                    switch (request.Header.MessageType)
+                    {
+                        case JupyterMessageContentTypes.KernelShutdownRequest:
+                            _controllChannel.Reply(new KernelShutdownReply(), request);
+                            SetIdle(request);
+                            _applicationLifetime.StopApplication();
                             break;
                     }
                 }
