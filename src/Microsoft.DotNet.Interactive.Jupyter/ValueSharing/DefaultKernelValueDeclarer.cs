@@ -12,9 +12,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing
 {
     internal class DefaultKernelValueDeclarer : IKernelValueDeclarer
     {
-        public bool TryGetValueDeclaration(ValueProduced valueProduced, out KernelCommand command)
+        public bool TryGetValueDeclaration(ValueProduced valueProduced, string declareAsName, out KernelCommand command)
         {
-            command = new SetValue(valueProduced.Value, valueProduced.Name, valueProduced.FormattedValue);
+            command = new SetValue(valueProduced.Value, declareAsName ?? valueProduced.Name, valueProduced.FormattedValue);
             return true;
         }
     }
