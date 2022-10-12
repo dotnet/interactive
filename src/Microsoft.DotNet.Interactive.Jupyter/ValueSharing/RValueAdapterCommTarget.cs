@@ -1,11 +1,14 @@
-﻿using System;
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Text;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing
+namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing;
+
+internal class RValueAdapterCommTarget : IValueAdapterCommDefinition
 {
-    internal class RValueAdapterCommTarget : IValueAdapterCommDefinition
-    {
-        private const string _commTargetDefinition = @"
+    private const string _commTargetDefinition = @"
 library(IRkernel);
 library(jsonlite);
 .value_adapter_comm_env <- new.env();
@@ -89,12 +92,11 @@ library(jsonlite);
 
 ";
 
-        public string GetTargetDefinition(string targetName)
-        {
-            StringBuilder builder = new StringBuilder(_commTargetDefinition);
-            builder.Append($"comm_manager()$register_target('{targetName}', .value_adapter_comm_env$value_adapter_connect_to_comm);");
+    public string GetTargetDefinition(string targetName)
+    {
+        StringBuilder builder = new StringBuilder(_commTargetDefinition);
+        builder.Append($"comm_manager()$register_target('{targetName}', .value_adapter_comm_env$value_adapter_connect_to_comm);");
 
-            return builder.ToString();
-        }
+        return builder.ToString();
     }
 }

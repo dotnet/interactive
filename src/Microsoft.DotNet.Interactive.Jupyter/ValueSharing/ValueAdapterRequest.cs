@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -7,24 +10,23 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing
+namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing;
+
+public interface IValueAdapterRequestArguments
 {
-    public interface IValueAdapterRequestArguments
+}
+
+[ValueAdapterMessageType(ValueAdapterMessageType.Request)]
+public abstract class ValueAdapterRequest<T>: ValueAdapterCommandMessage where T : IValueAdapterRequestArguments
+{
+
+    [JsonPropertyName("arguments")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public T Arguments { get; }
+
+
+    public ValueAdapterRequest(T arguments) : base(ValueAdapterMessageType.Request)
     {
-    }
-
-    [ValueAdapterMessageType(ValueAdapterMessageType.Request)]
-    public abstract class ValueAdapterRequest<T>: ValueAdapterCommandMessage where T : IValueAdapterRequestArguments
-    {
-
-        [JsonPropertyName("arguments")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public T Arguments { get; }
-
-
-        public ValueAdapterRequest(T arguments) : base(ValueAdapterMessageType.Request)
-        {
-            Arguments = arguments;
-        }
+        Arguments = arguments;
     }
 }

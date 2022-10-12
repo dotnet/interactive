@@ -1,4 +1,7 @@
-﻿using Microsoft.DotNet.Interactive.Jupyter.Messaging;
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging.Comms;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Utility;
@@ -7,79 +10,78 @@ using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 using System.Reactive.Linq;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing
+namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing;
+
+internal class LanguageValueAdapterFactory : IGetValueAdapter
 {
-    internal class LanguageValueAdapterFactory : IGetValueAdapter
+    private static string TargetName = "value_adapter_comm";
+
+    private readonly CommsManager _commsManager;
+    private readonly IMessageSender _sender;
+    private readonly IMessageReceiver _receiver;
+
+    public LanguageValueAdapterFactory(IMessageSender sender, IMessageReceiver receiver, CommsManager commsManager)
     {
-        private static string TargetName = "value_adapter_comm";
+        _sender = sender ?? throw new ArgumentNullException(nameof(sender));
+        _receiver = receiver ?? throw new ArgumentNullException(nameof(receiver));
+        _commsManager = commsManager ?? throw new ArgumentNullException(nameof(commsManager));
+    }
 
-        private readonly CommsManager _commsManager;
-        private readonly IMessageSender _sender;
-        private readonly IMessageReceiver _receiver;
-
-        public LanguageValueAdapterFactory(IMessageSender sender, IMessageReceiver receiver, CommsManager commsManager)
+    public async Task<IValueAdapter> GetValueAdapter(KernelInfo kernelInfo)
+    {
+        var language = kernelInfo.LanguageName;
+        switch(language?.ToLowerInvariant())
         {
-            _sender = sender ?? throw new ArgumentNullException(nameof(sender));
-            _receiver = receiver ?? throw new ArgumentNullException(nameof(receiver));
-            _commsManager = commsManager ?? throw new ArgumentNullException(nameof(commsManager));
+            case LanguageNameValues.Python:
+                return await CreateValueAdapterAsync(new PythonValueAdapterCommTarget());
+            case LanguageNameValues.R:
+                return await CreateValueAdapterAsync(new RValueAdapterCommTarget());
+            default:
+                return null;
         }
+    }
 
-        public async Task<IValueAdapter> GetValueAdapter(KernelInfo kernelInfo)
+    private async Task<IValueAdapter> CreateValueAdapterAsync(IValueAdapterCommDefinition definition)
+    {
+        var commTargetInitialized = await RunOnKernelAsync(definition.GetTargetDefinition(TargetName));
+        if (commTargetInitialized)
         {
-            var language = kernelInfo.LanguageName;
-            switch(language?.ToLowerInvariant())
-            {
-                case LanguageNameValues.Python:
-                    return await CreateValueAdapterAsync(new PythonValueAdapterCommTarget());
-                case LanguageNameValues.R:
-                    return await CreateValueAdapterAsync(new RValueAdapterCommTarget());
-                default:
-                    return null;
-            }
-        }
+            var agent = await _commsManager.OpenCommAsync(TargetName);
 
-        private async Task<IValueAdapter> CreateValueAdapterAsync(IValueAdapterCommDefinition definition)
-        {
-            var commTargetInitialized = await RunOnKernelAsync(definition.GetTargetDefinition(TargetName));
-            if (commTargetInitialized)
+            if (agent is not null) 
             {
-                var agent = await _commsManager.OpenCommAsync(TargetName);
+                var response = await agent.Messages
+                    .TakeUntilMessageType(JupyterMessageContentTypes.CommMsg, JupyterMessageContentTypes.CommClose)
+                    .ToTask();
 
-                if (agent is not null) 
+                if (response is CommMsg messageReceived)
                 {
-                    var response = await agent.Messages
-                        .TakeUntilMessageType(JupyterMessageContentTypes.CommMsg, JupyterMessageContentTypes.CommClose)
-                        .ToTask();
-
-                    if (response is CommMsg messageReceived)
+                    var adapterMessage = ValueAdapterMessageExtensions.FromDataDictionary(messageReceived.Data);
+                    if (adapterMessage is InitializedEvent)
                     {
-                        var adapterMessage = ValueAdapterMessageExtensions.FromDataDictionary(messageReceived.Data);
-                        if (adapterMessage is InitializedEvent)
-                        {
-                            return new CommValueAdapter(agent);
-                        }
+                        return new CommValueAdapter(agent);
                     }
                 }
             }
-
-            return null;
         }
 
-        private async Task<bool> RunOnKernelAsync(string code)
-        {
-            var executeRequest = Messaging.Message.Create(new ExecuteRequest(code.NormalizeLineEndings(),
-                                                                             silent: true,
-                                                                             storeHistory: false));
+        return null;
+    }
 
-            var executeReply = _receiver.Messages.ChildOf(executeRequest)
-                                    .SelectContent()
-                                    .TakeUntilMessageType(JupyterMessageContentTypes.ExecuteReply, JupyterMessageContentTypes.Error);
-            // run until we get a definitive pass or fail
+    private async Task<bool> RunOnKernelAsync(string code)
+    {
+        var executeRequest = Messaging.Message.Create(new ExecuteRequest(code.NormalizeLineEndings(),
+                                                                         silent: true,
+                                                                         storeHistory: false));
 
-            await _sender.SendAsync(executeRequest);
-            var reply = await executeReply.ToTask();
+        var executeReply = _receiver.Messages.ChildOf(executeRequest)
+                                .SelectContent()
+                                .TakeUntilMessageType(JupyterMessageContentTypes.ExecuteReply, JupyterMessageContentTypes.Error);
+        // run until we get a definitive pass or fail
 
-            return reply is ExecuteReplyOk;
-        }
+        await _sender.SendAsync(executeRequest);
+        var reply = await executeReply.ToTask();
+
+        return reply is ExecuteReplyOk;
     }
 }

@@ -1,9 +1,11 @@
-﻿using System.Threading.Tasks;
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Messaging
+using System.Threading.Tasks;
+
+namespace Microsoft.DotNet.Interactive.Jupyter.Messaging;
+
+public interface IMessageSender
 {
-    public interface IMessageSender
-    {
-        Task SendAsync(Message message);
-    }
+    Task SendAsync(Message message);
 }
