@@ -6,18 +6,18 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
-using Microsoft.DotNet.Interactive.Formatting;
-
 namespace Microsoft.DotNet.Interactive;
 
 public class RoutingSlip
 {
+    private readonly bool _requireReceivedStampBeforeComplete;
     private readonly ConcurrentDictionary<Uri, Entry> _entriesByKernelUris = new();
     private readonly List<Entry> _orderedEntries = new();
-   
 
-    public RoutingSlip(RoutingSlip source = null)
+
+    public RoutingSlip(RoutingSlip source = null, bool requireReceivedStampBeforeComplete = true)
     {
+        _requireReceivedStampBeforeComplete = requireReceivedStampBeforeComplete;
         if (source is { })
         {
             foreach (var entry in source._orderedEntries)
@@ -27,21 +27,23 @@ public class RoutingSlip
                 _orderedEntries.Add(newEntry);
             }
         }
-
     }
 
     public void MarkAsReceived(Uri kernelOrKernelHostUri)
     {
         var newEntry = new Entry(kernelOrKernelHostUri, false);
-        if (!_entriesByKernelUris.TryAdd(kernelOrKernelHostUri, newEntry))
+        InternalAddEntry(newEntry);
+    }
+
+    private void InternalAddEntry(Entry newEntry)
+    {
+        if (!_entriesByKernelUris.TryAdd(newEntry.KernelUri, newEntry))
 
         {
-            throw new InvalidOperationException($"The routing slip already contains {kernelOrKernelHostUri}");
+            throw new InvalidOperationException($"The routing slip already contains {newEntry.KernelUri}");
         }
-        else
-        {
-            _orderedEntries.Add(newEntry);
-        }
+
+        _orderedEntries.Add(newEntry);
     }
 
     public bool StartsWith(RoutingSlip other)
@@ -59,9 +61,21 @@ public class RoutingSlip
         return contains;
     }
 
-    public void Append(RoutingSlip other)
+    public void Append(RoutingSlip other, bool skipOverlapping = true)
     {
-        throw new NotImplementedException();
+        IEnumerable<Entry> toAppend = other._orderedEntries;
+        if (skipOverlapping)
+        {
+            if (other.StartsWith(this))
+            {
+                toAppend = toAppend.Skip(_orderedEntries.Count);
+            }
+        }
+        
+        foreach (var entry in toAppend)
+        {
+            InternalAddEntry(entry);
+        }
     }
 
     public Uri[] ToUriArray()
@@ -71,21 +85,24 @@ public class RoutingSlip
 
     public void MarkAsCompleted(Uri uri)
     {
-        if (_entriesByKernelUris.TryGetValue(uri, out var entry))
+        if (_requireReceivedStampBeforeComplete)
         {
-            entry.MarkAsCompleted();
+            if (_entriesByKernelUris.TryGetValue(uri, out var entry))
+            {
+                entry.MarkAsCompleted();
+            }
+            else
+            {
+                throw new InvalidOperationException($"The routing slip does not contain {uri}");
+            }
         }
         else
         {
-            throw new InvalidOperationException($"The routing slip does not contain {uri}");
+            var newEntry = new Entry(uri, true);
+            InternalAddEntry(newEntry);
         }
     }
 
-    public void AddAndMarkAsCompleted(Uri uri)
-    {
-        MarkAsReceived(uri);
-        MarkAsCompleted(uri);
-    }
 
     class Entry
     {

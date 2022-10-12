@@ -195,7 +195,7 @@ Console.WriteLine(1);";
 
         await compositeKernel.SendAsync(command);
 
-        command.RoutingSlip.Should().BeEquivalentTo(
+        command.RoutingSlip.ToUriArray().Should().BeEquivalentTo(
             new[]
             {
                 new Uri("kernel://local/.NET", UriKind.Absolute), 
@@ -226,7 +226,7 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
 
         var fsharpEvent = events.OfType<ReturnValueProduced>().First();
 
-        fsharpEvent.Command.RoutingSlip.Should().BeEquivalentTo(
+        fsharpEvent.Command.RoutingSlip.ToUriArray().Should().BeEquivalentTo(
             new[]
             {
                 new Uri("kernel://local/.NET", UriKind.Absolute),
@@ -307,7 +307,7 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
 
         await localCompositeKernel.SendAsync(command);
 
-        command.RoutingSlip.Should().BeEquivalentTo(
+        command.RoutingSlip.ToUriArray().Should().BeEquivalentTo(
             new[]
             {
                 new Uri("kernel://local/", UriKind.Absolute),
@@ -337,12 +337,8 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
         events.Should().ContainSingle<StandardOutputValueProduced>()
             .Which
             .RoutingSlip.ToUriArray().Should().ContainInOrder(
-            new[]
-            {
-                new Uri("kernel://local/csharp", UriKind.Absolute),
-                new Uri("kernel://local/.NET", UriKind.Absolute)
-               
-            });
+                new Uri("kernel://local/csharp", UriKind.Absolute), 
+                new Uri("kernel://local/.NET", UriKind.Absolute));
     }
 
     [Fact]
@@ -376,12 +372,9 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
         events.Should().ContainSingle<ReturnValueProduced>()
             .Which
             .RoutingSlip.ToUriArray().Should().ContainInOrder(
-            new[]
-            {
-                new Uri("kernel://remote/csharp", UriKind.Absolute),
+                new Uri("kernel://remote/csharp", UriKind.Absolute), 
                 new Uri("kernel://remote/", UriKind.Absolute),
-                new Uri("kernel://local/csharp-proxy", UriKind.Absolute),
-                new Uri("kernel://local/", UriKind.Absolute)
-            });
+                new Uri("kernel://local/csharp-proxy", UriKind.Absolute), 
+                new Uri("kernel://local/", UriKind.Absolute));
     }
 }

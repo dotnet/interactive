@@ -216,13 +216,14 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
 
     private static SerializationModel CreateSerializationModel(IKernelCommandEnvelope envelope)
     {
+        var routingSlip = envelope.Command.RoutingSlip.ToUriArray().Select(uri => uri.AbsoluteUri).ToArray();
         var serializationModel = new SerializationModel
         {
             command = envelope.Command,
             commandType = envelope.CommandType,
             token = envelope.Token,
             id = envelope.CommandId,
-            routingSlip = envelope.Command.RoutingSlip.ToUriArray().Select(uri => uri.AbsoluteUri).ToArray()
+            routingSlip = routingSlip
         };
         return serializationModel;
     }

@@ -36,16 +36,20 @@ namespace Microsoft.DotNet.Interactive
             KernelInvocationContext context)
         {
             EnsureMiddlewarePipelineIsInitialized();
-
+            command.RoutingSlip.MarkAsReceived(_kernel.GetKernelUri());
             try
             {
                 await _pipeline(command, context, (_, __) => Task.CompletedTask);
-                command.RoutingSlip.MarkAsReceived(_kernel.GetKernelUri());
+
             }
             catch (Exception exception)
             {
                 context.Fail(command, exception);
-                command.RoutingSlip.MarkAsReceived(_kernel.GetKernelUri());
+
+            }
+            finally
+            {
+                command.RoutingSlip.MarkAsCompleted(_kernel.GetKernelUri());
             }
         }
 

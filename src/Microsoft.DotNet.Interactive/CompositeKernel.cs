@@ -91,9 +91,6 @@ namespace Microsoft.DotNet.Interactive
 
             _childKernels.Add(kernel);
 
-            RegisterForDisposal(kernel.KernelEvents.Subscribe(PublishEvent));
-            RegisterForDisposal(kernel);
-            
             if (KernelInvocationContext.Current is { } current)
             {
                 var kernelInfoProduced = new KernelInfoProduced(kernel.KernelInfo, current.Command);
@@ -104,6 +101,9 @@ namespace Microsoft.DotNet.Interactive
                 var kernelInfoProduced = new KernelInfoProduced(kernel.KernelInfo, KernelCommand.None);
                 PublishEvent(kernelInfoProduced);
             }
+
+            RegisterForDisposal(kernel.KernelEvents.Subscribe(PublishEvent));
+            RegisterForDisposal(kernel);
         }
 
         public void SetDefaultTargetKernelNameForCommand(
@@ -235,7 +235,7 @@ namespace Microsoft.DotNet.Interactive
             RequestKernelInfo command,
             KernelInvocationContext context)
         {
-            command.RoutingSlip.MarkAsReceived(KernelInfo.Uri);
+            
             context.Publish(new KernelInfoProduced(KernelInfo, command));
             foreach (var childKernel in ChildKernels)
             {

@@ -157,6 +157,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
             {
                 c.Properties["id"] = "command-id";
                 c.RoutingSlip.MarkAsReceived(new Uri("kernel://somelocation/kernelName"));
+                c.RoutingSlip.MarkAsCompleted(new Uri("kernel://somelocation/kernelName"));
                 return c;
             }))
             {
@@ -179,7 +180,8 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
             {
                 e.Command.Properties["id"] = "command-id";
                 e.Command.RoutingSlip.MarkAsReceived(new Uri("kernel://somelocation/kernelName"));
-                e.RoutingSlip.MarkAsReceived(new Uri("kernel://somelocation/kernelName"));
+                e.Command.RoutingSlip.MarkAsCompleted(new Uri("kernel://somelocation/kernelName"));
+                e.RoutingSlip.MarkAsCompleted(new Uri("kernel://somelocation/kernelName"));
                 return e;
             }))
             {

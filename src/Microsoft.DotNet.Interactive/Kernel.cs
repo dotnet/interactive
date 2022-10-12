@@ -314,7 +314,7 @@ namespace Microsoft.DotNet.Interactive
 
             // only subscribe for the root command 
             var currentCommandOwnsContext = CommandEqualityComparer.Instance.Equals(context.Command, command);
-
+            
             if (currentCommandOwnsContext)
             {
                 disposable.Disposable = context.KernelEvents.Subscribe(PublishEvent);
@@ -329,6 +329,8 @@ namespace Microsoft.DotNet.Interactive
             if (TryPreprocessCommands(command, context, out var commands))
             {
                 SetHandlingKernel(command, context);
+
+               
 
                 foreach (var c in commands)
                 {
@@ -533,8 +535,13 @@ namespace Microsoft.DotNet.Interactive
                             {
                                 return false;
                             }
-                            
-                            return inner.Parent == outer || inner.RoutingSlip.StartsWith(outer.RoutingSlip);
+
+                            var isChild = inner.Parent == outer;
+                            var hasSameToken = inner.GetOrCreateToken() == outer.GetOrCreateToken();
+
+
+                            return isChild
+                                   || hasSameToken;
                         }
                         );
                     RegisterForDisposal(scheduler);
@@ -635,7 +642,7 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentNullException(nameof(kernelEvent));
             }
 
-            kernelEvent.RoutingSlip.MarkAsReceived(this.GetKernelUri());
+            kernelEvent.RoutingSlip.MarkAsCompleted(this.GetKernelUri());
             _kernelEvents.OnNext(kernelEvent);
         }
 

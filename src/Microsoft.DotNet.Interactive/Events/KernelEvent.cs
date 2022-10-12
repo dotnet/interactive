@@ -12,7 +12,7 @@ public abstract class KernelEvent
     protected KernelEvent(KernelCommand command)
     {
         Command = command ?? throw new ArgumentNullException(nameof(command));
-        RoutingSlip = new RoutingSlip();
+        RoutingSlip = new RoutingSlip(requireReceivedStampBeforeComplete:false);
     }
 
     [JsonIgnore]

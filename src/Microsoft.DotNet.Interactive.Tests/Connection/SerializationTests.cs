@@ -221,23 +221,22 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
 
             IEnumerable<KernelEvent> events()
             {
-                var submitCode = new SubmitCode("123");
 
                 yield return new CodeSubmissionReceived(
-                    submitCode);
+                    new SubmitCode("123"));
 
                 yield return new CommandFailed(
                     "Oooops!",
-                    submitCode);
+                    new SubmitCode("123"));
 
                 yield return new CommandFailed(
                    new InvalidOperationException("Oooops!"),
-                   submitCode,
+                   new SubmitCode("123"),
                    "oops");
 
-                yield return new CommandSucceeded(submitCode);
+                yield return new CommandSucceeded(new SubmitCode("123"));
 
-                yield return new CompleteCodeSubmissionReceived(submitCode);
+                yield return new CompleteCodeSubmissionReceived(new SubmitCode("123"));
 
                 var requestCompletion = new RequestCompletions("Console.Wri", new LinePosition(0, 11));
 
@@ -255,7 +254,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
                     },
                     requestCompletion);
 
-                yield return new DiagnosticLogEntryProduced("oops!", submitCode);
+                yield return new DiagnosticLogEntryProduced("oops!", new SubmitCode("123"));
 
                 yield return new DiagnosticsProduced(
                     new[]
@@ -268,7 +267,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
                             "code",
                             "message")
                     },
-                    submitCode);
+                    new SubmitCode("123"));
 
                 yield return new DisplayedValueProduced(
                     new HtmlString("<b>hi!</b>"),
@@ -287,9 +286,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
                         new FormattedValue("text/html", "<b>hi!</b>"),
                     });
 
-                yield return new ErrorProduced("oops!", submitCode);
+                yield return new ErrorProduced("oops!", new SubmitCode("123"));
 
-                yield return new IncompleteCodeSubmissionReceived(submitCode);
+                yield return new IncompleteCodeSubmissionReceived(new SubmitCode("123"));
 
                 var requestHoverTextCommand = new RequestHoverText("document-contents", new LinePosition(1, 2));
 
@@ -351,7 +350,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
                     1);
 
                 yield return new StandardErrorValueProduced(
-                    submitCode,
+                    new SubmitCode("123"),
                     new[]
                     {
                         new FormattedValue("text/plain", "oops!"),
