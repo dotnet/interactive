@@ -1,32 +1,34 @@
-﻿using System.Text.Json.Serialization;
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing
+using System.Text.Json.Serialization;
+
+namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing;
+
+public class SetVariableResponseBody : IValueAdapterResponseBody
 {
-    public class SetVariableResponseBody : IValueAdapterResponseBody
+    /* 
+     * If the name is changed by kernel due to identifier constraints, the new name is to be returned in the response
+     * body. For streaming, the new name should be used for new chunks in the request.
+     */
+    [JsonPropertyName("name")]
+    public string Name { get; }
+
+    [JsonPropertyName("type")]
+    public string Type { get; }
+
+    public SetVariableResponseBody(string name, string type)
     {
-        /* 
-         * If the name is changed by kernel due to identifier constraints, the new name is to be returned in the response
-         * body. For streaming, the new name should be used for new chunks in the request.
-         */
-        [JsonPropertyName("name")]
-        public string Name { get; }
-
-        [JsonPropertyName("type")]
-        public string Type { get; }
-
-        public SetVariableResponseBody(string name, string type)
-        {
-            Name = name;
-            Type = type;
-        }
+        Name = name;
+        Type = type;
     }
+}
 
-    [ValueAdapterMessageType(ValueAdapterMessageType.Response)]
-    [ValueAdapterCommand(ValueAdapterCommandTypes.SetVariable)]
-    public class SetVariableResponse : ValueAdapterResponse<SetVariableResponseBody>
+[ValueAdapterMessageType(ValueAdapterMessageType.Response)]
+[ValueAdapterCommand(ValueAdapterCommandTypes.SetVariable)]
+public class SetVariableResponse : ValueAdapterResponse<SetVariableResponseBody>
+{
+    public SetVariableResponse(bool success, SetVariableResponseBody body) : base(success, body)
     {
-        public SetVariableResponse(bool success, SetVariableResponseBody body) : base(success, body)
-        {
-        }
     }
 }

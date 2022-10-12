@@ -1,10 +1,13 @@
-﻿using System.Text;
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing
+using System.Text;
+
+namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing;
+
+internal class PythonValueAdapterCommTarget : IValueAdapterCommDefinition
 {
-    internal class PythonValueAdapterCommTarget : IValueAdapterCommDefinition
-    {
-        private const string _commTargetDefinition = @"
+    private const string _commTargetDefinition = @"
 class __ValueAdapterCommTarget: 
     _control_comm = None
     
@@ -129,12 +132,11 @@ class __ValueAdapterCommTarget:
 
 ";
 
-        public string GetTargetDefinition(string targetName)
-        {
-            StringBuilder builder = new StringBuilder(_commTargetDefinition);
-            builder.AppendLine($"get_ipython().kernel.comm_manager.register_target('{targetName}', __ValueAdapterCommTarget.handle_control_comm_opened)");
+    public string GetTargetDefinition(string targetName)
+    {
+        StringBuilder builder = new StringBuilder(_commTargetDefinition);
+        builder.AppendLine($"get_ipython().kernel.comm_manager.register_target('{targetName}', __ValueAdapterCommTarget.handle_control_comm_opened)");
 
-            return builder.ToString();
-        }
+        return builder.ToString();
     }
 }
