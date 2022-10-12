@@ -91,19 +91,13 @@ namespace Microsoft.DotNet.Interactive
 
             _childKernels.Add(kernel);
 
-            if (KernelInvocationContext.Current is { } current)
-            {
-                var kernelInfoProduced = new KernelInfoProduced(kernel.KernelInfo, current.Command);
-                current.Publish(kernelInfoProduced);
-            }
-            else
-            {
-                var kernelInfoProduced = new KernelInfoProduced(kernel.KernelInfo, KernelCommand.None);
-                PublishEvent(kernelInfoProduced);
-            }
-
             RegisterForDisposal(kernel.KernelEvents.Subscribe(PublishEvent));
             RegisterForDisposal(kernel);
+
+            var command = KernelInvocationContext.Current?.Command?? KernelCommand.None;
+            var kernelInfoProduced = new KernelInfoProduced(kernel.KernelInfo, command);
+            
+            PublishEvent(kernelInfoProduced);
         }
 
         public void SetDefaultTargetKernelNameForCommand(

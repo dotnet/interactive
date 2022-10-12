@@ -642,7 +642,11 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentNullException(nameof(kernelEvent));
             }
 
-            kernelEvent.RoutingSlip.MarkAsCompleted(this.GetKernelUri());
+            if (!kernelEvent.RoutingSlip.StartsWith(this.GetKernelUri()))
+            {
+                // the compositekernel gets added twice?
+                kernelEvent.RoutingSlip.MarkAsCompleted(this.GetKernelUri());
+            }
             _kernelEvents.OnNext(kernelEvent);
         }
 

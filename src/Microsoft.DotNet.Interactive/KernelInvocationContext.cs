@@ -206,7 +206,12 @@ namespace Microsoft.DotNet.Interactive
             }
 
             var command = @event.Command;
-
+            
+            if (HandlingKernel is { } handlingKernel)
+            {
+                @event.RoutingSlip.MarkAsCompleted(handlingKernel.GetKernelUri());
+            }
+            
             if (_childCommands.TryGetValue(command, out var events))
             {
                 events.OnNext(@event);

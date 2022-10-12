@@ -35,7 +35,7 @@ public class RoutingSlip
         InternalAddEntry(newEntry);
     }
 
-    private void InternalAddEntry(Entry newEntry)
+    private void  InternalAddEntry(Entry newEntry)
     {
         if (!_entriesByKernelUris.TryAdd(newEntry.KernelUri, newEntry))
 
