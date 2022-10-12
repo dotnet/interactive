@@ -69,6 +69,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
                 commandOrEventHandler.RegisterCommandHandler<SetValue>(valueAdapter.HandleCommandAsync);
 
                 proxyKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(SetValue)));
+                proxyKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValue)));
+                proxyKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValueInfos)));
                 proxyKernel.UseValueSharing(new DefaultKernelValueDeclarer());
                 proxyKernel.UseWho();
 
