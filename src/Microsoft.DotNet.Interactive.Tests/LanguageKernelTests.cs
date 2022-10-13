@@ -16,7 +16,6 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Microsoft.DotNet.Interactive.ValueSharing;
 using Pocket.For.Xunit;
 using Xunit;
 using Xunit.Abstractions;
@@ -1259,84 +1258,6 @@ System.Threading.Thread.Sleep(1000);
             var (success, valueInfosProduced) = await languageKernel.TryRequestValueInfosAsync();
 
             valueInfosProduced.ValueInfos.Should().Contain(v => v.Name == "x");
-        }
-
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        [InlineData(Language.PowerShell)]
-        public async Task SetValueAsync_declares_the_specified_variable(Language language)
-        {
-            var kernel = CreateKernel(language);
-
-            var languageKernel = kernel.ChildKernels.Single();
-
-            await ((ISupportSetClrValue)languageKernel).SetValueAsync("x", 123);
-
-            var (succeeded, valueProduced) = await languageKernel.TryRequestValueAsync("x");
-
-            using var _ = new AssertionScope();
-
-            succeeded.Should().BeTrue();
-            valueProduced.Value.Should().Be(123);
-        }
-
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        [InlineData(Language.PowerShell)]
-        public async Task SetValueAsync_overwrites_an_existing_variable_of_the_same_type(Language language)
-        {
-            var kernel = CreateKernel(language);
-
-            var languageKernel = kernel.ChildKernels.Single();
-
-            await ((ISupportSetClrValue)languageKernel).SetValueAsync("x", 123);
-            await ((ISupportSetClrValue)languageKernel).SetValueAsync("x", 456);
-
-            var (succeeded, valueProduced) = await languageKernel.TryRequestValueAsync("x");
-
-            using var _ = new AssertionScope();
-
-            succeeded.Should().BeTrue();
-            valueProduced.Value.Should().Be(456);
-        }
-
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        [InlineData(Language.PowerShell)]
-        public async Task SetValueAsync_can_redeclare_an_existing_variable_and_change_its_type(Language language)
-        {
-            var kernel = CreateKernel(language);
-
-            var languageKernel = kernel.ChildKernels.Single();
-
-            await ((ISupportSetClrValue)languageKernel).SetValueAsync("x", 123);
-            await ((ISupportSetClrValue)languageKernel).SetValueAsync("x", "hello");
-
-            var (succeeded, valueProduced) = await languageKernel.TryRequestValueAsync("x");
-
-            using var _ = new AssertionScope();
-
-            succeeded.Should().BeTrue();
-            valueProduced.Value.Should().Be("hello");
-        }
-
-        [Fact]
-        public async Task FSharp_can_set_an_array_value_with_SetValueAsync()
-        {
-            var kernel = CreateKernel(Language.FSharp);
-            var languageKernel = kernel.ChildKernels.Single();
-
-            await ((ISupportSetClrValue)languageKernel).SetValueAsync("x", new int[] { 42 });
-
-            var (succeeded, valueProduced) = await languageKernel.TryRequestValueAsync("x");
-
-            using var _ = new AssertionScope();
-
-            succeeded.Should().BeTrue();
-            valueProduced.Value.Should().BeEquivalentTo(new int[] { 42 });
         }
     }
 }

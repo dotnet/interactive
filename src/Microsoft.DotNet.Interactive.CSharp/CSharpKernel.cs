@@ -31,7 +31,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
         Kernel,
         IExtensibleKernel,
         ISupportNuget,
-        ISupportSetClrValue,
         IKernelCommandHandler<RequestCompletions>,
         IKernelCommandHandler<RequestDiagnostics>,
         IKernelCommandHandler<RequestHoverText>,
@@ -167,6 +166,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 value = (T)rawValue;
                 return true;
             }
+
             value = default;
             return false;
         }
@@ -175,12 +175,10 @@ namespace Microsoft.DotNet.Interactive.CSharp
             SendValue command,
             KernelInvocationContext context)
         {
-            await SetValueAsync(
-                command.Name,
-                command.Value ?? command.FormattedValue.Value);
+            await SetValueAsync(command, context, SetValueAsync);
         }
 
-        public async Task SetValueAsync(string name, object value, Type declaredType = null)
+        public async Task SetValueAsync(string name, object value, Type declaredType)
         {
             using var csharpTypeDeclaration = new StringWriter();
 

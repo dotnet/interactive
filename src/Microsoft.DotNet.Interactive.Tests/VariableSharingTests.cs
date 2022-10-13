@@ -3,8 +3,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
@@ -12,6 +14,7 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Microsoft.DotNet.Interactive.ValueSharing;
 using Pocket;
 using Pocket.For.Xunit;
 using Xunit;
@@ -409,9 +412,81 @@ y");
             
             javascriptKernel.UseValueSharing();
 
+            _disposables.Add(localCompositeKernel);
             _disposables.Add(remoteCompositeKernel);
 
             return (localCompositeKernel, remoteKernel);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        [InlineData(Language.PowerShell)]
+        public async Task SendValue_declares_the_specified_variable(Language language)
+        {
+            using var kernel = CreateKernel(language);
+
+            await kernel.SendAsync(new SendValue("x", 123));
+
+            var (succeeded, valueProduced) = await kernel.TryRequestValueAsync("x");
+
+            using var _ = new AssertionScope();
+
+            succeeded.Should().BeTrue();
+            valueProduced.Value.Should().Be(123);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        [InlineData(Language.PowerShell)]
+        public async Task SendValue_overwrites_an_existing_variable_of_the_same_type(Language language)
+        {
+            using var kernel = CreateKernel(language);
+
+            await kernel.SendAsync(new SendValue("x", 123));
+            await kernel.SendAsync(new SendValue("x", 456));
+
+            var (succeeded, valueProduced) = await kernel.TryRequestValueAsync("x");
+
+            using var _ = new AssertionScope();
+
+            succeeded.Should().BeTrue();
+            valueProduced.Value.Should().Be(456);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        [InlineData(Language.PowerShell)]
+        public async Task SendValue_can_redeclare_an_existing_variable_and_change_its_type(Language language)
+        {
+            using var kernel = CreateKernel(language);
+
+            await kernel.SendAsync(new SendValue("x", 123));
+            await kernel.SendAsync(new SendValue("x", "hello"));
+
+            var (succeeded, valueProduced) = await kernel.TryRequestValueAsync("x");
+
+            using var _ = new AssertionScope();
+
+            succeeded.Should().BeTrue();
+            valueProduced.Value.Should().Be("hello");
+        }
+
+        [Fact]
+        public async Task FSharp_can_set_an_array_value_with_SendValue()
+        {
+            using var kernel = CreateKernel(Language.FSharp);
+
+            await kernel.SendAsync(new SendValue("x", new int[] { 42 }));
+
+            var (succeeded, valueProduced) = await kernel.TryRequestValueAsync("x");
+
+            using var _ = new AssertionScope();
+
+            succeeded.Should().BeTrue();
+            valueProduced.Value.Should().BeEquivalentTo(new int[] { 42 });
         }
 
         private static CompositeKernel CreateKernel()
@@ -429,6 +504,26 @@ y");
                 new PowerShellKernel()
                     .UseValueSharing()
             }.LogEventsToPocketLogger();
+        }
+
+        private static Kernel CreateKernel(Language language)
+        {
+            return language switch
+            {
+                Language.CSharp =>
+                    new CSharpKernel()
+                        .UseNugetDirective()
+                        .UseKernelHelpers()
+                        .UseValueSharing(),
+                Language.FSharp =>
+                    new FSharpKernel()
+                        .UseNugetDirective()
+                        .UseKernelHelpers()
+                        .UseValueSharing(),
+                Language.PowerShell =>
+                    new PowerShellKernel()
+                        .UseValueSharing()
+            };
         }
 
         public void Dispose() => _disposables.Dispose();

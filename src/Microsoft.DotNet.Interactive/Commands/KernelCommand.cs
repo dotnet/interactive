@@ -41,16 +41,7 @@ public abstract class KernelCommand
             {
                 throw new ArgumentNullException(nameof(value));
             }
-
-            // FIX: (Parent) delete
-            if (_parent is {})
-            {
-                if (_parent != value)
-                {
-                    
-                }
-            }
-
+            
             _parent = value;
             var currentSlip = RoutingSlip;
             RoutingSlip = new RoutingSlip(_parent?.RoutingSlip);

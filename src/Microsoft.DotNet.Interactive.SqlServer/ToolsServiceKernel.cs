@@ -23,8 +23,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         IKernelCommandHandler<RequestCompletions>,
         IKernelCommandHandler<RequestValueInfos>,
         IKernelCommandHandler<RequestValue>,
-        IKernelCommandHandler<SendValue>,
-        ISupportSetClrValue
+        IKernelCommandHandler<SendValue>
     {
 
         protected readonly Uri TempFileUri;
@@ -392,25 +391,21 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             SendValue command,
             KernelInvocationContext context)
         {
-            await SetValueAsync(
-                command.Name,
-                command.Value ?? command.FormattedValue.Value);
-        }
-
-        public Task SetValueAsync(string name, object value, Type declaredType = null)
-        {
-            if (value == null)
+            await SetValueAsync(command, context, (name, value, declaredType) =>
             {
-                throw new ArgumentNullException(nameof(value), $"Sharing null values is not supported at this time.");
-            }
+                if (value == null)
+                {
+                    throw new ArgumentNullException(nameof(value), $"Sharing null values is not supported at this time.");
+                }
 
-            if (!CanDeclareVariable(name, value, out string msg))
-            {
-                throw new ArgumentException($"Cannot support value of Type {value.GetType()}. {msg}");
-            }
+                if (!CanDeclareVariable(name, value, out string msg))
+                {
+                    throw new ArgumentException($"Cannot support value of Type {value.GetType()}. {msg}");
+                }
 
-            _variables[name] = value;
-            return Task.CompletedTask;
+                _variables[name] = value;
+                return Task.CompletedTask;
+            });
         }
     }
 }

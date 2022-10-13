@@ -390,16 +390,6 @@ type FSharpKernel () as this =
                 context.Fail(requestValue, message=(sprintf "Value '%s' not found in kernel %s" requestValue.Name this.Name))
         }
 
-    member this.handleSetValueAsync(name: string, value: Object, [<Optional>] declaredType: Type) : Task = 
-        script.Value.Fsi.AddBoundValue(name, value) |> ignore
-        Task.CompletedTask
-
-    let handleSendValue (sendValue: SendValue) (context: KernelInvocationContext) =
-        if (sendValue.Value <> null) then
-            this.handleSetValueAsync (sendValue.Name, sendValue.Value, null)
-        else
-            this.handleSetValueAsync (sendValue.Name, sendValue.FormattedValue.Value, null)
-
     let createPackageRestoreContext registerForDisposal =
         let packageRestoreContext = new PackageRestoreContext()
         do registerForDisposal(fun () -> packageRestoreContext.Dispose())
@@ -451,7 +441,11 @@ type FSharpKernel () as this =
         member this.HandleAsync(command: RequestValue, context: KernelInvocationContext) = handleRequestValue command context 
 
     interface IKernelCommandHandler<SendValue> with
-        member this.HandleAsync(command: SendValue, context: KernelInvocationContext) = handleSendValue command context 
+        member this.HandleAsync(command: SendValue, context: KernelInvocationContext) = 
+            let handle (name : string) (value : obj) (declaredType : Type) : Task = 
+                script.Value.Fsi.AddBoundValue(name, value)
+                Task.CompletedTask
+            base.SetValueAsync(command, context, handle) 
 
     interface IKernelCommandHandler<SubmitCode> with
         member this.HandleAsync(command: SubmitCode, context: KernelInvocationContext) = handleSubmitCode command context
@@ -499,9 +493,6 @@ type FSharpKernel () as this =
                             sb.Append(Environment.NewLine) |> ignore
             let command = new SubmitCode(sb.ToString(), "fsharp")
             this.DeferCommand(command)
-
-    interface ISupportSetClrValue with
-        member _.SetValueAsync(name: string, value: obj, declaredType: Type): Task = this.handleSetValueAsync(name, value, declaredType)
 
     interface IExtensibleKernel with
         member this.LoadExtensionsFromDirectoryAsync(directory:DirectoryInfo, context:KernelInvocationContext) =

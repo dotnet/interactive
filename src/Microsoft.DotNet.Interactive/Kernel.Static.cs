@@ -110,4 +110,9 @@ namespace Microsoft.DotNet.Interactive
                       .SelectMany(i => i.GenericTypeArguments)
                       .ToArray());
     }
+
+    public delegate Task SetValueAsyncDelegate(
+        string name,
+        object value,
+        Type declaredType = null);
 }

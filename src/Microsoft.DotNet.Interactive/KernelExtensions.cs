@@ -84,6 +84,7 @@ namespace Microsoft.DotNet.Interactive
 
         public static async Task<(bool success, ValueInfosProduced valueInfosProduced)> TryRequestValueInfosAsync(this Kernel kernel)
         {
+            // FIX: (TryRequestValueInfosAsync)  remove this from the public API
             if (kernel.SupportsCommandType(typeof(RequestValueInfos)))
             {
                 var commandResult = await kernel.SendAsync(new RequestValueInfos());
@@ -99,6 +100,7 @@ namespace Microsoft.DotNet.Interactive
 
         public static async Task<(bool success, ValueProduced valueProduced)> TryRequestValueAsync(this Kernel kernel, string valueName)
         {
+            // FIX: (TryRequestValueAsync) remove this from the public API
             if (kernel.SupportsCommandType(typeof(RequestValue)))
             {
                 var commandResult = await kernel.SendAsync(new RequestValue(valueName));

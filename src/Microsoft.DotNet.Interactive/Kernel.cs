@@ -879,6 +879,25 @@ namespace Microsoft.DotNet.Interactive
             return false;
         }
 
+        protected async Task SetValueAsync(
+            SendValue command,
+            KernelInvocationContext context,
+            SetValueAsyncDelegate setValueAsync)
+        {
+            object value;
+
+            if (command.Value is not null)
+            {
+                value = command.Value;
+            }
+            else
+            {
+                value = command.FormattedValue.Value;
+            }
+
+            await setValueAsync(command.Name, value);
+        }
+
         public override string ToString()
         {
             var value = $"{base.ToString()}: {Name}";

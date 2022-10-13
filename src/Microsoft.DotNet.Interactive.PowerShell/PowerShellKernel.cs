@@ -28,7 +28,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
     public class PowerShellKernel :
         Kernel,
-        ISupportSetClrValue,
         IKernelCommandHandler<RequestCompletions>,
         IKernelCommandHandler<RequestDiagnostics>,
         IKernelCommandHandler<RequestValueInfos>,
@@ -198,15 +197,13 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             SendValue command,
             KernelInvocationContext context)
         {
-            await SetValueAsync(
-                command.Name,
-                command.Value ?? command.FormattedValue.Value);
-        }
+            await SetValueAsync(command, context, SetAsync);
 
-        public Task SetValueAsync(string name, object value, Type declaredType = null)
-        {
-            _lazyPwsh.Value.Runspace.SessionStateProxy.PSVariable.Set(name, value);
-            return Task.CompletedTask;
+            Task SetAsync(string name, object value, Type declaredType)
+            {
+                _lazyPwsh.Value.Runspace.SessionStateProxy.PSVariable.Set(name, value);
+                return Task.CompletedTask;
+            }
         }
 
         public async Task HandleAsync(
