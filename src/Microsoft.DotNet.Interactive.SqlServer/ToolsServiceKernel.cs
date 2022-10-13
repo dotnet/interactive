@@ -248,7 +248,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         private static IEnumerable<TabularDataResource> GetTabularDataResources(ColumnInfo[] columnInfos, CellValue[][] rows)
         {
             var schema = new TableSchema();
-            var dataRows = new List<Dictionary<string,object>>();
+            var dataRows = new List<List<KeyValuePair<string, object>>>();
             var columnNames = columnInfos.Select(info => info.ColumnName).ToArray();
 
             SqlKernelUtils.AliasDuplicateColumnNames(columnNames);
@@ -265,7 +265,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             
             foreach (var row in rows)
             {
-                var dataRow = new Dictionary<string, object>();
+                var dataRow = new List<KeyValuePair<string,object>>();
 
                 for (var colIndex = 0; colIndex < row.Length; colIndex++)
                 {
@@ -304,7 +304,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                         convertedValue = row[colIndex].DisplayValue;
                     }
                     
-                    dataRow.Add(columnNames[colIndex], convertedValue);
+                    dataRow.Add(new KeyValuePair<string, object>( columnNames[colIndex], convertedValue));
                 }
                 
                 dataRows.Add(dataRow);

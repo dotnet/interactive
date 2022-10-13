@@ -20,7 +20,20 @@ namespace Microsoft.DotNet.Interactive.Formatting.TabularData
             writer.WritePropertyName("schema");
             JsonSerializer.Serialize(writer, value.Schema, options);
             writer.WritePropertyName("data");
+            writer.WriteStartArray();
+            foreach (var row in value.Data)
+            {
+                writer.WriteStartObject();
+                foreach (var field in row)
+                {
+                    writer.WritePropertyName(field.Key);
+                    JsonSerializer.Serialize(writer, field.Value, options);
+                }
+               
+                writer.WriteEndObject();
+            }
             JsonSerializer.Serialize(writer, value.Data, options);
+            writer.WriteEndArray();
             writer.WriteEndObject();
         }
     }
