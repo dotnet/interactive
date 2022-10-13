@@ -1208,56 +1208,5 @@ System.Threading.Thread.Sleep(1000);
                 .Should()
                 .Be(command);
         }
-
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        [InlineData(Language.PowerShell)]
-        public async Task TryGetVariable_returns_defined_variable(Language language)
-        {
-            var codeToSetVariable = language switch
-            {
-                Language.CSharp => "var x = 123;",
-                Language.FSharp => "let x = 123",
-                Language.PowerShell => "$x = 123"
-            };
-
-            var kernel = CreateKernel(language);
-
-            await kernel.SubmitCodeAsync(codeToSetVariable);
-
-            var languageKernel = kernel.ChildKernels.Single();
-
-            var (succeeded, valueProduced) = await languageKernel.TryRequestValueAsync("x");
-
-            using var _ = new AssertionScope();
-
-            succeeded.Should().BeTrue();
-            valueProduced.Value.Should().Be(123);
-        }
-
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        [InlineData(Language.PowerShell)]
-        public async Task GetVariableNames_returns_the_names_of_defined_variables(Language language)
-        {
-            var codeToSetVariable = language switch
-            {
-                Language.CSharp => "var x = 123;",
-                Language.FSharp => "let x = 123",
-                Language.PowerShell => "$x = 123"
-            };
-
-            var kernel = CreateKernel(language);
-
-            await kernel.SubmitCodeAsync(codeToSetVariable);
-
-            var languageKernel = kernel.ChildKernels.Single();
-
-            var (success, valueInfosProduced) = await languageKernel.TryRequestValueInfosAsync();
-
-            valueInfosProduced.ValueInfos.Should().Contain(v => v.Name == "x");
-        }
     }
 }

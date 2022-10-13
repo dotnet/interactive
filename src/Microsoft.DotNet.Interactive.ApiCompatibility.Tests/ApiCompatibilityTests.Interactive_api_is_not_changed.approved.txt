@@ -204,8 +204,6 @@ Microsoft.DotNet.Interactive
     public static System.Collections.Generic.IEnumerable<Kernel> Subkernels(System.Boolean recursive = False)
     public static System.Collections.Generic.IEnumerable<Kernel> SubkernelsAndSelf(System.Boolean recursive = False)
     public static System.Threading.Tasks.Task<KernelCommandResult> SubmitCodeAsync(System.String code)
-    public static System.Threading.Tasks.Task<System.ValueTuple<System.Boolean,Microsoft.DotNet.Interactive.Events.ValueProduced>> TryRequestValueAsync(System.String valueName)
-    public static System.Threading.Tasks.Task<System.ValueTuple<System.Boolean,Microsoft.DotNet.Interactive.Events.ValueInfosProduced>> TryRequestValueInfosAsync()
     public static T UseImportMagicCommand<T>()
     public static T UseLogMagicCommand<T>()
     public static T UseQuitCommand<T>(System.Func<System.Threading.Tasks.Task> onQuitAsync = null)
@@ -659,7 +657,8 @@ Microsoft.DotNet.Interactive.Events
     .ctor(System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.ValueSharing.KernelValueInfo> valueInfos, Microsoft.DotNet.Interactive.Commands.RequestValueInfos command)
     public System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.ValueSharing.KernelValueInfo> ValueInfos { get;}
   public class ValueProduced : KernelEvent
-    .ctor(System.Object value, System.String name, Microsoft.DotNet.Interactive.FormattedValue formattedValue, Microsoft.DotNet.Interactive.Commands.RequestValue command)
+    .ctor(System.String name, Microsoft.DotNet.Interactive.FormattedValue formattedValue, Microsoft.DotNet.Interactive.Commands.RequestValue command)
+    .ctor(System.String name, System.Object value, Microsoft.DotNet.Interactive.Commands.RequestValue command)
     public Microsoft.DotNet.Interactive.FormattedValue FormattedValue { get;}
     public System.String Name { get;}
     public System.Object Value { get;}

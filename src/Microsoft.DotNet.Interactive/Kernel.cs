@@ -23,6 +23,8 @@ using static Pocket.Logger<Microsoft.DotNet.Interactive.Kernel>;
 using Pocket;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 using Disposable = System.Reactive.Disposables.Disposable;
+using Microsoft.DotNet.Interactive.Formatting;
+using System.Text.Json;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -915,7 +917,29 @@ namespace Microsoft.DotNet.Interactive
             }
             else
             {
-                value = command.FormattedValue.Value;
+                if (command.FormattedValue.MimeType == JsonFormatter.MimeType)
+                {
+                    var jsonDoc = JsonDocument.Parse(command.FormattedValue.Value);
+
+                    value = jsonDoc.RootElement.ValueKind switch
+                    {
+                        JsonValueKind.Object => jsonDoc,
+                        JsonValueKind.Array => jsonDoc,
+
+                        JsonValueKind.Undefined => null,
+                        JsonValueKind.True => true,
+                        JsonValueKind.False => false,
+                        JsonValueKind.Null => null,
+                        JsonValueKind.String => jsonDoc.Deserialize<string>(),
+                        JsonValueKind.Number => jsonDoc.Deserialize<double>(),
+
+                        _ => throw new ArgumentOutOfRangeException()
+                    };
+                }
+                else
+                {
+                    value = command.FormattedValue.Value;
+                }
             }
 
             await setValueAsync(command.Name, value);

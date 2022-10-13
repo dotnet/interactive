@@ -71,19 +71,18 @@ StormEvents | take 10
                     e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType));
         }
 
-
         [KqlFact]
         public async Task It_can_store_result_set_with_a_name()
         {
             var cluster = KqlFactAttribute.GetClusterForTests();
             using var kernel = await CreateKernelAsync();
             var result = await kernel.SubmitCodeAsync(
-                $"#!connect kql --kernel-name KustoHelp --cluster \"{cluster}\" --database \"Samples\"");
+                             $"#!connect kql --kernel-name KustoHelp --cluster \"{cluster}\" --database \"Samples\"");
 
             result.KernelEvents
-                .ToSubscribedList()
-                .Should()
-                .NotContainErrors();
+                  .ToSubscribedList()
+                  .Should()
+                  .NotContainErrors();
 
             result = await kernel.SubmitCodeAsync(@"
 #!kql-KustoHelp --name my_data_result
@@ -91,9 +90,13 @@ StormEvents | take 10
             ");
 
             var kqlKernel = kernel.FindKernelByName("kql-KustoHelp");
-            var (success, valueProduced) = await kqlKernel.TryRequestValueAsync("my_data_result");
-            success.Should().BeTrue();
-            valueProduced.Value.Should().BeAssignableTo<IEnumerable<TabularDataResource>>();
+
+            result = await kqlKernel.SendAsync(new RequestValue("my_data_result"));
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should().ContainSingle<ValueProduced>()
+                  .Which.Value.Should().BeAssignableTo<IEnumerable<TabularDataResource>>();
         }
 
         [KqlFact]

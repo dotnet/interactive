@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             string codeToWrite,
             string codeToRead)
         {
-            using var kernel = CreateKernel();
+            using var kernel = CreateCompositeKernel();
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             string codeToWrite,
             string codeToRead)
         {
-            using var kernel = CreateKernel();
+            using var kernel = CreateCompositeKernel();
 
             using var events = kernel.KernelEvents.ToSubscribedList();
             
@@ -100,7 +100,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             string codeToWrite,
             string codeToRead)
         {
-            using var kernel = CreateKernel();
+            using var kernel = CreateCompositeKernel();
             
             await kernel.SubmitCodeAsync($"{from}\n{codeToWrite}");
 
@@ -130,7 +130,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             "#!share --from pwsh x")]
         public async Task csharp_kernel_variables_shared_from_other_kernels_resolve_to_the_correct_runtime_type(string from, string codeToWrite, string codeToRead)
         {
-            using var kernel = CreateKernel();
+            using var kernel = CreateCompositeKernel();
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -157,7 +157,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             "#!share --from pwsh x")]
         public async Task fsharp_kernel_variables_shared_from_other_kernels_resolve_to_the_correct_runtime_types(string from, string codeToWrite, string codeToRead)
         {
-            using var kernel = CreateKernel();
+            using var kernel = CreateCompositeKernel();
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -184,7 +184,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             "#!share --from fsharp x")]
         public async Task pwsh_kernel_variables_shared_from_other_kernels_resolve_to_the_correct_runtime_type(string from, string codeToWrite, string codeToRead)
         {
-            using var kernel = CreateKernel();
+            using var kernel = CreateCompositeKernel();
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -249,7 +249,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             jsKernel.RegisterCommandHandler<RequestValue>((cmd, context) =>
             {
-                context.Publish(new ValueProduced(null, jsVariableName, new FormattedValue(JsonFormatter.MimeType, "123"), cmd));
+                context.Publish(new ValueProduced(jsVariableName, new FormattedValue(JsonFormatter.MimeType, "123"), cmd));
                 return Task.CompletedTask;
             });
 
@@ -315,7 +315,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task Values_can_be_shared_using_a_specified_MIME_type()
         {
-            using var kernel = CreateKernel();
+            using var kernel = CreateCompositeKernel();
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -338,7 +338,7 @@ x");
         [Fact]
         public async Task When_a_MIME_type_is_specified_then_a_string_is_declared_instead_of_a_reference()
         {
-            using var kernel = CreateKernel();
+            using var kernel = CreateCompositeKernel();
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -362,7 +362,7 @@ stringType");
         [Fact]
         public async Task A_name_can_be_specified_for_the_imported_value()
         {
-            using var kernel = CreateKernel();
+            using var kernel = CreateCompositeKernel();
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -416,6 +416,54 @@ y");
             _disposables.Add(remoteCompositeKernel);
 
             return (localCompositeKernel, remoteKernel);
+        }
+
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        [InlineData(Language.PowerShell)]
+        public async Task RequestValue_returns_defined_variable(Language language)
+        {
+            var codeToSetVariable = language switch
+            {
+                Language.CSharp => "var x = 123;",
+                Language.FSharp => "let x = 123",
+                Language.PowerShell => "$x = 123"
+            };
+
+            var kernel = CreateKernel(language);
+
+            await kernel.SubmitCodeAsync(codeToSetVariable);
+            
+            var (succeeded, valueProduced) = await kernel.TryRequestValueAsync("x");
+
+            using var _ = new AssertionScope();
+
+            succeeded.Should().BeTrue();
+            valueProduced.Value.Should().Be(123);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        [InlineData(Language.PowerShell)]
+        public async Task RequestValueInfos_returns_the_names_of_defined_variables(Language language)
+        {
+            var codeToSetVariable = language switch
+            {
+                Language.CSharp => "var x = 123;",
+                Language.FSharp => "let x = 123",
+                Language.PowerShell => "$x = 123"
+            };
+
+            var kernel = CreateKernel(language);
+
+            await kernel.SubmitCodeAsync(codeToSetVariable);
+
+            var (success, valueInfosProduced) = await kernel.TryRequestValueInfosAsync();
+
+            valueInfosProduced.ValueInfos.Should().Contain(v => v.Name == "x");
         }
 
         [Theory]
@@ -489,7 +537,7 @@ y");
             valueProduced.Value.Should().BeEquivalentTo(new int[] { 42 });
         }
 
-        private static CompositeKernel CreateKernel()
+        private static CompositeKernel CreateCompositeKernel()
         {
             return new CompositeKernel
             {
@@ -522,7 +570,7 @@ y");
                         .UseValueSharing(),
                 Language.PowerShell =>
                     new PowerShellKernel()
-                        .UseValueSharing()
+                        .UseValueSharing(),
             };
         }
 

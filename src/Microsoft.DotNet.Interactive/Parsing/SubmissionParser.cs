@@ -457,27 +457,43 @@ namespace Microsoft.DotNet.Interactive.Parsing
             }
             else
             {
-                var result = _kernel.RootKernel.SendAsync(new RequestValue(valueName, targetKernelName: targetKernelName)).GetAwaiter().GetResult();
+                var result = _kernel.RootKernel.SendAsync(new RequestValue(valueName, mimeType: "application/json" , targetKernelName: targetKernelName)).GetAwaiter().GetResult();
 
                 var events = result.KernelEvents.ToEnumerable().ToArray();
                 var valueProduced = events.OfType<ValueProduced>().SingleOrDefault();
 
-                if (valueProduced is { } &&
-                    valueProduced.FormattedValue.MimeType == "application/json")
+                if (valueProduced is { })
                 {
-                    var stringValue = valueProduced.FormattedValue.Value;
+                    string interpolatedValue = null;
 
-                    var jsonDoc = JsonDocument.Parse(stringValue);
-
-                    object interpolatedValue = jsonDoc.RootElement.ValueKind switch
+                    if (valueProduced.Value is { } value)
                     {
-                        JsonValueKind.True => true,
-                        JsonValueKind.False => false,
-                        JsonValueKind.String => jsonDoc.Deserialize<string>(),
-                        JsonValueKind.Number => jsonDoc.Deserialize<double>(),
+                        interpolatedValue = value.ToString();
+                    }
+                    else if (valueProduced.FormattedValue.MimeType == "application/json")
+                    {
+                        var stringValue = valueProduced.FormattedValue.Value;
 
-                        _ => null
-                    };
+                        var jsonDoc = JsonDocument.Parse(stringValue);
+
+                        object jsonValue = jsonDoc.RootElement.ValueKind switch
+                        {
+                            JsonValueKind.True => true,
+                            JsonValueKind.False => false,
+                            JsonValueKind.String => jsonDoc.Deserialize<string>(),
+                            JsonValueKind.Number => jsonDoc.Deserialize<double>(),
+
+                            _ => null
+                        };
+
+                        interpolatedValue = jsonValue?.ToString();
+                    }
+                    else
+                    {
+                        errorMessage = events.OfType<CommandFailed>().Last().Message;
+
+                        return false;
+                    }
 
                     if (interpolatedValue is { })
                     {
@@ -486,14 +502,13 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     }
                     else
                     {
-                        errorMessage = $"Value @{tokenToReplace} cannot be interpolated into magic command:\n{stringValue}";
+                        errorMessage = $"Value @{tokenToReplace} cannot be interpolated into magic command:\n{valueProduced.Value ?? valueProduced.FormattedValue.Value}";
                         return false;
                     }
                 }
                 else
                 {
                     errorMessage = events.OfType<CommandFailed>().Last().Message;
-
                     return false;
                 }
             }

@@ -98,20 +98,31 @@ public class PlaywrightKernelConnector : IKernelConnector
 
                     var selector = request.Name;
 
-                    var html = request.MimeType switch
+                    if (request.MimeType is not null)
                     {
-                        "image/jpeg" => await CaptureImageAsync(page, selector, ScreenshotType.Jpeg),
-                        "image/png" => await CaptureImageAsync(page, selector, ScreenshotType.Png),
-                        PlainTextFormatter.MimeType => await page.InnerTextAsync(selector),
-                        _ => await page.InnerHTMLAsync(selector)
-                    };
+                        var html = request.MimeType switch
+                        {
+                            "image/jpeg" => await CaptureImageAsync(page, selector, ScreenshotType.Jpeg),
+                            "image/png" => await CaptureImageAsync(page, selector, ScreenshotType.Png),
+                            PlainTextFormatter.MimeType => await page.InnerTextAsync(selector),
+                            HtmlFormatter.MimeType => await page.InnerHTMLAsync(selector),
+                            _ => throw new ArgumentException($"No formatter is registered for MIME type {request.MimeType}"),
+                        };
 
-                    context.Publish(
-                        new ValueProduced(
-                            page.Locator(selector),
-                            request.Name,
-                            new FormattedValue("text/html", html),
-                            request));
+                        context.Publish(
+                            new ValueProduced(
+                                request.Name,
+                                new FormattedValue("text/html", html),
+                                request));
+                    }
+                    else
+                    {
+                        context.Publish(
+                            new ValueProduced(
+                                request.Name,
+                                page.Locator(selector),
+                                request));
+                    }
                 });
 
                 break;

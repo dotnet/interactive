@@ -102,20 +102,20 @@ namespace Microsoft.DotNet.Interactive
 
         public static void PublishValueProduced(this KernelInvocationContext context, RequestValue command, object value)
         {
-            if (value is { })
+            if (command.MimeType is { } requestedMimeType)
             {
                 var valueType = value.GetType();
-                var formatter = Formatter.GetPreferredFormatterFor(valueType, command.MimeType);
+                var formatter = Formatter.GetPreferredFormatterFor(valueType, requestedMimeType);
 
                 using var writer = new StringWriter(CultureInfo.InvariantCulture);
                 formatter.Format(value, writer);
-                var formatted = new FormattedValue(command.MimeType, writer.ToString());
-                context.Publish(new ValueProduced(value, command.Name, formatted, command));
+
+                var formatted = new FormattedValue(requestedMimeType, writer.ToString());
+                context.Publish(new ValueProduced(command.Name, formatted, command));
             }
             else
             {
-                var formatted = new FormattedValue(command.MimeType, "null");
-                context.Publish(new ValueProduced(value, command.Name, formatted, command));
+                context.Publish(new ValueProduced(command.Name, value, command));
             }
         }
     }

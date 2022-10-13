@@ -82,38 +82,6 @@ namespace Microsoft.DotNet.Interactive
             };
         }
 
-        public static async Task<(bool success, ValueInfosProduced valueInfosProduced)> TryRequestValueInfosAsync(this Kernel kernel)
-        {
-            // FIX: (TryRequestValueInfosAsync)  remove this from the public API
-            if (kernel.SupportsCommandType(typeof(RequestValueInfos)))
-            {
-                var commandResult = await kernel.SendAsync(new RequestValueInfos());
-                var candidateResult = await commandResult.KernelEvents.OfType<ValueInfosProduced>().FirstOrDefaultAsync();
-                if (candidateResult is { })
-                {
-                    return (true, candidateResult);
-                }
-            }
-
-            return (false, default);
-        }
-
-        public static async Task<(bool success, ValueProduced valueProduced)> TryRequestValueAsync(this Kernel kernel, string valueName)
-        {
-            // FIX: (TryRequestValueAsync) remove this from the public API
-            if (kernel.SupportsCommandType(typeof(RequestValue)))
-            {
-                var commandResult = await kernel.SendAsync(new RequestValue(valueName));
-                var candidateResult = await commandResult.KernelEvents.OfType<ValueProduced>().FirstOrDefaultAsync();
-                if (candidateResult is { })
-                {
-                    return (true, candidateResult);
-                }
-            }
-
-            return (false, default);
-        }
-
         public static Task<KernelCommandResult> SubmitCodeAsync(
             this Kernel kernel,
             string code)
@@ -321,7 +289,7 @@ namespace Microsoft.DotNet.Interactive
             this Kernel fromKernel,
             Kernel toKernel,
             string fromName,
-            string mimeType, 
+            string requestedMimeType, 
             string toName)
         {
             var supportedRequestValue = fromKernel.SupportsCommandType(typeof(RequestValue));
@@ -331,13 +299,13 @@ namespace Microsoft.DotNet.Interactive
                 throw new InvalidOperationException($"Kernel {fromKernel} does not support command {nameof(RequestValue)}");
             }
 
-            var requestValueResult = await fromKernel.SendAsync(new RequestValue(fromName, mimeType: mimeType));
+            var requestValueResult = await fromKernel.SendAsync(new RequestValue(fromName, mimeType: requestedMimeType));
 
             if (requestValueResult.KernelEvents.ToEnumerable().OfType<ValueProduced>().SingleOrDefault() is { } valueProduced)
             {
                 var declarationName = toName ?? fromName;
 
-                if (mimeType is null)
+                if (valueProduced.Value is not null)
                 {
                     await toKernel.SendAsync(
                         new SendValue(
@@ -353,38 +321,7 @@ namespace Microsoft.DotNet.Interactive
                 }
             }
         }
-
-        static bool TryMaterialize(ValueProduced valueProduced, out object materializedValue)
-        {
-            if (valueProduced.FormattedValue.MimeType == JsonFormatter.MimeType)
-            {
-                // FIX: (DeclareValue) generalize
-                var jsonDoc = JsonDocument.Parse(valueProduced.FormattedValue.Value);
-
-                materializedValue = jsonDoc.RootElement.ValueKind switch
-                {
-                    JsonValueKind.Object => jsonDoc,
-                    JsonValueKind.Array => jsonDoc,
-
-                    JsonValueKind.Undefined => null,
-                    JsonValueKind.True => true,
-                    JsonValueKind.False => false,
-                    JsonValueKind.Null => null,
-                    JsonValueKind.String => jsonDoc.Deserialize<string>(),
-                    JsonValueKind.Number => jsonDoc.Deserialize<double>(),
-
-                    _ => throw new ArgumentOutOfRangeException()
-                };
-
-                return true;
-            }
-            else
-            {
-                materializedValue = null;
-                return false;
-            }
-        }
-
+        
         public static TKernel UseWho<TKernel>(this TKernel kernel)
             where TKernel : Kernel
         {
@@ -445,7 +382,7 @@ namespace Microsoft.DotNet.Interactive
                     using var __ = result.KernelEvents.OfType<ValueProduced>().Subscribe(e => valueEvents.Add(e));
                 }
 
-                var kernelValues = valueEvents.Select(e => new KernelValue(new KernelValueInfo(e.Name, e.Value.GetType()), e.Value, context.HandlingKernel.Name));
+                var kernelValues = valueEvents.Select(e => new KernelValue(new KernelValueInfo(e.Name, e.Value?.GetType()), e.Value, context.HandlingKernel.Name));
 
                 var currentVariables = new KernelValues(
                     kernelValues,

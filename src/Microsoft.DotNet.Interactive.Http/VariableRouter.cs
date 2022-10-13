@@ -145,8 +145,9 @@ namespace Microsoft.DotNet.Interactive.Http
 
         private async Task<FormattedValue> GetValueAsync(Kernel targetKernel, string variableName)
         {
-            var (success, valueProduced) = await targetKernel.TryRequestValueAsync(variableName);
-            if (success && valueProduced.Value is { } value)
+            var result = await targetKernel.SendAsync(new RequestValue(variableName));
+
+            if (await result.KernelEvents.FirstOrDefaultAsync() is ValueProduced { Value: { } value })
             {
                 return new FormattedValue(JsonFormatter.MimeType, value.ToDisplayString(JsonFormatter.MimeType));
             }

@@ -35,7 +35,7 @@ public class HtmlKernelTests : IDisposable
     {
         using var kernel = await CreateHtmlProxyKernelAsync();
 
-        var result = await kernel.SendAsync(new RequestValue("*", "text/html"));
+        var result = await kernel.SendAsync(new RequestValue("*"));
 
         var events = result.KernelEvents.ToSubscribedList();
 

@@ -85,7 +85,7 @@ public class VariableSharingWithinMagicCommandsTests : IDisposable
               .Should()
               .Contain("Value @x cannot be interpolated into magic command:\n{\"name\":\"my object\",\"shareability\":0}");
     }
-
+    
     [Fact]
     public async Task When_variable_does_not_exist_then_an_error_is_returned()
     {

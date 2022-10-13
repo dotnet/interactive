@@ -389,7 +389,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
                 }, new RequestValueInfos("csharp"));
 
                 yield return new ValueProduced(
-                    "raw value",
                     "a",
                     new FormattedValue(
                         HtmlFormatter.MimeType,
