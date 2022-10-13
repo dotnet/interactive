@@ -137,23 +137,27 @@ namespace Microsoft.DotNet.Interactive
                 }
                 else
                 {
-
-                    if (!completingMainCommand && command.ShouldPublishCompletionEvent == true)
+                    if (completingMainCommand || command.ShouldPublishCompletionEvent != true)
                     {
-                        Publish(new CommandFailed(exception, command, message));
-
-                        StopPublishingChildCommandEvents();
-                    }
-                    else
-                    {
-                        Publish(new CommandFailed(exception, Command, message ));
+                        Publish(new CommandFailed(exception, Command, message));
 
                         StopPublishingMainCommandEvents();
 
                         TryCancel();
-                    }
 
-                    _isFailed = true;
+                        _isFailed = true;
+                    }
+                    else
+                    {
+                        if (command.Parent is null)
+                        {
+                            Publish(new ErrorProduced(message, command), publishOnAmbientContextOnly: true);
+                        }
+
+                        Publish(new CommandFailed(exception, command, message));
+
+                        StopPublishingChildCommandEvents();
+                    }
                 }
 
                 if (completingMainCommand)
@@ -202,6 +206,11 @@ namespace Microsoft.DotNet.Interactive
 
         public void Publish(KernelEvent @event)
         {
+            Publish(@event, false);
+        }
+
+        public void Publish(KernelEvent @event, bool publishOnAmbientContextOnly)
+        {
             if (IsComplete)
             {
                 return;
@@ -214,7 +223,7 @@ namespace Microsoft.DotNet.Interactive
                 @event.TryAddToRoutingSlip(HandlingKernel.GetKernelUri());
             }
 
-            if (_childCommands.TryGetValue(command, out var events))
+            if (!publishOnAmbientContextOnly && _childCommands.TryGetValue(command, out var events))
             {
                 events.OnNext(@event);
             }
@@ -258,11 +267,6 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (!CommandEqualityComparer.Instance.Equals(_current.Value.Command, command))
                 {
-                    if (command.Parent is null && _current.Value.Command is {} cmd)
-                    {
-                        command.Parent = cmd;
-                    }
-
                     var capturedEventStream = _current.Value._events;
                     _current.Value._childCommands.GetOrAdd(command, innerCommand =>
                     {

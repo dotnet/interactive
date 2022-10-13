@@ -152,7 +152,9 @@ namespace Microsoft.DotNet.Interactive
                     return false;
                 }
 
-                if (command.DestinationUri is { } && handlingKernel.KernelInfo.Uri is { } && command.DestinationUri == handlingKernel.KernelInfo.Uri)
+                if (command.DestinationUri is { } &&
+                    handlingKernel.KernelInfo.Uri is { } && 
+                    command.DestinationUri == handlingKernel.KernelInfo.Uri)
                 {
                     command.SchedulingScope = handlingKernel.SchedulingScope;
                     command.TargetKernelName = handlingKernel.Name;

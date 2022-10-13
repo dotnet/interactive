@@ -97,7 +97,7 @@ await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
                   .Which
                   .Message
                   .Should()
-                  .Be("Error: (1,1): error CS0103: The name 'error' does not exist in the current context");
+                  .Be("(1,1): error CS0103: The name 'error' does not exist in the current context");
         }
 
         [Fact]

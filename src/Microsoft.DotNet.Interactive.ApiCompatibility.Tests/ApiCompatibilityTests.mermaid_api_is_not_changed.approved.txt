@@ -4,7 +4,6 @@ Microsoft.DotNet.Interactive.Mermaid
   public class MermaidKernel : Microsoft.DotNet.Interactive.Kernel, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
     .ctor()
     public Microsoft.DotNet.Interactive.ChooseKernelDirective ChooseKernelDirective { get;}
-    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SubmitCode command, Microsoft.DotNet.Interactive.KernelInvocationContext context)
   public class MermaidMarkdown
     .ctor(System.String value)
     public System.String ToString()

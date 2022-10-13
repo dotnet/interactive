@@ -30,7 +30,7 @@ Microsoft.DotNet.Interactive
      System.Collections.Generic.IEnumerable<System.CommandLine.Parsing.Parser> GetDirectiveParsersForCompletion(Microsoft.DotNet.Interactive.Parsing.DirectiveNode directiveNode, System.Int32 requestPosition)
     public System.Collections.Generic.IEnumerator<Kernel> GetEnumerator()
      Kernel GetHandlingKernel(Microsoft.DotNet.Interactive.Commands.KernelCommand command, KernelInvocationContext context)
-    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.RequestKernelInfo command, KernelInvocationContext context)
+     System.Threading.Tasks.Task HandleRequestKernelInfoAsync(Microsoft.DotNet.Interactive.Commands.RequestKernelInfo command, KernelInvocationContext context)
     public System.Threading.Tasks.Task LoadExtensionsFromDirectoryAsync(System.IO.DirectoryInfo directory, KernelInvocationContext context)
     public System.Void SetDefaultTargetKernelNameForCommand(System.Type commandType, System.String kernelName)
     protected System.Void SetHandlingKernel(Microsoft.DotNet.Interactive.Commands.KernelCommand command, KernelInvocationContext context)
@@ -73,7 +73,6 @@ Microsoft.DotNet.Interactive
     public System.Threading.Tasks.Task ExecuteClientScript(System.String code, KernelInvocationContext context)
   public class HtmlKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
     .ctor()
-    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SubmitCode command, KernelInvocationContext context)
   public abstract class IKernelCommandHandler<TCommand>
     public System.Threading.Tasks.Task HandleAsync(TCommand command, KernelInvocationContext context)
   public abstract class IKernelExtension
@@ -96,7 +95,6 @@ Microsoft.DotNet.Interactive
   public class JavaScriptKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
     .ctor(Microsoft.DotNet.Interactive.Connection.KernelClientBase client = null)
     protected Func<TCommand,KernelInvocationContext,System.Threading.Tasks.Task> CreateDefaultHandlerForCommandType<TCommand>()
-    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SubmitCode command, KernelInvocationContext context)
   public abstract class JsonConverter<T> : JsonConverter<T>
     protected System.Void EnsureStartObject(System.Text.Json.Utf8JsonReader reader, System.Type typeToConvert)
     protected System.Void OnWrite(System.Text.Json.Utf8JsonWriter writer, T value, System.Text.Json.JsonSerializerOptions options)
@@ -130,6 +128,7 @@ Microsoft.DotNet.Interactive
      System.Collections.Generic.IEnumerable<System.CommandLine.Parsing.Parser> GetDirectiveParsersForCompletion(Microsoft.DotNet.Interactive.Parsing.DirectiveNode directiveNode, System.Int32 requestPosition)
      Kernel GetHandlingKernel(Microsoft.DotNet.Interactive.Commands.KernelCommand command, KernelInvocationContext context)
     public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.RequestKernelInfo command, KernelInvocationContext context)
+     System.Threading.Tasks.Task HandleRequestKernelInfoAsync(Microsoft.DotNet.Interactive.Commands.RequestKernelInfo command, KernelInvocationContext context)
      System.Boolean HasDynamicHandlerFor(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
      System.Void PublishEvent(Microsoft.DotNet.Interactive.Events.KernelEvent kernelEvent)
     public System.Void RegisterCommandHandler<TCommand>(Func<TCommand,KernelInvocationContext,System.Threading.Tasks.Task> handler)
@@ -251,6 +250,7 @@ Microsoft.DotNet.Interactive
     public System.Void Fail(Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Exception exception = null, System.String message = null)
     public System.Void OnComplete(System.Action<KernelInvocationContext> onComplete)
     public System.Void Publish(Microsoft.DotNet.Interactive.Events.KernelEvent event)
+    public System.Void Publish(Microsoft.DotNet.Interactive.Events.KernelEvent event, System.Boolean publishOnAmbientContextOnly)
     public System.Threading.Tasks.Task ScheduleAsync(System.Func<KernelInvocationContext,System.Threading.Tasks.Task> func)
   public static class KernelInvocationContextExtensions
     public static DisplayedValue Display(System.Object value, System.String[] mimeTypes)
@@ -283,13 +283,8 @@ Microsoft.DotNet.Interactive
     .ctor(System.String name = value)
     public ChooseKernelDirective ChooseKernelDirective { get;}
     public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Values { get;}
-    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.RequestValueInfos command, KernelInvocationContext context)
-    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.RequestValue command, KernelInvocationContext context)
-    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SendValue command, KernelInvocationContext context)
-    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SubmitCode command, KernelInvocationContext context)
   public class KqlDiscoverabilityKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
     .ctor()
-    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SubmitCode command, KernelInvocationContext context)
   public class LinePosition, System.IEquatable<LinePosition>
     public static LinePosition FromCodeAnalysisLinePosition(Microsoft.CodeAnalysis.Text.LinePosition linePosition)
     public static System.Boolean op_Equality(LinePosition a, LinePosition b)
@@ -364,7 +359,6 @@ Microsoft.DotNet.Interactive
     public System.Collections.Generic.IReadOnlyList<ParameterInformation> Parameters { get;}
   public class SqlDiscoverabilityKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
     .ctor()
-    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SubmitCode command, KernelInvocationContext context)
   public class TabularDataResourceSummaryExplorer : DataExplorer<Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource>
     .ctor(Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource data)
     protected Microsoft.AspNetCore.Html.IHtmlContent ToHtml()
@@ -551,7 +545,7 @@ Microsoft.DotNet.Interactive.Connection
   public class ProxyKernel : Microsoft.DotNet.Interactive.Kernel, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, System.IDisposable
     .ctor(System.String name, IKernelCommandAndEventSender sender, IKernelCommandAndEventReceiver receiver, System.Uri remoteUri = null)
     protected Func<TCommand,Microsoft.DotNet.Interactive.KernelInvocationContext,System.Threading.Tasks.Task> CreateDefaultHandlerForCommandType<TCommand>()
-    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.RequestKernelInfo command, Microsoft.DotNet.Interactive.KernelInvocationContext context)
+     System.Threading.Tasks.Task HandleRequestKernelInfoAsync(Microsoft.DotNet.Interactive.Commands.RequestKernelInfo command, Microsoft.DotNet.Interactive.KernelInvocationContext context)
   public delegate ReadCommandOrEvent : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable
     .ctor(System.Object object, System.IntPtr method)
     public System.IAsyncResult BeginInvoke(System.Threading.CancellationToken cancellationToken, System.AsyncCallback callback, System.Object object)
