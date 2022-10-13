@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 
         public KernelCommandInvocation Handle { get; set; }
 
-        public Task HandleAsync(SubmitCode command, KernelInvocationContext context)
+        Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
         {
             Handle?.Invoke(command, context);
             return Task.CompletedTask;

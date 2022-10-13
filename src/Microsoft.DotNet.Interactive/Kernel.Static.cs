@@ -109,10 +109,10 @@ namespace Microsoft.DotNet.Interactive
                       .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IKernelCommandHandler<>))
                       .SelectMany(i => i.GenericTypeArguments)
                       .ToArray());
-    }
 
-    public delegate Task SetValueAsyncDelegate(
-        string name,
-        object value,
-        Type declaredType = null);
+        protected delegate Task SetValueAsyncDelegate(
+            string name,
+            object value,
+            Type declaredType = null);
+    }
 }

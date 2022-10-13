@@ -31,14 +31,14 @@ namespace Microsoft.DotNet.Interactive
         {
         }
 
-        public Task HandleAsync(RequestValueInfos command, KernelInvocationContext context)
+        Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
         {
             var valueInfos = _values.Select(e => new KernelValueInfo(e.Key, typeof(string))).ToArray();
             context.Publish(new ValueInfosProduced(valueInfos, command));
             return Task.CompletedTask;
         }
 
-        public Task HandleAsync(RequestValue command, KernelInvocationContext context)
+        Task IKernelCommandHandler<RequestValue>.HandleAsync(RequestValue command, KernelInvocationContext context)
         {
             if (_values.TryGetValue(command.Name, out var value))
             {
@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.Interactive
             return Task.CompletedTask;
         }
 
-        public async Task HandleAsync(SendValue command, KernelInvocationContext context)
+        async Task IKernelCommandHandler<SendValue>.HandleAsync(SendValue command, KernelInvocationContext context)
         {
             await SetValueAsync(command, context, (name, value, _) =>
             {
@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.Interactive
 
         public IReadOnlyDictionary<string, object> Values => _values;
 
-        public Task HandleAsync(
+        Task IKernelCommandHandler<SubmitCode>.HandleAsync(
             SubmitCode command,
             KernelInvocationContext context)
         {

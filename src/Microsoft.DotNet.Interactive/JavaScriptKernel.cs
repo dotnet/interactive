@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive
             _client = client;
         }
 
-        public Task HandleAsync(
+        Task IKernelCommandHandler<SubmitCode>.HandleAsync(
             SubmitCode command,
             KernelInvocationContext context)
         {

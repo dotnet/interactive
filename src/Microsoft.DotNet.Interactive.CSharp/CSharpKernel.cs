@@ -116,14 +116,14 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return Task.FromResult(SyntaxFactory.IsCompleteSubmission(syntaxTree));
         }
 
-        public Task HandleAsync(RequestValueInfos command, KernelInvocationContext context)
+        Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
         {
             var valueInfos = GetValueInfos();
             context.Publish(new ValueInfosProduced(valueInfos, command));
             return Task.CompletedTask;
         }
 
-        public Task HandleAsync(RequestValue command, KernelInvocationContext context)
+        Task IKernelCommandHandler<RequestValue>.HandleAsync(RequestValue command, KernelInvocationContext context)
         {
             if (TryGetValue<object>(command.Name, out var value))
             {
@@ -171,7 +171,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return false;
         }
 
-        public async Task HandleAsync(
+        async Task IKernelCommandHandler<SendValue>.HandleAsync(
             SendValue command,
             KernelInvocationContext context)
         {
@@ -192,7 +192,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             scriptVariable.Value = value;
         }
 
-        public async Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
+        async Task IKernelCommandHandler<RequestHoverText>.HandleAsync(RequestHoverText command, KernelInvocationContext context)
         {
             await EnsureWorkspaceIsInitializedAsync(context);
 
@@ -223,7 +223,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                     correctedLinePosSpan));
         }
 
-        public async Task HandleAsync(RequestSignatureHelp command, KernelInvocationContext context)
+        async Task IKernelCommandHandler<RequestSignatureHelp>.HandleAsync(RequestSignatureHelp command, KernelInvocationContext context)
         {
             await EnsureWorkspaceIsInitializedAsync(context);
 
@@ -249,7 +249,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }
         }
 
-        public async Task HandleAsync(SubmitCode submitCode, KernelInvocationContext context)
+        async Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode submitCode, KernelInvocationContext context)
         {
             var codeSubmissionReceived = new CodeSubmissionReceived(submitCode);
 
@@ -355,7 +355,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }
         }
 
-        public Task HandleAsync(ChangeWorkingDirectory command, KernelInvocationContext context)
+        Task IKernelCommandHandler<ChangeWorkingDirectory>.HandleAsync(ChangeWorkingDirectory command, KernelInvocationContext context)
         {
             return Task.CompletedTask;
         }
@@ -410,7 +410,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }
         }
 
-        public async Task HandleAsync(
+        async Task IKernelCommandHandler<RequestCompletions>.HandleAsync(
             RequestCompletions command,
             KernelInvocationContext context)
         {
@@ -464,7 +464,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return new DiagnosticsProduced(kernelDiagnostics, command, formattedDiagnostics);
         }
 
-        public async Task HandleAsync(
+        async Task IKernelCommandHandler<RequestDiagnostics>.HandleAsync(
             RequestDiagnostics command,
             KernelInvocationContext context)
         {

@@ -64,8 +64,6 @@ Microsoft.DotNet.Interactive
     .ctor(System.String displayId, System.String[] mimeTypes, KernelInvocationContext context)
     public System.Collections.Generic.IReadOnlyCollection<System.String> MimeTypes { get;}
     public System.Void Update(System.Object updatedValue)
-  public static class DotNetKernelExtensions
-    public static System.Threading.Tasks.Task SetValueAsync<T>(System.String name, T value)
   public class FormattedValue
     public static System.Collections.Generic.IReadOnlyCollection<FormattedValue> FromObject(System.Object value, System.String[] mimeTypes)
     .ctor(System.String mimeType, System.String value)
@@ -141,6 +139,7 @@ Microsoft.DotNet.Interactive
     public System.Threading.Tasks.Task<KernelCommandResult> SendAsync(Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Threading.CancellationToken cancellationToken = null)
     protected System.Void SetHandlingKernel(Microsoft.DotNet.Interactive.Commands.KernelCommand command, KernelInvocationContext context)
      System.Void SetScheduler(KernelScheduler<Microsoft.DotNet.Interactive.Commands.KernelCommand,KernelCommandResult> scheduler)
+    protected System.Threading.Tasks.Task SetValueAsync(Microsoft.DotNet.Interactive.Commands.SendValue command, KernelInvocationContext context, SetValueAsyncDelegate setValueAsync)
     public System.Boolean SupportsCommandType(System.Type commandType)
     public System.String ToString()
   public class KernelCollection, System.Collections.Generic.IEnumerable<Kernel>, System.Collections.Generic.IReadOnlyCollection<Kernel>, System.Collections.IEnumerable
@@ -245,7 +244,6 @@ Microsoft.DotNet.Interactive
     public Microsoft.DotNet.Interactive.Commands.KernelCommand Command { get;}
     public Kernel HandlingKernel { get;}
     public System.Boolean IsComplete { get;}
-    public System.Boolean IsFailed { get;}
     public System.IObservable<Microsoft.DotNet.Interactive.Events.KernelEvent> KernelEvents { get;}
     public KernelCommandResult Result { get;}
     public System.Void Complete(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
@@ -281,14 +279,14 @@ Microsoft.DotNet.Interactive
     public System.IAsyncResult BeginInvoke(T value, System.AsyncCallback callback, System.Object object)
     public Task<TResult> EndInvoke(System.IAsyncResult result)
     public Task<TResult> Invoke(T value)
-  public class KeyValueStoreKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValue>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValueInfos>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, Microsoft.DotNet.Interactive.ValueSharing.ISupportSetClrValue, System.IDisposable
+  public class KeyValueStoreKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValue>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValueInfos>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SendValue>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
     .ctor(System.String name = value)
     public ChooseKernelDirective ChooseKernelDirective { get;}
     public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Values { get;}
     public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.RequestValueInfos command, KernelInvocationContext context)
     public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.RequestValue command, KernelInvocationContext context)
+    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SendValue command, KernelInvocationContext context)
     public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SubmitCode command, KernelInvocationContext context)
-    public System.Threading.Tasks.Task SetValueAsync(System.String name, System.Object value, System.Type declaredType = null)
   public class KqlDiscoverabilityKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
     .ctor()
     public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SubmitCode command, KernelInvocationContext context)
@@ -437,7 +435,8 @@ Microsoft.DotNet.Interactive.Commands
     public System.String Code { get;}
     public System.String Language { get;}
   public class SendValue : KernelCommand
-    .ctor(System.String name, System.Object value, Microsoft.DotNet.Interactive.FormattedValue formattedValue, System.String targetKernelName = null)
+    .ctor(System.String name, Microsoft.DotNet.Interactive.FormattedValue formattedValue, System.String targetKernelName = null)
+    .ctor(System.String name, System.Object value, System.String targetKernelName = null)
     public Microsoft.DotNet.Interactive.FormattedValue FormattedValue { get;}
     public System.String Name { get;}
     public System.Object Value { get;}
@@ -943,11 +942,6 @@ Microsoft.DotNet.Interactive.Utility
     public static Microsoft.DotNet.Interactive.LinePositionSpan GetLinePositionSpanFromStartAndEndIndices(System.String code, System.Int32 startIndex, System.Int32 endIndex)
     public static Microsoft.DotNet.Interactive.LinePosition GetPositionFromCursorOffset(System.String code, System.Int32 cursorOffset)
 Microsoft.DotNet.Interactive.ValueSharing
-  public abstract class ISupportSetClrValue
-    public System.Threading.Tasks.Task SetValueAsync(System.String name, System.Object value, System.Type declaredType = null)
-  public class JavaScriptValueDeclarer
-    .ctor()
-    public System.Boolean TryGetValueDeclaration(Microsoft.DotNet.Interactive.Events.ValueProduced valueProduced, System.String declareAsName, ref Microsoft.DotNet.Interactive.Commands.KernelCommand& command)
   public class KernelValue
     .ctor(KernelValueInfo valueInfo, System.Object value, System.String kernelName)
     public System.String KernelName { get;}

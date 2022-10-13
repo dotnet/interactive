@@ -172,14 +172,14 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             return false;
         }
 
-        public Task HandleAsync(RequestValueInfos command, KernelInvocationContext context)
+        Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
         {
             var valueInfos = GetValueInfos();
             context.Publish(new ValueInfosProduced(valueInfos, command));
             return Task.CompletedTask;
         }
 
-        public Task HandleAsync(RequestValue command, KernelInvocationContext context)
+        Task IKernelCommandHandler<RequestValue>.HandleAsync(RequestValue command, KernelInvocationContext context)
         {
             if (TryGetValue<object>(command.Name, out var value))
             {
@@ -193,7 +193,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             return Task.CompletedTask;
         }
 
-        public async Task HandleAsync(
+        async Task IKernelCommandHandler<SendValue>.HandleAsync(
             SendValue command,
             KernelInvocationContext context)
         {
@@ -206,7 +206,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             }
         }
 
-        public async Task HandleAsync(
+        async Task IKernelCommandHandler<SubmitCode>.HandleAsync(
             SubmitCode submitCode,
             KernelInvocationContext context)
         {
@@ -265,7 +265,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             }
         }
 
-        public Task HandleAsync(
+        Task IKernelCommandHandler<RequestCompletions>.HandleAsync(
             RequestCompletions requestCompletions,
             KernelInvocationContext context)
         {
@@ -302,7 +302,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             return Task.CompletedTask;
         }
 
-        public Task HandleAsync(
+        Task IKernelCommandHandler<RequestDiagnostics>.HandleAsync(
             RequestDiagnostics requestDiagnostics,
             KernelInvocationContext context)
         {

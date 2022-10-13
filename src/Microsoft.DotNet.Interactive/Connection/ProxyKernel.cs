@@ -157,11 +157,11 @@ public sealed class ProxyKernel : Kernel
         {
             return base.HandleAsync(command, context);
         }
-        
+
         return HandleByForwardingToRemoteAsync(command, context);
     }
 
-    public override Task HandleAsync(RequestKernelInfo command, KernelInvocationContext context) =>
+    private protected override Task HandleRequestKernelInfoAsync(RequestKernelInfo command, KernelInvocationContext context) =>
         // override the default handler on Kernel and forward the command instead
         HandleByForwardingToRemoteAsync(command, context);
 

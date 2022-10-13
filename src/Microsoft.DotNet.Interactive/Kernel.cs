@@ -14,6 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.CSharp.RuntimeBinder;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
@@ -575,12 +576,14 @@ namespace Microsoft.DotNet.Interactive
             return deferredCommands;
         }
 
-        public virtual Task HandleAsync(
+        public Task HandleAsync(
             RequestKernelInfo command,
-            KernelInvocationContext context)
+            KernelInvocationContext context) =>
+            HandleRequestKernelInfoAsync(command, context);
+
+        private protected virtual Task HandleRequestKernelInfoAsync(RequestKernelInfo command, KernelInvocationContext context)
         {
             context.Publish(new KernelInfoProduced(KernelInfo, command));
-
             return Task.CompletedTask;
         }
 
@@ -790,6 +793,24 @@ namespace Microsoft.DotNet.Interactive
 
                     case (RequestKernelInfo requestKernelInfo, IKernelCommandHandler<RequestKernelInfo> requestKernelInfoHandler):
                         SetHandler(requestKernelInfo, requestKernelInfoHandler);
+                        break;
+
+                    case (Cancel cancel, _):
+                        break;
+
+                    default:
+                        // for command types defined outside this assembly, we can dynamically assign the handler
+                        if (command.GetType().IsPublic)
+                        {
+                            try
+                            {
+                                SetHandler((dynamic)command, (dynamic)this);
+                            }
+                            catch (RuntimeBinderException)
+                            {
+                            }
+                        }
+
                         break;
                 }
             }
