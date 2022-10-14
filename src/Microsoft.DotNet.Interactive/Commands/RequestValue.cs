@@ -7,11 +7,11 @@ public class RequestValue : KernelCommand
 {
     public RequestValue(
         string name, 
-        string mimeType = null, 
+        string mimeType = "application/json", 
         string targetKernelName = null) : base(targetKernelName)
     {
         Name = name;
-        MimeType = mimeType;
+        MimeType = mimeType ?? "application/json";
     }
 
     public string Name { get; }

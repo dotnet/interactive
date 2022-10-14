@@ -9,8 +9,8 @@ namespace Microsoft.DotNet.Interactive.Events;
 
 public class ValueProduced : KernelEvent
 {
-    [JsonConstructor]
     public ValueProduced(
+        object value,
         string name,
         FormattedValue formattedValue,
         RequestValue command) : base(command)
@@ -20,25 +20,13 @@ public class ValueProduced : KernelEvent
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
         }
 
+        Value = value;
         Name = name;
         FormattedValue = formattedValue ?? throw new ArgumentNullException(nameof(formattedValue));
     }
 
-    public ValueProduced(
-        string name,
-        object value,
-        RequestValue command) : base(command)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
-        }
-
-        Value = value;
-        Name = name;
-    }
-
-    [JsonIgnore] public object Value { get; }
+    [JsonIgnore] 
+    public object Value { get; }
 
     public string Name { get; }
 

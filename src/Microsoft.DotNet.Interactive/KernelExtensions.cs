@@ -271,7 +271,11 @@ namespace Microsoft.DotNet.Interactive
 
                 if (kernel.FindKernelByName(from) is { } fromKernel)
                 {
-                    await fromKernel.GetValueAndSendTo(kernel, valueName, mimeType, importAsName);
+                    await fromKernel.GetValueAndSendTo(
+                        kernel, 
+                        valueName, 
+                        mimeType, 
+                        importAsName);
                 }
                 else
                 {
@@ -306,22 +310,18 @@ namespace Microsoft.DotNet.Interactive
 
                 if (toKernel.SupportsCommandType(typeof(SendValue)))
                 {
-                    if (valueProduced.Value is not null)
-                    {
-                        await toKernel.SendAsync(
-                            new SendValue(
-                                declarationName,
-                                valueProduced.Value));
-                    }
-                    else
-                    {
-                        await toKernel.SendAsync(
-                            new SendValue(
-                                declarationName,
-                                valueProduced.FormattedValue));
-                    }
+                    var value =
+                        requestedMimeType is null
+                            ? valueProduced.Value
+                            : null;
+
+                    await toKernel.SendAsync(
+                        new SendValue(
+                            declarationName,
+                            value,
+                            valueProduced.FormattedValue));
                 }
-                else if (toKernel.KernelInfo.LanguageName?.ToLowerInvariant() == "JavaScript")
+                else if (toKernel.KernelInfo.LanguageName?.ToLowerInvariant() == "javascript")
                 {
                     if (new JavaScriptValueDeclarer().TryGetValueDeclaration(valueProduced, toName, out var submitCode))
                     {

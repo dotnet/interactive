@@ -13,7 +13,6 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Microsoft.DotNet.Interactive.ValueSharing;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Kql.Tests

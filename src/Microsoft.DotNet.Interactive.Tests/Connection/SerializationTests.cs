@@ -208,6 +208,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
 
                 yield return new SendValue(
                     "name",
+                    "formatted value",
                     new FormattedValue("text/plain", "formatted value"),
                     targetKernelName: "fsharp");
             }
@@ -365,7 +366,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
                     submitCode,
                     new[]
                     {
-                        new FormattedValue("text/plain", "oops!"),
+                        new FormattedValue("text/plain", "oops!")
                     });
 
                 yield return new StandardOutputValueProduced(
@@ -389,10 +390,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
                 }, new RequestValueInfos("csharp"));
 
                 yield return new ValueProduced(
+                    "raw value",
                     "a",
                     new FormattedValue(
                         HtmlFormatter.MimeType,
-                        "<span>formatted value</span>"),
+                        "<span>raw value</span>"),
                     new RequestValue("a", mimeType: HtmlFormatter.MimeType, targetKernelName: "csharp"));
 
                 yield return new CommandCancelled(new Cancel(), new SubmitCode("var value = 1;", "csharp"));

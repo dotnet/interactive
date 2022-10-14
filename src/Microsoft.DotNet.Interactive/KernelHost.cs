@@ -75,7 +75,6 @@ namespace Microsoft.DotNet.Interactive
             {
                 Name = "KernelHost command dispatcher"
             }); 
-
             
             _kernelEventSubscription = _kernel.KernelEvents.Subscribe(e =>
             {

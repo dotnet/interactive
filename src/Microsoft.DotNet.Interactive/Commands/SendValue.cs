@@ -8,24 +8,10 @@ namespace Microsoft.DotNet.Interactive.Commands;
 
 public class SendValue : KernelCommand
 {
-    [JsonConstructor]
-    public SendValue(
-        string name,
-        FormattedValue formattedValue,
-        string targetKernelName = null) : base(targetKernelName)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
-        }
-
-        Name = name;
-        FormattedValue = formattedValue;
-    }
-
     public SendValue(
         string name,
         object value,
+        FormattedValue formattedValue = null,
         string targetKernelName = null) : base(targetKernelName)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -35,6 +21,7 @@ public class SendValue : KernelCommand
 
         Name = name;
         Value = value;
+        FormattedValue = formattedValue;
     }
 
     public FormattedValue FormattedValue { get; }

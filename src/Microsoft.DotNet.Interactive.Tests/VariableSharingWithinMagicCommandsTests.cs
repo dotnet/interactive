@@ -68,23 +68,6 @@ public class VariableSharingWithinMagicCommandsTests : IDisposable
 
         receivedValue.Should().Be(valueX);
     }
-
-    [Fact]
-    public async Task Magic_commands_cannot_interpolate_complex_objects()
-    {
-        await _kernel.SendAsync(new SubmitCode("var x = new { name = \"my object\", shareability = 0 };", "csharp"));
-
-        var result = await _kernel.SendAsync(new SubmitCode("#!shim --value @x", "csharp"));
-
-        using var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should()
-              .ContainSingle<CommandFailed>()
-              .Which
-              .Message
-              .Should()
-              .Contain("Value @x cannot be interpolated into magic command:\n{\"name\":\"my object\",\"shareability\":0}");
-    }
     
     [Fact]
     public async Task When_variable_does_not_exist_then_an_error_is_returned()

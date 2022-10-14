@@ -507,11 +507,18 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
         }
 
-        public static ITypeFormatter GetPreferredFormatterFor(Type actualType, string mimeType) =>
-            _typeFormattersTable
+        public static ITypeFormatter GetPreferredFormatterFor(Type actualType, string mimeType)
+        {
+            if (mimeType == null)
+            {
+                throw new ArgumentNullException(nameof(mimeType));
+            }
+
+            return _typeFormattersTable
                 .GetOrAdd(
                     (actualType, mimeType),
                     tuple => InferPreferredFormatter(actualType, mimeType));
+        }
 
         internal static ITypeFormatter InferPreferredFormatter(Type actualType, string mimeType)
         {

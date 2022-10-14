@@ -234,7 +234,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                           .Should()
                           .Be("csharpVariable = 123;");
         }
-
+        
         [Fact]
         public async Task CSharpKernel_can_share_variable_from_JavaScript_via_a_ProxyKernel()
         {
@@ -244,7 +244,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             jsKernel.RegisterCommandHandler<RequestValue>((cmd, context) =>
             {
-                context.Publish(new ValueProduced(jsVariableName, new FormattedValue(JsonFormatter.MimeType, "123"), cmd));
+                context.Publish(new ValueProduced(123, jsVariableName, new FormattedValue(JsonFormatter.MimeType, "123"), cmd));
                 return Task.CompletedTask;
             });
 
@@ -377,42 +377,6 @@ y");
                   .Should()
                   .BeEquivalentTo(new FormattedValue("text/plain", 123.ToDisplayString("text/plain")));
         }
-
-        private async Task<(CompositeKernel, FakeKernel)> CreateCompositeKernelWithJavaScriptProxyKernel()
-        {
-            var localCompositeKernel = new CompositeKernel
-            {
-                new CSharpKernel().UseValueSharing()
-            };
-            localCompositeKernel.DefaultKernelName = "csharp";
-
-            var remoteCompositeKernel = new CompositeKernel();
-            var remoteKernel = new FakeKernel("remote-javascript");
-            remoteCompositeKernel.Add(remoteKernel);
-
-            ConnectHost.ConnectInProcessHost(
-                localCompositeKernel,
-                remoteCompositeKernel);
-
-            var remoteKernelUri = new Uri("kernel://remote/remote-javascript");
-
-            var javascriptKernel =
-                await localCompositeKernel
-                      .Host
-                      .ConnectProxyKernelOnDefaultConnectorAsync(
-                          "javascript",
-                          remoteKernelUri);
-
-            await localCompositeKernel.SendAsync(new RequestKernelInfo(remoteKernelUri));
-            
-            javascriptKernel.UseValueSharing();
-
-            _disposables.Add(localCompositeKernel);
-            _disposables.Add(remoteCompositeKernel);
-
-            return (localCompositeKernel, remoteKernel);
-        }
-
 
         [Theory]
         [InlineData(Language.CSharp)]
@@ -547,6 +511,44 @@ y");
                 new PowerShellKernel()
                     .UseValueSharing()
             }.LogEventsToPocketLogger();
+        }
+
+        private async Task<(CompositeKernel, FakeKernel)> CreateCompositeKernelWithJavaScriptProxyKernel()
+        {
+            var localCompositeKernel = new CompositeKernel
+            {
+                new CSharpKernel().UseValueSharing()
+            };
+            localCompositeKernel.DefaultKernelName = "csharp";
+
+            var remoteCompositeKernel = new CompositeKernel();
+            var remoteKernel = new FakeKernel("remote-javascript", "javascript");
+            remoteKernel.RegisterCommandType<RequestValue>();
+            remoteKernel.RegisterCommandType<RequestValueInfos>();
+            
+            remoteCompositeKernel.Add(remoteKernel);
+
+            ConnectHost.ConnectInProcessHost(
+                localCompositeKernel,
+                remoteCompositeKernel);
+
+            var remoteKernelUri = new Uri("kernel://remote/remote-javascript");
+
+            var javascriptKernel =
+                await localCompositeKernel
+                      .Host
+                      .ConnectProxyKernelOnDefaultConnectorAsync(
+                          "javascript",
+                          remoteKernelUri);
+
+            javascriptKernel.UseValueSharing();
+
+            await localCompositeKernel.SendAsync(new RequestKernelInfo(remoteKernelUri));
+
+            _disposables.Add(localCompositeKernel);
+            _disposables.Add(remoteCompositeKernel);
+
+            return (localCompositeKernel, remoteKernel);
         }
 
         private static Kernel CreateKernel(Language language)

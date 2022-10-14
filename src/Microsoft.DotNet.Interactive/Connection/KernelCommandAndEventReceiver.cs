@@ -8,6 +8,8 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
 using Pocket;
 using static Pocket.Logger;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
@@ -56,18 +58,20 @@ public class KernelCommandAndEventReceiver : IKernelCommandAndEventReceiver, IDi
     }
 
     private KernelCommandAndEventReceiver(IObservable<string> messages) =>
-        _observable = messages.Select(s =>
-        {
-            try
+        _observable = messages
+            .Select(s =>
             {
-                return Serializer.DeserializeCommandOrEvent(s);
-            }
-            catch (Exception exception)
-            {
-                Log.Error(exception);
-                return null;
-            }
-        });
+                try
+                {
+                    return Serializer.DeserializeCommandOrEvent(s);
+                }
+                catch (Exception exception)
+                {
+                    Log.Error(exception);
+
+                    return new CommandOrEvent(new DiagnosticLogEntryProduced(exception.Message, KernelCommand.None), true);
+                }
+            });
 
     private void ReaderLoop()
     {

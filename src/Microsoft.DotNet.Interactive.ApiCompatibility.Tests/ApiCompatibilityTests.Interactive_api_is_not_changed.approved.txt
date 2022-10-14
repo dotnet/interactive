@@ -255,7 +255,7 @@ Microsoft.DotNet.Interactive
     public static DisplayedValue DisplayAs(System.String value, System.String mimeType, System.String[] additionalMimeTypes)
     public static System.Void DisplayStandardError(System.String error, Microsoft.DotNet.Interactive.Commands.KernelCommand command = null)
     public static System.Void DisplayStandardOut(System.String output, Microsoft.DotNet.Interactive.Commands.KernelCommand command = null)
-    public static System.Void PublishValueProduced(Microsoft.DotNet.Interactive.Commands.RequestValue command, System.Object value)
+    public static System.Void PublishValueProduced(Microsoft.DotNet.Interactive.Commands.RequestValue requestValue, System.Object value)
   public delegate KernelPipelineContinuation : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable
     .ctor(System.Object object, System.IntPtr method)
     public System.IAsyncResult BeginInvoke(Microsoft.DotNet.Interactive.Commands.KernelCommand command, KernelInvocationContext context, System.AsyncCallback callback, System.Object object)
@@ -417,7 +417,7 @@ Microsoft.DotNet.Interactive.Commands
   public class RequestSignatureHelp : LanguageServiceCommand
     .ctor(System.String code, Microsoft.DotNet.Interactive.LinePosition linePosition, System.String targetKernelName = null)
   public class RequestValue : KernelCommand
-    .ctor(System.String name, System.String mimeType = null, System.String targetKernelName = null)
+    .ctor(System.String name, System.String mimeType = application/json, System.String targetKernelName = null)
     public System.String MimeType { get;}
     public System.String Name { get;}
   public class RequestValueInfos : KernelCommand
@@ -427,8 +427,7 @@ Microsoft.DotNet.Interactive.Commands
     public System.String Code { get;}
     public System.String Language { get;}
   public class SendValue : KernelCommand
-    .ctor(System.String name, Microsoft.DotNet.Interactive.FormattedValue formattedValue, System.String targetKernelName = null)
-    .ctor(System.String name, System.Object value, System.String targetKernelName = null)
+    .ctor(System.String name, System.Object value, Microsoft.DotNet.Interactive.FormattedValue formattedValue = null, System.String targetKernelName = null)
     public Microsoft.DotNet.Interactive.FormattedValue FormattedValue { get;}
     public System.String Name { get;}
     public System.Object Value { get;}
@@ -657,8 +656,7 @@ Microsoft.DotNet.Interactive.Events
     .ctor(System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.ValueSharing.KernelValueInfo> valueInfos, Microsoft.DotNet.Interactive.Commands.RequestValueInfos command)
     public System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.ValueSharing.KernelValueInfo> ValueInfos { get;}
   public class ValueProduced : KernelEvent
-    .ctor(System.String name, Microsoft.DotNet.Interactive.FormattedValue formattedValue, Microsoft.DotNet.Interactive.Commands.RequestValue command)
-    .ctor(System.String name, System.Object value, Microsoft.DotNet.Interactive.Commands.RequestValue command)
+    .ctor(System.Object value, System.String name, Microsoft.DotNet.Interactive.FormattedValue formattedValue, Microsoft.DotNet.Interactive.Commands.RequestValue command)
     public Microsoft.DotNet.Interactive.FormattedValue FormattedValue { get;}
     public System.String Name { get;}
     public System.Object Value { get;}

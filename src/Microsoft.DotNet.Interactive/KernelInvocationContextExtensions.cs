@@ -100,23 +100,29 @@ namespace Microsoft.DotNet.Interactive
                     formattedValues));
         }
 
-        public static void PublishValueProduced(this KernelInvocationContext context, RequestValue requestValue, object value)
+        public static void PublishValueProduced(
+            this KernelInvocationContext context, 
+            RequestValue requestValue, 
+            object value)
         {
-            if (requestValue.MimeType is { } requestedMimeType)
-            {
-                var valueType = value.GetType();
-                var formatter = Formatter.GetPreferredFormatterFor(valueType, requestedMimeType);
+            var valueType = value?.GetType();
 
-                using var writer = new StringWriter(CultureInfo.InvariantCulture);
-                formatter.Format(value, writer);
+            var requestedMimeType = requestValue.MimeType;
 
-                var formatted = new FormattedValue(requestedMimeType, writer.ToString());
-                context.Publish(new ValueProduced(requestValue.Name, formatted, requestValue));
-            }
-            else
-            {
-                context.Publish(new ValueProduced(requestValue.Name, value, requestValue));
-            }
+            var formatter = Formatter.GetPreferredFormatterFor(valueType, requestedMimeType);
+
+            using var writer = new StringWriter(CultureInfo.InvariantCulture);
+            formatter.Format(value, writer);
+
+            var formatted = new FormattedValue(
+                requestedMimeType, 
+                writer.ToString());
+
+            context.Publish(new ValueProduced(
+                                value,
+                                requestValue.Name,
+                                formatted, 
+                                requestValue));
         }
     }
 }

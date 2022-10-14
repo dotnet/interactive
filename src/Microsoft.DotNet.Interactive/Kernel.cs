@@ -909,13 +909,24 @@ namespace Microsoft.DotNet.Interactive
             KernelInvocationContext context,
             SetValueAsyncDelegate setValueAsync)
         {
-            object value;
+            object value = null;
 
             if (command.Value is not null)
             {
-                value = command.Value;
+                switch (command.Value)
+                {
+                    case Type { IsPublic: true } t:
+                        value = t;
+                        break;
+
+                    default:
+
+                        value = command.Value;
+                        break;
+                }
             }
-            else
+
+            if (value is null)
             {
                 if (command.FormattedValue.MimeType == JsonFormatter.MimeType)
                 {
