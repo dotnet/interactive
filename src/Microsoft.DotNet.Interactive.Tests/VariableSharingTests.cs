@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
@@ -14,7 +13,6 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Microsoft.DotNet.Interactive.ValueSharing;
 using Pocket;
 using Pocket.For.Xunit;
 using Xunit;
@@ -230,14 +228,11 @@ namespace Microsoft.DotNet.Interactive.Tests
             events.Should().NotContainErrors();
 
             remoteCommands.Should()
-                          .ContainSingle<SendValue>()
+                          .ContainSingle<SubmitCode>()
                           .Which
-                          .Name
+                          .Code
                           .Should()
-                          .Be("csharpVariable");
-
-            // FIX: (JavaScript_ProxyKernel_can_share_a_value_from_csharp) should this still use the codegen approach or should it rely on the JS kernel to do that part?
-            throw new NotImplementedException();
+                          .Be("csharpVariable = 123;");
         }
 
         [Fact]

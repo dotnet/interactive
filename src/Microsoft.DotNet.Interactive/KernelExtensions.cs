@@ -305,19 +305,33 @@ namespace Microsoft.DotNet.Interactive
             {
                 var declarationName = toName ?? fromName;
 
-                if (valueProduced.Value is not null)
+                if (toKernel.SupportsCommandType(typeof(SendValue)))
                 {
-                    await toKernel.SendAsync(
-                        new SendValue(
-                            declarationName,
-                            valueProduced.Value));
+                    if (valueProduced.Value is not null)
+                    {
+                        await toKernel.SendAsync(
+                            new SendValue(
+                                declarationName,
+                                valueProduced.Value));
+                    }
+                    else
+                    {
+                        await toKernel.SendAsync(
+                            new SendValue(
+                                declarationName,
+                                valueProduced.FormattedValue));
+                    }
+                }
+                else if (toKernel.KernelInfo.LanguageName?.ToLowerInvariant() == "JavaScript")
+                {
+                    if (new JavaScriptValueDeclarer().TryGetValueDeclaration(valueProduced, toName, out var submitCode))
+                    {
+                        await toKernel.SendAsync(submitCode);
+                    }
                 }
                 else
                 {
-                    await toKernel.SendAsync(
-                        new SendValue(
-                            declarationName,
-                            valueProduced.FormattedValue));
+                    throw new CommandNotSupportedException(typeof(SendValue), toKernel);
                 }
             }
         }

@@ -37,7 +37,7 @@ internal class JavaScriptValueDeclarer
     public bool TryGetValueDeclaration(
         ValueProduced valueProduced,
         string declareAsName,
-        out KernelCommand command)
+        out SubmitCode command)
     {
         if (valueProduced.Value is { } value)
         {
@@ -45,6 +45,8 @@ internal class JavaScriptValueDeclarer
             command = new SubmitCode(code);
             return true;
         }
+
+        // FIX: (TryGetValueDeclaration) handle application/json
 
         command = null;
         return false;

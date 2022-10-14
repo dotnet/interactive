@@ -625,7 +625,7 @@ namespace Microsoft.DotNet.Interactive
             }
             else
             {
-                context.Fail(command, new CommandNotSupportedException(command, this));
+                context.Fail(command, new CommandNotSupportedException(command.GetType(), this));
 
                 return null;
             }
