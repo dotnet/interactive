@@ -4,7 +4,6 @@
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Help;
-using System.CommandLine.IO;
 using System.IO;
 using System.Linq;
 
@@ -66,28 +65,5 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         private string CleanUp(string value) =>
           value.Replace(_rootCommandName + " ", "");
-
-        private class SystemConsole : IConsole
-        {
-            public IStandardStreamWriter Out { get; } = new StandardOutStreamWriter();
-
-            public bool IsOutputRedirected => System.Console.IsOutputRedirected;
-
-            public IStandardStreamWriter Error { get; } = new StandardErrorStreamWriter();
-
-            public bool IsErrorRedirected => System.Console.IsErrorRedirected;
-
-            public bool IsInputRedirected => System.Console.IsInputRedirected;
-
-            private class StandardOutStreamWriter : IStandardStreamWriter
-            {
-                public void Write(string value) => System.Console.Out.Write(value);
-            }
-
-            private class StandardErrorStreamWriter : IStandardStreamWriter
-            {
-                public void Write(string value) => System.Console.Error.Write(value);
-            }
-        }
     }
 }
