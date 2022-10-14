@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Interactive
             
             try
             {
-                await _pipeline(command, context, (_, __) => Task.CompletedTask);
+                await _pipeline(command, context, (_, _) => Task.CompletedTask);
             }
             catch (Exception exception)
             {

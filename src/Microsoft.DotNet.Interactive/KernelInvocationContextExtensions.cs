@@ -100,9 +100,9 @@ namespace Microsoft.DotNet.Interactive
                     formattedValues));
         }
 
-        public static void PublishValueProduced(this KernelInvocationContext context, RequestValue command, object value)
+        public static void PublishValueProduced(this KernelInvocationContext context, RequestValue requestValue, object value)
         {
-            if (command.MimeType is { } requestedMimeType)
+            if (requestValue.MimeType is { } requestedMimeType)
             {
                 var valueType = value.GetType();
                 var formatter = Formatter.GetPreferredFormatterFor(valueType, requestedMimeType);
@@ -111,11 +111,11 @@ namespace Microsoft.DotNet.Interactive
                 formatter.Format(value, writer);
 
                 var formatted = new FormattedValue(requestedMimeType, writer.ToString());
-                context.Publish(new ValueProduced(command.Name, formatted, command));
+                context.Publish(new ValueProduced(requestValue.Name, formatted, requestValue));
             }
             else
             {
-                context.Publish(new ValueProduced(command.Name, value, command));
+                context.Publish(new ValueProduced(requestValue.Name, value, requestValue));
             }
         }
     }

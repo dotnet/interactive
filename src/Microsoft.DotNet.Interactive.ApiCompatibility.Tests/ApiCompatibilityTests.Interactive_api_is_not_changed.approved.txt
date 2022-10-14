@@ -19,7 +19,7 @@ Microsoft.DotNet.Interactive
   public class CodeSubmissionCompilationErrorException : System.Exception, System.Runtime.Serialization.ISerializable
     .ctor(System.Exception innerException)
   public class CommandNotSupportedException : System.Exception, System.Runtime.Serialization.ISerializable
-    .ctor(Microsoft.DotNet.Interactive.Commands.KernelCommand command, Kernel kernel)
+    .ctor(System.Type commandType, Kernel kernel)
   public class CompositeKernel : Kernel, Microsoft.DotNet.Interactive.Extensions.IExtensibleKernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, System.Collections.Generic.IEnumerable<Kernel>, System.Collections.IEnumerable, System.IDisposable
     .ctor(System.String name = null)
     public KernelCollection ChildKernels { get;}
