@@ -103,7 +103,7 @@ public class PlaywrightKernelConnector : IKernelConnector
                         "image/jpeg" => await CaptureImageAsync(page, selector, ScreenshotType.Jpeg),
                         "image/png" => await CaptureImageAsync(page, selector, ScreenshotType.Png),
                         PlainTextFormatter.MimeType => await page.InnerTextAsync(selector),
-                        _ => await page.InnerHTMLAsync(selector)
+                        _ => await page.InnerHTMLAsync(selector),
                     };
 
                     context.Publish(

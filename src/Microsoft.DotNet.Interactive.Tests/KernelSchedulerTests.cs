@@ -416,8 +416,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                              "outer 1",
                              "inner 1",
                              "inner 2",
-                             "outer 2"
-                         );
+                             "outer 2");
         }
 
         [Fact]

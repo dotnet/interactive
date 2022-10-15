@@ -213,36 +213,29 @@ internal class InteractiveDocumentOutputElementConverter : JsonConverter<Interac
             {
                 writer.WritePropertyName(kvp.Key);
 
-                if (kvp.Key == "application/json")
+                var value = kvp.Value;
+
+                var lines = value switch
                 {
-                    // FIX: (Write) JSON
-                }
-                else
+                    IEnumerable<string> enumerable => enumerable,
+                    string s => s.SplitIntoJupyterFileArray(),
+                    IEnumerable<object> os => os.Select(o => o switch
+                    {
+                        string s => s,
+                        _ => throw new ArgumentException($"Expected string but found {o.GetType()}")
+                    }),
+                    { } o when o.GetType() == typeof(object) => Array.Empty<string>(),
+                    _ => throw new ArgumentException($"Expected IEnumerable<string> but received {kvp.Value.GetType()}")
+                };
+
+                writer.WriteStartArray();
+
+                foreach (var line in lines)
                 {
-                    var value = kvp.Value;
-
-                    var lines = value switch
-                    {
-                        IEnumerable<string> enumerable => enumerable,
-                        string s => s.SplitIntoJupyterFileArray(),
-                        IEnumerable<object> os => os.Select(o => o switch
-                        {
-                            string s => s,
-                            _ => throw new ArgumentException($"Expected string but found {o.GetType()}")
-                        }),
-                        object o when o.GetType() == typeof(object) => new string[0],
-                        _ => throw new ArgumentException($"Expected IEnumerable<string> but received {kvp.Value.GetType()}")
-                    };
-
-                    writer.WriteStartArray();
-
-                    foreach (var line in lines)
-                    {
-                        writer.WriteStringValue(line);
-                    }
-
-                    writer.WriteEndArray();
+                    writer.WriteStringValue(line);
                 }
+
+                writer.WriteEndArray();
             }
 
             writer.WriteEndObject();

@@ -11,11 +11,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -24,7 +22,6 @@ using Microsoft.DotNet.Interactive.ValueSharing;
 using Pocket;
 using CompletionItem = System.CommandLine.Completions.CompletionItem;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
-using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -82,36 +79,6 @@ namespace Microsoft.DotNet.Interactive
                 _ when predicate(kernel) => new[] { kernel },
                 _ => Enumerable.Empty<Kernel>()
             };
-        }
-
-        public static async Task<(bool success, ValueInfosProduced valueInfosProduced)> TryRequestValueInfosAsync(this Kernel kernel)
-        {
-            if (kernel.SupportsCommandType(typeof(RequestValueInfos)))
-            {
-                var commandResult = await kernel.SendAsync(new RequestValueInfos());
-                var candidateResult = await commandResult.KernelEvents.OfType<ValueInfosProduced>().FirstOrDefaultAsync();
-                if (candidateResult is { })
-                {
-                    return (true, candidateResult);
-                }
-            }
-
-            return (false, default);
-        }
-
-        public static async Task<(bool success, ValueProduced valueProduced)> TryRequestValueAsync(this Kernel kernel, string valueName)
-        {
-            if (kernel.SupportsCommandType(typeof(RequestValue)))
-            {
-                var commandResult = await kernel.SendAsync(new RequestValue(valueName));
-                var candidateResult = await commandResult.KernelEvents.OfType<ValueProduced>().FirstOrDefaultAsync();
-                if (candidateResult is { })
-                {
-                    return (true, candidateResult);
-                }
-            }
-
-            return (false, default);
         }
 
         public static Task<KernelCommandResult> SubmitCodeAsync(
@@ -201,9 +168,7 @@ namespace Microsoft.DotNet.Interactive
                     {
                         if (KernelInvocationContext.Current is {} currentContext)
                         {
-                            if (e is DiagnosticEvent ||
-                                e is DisplayEvent ||
-                                e is DiagnosticsProduced)
+                            if (e is DiagnosticEvent or DisplayEvent or DiagnosticsProduced)
                             {
                                 return;
                             }
@@ -234,32 +199,13 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
-        public static ProxyKernel UseValueSharing(
-            this ProxyKernel kernel,
-            IKernelValueDeclarer kernelValueDeclarer)
-        {
-            if (kernelValueDeclarer is null)
-            {
-                throw new ArgumentNullException(nameof(kernelValueDeclarer));
-            }
-
-            kernel.UseValueSharing();
-            kernel.ValueDeclarer = kernelValueDeclarer;
-            return kernel;
-        }
-
         public static T UseValueSharing<T>(this T kernel) where T : Kernel
         {
-            var valueNameArg = new Argument<string>(
+            var sourceValueNameArg = new Argument<string>(
                 "name",
-                "The name of the variable to create in the destination kernel");
-
-            if (kernel.ParentKernel is { } composite)
-            {
-                
-            }
-
-            valueNameArg.AddCompletions(_ =>
+                "The name of the value to share. (This is also the default name value created in the destination kernel, unless --as is used to specify a different one.)");
+            
+            sourceValueNameArg.AddCompletions(_ =>
             {
                 if (kernel.ParentKernel is { } composite)
                 {
@@ -284,7 +230,7 @@ namespace Microsoft.DotNet.Interactive
 
             var fromKernelOption = new Option<string>(
                 "--from",
-                "The name of the kernel where the variable has been previously declared");
+                "The name of the kernel to get the value from.");
 
             fromKernelOption.AddCompletions(_ =>
             {
@@ -305,12 +251,12 @@ namespace Microsoft.DotNet.Interactive
                     HtmlFormatter.MimeType, 
                     PlainTextFormatter.MimeType);
 
-            var asOption = new Option<string>("--as", "The name of the value in the importing kernel.");
+            var asOption = new Option<string>("--as", "The name to give the the value in the importing kernel.");
 
-            var share = new Command("#!share", "Share a value between subkernels")
+            var share = new Command("#!share", "Get a value from one kernel and create a copy (or a reference if the kernels are in the same process) in another.")
             {
                 fromKernelOption,
-                valueNameArg,
+                sourceValueNameArg,
                 mimeTypeOption,
                 asOption
             };
@@ -318,14 +264,18 @@ namespace Microsoft.DotNet.Interactive
             share.SetHandler(async cmdLineContext =>
             {
                 var from = cmdLineContext.ParseResult.GetValueForOption(fromKernelOption);
-                var valueName = cmdLineContext.ParseResult.GetValueForArgument(valueNameArg);
+                var valueName = cmdLineContext.ParseResult.GetValueForArgument(sourceValueNameArg);
                 var context = cmdLineContext.GetService<KernelInvocationContext>();
                 var mimeType = cmdLineContext.ParseResult.GetValueForOption(mimeTypeOption);
                 var importAsName = cmdLineContext.ParseResult.GetValueForOption(asOption);
 
                 if (kernel.FindKernelByName(from) is { } fromKernel)
                 {
-                    await fromKernel.GetValueAndImportTo(kernel, valueName, mimeType, importAsName);
+                    await fromKernel.GetValueAndSendTo(
+                        kernel, 
+                        valueName, 
+                        mimeType, 
+                        importAsName);
                 }
                 else
                 {
@@ -338,11 +288,11 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
-        internal static async Task GetValueAndImportTo(
+        internal static async Task GetValueAndSendTo(
             this Kernel fromKernel,
             Kernel toKernel,
             string fromName,
-            string mimeType, 
+            string requestedMimeType, 
             string toName)
         {
             var supportedRequestValue = fromKernel.SupportsCommandType(typeof(RequestValue));
@@ -352,71 +302,39 @@ namespace Microsoft.DotNet.Interactive
                 throw new InvalidOperationException($"Kernel {fromKernel} does not support command {nameof(RequestValue)}");
             }
 
-            var requestValueResult = await fromKernel.SendAsync(new RequestValue(fromName, mimeType: mimeType));
+            var requestValueResult = await fromKernel.SendAsync(new RequestValue(fromName, mimeType: requestedMimeType));
 
             if (requestValueResult.KernelEvents.ToEnumerable().OfType<ValueProduced>().SingleOrDefault() is { } valueProduced)
             {
-                await DeclareValue(
-                    toKernel,
-                    valueProduced,
-                    toName ?? fromName,
-                    allowShareByRef: mimeType is null);
-            }
-        }
+                var declarationName = toName ?? fromName;
 
-        private static async Task DeclareValue(
-            Kernel importingKernel,
-            ValueProduced valueProduced,
-            string declarationName,
-            bool allowShareByRef)
-        {
-            if (importingKernel is ISupportSetClrValue toInProcessKernel)
-            {
-                if (!allowShareByRef || 
-                    valueProduced.Value is not { } value)
+                if (toKernel.SupportsCommandType(typeof(SendValue)))
                 {
-                    if (valueProduced.FormattedValue.MimeType == JsonFormatter.MimeType)
+                    var value =
+                        requestedMimeType is null
+                            ? valueProduced.Value
+                            : null;
+
+                    await toKernel.SendAsync(
+                        new SendValue(
+                            declarationName,
+                            value,
+                            valueProduced.FormattedValue));
+                }
+                else if (toKernel.KernelInfo.LanguageName?.ToLowerInvariant() == "javascript")
+                {
+                    if (new JavaScriptValueDeclarer().TryGetValueDeclaration(valueProduced, toName, out var submitCode))
                     {
-                        var jsonDoc = JsonDocument.Parse(valueProduced.FormattedValue.Value);
-
-                        value = jsonDoc.RootElement.ValueKind switch
-                        {
-                            JsonValueKind.Object => jsonDoc,
-                            JsonValueKind.Array => jsonDoc,
-
-                            JsonValueKind.Undefined => null,
-                            JsonValueKind.True => true,
-                            JsonValueKind.False => false,
-                            JsonValueKind.Null => null,
-                            JsonValueKind.String => jsonDoc.Deserialize<string>(),
-                            JsonValueKind.Number => jsonDoc.Deserialize<double>(),
-
-                            _ => throw new ArgumentOutOfRangeException()
-                        };
-                    }
-                    else
-                    {
-                        value = valueProduced.FormattedValue.Value;
+                        await toKernel.SendAsync(submitCode);
                     }
                 }
-          
-                await toInProcessKernel.SetValueAsync(declarationName, value);
-
-                return;
-            }
-
-            var declarer = importingKernel.GetValueDeclarer();
-
-            if (declarer.TryGetValueDeclaration(valueProduced, declarationName, out KernelCommand command))
-            {
-                await importingKernel.SendAsync(command);
-            }
-            else
-            {
-                throw new ArgumentException($"Value '{declarationName}' cannot be declared in kernel '{importingKernel.Name}'");
+                else
+                {
+                    throw new CommandNotSupportedException(typeof(SendValue), toKernel);
+                }
             }
         }
-
+        
         public static TKernel UseWho<TKernel>(this TKernel kernel)
             where TKernel : Kernel
         {
@@ -425,7 +343,6 @@ namespace Microsoft.DotNet.Interactive
             {
                 kernel.AddDirective(who());
                 kernel.AddDirective(whos());
-                Formatter.Register(new CurrentVariablesFormatter());
             }
             return kernel;
         }
@@ -449,8 +366,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 Handler = CommandHandler.Create(async (InvocationContext ctx) =>
                 {
-                    await DisplayValues(
-                        ctx.GetService<KernelInvocationContext>(), true);
+                    await DisplayValues(ctx.GetService<KernelInvocationContext>(), true);
                 })
             };
 
@@ -479,25 +395,17 @@ namespace Microsoft.DotNet.Interactive
                     using var __ = result.KernelEvents.OfType<ValueProduced>().Subscribe(e => valueEvents.Add(e));
                 }
 
-                var kernelValues = valueEvents.Select(e => new KernelValue(new KernelValueInfo(e.Name, e.Value.GetType()), e.Value, context.HandlingKernel.Name));
+                var kernelValues = valueEvents.Select(e => new KernelValue(new KernelValueInfo(e.Name, e.Value?.GetType()), e.Value, context.HandlingKernel.Name));
 
                 var currentVariables = new KernelValues(
                     kernelValues,
                     detailed);
 
-                var html = currentVariables
-                    .ToDisplayString(HtmlFormatter.MimeType);
-
                 context.Publish(
                     new DisplayedValueProduced(
-                        html,
+                        currentVariables,
                         context.Command,
-                        new[]
-                        {
-                            new FormattedValue(
-                                HtmlFormatter.MimeType,
-                                html)
-                        }));
+                        FormattedValue.FromObject(currentVariables)));
             }
         }
 

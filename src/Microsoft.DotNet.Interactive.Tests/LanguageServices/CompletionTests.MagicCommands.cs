@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
 
             [Theory]
             // commands
-            [InlineData("#!sha[||]", "Share a value")]
+            [InlineData("#!sha[||]", "Get a value from one kernel and create a copy (or a reference if the kernels are in the same process) in another.")]
             // options
             [InlineData("#!share --fr[||]", "--from*csharp*The name of the kernel")]
             // subcommands

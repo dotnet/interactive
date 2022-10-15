@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         IKernelCommandHandler<RequestCompletions>,
         IKernelCommandHandler<RequestValueInfos>,
         IKernelCommandHandler<RequestValue>,
-        ISupportSetClrValue
+        IKernelCommandHandler<SendValue>
     {
 
         protected readonly Uri TempFileUri;
@@ -242,7 +242,6 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         protected virtual void StoreQueryResults(IReadOnlyCollection<TabularDataResource> results, ParseResult commandKernelChooserParseResult)
         {
-
         }
 
         private static IEnumerable<TabularDataResource> GetTabularDataResources(ColumnInfo[] columnInfos, CellValue[][] rows)
@@ -388,19 +387,25 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         /// <returns></returns>
         protected abstract bool CanDeclareVariable(string name, object value, out string msg);
 
-        public Task SetValueAsync(string name, object value, Type declaredType = null)
+        public async Task HandleAsync(
+            SendValue command,
+            KernelInvocationContext context)
         {
-            if (value == null)
+            await SetValueAsync(command, context, (name, value, declaredType) =>
             {
-                throw new ArgumentNullException(nameof(value), $"Sharing null values is not supported at this time.");
-            }
+                if (value == null)
+                {
+                    throw new ArgumentNullException(nameof(value), $"Sharing null values is not supported at this time.");
+                }
 
-            if (!CanDeclareVariable(name, value, out string msg))
-            {
-                throw new ArgumentException($"Cannot support value of Type {value.GetType()}. {msg}");
-            }
-            _variables[name] = value;
-            return Task.CompletedTask;
+                if (!CanDeclareVariable(name, value, out string msg))
+                {
+                    throw new ArgumentException($"Cannot support value of Type {value.GetType()}. {msg}");
+                }
+
+                _variables[name] = value;
+                return Task.CompletedTask;
+            });
         }
     }
 }

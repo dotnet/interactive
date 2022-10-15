@@ -72,20 +72,14 @@ namespace Microsoft.DotNet.Interactive
         public KernelCommand Command { get; }
 
         public bool IsComplete { get; private set; }
-
-        public bool IsFailed => IsComplete && _isFailed;
-
-        public CancellationToken CancellationToken
-        {
-            get
-            {
-                return _cancellationTokenSource.IsCancellationRequested ? new CancellationToken(true) : _cancellationTokenSource.Token;
-            }
-        }
+        
+        public CancellationToken CancellationToken => _cancellationTokenSource.IsCancellationRequested
+                                                          ? new CancellationToken(true) 
+                                                          : _cancellationTokenSource.Token;
 
         public void Complete(KernelCommand command)
         {
-            SucceedOrFail(true, command);
+            SucceedOrFail(!_isFailed, command);
         }
 
         public void Fail(
@@ -123,8 +117,8 @@ namespace Microsoft.DotNet.Interactive
                 }
 
                 var completingMainCommand = CommandEqualityComparer.Instance.Equals(command, Command);
-
-                if (succeed)
+                
+                if (succeed && !_isFailed)
                 {
                     if (completingMainCommand)
                     {
@@ -143,26 +137,32 @@ namespace Microsoft.DotNet.Interactive
                 }
                 else
                 {
-                    if (!completingMainCommand && command.ShouldPublishCompletionEvent == true)
-                    {
-                        Publish(new CommandFailed(exception, command, message));
-
-                        StopPublishingChildCommandEvents();
-                    }
-                    else
+                    if (completingMainCommand || command.ShouldPublishCompletionEvent != true)
                     {
                         Publish(new CommandFailed(exception, Command, message));
 
                         StopPublishingMainCommandEvents();
 
                         TryCancel();
+
+                        _isFailed = true;
+                    }
+                    else
+                    {
+                        if (command.Parent is null)
+                        {
+                            Publish(new ErrorProduced(message, command), publishOnAmbientContextOnly: true);
+                        }
+
+                        Publish(new CommandFailed(exception, command, message));
+
+                        StopPublishingChildCommandEvents();
                     }
                 }
 
-                IsComplete = completingMainCommand;
                 if (completingMainCommand)
                 {
-                    _isFailed = !succeed;
+                    IsComplete = true;
                 }
             }
 
@@ -206,6 +206,11 @@ namespace Microsoft.DotNet.Interactive
 
         public void Publish(KernelEvent @event)
         {
+            Publish(@event, false);
+        }
+
+        public void Publish(KernelEvent @event, bool publishOnAmbientContextOnly)
+        {
             if (IsComplete)
             {
                 return;
@@ -218,7 +223,7 @@ namespace Microsoft.DotNet.Interactive
                 @event.TryAddToRoutingSlip(HandlingKernel.GetKernelUri());
             }
 
-            if (_childCommands.TryGetValue(command, out var events))
+            if (!publishOnAmbientContextOnly && _childCommands.TryGetValue(command, out var events))
             {
                 events.OnNext(@event);
             }
@@ -262,11 +267,6 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (!CommandEqualityComparer.Instance.Equals(_current.Value.Command, command))
                 {
-                    if (command.Parent is null)
-                    {
-                        command.Parent = _current.Value.Command;
-                    }
-
                     var capturedEventStream = _current.Value._events;
                     _current.Value._childCommands.GetOrAdd(command, innerCommand =>
                     {

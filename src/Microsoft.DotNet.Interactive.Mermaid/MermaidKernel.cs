@@ -6,18 +6,16 @@ using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Mermaid;
 
-public class MermaidKernel : Kernel
-    , IKernelCommandHandler<SubmitCode>
-
+public class MermaidKernel : Kernel, 
+                             IKernelCommandHandler<SubmitCode>
 {
-
     private ChooseMermaidKernelDirective? _chooseKernelDirective;
 
     public MermaidKernel() : base("mermaid", languageName:"Mermaid")
     {
     }
 
-    public Task HandleAsync(SubmitCode command, KernelInvocationContext context)
+    Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
     {
         string? width = null;
         string? height = null;
