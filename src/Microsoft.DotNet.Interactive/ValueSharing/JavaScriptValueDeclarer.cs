@@ -38,7 +38,6 @@ internal class JavaScriptValueDeclarer
         if (referenceValue is { } value)
         {
             code = $"{declareAsName} = {JsonSerializer.Serialize(value, _serializerOptions)};";
-            new SubmitCode(code);
             return true;
         }
 

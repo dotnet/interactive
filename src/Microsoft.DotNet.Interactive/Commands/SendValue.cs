@@ -24,7 +24,7 @@ public class SendValue : KernelCommand
         FormattedValue = formattedValue;
     }
 
-    public FormattedValue FormattedValue { get; internal set; }
+    public FormattedValue FormattedValue { get; }
 
     public string Name { get; }
 
