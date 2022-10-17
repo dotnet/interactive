@@ -250,15 +250,28 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             var dataRows = new List<List<KeyValuePair<string, object>>>();
             var columnNames = columnInfos.Select(info => info.ColumnName).ToArray();
 
+            var columnNameCounters = new Dictionary<string, int>();
+
             SqlKernelUtils.AliasDuplicateColumnNames(columnNames);
 
             foreach (var columnInfo in columnInfos)
             {
+                var columnName = columnInfo.ColumnName;
+                if (columnNameCounters.TryGetValue(columnName, out var count))
+                {
+                    columnNameCounters[columnName] = count + 1;
+                    columnName = $"{columnName}_{count}";
+                }
+                else
+                {
+                    columnNameCounters[columnName] = 1;
+                }
+                
                 var expectedType = Type.GetType(columnInfo.DataType);
-                schema.Fields.Add(new TableSchemaFieldDescriptor(columnInfo.ColumnName, expectedType.ToTableSchemaFieldType()));
+                schema.Fields.Add(new TableSchemaFieldDescriptor(columnName, expectedType.ToTableSchemaFieldType()));
                 if (columnInfo.IsKey == true)
                 {
-                    schema.PrimaryKey.Add(columnInfo.ColumnName);
+                    schema.PrimaryKey.Add(columnName);
                 }
             }
             
