@@ -5,7 +5,6 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
 namespace Microsoft.DotNet.Interactive.ValueSharing;
@@ -34,21 +33,18 @@ internal class JavaScriptValueDeclarer
         };
     }
 
-    public bool TryGetValueDeclaration(
-        ValueProduced valueProduced,
-        string declareAsName,
-        out SubmitCode command)
+    public static bool TryGetValueDeclaration(object referenceValue, string declareAsName, out string code)
     {
-        if (valueProduced.Value is { } value)
+        if (referenceValue is { } value)
         {
-            var code = $"{valueProduced.Name} = {JsonSerializer.Serialize(value, _serializerOptions)};";
-            command = new SubmitCode(code);
+            code = $"{declareAsName} = {JsonSerializer.Serialize(value, _serializerOptions)};";
+            new SubmitCode(code);
             return true;
         }
 
         // FIX: (TryGetValueDeclaration) handle application/json
 
-        command = null;
+        code = null;
         return false;
     }
 }

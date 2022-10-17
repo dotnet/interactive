@@ -3,7 +3,10 @@
 
 using System;
 using System.Threading.Tasks;
+using System.Xml.Linq;
+
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.PowerShell;
 
 namespace Microsoft.DotNet.Interactive.VSCode;
@@ -29,6 +32,7 @@ public class VSCodeClientKernelExtension : IKernelExtension
             jsKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(SubmitCode)));
             jsKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValue)));
             jsKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValueInfos)));
+            jsKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(SendValue)));
 
             root.VisitSubkernels(subkernel =>
             {
