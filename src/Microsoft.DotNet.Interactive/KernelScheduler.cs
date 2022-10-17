@@ -75,7 +75,7 @@ namespace Microsoft.DotNet.Interactive
                     executionContext: null,
                     scope,
                     cancellationToken);
-                RunPreemptivelyAsync(operation);
+                RunPreemptively(operation);
             }
             else
             {
@@ -112,7 +112,7 @@ namespace Microsoft.DotNet.Interactive
                 {
                     ExecutionContext.Run(
                         executionContext!,
-                        _ => RunPreemptivelyAsync(operation),
+                        _ => RunPreemptively(operation),
                         operation);
 
                     operation.TaskCompletionSource.Task.Wait(_schedulerDisposalSource.Token);
@@ -172,7 +172,7 @@ namespace Microsoft.DotNet.Interactive
             _topLevelScheduledOperations.Add(operation, cancellationToken);
         }
 
-        private void RunPreemptivelyAsync(ScheduledOperation operation)
+        private void RunPreemptively(ScheduledOperation operation)
         {
             try
             {
