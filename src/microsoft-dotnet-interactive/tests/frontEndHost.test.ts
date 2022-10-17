@@ -81,7 +81,7 @@ describe("frontEndHost", () => {
                 kernelInfo:
                 {
                     aliases: ['js'],
-                    languageName: 'Javascript',
+                    languageName: 'JavaScript',
                     languageVersion: undefined,
                     localName: 'javascript',
                     supportedDirectives: [],

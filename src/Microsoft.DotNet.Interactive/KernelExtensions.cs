@@ -321,13 +321,6 @@ namespace Microsoft.DotNet.Interactive
                             value,
                             valueProduced.FormattedValue));
                 }
-                else if (toKernel.KernelInfo.LanguageName?.ToLowerInvariant() == "javascript")
-                {
-                    if (new JavaScriptValueDeclarer().TryGetValueDeclaration(valueProduced, toName, out var submitCode))
-                    {
-                        await toKernel.SendAsync(submitCode);
-                    }
-                }
                 else
                 {
                     throw new CommandNotSupportedException(typeof(SendValue), toKernel);
