@@ -89,7 +89,8 @@ describe("frontEndHost", () => {
                         [{ name: 'RequestKernelInfo' },
                         { name: 'SubmitCode' },
                         { name: 'RequestValueInfos' },
-                        { name: 'RequestValue' }],
+                        { name: 'RequestValue' },
+                        { name: 'SendValue' }],
                     uri: 'kernel://testKernel/javascript'
                 }
             },

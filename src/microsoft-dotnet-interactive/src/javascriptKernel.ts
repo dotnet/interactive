@@ -16,8 +16,27 @@ export class JavascriptKernel extends Kernel {
         this.registerCommandHandler({ commandType: contracts.SubmitCodeType, handle: invocation => this.handleSubmitCode(invocation) });
         this.registerCommandHandler({ commandType: contracts.RequestValueInfosType, handle: invocation => this.handleRequestValueInfos(invocation) });
         this.registerCommandHandler({ commandType: contracts.RequestValueType, handle: invocation => this.handleRequestValue(invocation) });
+        this.registerCommandHandler({ commandType: contracts.SendValueType, handle: invocation => this.handleSendValue(invocation) });
 
         this.capture = new ConsoleCapture();
+    }
+
+    private handleSendValue(invocation: IKernelCommandInvocation): Promise<void> {
+        const sendValue = <contracts.SendValue>invocation.commandEnvelope.command;
+        if (sendValue.formattedValue) {
+            switch (sendValue.formattedValue.mimeType) {
+                case 'application/json':
+                    (<any>globalThis)[sendValue.name] = JSON.parse(sendValue.formattedValue.value);
+                    break;
+                case 'text/plain':
+                    (<any>globalThis)[sendValue.name] = sendValue.formattedValue.value;
+                    break;
+                default:
+                    throw new Error(`mimetype ${sendValue.formattedValue.mimeType} not supported`);
+            }
+            return Promise.resolve();
+        }
+        throw new Error("formattedValue is required");
     }
 
     private async handleSubmitCode(invocation: IKernelCommandInvocation): Promise<void> {
@@ -73,7 +92,7 @@ export class JavascriptKernel extends Kernel {
         return Promise.resolve();
     }
 
-    private allLocalVariableNames(): string[] {
+    public allLocalVariableNames(): string[] {
         const result: string[] = [];
         try {
             for (const key in globalThis) {
@@ -92,7 +111,7 @@ export class JavascriptKernel extends Kernel {
         return result;
     }
 
-    private getLocalVariable(name: string): any {
+    public getLocalVariable(name: string): any {
         return (<any>globalThis)[name];
     }
 }
