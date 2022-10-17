@@ -35,7 +35,8 @@ describe("kernelInfo", () => {
                     [{ name: 'RequestKernelInfo' },
                     { name: 'SubmitCode' },
                     { name: 'RequestValueInfos' },
-                    { name: 'RequestValue' }]
+                    { name: 'RequestValue' },
+                    { name: 'SendValue' }]
             },
             {
                 aliases: ['child2Js'],
@@ -47,7 +48,8 @@ describe("kernelInfo", () => {
                     [{ name: 'RequestKernelInfo' },
                     { name: 'SubmitCode' },
                     { name: 'RequestValueInfos' },
-                    { name: 'RequestValue' }]
+                    { name: 'RequestValue' },
+                    { name: 'SendValue' }]
             }]);
         });
 
@@ -91,12 +93,11 @@ describe("kernelInfo", () => {
                         localName: 'child1',
                         supportedDirectives: [],
                         supportedKernelCommands:
-                            [
-                                { name: 'RequestKernelInfo' },
-                                { name: 'SubmitCode' },
-                                { name: 'RequestValueInfos' },
-                                { name: 'RequestValue' }
-                            ]
+                            [{ name: 'RequestKernelInfo' },
+                            { name: 'SubmitCode' },
+                            { name: 'RequestValueInfos' },
+                            { name: 'RequestValue' },
+                            { name: 'SendValue' }]
                     }
                 },
                 eventType: 'KernelInfoProduced'
@@ -289,7 +290,8 @@ describe("kernelInfo", () => {
                     { name: 'RequestKernelInfo' },
                     { name: 'SubmitCode' },
                     { name: 'RequestValueInfos' },
-                    { name: 'RequestValue' }
+                    { name: 'RequestValue' },
+                    { name: 'SendValue' }
                 ]);
         });
 
@@ -332,6 +334,7 @@ describe("kernelInfo", () => {
                 { name: 'SubmitCode' },
                 { name: 'RequestValueInfos' },
                 { name: 'RequestValue' },
+                { name: 'SendValue' },
                 { name: 'TestCommand1' },
                 { name: 'TestCommand2' },
                 { name: 'TestCommand3' }]);
