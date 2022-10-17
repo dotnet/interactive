@@ -228,11 +228,11 @@ namespace Microsoft.DotNet.Interactive.Tests
             events.Should().NotContainErrors();
 
             remoteCommands.Should()
-                          .ContainSingle<SubmitCode>()
+                          .ContainSingle<SendValue>()
                           .Which
-                          .Code
+                          .FormattedValue.Value
                           .Should()
-                          .Be("csharpVariable = 123;");
+                          .Be("123");
         }
         
         [Fact]
@@ -525,7 +525,8 @@ y");
             var remoteKernel = new FakeKernel("remote-javascript", "javascript");
             remoteKernel.RegisterCommandType<RequestValue>();
             remoteKernel.RegisterCommandType<RequestValueInfos>();
-            
+            remoteKernel.RegisterCommandType<SendValue>();
+
             remoteCompositeKernel.Add(remoteKernel);
 
             ConnectHost.ConnectInProcessHost(
@@ -542,7 +543,7 @@ y");
                           remoteKernelUri);
 
             javascriptKernel.UseValueSharing();
-
+            javascriptKernel.RegisterCommandType<SendValue>();
             await localCompositeKernel.SendAsync(new RequestKernelInfo(remoteKernelUri));
 
             _disposables.Add(localCompositeKernel);
