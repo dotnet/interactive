@@ -68,6 +68,11 @@ internal class CommValueAdapter : IValueAdapter
                     success = response is not null && response.Success;
                 }
             }
+            else if (variableValue is TabularDataResource table)
+            {
+                var response = await SetVariableAsync(seq, variableName, table, TabularDataResourceFormatter.MimeType, token);
+                success = response is not null && response.Success;
+            }
             else
             {
                 var response = await SetVariableAsync(seq, variableName, command.FormattedValue.Value, command.FormattedValue.MimeType, token);
