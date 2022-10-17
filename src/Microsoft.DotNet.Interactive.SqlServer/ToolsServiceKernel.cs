@@ -15,6 +15,8 @@ using Microsoft.DotNet.Interactive.ExtensionLab;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.ValueSharing;
 
+using static Azure.Core.HttpHeader;
+
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
     public abstract class ToolsServiceKernel :
@@ -248,25 +250,15 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         {
             var schema = new TableSchema();
             var dataRows = new List<List<KeyValuePair<string, object>>>();
-            var columnNames = columnInfos.Select(info => info.ColumnName).ToArray();
-
-            var columnNameCounters = new Dictionary<string, int>();
+            var columnNames = columnInfos.Select(c => c.ColumnName).ToArray();
 
             SqlKernelUtils.AliasDuplicateColumnNames(columnNames);
 
-            foreach (var columnInfo in columnInfos)
+            for (var i = 0; i <  columnInfos.Length; i++)
             {
-                var columnName = columnInfo.ColumnName;
-                if (columnNameCounters.TryGetValue(columnName, out var count))
-                {
-                    columnNameCounters[columnName] = count + 1;
-                    columnName = $"{columnName}_{count}";
-                }
-                else
-                {
-                    columnNameCounters[columnName] = 1;
-                }
-                
+                var columnInfo = columnInfos[i];
+                var columnName = columnNames[i];
+
                 var expectedType = Type.GetType(columnInfo.DataType);
                 schema.Fields.Add(new TableSchemaFieldDescriptor(columnName, expectedType.ToTableSchemaFieldType()));
                 if (columnInfo.IsKey == true)
