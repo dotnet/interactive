@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
             // commands
             [InlineData("#!sha[||]", "Get a value from one kernel and create a copy (or a reference if the kernels are in the same process) in another.")]
             // options
-            [InlineData("#!share --fr[||]", "--from*csharp*The name of the kernel")]
+            [InlineData("#!share --fr[||]", "--from*ValueSource*The name of the kernel")]
             // subcommands
             [InlineData("#!connect signa[||]", "Connects to a kernel using SignalR*--hub-url*The URL of the SignalR hub")]
             public async Task Completion_documentation_is_available_for_magic_commands(
@@ -73,7 +73,11 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 string expected)
             {
                 var kernel = CreateKernel();
-
+                var fakeKernel = new FakeKernel("ValueSource");
+                fakeKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValue)));
+                fakeKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValueInfos)));
+                
+                kernel.Add(fakeKernel);
                 kernel.AddKernelConnector(new ConnectSignalRCommand());
 
                 var completions = await markupCode
