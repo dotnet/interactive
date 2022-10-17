@@ -230,18 +230,20 @@ namespace Microsoft.DotNet.Interactive
                 await base.HandleAsync(command, context);
             }
         }
-
-        private protected override async Task HandleRequestKernelInfoAsync(
+        
+        public override async Task HandleAsync(
             RequestKernelInfo command,
             KernelInvocationContext context)
         {
-            foreach (var childKernel in ChildKernels)
-            {
-                if (childKernel.SupportsCommand(command))
+                context.Publish(new KernelInfoProduced(KernelInfo, command));
+
+                foreach (var childKernel in ChildKernels)
                 {
-                    await childKernel.HandleAsync(command, context);
+                    if (childKernel.SupportsCommand(command))
+                    {
+                        await childKernel.HandleAsync(command, context);
+                    }
                 }
-            }
         }
 
         private protected override IEnumerable<Parser> GetDirectiveParsersForCompletion(
