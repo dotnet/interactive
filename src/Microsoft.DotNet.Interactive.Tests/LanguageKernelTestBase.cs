@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             TaskScheduler.UnobservedTaskException += (sender, args) =>
             {
-                Log.Warning($"{nameof(TaskScheduler.UnobservedTaskException)}", args.Exception);
+                Log.Error($"{nameof(TaskScheduler.UnobservedTaskException)}", args.Exception);
                 args.SetObserved();
             };
         }
