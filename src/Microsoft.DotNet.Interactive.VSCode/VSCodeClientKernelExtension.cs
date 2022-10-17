@@ -34,6 +34,8 @@ public class VSCodeClientKernelExtension : IKernelExtension
             jsKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValueInfos)));
             jsKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(SendValue)));
 
+            jsKernel.UseValueSharing();
+
             root.VisitSubkernels(subkernel =>
             {
                 if (subkernel is PowerShellKernel powerShellKernel)
