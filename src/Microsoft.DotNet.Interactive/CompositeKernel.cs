@@ -230,8 +230,8 @@ namespace Microsoft.DotNet.Interactive
                 await base.HandleAsync(command, context);
             }
         }
-        
-        public override async Task HandleAsync(
+
+        private protected override async Task HandleRequestKernelInfoAsync(
             RequestKernelInfo command,
             KernelInvocationContext context)
         {
@@ -252,10 +252,6 @@ namespace Microsoft.DotNet.Interactive
                         await childKernel.HandleAsync(cr, context);
                     }
                 }
-            }
-            else
-            {
-
             }
         }
 

@@ -103,7 +103,7 @@ select top 10 AddressLine1, AddressLine2 from Person.Address
                 .Type
                 .Should()
                 .Be(TableSchemaFieldType.String);
-
+      
             events.ShouldDisplayTabularDataResourceWhich()
                 .Data
                 .SelectMany(row => row.Where(r => r.Key == "AddressLine2").Select(r => r.Value))
