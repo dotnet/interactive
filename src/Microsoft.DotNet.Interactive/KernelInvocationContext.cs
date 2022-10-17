@@ -77,6 +77,7 @@ namespace Microsoft.DotNet.Interactive
                                                           ? new CancellationToken(true) 
                                                           : _cancellationTokenSource.Token;
 
+        public bool IsFailed => IsComplete && _isFailed;
         public void Complete(KernelCommand command)
         {
             SucceedOrFail(!_isFailed, command);

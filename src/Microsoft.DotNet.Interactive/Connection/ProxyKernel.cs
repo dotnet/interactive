@@ -84,7 +84,12 @@ public sealed class ProxyKernel : Kernel
                 command.OriginUri = KernelInfo.Uri;
             }
         }
-       
+
+        if (command.DestinationUri is null)
+        {
+            command.OriginUri = KernelInfo.RemoteUri;
+        }
+
         _executionContext = ExecutionContext.Capture();
         var token = command.GetOrCreateToken();
 
