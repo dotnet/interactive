@@ -210,7 +210,9 @@ namespace Microsoft.DotNet.Interactive
                 if (kernel.ParentKernel is { } composite)
                 {
                     var valueInfos = new ConcurrentQueue<ValueInfosProduced>();
-                    var getValueTasks = composite.ChildKernels.Where(k => k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)))
+                    var getValueTasks = composite.ChildKernels.Where(
+                                 k => k != kernel &&
+                                 k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)))
                         .Select(async k =>
                         {
                             var result = await k.SendAsync(new RequestValueInfos());
@@ -237,8 +239,10 @@ namespace Microsoft.DotNet.Interactive
                 if (kernel.ParentKernel is { } composite)
                 {
                     return composite.ChildKernels
-                                    .Where(k => k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)) &&
-                                                k.KernelInfo.SupportsCommand(nameof(RequestValue)))
+                                    .Where(k =>
+                                        k != kernel &&
+                                        k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)) &&
+                                        k.KernelInfo.SupportsCommand(nameof(RequestValue)))
                                     .Select(k => new CompletionItem(k.Name));
                 }
 
