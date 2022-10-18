@@ -11,6 +11,7 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
 using Pocket.For.Xunit;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Browser.Tests;
@@ -27,7 +28,7 @@ public class JavaScriptKernelTests : IDisposable
 
     public void Dispose() => _disposables.Dispose();
 
-    [FactSkipLinux]
+    [Fact]
     public async Task It_can_execute_code()
     {
         using var kernel = await CreateJavaScriptProxyKernelAsync();
@@ -39,7 +40,7 @@ public class JavaScriptKernelTests : IDisposable
         events.Should().NotContainErrors();
     }
 
-    [FactSkipLinux]
+    [Fact]
     public async Task It_can_get_a_return_value()
     {
         using var kernel = await CreateJavaScriptProxyKernelAsync();
@@ -56,7 +57,7 @@ public class JavaScriptKernelTests : IDisposable
                                   v.Value == "123");
     }
 
-    [FactSkipLinux]
+    [Fact]
     public async Task It_can_get_console_log_output()
     {
         using var kernel = await CreateJavaScriptProxyKernelAsync();
@@ -73,7 +74,7 @@ public class JavaScriptKernelTests : IDisposable
                                   v.Value == "123");
     }
 
-    [FactSkipLinux]
+    [Fact]
     public async Task It_can_import_value_from_another_kernel()
     {
         using var kernel = await CreateJavaScriptProxyKernelAsync();
@@ -102,7 +103,7 @@ console.log(x);", targetKernelName: kernel.Name));
                                 v.Value == "123");
     }
 
-    [FactSkipLinux]
+    [Fact]
     public async Task It_can_share_value_with_another_kernel()
     {
         using var kernel = await CreateJavaScriptProxyKernelAsync();
