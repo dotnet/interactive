@@ -8,11 +8,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility;
 
 public sealed class FactSkipWindows : FactAttribute
 {
-    public FactSkipWindows()
+    public FactSkipWindows(string reason = null)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            Skip = "Ignored on Windows";
+            Skip = string.IsNullOrWhiteSpace(reason) ? "Ignored on Windows" : reason;
         }
     }
 }

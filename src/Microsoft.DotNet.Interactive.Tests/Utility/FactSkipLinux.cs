@@ -8,11 +8,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility;
 
 public sealed class FactSkipLinux : FactAttribute
 {
-    public FactSkipLinux()
+    public FactSkipLinux(string reason = null)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            Skip = "Ignored on Linux";
+            Skip = string.IsNullOrWhiteSpace(reason) ? "Ignored on Linux" : reason;
         }
     }
 }
