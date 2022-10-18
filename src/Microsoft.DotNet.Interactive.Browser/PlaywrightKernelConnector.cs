@@ -117,7 +117,11 @@ public class PlaywrightKernelConnector : IKernelConnector
                 break;
 
             case "javascript":
-
+                proxy.KernelInfo.SupportedKernelCommands.Add(new(nameof(SubmitCode)));
+                proxy.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValue)));
+                proxy.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValueInfos)));
+                proxy.KernelInfo.SupportedKernelCommands.Add(new(nameof(SendValue)));
+                proxy.UseValueSharing();
                 break;
         }
 
