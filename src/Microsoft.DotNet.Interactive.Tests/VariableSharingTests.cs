@@ -543,7 +543,7 @@ y");
                           remoteKernelUri);
 
             javascriptKernel.UseValueSharing();
-            javascriptKernel.RegisterCommandType<SendValue>();
+            
             await localCompositeKernel.SendAsync(new RequestKernelInfo(remoteKernelUri));
 
             _disposables.Add(localCompositeKernel);
