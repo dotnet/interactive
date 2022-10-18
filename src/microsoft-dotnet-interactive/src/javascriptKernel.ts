@@ -28,9 +28,6 @@ export class JavascriptKernel extends Kernel {
                 case 'application/json':
                     (<any>globalThis)[sendValue.name] = JSON.parse(sendValue.formattedValue.value);
                     break;
-                case 'text/plain':
-                    (<any>globalThis)[sendValue.name] = sendValue.formattedValue.value;
-                    break;
                 default:
                     throw new Error(`mimetype ${sendValue.formattedValue.mimeType} not supported`);
             }
