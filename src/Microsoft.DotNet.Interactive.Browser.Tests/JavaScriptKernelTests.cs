@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
@@ -70,6 +71,64 @@ public class JavaScriptKernelTests : IDisposable
               .Should()
               .ContainSingle(v => v.MimeType == "text/plain" &&
                                   v.Value == "123");
+    }
+
+    [FactSkipLinux]
+    public async Task It_can_import_value_from_another_kernel()
+    {
+        using var kernel = await CreateJavaScriptProxyKernelAsync();
+        var csharp = new CSharpKernel();
+        csharp.UseValueSharing();
+
+        var compositeKernel = new CompositeKernel
+        {
+            kernel,
+            csharp
+        };
+
+        compositeKernel.DefaultKernelName = csharp.Name;
+
+        await compositeKernel.SendAsync(new SubmitCode("var x = 123;", targetKernelName: csharp.Name));
+        var result = await compositeKernel.SendAsync(new SubmitCode(@"#!share x --from csharp
+console.log(x);", targetKernelName: kernel.Name));
+
+        var events = result.KernelEvents.ToSubscribedList();
+
+        events.Should().ContainSingle<DisplayedValueProduced>()
+            .Which
+            .FormattedValues
+            .Should()
+            .ContainSingle(v => v.MimeType == "text/plain" &&
+                                v.Value == "123");
+    }
+
+    [FactSkipLinux]
+    public async Task It_can_share_value_with_another_kernel()
+    {
+        using var kernel = await CreateJavaScriptProxyKernelAsync();
+        var csharp = new CSharpKernel();
+        csharp.UseValueSharing();
+
+        var compositeKernel = new CompositeKernel
+        {
+            kernel,
+            csharp
+        };
+
+        compositeKernel.DefaultKernelName = csharp.Name;
+
+        await compositeKernel.SendAsync(new SubmitCode(" x = 123;", targetKernelName: kernel.Name));
+        var result = await compositeKernel.SendAsync(new SubmitCode(@$"#!share x --from {kernel.Name}
+Console.Write(x);", targetKernelName: csharp.Name));
+
+        var events = result.KernelEvents.ToSubscribedList();
+
+        events.Should().ContainSingle<StandardOutputValueProduced>()
+            .Which
+            .FormattedValues
+            .Should()
+            .ContainSingle(v => v.MimeType == "text/plain" &&
+                                v.Value == "123");
     }
 
     private static async Task<Kernel> CreateJavaScriptProxyKernelAsync()
