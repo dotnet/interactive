@@ -28,7 +28,7 @@ public class JavaScriptKernelTests : IDisposable
 
     public void Dispose() => _disposables.Dispose();
 
-    [Fact]
+    [FactSkipLinux("Requires Playwright installed")]
     public async Task It_can_execute_code()
     {
         using var kernel = await CreateJavaScriptProxyKernelAsync();
@@ -40,7 +40,7 @@ public class JavaScriptKernelTests : IDisposable
         events.Should().NotContainErrors();
     }
 
-    [Fact]
+    [FactSkipLinux("Requires Playwright installed")]
     public async Task It_can_get_a_return_value()
     {
         using var kernel = await CreateJavaScriptProxyKernelAsync();
@@ -57,7 +57,7 @@ public class JavaScriptKernelTests : IDisposable
                                   v.Value == "123");
     }
 
-    [Fact]
+    [FactSkipLinux("Requires Playwright installed")]
     public async Task It_can_get_console_log_output()
     {
         using var kernel = await CreateJavaScriptProxyKernelAsync();
@@ -74,7 +74,7 @@ public class JavaScriptKernelTests : IDisposable
                                   v.Value == "123");
     }
 
-    [Fact]
+    [FactSkipLinux("Requires Playwright installed")]
     public async Task It_can_import_value_from_another_kernel()
     {
         using var kernel = await CreateJavaScriptProxyKernelAsync();
@@ -103,7 +103,7 @@ console.log(x);", targetKernelName: kernel.Name));
                                 v.Value == "123");
     }
 
-    [Fact]
+    [FactSkipLinux("Requires Playwright installed")]
     public async Task It_can_share_value_with_another_kernel()
     {
         using var kernel = await CreateJavaScriptProxyKernelAsync();

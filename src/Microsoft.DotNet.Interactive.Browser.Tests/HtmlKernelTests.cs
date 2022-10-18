@@ -32,7 +32,7 @@ public class HtmlKernelTests : IDisposable
 
     public void Dispose() => _disposables.Dispose();
 
-    [Fact]
+    [FactSkipLinux("Requires Playwright installed")]
     public async Task It_can_share_the_underlying_Playwright_page_object()
     {
         using var kernel = await CreateHtmlProxyKernelAsync();
@@ -50,7 +50,7 @@ public class HtmlKernelTests : IDisposable
             .BeAssignableTo<ILocator>();
     }
 
-    [Fact]
+    [FactSkipLinux("Requires Playwright installed")]
     public async Task It_can_share_the_underlying_page_HTML()
     {
         using var kernel = await CreateHtmlProxyKernelAsync();
@@ -72,7 +72,7 @@ public class HtmlKernelTests : IDisposable
             .Contain("<div>hello</div>");
     }
 
-    [Fact]
+    [FactSkipLinux("Requires Playwright installed")]
     public async Task It_can_share_the_underlying_page_content()
     {
         using var kernel = await CreateHtmlProxyKernelAsync();
@@ -94,7 +94,7 @@ public class HtmlKernelTests : IDisposable
             .Be("hello");
     }
 
-    [Fact]
+    [FactSkipLinux("Requires Playwright installed")]
     public async Task It_can_capture_a_PNG_using_a_selector()
     {
         using var kernel = await CreateHtmlProxyKernelAsync();
@@ -121,7 +121,7 @@ public class HtmlKernelTests : IDisposable
              .NotThrow();
     }
 
-    [Fact]
+    [FactSkipLinux("Requires Playwright installed")]
     public async Task It_can_capture_a_Jpeg_using_a_selector()
     {
         using var kernel = await CreateHtmlProxyKernelAsync();
@@ -148,7 +148,7 @@ public class HtmlKernelTests : IDisposable
              .NotThrow();
     }
 
-    [Fact]
+    [FactSkipLinux("Requires Playwright installed")]
     public async Task It_has_shareable_values()
     {
         using var kernel = await CreateHtmlProxyKernelAsync();
@@ -166,7 +166,7 @@ public class HtmlKernelTests : IDisposable
             .ContainSingle(i => i.Name == ":root");
     }
 
-    [Fact]
+    [FactSkipLinux("Requires Playwright installed")]
     public async Task HTML_kernel_can_see_DOM_changes_made_by_JavaScript_kernel()
     {
         var connector = new PlaywrightKernelConnector(!Debugger.IsAttached);
@@ -189,7 +189,7 @@ public class HtmlKernelTests : IDisposable
             .Contain("<div>howdy</div>");
     }
 
-    [Fact]
+    [FactSkipLinux("Requires Playwright installed")]
     public async Task JavaScript_kernel_can_see_DOM_changes_made_by_HTML_kernel()
     {
         var connector = new PlaywrightKernelConnector(!Debugger.IsAttached);
