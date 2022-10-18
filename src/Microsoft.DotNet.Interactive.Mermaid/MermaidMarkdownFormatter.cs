@@ -56,8 +56,9 @@ internal class MermaidMarkdownFormatter : ITypeFormatterSource
         var code = new StringBuilder();
         var functionName = $"loadMermaid_{divId}";
         code.AppendLine($"<div class=\"mermaidMarkdownContainer\" style=\"background-color:{markdown.Background}\">");
-
-        code.AppendLine(@"<script type=""text/javascript"">");
+        code.AppendLine(@"<link rel=""stylesheet"" href=""https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"">");
+            
+                                             code.AppendLine(@"<script type=""text/javascript"">");
         AppendJsCode(code, divId, functionName, libraryUri, libraryVersion, markdown.ToString());
         code.AppendLine(JavascriptUtilities.GetCodeForEnsureRequireJs(RequireUri, functionName));
         code.AppendLine("</script>");
