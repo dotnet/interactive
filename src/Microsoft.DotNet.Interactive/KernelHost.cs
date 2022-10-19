@@ -8,7 +8,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
-using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -76,7 +75,6 @@ namespace Microsoft.DotNet.Interactive
             {
                 Name = "KernelHost command dispatcher"
             }); 
-
             
             _kernelEventSubscription = _kernel.KernelEvents.Subscribe(e =>
             {

@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.Mermaid;
 
 internal class MermaidMarkdownFormatter : ITypeFormatterSource
 {
-    private const string DefaultLibraryVersion = "9.1.3";
+    private const string DefaultLibraryVersion = "9.1.7";
     private static readonly Uri DefaultLibraryUri = new($@"https://cdn.jsdelivr.net/npm/mermaid@{DefaultLibraryVersion}/dist/mermaid.min.js", UriKind.Absolute);
     private static readonly Uri RequireUri = new("https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js");
     
@@ -56,8 +56,9 @@ internal class MermaidMarkdownFormatter : ITypeFormatterSource
         var code = new StringBuilder();
         var functionName = $"loadMermaid_{divId}";
         code.AppendLine($"<div class=\"mermaidMarkdownContainer\" style=\"background-color:{markdown.Background}\">");
-
-        code.AppendLine(@"<script type=""text/javascript"">");
+        code.AppendLine(@"<link rel=""stylesheet"" href=""https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"">");
+            
+                                             code.AppendLine(@"<script type=""text/javascript"">");
         AppendJsCode(code, divId, functionName, libraryUri, libraryVersion, markdown.ToString());
         code.AppendLine(JavascriptUtilities.GetCodeForEnsureRequireJs(RequireUri, functionName));
         code.AppendLine("</script>");
@@ -87,6 +88,7 @@ internal class MermaidMarkdownFormatter : ITypeFormatterSource
 
     private static void AppendJsCode(StringBuilder stringBuilder, string divId, string functionName, Uri libraryUri, string libraryVersion, string markdown)
     {
+        var escapedMarkdown = Regex.Replace(markdown, @"(?<pre>[^\\])(?<newLine>\\n)", @"${pre}\\n");
         stringBuilder.AppendLine($@"
 {functionName} = () => {{");
 
@@ -100,7 +102,7 @@ internal class MermaidMarkdownFormatter : ITypeFormatterSource
             let renderTarget = document.getElementById('{divId}');
             mermaid.mermaidAPI.render( 
                 'mermaid_{divId}', 
-                `{markdown}`, 
+                `{escapedMarkdown}`, 
                 g => {{
                     renderTarget.innerHTML = g 
                 }});

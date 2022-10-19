@@ -26,6 +26,28 @@ describe("javascriptKernel", () => {
         expect(events.find(e => e.eventType === contracts.CommandSucceededType)).to.not.be.undefined;
     });
 
+    it("can handle SendValue with application/json", async () => {
+        let events: contracts.KernelEventEnvelope[] = [];
+        const kernel = new JavascriptKernel();
+        kernel.subscribeToKernelEvents((e) => {
+            events.push(e);
+        });
+
+        await kernel.send({
+            commandType: contracts.SendValueType, command: <contracts.SendValue>{
+                formattedValue: {
+                    value: JSON.stringify({ a: 1 }),
+                    mimeType: "application/json",
+                },
+                name: "x0"
+            }
+        });
+
+        expect(events.find(e => e.eventType === contracts.CommandSucceededType)).to.not.be.undefined;
+        let value: any = kernel.getLocalVariable("x0");
+        expect(value).to.deep.equal({ a: 1 });
+    });
+
     it("does not return built-in values from RequestValueInfos", async () => {
         const events: contracts.KernelEventEnvelope[] = [];
         const kernel = new JavascriptKernel();

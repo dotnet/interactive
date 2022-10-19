@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
     public abstract class RequestHandlerBase<T> : IDisposable
         where T : RequestMessage
     {
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        private readonly CompositeDisposable _disposables = new();
 
         protected RequestHandlerBase(Kernel kernel, IScheduler scheduler)
         {
@@ -25,8 +25,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         }
 
         protected IObservable<KernelEvent> KernelEvents { get; }
-
-        protected FrontendEnvironment FrontendEnvironment => Kernel.FrontendEnvironment;
 
         protected async Task SendAsync(
             JupyterRequestContext context,
@@ -45,7 +43,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
             bool ShouldForward(KernelEvent e)
             {
-                return (e.Command?.GetOrCreateToken() == context.Token) || e.Command.ShouldPublishInternalEvents();
+                return e.Command?.GetOrCreateToken() == context.Token || e.Command.ShouldPublishInternalEvents();
             }
         }
 

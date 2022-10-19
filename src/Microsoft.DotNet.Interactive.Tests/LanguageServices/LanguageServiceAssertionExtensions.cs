@@ -31,9 +31,9 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
             }
         }
 
-        public static AndWhichConstraint<
+        public static async Task<AndWhichConstraint<
             GenericCollectionAssertions<CompletionsProduced>,
-            IEnumerable<CompletionsProduced>> ProvideCompletions(
+            IEnumerable<CompletionsProduced>>> ProvideCompletionsAsync(
             this GenericCollectionAssertions<MarkedUpCodeLinePosition> assertions,
             Kernel kernel)
         {
@@ -43,11 +43,10 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
 
             foreach (var position in assertions.Subject)
             {
-                var result = Task.Run(() =>
-                                          kernel.SendAsync(
-                                              new RequestCompletions(
-                                                  position.MarkedUpCode.Code,
-                                                  position.LinePosition))).Result;
+                var result = await kernel.SendAsync(
+                                     new RequestCompletions(
+                                         position.MarkedUpCode.Code,
+                                         position.LinePosition));
 
                 using var events = result.KernelEvents.ToSubscribedList();
 
@@ -60,7 +59,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
             }
 
             return new AndWhichConstraint<
-                GenericCollectionAssertions<CompletionsProduced>, 
+                GenericCollectionAssertions<CompletionsProduced>,
                 IEnumerable<CompletionsProduced>>(
                 items.Should(), 
                 items);

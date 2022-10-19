@@ -5,10 +5,15 @@ using System;
 using System.IO;
 using System.IO.Pipes;
 using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
+using Pocket;
+using static Pocket.Logger;
+using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
+using Disposable = System.Reactive.Disposables.Disposable;
 
 namespace Microsoft.DotNet.Interactive.Connection;
 
@@ -53,8 +58,20 @@ public class KernelCommandAndEventReceiver : IKernelCommandAndEventReceiver, IDi
     }
 
     private KernelCommandAndEventReceiver(IObservable<string> messages) =>
-        _observable = messages.ObserveOn(new EventLoopScheduler())
-                              .Select(Serializer.DeserializeCommandOrEvent);
+        _observable = messages
+            .Select(s =>
+            {
+                try
+                {
+                    return Serializer.DeserializeCommandOrEvent(s);
+                }
+                catch (Exception exception)
+                {
+                    Log.Error(exception);
+
+                    return new CommandOrEvent(new DiagnosticLogEntryProduced(exception.Message, KernelCommand.None), true);
+                }
+            });
 
     private void ReaderLoop()
     {
@@ -70,8 +87,9 @@ public class KernelCommandAndEventReceiver : IKernelCommandAndEventReceiver, IDi
                 }
             }
         }
-        catch
+        catch (Exception exception)
         {
+            Log.Error(exception);
         }
     }
 
@@ -88,8 +106,9 @@ public class KernelCommandAndEventReceiver : IKernelCommandAndEventReceiver, IDi
             {
                 cts.Cancel();
             }
-            catch
+            catch (Exception exception)
             {
+                Log.Error(exception);
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -15,6 +15,8 @@ using Microsoft.DotNet.Interactive.ExtensionLab;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.ValueSharing;
 
+using static Azure.Core.HttpHeader;
+
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
     public abstract class ToolsServiceKernel :
@@ -23,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         IKernelCommandHandler<RequestCompletions>,
         IKernelCommandHandler<RequestValueInfos>,
         IKernelCommandHandler<RequestValue>,
-        ISupportSetClrValue
+        IKernelCommandHandler<SendValue>
     {
 
         protected readonly Uri TempFileUri;
@@ -242,30 +244,32 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         protected virtual void StoreQueryResults(IReadOnlyCollection<TabularDataResource> results, ParseResult commandKernelChooserParseResult)
         {
-
         }
 
         private static IEnumerable<TabularDataResource> GetTabularDataResources(ColumnInfo[] columnInfos, CellValue[][] rows)
         {
             var schema = new TableSchema();
-            var dataRows = new List<Dictionary<string,object>>();
-            var columnNames = columnInfos.Select(info => info.ColumnName).ToArray();
+            var dataRows = new List<List<KeyValuePair<string, object>>>();
+            var columnNames = columnInfos.Select(c => c.ColumnName).ToArray();
 
             SqlKernelUtils.AliasDuplicateColumnNames(columnNames);
 
-            foreach (var columnInfo in columnInfos)
+            for (var i = 0; i <  columnInfos.Length; i++)
             {
+                var columnInfo = columnInfos[i];
+                var columnName = columnNames[i];
+
                 var expectedType = Type.GetType(columnInfo.DataType);
-                schema.Fields.Add(new TableSchemaFieldDescriptor(columnInfo.ColumnName, expectedType.ToTableSchemaFieldType()));
+                schema.Fields.Add(new TableSchemaFieldDescriptor(columnName, expectedType.ToTableSchemaFieldType()));
                 if (columnInfo.IsKey == true)
                 {
-                    schema.PrimaryKey.Add(columnInfo.ColumnName);
+                    schema.PrimaryKey.Add(columnName);
                 }
             }
             
             foreach (var row in rows)
             {
-                var dataRow = new Dictionary<string, object>();
+                var dataRow = new List<KeyValuePair<string,object>>();
 
                 for (var colIndex = 0; colIndex < row.Length; colIndex++)
                 {
@@ -304,7 +308,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                         convertedValue = row[colIndex].DisplayValue;
                     }
                     
-                    dataRow.Add(columnNames[colIndex], convertedValue);
+                    dataRow.Add(new KeyValuePair<string, object>( columnNames[colIndex], convertedValue));
                 }
                 
                 dataRows.Add(dataRow);
@@ -388,19 +392,25 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         /// <returns></returns>
         protected abstract bool CanDeclareVariable(string name, object value, out string msg);
 
-        public Task SetValueAsync(string name, object value, Type declaredType = null)
+        public async Task HandleAsync(
+            SendValue command,
+            KernelInvocationContext context)
         {
-            if (value == null)
+            await SetValueAsync(command, context, (name, value, declaredType) =>
             {
-                throw new ArgumentNullException(nameof(value), $"Sharing null values is not supported at this time.");
-            }
+                if (value == null)
+                {
+                    throw new ArgumentNullException(nameof(value), $"Sharing null values is not supported at this time.");
+                }
 
-            if (!CanDeclareVariable(name, value, out string msg))
-            {
-                throw new ArgumentException($"Cannot support value of Type {value.GetType()}. {msg}");
-            }
-            _variables[name] = value;
-            return Task.CompletedTask;
+                if (!CanDeclareVariable(name, value, out string msg))
+                {
+                    throw new ArgumentException($"Cannot support value of Type {value.GetType()}. {msg}");
+                }
+
+                _variables[name] = value;
+                return Task.CompletedTask;
+            });
         }
     }
 }

@@ -106,7 +106,7 @@ select top 10 AddressLine1, AddressLine2 from Person.Address
 
             events.ShouldDisplayTabularDataResourceWhich()
                 .Data
-                .Select(row => row["AddressLine2"])
+                .SelectMany(row => row.Where(r => r.Key == "AddressLine2").Select(r => r.Value))
                 .Should()
                 .AllBeEquivalentTo((object)null);
         }
