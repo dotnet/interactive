@@ -69,12 +69,12 @@ public class JupyterKernelConnector : IKernelConnector
         {
             commandOrEventHandler.RegisterCommandHandler<RequestValue>(valueAdapter.HandleCommandAsync);
             commandOrEventHandler.RegisterCommandHandler<RequestValueInfos>(valueAdapter.HandleCommandAsync);
-            commandOrEventHandler.RegisterCommandHandler<SetValue>(valueAdapter.HandleCommandAsync);
+            commandOrEventHandler.RegisterCommandHandler<SendValue>(valueAdapter.HandleCommandAsync);
 
-            proxyKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(SetValue)));
+            proxyKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(SendValue)));
             proxyKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValue)));
             proxyKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValueInfos)));
-            proxyKernel.UseValueSharing(new DefaultKernelValueDeclarer());
+            proxyKernel.UseValueSharing();
             proxyKernel.UseWho();
 
             proxyKernel.RegisterForDisposal(valueAdapter);

@@ -8,7 +8,7 @@ using System;
 namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing;
 
 internal interface IValueAdapter : IDisposable, 
-    IKernelCommandToMessageHandler<SetValue>, 
+    IKernelCommandToMessageHandler<SendValue>, 
     IKernelCommandToMessageHandler<RequestValue>,
     IKernelCommandToMessageHandler<RequestValueInfos>
 {
