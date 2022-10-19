@@ -8,13 +8,13 @@ using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive
 {
-    internal class CurrentVariablesFormatter : HtmlFormatter<KernelValues>
+    internal class KernelValuesFormatter : HtmlFormatter<KernelValues>
     {
-        public CurrentVariablesFormatter() : base(FormatCurrentVariables)
+        public KernelValuesFormatter() : base(FormatKernelValues)
         {
         }
 
-        private static bool FormatCurrentVariables(
+        private static bool FormatKernelValues(
             KernelValues instance, 
             FormatContext context)
         {

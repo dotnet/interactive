@@ -38,104 +38,108 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
             [InlineData("#!csharp [||]", "--help")]
             // subcommands
             [InlineData("#!connect [||]", "--help,signalr")]
-            public void Completions_are_available_for_magic_commands(
+            public async Task Completions_are_available_for_magic_commands(
                 string markupCode,
                 string expected)
             {
                 var kernel = CreateKernel();
                 kernel.AddKernelConnector(new ConnectSignalRCommand());
 
-                markupCode
-                    .ParseMarkupCode()
-                    .PositionsInMarkedSpans()
-                    .Should()
-                    .ProvideCompletions(kernel)
-                    .Which
-                    .Should()
-                    .AllSatisfy(
-                        requestCompleted =>
-                            requestCompleted
-                                .Completions.Select(i => i.DisplayText)
-                                      .Should()
-                                      .Contain(expected.Split(","),
-                                               because: $"position {requestCompleted.LinePositionSpan} should provide completions"));
+                var completions = await markupCode
+                                        .ParseMarkupCode()
+                                        .PositionsInMarkedSpans()
+                                        .Should()
+                                        .ProvideCompletionsAsync(kernel);
+                completions.Which
+                           .Should()
+                           .AllSatisfy(
+                               requestCompleted =>
+                                   requestCompleted
+                                       .Completions.Select(i => i.DisplayText)
+                                       .Should()
+                                       .Contain(expected.Split(","),
+                                                because: $"position {requestCompleted.LinePositionSpan} should provide completions"));
             }
 
             [Theory]
             // commands
-            [InlineData("#!sha[||]", "Share a value")]
+            [InlineData("#!sha[||]", "Get a value from one kernel and create a copy (or a reference if the kernels are in the same process) in another.")]
             // options
-            [InlineData("#!share --fr[||]", "--from*csharp*The name of the kernel")]
+            [InlineData("#!share --fr[||]", "--from*ValueSource*The name of the kernel")]
             // subcommands
             [InlineData("#!connect signa[||]", "Connects to a kernel using SignalR*--hub-url*The URL of the SignalR hub")]
-            public void Completion_documentation_is_available_for_magic_commands(
+            public async Task Completion_documentation_is_available_for_magic_commands(
                 string markupCode,
                 string expected)
             {
                 var kernel = CreateKernel();
-                    
+                var fakeKernel = new FakeKernel("ValueSource");
+                fakeKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValue)));
+                fakeKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValueInfos)));
+                
+                kernel.Add(fakeKernel);
                 kernel.AddKernelConnector(new ConnectSignalRCommand());
 
-                markupCode
-                    .ParseMarkupCode()
-                    .PositionsInMarkedSpans()
-                    .Should()
-                    .ProvideCompletions(kernel)
-                    .Which
-                    .Should()
-                    .ContainSingle()
-                    .Which
-                    .Completions
-                    .Should()
-                    .ContainSingle()
-                    .Which
-                    .Documentation
-                    .Should()
-                    .Match($"*{expected}*");
+                var completions = await markupCode
+                                        .ParseMarkupCode()
+                                        .PositionsInMarkedSpans()
+                                        .Should()
+                                        .ProvideCompletionsAsync(kernel);
+                completions.Which
+                           .Should()
+                           .ContainSingle()
+                           .Which
+                           .Completions
+                           .Should()
+                           .ContainSingle()
+                           .Which
+                           .Documentation
+                           .Should()
+                           .Match($"*{expected}*");
             }
 
             [Fact]
-            public void Insertion_range_is_correct_for_option_completions()
+            public async Task Insertion_range_is_correct_for_option_completions()
             {
                 var kernel = CreateCompositeKernel();
 
-                "#!share fr[||]"
-                    .ParseMarkupCode()
-                    .PositionsInMarkedSpans()
-                    .Should()
-                    .ProvideCompletions(kernel)
-                    .Which
-                    .Should()
-                    .AllSatisfy(c =>
-                                    c.LinePositionSpan
-                                     .Should()
-                                     .BeEquivalentToRespectingRuntimeTypes(new LinePositionSpan(
-                                                         new LinePosition(0, 8),
-                                                         new LinePosition(0, 10))));
+                var completions = await "#!share fr[||]"
+                                        .ParseMarkupCode()
+                                        .PositionsInMarkedSpans()
+                                        .Should()
+                                        .ProvideCompletionsAsync(kernel);
+                completions.Which
+                           .Should()
+                           .AllSatisfy(c =>
+                                           c.LinePositionSpan
+                                            .Should()
+                                            .BeEquivalentToRespectingRuntimeTypes(new LinePositionSpan(
+                                                                                      new LinePosition(0, 8),
+                                                                                      new LinePosition(0, 10))));
             }
 
             [Fact]
-            public void Insertion_range_is_correct_for_command_completions()
+            public async Task Insertion_range_is_correct_for_command_completions()
             {
                 var kernel = CreateCompositeKernel();
 
-                "#!wh[||]"
-                    .ParseMarkupCode()
-                    .PositionsInMarkedSpans()
-                    .Should()
-                    .ProvideCompletions(kernel)
-                    .Which
-                    .Should()
-                    .AllSatisfy(c =>
-                                    c.LinePositionSpan
-                                     .Should()
-                                     .BeEquivalentToRespectingRuntimeTypes(new LinePositionSpan(
-                                                         new LinePosition(0, 0),
-                                                         new LinePosition(0, 4))));
+                var completions = await "#!wh[||]"
+                                        .ParseMarkupCode()
+                                        .PositionsInMarkedSpans()
+                                        .Should()
+                                        .ProvideCompletionsAsync(kernel);
+                completions.Which
+                           .Should()
+                           .AllSatisfy(c =>
+                                           c.LinePositionSpan
+                                            .Should()
+                                            .BeEquivalentToRespectingRuntimeTypes(new LinePositionSpan(
+                                                                                      new LinePosition(0, 0),
+                                                                                      new LinePosition(0, 4))));
             }
 
             [Fact]
-            public void Completions_include_magic_commands_from_all_kernels()
+            public async Task Completions_include_magic_commands_from_all_kernels()
             {
                 var markupCode = "[|#!|]";
                 var expected = new[] { "#!csharp", "#!fsharp", "#!pwsh", "#!who" };
@@ -147,12 +151,13 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                     new PowerShellKernel()
                 };
 
-                markupCode
-                    .ParseMarkupCode()
-                    .PositionsInMarkedSpans()
-                    .Should()
-                    .ProvideCompletions(kernel)
-                    .Which
+                var completions = await markupCode
+                                        .ParseMarkupCode()
+                                        .PositionsInMarkedSpans()
+                                        .Should()
+                                        .ProvideCompletionsAsync(kernel);
+                completions
+                    .Subject
                     .Should()
                     .AllSatisfy(
                         requestCompleted =>
@@ -167,17 +172,18 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
             [Theory]
             [InlineData("#!share [| |]")]
             [InlineData("#!connect [| |]")]
-            public void Inner_symbol_completions_do_not_include_top_level_symbols(string markupCode)
+            public async Task Inner_symbol_completions_do_not_include_top_level_symbols(string markupCode)
             {
                 var kernel = CreateCompositeKernel();
-                    kernel.AddKernelConnector(new ConnectSignalRCommand());
+                kernel.AddKernelConnector(new ConnectSignalRCommand());
 
-                markupCode
-                    .ParseMarkupCode()
-                    .PositionsInMarkedSpans()
-                    .Should()
-                    .ProvideCompletions(kernel)
-                    .Which
+                var completions = await markupCode
+                                        .ParseMarkupCode()
+                                        .PositionsInMarkedSpans()
+                                        .Should()
+                                        .ProvideCompletionsAsync(kernel);
+                completions
+                    .Subject
                     .Should()
                     .AllSatisfy(
                         requestCompleted =>
@@ -230,7 +236,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
             [InlineData("[|#!dir|]\n", "#!directiveOnChild,#!directiveOnParent", Language.FSharp)]
             [InlineData("[|#!d|]", "#!directiveOnChild,#!directiveOnParent", Language.PowerShell)]
             [InlineData("[|#!dir|]\n", "#!directiveOnChild,#!directiveOnParent", Language.PowerShell)]
-            public void Completions_are_available_for_magic_commands_added_at_runtime_to_child_and_parent_kernels(
+            public async Task Completions_are_available_for_magic_commands_added_at_runtime_to_child_and_parent_kernels(
                 string markupCode,
                 string expected,
                 Language defaultLanguage)
@@ -249,21 +255,21 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                     Handler = CommandHandler.Create(() => { })
                 });
 
-                markupCode
-                    .ParseMarkupCode()
-                    .PositionsInMarkedSpans()
-                    .Should()
-                    .ProvideCompletions(kernel)
-                    .Which
-                    .Should()
-                    .AllSatisfy(
-                        requestCompleted =>
-                            requestCompleted
-                                .Completions
-                                .Select(i => i.DisplayText)
-                                .Should()
-                                .Contain(expected.Split(","),
-                                         because: $"position {requestCompleted.LinePositionSpan} should provide completions"));
+                var completions = await markupCode
+                                        .ParseMarkupCode()
+                                        .PositionsInMarkedSpans()
+                                        .Should()
+                                        .ProvideCompletionsAsync(kernel);
+                completions.Which
+                           .Should()
+                           .AllSatisfy(
+                               requestCompleted =>
+                                   requestCompleted
+                                       .Completions
+                                       .Select(i => i.DisplayText)
+                                       .Should()
+                                       .Contain(expected.Split(","),
+                                                because: $"position {requestCompleted.LinePositionSpan} should provide completions"));
             }
 
             [Fact]

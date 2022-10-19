@@ -9,14 +9,8 @@ namespace Microsoft.DotNet.Interactive.Events;
 
 public class ValueProduced : KernelEvent
 {
-    [JsonIgnore] 
-    public object Value { get; }
-
-    public string Name { get; }
-
-    public FormattedValue FormattedValue { get; }
-
-    public ValueProduced(object value,
+    public ValueProduced(
+        object value,
         string name,
         FormattedValue formattedValue,
         RequestValue command) : base(command)
@@ -30,4 +24,11 @@ public class ValueProduced : KernelEvent
         Name = name;
         FormattedValue = formattedValue ?? throw new ArgumentNullException(nameof(formattedValue));
     }
+
+    [JsonIgnore] 
+    public object Value { get; }
+
+    public string Name { get; }
+
+    public FormattedValue FormattedValue { get; }
 }

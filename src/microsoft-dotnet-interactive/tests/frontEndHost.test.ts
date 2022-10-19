@@ -81,7 +81,7 @@ describe("frontEndHost", () => {
                 kernelInfo:
                 {
                     aliases: ['js'],
-                    languageName: 'Javascript',
+                    languageName: 'JavaScript',
                     languageVersion: undefined,
                     localName: 'javascript',
                     supportedDirectives: [],
@@ -89,7 +89,8 @@ describe("frontEndHost", () => {
                         [{ name: 'RequestKernelInfo' },
                         { name: 'SubmitCode' },
                         { name: 'RequestValueInfos' },
-                        { name: 'RequestValue' }],
+                        { name: 'RequestValue' },
+                        { name: 'SendValue' }],
                     uri: 'kernel://testKernel/javascript'
                 }
             },

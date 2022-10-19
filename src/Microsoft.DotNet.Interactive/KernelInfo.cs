@@ -59,13 +59,29 @@ namespace Microsoft.DotNet.Interactive
         public ICollection<KernelCommandInfo> SupportedKernelCommands
         {
             get => _supportedKernelCommands;
-            init => _supportedKernelCommands.UnionWith(value ?? throw new ArgumentNullException(nameof(value)));
+            init
+            {
+                if (value is null)
+                {
+                    return;
+                }
+
+                _supportedKernelCommands.UnionWith(value);
+            }
         }
 
         public ICollection<KernelDirectiveInfo> SupportedDirectives
         {
             get => _supportedDirectives;
-            init => _supportedDirectives.UnionWith(value ?? throw new ArgumentNullException(nameof(value)));
+            init
+            {
+                if (value is null)
+                {
+                    return;
+                }
+
+                _supportedDirectives.UnionWith(value);
+            }
         }
 
         public override string ToString() => LocalName +

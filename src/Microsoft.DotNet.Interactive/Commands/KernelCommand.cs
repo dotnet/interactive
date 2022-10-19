@@ -22,7 +22,10 @@ public abstract class KernelCommand
         Properties = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
         TargetKernelName = targetKernelName;
         RoutingSlip = new RoutingSlip();
-        Parent = parent;
+        if (parent is {})
+        {
+            Parent = parent;
+        }
     }
 
     [JsonIgnore] 
@@ -34,6 +37,11 @@ public abstract class KernelCommand
         get => _parent;
         internal set
         {
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+            
             _parent = value;
             var currentSlip = RoutingSlip;
             RoutingSlip = new RoutingSlip(_parent?.RoutingSlip);

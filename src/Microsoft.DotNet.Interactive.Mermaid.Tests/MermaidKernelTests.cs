@@ -82,6 +82,34 @@ public class MermaidKernelTests
     }
 
     [Fact]
+    public async Task mermaid_kernel_handles_escaped_strings()
+    {
+        using var kernel = new CompositeKernel
+        {
+            new MermaidKernel()
+        };
+
+        var result = await kernel.SubmitCodeAsync(@"flowchart LR
+    data[(SQL\nQuery Titanic data)] 
+    data --data.frame --> R[R fa:fa-gear \nData cleanup \nand Feature engineering\\n w/ ggplot2, dplyr, tidyverse]
+    R -- ""pandas.DataFrame"" --> Py[py fa:fa-gear \nPredictive Modeling\n w/ pandas, scikit-learn]
+");
+
+        var events = result.KernelEvents.ToSubscribedList();
+
+        var formattedValue = events
+            .OfType<DisplayedValueProduced>()
+            .Single()
+            .FormattedValues.First(fm => fm.MimeType == HtmlFormatter.MimeType);
+
+        formattedValue.Value.Should().Contain(@"flowchart LR
+    data[(SQL\\nQuery Titanic data)] 
+    data --data.frame --> R[R fa:fa-gear \\nData cleanup \\nand Feature engineering\\n w/ ggplot2, dplyr, tidyverse]
+    R -- ""pandas.DataFrame"" --> Py[py fa:fa-gear \\nPredictive Modeling\\n w/ pandas, scikit-learn]");
+
+    }
+
+    [Fact]
     public async Task can_specify_background_color()
     {
         using var kernel = new CompositeKernel
