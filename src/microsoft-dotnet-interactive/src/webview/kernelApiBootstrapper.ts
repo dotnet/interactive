@@ -74,4 +74,6 @@ function configureRequire(interactive: any) {
     }
 }
 
+Logger.default.info(`setting up 'webview' host`);
 configure(window);
+Logger.default.info(`set up 'webview' host complete`);

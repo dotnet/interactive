@@ -1,0 +1,18 @@
+{
+  "token": "the-token",
+  "id": "command-id",
+  "commandType": "SendValue",
+  "command": {
+    "formattedValue": {
+      "mimeType": "text/plain",
+      "value": "formatted value"
+    },
+    "name": "name",
+    "targetKernelName": "fsharp",
+    "originUri": null,
+    "destinationUri": null
+  },
+  "routingSlip": [
+    "kernel://somelocation/kernelName"
+  ]
+}

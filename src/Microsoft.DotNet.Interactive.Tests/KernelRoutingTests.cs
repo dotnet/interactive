@@ -217,7 +217,7 @@ Console.WriteLine(1);";
             });
     }
 
-    [Fact]
+    [Fact(Skip = "this example shows spooky action at a distance")]
     public async Task commands_routing_slip_contains_the_uris_of_parent_command()
     {
         using var compositeKernel = new CompositeKernel
@@ -343,13 +343,13 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
 
         compositeKernel.DefaultKernelName = "fsharp";
 
-        var command = new SubmitCode(@"Console.WriteLine(1);", targetKernelName: "csharp");
+        var command = new SubmitCode(@"123", targetKernelName: "csharp");
 
         var result = await compositeKernel.SendAsync(command);
 
         var events = result.KernelEvents.ToSubscribedList();
 
-        events.Should().ContainSingle<StandardOutputValueProduced>()
+        events.Should().ContainSingle<ReturnValueProduced>()
             .Which
             .RoutingSlip.Should().ContainInOrder(
             new[]

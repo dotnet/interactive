@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
         [Fact]
         public async Task OpenDocument_before_OpenProject_fails()
         {
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
             var result = await kernel.SendAsync(new OpenDocument("Program.cs"));
             var kernelEvents = result.KernelEvents.ToSubscribedList();
             kernelEvents
@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
         [Fact]
         public async Task OpenProject_returns_a_full_list_of_available_project_items()
         {
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
             var result = await kernel.SendAsync(new OpenProject(new Project(new[]
             {
                 new ProjectFile("FileWithOneRegion.cs", @"
@@ -75,7 +75,7 @@ var a = 2;
         [Fact]
         public async Task OpenProject_overrides_previously_loaded_project()
         {
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
             await kernel.SendAsync(new OpenProject(new Project(new[]
             {
                 new ProjectFile("program.cs", @"
@@ -142,7 +142,7 @@ namespace Program {
         [Fact]
         public async Task OpenDocument_with_an_existing_file_path_succeeds()
         {
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
             await kernel.SendAsync(new OpenProject(new Project(new[] { new ProjectFile("Program.cs", "// content") })));
             var result = await kernel.SendAsync(new OpenDocument("Program.cs"));
             var kernelEvents = result.KernelEvents.ToSubscribedList();
@@ -154,7 +154,7 @@ namespace Program {
         [Fact]
         public async Task OpenDocument_with_an_existing_file_path_produces_DocumentOpened_event()
         {
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
             await kernel.SendAsync(new OpenProject(new Project(new[] { new ProjectFile("Program.cs", "// content") })));
             var result = await kernel.SendAsync(new OpenDocument("Program.cs"));
             var kernelEvents = result.KernelEvents.ToSubscribedList();
@@ -166,7 +166,7 @@ namespace Program {
         [Fact]
         public async Task OpenDocument_with_an_existing_file_path_and_region_produces_DocumentOpened_event()
         {
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
             await kernel.SendAsync(new OpenProject(new Project(new[] { new ProjectFile("Program.cs", "#region region-name\n// content\n#endregion") })));
             var result = await kernel.SendAsync(new OpenDocument("Program.cs", "region-name"));
             var kernelEvents = result.KernelEvents.ToSubscribedList();
@@ -178,7 +178,7 @@ namespace Program {
         [Fact]
         public async Task OpenDocument_with_a_non_existing_file_path_succeeds()
         {
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
             await kernel.SendAsync(new OpenProject(new Project(new[] { new ProjectFile("A_file_that_is_not_part_of_the_default_project.cs", "// content") })));
             var result = await kernel.SendAsync(new OpenDocument("File_that_is_not_part_of_the_project.cs"));
             var kernelEvents = result.KernelEvents.ToSubscribedList();
@@ -190,7 +190,7 @@ namespace Program {
         [Fact]
         public async Task OpenDocument_with_a_non_existing_file_path_produces_DocumentOpened_event()
         {
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
             await kernel.SendAsync(new OpenProject(new Project(Array.Empty<ProjectFile>())));
             var result = await kernel.SendAsync(new OpenDocument("File_that_is_not_part_of_the_project.cs"));
             var kernelEvents = result.KernelEvents.ToSubscribedList();
@@ -202,7 +202,7 @@ namespace Program {
         [Fact]
         public async Task OpenDocument_with_a_non_existing_file_path_and_region_fails()
         {
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
             await kernel.SendAsync(new OpenProject(new Project(Array.Empty<ProjectFile>())));
             var result = await kernel.SendAsync(new OpenDocument("File_that_is_not_part_of_the_project.cs", regionName: "test-region"));
             var kernelEvents = result.KernelEvents.ToSubscribedList();
@@ -218,7 +218,7 @@ namespace Program {
         [Fact]
         public async Task OpenDocument_with_path_and_region_name_succeeds()
         {
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
             await kernel.SendAsync(new OpenProject(new Project(new[] { new ProjectFile("Program.cs", @"
 public class Program
 {
@@ -244,7 +244,7 @@ public class Program
         [Fact]
         public async Task OpenDocument_with_region_name_fails_if_region_name_cannot_be_found()
         {
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
             await kernel.SendAsync(new OpenProject(new Project(new[] { new ProjectFile("Program.cs", @"
 public class Program
 {
@@ -268,7 +268,7 @@ public class Program
         [Fact]
         public async Task CompileProject_before_OpenProject_fails()
         {
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
             var result = await kernel.SendAsync(new CompileProject());
             var kernelEvents = result.KernelEvents.ToSubscribedList();
             kernelEvents
@@ -283,7 +283,7 @@ public class Program
         [Fact]
         public async Task CompileProject_before_OpenDocument_fails()
         {
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
             await kernel.SendAsync(new OpenProject(new Project(new[] { new ProjectFile("Program.cs", "// file content") })));
             var result = await kernel.SendAsync(new CompileProject());
             var kernelEvents = result.KernelEvents.ToSubscribedList();
@@ -301,7 +301,7 @@ public class Program
         {
             var markedCode = @"in$$t x = 1;";
             MarkupTestFile.GetLineAndColumn(markedCode, out var code, out var line, out var character);
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
             var result = await kernel.SendAsync(new RequestCompletions(code, new LinePosition(line, character)));
             var kernelEvents = result.KernelEvents.ToSubscribedList();
             kernelEvents
@@ -318,7 +318,7 @@ public class Program
         {
             var markedCode = @"in$$t x = 1;";
             MarkupTestFile.GetLineAndColumn(markedCode, out var code, out var line, out var character);
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
             await kernel.SendAsync(new OpenProject(new Project(new[] { new ProjectFile("Program.cs", "// file content") })));
             var result = await kernel.SendAsync(new RequestCompletions(code, new LinePosition(line, character)));
             var kernelEvents = result.KernelEvents.ToSubscribedList();
@@ -334,7 +334,7 @@ public class Program
         [Fact]
         public async Task CompletionsProduced_is_returned_when_the_entire_file_contents_are_set()
         {
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
             await kernel.SendAsync(new OpenProject(new Project(new[] { new ProjectFile("Program.cs", "// this content will be replaced") })));
             await kernel.SendAsync(new OpenDocument("Program.cs"));
 
@@ -362,7 +362,7 @@ public class Program
         [Fact]
         public async Task CompletionsProduced_is_returned_when_a_region_is_set()
         {
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
             await kernel.SendAsync(new OpenProject(new Project(new[] { new ProjectFile("Program.cs", @"
 public class Program
 {
@@ -392,7 +392,7 @@ public class Program
         [Fact]
         public async Task SignatureHelpProduced_is_returned_when_a_region_is_set()
         {
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
             await kernel.SendAsync(new OpenProject(new Project(new[] { new ProjectFile("Program.cs", @"
 public class Program
 {
@@ -455,7 +455,7 @@ public class Program
         [Fact]
         public async Task SignatureHelpProduced_is_returned_when_no_region_is_set()
         {
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
             await kernel.SendAsync(new OpenProject(new Project(new[] { new ProjectFile("Program.cs", @"// content will be replaced") })));
             await kernel.SendAsync(new OpenDocument("Program.cs"));
 
@@ -517,7 +517,7 @@ public class Program
         [Fact]
         public async Task CompileProject_with_no_region_returns_an_assembly()
         {
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
             await kernel.SendAsync(new OpenProject(new Project(new[] { new ProjectFile("Program.cs", "// this will be wholly replaced") })));
             await kernel.SendAsync(new OpenDocument("Program.cs"));
             await kernel.SendAsync(new SubmitCode(@"
@@ -543,7 +543,7 @@ public class Program
         [Fact]
         public async Task CompileProject_with_a_region_returns_an_assembly()
         {
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
             await kernel.SendAsync(new OpenProject(new Project(new[] { new ProjectFile("Program.cs", @"
 public class Program
 {
@@ -572,7 +572,7 @@ public class Program
         [Fact]
         public async Task CompileProject_produces_diagnostics_and_fails()
         {
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
             await kernel.SendAsync(new OpenProject(new Project(new[] { new ProjectFile("Program.cs", @"
 public class Program
 {
@@ -613,7 +613,7 @@ public class Program
         [Fact]
         public async Task CompileProject_produces_empty_diagnostics_collection_when_it_passes()
         {
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
             await kernel.SendAsync(new OpenProject(new Project(new[] { new ProjectFile("Program.cs", @"
 public class Program
 {
@@ -647,7 +647,7 @@ public class Program
         [Fact]
         public async Task RequestDiagnostics_succeeds_even_with_errors_in_the_code()
         {
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
             await kernel.SendAsync(new OpenProject(new Project(new[] { new ProjectFile("Program.cs", @"
 public class Program
 {
@@ -684,7 +684,7 @@ public class Program
         [Fact]
         public async Task project_files_are_case_insensitive()
         {
-            var kernel = new CSharpProjectKernel("csharp");
+            var kernel = new CSharpProjectKernel();
 
             // the console project defaults to a file named `Program.cs` so by specifying `program.cs` we're
             // effectively adding a duplicate file

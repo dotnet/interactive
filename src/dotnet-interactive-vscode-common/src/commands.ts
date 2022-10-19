@@ -6,7 +6,7 @@ import * as path from 'path';
 import { acquireDotnetInteractive } from './acquisition';
 import { InstallInteractiveArgs, InteractiveLaunchOptions } from './interfaces';
 import { ClientMapper } from './clientMapper';
-import { getEol, isAzureDataStudio, toNotebookDocument } from './vscodeUtilities';
+import { getEol, isAzureDataStudio, isInsidersBuild, toNotebookDocument } from './vscodeUtilities';
 import { DotNetPathManager, KernelIdForJupyter } from './extension';
 import { computeToolInstallArguments, executeSafe, executeSafeAndLog, extensionToDocumentType, getVersionNumber } from './utilities';
 
@@ -101,7 +101,15 @@ export function registerAcquisitionCommands(context: vscode.ExtensionContext, di
     }
 }
 
-function registerLegacyKernelCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
+function getCurrentNotebookDocument(): vscode.NotebookDocument | undefined {
+    if (!vscode.window.activeNotebookEditor) {
+        return undefined;
+    }
+
+    return versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
+}
+
+export function registerLegacyKernelCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.restartCurrentNotebookKernel', async (notebook?: vscode.NotebookDocument | undefined) => {
         vscode.window.showWarningMessage(`The command '.NET Interactive: Restart the current notebook's kernel' is deprecated.  Please use the 'Polyglot Notebook: Restart the current notebook's kernel' command instead.`);
@@ -123,16 +131,20 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
     // TODO: remove this
     registerLegacyKernelCommands(context, clientMapper);
 
+    // azure data studio doesn't support the notebook toolbar
+    if (!isAzureDataStudio(context)) {
+        context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.notebookEditor.restartKernel', async (_notebookEditor) => {
+            await vscode.commands.executeCommand('polyglot-notebook.restartCurrentNotebookKernel');
+        }));
+
+        context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.notebookEditor.openValueViewer', async () => {
+            // vscode creates a command named `<viewId>.focus` for all contributed views, so we need to match the id
+            await vscode.commands.executeCommand('polyglot-notebook-panel-values.focus');
+        }));
+    }
+
     context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.restartCurrentNotebookKernel', async (notebook?: vscode.NotebookDocument | undefined) => {
-        if (!notebook) {
-            if (!vscode.window.activeNotebookEditor) {
-                // no notebook to operate on
-                return;
-            }
-
-            notebook = versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
-        }
-
+        notebook = notebook || getCurrentNotebookDocument();
         if (notebook) {
             // clear the value explorer view
             await vscode.commands.executeCommand('polyglot-notebook.clearValueExplorer');
@@ -147,6 +159,9 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
             await vscode.commands.executeCommand('polyglot-notebook.stopCurrentNotebookKernel', notebook);
             const _client = await clientMapper.getOrAddClient(notebook.uri);
             restartCompletionSource.resolve();
+            if (!isAzureDataStudio(context) && isInsidersBuild()) {
+                await vscode.commands.executeCommand('workbench.notebook.layout.webview.reset', notebook.uri);
+            }
             vscode.window.showInformationMessage('Kernel restarted.');
 
             // notify the ValueExplorer that the kernel has restarted
@@ -155,15 +170,7 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.stopCurrentNotebookKernel', async (notebook?: vscode.NotebookDocument | undefined) => {
-        if (!notebook) {
-            if (!vscode.window.activeNotebookEditor) {
-                // no notebook to operate on
-                return;
-            }
-
-            notebook = versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
-        }
-
+        notebook = notebook || getCurrentNotebookDocument();
         if (notebook) {
             for (const cell of notebook.getCells()) {
                 notebookControllers.endExecution(undefined, cell, false);

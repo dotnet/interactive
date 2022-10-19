@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.TabularData
 
                 IReadOnlyList<IHtmlContent> rows =
                     value.Data
-                         .Select(d => (IHtmlContent)tr(d.Values.Select(v => td(v))))
+                         .Select(d => (IHtmlContent)tr(d.Select(v => td(v.Value))))
                          .ToArray();
 
                 Html.Table(headers, rows).WriteTo(context);
@@ -48,10 +48,11 @@ namespace Microsoft.DotNet.Interactive.Formatting.TabularData
             {
                 var columns = value.Schema.Fields.Select(f => f.Name).ToArray();
 
-                return CsvFormatter<IReadOnlyList<IDictionary<string,object>>>.BuildTable(value.Data, _ => columns,
+                return CsvFormatter<IEnumerable<IEnumerable<KeyValuePair<string, object>>>>.BuildTable(value.Data, _ => columns,
                     rows =>
                     {
-                        return rows.Select(row => columns.Select(c => row[c]));
+                        
+                        return rows.Select(row => columns.Select(c => row.First(rc => rc.Key == c).Value));
                     }, context);
             });
         }

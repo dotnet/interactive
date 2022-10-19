@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive
             };
         }
 
-        public Task HandleAsync(SubmitCode command, KernelInvocationContext context)
+        Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
         {
             var root = (Kernel)ParentKernel ?? this;
 

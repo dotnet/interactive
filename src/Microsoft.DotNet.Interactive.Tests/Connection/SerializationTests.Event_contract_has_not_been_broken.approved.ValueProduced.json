@@ -3,7 +3,7 @@
     "name": "a",
     "formattedValue": {
       "mimeType": "text/html",
-      "value": "\u003Cspan\u003Eformatted value\u003C/span\u003E"
+      "value": "\u003Cspan\u003Eraw value\u003C/span\u003E"
     }
   },
   "eventType": "ValueProduced",

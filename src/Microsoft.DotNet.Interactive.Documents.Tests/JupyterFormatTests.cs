@@ -82,6 +82,19 @@ public class JupyterFormatTests : DocumentFormatTestsBase
     }
 
     [Fact]
+    public void Default_language_can_be_specified_in_metadata()
+    {
+        var originalDoc = new InteractiveDocument().WithJupyterMetadata("fsharp");
+
+        var parsedDoc = Notebook.Parse(originalDoc.ToJupyterJson());
+
+        parsedDoc.GetDefaultKernelName()
+                .Should()
+                .Be("fsharp");
+    }
+
+
+    [Fact]
     public void missing_metadata_defaults_to_csharp_kernel()
     {
         var jupyter = new

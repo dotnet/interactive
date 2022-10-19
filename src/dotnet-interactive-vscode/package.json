@@ -160,7 +160,7 @@
         },
         "polyglot-notebook.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.350401",
+          "default": "1.0.350406",
           "description": "The minimum required version of the .NET Interactive tool."
         },
         "polyglot-notebook.logLevel": {
@@ -258,12 +258,25 @@
         "title": ".NET Interactive: Restart the current notebook's kernel"
       },
       {
+        "command": "polyglot-notebook.notebookEditor.restartKernel",
+        "title": "Restart",
+        "icon": {
+          "light": "resources/light/restart-kernel.svg",
+          "dark": "resources/dark/restart-kernel.svg"
+        }
+      },
+      {
         "command": "dotnet-interactive.stopCurrentNotebookKernel",
         "title": ".NET Interactive: Stop the current notebook's kernel"
       },
       {
         "command": "dotnet-interactive.stopAllNotebookKernels",
         "title": ".NET Interactive: Stop all notebook kernels"
+      },
+      {
+        "command": "polyglot-notebook.notebookEditor.openValueViewer",
+        "title": "Values",
+        "icon": "$(variable-group)"
       }
     ],
     "keybindings": [
@@ -348,6 +361,20 @@
         "configuration": "./syntaxes/kql.language-configuration.json"
       }
     ],
+    "menus": {
+      "notebook/toolbar": [
+        {
+          "command": "polyglot-notebook.notebookEditor.restartKernel",
+          "group": "navigation/execute@1",
+          "when": "notebookKernel =~ /polyglot-notebook/ && isWorkspaceTrusted"
+        },
+        {
+          "command": "polyglot-notebook.notebookEditor.openValueViewer",
+          "group": "navigation@1",
+          "when": "notebookKernel =~ /polyglot-notebook/ && isWorkspaceTrusted"
+        }
+      ]
+    },
     "grammars": [
       {
         "language": "dotnet-interactive",

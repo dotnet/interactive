@@ -38,9 +38,9 @@ public class DataFrameKernelExtensionTests : IDisposable
         var stream = @"id,name,color,deliciousness
 1,apple,green,10
 2,banana,yellow,11
-3,cherry,red,9000".ToStream();
+3,cherry,red,9000";
 
-        var dataFrame = DataFrame.LoadCsv(stream);
+        var dataFrame = DataFrame.LoadCsvFromString(stream);
 
         var formatted = dataFrame.ToDisplayString(TabularDataResourceFormatter.MimeType);
 

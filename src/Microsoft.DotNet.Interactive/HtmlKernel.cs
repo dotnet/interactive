@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive
         {
         }
 
-        public Task HandleAsync(SubmitCode command, KernelInvocationContext context)
+        Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
         {
             context.Display(
                 new HtmlString(command.Code),

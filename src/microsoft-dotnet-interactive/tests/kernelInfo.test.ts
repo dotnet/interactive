@@ -27,7 +27,7 @@ describe("kernelInfo", () => {
             expect(kernelInfos.length).to.equal(2);
             expect(kernelInfos).to.deep.equal([{
                 aliases: ['child1Js'],
-                languageName: 'Javascript',
+                languageName: 'JavaScript',
                 languageVersion: undefined,
                 localName: 'child1',
                 supportedDirectives: [],
@@ -35,11 +35,12 @@ describe("kernelInfo", () => {
                     [{ name: 'RequestKernelInfo' },
                     { name: 'SubmitCode' },
                     { name: 'RequestValueInfos' },
-                    { name: 'RequestValue' }]
+                    { name: 'RequestValue' },
+                    { name: 'SendValue' }]
             },
             {
                 aliases: ['child2Js'],
-                languageName: 'Javascript',
+                languageName: 'JavaScript',
                 languageVersion: undefined,
                 localName: 'child2',
                 supportedDirectives: [],
@@ -47,7 +48,8 @@ describe("kernelInfo", () => {
                     [{ name: 'RequestKernelInfo' },
                     { name: 'SubmitCode' },
                     { name: 'RequestValueInfos' },
-                    { name: 'RequestValue' }]
+                    { name: 'RequestValue' },
+                    { name: 'SendValue' }]
             }]);
         });
 
@@ -86,17 +88,16 @@ describe("kernelInfo", () => {
                     kernelInfo:
                     {
                         aliases: ['child1Js'],
-                        languageName: 'Javascript',
+                        languageName: 'JavaScript',
                         languageVersion: undefined,
                         localName: 'child1',
                         supportedDirectives: [],
                         supportedKernelCommands:
-                            [
-                                { name: 'RequestKernelInfo' },
-                                { name: 'SubmitCode' },
-                                { name: 'RequestValueInfos' },
-                                { name: 'RequestValue' }
-                            ]
+                            [{ name: 'RequestKernelInfo' },
+                            { name: 'SubmitCode' },
+                            { name: 'RequestValueInfos' },
+                            { name: 'RequestValue' },
+                            { name: 'SendValue' }]
                     }
                 },
                 eventType: 'KernelInfoProduced'
@@ -289,7 +290,8 @@ describe("kernelInfo", () => {
                     { name: 'RequestKernelInfo' },
                     { name: 'SubmitCode' },
                     { name: 'RequestValueInfos' },
-                    { name: 'RequestValue' }
+                    { name: 'RequestValue' },
+                    { name: 'SendValue' }
                 ]);
         });
 
@@ -301,7 +303,7 @@ describe("kernelInfo", () => {
             await kernel.send({ commandType: contracts.RequestKernelInfoType, command: {} });
             sub.dispose();
             const kernelInfoProduced = <contracts.KernelInfoProduced>events.find(e => e.eventType === contracts.KernelInfoProducedType)?.event;
-            expect(kernelInfoProduced?.kernelInfo.languageName).to.equal("Javascript");
+            expect(kernelInfoProduced?.kernelInfo.languageName).to.equal("JavaScript");
 
         });
 
@@ -332,6 +334,7 @@ describe("kernelInfo", () => {
                 { name: 'SubmitCode' },
                 { name: 'RequestValueInfos' },
                 { name: 'RequestValue' },
+                { name: 'SendValue' },
                 { name: 'TestCommand1' },
                 { name: 'TestCommand2' },
                 { name: 'TestCommand3' }]);

@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -83,9 +83,9 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
                         await startHostTask.ConfigureAwait(false);
 
                         var httpClient = HttpClientFormatter.CreateEnhancedHttpClient(interactiveHost.Address, interactiveLoggerProvider);
-                        await kernel.SetValueAsync<IApplicationBuilder>("App", interactiveHost.App).ConfigureAwait(false);
-                        await kernel.SetValueAsync<IEndpointRouteBuilder>("Endpoints", interactiveHost.Endpoints).ConfigureAwait(false);
-                        await kernel.SetValueAsync<HttpClient>("HttpClient", httpClient).ConfigureAwait(false);
+                        await kernel.SetValueAsync("App", interactiveHost.App, typeof(IApplicationBuilder)).ConfigureAwait(false);
+                        await kernel.SetValueAsync("Endpoints", interactiveHost.Endpoints, typeof(IEndpointRouteBuilder)).ConfigureAwait(false);
+                        await kernel.SetValueAsync("HttpClient", httpClient, typeof(HttpClient)).ConfigureAwait(false);
                     }
                 })
             };

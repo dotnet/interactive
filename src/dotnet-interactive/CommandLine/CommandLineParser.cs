@@ -356,7 +356,7 @@ public static class CommandLineParser
                         else
                         {
                             kernel.Add(
-                                new JavaScriptKernel(clientSideKernelClient),
+                                new JavaScriptKernel(clientSideKernelClient).UseValueSharing(),
                                 new[] { "js" });
                         }
 

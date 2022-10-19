@@ -17,7 +17,8 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
-    public class CancelCommandTests : LanguageKernelTestBase
+#pragma warning disable xUnit1000
+    internal class CancelCommandTests : LanguageKernelTestBase
     {
         public CancelCommandTests(ITestOutputHelper output) : base(output)
         {
@@ -60,7 +61,7 @@ while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested
 
                 var commandToCancel = new SubmitCode(@"
 using Microsoft.DotNet.Interactive;
-
+await Task.Delay(10);
 while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested){ await Task.Delay(10); }",
                                                      targetKernelName: "csharp");
                 var followingCommand = new SubmitCode("1");
