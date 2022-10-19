@@ -153,12 +153,12 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                                         RowsStartIndex = 0,
                                         RowsCount = Convert.ToInt32(resultSummary.RowCount)
                                     };
+                                    
                                     var subsetResult = await ServiceClient.ExecuteQueryExecuteSubsetAsync(subsetParams, context.CancellationToken);
-                                    var tables = GetEnumerableTables(resultSummary.ColumnInfo, subsetResult.ResultSubset.Rows);
+                                    var tabularDataResources = GetTabularDataResources(resultSummary.ColumnInfo, subsetResult.ResultSubset.Rows);
 
-                                    foreach (var table in tables)
+                                    foreach (var tabularDataResource in tabularDataResources)
                                     {
-                                        var tabularDataResource = table.ToTabularDataResource();
                                         // Store each result set in the list of result sets being saved
 
                                         results.Add(tabularDataResource);
@@ -245,17 +245,27 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         }
 
-
-        private static IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> GetEnumerableTables(ColumnInfo[] columnInfos, CellValue[][] rows)
+        private static IEnumerable<TabularDataResource> GetTabularDataResources(ColumnInfo[] columnInfos, CellValue[][] rows)
         {
-            var displayTable = new List<(string, object)[]>();
+            var schema = new TableSchema();
+            var dataRows = new List<Dictionary<string,object>>();
             var columnNames = columnInfos.Select(info => info.ColumnName).ToArray();
 
             SqlKernelUtils.AliasDuplicateColumnNames(columnNames);
 
-            foreach (CellValue[] row in rows)
+            foreach (var columnInfo in columnInfos)
             {
-                var displayRow = new (string, object)[row.Length];
+                var expectedType = Type.GetType(columnInfo.DataType);
+                schema.Fields.Add(new TableSchemaFieldDescriptor(columnInfo.ColumnName, expectedType.ToTableSchemaFieldType()));
+                if (columnInfo.IsKey == true)
+                {
+                    schema.PrimaryKey.Add(columnInfo.ColumnName);
+                }
+            }
+            
+            foreach (var row in rows)
+            {
+                var dataRow = new Dictionary<string, object>();
 
                 for (var colIndex = 0; colIndex < row.Length; colIndex++)
                 {
@@ -269,19 +279,22 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
                         if (TypeDescriptor.GetConverter(expectedType) is { } typeConverter)
                         {
-                            if (typeConverter.CanConvertFrom(typeof(string)))
+                            if (!row[colIndex].IsNull)
                             {
-                                // TODO:fix handling target boolean type when the column is bit type with numeric value
-                                if ((expectedType == typeof(bool) || expectedType == typeof(bool?)) &&
+                                if (typeConverter.CanConvertFrom(typeof(string)))
+                                {
+                                    // TODO:fix handling target boolean type when the column is bit type with numeric value
+                                    if ((expectedType == typeof(bool) || expectedType == typeof(bool?)) &&
 
-                                    decimal.TryParse(row[colIndex].DisplayValue, out var numericValue))
-                                {
-                                    convertedValue = numericValue != 0;
-                                }
-                                else
-                                {
-                                    convertedValue =
-                                        typeConverter.ConvertFromInvariantString(row[colIndex].DisplayValue);
+                                        decimal.TryParse(row[colIndex].DisplayValue, out var numericValue))
+                                    {
+                                        convertedValue = numericValue != 0;
+                                    }
+                                    else
+                                    {
+                                        convertedValue =
+                                            typeConverter.ConvertFromInvariantString(row[colIndex].DisplayValue);
+                                    }
                                 }
                             }
                         }
@@ -290,14 +303,14 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                     {
                         convertedValue = row[colIndex].DisplayValue;
                     }
-
-                    displayRow[colIndex] = (columnNames[colIndex], convertedValue);
+                    
+                    dataRow.Add(columnNames[colIndex], convertedValue);
                 }
-
-                displayTable.Add(displayRow);
+                
+                dataRows.Add(dataRow);
             }
 
-            yield return displayTable;
+            yield return new TabularDataResource(schema, dataRows);
         }
 
         public async Task HandleAsync(RequestCompletions command, KernelInvocationContext context)
