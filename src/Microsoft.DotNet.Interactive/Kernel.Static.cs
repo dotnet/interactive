@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Interactive
         /// <returns>The user input value.</returns>
         public static async Task<string> GetInputAsync(string prompt = "", string typeHint = "text")
         {
-            return await GetInputAsync(prompt, false);
+            return await GetInputAsync(prompt, false, typeHint);
         }
         
         public static async Task<string> GetPasswordAsync(string prompt = "")
@@ -48,9 +48,12 @@ namespace Microsoft.DotNet.Interactive
             return await GetInputAsync(prompt, true);
         }
 
-        private static async Task<string> GetInputAsync(string prompt, bool isPassword)
+        private static async Task<string> GetInputAsync(string prompt, bool isPassword, string typeHint = "text")
         {
-            var command = new RequestInput(prompt, isPassword ? "password" : default);
+            var command = new RequestInput(
+                prompt, 
+                isPassword ? "password" : default,
+                inputTypeHint: typeHint);
 
             var results = await Root.SendAsync(command, CancellationToken.None);
 
