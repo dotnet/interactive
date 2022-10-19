@@ -42,7 +42,7 @@ internal class CommValueAdapter : IValueAdapter
         _disposables.Dispose();
     }
 
-    public async Task HandleCommandAsync(SetValue command, ICommandExecutionContext context, CancellationToken token)
+    public async Task HandleCommandAsync(SendValue command, ICommandExecutionContext context, CancellationToken token)
     {
         if (FailIfAgentIsClosed(command, context))
         {
@@ -57,9 +57,9 @@ internal class CommValueAdapter : IValueAdapter
 
         try
         {
-            if (variableValue is IReadOnlyList<TabularDataResource> tables)
+            if (variableValue is IEnumerable<TabularDataResource> tables)
             {
-                int tableCount = tables.Count;
+                int tableCount = tables.Count();
                 int tableIndex = 0;
                 foreach (var table in tables)
                 {
