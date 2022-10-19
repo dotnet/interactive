@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.TabularData
     public class TabularDataResource
     {
         public TabularDataResource(
-            TableSchema schema, IReadOnlyList<IDictionary<string, object>> data)
+            TableSchema schema, IEnumerable<IEnumerable<KeyValuePair<string, object>>> data)
         {
             Profile = "tabular-data-resource";
             Schema = schema ?? throw new ArgumentNullException(nameof(schema));
@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.TabularData
 
         public TableSchema Schema { get; }
 
-        public IReadOnlyList<IDictionary<string, object>> Data { get; }
+        public IEnumerable<IEnumerable<KeyValuePair<string, object>>> Data { get; }
 
         public TabularDataResourceJsonString ToJsonString()
         {

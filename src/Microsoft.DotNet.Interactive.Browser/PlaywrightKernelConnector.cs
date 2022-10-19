@@ -103,7 +103,7 @@ public class PlaywrightKernelConnector : IKernelConnector
                         "image/jpeg" => await CaptureImageAsync(page, selector, ScreenshotType.Jpeg),
                         "image/png" => await CaptureImageAsync(page, selector, ScreenshotType.Png),
                         PlainTextFormatter.MimeType => await page.InnerTextAsync(selector),
-                        _ => await page.InnerHTMLAsync(selector)
+                        _ => await page.InnerHTMLAsync(selector),
                     };
 
                     context.Publish(
@@ -117,7 +117,11 @@ public class PlaywrightKernelConnector : IKernelConnector
                 break;
 
             case "javascript":
-
+                proxy.KernelInfo.SupportedKernelCommands.Add(new(nameof(SubmitCode)));
+                proxy.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValue)));
+                proxy.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValueInfos)));
+                proxy.KernelInfo.SupportedKernelCommands.Add(new(nameof(SendValue)));
+                proxy.UseValueSharing();
                 break;
         }
 

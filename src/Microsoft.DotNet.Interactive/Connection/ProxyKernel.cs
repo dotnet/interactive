@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.ValueSharing;
 
 namespace Microsoft.DotNet.Interactive.Connection;
 
@@ -22,7 +21,6 @@ public sealed class ProxyKernel : Kernel
     private readonly Dictionary<string, (KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<KernelEvent> completionSource, KernelInvocationContext
         invocationContext)> _inflight = new();
 
-    private IKernelValueDeclarer _valueDeclarer;
     private readonly Uri _remoteUri;
 
     public ProxyKernel(
@@ -159,11 +157,11 @@ public sealed class ProxyKernel : Kernel
         {
             return base.HandleAsync(command, context);
         }
-        
+
         return HandleByForwardingToRemoteAsync(command, context);
     }
 
-    public override Task HandleAsync(RequestKernelInfo command, KernelInvocationContext context) =>
+    private protected override Task HandleRequestKernelInfoAsync(RequestKernelInfo command, KernelInvocationContext context) =>
         // override the default handler on Kernel and forward the command instead
         HandleByForwardingToRemoteAsync(command, context);
 
@@ -250,11 +248,4 @@ public sealed class ProxyKernel : Kernel
 
         return commandOriginUri is null;
     }
-
-    internal IKernelValueDeclarer ValueDeclarer
-    {
-        set => _valueDeclarer = value;
-    }
-
-    internal override IKernelValueDeclarer GetValueDeclarer() => _valueDeclarer ?? KernelValueDeclarer.Default;
 }

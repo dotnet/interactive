@@ -14,6 +14,8 @@ using Pocket.For.Xunit;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Png;
+
+using Xunit;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Browser.Tests;
@@ -30,12 +32,12 @@ public class HtmlKernelTests : IDisposable
 
     public void Dispose() => _disposables.Dispose();
 
-    [FactSkipLinux]
+    [FactSkipLinux("Requires Playwright installed")]
     public async Task It_can_share_the_underlying_Playwright_page_object()
     {
         using var kernel = await CreateHtmlProxyKernelAsync();
 
-        var result = await kernel.SendAsync(new RequestValue("*", "text/html"));
+        var result = await kernel.SendAsync(new RequestValue("*"));
 
         var events = result.KernelEvents.ToSubscribedList();
 
@@ -48,7 +50,7 @@ public class HtmlKernelTests : IDisposable
             .BeAssignableTo<ILocator>();
     }
 
-    [FactSkipLinux]
+    [FactSkipLinux("Requires Playwright installed")]
     public async Task It_can_share_the_underlying_page_HTML()
     {
         using var kernel = await CreateHtmlProxyKernelAsync();
@@ -70,7 +72,7 @@ public class HtmlKernelTests : IDisposable
             .Contain("<div>hello</div>");
     }
 
-    [FactSkipLinux]
+    [FactSkipLinux("Requires Playwright installed")]
     public async Task It_can_share_the_underlying_page_content()
     {
         using var kernel = await CreateHtmlProxyKernelAsync();
@@ -92,7 +94,7 @@ public class HtmlKernelTests : IDisposable
             .Be("hello");
     }
 
-    [FactSkipLinux]
+    [FactSkipLinux("Requires Playwright installed")]
     public async Task It_can_capture_a_PNG_using_a_selector()
     {
         using var kernel = await CreateHtmlProxyKernelAsync();
@@ -119,7 +121,7 @@ public class HtmlKernelTests : IDisposable
              .NotThrow();
     }
 
-    [FactSkipLinux]
+    [FactSkipLinux("Requires Playwright installed")]
     public async Task It_can_capture_a_Jpeg_using_a_selector()
     {
         using var kernel = await CreateHtmlProxyKernelAsync();
@@ -146,7 +148,7 @@ public class HtmlKernelTests : IDisposable
              .NotThrow();
     }
 
-    [FactSkipLinux]
+    [FactSkipLinux("Requires Playwright installed")]
     public async Task It_has_shareable_values()
     {
         using var kernel = await CreateHtmlProxyKernelAsync();
@@ -164,7 +166,7 @@ public class HtmlKernelTests : IDisposable
             .ContainSingle(i => i.Name == ":root");
     }
 
-    [FactSkipLinux]
+    [FactSkipLinux("Requires Playwright installed")]
     public async Task HTML_kernel_can_see_DOM_changes_made_by_JavaScript_kernel()
     {
         var connector = new PlaywrightKernelConnector(!Debugger.IsAttached);
@@ -187,7 +189,7 @@ public class HtmlKernelTests : IDisposable
             .Contain("<div>howdy</div>");
     }
 
-    [FactSkipLinux]
+    [FactSkipLinux("Requires Playwright installed")]
     public async Task JavaScript_kernel_can_see_DOM_changes_made_by_HTML_kernel()
     {
         var connector = new PlaywrightKernelConnector(!Debugger.IsAttached);

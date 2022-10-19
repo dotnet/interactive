@@ -140,6 +140,20 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         }
 
         [Fact]
+        public void can_generate_tabular_json_from_data_with_nullable_types()
+        {
+            var data = new Dictionary<string, int?>
+            {
+                ["one"] = 1,
+                ["two"] = null
+            };
+
+            var formattedData = data.ToDisplayString(TabularDataResourceFormatter.MimeType);
+
+            this.Assent(formattedData, _configuration);
+        }
+
+        [Fact]
         public void Tabular_data_resource_with_is_formatted_as_a_table()
         {
             var tabularDataResource = JsonDocument.Parse(@"

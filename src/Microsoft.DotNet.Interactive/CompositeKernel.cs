@@ -231,7 +231,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public override async Task HandleAsync(
+        private protected override async Task HandleRequestKernelInfoAsync(
             RequestKernelInfo command,
             KernelInvocationContext context)
         {

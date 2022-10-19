@@ -23,6 +23,7 @@ export const RequestSignatureHelpType = "RequestSignatureHelp";
 export const RequestValueType = "RequestValue";
 export const RequestValueInfosType = "RequestValueInfos";
 export const SendEditableCodeType = "SendEditableCode";
+export const SendValueType = "SendValue";
 export const SubmitCodeType = "SubmitCode";
 export const UpdateDisplayedValueType = "UpdateDisplayedValue";
 
@@ -45,6 +46,7 @@ export type KernelCommandType =
     | typeof RequestValueType
     | typeof RequestValueInfosType
     | typeof SendEditableCodeType
+    | typeof SendValueType
     | typeof SubmitCodeType
     | typeof UpdateDisplayedValueType;
 
@@ -128,6 +130,11 @@ export interface RequestValueInfos extends KernelCommand {
 export interface SendEditableCode extends KernelCommand {
     language: string;
     code: string;
+}
+
+export interface SendValue extends KernelCommand {
+    formattedValue: FormattedValue;
+    name: string;
 }
 
 export interface SubmitCode extends KernelCommand {

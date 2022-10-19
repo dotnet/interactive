@@ -31,9 +31,6 @@ namespace Microsoft.DotNet.Interactive.Documents
 
         public string? KernelName { get; set; }
 
-        // FIX: (InteractiveDocumentElement) add this back
-       //  public string? Language { get; set; }
-
         public string Contents { get; set; }
 
         public List<InteractiveDocumentOutputElement> Outputs { get; } = new();

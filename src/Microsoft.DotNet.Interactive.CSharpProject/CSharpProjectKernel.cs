@@ -15,7 +15,15 @@ using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject;
 
-public class CSharpProjectKernel : Kernel
+public class CSharpProjectKernel :
+    Kernel,
+    IKernelCommandHandler<OpenProject>,
+    IKernelCommandHandler<OpenDocument>,
+    IKernelCommandHandler<CompileProject>,
+    IKernelCommandHandler<RequestCompletions>,
+    IKernelCommandHandler<RequestDiagnostics>,
+    IKernelCommandHandler<RequestSignatureHelp>,
+    IKernelCommandHandler<SubmitCode>
 {
     private RoslynWorkspaceServer _workspaceServer;
     private Workspace _workspace;
@@ -26,15 +34,15 @@ public class CSharpProjectKernel : Kernel
         // register commands and event with serialization
 
         var commandTypes = typeof(CSharpProjectKernel).Assembly.ExportedTypes
-            .Where(t => !t.IsAbstract && !t.IsInterface)
-            .Where(t => typeof(KernelCommand).IsAssignableFrom(t))
-            .OrderBy(t => t.Name)
-            .ToList();
+                                                      .Where(t => !t.IsAbstract && !t.IsInterface)
+                                                      .Where(t => typeof(KernelCommand).IsAssignableFrom(t))
+                                                      .OrderBy(t => t.Name)
+                                                      .ToList();
         var eventTypes = typeof(CSharpProjectKernel).Assembly.ExportedTypes
-            .Where(t => !t.IsAbstract && !t.IsInterface)
-            .Where(t => typeof(KernelEvent).IsAssignableFrom(t))
-            .OrderBy(t => t.Name)
-            .ToList();
+                                                    .Where(t => !t.IsAbstract && !t.IsInterface)
+                                                    .Where(t => typeof(KernelEvent).IsAssignableFrom(t))
+                                                    .OrderBy(t => t.Name)
+                                                    .ToList();
 
         foreach (var commandType in commandTypes)
         {
@@ -47,19 +55,11 @@ public class CSharpProjectKernel : Kernel
         }
     }
 
-    public CSharpProjectKernel(string name)
-        : base(name, "C#")
+    public CSharpProjectKernel(string name = "csharp") : base(name, "C#")
     {
-        RegisterCommandHandler<OpenProject>(HandleAsync);
-        RegisterCommandHandler<OpenDocument>(HandleAsync);
-        RegisterCommandHandler<CompileProject>(HandleAsync);
-        RegisterCommandHandler<RequestCompletions>(HandleAsync);
-        RegisterCommandHandler<RequestDiagnostics>(HandleAsync);
-        RegisterCommandHandler<RequestSignatureHelp>(HandleAsync);
-        RegisterCommandHandler<SubmitCode>(HandleAsync);
     }
 
-    public async Task HandleAsync(OpenProject command, KernelInvocationContext context)
+    async Task IKernelCommandHandler<OpenProject>.HandleAsync(OpenProject command, KernelInvocationContext context)
     {
         _workspaceServer = new RoslynWorkspaceServer(CreateConsoleWorkspacePackage);
 
@@ -74,7 +74,7 @@ public class CSharpProjectKernel : Kernel
             .ToList()));
     }
 
-    public async Task HandleAsync(OpenDocument command, KernelInvocationContext context)
+    async Task IKernelCommandHandler<OpenDocument>.HandleAsync(OpenDocument command, KernelInvocationContext context)
     {
         ThrowIfProjectIsNotOpened();
 
@@ -115,7 +115,7 @@ public class CSharpProjectKernel : Kernel
         context.Publish(new DocumentOpened(command, command.RelativeFilePath, command.RegionName, _buffer.Content));
     }
 
-    public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
+    async Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
     {
         ThrowIfProjectIsNotOpened();
         ThrowIfDocumentIsNotOpened();
@@ -125,7 +125,7 @@ public class CSharpProjectKernel : Kernel
         _workspace = updatedWorkspace;
     }
 
-    public async Task HandleAsync(CompileProject command, KernelInvocationContext context)
+    async Task IKernelCommandHandler<CompileProject>.HandleAsync(CompileProject command, KernelInvocationContext context)
     {
         ThrowIfProjectIsNotOpened();
         ThrowIfDocumentIsNotOpened();
@@ -144,7 +144,7 @@ public class CSharpProjectKernel : Kernel
         context.Publish(new AssemblyProduced(command, new Base64EncodedAssembly(result.Base64Assembly)));
     }
 
-    public async Task HandleAsync(RequestCompletions command, KernelInvocationContext context)
+    async Task IKernelCommandHandler<RequestCompletions>.HandleAsync(RequestCompletions command, KernelInvocationContext context)
     {
         ThrowIfProjectIsNotOpened();
         ThrowIfDocumentIsNotOpened();
@@ -164,7 +164,7 @@ public class CSharpProjectKernel : Kernel
         context.Publish(new CompletionsProduced(completionItems, command));
     }
 
-    public async Task HandleAsync(RequestDiagnostics command, KernelInvocationContext context)
+    async Task IKernelCommandHandler<RequestDiagnostics>.HandleAsync(RequestDiagnostics command, KernelInvocationContext context)
     {
         ThrowIfProjectIsNotOpened();
         ThrowIfDocumentIsNotOpened();
@@ -177,7 +177,7 @@ public class CSharpProjectKernel : Kernel
         context.Publish(new DiagnosticsProduced(diagnostics, command));
     }
 
-    public async Task HandleAsync(RequestSignatureHelp command, KernelInvocationContext context)
+    async Task IKernelCommandHandler<RequestSignatureHelp>.HandleAsync(RequestSignatureHelp command, KernelInvocationContext context)
     {
         ThrowIfProjectIsNotOpened();
         ThrowIfDocumentIsNotOpened();
