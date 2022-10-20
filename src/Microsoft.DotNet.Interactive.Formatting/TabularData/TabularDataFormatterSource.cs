@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.TabularData
 
             yield return new JsonFormatter<TabularDataResource>((value, context) =>
             {
-                var json = JsonSerializer.Serialize(value.Data, TabularDataResourceFormatter.JsonSerializerOptions);
+                var json = JsonSerializer.Serialize(value, TabularDataResourceFormatter.JsonSerializerOptions);
 
                 context.Writer.Write(json);
             });
