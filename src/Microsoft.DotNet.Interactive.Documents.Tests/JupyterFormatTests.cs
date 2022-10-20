@@ -81,18 +81,21 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 });
     }
 
-    [Fact]
-    public void Default_language_can_be_specified_in_metadata()
+    [Theory]
+    [InlineData("C#", "csharp")]
+    [InlineData("F#", "fsharp")]
+    [InlineData("f#", "fsharp")]
+    [InlineData("PowerShell", "powershell")]
+    public void Metadata_default_kernel_name_is_based_on_specified_language(string languageName, string kernelName)
     {
-        var originalDoc = new InteractiveDocument().WithJupyterMetadata("fsharp");
+        var originalDoc = new InteractiveDocument().WithJupyterMetadata(languageName);
 
         var parsedDoc = Notebook.Parse(originalDoc.ToJupyterJson());
 
         parsedDoc.GetDefaultKernelName()
-                .Should()
-                .Be("fsharp");
+                 .Should()
+                 .Be(kernelName);
     }
-
 
     [Fact]
     public void missing_metadata_defaults_to_csharp_kernel()
@@ -983,6 +986,14 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                     name = "C#",
                     pygments_lexer = "csharp",
                     version = "10.0"
+                },
+                dotnet_interactive = new
+                {
+                    defaultKernelName = "csharp",
+                    items = new object[]
+                    {
+                        new { name = "csharp" }
+                    }
                 }
             })));
         jupyter["nbformat"]

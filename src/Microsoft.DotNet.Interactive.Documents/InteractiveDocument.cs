@@ -226,6 +226,24 @@ public class InteractiveDocument : IEnumerable
                 return true;
             }
 
+            if (metadata.TryGetValue("dotnet_interactive", out var dotnetInteractiveObj))
+            {
+                if (dotnetInteractiveObj is IDictionary<string, object> dotnetInteractiveDict)
+                {
+                    kernelInfo = new();
+
+                    if (dotnetInteractiveDict.TryGetValue("defaultKernelName", out var nameObj) &&
+                        nameObj is string name)
+                    {
+                        kernelInfo.DefaultKernelName = name;
+                    }
+
+                    return true;
+
+                    // FIX: (TryGetKernelInfoFromMetadata) add items
+                }
+            }
+
             // check for .ipynb / Jupyter metadata
             if (metadata.TryGetValue("kernelspec", out var kernelspecObj))
             {
@@ -242,7 +260,6 @@ public class InteractiveDocument : IEnumerable
                     }
                 }
             }
-            
         }
 
         // check if a KernelInfoCollection was directly serialized into the metadata
