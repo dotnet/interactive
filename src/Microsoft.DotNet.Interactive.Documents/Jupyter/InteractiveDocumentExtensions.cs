@@ -13,32 +13,37 @@ public static class InteractiveDocumentExtensions
         this InteractiveDocument document,
         string language = "C#")
     {
-        var (moniker, langVersion, fileExtension) =
-            language switch
+        var (kernelName, canonicalLanguageName, langVersion, fileExtension) =
+            language.ToLowerInvariant() switch
             {
-                "C#" or "csharp" => ("csharp", "10.0", ".cs"),
-                "F#" or "fsharp" => ("fsharp", "6.0", ".fs"),
-                "PowerShell" or "pwsh" => ("powershell", "7.0", ".ps1"),
+                "c#" or "csharp" => ("csharp","C#", "10.0", ".cs"),
+                "f#" or "fsharp" => ("fsharp","F#", "6.0", ".fs"),
+                "powershell" or "pwsh" => ("powershell", "PowerShell", "7.0", ".ps1"),
                 _ => throw new ArgumentException($"Unrecognized language: {language}") 
             };
 
         document.Metadata.GetOrAdd("kernelspec", _ => new Dictionary<string, object>())
                 .MergeWith(new Dictionary<string, object>
                 {
-                    ["display_name"] = $".NET ({language})",
-                    ["language"] = language,
-                    ["name"] = $".net-{moniker}"
+                    ["display_name"] = $".NET ({canonicalLanguageName})",
+                    ["language"] = canonicalLanguageName,
+                    ["name"] = $".net-{kernelName}"
                 });
 
         document.Metadata.GetOrAdd("language_info", _ => new Dictionary<string, object>())
                 .MergeWith(new Dictionary<string, object>
                 {
                     ["file_extension"] = fileExtension,
-                    ["mimetype"] = $"text/x-{moniker}",
-                    ["name"] = language,
-                    ["pygments_lexer"] = moniker,
+                    ["mimetype"] = $"text/x-{kernelName}",
+                    ["name"] = canonicalLanguageName,
+                    ["pygments_lexer"] = kernelName,
                     ["version"] = langVersion
                 });
+
+        var kernelInfos = document.Metadata.GetOrAdd("dotnet_interactive", _ => new KernelInfoCollection());
+
+        kernelInfos.DefaultKernelName = kernelName;
+        kernelInfos.Add(new(kernelName));
 
         return document;
     }
