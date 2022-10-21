@@ -89,11 +89,11 @@ class __ValueAdapterCommTarget:
         
         resultValue = var_value
         if (var_type == 'application/table-schema+json'):
+            import json; resultValue = json.loads(var_value)
             try:
-                import pandas as pd; resultValue = pd.DataFrame(data=var_value['Data'])
+                import pandas as pd; resultValue = pd.DataFrame(data=resultValue['data'])
             except Exception as e:
                 cls.__debugLog('__commDebug.dataframe.error', e)
-                import json; resultValue = json.loads(var_value)
         elif (var_type == 'application/json'):
             import json; resultValue = json.loads(var_value)
         else:

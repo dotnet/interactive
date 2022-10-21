@@ -15,6 +15,7 @@ library(jsonlite);
 
 .value_adapter_comm_env$value_adapter_connect_to_comm <- function(comm, data) {
     comm$on_msg(function(.msg) {
+        # assign('debug.onmsg', .msg, globalenv());
         if (.msg$type == 'request') {
             .command <- .msg$command;
 
@@ -31,7 +32,8 @@ library(jsonlite);
                 resultVal <- varInfo$value;
 
                 if (varInfo$type == 'application/table-schema+json') {
-                    resultVal <- data.frame(varInfo$value$Data);
+                    .resultValTable <- fromJSON(varInfo$value);
+                    resultVal <- data.frame(.resultValTable$data);
                 } else if (varInfo$type == 'application/json') {
                     resultVal <- fromJSON(varInfo$value);
                 };

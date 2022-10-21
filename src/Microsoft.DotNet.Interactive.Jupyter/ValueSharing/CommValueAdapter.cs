@@ -64,18 +64,24 @@ internal class CommValueAdapter : IValueAdapter
                 foreach (var table in tables)
                 {
                     var variableIndex = tableCount > 1 ? (++tableIndex).ToString() : String.Empty;
-                    var response = await SetVariableAsync(seq, $"{variableName}{variableIndex}", table, TabularDataResourceFormatter.MimeType, token);
+                    var response = await SetVariableAsync(
+                        seq,
+                        $"{variableName}{variableIndex}",
+                        JsonSerializer.Serialize(table, TabularDataResourceFormatter.JsonSerializerOptions),
+                        TabularDataResourceFormatter.MimeType,
+                        token);
                     success = response is not null && response.Success;
                 }
             }
-            else if (variableValue is TabularDataResource table)
-            {
-                var response = await SetVariableAsync(seq, variableName, table, TabularDataResourceFormatter.MimeType, token);
-                success = response is not null && response.Success;
-            }
             else
             {
-                var response = await SetVariableAsync(seq, variableName, command.FormattedValue.Value, command.FormattedValue.MimeType, token);
+                var formattedValue = (variableValue is TabularDataResource table) ?
+                    new FormattedValue(
+                        TabularDataResourceFormatter.MimeType,
+                        JsonSerializer.Serialize(table, TabularDataResourceFormatter.JsonSerializerOptions)) 
+                    : command.FormattedValue;
+
+                var response = await SetVariableAsync(seq, variableName, formattedValue.Value, formattedValue.MimeType, token);
                 success = response is not null && response.Success;
             }
         }
