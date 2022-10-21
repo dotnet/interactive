@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Microsoft.DotNet.Interactive.CSharpProject\%28Recipes%29\AsyncLazy{T}.cs" Link="Utility\AsyncLazy{T}.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Jupyter\(Recipes)\BareObjectConverter.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Jupyter\(Recipes)\JsonSerializationExtensions.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\InvocationContextExtensions.cs" Link="Utility\InvocationContextExtensions.cs" />
