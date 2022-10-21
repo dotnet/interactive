@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var kernel = CreateKernel(language);
             var provider = new FileProvider(kernel, typeof(Program).Assembly);
 
-            var extensionPackage = KernelExtensionTestHelper.GetOrCreateSimpleExtension();
+            var extensionPackage = await KernelExtensionTestHelper.GetSimpleExtensionAsync();
 
             await kernel.SubmitCodeAsync($@"
 #i ""nuget:{extensionPackage.PackageLocation}""
@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var kernel = CreateKernel(language);
             var provider = new FileProvider(kernel, typeof(Program).Assembly);
 
-            var extensionPackage = KernelExtensionTestHelper.GetOrCreateFileProviderExtension();
+            var extensionPackage = await KernelExtensionTestHelper.GetFileProviderExtensionAsync();
 
             await kernel.SubmitCodeAsync($@"
 #i ""nuget:{extensionPackage.PackageLocation}""

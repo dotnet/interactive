@@ -354,7 +354,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
             var server = await GetServer();
             var kernel = server.Kernel;
 
-            var extensionPackage = KernelExtensionTestHelper.GetOrCreateFileProviderExtension();
+            var extensionPackage = await KernelExtensionTestHelper.GetFileProviderExtensionAsync();
 
             await kernel.SubmitCodeAsync($@"#i ""nuget:{extensionPackage.PackageLocation}""
 #r ""nuget:{extensionPackage.Name},{extensionPackage.Version}""");

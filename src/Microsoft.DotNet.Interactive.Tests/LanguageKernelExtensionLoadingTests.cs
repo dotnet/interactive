@@ -1,19 +1,13 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.CommandLine;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Tests.Parsing;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Microsoft.Extensions.Hosting;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -96,7 +90,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         public async Task It_loads_extensions_found_in_nuget_packages(Language language)
         {
 
-            var extensionPackage = KernelExtensionTestHelper.GetOrCreateSimpleExtension();
+            var extensionPackage = await KernelExtensionTestHelper.GetSimpleExtensionAsync();
 
             var kernel = CreateKernel(language);
 
@@ -118,7 +112,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [InlineData(Language.FSharp)]
         public async Task it_loads_script_extension_found_in_nuget_package(Language defaultLanguage)
         {
-            var extensionPackage = KernelExtensionTestHelper.GetOrCreateScriptBasedExtensionPackage();
+            var extensionPackage = await KernelExtensionTestHelper.GetScriptExtensionPackageAsync();
 
             var kernel = CreateCompositeKernel(defaultLanguage);
 
