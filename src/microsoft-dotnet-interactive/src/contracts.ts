@@ -5,7 +5,6 @@
 
 // --------------------------------------------- Kernel Commands
 
-export const AddPackageType = "AddPackage";
 export const CancelType = "Cancel";
 export const ChangeWorkingDirectoryType = "ChangeWorkingDirectory";
 export const CompileProjectType = "CompileProject";
@@ -28,8 +27,7 @@ export const SubmitCodeType = "SubmitCode";
 export const UpdateDisplayedValueType = "UpdateDisplayedValue";
 
 export type KernelCommandType =
-      typeof AddPackageType
-    | typeof CancelType
+      typeof CancelType
     | typeof ChangeWorkingDirectoryType
     | typeof CompileProjectType
     | typeof DisplayErrorType
@@ -50,17 +48,13 @@ export type KernelCommandType =
     | typeof SubmitCodeType
     | typeof UpdateDisplayedValueType;
 
-export interface AddPackage extends KernelCommand {
-    packageReference: PackageReference;
+export interface Cancel extends KernelCommand {
 }
 
 export interface KernelCommand {
     targetKernelName?: string;
     originUri?: string;
     destinationUri?: string;
-}
-
-export interface Cancel extends KernelCommand {
 }
 
 export interface ChangeWorkingDirectory extends KernelCommand {
@@ -481,12 +475,6 @@ export interface KernelValueInfo {
     preferredMimeTypes: Array<string>;
 }
 
-export interface PackageReference {
-    packageName: string;
-    packageVersion: string;
-    isPackageVersionSpecified: boolean;
-}
-
 export interface Project {
     files: Array<ProjectFile>;
 }
@@ -511,6 +499,12 @@ export interface ResolvedPackageReference extends PackageReference {
     assemblyPaths: Array<string>;
     probingPaths: Array<string>;
     packageRoot: string;
+}
+
+export interface PackageReference {
+    packageName: string;
+    packageVersion: string;
+    isPackageVersionSpecified: boolean;
 }
 
 export interface SignatureInformation {

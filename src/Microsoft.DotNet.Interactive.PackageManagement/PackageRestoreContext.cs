@@ -259,7 +259,7 @@ namespace Microsoft.DotNet.Interactive
 
             var errors = new List<string>();
 
-            var result = await Task.Run(() => Resolve(GetPackageManagerLines(), restoreTfm, ReportError));
+            var result = Resolve(GetPackageManagerLines(), restoreTfm, ReportError);
 
             PackageRestoreResult packageRestoreResult;
 

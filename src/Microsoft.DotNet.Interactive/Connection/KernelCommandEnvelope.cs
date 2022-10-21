@@ -59,7 +59,6 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
     {
         _envelopeTypesByCommandTypeName = new ConcurrentDictionary<string, Type>
         {
-            [nameof(AddPackage)] = typeof(KernelCommandEnvelope<AddPackage>),
             [nameof(ChangeWorkingDirectory)] = typeof(KernelCommandEnvelope<ChangeWorkingDirectory>),
             [nameof(DisplayError)] = typeof(KernelCommandEnvelope<DisplayError>),
             [nameof(DisplayValue)] = typeof(KernelCommandEnvelope<DisplayValue>),
