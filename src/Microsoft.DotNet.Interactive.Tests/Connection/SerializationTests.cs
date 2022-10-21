@@ -166,8 +166,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
 
             IEnumerable<KernelCommand> commands()
             {
-                yield return new AddPackage(new PackageReference("MyAwesomePackage", "1.2.3"));
-
                 yield return new ChangeWorkingDirectory("/path/to/somewhere");
 
                 yield return new DisplayError("oops!");
