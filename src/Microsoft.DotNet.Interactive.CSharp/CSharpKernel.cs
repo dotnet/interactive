@@ -19,7 +19,6 @@ using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp.SignatureHelp;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
@@ -29,7 +28,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
 {
     public class CSharpKernel :
         Kernel,
-        IExtensibleKernel,
         ISupportNuget,
         IKernelCommandHandler<RequestCompletions>,
         IKernelCommandHandler<RequestDiagnostics>,
@@ -54,10 +52,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         private Lazy<PackageRestoreContext> _lazyPackageRestoreContext;
 
         private ScriptOptions _scriptOptions;
-
-        private readonly AssemblyBasedExtensionLoader _extensionLoader = new();
-        private readonly ScriptBasedExtensionLoader _scriptExtensionLoader = new();
-
+        
         private string _workingDirectory;
 
         public CSharpKernel() : this(DefaultKernelName)
@@ -474,21 +469,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var semanticModel = await document.GetSemanticModelAsync(context.CancellationToken);
             var diagnostics = semanticModel.GetDiagnostics(cancellationToken:context.CancellationToken);
             context.Publish(GetDiagnosticsProduced(command, diagnostics));
-        }
-
-        public async Task LoadExtensionsFromDirectoryAsync(
-            DirectoryInfo directory,
-            KernelInvocationContext context)
-        {
-            await _extensionLoader.LoadFromDirectoryAsync(
-                directory,
-                this,
-                context);
-
-            await _scriptExtensionLoader.LoadFromDirectoryAsync(
-                directory,
-                this,
-                context);
         }
 
         public PackageRestoreContext PackageRestoreContext => _lazyPackageRestoreContext.Value;
