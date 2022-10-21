@@ -20,7 +20,6 @@ open Microsoft.DotNet.Interactive
 open Microsoft.DotNet.Interactive.Formatting
 open Microsoft.DotNet.Interactive.Commands
 open Microsoft.DotNet.Interactive.Events
-open Microsoft.DotNet.Interactive.Extensions
 open Microsoft.DotNet.Interactive.FSharp.ScriptHelpers
 open Microsoft.DotNet.Interactive.ValueSharing
 
@@ -47,9 +46,6 @@ type FSharpKernel () as this =
         lock lockObj (fun () -> new FSharpScript(additionalArgs=additionalArgs))
 
     let script = lazy createScript ()
-
-    let extensionLoader: AssemblyBasedExtensionLoader = AssemblyBasedExtensionLoader()
-    let scriptExtensionLoader: ScriptBasedExtensionLoader = ScriptBasedExtensionLoader()
 
     let mutable cancellationTokenSource = new CancellationTokenSource()
 
@@ -493,10 +489,3 @@ type FSharpKernel () as this =
                             sb.Append(Environment.NewLine) |> ignore
             let command = new SubmitCode(sb.ToString(), "fsharp")
             this.DeferCommand(command)
-
-    interface IExtensibleKernel with
-        member this.LoadExtensionsFromDirectoryAsync(directory:DirectoryInfo, context:KernelInvocationContext) =
-            task {
-                do! extensionLoader.LoadFromDirectoryAsync(directory, this, context) |> Async.AwaitTask
-                do! scriptExtensionLoader.LoadFromDirectoryAsync(directory, this, context) |> Async.AwaitTask
-            }
