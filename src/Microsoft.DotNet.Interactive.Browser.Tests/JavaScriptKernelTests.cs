@@ -135,7 +135,7 @@ Console.Write(x);", targetKernelName: csharp.Name));
     {
         var connector = new PlaywrightKernelConnector(!Debugger.IsAttached, Debugger.IsAttached);
 
-        var proxy = await connector.CreateKernelAsync("javascript");
+        var proxy = await connector.CreateKernelAsync("javascript", BrowserKernelLanguage.JavaScript);
 
         return proxy;
     }
