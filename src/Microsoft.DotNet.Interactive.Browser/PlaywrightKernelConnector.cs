@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Text.Json;
@@ -19,7 +20,7 @@ using Disposable = System.Reactive.Disposables.Disposable;
 
 namespace Microsoft.DotNet.Interactive.Browser;
 
-public class PlaywrightKernelConnector : IKernelConnector
+public class PlaywrightKernelConnector
 {
     private readonly RefCountDisposable _refCountDisposable;
     private readonly AsyncLazy<(IPage page, Subject<CommandOrEvent> commandsAndEvents)> _oneTimeBrowserSetup;
@@ -69,7 +70,40 @@ public class PlaywrightKernelConnector : IKernelConnector
         });
     }
 
-    public Task<Kernel> CreateKernelAsync(string kernelName)
+    public static async Task AddKernelsToCurrentRootAsync()
+    {
+        if (Kernel.Root is CompositeKernel root &&
+            KernelInvocationContext.Current is { } context)
+        {
+            var playwrightConnector = new PlaywrightKernelConnector();
+
+            var jsKernel = await playwrightConnector.CreateKernelAsync("javascript-browser", BrowserKernelLanguage.JavaScript);
+            root.Add(jsKernel);
+
+            var htmlKernel = await playwrightConnector.CreateKernelAsync("html-browser", BrowserKernelLanguage.Html);
+            root.Add(htmlKernel);
+
+            var subscription = Kernel.Root
+                                     .KernelEvents
+                                     .OfType<DisplayEvent>()
+                                     .SelectMany(e => e.FormattedValues.Where(v => v.MimeType == "text/html"))
+                                     .Subscribe(v => htmlKernel.SendAsync(new SubmitCode(v.Value)));
+            
+            htmlKernel.RegisterForDisposal(subscription);
+
+            context.DisplayAs($@"
+Added browser kernels:
+* `{htmlKernel.ChooseKernelDirective.Name}`: Render HTML in an external browser
+* `{jsKernel.ChooseKernelDirective.Name}`: Run JavaScript in the same external browser",
+                              "text/markdown");
+        }
+        else
+        {
+            throw new InvalidOperationException($"{nameof(AddKernelsToCurrentRootAsync)} can only be called within the context of an active {nameof(KernelInvocationContext)}");
+        }
+    }
+
+    public Task<Kernel> CreateKernelAsync(string kernelName, BrowserKernelLanguage language)
     {
         var senderAndReceiver = new PlaywrightSenderAndReceiver(_oneTimeBrowserSetup);
 

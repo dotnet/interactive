@@ -40,4 +40,8 @@
     <EmbeddedResource Include="..\microsoft-dotnet-interactive\lib\dotnet-interactive.js" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="extension.dib" Pack="true" PackagePath="interactive-extensions/dotnet" />
+  </ItemGroup>
+
 </Project>
