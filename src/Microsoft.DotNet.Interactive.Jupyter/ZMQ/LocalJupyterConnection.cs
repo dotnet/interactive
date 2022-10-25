@@ -17,18 +17,19 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ;
 
 internal class LocalJupyterConnection : IJupyterConnection
 {
-    private Uri _targetUri;
     private readonly CompositeDisposable _disposables = new CompositeDisposable();
     private Process _kernelProcess;
-
-    public Uri TargetUri => _targetUri;
 
     public async Task<IJupyterKernelConnection> CreateKernelConnectionAsync(string kernelType)
     {
         var connectionInfo = await LaunchKernel(kernelType);
 
-        var kernelConnection = new ZMQKernelConnection(connectionInfo);
-        return kernelConnection;
+        if (connectionInfo != null && !_kernelProcess.HasExited) {
+            var kernelConnection = new ZMQKernelConnection(connectionInfo, _kernelProcess.Id);
+            return kernelConnection;
+        }
+
+        throw new KernelLaunchException("Could not start kernel process");
     }
 
     private async Task<ConnectionInformation> LaunchKernel(string kernelType)
@@ -38,7 +39,7 @@ internal class LocalJupyterConnection : IJupyterConnection
 
         if (spec is null)
         {
-            throw new Exception("Kernel not found");
+            throw new KernelLaunchException($"spec for `{kernelType}` not found");
         }
 
         ConnectionInformation connectionInfo = null;
@@ -104,8 +105,6 @@ internal class LocalJupyterConnection : IJupyterConnection
             await Task.Yield();
 
             _kernelProcess.Start();
-            _targetUri = KernelHost.CreateHostUriForProcessId(_kernelProcess.Id);
-            //_targetUri = KernelHost.CreateHostUriForProcessId(11111);
             _disposables.Add(_kernelProcess);
         }
 

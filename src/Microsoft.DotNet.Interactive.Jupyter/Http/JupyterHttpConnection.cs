@@ -41,10 +41,11 @@ internal class JupyterHttpConnection : IJupyterConnection
     private readonly string _authType;
     private readonly HttpClient _httpClient;
     private readonly CompositeDisposable _disposables;
+    private readonly Uri _serverUri;
 
-    public JupyterHttpConnection(Uri targetUri, string token, string authType = null)
+    public JupyterHttpConnection(Uri uri, string token, string authType = null)
     {
-        TargetUri = targetUri;
+        _serverUri = uri;
         _token = token;
         _authType = authType ?? AuthType.Token;
         _httpClient = new HttpClient();
@@ -54,8 +55,6 @@ internal class JupyterHttpConnection : IJupyterConnection
         };
     }
 
-    public Uri TargetUri { get; }
-
     public void Dispose()
     {
         _disposables.Dispose();
@@ -63,15 +62,16 @@ internal class JupyterHttpConnection : IJupyterConnection
 
     public async Task<IJupyterKernelConnection> CreateKernelConnectionAsync(string kernelType)
     {
+        string kernelId = Guid.NewGuid().ToString();
         var body = new
         {
             kernel = new
             {
-                id = 123,
+                id = kernelId,
                 name = kernelType
             },
             name = "",
-            path = $"dotnet-{Guid.NewGuid().ToString()}", // TODO: Find out how to get the filename
+            path = $"dotnet-{kernelId}", 
             type = "notebook"
         };
 
@@ -84,14 +84,14 @@ internal class JupyterHttpConnection : IJupyterConnection
 
         if (!response.IsSuccessStatusCode)
         {
-            throw new Exception("Kernel Launch failed");
+            throw new KernelLaunchException(response.ReasonPhrase);
         }
 
         byte[] bytes = await response.Content.ReadAsByteArrayAsync();
         var session = JsonSerializer.Deserialize<KernelSessionInfo>(bytes);
 
-        Uri socketUri = GetWebsocketUri($"/api/kernels/{session?.kernel?.id}/channels?token={_token}");
-        return new JupyterKernelHttpConnection(socketUri);
+        Uri socketUri = GetWebsocketUri($"/api/kernels/{session.kernel.id}/channels?token={_token}");
+        return new JupyterKernelHttpConnection(socketUri, GetHttpUri($"api/kernels/{session.kernel.id}"));
     }
 
 
@@ -127,13 +127,13 @@ internal class JupyterHttpConnection : IJupyterConnection
 
     private Uri GetHttpUri(string apiPath)
     {
-        return new Uri($"{TargetUri.AbsoluteUri}{apiPath}");
+        return new Uri($"{_serverUri.AbsoluteUri}{apiPath}");
     }
 
     private Uri GetWebsocketUri(string apiPath)
     {
-        string websocketScheme = TargetUri.Scheme == "http" ? "ws" : "wss";
-        string socketUri = $"{websocketScheme}://{TargetUri.Authority}{apiPath}";
+        string websocketScheme = _serverUri.Scheme == "http" ? "ws" : "wss";
+        string socketUri = $"{websocketScheme}://{_serverUri.Authority}{apiPath}";
 
         return new Uri(socketUri);
     }

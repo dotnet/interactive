@@ -33,8 +33,8 @@ internal class RequestHoverTextHandler : CommandToJupyterMessageHandlerBase<Requ
         var reply = Receiver.Messages.ChildOf(request)
                                 .SelectContent()
                                 .Do(replyMessage => HandleReplyMessage(replyMessage, command, context))
-                                .TakeUntilMessageType(JupyterMessageContentTypes.InspectReply, JupyterMessageContentTypes.Error);
-                                // run until we get a definitive pass or fail
+                                .TakeUntilMessageType(JupyterMessageContentTypes.InspectReply);
+                                 // run until we get a reply
 
         await Sender.SendAsync(request);
         await reply.ToTask(token);
@@ -47,7 +47,7 @@ internal class RequestHoverTextHandler : CommandToJupyterMessageHandlerBase<Requ
             case (InspectReply results):
                 if (results.Status != StatusValues.Ok)
                 {
-                    // TODO: Add an error trace
+                    // TODO: split reply ok from error
                     context.Publish(new CommandFailed(null, command, "kernel returned failed"));
                     break;
                 }
@@ -60,10 +60,6 @@ internal class RequestHoverTextHandler : CommandToJupyterMessageHandlerBase<Requ
                 }
 
                 context.Publish(new CommandSucceeded(command));
-                break;
-            case (Error error):
-                // TODO: how to translate traceback to exception;
-                context.Publish(new CommandFailed(null, command, error.EValue));
                 break;
             default:
                 break;

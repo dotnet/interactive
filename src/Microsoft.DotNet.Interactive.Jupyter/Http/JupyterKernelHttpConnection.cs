@@ -25,9 +25,9 @@ internal class JupyterKernelHttpConnection : IJupyterKernelConnection, IMessageS
     private readonly CancellationTokenSource _cancellationTokenSource;
     private readonly CompositeDisposable _disposables;
 
-    public JupyterKernelHttpConnection(Uri channelUri)
+    public JupyterKernelHttpConnection(Uri channelUri, Uri kernelUri)
     {
-        _channelUri = channelUri;
+        _channelUri = channelUri ?? throw new ArgumentNullException(nameof(channelUri));
         _socket = new ClientWebSocket();
         _subject = new Subject<JupyterMessage>();
         _cancellationTokenSource = new CancellationTokenSource();
@@ -37,6 +37,8 @@ internal class JupyterKernelHttpConnection : IJupyterKernelConnection, IMessageS
             _subject,
             _cancellationTokenSource
         };
+
+        Uri = kernelUri;
     }
 
     public void Dispose()
@@ -44,6 +46,8 @@ internal class JupyterKernelHttpConnection : IJupyterKernelConnection, IMessageS
         _cancellationTokenSource.Cancel();
         _disposables.Dispose();
     }
+
+    public Uri Uri { get; }
 
     public IObservable<JupyterMessage> Messages => _subject;
 

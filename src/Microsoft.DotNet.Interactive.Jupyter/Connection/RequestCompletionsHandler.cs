@@ -31,8 +31,7 @@ internal class RequestCompletionsHandler : CommandToJupyterMessageHandlerBase<Re
         var reply = Receiver.Messages.ChildOf(request)
                                 .SelectContent()
                                 .Do(replyMessage => HandleReplyMessage(replyMessage, command, context))
-                                .TakeUntilMessageType(JupyterMessageContentTypes.CompleteReply, JupyterMessageContentTypes.Error);
-        // run until we get a definitive pass or fail
+                                .TakeUntilMessageType(JupyterMessageContentTypes.CompleteReply);
 
         await Sender.SendAsync(request);
         await reply.ToTask(token);
@@ -46,7 +45,7 @@ internal class RequestCompletionsHandler : CommandToJupyterMessageHandlerBase<Re
 
                 if (results.Status != StatusValues.Ok)
                 {
-                    // TODO: Add an error trace
+                    // TODO: split reply ok from error
                     context.Publish(new CommandFailed(null, command, "kernel returned failed"));
                     break;
                 }
@@ -73,10 +72,6 @@ internal class RequestCompletionsHandler : CommandToJupyterMessageHandlerBase<Re
 
                 context.Publish(completion);
                 context.Publish(new CommandSucceeded(command));
-                break;
-            case (Error error):
-                // TODO: how to translate traceback to exception;
-                context.Publish(new CommandFailed(null, command, error.EValue));
                 break;
             default:
                 break;

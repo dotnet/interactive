@@ -28,7 +28,7 @@ public class JupyterKernelConnector : IKernelConnector
     public async Task<Kernel> CreateKernelAsync(string kernelName)
     {
         var kernelConnection = await _jupyterConnection.CreateKernelConnectionAsync(_kernelSpecName);
-        var remoteUri = _jupyterConnection.TargetUri;
+        var remoteUri = kernelConnection.Uri;
         var sender = kernelConnection.Sender;
         var receiver = kernelConnection.Receiver;
         var commsManager = new CommsManager(sender, receiver);
