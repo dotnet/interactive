@@ -3,6 +3,8 @@
 
 using Microsoft.DotNet.Interactive.Jupyter.Connection;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reactive.Disposables;
@@ -32,7 +34,18 @@ internal class KernelInfo
     public int connections { get; set; }
 }
 
+internal class KernelSpecs
+{
+    public string @default {get; set;} 
+    public Dictionary<string, KernelSpecDetail> kernelspecs { get; set; }
+}
 
+internal class KernelSpecDetail
+{
+    public string name { get; set; }
+    public KernelSpec spec { get; set; }
+    public object resources { get; set; }
+}
 #endregion
 
 internal class JupyterHttpConnection : IJupyterConnection
@@ -58,6 +71,26 @@ internal class JupyterHttpConnection : IJupyterConnection
     public void Dispose()
     {
         _disposables.Dispose();
+    }
+
+    public async Task<string[]> ListAvailableKernelSpecsAsync()
+    {
+        HttpResponseMessage response = await SendWebRequestAsync(
+            apiPath: "api/kernelspecs",
+            body: null,
+            contentType: "application/json",
+            method: HttpMethod.Get
+        );
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new Exception(response.ReasonPhrase);
+        }
+
+        byte[] bytes = await response.Content.ReadAsByteArrayAsync();
+        var list = JsonSerializer.Deserialize<KernelSpecs>(bytes);
+
+        return list?.kernelspecs?.Keys.ToArray();
     }
 
     public async Task<IJupyterKernelConnection> CreateKernelConnectionAsync(string kernelType)
@@ -137,4 +170,6 @@ internal class JupyterHttpConnection : IJupyterConnection
 
         return new Uri(socketUri);
     }
+
+    
 }
