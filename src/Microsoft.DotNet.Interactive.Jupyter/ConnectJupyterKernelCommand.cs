@@ -1,16 +1,18 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.IO;
-using System.Reactive.Disposables;
-using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.Http;
 using Microsoft.DotNet.Interactive.Jupyter.ZMQ;
+using System;
+using System.Collections.Generic;
+using System.CommandLine;
+using System.CommandLine.Completions;
+using System.CommandLine.Invocation;
+using System.CommandLine.Parsing;
+using System.Reactive.Disposables;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Jupyter;
 
@@ -19,7 +21,8 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
     public ConnectJupyterKernelCommand() : base("jupyter",
                                         "Connects to a jupyter kernel")
     {
-        AddOption(KernelType);
+
+        AddOption(KernelType.AddCompletions(ctx => GetKernelSpecsCompletions(ctx)));
         AddOption(TargetUrl);
         AddOption(Token);
         AddOption(UseBearerAuth);
@@ -51,25 +54,13 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
         InvocationContext commandLineContext)
     {
         var kernelType = commandLineContext.ParseResult.GetValueForOption(KernelType);
-        var targetUrl = commandLineContext.ParseResult.GetValueForOption(TargetUrl);
-        var token = commandLineContext.ParseResult.GetValueForOption(Token);
-        var useBearerAuth = commandLineContext.ParseResult.GetValueForOption(UseBearerAuth);
 
-        JupyterKernelConnector connector = null;
-
-        CompositeDisposable disposables = new CompositeDisposable();
-        if (targetUrl is not null)
+        var connection = GetJupyterConnection(commandLineContext.ParseResult);
+        JupyterKernelConnector connector = new JupyterKernelConnector(connection, kernelType);
+        CompositeDisposable disposables = new CompositeDisposable
         {
-            var connection = new JupyterHttpConnection(new Uri(targetUrl), token, useBearerAuth ? AuthType.Bearer : null);
-            connector = new JupyterKernelConnector(connection, kernelType);
-            disposables.Add(connection);
-        }
-        else
-        {
-            var connection = new LocalJupyterConnection();
-            connector = new JupyterKernelConnector(connection, kernelType);
-            disposables.Add(connection);
-        }
+            connection
+        };
 
         var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
 
@@ -78,4 +69,34 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
         return kernel;
     }
 
+    private IJupyterConnection GetJupyterConnection(ParseResult parseResult)
+    {
+        var targetUrl = parseResult.GetValueForOption(TargetUrl);
+        var token = parseResult.GetValueForOption(Token);
+        var useBearerAuth = parseResult.GetValueForOption(UseBearerAuth);
+
+        if (targetUrl is not null)
+        {
+            var connection = new JupyterHttpConnection(new Uri(targetUrl), token, useBearerAuth ? AuthType.Bearer : null);
+            return connection;
+        }
+        else
+        {
+            var connection = new LocalJupyterConnection();
+            return connection;
+        }
+    }
+    private List<CompletionItem> GetKernelSpecsCompletions(CompletionContext ctx)
+    {
+        var specCompletions = new List<CompletionItem>();
+        using (var connection = GetJupyterConnection(ctx.ParseResult))
+        {
+            var specs = connection.ListAvailableKernelSpecsAsync().Result;
+            foreach (var s in specs)
+            {
+                specCompletions.Add(new CompletionItem(s));
+            }
+        }
+        return specCompletions;
+    }
 }
