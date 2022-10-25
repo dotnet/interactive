@@ -4,11 +4,9 @@
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging.Comms;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
-using Microsoft.DotNet.Interactive.Utility;
 using System;
 using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
-using System.Reactive.Linq;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing;
 
