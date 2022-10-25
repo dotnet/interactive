@@ -34,7 +34,7 @@ internal class RequestKernelInfoHandler : CommandToJupyterMessageHandlerBase<Req
 
         if (kernelInfoReply.Status != StatusValues.Ok)
         {
-            // TODO: Add an error trace
+            // TODO: Need to split reply ok from error 
             context.Publish(new CommandFailed(null, command, "kernel returned failed"));
             return;
         }

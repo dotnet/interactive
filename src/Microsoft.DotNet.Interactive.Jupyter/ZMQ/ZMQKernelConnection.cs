@@ -22,8 +22,6 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
     private readonly string _ioSubAddress;
     private readonly CompositeDisposable _disposables;
     private readonly RequestReplyChannel _shellChannel;
-    private readonly PubSubChannel _ioSubChannel;
-    private readonly StdInChannel _stdInChannel;
     private readonly string _stdInAddress;
     private readonly string _controlAddress;
     private readonly DealerSocket _stdIn;
@@ -31,7 +29,7 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
     private readonly Subject<JupyterMessage> _subject;
     private readonly CancellationTokenSource _cancellationTokenSource;
 
-    public ZMQKernelConnection(ConnectionInformation connectionInformation)
+    public ZMQKernelConnection(ConnectionInformation connectionInformation, int processId)
     {
         if (connectionInformation is null)
         {
@@ -51,9 +49,7 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
         _control = new DealerSocket();
 
         _shellChannel = new RequestReplyChannel(new MessageSender(_shell, signatureValidator));
-        _ioSubChannel = new PubSubChannel(new MessageSender(_ioSubSocket, signatureValidator));
-        _stdInChannel = new StdInChannel(new MessageSender(_stdIn, signatureValidator), new MessageReceiver(_stdIn));
-
+        
         _cancellationTokenSource = new CancellationTokenSource();
         _subject = new Subject<JupyterMessage>();
 
@@ -65,7 +61,11 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
                            _control,
                            _cancellationTokenSource
                        };
+
+        Uri = KernelHost.CreateHostUriForProcessId(processId);
     }
+
+    public Uri Uri { get; }
 
     public IObservable<JupyterMessage> Messages => _subject;
 

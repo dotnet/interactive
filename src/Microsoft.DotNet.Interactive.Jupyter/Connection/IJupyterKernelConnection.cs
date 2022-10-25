@@ -9,6 +9,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection;
 
 public interface IJupyterKernelConnection : IDisposable
 {
+    Uri Uri { get; }
+
     Task StartAsync();
 
     IMessageSender Sender { get; }

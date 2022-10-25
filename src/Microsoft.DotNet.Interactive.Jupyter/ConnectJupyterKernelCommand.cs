@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter;
 public class ConnectJupyterKernelCommand : ConnectKernelCommand
 {
     public ConnectJupyterKernelCommand() : base("jupyter",
-                                        "Connects to a installed jupyter kernel")
+                                        "Connects to a jupyter kernel")
     {
         AddOption(KernelType);
         AddOption(TargetUrl);
