@@ -5,14 +5,10 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
-using Microsoft.DotNet.Interactive.Jupyter.Messaging.Comms;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
-using Microsoft.DotNet.Interactive.Jupyter.ValueSharing;
-using Microsoft.DotNet.Interactive.ValueSharing;
 using System;
 using System.Collections.Concurrent;
 using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
 using System.Threading;
@@ -20,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Connection;
 
-internal class MessageToCommandAndEventConnector : IKernelCommandAndEventSender, IKernelCommandAndEventReceiver, ICommandExecutionContext, IDisposable
+internal class JupyterConnectionCommandAndEventSenderAndReceiver : IKernelCommandAndEventSender, IKernelCommandAndEventReceiver, ICommandExecutionContext, IDisposable
 {
     private readonly Subject<CommandOrEvent> _commandOrEventsSubject;
     private readonly Uri _targetUri;
@@ -29,10 +25,8 @@ internal class MessageToCommandAndEventConnector : IKernelCommandAndEventSender,
     private readonly IMessageReceiver _receiver;
 
     private readonly ConcurrentDictionary<Type, Func<KernelCommand, ICommandExecutionContext, CancellationToken, Task>> _dynamicHandlers = new();
-    // private readonly KernelValueHandler _kernelValueHandler = new();
 
-
-    public MessageToCommandAndEventConnector(IMessageSender messageSender, IMessageReceiver messageReceiver, Uri targetUri)
+    public JupyterConnectionCommandAndEventSenderAndReceiver(IMessageSender messageSender, IMessageReceiver messageReceiver, Uri targetUri)
     {
         _commandOrEventsSubject = new Subject<CommandOrEvent>();
         _targetUri = targetUri;
@@ -118,7 +112,7 @@ internal class MessageToCommandAndEventConnector : IKernelCommandAndEventSender,
     private async Task InterruptKernelExecutionAsync()
     {
         var interruptRequest = Messaging.Message.Create(new InterruptRequest(), channel: "control");
-        var interruptReply = _receiver.Messages.ChildOf(interruptRequest)
+        var interruptReply = _receiver.Messages.FilterByParent(interruptRequest)
                                 .SelectContent()
                                 .TakeUntilMessageType(JupyterMessageContentTypes.InterruptReply, JupyterMessageContentTypes.Error);
 

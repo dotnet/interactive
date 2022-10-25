@@ -24,7 +24,7 @@ internal class SubmitCodeHandler : CommandToJupyterMessageHandlerBase<SubmitCode
     public override async Task HandleCommandAsync(SubmitCode command, ICommandExecutionContext context, CancellationToken token)
     {
         var executeRequest = Messaging.Message.Create(new ExecuteRequest(command.Code.NormalizeLineEndings()));
-        var executeReply = Receiver.Messages.ChildOf(executeRequest)
+        var executeReply = Receiver.Messages.FilterByParent(executeRequest)
                                 .SelectContent()
                                 .Do(replyMessage => HandleReplyMessage(replyMessage, command, context))
                                 .TakeUntil(m => m.MessageType == JupyterMessageContentTypes.Error

@@ -48,9 +48,9 @@ class __ValueAdapterCommTarget:
     
     @classmethod
     def _handle_variablesRequest(cls, command):
-        rwho_ls = %who_ls
+        results_who_ls = %who_ls
         variables = globals()
-        results = [{'name': x, 'type':  str(type(variables[x]))} for x in rwho_ls ]
+        results = [{'name': x, 'type':  str(type(variables[x]))} for x in results_who_ls ]
         cls._sendResponse(command, True, { 'variables': results })
             
     @classmethod

@@ -84,7 +84,7 @@ internal class JupyterHttpConnection : IJupyterConnection
 
         if (!response.IsSuccessStatusCode)
         {
-            throw new KernelLaunchException(response.ReasonPhrase);
+            throw new KernelLaunchException(kernelType, response.ReasonPhrase);
         }
 
         byte[] bytes = await response.Content.ReadAsByteArrayAsync();

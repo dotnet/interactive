@@ -74,7 +74,7 @@ internal class LanguageValueAdapterFactory : IGetValueAdapter
                                                                          silent: true,
                                                                          storeHistory: false));
 
-        var executeReply = _receiver.Messages.ChildOf(executeRequest)
+        var executeReply = _receiver.Messages.FilterByParent(executeRequest)
                                 .SelectContent()
                                 .TakeUntilMessageType(JupyterMessageContentTypes.ExecuteReply, JupyterMessageContentTypes.Error);
         // run until we get a definitive pass or fail

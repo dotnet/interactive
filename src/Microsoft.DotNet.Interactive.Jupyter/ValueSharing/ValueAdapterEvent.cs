@@ -10,6 +10,7 @@ using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing;
 
+// Based on the Microsoft DAP Event type https://microsoft.github.io/debug-adapter-protocol/specification 
 public abstract class ValueAdapterEvent: ValueAdapterMessage
 {
     private static readonly IReadOnlyDictionary<string, Type> _eventToClrType;

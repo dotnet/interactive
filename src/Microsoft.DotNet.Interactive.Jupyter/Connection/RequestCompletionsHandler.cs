@@ -28,7 +28,7 @@ internal class RequestCompletionsHandler : CommandToJupyterMessageHandlerBase<Re
                                             command.Code,
                                             SourceUtilities.GetCursorOffsetFromPosition(command.Code, command.LinePosition)));
 
-        var reply = Receiver.Messages.ChildOf(request)
+        var reply = Receiver.Messages.FilterByParent(request)
                                 .SelectContent()
                                 .Do(replyMessage => HandleReplyMessage(replyMessage, command, context))
                                 .TakeUntilMessageType(JupyterMessageContentTypes.CompleteReply);

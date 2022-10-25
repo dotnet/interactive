@@ -97,7 +97,7 @@ internal class CommValueAdapter : IValueAdapter
         }
         else
         {
-            context.Publish(new CommandFailed($"Failed to create variable ${variableName}.", command));
+            context.Publish(new CommandFailed($"Failed to create variable {variableName}.", command));
         }
     }
 
@@ -147,7 +147,7 @@ internal class CommValueAdapter : IValueAdapter
             return;
         }
 
-        context.Publish(new CommandFailed($"Failed to get variable ${command.Name}.", command));
+        context.Publish(new CommandFailed($"Failed to get variable {command.Name}.", command));
     }
 
     public async Task HandleCommandAsync(RequestValueInfos command, ICommandExecutionContext context, CancellationToken token)
