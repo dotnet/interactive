@@ -28,7 +28,7 @@ internal class RequestSignatureHelpHandler : CommandToJupyterMessageHandlerBase<
                                             cursorPos: SourceUtilities.GetCursorOffsetFromPosition(command.Code, command.LinePosition), 
                                             detailLevel: 0));
 
-        var reply = Receiver.Messages.ChildOf(request)
+        var reply = Receiver.Messages.FilterByParent(request)
                                 .SelectContent()
                                 .Do(replyMessage => HandleReplyMessage(replyMessage, command, context))
                                 .TakeUntilMessageType(JupyterMessageContentTypes.InspectReply);

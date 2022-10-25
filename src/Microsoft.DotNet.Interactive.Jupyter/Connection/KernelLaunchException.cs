@@ -8,7 +8,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection
 {
     internal class KernelLaunchException : Exception
     {
-        public KernelLaunchException(string reason): base($"Kernel launch failed due to {reason}")
+        public KernelLaunchException(string kernelType, string reason): base($"Kernel {kernelType} launch failed due to {reason}")
         {
         }
     }

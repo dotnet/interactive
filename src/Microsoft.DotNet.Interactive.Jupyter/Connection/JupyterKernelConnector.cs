@@ -33,9 +33,9 @@ public class JupyterKernelConnector : IKernelConnector
         var receiver = kernelConnection.Receiver;
         var commsManager = new CommsManager(sender, receiver);
 
-        MessageToCommandAndEventConnector commandOrEventHandler = new(sender, receiver, remoteUri);
+        var coeSenderAndReceiver = new JupyterConnectionCommandAndEventSenderAndReceiver(sender, receiver, remoteUri);
 
-        ProxyKernel proxyKernel = new(kernelName, commandOrEventHandler, commandOrEventHandler, remoteUri);
+        ProxyKernel proxyKernel = new(kernelName, coeSenderAndReceiver, coeSenderAndReceiver, remoteUri);
         proxyKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(SubmitCode)));
 
         KernelInfoProduced kernelInfoProduced = null;
@@ -47,19 +47,19 @@ public class JupyterKernelConnector : IKernelConnector
             }
         });
 
-        commandOrEventHandler.Select(coe => coe.Event)
+        coeSenderAndReceiver.Select(coe => coe.Event)
                                .OfType<KernelInfoProduced>()
                                .Take(1)
                                .Subscribe(e => kernelInfoProduced = e);
 
         // start the kernel connection and request kernel info
         await kernelConnection.StartAsync();
-        await commandOrEventHandler.SendAsync(new RequestKernelInfo(), CancellationToken.None);
+        await coeSenderAndReceiver.SendAsync(new RequestKernelInfo(), CancellationToken.None);
         await waitForKernelInfoProduced;
 
 
         proxyKernel.RegisterForDisposal(kernelConnection);
-        proxyKernel.RegisterForDisposal(commandOrEventHandler);
+        proxyKernel.RegisterForDisposal(coeSenderAndReceiver);
         proxyKernel.RegisterForDisposal(commsManager);
 
         var getValueAdapter = new LanguageValueAdapterFactory(sender, receiver, commsManager);
@@ -67,9 +67,9 @@ public class JupyterKernelConnector : IKernelConnector
 
         if (valueAdapter is not null)
         {
-            commandOrEventHandler.RegisterCommandHandler<RequestValue>(valueAdapter.HandleCommandAsync);
-            commandOrEventHandler.RegisterCommandHandler<RequestValueInfos>(valueAdapter.HandleCommandAsync);
-            commandOrEventHandler.RegisterCommandHandler<SendValue>(valueAdapter.HandleCommandAsync);
+            coeSenderAndReceiver.RegisterCommandHandler<RequestValue>(valueAdapter.HandleCommandAsync);
+            coeSenderAndReceiver.RegisterCommandHandler<RequestValueInfos>(valueAdapter.HandleCommandAsync);
+            coeSenderAndReceiver.RegisterCommandHandler<SendValue>(valueAdapter.HandleCommandAsync);
 
             proxyKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(SendValue)));
             proxyKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValue)));

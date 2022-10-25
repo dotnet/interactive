@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Messaging;
 
 public static class MessageObservableExtensions
 {
-    public static IObservable<Message> ChildOf(this IObservable<Message> observable, Message parentMessage)
+    public static IObservable<Message> FilterByParent(this IObservable<Message> observable, Message parentMessage)
     {
         return observable.Where(m => m?.ParentHeader?.MessageId == parentMessage.Header.MessageId);
     }

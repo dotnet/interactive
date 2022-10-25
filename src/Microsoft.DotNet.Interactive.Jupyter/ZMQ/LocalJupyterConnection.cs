@@ -29,7 +29,7 @@ internal class LocalJupyterConnection : IJupyterConnection
             return kernelConnection;
         }
 
-        throw new KernelLaunchException("Could not start kernel process");
+        throw new KernelLaunchException(kernelType, "could not start kernel process");
     }
 
     private async Task<ConnectionInformation> LaunchKernel(string kernelType)
@@ -39,7 +39,7 @@ internal class LocalJupyterConnection : IJupyterConnection
 
         if (spec is null)
         {
-            throw new KernelLaunchException($"spec for `{kernelType}` not found");
+            throw new KernelLaunchException(kernelType, "kernel not found");
         }
 
         ConnectionInformation connectionInfo = null;

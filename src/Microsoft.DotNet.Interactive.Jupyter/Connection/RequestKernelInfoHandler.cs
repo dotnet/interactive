@@ -23,7 +23,7 @@ internal class RequestKernelInfoHandler : CommandToJupyterMessageHandlerBase<Req
     {
         // wait for kernel reply
         var request = Messaging.Message.Create(new KernelInfoRequest());
-        var reply = Receiver.Messages.ChildOf(request)
+        var reply = Receiver.Messages.FilterByParent(request)
                              .SelectContent()
                              .OfType<KernelInfoReply>()
                              .Take(1)
