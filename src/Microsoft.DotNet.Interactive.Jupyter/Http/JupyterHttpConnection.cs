@@ -55,6 +55,7 @@ internal class JupyterHttpConnection : IJupyterConnection
     private readonly HttpClient _httpClient;
     private readonly CompositeDisposable _disposables;
     private readonly Uri _serverUri;
+    private string[] _availableKernels;
 
     public JupyterHttpConnection(Uri uri, string token, string authType = null)
     {
@@ -75,22 +76,25 @@ internal class JupyterHttpConnection : IJupyterConnection
 
     public async Task<string[]> ListAvailableKernelSpecsAsync()
     {
-        HttpResponseMessage response = await SendWebRequestAsync(
-            apiPath: "api/kernelspecs",
-            body: null,
-            contentType: "application/json",
-            method: HttpMethod.Get
-        );
-
-        if (!response.IsSuccessStatusCode)
+        if (_availableKernels == null)
         {
-            throw new Exception(response.ReasonPhrase);
+            HttpResponseMessage response = await SendWebRequestAsync(
+                apiPath: "api/kernelspecs",
+                body: null,
+                contentType: "application/json",
+                method: HttpMethod.Get
+            );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception(response.ReasonPhrase);
+            }
+
+            byte[] bytes = await response.Content.ReadAsByteArrayAsync();
+            var list = JsonSerializer.Deserialize<KernelSpecs>(bytes);
+            _availableKernels = list?.kernelspecs?.Keys.ToArray();
         }
-
-        byte[] bytes = await response.Content.ReadAsByteArrayAsync();
-        var list = JsonSerializer.Deserialize<KernelSpecs>(bytes);
-
-        return list?.kernelspecs?.Keys.ToArray();
+        return _availableKernels;
     }
 
     public async Task<IJupyterKernelConnection> CreateKernelConnectionAsync(string kernelType)

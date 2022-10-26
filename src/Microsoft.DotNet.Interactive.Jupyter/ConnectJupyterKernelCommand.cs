@@ -21,11 +21,10 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
     public ConnectJupyterKernelCommand() : base("jupyter",
                                         "Connects to a jupyter kernel")
     {
-
-        AddOption(KernelType.AddCompletions(ctx => GetKernelSpecsCompletions(ctx)));
         AddOption(TargetUrl);
         AddOption(Token);
         AddOption(UseBearerAuth);
+        AddOption(KernelType.AddCompletions(ctx => GetKernelSpecsCompletions(ctx)));
     }
 
     public Option<string> KernelType { get; } =
@@ -86,15 +85,19 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
             return connection;
         }
     }
+
     private List<CompletionItem> GetKernelSpecsCompletions(CompletionContext ctx)
     {
         var specCompletions = new List<CompletionItem>();
         using (var connection = GetJupyterConnection(ctx.ParseResult))
         {
             var specs = connection.ListAvailableKernelSpecsAsync().Result;
-            foreach (var s in specs)
+            if (specs != null)
             {
-                specCompletions.Add(new CompletionItem(s));
+                foreach (var s in specs)
+                {
+                    specCompletions.Add(new CompletionItem(s));
+                }
             }
         }
         return specCompletions;

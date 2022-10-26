@@ -19,10 +19,10 @@ internal class LocalJupyterConnection : IJupyterConnection
 {
     private readonly CompositeDisposable _disposables = new CompositeDisposable();
     private Process _kernelProcess;
-
+    
     public Task<string[]> ListAvailableKernelSpecsAsync()
     {
-        return Task.FromResult(new string[0]);
+        return Task.FromResult<string[]>(null);
     }
 
     public async Task<IJupyterKernelConnection> CreateKernelConnectionAsync(string kernelType)
