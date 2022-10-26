@@ -46,5 +46,10 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                 ? _defaultKernelSpecDirectory ?? new JupyterKernelSpecModule().GetDefaultKernelSpecDirectory()
                 : _defaultKernelSpecDirectory?? new DirectoryInfo(Path.Combine(Path.GetTempPath(), Path.GetTempFileName()));
         }
+
+        public IReadOnlyDictionary<string, DirectoryInfo> GetInstalledKernelDirectories()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

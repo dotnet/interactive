@@ -74,7 +74,7 @@ internal class JupyterHttpConnection : IJupyterConnection
         _disposables.Dispose();
     }
 
-    public async Task<string[]> ListAvailableKernelSpecsAsync()
+    public async Task<string[]> GetKernelSpecsAsync()
     {
         if (_availableKernels == null)
         {
@@ -87,7 +87,7 @@ internal class JupyterHttpConnection : IJupyterConnection
 
             if (!response.IsSuccessStatusCode)
             {
-                throw new Exception(response.ReasonPhrase);
+                return null;
             }
 
             byte[] bytes = await response.Content.ReadAsByteArrayAsync();

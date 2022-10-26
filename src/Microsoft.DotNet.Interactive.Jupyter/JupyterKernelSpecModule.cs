@@ -1,16 +1,17 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
+using Microsoft.DotNet.Interactive.Utility;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-
-using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
 {
     public class JupyterKernelSpecModule : IJupyterKernelSpecModule
     {
+        private Dictionary<string, DirectoryInfo> _installedKernelDirs = null;
+
         private async Task<CommandLineResult> ExecuteCommand(string command, string args = "")
         {
             return await CommandLine.Execute("jupyter", $"kernelspec {command} {args}");
@@ -21,61 +22,38 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             return ExecuteCommand($@"install ""{sourceDirectory.FullName}""", "--user");
         }
 
+        public IReadOnlyDictionary<string, DirectoryInfo> GetInstalledKernelDirectories()
+        {
+            // do this only once. If a new kernel is installed, the kernel has to be reloaded. 
+            if (_installedKernelDirs == null)
+            {
+                _installedKernelDirs = new Dictionary<string, DirectoryInfo>();
+
+                var dataDirectories = JupyterCommonDirectories.GetDataDirectories();
+                foreach (var directory in dataDirectories)
+                {
+                    var kernelDir = new DirectoryInfo(Path.Combine(directory.FullName, "kernels"));
+                    if (kernelDir.Exists)
+                    {
+                        var kernels = kernelDir.GetDirectories();
+                        foreach (var kernel in kernels)
+                        {
+                            if (!_installedKernelDirs.ContainsKey(kernel.Name))
+                            {
+                                _installedKernelDirs.Add(kernel.Name, kernel);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return _installedKernelDirs;
+        }
+
         public DirectoryInfo GetDefaultKernelSpecDirectory()
         {
-
-            var directory = GetDefaultAnacondaKernelSpecDirectory();
-            if (!directory.Exists)
-            {
-                directory = GetDefaultJupyterKernelSpecDirectory();
-            }
-
-            return directory;
-        }
-
-        private static DirectoryInfo GetDefaultAnacondaKernelSpecDirectory()
-        {
-            DirectoryInfo directory;
-            switch (Environment.OSVersion.Platform)
-            {
-                case PlatformID.Win32S:
-                case PlatformID.Win32Windows:
-                case PlatformID.Win32NT:
-                    directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Continuum", "anaconda3", "share", "jupyter", "kernels"));
-                    break;
-                case PlatformID.Unix:
-                    directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "anaconda3", "share", "jupyter", "kernels"));
-                    break;
-                case PlatformID.MacOSX:
-                    directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "opt", "anaconda3", "share", "jupyter", "kernels"));
-                    break;
-                default:
-                    throw new PlatformNotSupportedException();
-            }
-
-            return directory;
-        }
-
-        private static DirectoryInfo GetDefaultJupyterKernelSpecDirectory()
-        {
-            DirectoryInfo directory;
-            switch (Environment.OSVersion.Platform)
-            {
-                case PlatformID.Win32S:
-                case PlatformID.Win32Windows:
-                case PlatformID.Win32NT:
-                    directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "jupyter", "kernels"));
-                    break;
-                case PlatformID.Unix:
-                    directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share", "jupyter", "kernels"));
-                    break;
-                case PlatformID.MacOSX:
-                    directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Jupyter", "kernels"));
-                    break;
-                default:
-                    throw new PlatformNotSupportedException();
-            }
-
+            var dataDirectory = JupyterCommonDirectories.GetDataDirectory();
+            var directory = new DirectoryInfo(Path.Combine(dataDirectory.FullName, "kernels"));
             return directory;
         }
     }
