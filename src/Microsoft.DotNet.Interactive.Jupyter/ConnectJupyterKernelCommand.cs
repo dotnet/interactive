@@ -18,6 +18,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter;
 
 public class ConnectJupyterKernelCommand : ConnectKernelCommand
 {
+    private List<CompletionItem> _kernelSpecCompletions;
+    private int? _optionHash = null;
+
     public ConnectJupyterKernelCommand() : base("jupyter",
                                         "Connects to a jupyter kernel")
     {
@@ -88,18 +91,34 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
 
     private List<CompletionItem> GetKernelSpecsCompletions(CompletionContext ctx)
     {
-        var specCompletions = new List<CompletionItem>();
+        var latestHash = GetOptionHash(ctx.ParseResult);
+        if (latestHash == _optionHash)
+        {
+            return _kernelSpecCompletions;
+        }
+
+        _optionHash = latestHash;
+        _kernelSpecCompletions = new List<CompletionItem>();
         using (var connection = GetJupyterConnection(ctx.ParseResult))
         {
-            var specs = connection.ListAvailableKernelSpecsAsync().Result;
+            var specs = connection.GetKernelSpecsAsync().Result;
             if (specs != null)
             {
                 foreach (var s in specs)
                 {
-                    specCompletions.Add(new CompletionItem(s));
+                    _kernelSpecCompletions.Add(new CompletionItem(s));
                 }
             }
         }
-        return specCompletions;
+        return _kernelSpecCompletions;
+    }
+
+    private int GetOptionHash(ParseResult parseResult)
+    {
+        var targetUrl = parseResult.GetValueForOption(TargetUrl);
+        var token = parseResult.GetValueForOption(Token);
+        var useBearerAuth = parseResult.GetValueForOption(UseBearerAuth);
+
+        return (targetUrl + token + useBearerAuth).GetHashCode();
     }
 }

@@ -8,7 +8,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Connection;
 
 public interface IJupyterConnection : IDisposable
 {
-    Task<string[]> ListAvailableKernelSpecsAsync();
+    Task<string[]> GetKernelSpecsAsync();
 
     Task<IJupyterKernelConnection> CreateKernelConnectionAsync(string kernelSpec);
 }

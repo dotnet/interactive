@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reactive.Disposables;
 using System.Text;
 using System.Text.Json;
@@ -18,11 +19,18 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ;
 internal class LocalJupyterConnection : IJupyterConnection
 {
     private readonly CompositeDisposable _disposables = new CompositeDisposable();
+    private readonly IJupyterKernelSpecModule _kernelSpecModule;
     private Process _kernelProcess;
-    
-    public Task<string[]> ListAvailableKernelSpecsAsync()
+
+    public LocalJupyterConnection(IJupyterKernelSpecModule kernelSpecModule = null)
     {
-        return Task.FromResult<string[]>(null);
+        _kernelSpecModule = kernelSpecModule ?? new JupyterKernelSpecModule();
+    }
+
+    public Task<string[]> GetKernelSpecsAsync()
+    {
+        var specsDirs = _kernelSpecModule.GetInstalledKernelDirectories();
+        return Task.FromResult(specsDirs?.Keys.ToArray());
     }
 
     public async Task<IJupyterKernelConnection> CreateKernelConnectionAsync(string kernelType)
@@ -34,7 +42,7 @@ internal class LocalJupyterConnection : IJupyterConnection
             return kernelConnection;
         }
 
-        throw new KernelLaunchException(kernelType, "could not start kernel process");
+        throw new KernelLaunchException(kernelType, $"Process Exited with exit code {_kernelProcess.ExitCode}");
     }
 
     private async Task<ConnectionInformation> LaunchKernel(string kernelType)
@@ -64,20 +72,20 @@ internal class LocalJupyterConnection : IJupyterConnection
                 StdinPort = reservedPorts[2],
                 ControlPort = reservedPorts[3],
                 HBPort = reservedPorts[4],
-                IP = "127.0.0.1",
+                IP = IPAddress.Loopback.ToString(), // "127.0.0.1",
                 Key = Guid.NewGuid().ToString(),
                 Transport = "tcp",
                 SignatureScheme = "hmac-sha256"
             };
 
             var fileName = $"kernel-{Guid.NewGuid().ToString()}.json";
-            var connectionInfoTempFilePath = $@"{fileName}";
+            var connectionInfoTempFilePath = Path.Combine(Path.GetTempPath(), fileName);
             using (var writer = new FileStream(connectionInfoTempFilePath, FileMode.CreateNew))
             {
                 await JsonSerializer.SerializeAsync(writer, connectionInfo, connectionInfo.GetType(), JsonFormatter.SerializerOptions);
             }
 
-            var runtimeConnectionFile = $@"{fileName}";
+            var runtimeConnectionFile = Path.Combine(JupyterCommonDirectories.GetRuntimeDirectory().FullName, fileName);
             File.Copy(connectionInfoTempFilePath, runtimeConnectionFile);
             File.Delete(connectionInfoTempFilePath);
 
@@ -124,9 +132,20 @@ internal class LocalJupyterConnection : IJupyterConnection
 
     private KernelSpec GetKernelSpec(string kernelType)
     {
-        var kernelJson = JsonDocument.Parse(File.ReadAllText(@""));
-        var spec = JsonSerializer.Deserialize<KernelSpec>(kernelJson, JsonFormatter.SerializerOptions);
+        var installedSpecs = _kernelSpecModule.GetInstalledKernelDirectories(); 
 
-        return spec;
+        if (installedSpecs.ContainsKey(kernelType))
+        {
+            var directory = installedSpecs[kernelType];
+            var kernelJsonPath = Path.Combine(directory.FullName, "kernel.json");
+            if (File.Exists(kernelJsonPath))
+            {
+                var kernelJson = JsonDocument.Parse(File.ReadAllText(kernelJsonPath));
+                var spec = JsonSerializer.Deserialize<KernelSpec>(kernelJson, JsonFormatter.SerializerOptions);
+                return spec;
+            }
+        }
+
+        return null;
     }
 }
