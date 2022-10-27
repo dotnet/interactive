@@ -35,24 +35,24 @@ internal class LocalJupyterConnection : IJupyterConnection
 
     public async Task<IJupyterKernelConnection> CreateKernelConnectionAsync(string kernelType)
     {
-        var connectionInfo = await LaunchKernel(kernelType);
+        var connectionInfo = await StartKernelAsync(kernelType);
 
         if (connectionInfo != null && !_kernelProcess.HasExited) {
             var kernelConnection = new ZMQKernelConnection(connectionInfo, _kernelProcess.Id);
             return kernelConnection;
         }
 
-        throw new KernelLaunchException(kernelType, $"Process Exited with exit code {_kernelProcess.ExitCode}");
+        throw new KernelStartException(kernelType, $"Process Exited with exit code {_kernelProcess.ExitCode}. Ensure you are running in the correct environment.");
     }
 
-    private async Task<ConnectionInformation> LaunchKernel(string kernelType)
+    private async Task<ConnectionInformation> StartKernelAsync(string kernelType)
     {
         // find the related kernel spec for the kernel type 
         var spec = GetKernelSpec(kernelType);
 
         if (spec is null)
         {
-            throw new KernelLaunchException(kernelType, "kernel not found");
+            throw new KernelStartException(kernelType, "kernel not found");
         }
 
         ConnectionInformation connectionInfo = null;

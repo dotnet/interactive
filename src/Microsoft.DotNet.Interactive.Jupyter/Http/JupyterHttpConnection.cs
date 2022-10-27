@@ -5,6 +5,7 @@ using Microsoft.DotNet.Interactive.Jupyter.Connection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reactive.Disposables;
@@ -36,7 +37,7 @@ internal class KernelInfo
 
 internal class KernelSpecs
 {
-    public string @default {get; set;} 
+    public string @default { get; set; }
     public Dictionary<string, KernelSpecDetail> kernelspecs { get; set; }
 }
 
@@ -108,27 +109,34 @@ internal class JupyterHttpConnection : IJupyterConnection
                 name = kernelType
             },
             name = "",
-            path = $"dotnet-{kernelId}", 
+            path = $"dotnet-{kernelId}",
             type = "notebook"
         };
 
-        HttpResponseMessage response = await SendWebRequestAsync(
-            apiPath: "api/sessions",
-            body: JsonSerializer.Serialize(body),
-            contentType: "application/json",
-            method: HttpMethod.Post
-        );
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            throw new KernelLaunchException(kernelType, response.ReasonPhrase);
+            HttpResponseMessage response = await SendWebRequestAsync(
+                apiPath: "api/sessions",
+                body: JsonSerializer.Serialize(body),
+                contentType: "application/json",
+                method: HttpMethod.Post
+            );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new KernelStartException(kernelType, response.ReasonPhrase);
+            }
+
+            byte[] bytes = await response.Content.ReadAsByteArrayAsync();
+            var session = JsonSerializer.Deserialize<KernelSessionInfo>(bytes);
+
+            Uri socketUri = GetWebsocketUri($"/api/kernels/{session.kernel.id}/channels?token={_token}");
+            return new JupyterKernelHttpConnection(socketUri, GetHttpUri($"api/kernels/{session.kernel.id}"));
         }
-
-        byte[] bytes = await response.Content.ReadAsByteArrayAsync();
-        var session = JsonSerializer.Deserialize<KernelSessionInfo>(bytes);
-
-        Uri socketUri = GetWebsocketUri($"/api/kernels/{session.kernel.id}/channels?token={_token}");
-        return new JupyterKernelHttpConnection(socketUri, GetHttpUri($"api/kernels/{session.kernel.id}"));
+        catch (Exception e)
+        {
+            throw new KernelStartException(kernelType, e.Message);
+        }
     }
 
 
@@ -175,5 +183,5 @@ internal class JupyterHttpConnection : IJupyterConnection
         return new Uri(socketUri);
     }
 
-    
+
 }
