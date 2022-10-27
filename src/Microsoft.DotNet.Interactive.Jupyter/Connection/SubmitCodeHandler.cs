@@ -6,6 +6,8 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
@@ -28,7 +30,7 @@ internal class SubmitCodeHandler : CommandToJupyterMessageHandlerBase<SubmitCode
                                 .Do(replyMessage => HandleReplyMessage(replyMessage, command, context))
                                 .TakeUntil(m => m.MessageType == JupyterMessageContentTypes.Error
                                 || (m.MessageType == JupyterMessageContentTypes.Status && (m as Status)?.ExecutionState == StatusValues.Idle));
-                                // run until kernel idle
+        // run until kernel idle
 
         await Sender.SendAsync(executeRequest);
         await executeReply.ToTask(token);
@@ -48,18 +50,23 @@ internal class SubmitCodeHandler : CommandToJupyterMessageHandlerBase<SubmitCode
                 break;
 
             case (DisplayData displayData):
-                var formattedDisplayValues = displayData.Data.Select(d => new FormattedValue(d.Key, d.Value.ToString())).ToArray();
-
                 context.Publish(new DisplayedValueProduced(displayData.Data,
                                                         command,
-                                                        formattedDisplayValues));
+                                                        GetFormattedValues(displayData.Data),
+                                                        GetDisplayIdFromTransientData(displayData.Transient)
+                                                        ));
+                break;
+
+            case (UpdateDisplayData updateDisplayData):
+                context.Publish(new DisplayedValueUpdated(updateDisplayData.Data,
+                                                          GetDisplayIdFromTransientData(updateDisplayData.Transient),
+                                                          command,
+                                                          GetFormattedValues(updateDisplayData.Data)));
                 break;
             case (ExecuteResult result):
-                var formattedValues = result.Data.Select(d => new FormattedValue(d.Key, d.Value.ToString())).ToArray();
-
                 context.Publish(new ReturnValueProduced(result.Data,
                                                         command,
-                                                        formattedValues));
+                                                        GetFormattedValues(result.Data)));
                 break;
             case (Stream streamResult):
                 if (streamResult.Name == Stream.StandardOutput)
@@ -85,5 +92,17 @@ internal class SubmitCodeHandler : CommandToJupyterMessageHandlerBase<SubmitCode
             default:
                 break;
         }
+    }
+
+    private string GetDisplayIdFromTransientData(IReadOnlyDictionary<string, object> transientData)
+    {
+        string key = "display_id";
+        return transientData.ContainsKey(key) ? transientData[key]?.ToString() : Guid.NewGuid().ToString();
+    }
+
+    private IReadOnlyCollection<FormattedValue> GetFormattedValues(IReadOnlyDictionary<string, object> data)
+    {
+        var formattedValues = data.Select(d => new FormattedValue(d.Key, d.Value.ToString())).ToArray();
+        return formattedValues;
     }
 }
