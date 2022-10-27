@@ -44,7 +44,7 @@ class __ValueAdapterCommTarget:
             elif (command == 'variables'):
                 cls._handle_variablesRequest(command)
         except Exception as e:
-            cls._sendResponse(command, False)
+            cls._sendResponse(command, False, None, str(e))
     
     @classmethod
     def _handle_variablesRequest(cls, command):
@@ -87,6 +87,10 @@ class __ValueAdapterCommTarget:
         var_type = variableInfo['type']
         var_value = variableInfo['value']
         
+        if (not str.isidentifier(var_name)):
+            cls._sendResponse(command, False, None, 'Invalid Identifier')
+            return
+        
         resultValue = var_value
         if (var_type == 'application/table-schema+json'):
             import json; resultValue = json.loads(var_value)
@@ -113,7 +117,7 @@ class __ValueAdapterCommTarget:
         globals()[name] = value
         
     @classmethod
-    def _sendResponse(cls, command, success = False, body = None):
+    def _sendResponse(cls, command, success = False, body = None, message = None):
         response = {
             'type': 'response', 
             'command': command, 
@@ -122,7 +126,10 @@ class __ValueAdapterCommTarget:
         
         if (body is not None):
             response['body'] = body
-        
+
+        if (message is not None):
+            response['message'] = message
+
         # print (response)
         cls._control_comm.send(response)
 

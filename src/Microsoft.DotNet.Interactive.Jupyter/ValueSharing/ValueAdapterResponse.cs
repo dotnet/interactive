@@ -18,9 +18,14 @@ public abstract class ValueAdapterResponse<T> : ValueAdapterCommandMessage where
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public T Body { get; }
 
-    public ValueAdapterResponse(bool success, T body): base(ValueAdapterMessageType.Response)
+    [JsonPropertyName("message")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string Message { get; }
+
+    public ValueAdapterResponse(bool success, T body, string message) : base(ValueAdapterMessageType.Response)
     {
         Success = success;
         Body = body;
+        Message = message;
     }
 }

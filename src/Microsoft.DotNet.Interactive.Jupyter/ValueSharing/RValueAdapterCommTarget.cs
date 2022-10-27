@@ -22,33 +22,39 @@ library(jsonlite);
             .response <- list(
                     type = 'response',
                     command=.command, 
-                    success=FALSE, 
-                    body=list()
-                    );
+                    success=FALSE);
             
             if (.command == 'setVariable') {
                 varInfo <- .msg$arguments;
                 varName <- varInfo$name;
                 resultVal <- varInfo$value;
 
-                if (varInfo$type == 'application/table-schema+json') {
-                    .resultValTable <- fromJSON(varInfo$value);
-                    resultVal <- data.frame(.resultValTable$data);
-                } else if (varInfo$type == 'application/json') {
-                    resultVal <- fromJSON(varInfo$value);
-                };
+                if (make.names(varName) != varName) {
+                    .response <- list(
+                        type = 'response',
+                        command=.command, 
+                        success=FALSE, 
+                        body=NULL, 
+                        message='Invalid Identifier');
+                } else {
+                    if (varInfo$type == 'application/table-schema+json') {
+                        .resultValTable <- fromJSON(varInfo$value);
+                        resultVal <- data.frame(.resultValTable$data);
+                    } else if (varInfo$type == 'application/json') {
+                        resultVal <- fromJSON(varInfo$value);
+                    };
                 
-                assign(varName, resultVal, globalenv());
-                .response <- list(
-                    type = 'response',
-                    command=.command, 
-                    success=TRUE, 
-                    body=list(
-                        name=varName, 
-                        type=typeof(resultVal)
-                    )
-                );
-                
+                    assign(varName, resultVal, globalenv());
+                    .response <- list(
+                        type = 'response',
+                        command=.command, 
+                        success=TRUE, 
+                        body=list(
+                            name=varName, 
+                            type=typeof(resultVal)
+                        )
+                    );
+                }
             } else if (.command == 'getVariable') {
                 varInfo <- .msg$arguments;
                 varName <- varInfo$name;

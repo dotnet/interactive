@@ -42,6 +42,20 @@ internal class CommValueAdapter : IValueAdapter
         _disposables.Dispose();
     }
 
+    public void Display(ICommandExecutionContext context, KernelCommand command, object value, params string[] mimeTypes)
+    {
+        var displayId = Guid.NewGuid().ToString();
+
+        var formattedValues = FormattedValue.FromObject(value, mimeTypes);
+
+        context.Publish(
+            new DisplayedValueProduced(
+                value,
+                command,
+                formattedValues,
+                displayId));
+    }
+
     public async Task HandleCommandAsync(SendValue command, ICommandExecutionContext context, CancellationToken token)
     {
         if (FailIfAgentIsClosed(command, context))
@@ -61,16 +75,28 @@ internal class CommValueAdapter : IValueAdapter
             {
                 int tableCount = tables.Count();
                 int tableIndex = 0;
+
+                var variablePartNames = Enumerable.Repeat(variableName, tableCount).Select((s, i) => $"{s}{i + 1}").ToArray();
                 foreach (var table in tables)
                 {
-                    var variableIndex = tableCount > 1 ? (++tableIndex).ToString() : String.Empty;
+                    var partName = tableCount > 1 ? variablePartNames[tableIndex++] : variableName;
                     var response = await SetVariableAsync(
                         seq,
-                        $"{variableName}{variableIndex}",
+                        partName,
                         JsonSerializer.Serialize(table, TabularDataResourceFormatter.JsonSerializerOptions),
                         TabularDataResourceFormatter.MimeType,
                         token);
                     success = response is not null && response.Success;
+                    if (!success)
+                    {
+                        context.Publish(new CommandFailed($"Failed to create part of results in '{variableName}' as '{partName}'. {response.Message}", command));
+                        break;
+                    }
+                }
+
+                if (success && tableCount > 1)
+                {
+                    Display(context, command, $"Multiple results in '{variableName}'. Created variables as {string.Join(", ", variablePartNames)}");
                 }
             }
             else
@@ -78,11 +104,15 @@ internal class CommValueAdapter : IValueAdapter
                 var formattedValue = (variableValue is TabularDataResource table) ?
                     new FormattedValue(
                         TabularDataResourceFormatter.MimeType,
-                        JsonSerializer.Serialize(table, TabularDataResourceFormatter.JsonSerializerOptions)) 
+                        JsonSerializer.Serialize(table, TabularDataResourceFormatter.JsonSerializerOptions))
                     : command.FormattedValue;
 
                 var response = await SetVariableAsync(seq, variableName, formattedValue.Value, formattedValue.MimeType, token);
                 success = response is not null && response.Success;
+                if (!success)
+                {
+                    context.Publish(new CommandFailed($"Failed to create variable '{variableName}'. {response.Message}", command));
+                }
             }
         }
         catch (Exception e)
@@ -94,10 +124,6 @@ internal class CommValueAdapter : IValueAdapter
         if (success)
         {
             context.Publish(new CommandSucceeded(command));
-        }
-        else
-        {
-            context.Publish(new CommandFailed($"Failed to create variable {variableName}.", command));
         }
     }
 
