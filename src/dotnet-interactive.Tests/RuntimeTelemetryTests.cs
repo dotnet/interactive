@@ -34,17 +34,47 @@ public class RuntimeTelemetryTests : IDisposable
     [Fact]
     public async Task Language_information_is_sent_on_successful_code_execution_when_target_kernel_is_specified()
     {
+        var telemetrySender = new FakeTelemetrySender();
+        using var kernel = new CompositeKernel
+            {
+                new CSharpKernel().UseNugetDirective(),
+                new FakeKernel("kql", "KQL"),
+                new FakeKernel("sql", "T-SQL")
+            }
+            .UseTelemetrySender(telemetrySender);
+        
+        await kernel.SendAsync(new SubmitCode(@"
+#!sql
+select * from db
+
+#!kql
+telemetry
+| take 1
+", "csharp"));
+
+        var properties = telemetrySender.TelemetryEvents.Where(e => e.EventName == "CodeSubmitted").SelectMany(e =>e.Properties).Where(p => p.Key == "KernelName" || p.Key == "KernelLanguageName").ToArray();
+
+        properties.Should().Contain(
+            new KeyValuePair<string, string>("KernelName", "kql".ToSha256Hash()),
+            new KeyValuePair<string, string>("KernelLanguageName", "KQL".ToSha256Hash()),
+            new KeyValuePair<string, string>("KernelName", "sql".ToSha256Hash()),
+            new KeyValuePair<string, string>("KernelLanguageName", "T-SQL".ToSha256Hash()));
+    }
+
+    [Fact]
+    public async Task Language_information_is_sent_on_successful_code_execution_after_split()
+    {
         await _kernel.SendAsync(new SubmitCode("123", "csharp"));
 
         _telemetrySender.TelemetryEvents
-                        .Should()
-                        .ContainSingle(e => e.EventName == "CodeSubmitted")
-                        .Which
-                        .Properties
-                        .Should()
-                        .Contain(
-                            new KeyValuePair<string, string>("KernelName", "csharp".ToSha256Hash()),
-                            new KeyValuePair<string, string>("KernelLanguageName", "C#".ToSha256Hash()));
+            .Should()
+            .ContainSingle(e => e.EventName == "CodeSubmitted")
+            .Which
+            .Properties
+            .Should()
+            .Contain(
+                new KeyValuePair<string, string>("KernelName", "csharp".ToSha256Hash()),
+                new KeyValuePair<string, string>("KernelLanguageName", "C#".ToSha256Hash()));
     }
 
     [Fact]
