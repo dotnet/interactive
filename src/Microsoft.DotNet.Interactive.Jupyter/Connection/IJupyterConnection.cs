@@ -2,13 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Connection;
 
 public interface IJupyterConnection : IDisposable
 {
-    Task<string[]> GetKernelSpecsAsync();
+    Task<IReadOnlyCollection<string>> GetKernelSpecNamesAsync();
 
     Task<IJupyterKernelConnection> CreateKernelConnectionAsync(string kernelSpec);
 }

@@ -27,10 +27,10 @@ internal class LocalJupyterConnection : IJupyterConnection
         _kernelSpecModule = kernelSpecModule ?? new JupyterKernelSpecModule();
     }
 
-    public Task<string[]> GetKernelSpecsAsync()
+    public Task<IReadOnlyCollection<string>> GetKernelSpecNamesAsync()
     {
         var specsDirs = _kernelSpecModule.GetInstalledKernelDirectories();
-        return Task.FromResult(specsDirs?.Keys.ToArray());
+        return Task.FromResult<IReadOnlyCollection<string>>(specsDirs?.Keys.ToArray());
     }
 
     public async Task<IJupyterKernelConnection> CreateKernelConnectionAsync(string kernelType)

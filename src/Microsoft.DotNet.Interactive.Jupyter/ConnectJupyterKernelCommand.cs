@@ -101,7 +101,7 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
         _kernelSpecCompletions = new List<CompletionItem>();
         using (var connection = GetJupyterConnection(ctx.ParseResult))
         {
-            var specs = connection.GetKernelSpecsAsync().Result;
+            var specs = connection.GetKernelSpecNamesAsync().Result;
             if (specs != null)
             {
                 foreach (var s in specs)
