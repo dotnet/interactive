@@ -1,4 +1,4 @@
-# Using HTML and JavaScript in .NET Interactive
+# Using HTML and JavaScript with .NET Interactive
 
 Creating visualizations for data is one of the key features of notebooks. In both Visual Studio Code and Jupyter, the frontend can render HTML, and there are numerous libraries available for .NET and Python the help create plots and visualizations. It's common in such libraries that you can write code that executes in the kernel, and the library handles the transformation into HTML and JavaScript for you. With .NET Interactive, there are some APIs available to simplify the process of directly writing your HTML and JavaScript. This enables you to create custom visualizations and directly access the broader ecosysytem of JavaScript libraries without needing wrapper libraries. You may choose to use these APIs directly or use them to create custom extensions to enrich the visualization of .NET types.
 
