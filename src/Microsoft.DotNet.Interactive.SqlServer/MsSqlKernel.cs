@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         internal MsSqlKernel(
             string name,
             string connectionString,
-            ToolsServiceClient client) : base(name, client, "SQLite")
+            ToolsServiceClient client) : base(name, client, "T-SQL")
         {
             if (string.IsNullOrWhiteSpace(connectionString))
             {
