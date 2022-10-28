@@ -150,7 +150,7 @@
         },
         "polyglot-notebook.interactiveToolSource": {
           "type": "string",
-          "default": "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json",
+          "default": "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-experimental/nuget/v3/index.json",
           "description": "The NuGet source to use when acquiring the .NET Interactive tool."
         },
         "polyglot-notebook.minimumDotNetSdkVersion": {
