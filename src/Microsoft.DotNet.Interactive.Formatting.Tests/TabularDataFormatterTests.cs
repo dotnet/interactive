@@ -140,6 +140,36 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         }
 
         [Fact]
+        public void serialization_of_sequence_of_dictionaries_is_equivalent_to_sequence_of_objects()
+        {
+            var dict = new Dictionary<string, object>[]
+            {
+                new()
+                {
+                    ["a"] = 1,
+                    ["b"] = "2",
+                    ["c"] = null
+                },
+                new()
+                {
+                    ["a"] = 4,
+                    ["b"] = "5",
+                    ["c"] = 6
+                }
+            };
+            var obj = new[]
+            {
+                new { a = 1, b = "2", c = (int?)null },
+                new { a = 4, b = "5", c = (int?)6 },
+            };
+
+            var dictJson = dict.ToDisplayString(TabularDataResourceFormatter.MimeType);
+            var objJson = obj.ToDisplayString(TabularDataResourceFormatter.MimeType);
+
+            dictJson.Should().Be(objJson);
+        }
+
+        [Fact]
         public void can_generate_tabular_json_from_data_with_nullable_types()
         {
             var data = new Dictionary<string, int?>
@@ -156,7 +186,28 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void Tabular_data_resource_with_is_formatted_as_a_table()
         {
-            var tabularDataResource = JsonDocument.Parse(@"
+            var tabularDataResource = CreateTabularDataResource();
+
+            tabularDataResource
+                .ToDisplayString("text/html")
+                .Should()
+                .Be("<table><thead><tr><td><span>name</span></td><td><span>deliciousness</span></td><td><span>color</span></td><td><span>available</span></td></tr></thead><tbody><tr><td>Granny Smith apple</td><td><div class=\"dni-plaintext\">12</div></td><td>green</td><td><div class=\"dni-plaintext\">True</div></td></tr><tr><td>Rainier cherry</td><td><div class=\"dni-plaintext\">9000</div></td><td>yellow</td><td><div class=\"dni-plaintext\">True</div></td></tr></tbody></table>");
+        }
+
+        [Fact]
+        public void Serialization_as_MIME_type_application_json_uses_custom_formatter()
+        {
+            var tabularDataResource = CreateTabularDataResource();
+
+            var tabularDataResourceJson = tabularDataResource.ToDisplayString(TabularDataResourceFormatter.MimeType);
+            var applicationJson = tabularDataResource.ToDisplayString(JsonFormatter.MimeType);
+
+            applicationJson.Should().Be(tabularDataResourceJson);
+        }
+
+        private static TabularDataResource CreateTabularDataResource()
+        {
+            return JsonDocument.Parse(@"
 [
   {
       ""name"": ""Granny Smith apple"", 
@@ -171,11 +222,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
       ""available"":true
   }
 ]").ToTabularDataResource();
-
-            tabularDataResource
-                .ToDisplayString("text/html")
-                .Should()
-                .Be("<table><thead><tr><td><span>name</span></td><td><span>deliciousness</span></td><td><span>color</span></td><td><span>available</span></td></tr></thead><tbody><tr><td>Granny Smith apple</td><td><div class=\"dni-plaintext\">12</div></td><td>green</td><td><div class=\"dni-plaintext\">True</div></td></tr><tr><td>Rainier cherry</td><td><div class=\"dni-plaintext\">9000</div></td><td>yellow</td><td><div class=\"dni-plaintext\">True</div></td></tr></tbody></table>");
         }
 
         public void Dispose()

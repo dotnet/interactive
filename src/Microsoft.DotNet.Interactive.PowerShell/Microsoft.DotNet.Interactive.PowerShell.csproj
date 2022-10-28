@@ -48,6 +48,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.IO.Pipelines" Version="6.0.3" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="$(SystemSecurityCryptographyXmlVersion)" />
     <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.2.6" />
   </ItemGroup>
 
