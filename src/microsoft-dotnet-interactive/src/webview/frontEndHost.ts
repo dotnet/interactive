@@ -24,7 +24,8 @@ export function createHost(
 
     const compositeKernel = new CompositeKernel(compositeKernelName);
     const kernelHost = new KernelHost(compositeKernel, connection.KernelCommandAndEventSender.FromObserver(localToRemote), connection.KernelCommandAndEventReceiver.FromObservable(remoteToLocal), `kernel://${compositeKernelName}`);
-    remoteToLocal.subscribe({
+
+    kernelHost.defaultConnector.receiver.subscribe({
         next: (envelope) => {
             if (connection.isKernelEventEnvelope(envelope) && envelope.eventType === contracts.KernelInfoProducedType) {
                 const kernelInfoProduced = <contracts.KernelInfoProduced>envelope.event;

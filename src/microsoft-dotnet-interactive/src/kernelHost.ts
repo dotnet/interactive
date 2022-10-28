@@ -29,6 +29,10 @@ export class KernelHost {
         this._connectors.push(this._defaultConnector);
     }
 
+    public get defaultConnector(): connection.Connector {
+        return this._defaultConnector;
+    }
+
     public get uri(): string {
         return this._uri;
     }
