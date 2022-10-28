@@ -68,7 +68,7 @@ console.log(`The value is ${x}.`);
 1234
 ```
 
-And the .NET ITERACTIVE: VALUES window should contain a variable with name `asdf`, value `1234` and kernel Name `csharp`
+And the `POLYGLOT NOTEBOOK: VALUES` window should contain a variable with name `asdf`, value `1234` and kernel Name `csharp`
 
 #!javascript
 
@@ -184,10 +184,10 @@ Now check the variable explorer. Is the value there in the `#!value` kernel?
 
 # Check this manual scenario:
 
-1. `Ctrl+Shift+P` => ".NET Interactive: Create new blank notebook"
+1. `Ctrl+Shift+P` => "Polyglot Notebook: Create new blank notebook"
 2. Select "Create as .dib"
 3. Select "F#"
-4. You should have a new empty notebook named something like "Untitled-1.dib" with a single cell of type "F# (Interactive)".
+4. You should have a new empty notebook named something like "Untitled-1.dib" with a single cell of type "F# (Polyglot Notebook)".
 5. Set the cell contents to `1+1` and execute.
 6. Verify output of `2`.
 7. Save to disk.
@@ -213,6 +213,32 @@ Now check the variable explorer. Is the value there in the `#!value` kernel?
 
 ``` json
 {
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {
+    "polyglot_notebook": {
+     "language": "fsharp"
+    },
+    "vscode": {
+     "languageId": "dotnet-interactive.fsharp"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "2\r\n"
+     ]
+    }
+   ],
+   "source": [
+    "1+1"
+   ]
+  }
+ ],
  "metadata": {
   "kernelspec": {
    "display_name": ".NET (F#)",
@@ -223,31 +249,6 @@ Now check the variable explorer. Is the value there in the `#!value` kernel?
    "name": "F#"
   }
  },
- "cells": [
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "source": [
-    "1+1"
-   ],
-   "outputs": [
-    {
-     "output_type": "display_data",
-     "data": {
-      "text/html": [
-       "<div class=\"dni-plaintext\">2</div>"
-      ]
-     },
-     "metadata": {}
-    }
-   ],
-   "metadata": {
-    "dotnet_interactive": {
-     "language": "fsharp"
-    }
-   }
-  }
- ],
  "nbformat": 4,
  "nbformat_minor": 2
 }
@@ -257,7 +258,7 @@ Now check the variable explorer. Is the value there in the `#!value` kernel?
 
 # Open the two previously saved notebooks via the following:
 
-1. `Ctrl+Shift+P` => ".NET Interactive: Open notebook"
+1. `Ctrl+Shift+P` => "Polyglot Notebook: Open notebook"
 2. Select the "Untitled-1.dib"/"Untitled-1.ipynb" from before.
 3. Verify that it contains a single F# cell with the contents "1+1" and that it can execute.
 

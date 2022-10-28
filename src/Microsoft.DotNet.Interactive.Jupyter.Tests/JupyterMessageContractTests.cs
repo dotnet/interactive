@@ -3,7 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-
+using System.Diagnostics;
 using Assent;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
             _configuration = new Configuration()
                 .UsingExtension("json");
 
-            _configuration = _configuration.SetInteractive(false);
+            _configuration = _configuration.SetInteractive(Debugger.IsAttached);
         }
 
         [Fact]

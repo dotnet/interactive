@@ -13,7 +13,7 @@
     <ToolCommandName>dotnet-interactive</ToolCommandName>
     <IsPackable>true</IsPackable>
     <PackageDescription>Command line tool for interactive programming with C#, F#, and PowerShell, including support for Jupyter Notebooks.</PackageDescription>
-    <PackageTags>dotnet interactive Jupyter csharp fsharp PowerShell</PackageTags>
+    <PackageTags>polyglot notebook dotnet interactive Jupyter csharp fsharp PowerShell</PackageTags>
     <PackAsTool>true</PackAsTool>
     <Description>.NET Interactive</Description>
     <NoWarn>$(NoWarn);8002</NoWarn><!-- Markdig isn't strongly signed -->

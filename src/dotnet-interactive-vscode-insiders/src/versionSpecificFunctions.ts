@@ -145,7 +145,7 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, ker
 
         client.registerForDisposal(() => {
             messageHandlerMap.delete(documentUriString);
-            client.kernelHost.tryRemoveConnector({ remoteUris: ["kernel://webview"] })
+            client.kernelHost.tryRemoveConnector({ remoteUris: ["kernel://webview"] });
             sub01.unsubscribe();
             sub02.unsubscribe();
         });
