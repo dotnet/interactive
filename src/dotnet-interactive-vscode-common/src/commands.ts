@@ -19,9 +19,9 @@ import * as versionSpecificFunctions from '../versionSpecificFunctions';
 import { PromiseCompletionSource } from './dotnet-interactive/promiseCompletionSource';
 
 export function registerAcquisitionCommands(context: vscode.ExtensionContext, diagnosticChannel: ReportChannel) {
-    const config = vscode.workspace.getConfiguration('polyglot-notebook');
-    const minDotNetInteractiveVersion = config.get<string>('minimumInteractiveToolVersion');
-    const interactiveToolSource = config.get<string>('interactiveToolSource');
+    const dotnetConfig = vscode.workspace.getConfiguration('dotnet-interactive');
+    const minDotNetInteractiveVersion = dotnetConfig.get<string>('minimumInteractiveToolVersion');
+    const interactiveToolSource = dotnetConfig.get<string>('interactiveToolSource');
 
     let cachedInstallArgs: InstallInteractiveArgs | undefined = undefined;
     let acquirePromise: Promise<InteractiveLaunchOptions> | undefined = undefined;
