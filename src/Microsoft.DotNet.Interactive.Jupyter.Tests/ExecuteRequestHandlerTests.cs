@@ -459,7 +459,7 @@ f();"));
         {
             var metaData = new Dictionary<string, object>
             {
-                { "polyglot_notebook", new InputCellMetadata ("fsharp") }
+                { "dotnet_interactive", new InputCellMetadata ("fsharp") }
             };
             var request = ZeroMQMessage.Create(new ExecuteRequest("1+1"), metaData: metaData);
             var context = new JupyterRequestContext(JupyterMessageSender, request);

@@ -182,7 +182,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     const cellKind = languageToCellKind(language);
                     const notebookCellLanguage = getNotebookSpecificLanguage(language);
                     const newCell = new vscode.NotebookCellData(cellKind, contents, notebookCellLanguage);
-                    const succeeded = versionSpecificFunctions.replaceNotebookCells(notebookDocument.uri, range, [newCell]);
+                    const succeeded = await versionSpecificFunctions.replaceNotebookCells(notebookDocument.uri, range, [newCell]);
                     if (!succeeded) {
                         throw new Error(`Unable to add cell to notebook '${notebookUri.toString()}'.`);
                     }

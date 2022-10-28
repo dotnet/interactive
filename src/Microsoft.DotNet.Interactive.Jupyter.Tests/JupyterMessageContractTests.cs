@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         {
             _configuration = new Configuration()
                 .UsingExtension("json");
-            
+
             _configuration = _configuration.SetInteractive(Debugger.IsAttached);
         }
 
@@ -177,7 +177,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 
             var metaData = new Dictionary<string, object>
             {
-                { "polyglot_notebook", new InputCellMetadata("fsharp") }
+                { "dotnet_interactive", new InputCellMetadata("fsharp") }
             };
 
             var replyMessage = new Message(header, content: executeResult, metaData: metaData);

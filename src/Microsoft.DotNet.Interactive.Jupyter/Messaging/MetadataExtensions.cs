@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Messaging
             {
                 switch (property.Name)
                 {
-                    case "polyglot_notebook":
+                    case "dotnet_interactive":
                         metadata[property.Name] = JsonSerializer.Deserialize<InputCellMetadata>(property.Value.GetRawText());
                         break;
 

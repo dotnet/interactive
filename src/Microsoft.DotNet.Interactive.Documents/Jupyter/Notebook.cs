@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter
 
         public static JsonSerializerOptions JsonSerializerOptions { get; }
 
-        public const string MetadataNamespace = "polyglot_notebook";
+        public const string MetadataNamespace = "dotnet_interactive";
 
         public static Encoding Encoding => new UTF8Encoding(false);
 

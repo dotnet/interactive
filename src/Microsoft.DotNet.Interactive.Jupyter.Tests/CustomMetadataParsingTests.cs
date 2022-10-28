@@ -17,12 +17,12 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         {
             var rawMetadata = new
             {
-                polyglot_notebook = new InputCellMetadata("fsharp")
+                dotnet_interactive = new InputCellMetadata("fsharp")
             };
             var rawMetadataJson = JsonSerializer.Serialize(rawMetadata);
             var metadata = MetadataExtensions.DeserializeMetadataFromJsonString(rawMetadataJson);
             metadata.Should()
-                .ContainKey("polyglot_notebook")
+                .ContainKey("dotnet_interactive")
                 .WhoseValue
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata("fsharp"));
@@ -33,12 +33,12 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         {
             var rawMetadata = new
             {
-                polyglot_notebook = new InputCellMetadata()
+                dotnet_interactive = new InputCellMetadata()
             };
             var rawMetadataJson = JsonSerializer.Serialize(rawMetadata);
             var metadata = MetadataExtensions.DeserializeMetadataFromJsonString(rawMetadataJson);
             metadata.Should()
-                .ContainKey("polyglot_notebook")
+                .ContainKey("dotnet_interactive")
                 .WhoseValue
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata() );
@@ -49,12 +49,12 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         {
             var rawMetadata = new
             {
-                polyglot_notebook_but_not_the_right_shape = new InputCellMetadata("fsharp")
+                dotnet_interactive_but_not_the_right_shape = new InputCellMetadata("fsharp")
             };
             var rawMetadataJson = JsonSerializer.Serialize(rawMetadata);
             var metadata = MetadataExtensions.DeserializeMetadataFromJsonString(rawMetadataJson);
             metadata.Should()
-                .NotContainKey("polyglot_notebook");
+                .NotContainKey("dotnet_interactive");
         }
     }
 }

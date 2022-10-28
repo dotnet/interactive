@@ -359,7 +359,7 @@ describe('ipynb metadata tests', () => {
             const cellMetadata = {
                 custom: {
                     metadata: {
-                        polyglot_notebook: {
+                        dotnet_interactive: {
                             language: 'see-sharp'
                         }
                     }
@@ -373,7 +373,7 @@ describe('ipynb metadata tests', () => {
             const cellMetadata = {
                 custom: {
                     metadata_but_not_the_correct_shape: {
-                        polyglot_notebook: {
+                        dotnet_interactive: {
                             language: 'see-sharp'
                         }
                     }
@@ -387,7 +387,7 @@ describe('ipynb metadata tests', () => {
             const cellMetadata = {
                 custom: {
                     metadata: {
-                        polyglot_notebook_but_not_the_correct_shape: {
+                        dotnet_interactive_but_not_the_correct_shape: {
                             language: 'see-sharp'
                         }
                     }
@@ -401,7 +401,7 @@ describe('ipynb metadata tests', () => {
             const cellMetadata = {
                 custom: {
                     metadata: {
-                        polyglot_notebook: {
+                        dotnet_interactive: {
                             language_but_not_the_correct_shape: 'see-sharp'
                         }
                     }
@@ -415,7 +415,7 @@ describe('ipynb metadata tests', () => {
             const cellMetadata = {
                 custom: {
                     metadata: {
-                        polyglot_notebook: {
+                        dotnet_interactive: {
                             language: 42 // not a string
                         }
                     }
@@ -431,7 +431,7 @@ describe('ipynb metadata tests', () => {
             expect(updatedCellMetadata).to.deep.equal({
                 custom: {
                     metadata: {
-                        polyglot_notebook: {
+                        dotnet_interactive: {
                             language: 'pwsh'
                         }
                     }
@@ -446,7 +446,7 @@ describe('ipynb metadata tests', () => {
                     anotherNumber: 43,
                     metadata: {
                         stillAnotherNumber: 44,
-                        polyglot_notebook: {
+                        dotnet_interactive: {
                             aReallyDeepNumber: 45,
                             language: 'not-pwsh'
                         }
@@ -460,7 +460,7 @@ describe('ipynb metadata tests', () => {
                     anotherNumber: 43,
                     metadata: {
                         stillAnotherNumber: 44,
-                        polyglot_notebook: {
+                        dotnet_interactive: {
                             aReallyDeepNumber: 45,
                             language: 'pwsh'
                         }

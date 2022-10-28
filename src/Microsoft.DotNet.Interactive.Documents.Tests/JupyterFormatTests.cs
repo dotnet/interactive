@@ -145,7 +145,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                     execution_count = 1,
                     metadata = new
                     {
-                        polyglot_notebook = new
+                        dotnet_interactive = new
                         {
                             language = "fsharp"
                         }
@@ -196,7 +196,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                     execution_count = 1,
                     metadata = new
                     {
-                        polyglot_notebook = new
+                        dotnet_interactive = new
                         {
                             language = "fsharp"
                         }
@@ -273,7 +273,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                     execution_count = 1,
                     metadata = new
                     {
-                        polyglot_notebook = new
+                        dotnet_interactive = new
                         {
                             language = "fsharp"
                         }
@@ -644,7 +644,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                     },
                     metadata = new
                     {
-                        polyglot_notebook = new
+                        dotnet_interactive = new
                         {
                             not_a_language = "fsharp"
                         }
@@ -663,7 +663,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                     {
                         Metadata = new Dictionary<string, object>
                         {
-                            ["polyglot_notebook"] = new Dictionary<string, object>
+                            ["dotnet_interactive"] = new Dictionary<string, object>
                             {
                                 ["not_a_language"] = "fsharp"
                             }
@@ -1028,7 +1028,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                                                  execution_count = (int?)null,
                                                  metadata = new
                                                  {
-                                                     polyglot_notebook = new
+                                                     dotnet_interactive = new
                                                      {
                                                          language = "csharp"
                                                      }
@@ -1078,7 +1078,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 execution_count = 123,
                 metadata = new
                 {
-                    polyglot_notebook = new
+                    dotnet_interactive = new
                     {
                         language = "fsharp"
                     }
