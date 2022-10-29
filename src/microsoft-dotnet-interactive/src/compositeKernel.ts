@@ -102,11 +102,37 @@ export class CompositeKernel extends Kernel {
     }
 
     findKernelByUri(uri: string): Kernel | undefined {
+        if (this.kernelInfo.uri === uri) {
+            return this;
+        }
         return this._childKernels.tryGetByUri(uri);
     }
 
     findKernelByName(name: string): Kernel | undefined {
+        if (this.kernelInfo.localName === name || this.kernelInfo.aliases.find(a => a === name)) {
+            return this;
+        }
         return this._childKernels.tryGetByAlias(name);
+    }
+
+    findKernels(predicate: (kernel: Kernel) => boolean): Kernel[] {
+        var results: Kernel[] = [];
+        if (predicate(this)) {
+            results.push(this);
+        }
+        for (let kernel of this.childKernels) {
+            if (predicate(kernel)) {
+                results.push(kernel);
+            }
+        }
+        return results;
+    }
+
+    findKernel(predicate: (kernel: Kernel) => boolean): Kernel | undefined {
+        if (predicate(this)) {
+            return this;
+        }
+        return this.childKernels.find(predicate);
     }
 
     setDefaultTargetKernelNameForCommand(commandType: contracts.KernelCommandType, kernelName: string) {
