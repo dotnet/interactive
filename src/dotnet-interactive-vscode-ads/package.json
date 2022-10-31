@@ -101,61 +101,15 @@
     "configuration": {
       "title": "Polyglot Notebook",
       "properties": {
-        "polyglot-notebook.kernelTransportArgs": {
-          "type": "array",
-          "default": [
-            "{dotnet_path}",
-            "tool",
-            "run",
-            "dotnet-interactive",
-            "--",
-            "[vscode]",
-            "stdio",
-            "--working-dir",
-            "{working_dir}"
-          ],
-          "description": "Command and arguments used to start a notebook session."
-        },
         "polyglot-notebook.kernelEnvironmentVariables": {
           "type": "object",
           "default": {},
           "description": "Environment variables to set when starting a notebook session."
         },
-        "polyglot-notebook.notebookParserArgs": {
-          "type": "array",
-          "default": [
-            "{dotnet_path}",
-            "tool",
-            "run",
-            "dotnet-interactive",
-            "--",
-            "notebook-parser"
-          ]
-        },
-        "polyglot-notebook.kernelTransportWorkingDirectory": {
-          "type": "string",
-          "default": "{global_storage_path}",
-          "description": "The working directory in which the kernel transport process is started."
-        },
         "polyglot-notebook.languageServiceDelay": {
           "type": "number",
           "default": 500,
           "description": "The delay in ms before language services are invoked."
-        },
-        "polyglot-notebook.interactiveToolSource": {
-          "type": "string",
-          "default": "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json",
-          "description": "The NuGet source to use when acquiring the .NET Interactive tool."
-        },
-        "polyglot-notebook.minimumDotNetSdkVersion": {
-          "type": "string",
-          "default": "6.0",
-          "description": "The minimum required version of the .NET SDK."
-        },
-        "polyglot-notebook.minimumInteractiveToolVersion": {
-          "type": "string",
-          "default": "1.0.350406",
-          "description": "The minimum required version of the .NET Interactive tool."
         },
         "polyglot-notebook.logLevel": {
           "type": "string",
@@ -172,6 +126,52 @@
             "Logs error messages",
             "Disables logging"
           ]
+        },
+        "dotnet-interactive.kernelTransportArgs": {
+          "type": "array",
+          "default": [
+            "{dotnet_path}",
+            "tool",
+            "run",
+            "dotnet-interactive",
+            "--",
+            "[vscode]",
+            "stdio",
+            "--working-dir",
+            "{working_dir}"
+          ],
+          "description": "Command and arguments used to start a notebook session."
+        },
+        "dotnet-interactive.notebookParserArgs": {
+          "type": "array",
+          "default": [
+            "{dotnet_path}",
+            "tool",
+            "run",
+            "dotnet-interactive",
+            "--",
+            "notebook-parser"
+          ]
+        },
+        "dotnet-interactive.kernelTransportWorkingDirectory": {
+          "type": "string",
+          "default": "{global_storage_path}",
+          "description": "The working directory in which the kernel transport process is started."
+        },
+        "dotnet-interactive.interactiveToolSource": {
+          "type": "string",
+          "default": "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json",
+          "description": "The NuGet source to use when acquiring the .NET Interactive tool."
+        },
+        "dotnet-interactive.minimumDotNetSdkVersion": {
+          "type": "string",
+          "default": "6.0",
+          "description": "The minimum required version of the .NET SDK."
+        },
+        "dotnet-interactive.minimumInteractiveToolVersion": {
+          "type": "string",
+          "default": "1.0.350406",
+          "description": "The minimum required version of the .NET Interactive tool."
         }
       }
     },
