@@ -20,9 +20,6 @@ changelog:
     - title: Area-Automation 
       labels:
         - Area-Automation
-    - title: Area-Azure Data Studio
-      labels:
-        - Area-Azure Data Studio
     - title: Area-C#
       labels:
         - Area-C#

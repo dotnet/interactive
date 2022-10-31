@@ -4,7 +4,7 @@ The .NET Interactive tool works with multiple frontends, and so depending on how
 
 ## Jupyter
 
-.NET Interactive is a Jupyter kernel. To install it for use with Jupyter (including Jupyter Notebook, JupyterLab, nteract, Azure Data Studio, and others), follow the instructions [here](NotebookswithJupyter.md). 
+.NET Interactive is a Jupyter kernel. To install it for use with Jupyter (including Jupyter Notebook, JupyterLab, nteract, and others), follow the instructions [here](NotebookswithJupyter.md). 
 
 ## Visual Studio Code
 

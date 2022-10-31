@@ -7,13 +7,6 @@ Set-StrictMode -version 2.0
 $ErrorActionPreference = "Stop"
 
 try {
-    function GetAzureDataStudioVSCodeVersion() {
-        # e.g., fetch the value "1.59.0" and turn it into "1.59"
-        $fullVersion = (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/microsoft/azuredatastudio/main/product.json" | ConvertFrom-Json).vscodeVersion
-        $versionParts = $fullVersion.Split(".")
-        return "$($versionParts[0]).$($versionParts[1])"
-    }
-
     function Update-VersionNumbers([string] $packageJsonPath, [string] $vscodeEngine, [bool] $updateToolVersion) {
         Write-Host "Updating file '$packageJsonPath'"
 
@@ -55,10 +48,8 @@ try {
     $vsCodeStableVersion = (Get-Content "$PSScriptRoot\vscodeStableVersion.txt").Trim() # e.g., "1.53"
     $vsCodeVersionParts = $vsCodeStableVersion -split "\."
     $vsCodeInsidersVersion = $vsCodeVersionParts[0] + "." + ([int]$vsCodeVersionParts[1] + 1)
-    $adsStableVersion = GetAzureDataStudioVSCodeVersion # e.g., "1.53"
 
     Update-VersionNumbers -packageJsonPath "$PSScriptRoot\package.json" -vscodeEngine "^$vsCodeStableVersion.0" -updateToolVersion $updateAll
-    Update-VersionNumbers -packageJsonPath "$PSScriptRoot\..\dotnet-interactive-vscode-ads\package.json" -vscodeEngine "^$adsStableVersion.0" -updateToolVersion $updateAll
     Update-VersionNumbers -packageJsonPath "$PSScriptRoot\..\dotnet-interactive-vscode-insiders\package.json" -vscodeEngine "$vsCodeInsidersVersion.0-insider" -updateToolVersion $true
 }
 catch {
