@@ -9,7 +9,7 @@
  <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageDescription>Support for dotnet-interactive</PackageDescription>
-    <PackageTags>dotnet-interactive JavaScript</PackageTags>
+    <PackageTags>polyglot notebook dotnet interactive JavaScript</PackageTags>
     <IncludeBuildOutput>true</IncludeBuildOutput>
   </PropertyGroup>
     
