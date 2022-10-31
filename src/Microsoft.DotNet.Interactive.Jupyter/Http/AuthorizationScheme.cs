@@ -3,7 +3,7 @@
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Http;
 
-internal static class AuthType
+internal static class AuthorizationScheme
 {
     public static string Bearer = "Bearer";
     public static string Token = "token";
