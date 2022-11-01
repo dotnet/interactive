@@ -54,7 +54,7 @@ Execute code by selecting the subkernel in the bottom right of each cell, or use
 
 ## Variable Sharing + Variable Explorer 
 
-Share variables from subkernel to subkernel via the #!share command that is easily generated from the variable explorer. Use the variable explorer to manage the state and value of your variables. 
+Share variables from subkernel to subkernel via the `#!share` magic command that is easily generated from the variable explorer. Use the Variable Explorer to manage the state and value of your variables. 
 
 ![Variable Sharing via Variable Explorer](images/VariableSharingExample.gif)
 
