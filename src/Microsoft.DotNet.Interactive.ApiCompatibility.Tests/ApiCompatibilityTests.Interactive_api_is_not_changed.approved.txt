@@ -242,6 +242,7 @@ Microsoft.DotNet.Interactive
     public Microsoft.DotNet.Interactive.Commands.KernelCommand Command { get;}
     public Kernel HandlingKernel { get;}
     public System.Boolean IsComplete { get;}
+    public System.Boolean IsFailed { get;}
     public System.IObservable<Microsoft.DotNet.Interactive.Events.KernelEvent> KernelEvents { get;}
     public KernelCommandResult Result { get;}
     public System.Void Complete(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
