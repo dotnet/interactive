@@ -54,7 +54,10 @@ internal class RequestSignatureHelpHandler : CommandToJupyterMessageHandlerBase<
                 {
                     // the kernels return everything as a docstring. 
                     var signatureHelpItems = results.Data.Select(d => new SignatureInformation(string.Empty,
-                                                                                               new FormattedValue(d.Key, d.Value.ToString()),
+                                                                                               new FormattedValue(d.Key, 
+                                                                                                                  d.Value
+                                                                                                                    .ToString()
+                                                                                                                    .StripUnsupportedTextFormats()),
                                                                                                new List<ParameterInformation>())).ToArray();
 
                     context.Publish(new SignatureHelpProduced(command, signatureHelpItems,0, 0)); 

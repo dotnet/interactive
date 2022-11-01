@@ -55,7 +55,11 @@ internal class RequestHoverTextHandler : CommandToJupyterMessageHandlerBase<Requ
                 if (results.Found)
                 {
                     // TODO: The data returned is using ANSI encoding. Need to format to show correctly in hover text
-                    var content = results.Data.Select(d => new FormattedValue(d.Key, d.Value.ToString())).ToArray();
+                    var content = results.Data.Select(d => new FormattedValue(d.Key, 
+                                                                              d.Value
+                                                                                .ToString()
+                                                                                .StripUnsupportedTextFormats())
+                                                                              ).ToArray();
                     context.Publish(new HoverTextProduced(command, content, new LinePositionSpan(command.LinePosition, command.LinePosition))); // we don't get any line position back from kernel
                 }
 
