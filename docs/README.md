@@ -53,7 +53,7 @@ There are several ways to get started using .NET Interactive with Jupyter, inclu
 
 ## Acknowledgements 
 
-The multi-language experience of .NET Interactive is truly a collaborative efforts amongst other groups at Microsoft. We'd like to thank the following teams for contributing their time and expertise to helping light up functionality for other languages. 
+The multi-language experience of .NET Interactive is truly a collaborative effort amongst other groups at Microsoft. We'd like to thank the following teams for contributing their time and expertise to helping light up functionality for other languages. 
 
 - **PowerShell Team:** PowerShell
 - **Azure Data/SQL Team:** SQL, KQL
