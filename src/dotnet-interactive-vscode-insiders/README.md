@@ -22,7 +22,7 @@ With the Polyglot Notebooks extension, you can use multiple languages in the sam
 ## Features
 
 - Connect to and query from Microsoft SQL Server databases and Kusto clusters
-- Run and execute code for all 8 featured languages
+- Run and execute code for all featured languages
 - Language server support such as completions, syntax highlighting, and signature help for each language
 - Variable sharing between languages
 - Variable Explorer to check value and state of variables 
