@@ -3,6 +3,7 @@
 
 import * as contracts from "./contracts";
 import { Kernel, IKernelCommandInvocation } from "./kernel";
+import { Logger } from "./logger";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
 
 export class HtmlKernel extends Kernel {
@@ -45,7 +46,8 @@ export interface HtmlDomFragmentInserterConfiguration {
     getOrCreateContainer?: () => HTMLElement,
     updateContainerContent?: (container: HTMLElement, htmlFragment: string) => void,
     createMutationObserver?: (callback: MutationCallback) => MutationObserver,
-    normalizeHtmlFragment?: (htmlFragment: string) => string
+    normalizeHtmlFragment?: (htmlFragment: string) => string,
+    jsEvaluator?: (js: string) => void
 };
 
 export function htmlDomFragmentInserter(htmlFragment: string, configuration?: HtmlDomFragmentInserterConfiguration): Promise<string> {
@@ -62,7 +64,7 @@ export function htmlDomFragmentInserter(htmlFragment: string, configuration?: Ht
     });
     const updateContainerContent = configuration?.updateContainerContent ?? ((container, htmlFragment) => container.innerHTML = htmlFragment);
     const createMutationObserver = configuration?.createMutationObserver ?? (callback => new MutationObserver(callback));
-
+    const jsEvaluator = configuration?.jsEvaluator ?? ((js: string) => eval(js));
     let container = getOrCreateContainer();
 
     const normalisedHtmlFragment = nomarliseFragment(htmlFragment);
@@ -84,7 +86,19 @@ export function htmlDomFragmentInserter(htmlFragment: string, configuration?: Ht
 
     mutationObserver.observe(container, { childList: true, subtree: true });
     updateContainerContent(container, normalisedHtmlFragment);
-    return completionPromise.promise.then(() => container.innerHTML);
+    return completionPromise.promise.then(() => {
+        container.querySelectorAll("script").forEach(script => {
+            if (script.textContent) {
+                try {
+                    jsEvaluator(script.textContent);
+                } catch (e: any) {
+                    e;//?
+                    Logger.default.error(e?.message ?? e);
+                }
+            }
+        });
+        return container.innerHTML;
+    });
 }
 
 export type HtmlKernelInBrowserConfiguration = { kernelName: string, container: HTMLElement | string, contentBehaviour: "append" | "replace" } | { kernelName: string, htmlDomFragmentInserterConfiguration: HtmlDomFragmentInserterConfiguration };
