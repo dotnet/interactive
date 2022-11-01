@@ -174,7 +174,7 @@ export class Kernel {
                 this.name;//?
                 Logger.default.info(`kernel ${this.name} of type ${KernelType[this.kernelType]} subscribing to context events`);
                 eventSubscription = context.kernelEvents.pipe(rxjs.map(e => {
-                    const message = `kernel ${this.name} of type ${KernelType[this.kernelType]} saw event ${e.eventType} with token ${e.command?.token}`; Logger.default.info(message);
+                    const message = `kernel ${this.name} of type ${KernelType[this.kernelType]} saw event ${e.eventType} with token ${e.command?.token}`;
                     Logger.default.info(message);
                     tryAddUriToRoutingSlip(e, getKernelUri(this));
                     return e;
