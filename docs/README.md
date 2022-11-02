@@ -67,7 +67,7 @@ We support running on devices like Raspberry Pi and [pi-top [4]](https://github.
 
 ### Telemetry
 
-Telemetry is collected when .NET Interactive is started. Once .NET Interactive is running, we collect the names of packages imported into the notebook and the languages used to run individual cells. We do not collect any additional code from cells. The telemetry is anonymous and reports only the values for a specific subset of the verbs in the .NET Interactive CLI. Those verbs are:
+Telemetry is collected when .NET Interactive is started. Once .NET Interactive is running, we collect hashed versions of packages imported into the notebook and the languages used to run individual cells. We do not collect any additional code or clear text from cells. The telemetry is anonymous and reports only the values for a specific subset of the verbs in the .NET Interactive CLI. Those verbs are:
 
 * `dotnet interactive jupyter`
 * `dotnet interactive jupyter install`
