@@ -29,7 +29,7 @@ public class VariablesResponseBody : IValueAdapterResponseBody
 [ValueAdapterCommand(ValueAdapterCommandTypes.Variables)]
 public class VariablesResponse : ValueAdapterResponse<VariablesResponseBody>
 {
-    public VariablesResponse(bool success, VariablesResponseBody body) : base(success, body)
+    public VariablesResponse(bool success, VariablesResponseBody body, string message = null) : base(success, body, message)
     {
     }
 }

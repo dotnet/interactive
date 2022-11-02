@@ -1,10 +1,11 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Http;
+using System.Threading.Tasks;
 
-internal static class AuthType
+namespace Microsoft.DotNet.Interactive.Jupyter;
+
+internal interface IJupyterKernelConfiguration
 {
-    public static string Bearer = "Bearer";
-    public static string Token = "token";
+    Task<bool> ApplyAsync(JupyterKernel kernel);
 }

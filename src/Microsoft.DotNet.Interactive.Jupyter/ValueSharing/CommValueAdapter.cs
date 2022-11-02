@@ -5,7 +5,6 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
-using Microsoft.DotNet.Interactive.Jupyter.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging.Comms;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
@@ -15,7 +14,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reactive.Disposables;
 using System.Reactive.Threading.Tasks;
 using System.Text.Json;
 using System.Threading;
@@ -23,26 +21,24 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing;
 
-internal class CommValueAdapter : IValueAdapter
+internal class CommValueAdapter : IDisposable,
+    IKernelCommandHandler<SendValue>,
+    IKernelCommandHandler<RequestValue>,
+    IKernelCommandHandler<RequestValueInfos>
 {
     private readonly CommAgent _agent;
-    private readonly CompositeDisposable _disposables;
 
     public CommValueAdapter(CommAgent agent)
     {
         _agent = agent ?? throw new ArgumentNullException(nameof(agent));
-        _disposables = new CompositeDisposable
-        {
-            _agent
-        };
     }
 
     public void Dispose()
     {
-        _disposables.Dispose();
+        _agent.Dispose();
     }
 
-    public async Task HandleCommandAsync(SendValue command, ICommandExecutionContext context, CancellationToken token)
+    public async Task HandleAsync(SendValue command, KernelInvocationContext context)
     {
         if (FailIfAgentIsClosed(command, context))
         {
@@ -61,16 +57,29 @@ internal class CommValueAdapter : IValueAdapter
             {
                 int tableCount = tables.Count();
                 int tableIndex = 0;
+
+                var variablePartNames = Enumerable.Repeat(variableName, tableCount).Select((s, i) => $"{s}{i + 1}").ToArray();
                 foreach (var table in tables)
                 {
-                    var variableIndex = tableCount > 1 ? (++tableIndex).ToString() : String.Empty;
+                    var partName = tableCount > 1 ? variablePartNames[tableIndex++] : variableName;
                     var response = await SetVariableAsync(
                         seq,
-                        $"{variableName}{variableIndex}",
+                        partName,
                         JsonSerializer.Serialize(table, TabularDataResourceFormatter.JsonSerializerOptions),
                         TabularDataResourceFormatter.MimeType,
-                        token);
+                        context.CancellationToken);
                     success = response is not null && response.Success;
+                    if (!success)
+                    {
+                        context.Display($"Failed to create part of results in '{variableName}' as '{partName}'. {response.Message}");
+                        context.Fail(command);
+                        return;
+                    }
+                }
+
+                if (success && tableCount > 1)
+                {
+                    context.Display($"Multiple results in '{variableName}'. Created variables as {string.Join(", ", variablePartNames)}");
                 }
             }
             else
@@ -78,26 +87,23 @@ internal class CommValueAdapter : IValueAdapter
                 var formattedValue = (variableValue is TabularDataResource table) ?
                     new FormattedValue(
                         TabularDataResourceFormatter.MimeType,
-                        JsonSerializer.Serialize(table, TabularDataResourceFormatter.JsonSerializerOptions)) 
+                        JsonSerializer.Serialize(table, TabularDataResourceFormatter.JsonSerializerOptions))
                     : command.FormattedValue;
 
-                var response = await SetVariableAsync(seq, variableName, formattedValue.Value, formattedValue.MimeType, token);
+                var response = await SetVariableAsync(seq, variableName, formattedValue.Value, formattedValue.MimeType, context.CancellationToken);
                 success = response is not null && response.Success;
+                if (!success)
+                {
+                    context.Display($"Failed to create variable '{variableName}'. {response.Message}");
+                    context.Fail(command);
+                    return;
+                }
             }
         }
         catch (Exception e)
         {
-            context.Publish(new CommandFailed(e, command));
+            context.Fail(command, e);
             return;
-        }
-
-        if (success)
-        {
-            context.Publish(new CommandSucceeded(command));
-        }
-        else
-        {
-            context.Publish(new CommandFailed($"Failed to create variable {variableName}.", command));
         }
     }
 
@@ -116,7 +122,7 @@ internal class CommValueAdapter : IValueAdapter
         return null;
     }
 
-    public async Task HandleCommandAsync(RequestValue command, ICommandExecutionContext context, CancellationToken token)
+    public async Task HandleAsync(RequestValue command, KernelInvocationContext context)
     {
         if (FailIfAgentIsClosed(command, context))
         {
@@ -126,7 +132,7 @@ internal class CommValueAdapter : IValueAdapter
         var arguments = new GetVariableArguments(command.Name, command.MimeType);
         var request = new GetVariableRequest(arguments);
 
-        var response = await SendRequestAsync(request, token);
+        var response = await SendRequestAsync(request, context.CancellationToken);
 
         if (response is GetVariableResponse getVariableResponse && getVariableResponse.Success)
         {
@@ -143,14 +149,14 @@ internal class CommValueAdapter : IValueAdapter
             var formatted = new FormattedValue(command.MimeType, writer.ToString());
 
             context.Publish(new ValueProduced(value, command.Name, formatted, command));
-            context.Publish(new CommandSucceeded(command));
             return;
         }
 
-        context.Publish(new CommandFailed($"Failed to get variable {command.Name}.", command));
+        context.Display($"Failed to get variable {command.Name}.");
+        context.Fail(command);
     }
 
-    public async Task HandleCommandAsync(RequestValueInfos command, ICommandExecutionContext context, CancellationToken token)
+    public async Task HandleAsync(RequestValueInfos command, KernelInvocationContext context)
     {
         if (FailIfAgentIsClosed(command, context))
         {
@@ -159,7 +165,7 @@ internal class CommValueAdapter : IValueAdapter
 
         var request = new VariablesRequest();
 
-        var response = await SendRequestAsync(request, token);
+        var response = await SendRequestAsync(request, context.CancellationToken);
 
         if (response is VariablesResponse variablesResponse && variablesResponse.Success)
         {
@@ -167,11 +173,11 @@ internal class CommValueAdapter : IValueAdapter
                 .Select(v => new KernelValueInfo(v.Name)).ToList();
 
             context.Publish(new ValueInfosProduced(kernelValueInfos, command));
-            context.Publish(new CommandSucceeded(command));
             return;
         }
 
-        context.Publish(new CommandFailed($"Failed to get variables", command));
+        context.Display($"Failed to get variables");
+        context.Fail(command); 
     }
 
     private async Task<ValueAdapterMessage> SendRequestAsync(ValueAdapterMessage request, CancellationToken token)
@@ -197,11 +203,11 @@ internal class CommValueAdapter : IValueAdapter
             JupyterMessageContentTypes.CommClose);
     }
 
-    private bool FailIfAgentIsClosed(KernelCommand command, ICommandExecutionContext context)
+    private bool FailIfAgentIsClosed(KernelCommand command, KernelInvocationContext context)
     {
         if (_agent.IsClosed)
         {
-            context.Publish(new CommandFailed("Value adapter channel with kernel shutdown", command));
+            context.Fail(command, null, "Value adapter channel with kernel shutdown");
             return true;
         }
 

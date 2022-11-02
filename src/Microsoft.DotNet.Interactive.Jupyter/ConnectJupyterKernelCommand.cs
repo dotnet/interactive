@@ -79,7 +79,7 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
 
         if (targetUrl is not null)
         {
-            var connection = new JupyterHttpConnection(new Uri(targetUrl), token, useBearerAuth ? AuthType.Bearer : null);
+            var connection = new JupyterHttpConnection(new Uri(targetUrl), new JupyterTokenProvider(token, useBearerAuth ? AuthorizationScheme.Bearer : null));
             return connection;
         }
         else

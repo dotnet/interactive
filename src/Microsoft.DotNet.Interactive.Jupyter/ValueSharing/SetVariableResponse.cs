@@ -28,7 +28,7 @@ public class SetVariableResponseBody : IValueAdapterResponseBody
 [ValueAdapterCommand(ValueAdapterCommandTypes.SetVariable)]
 public class SetVariableResponse : ValueAdapterResponse<SetVariableResponseBody>
 {
-    public SetVariableResponse(bool success, SetVariableResponseBody body) : base(success, body)
+    public SetVariableResponse(bool success, SetVariableResponseBody body, string message = null) : base(success, body, message)
     {
     }
 }

@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Reactive.Disposables;
 using System.Text;
 using System.Text.Json;
@@ -36,7 +35,7 @@ internal class KernelInfo
 
 internal class KernelSpecs
 {
-    public string @default {get; set;} 
+    public string @default { get; set; }
     public Dictionary<string, KernelSpecDetail> kernelspecs { get; set; }
 }
 
@@ -50,22 +49,23 @@ internal class KernelSpecDetail
 
 internal class JupyterHttpConnection : IJupyterConnection
 {
-    private readonly string _token;
-    private readonly string _authType;
-    private readonly HttpClient _httpClient;
+    private readonly HttpApiClient _apiClient;
+    private readonly IAuthorizationProvider _authProvider;
     private readonly CompositeDisposable _disposables;
-    private readonly Uri _serverUri;
     private string[] _availableKernels;
 
-    public JupyterHttpConnection(Uri uri, string token, string authType = null)
+    public JupyterHttpConnection(Uri serverUri, IAuthorizationProvider authProvider) :
+        this(new HttpApiClient(serverUri, authProvider), authProvider)
+    { }
+
+    public JupyterHttpConnection(HttpApiClient apiClient, IAuthorizationProvider authProvider)
     {
-        _serverUri = uri;
-        _token = token;
-        _authType = authType ?? AuthType.Token;
-        _httpClient = new HttpClient();
+        _apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
+        _authProvider = authProvider ?? throw new ArgumentNullException(nameof(authProvider));
+
         _disposables = new CompositeDisposable
         {
-            _httpClient
+            _apiClient
         };
     }
 
@@ -78,10 +78,9 @@ internal class JupyterHttpConnection : IJupyterConnection
     {
         if (_availableKernels == null)
         {
-            HttpResponseMessage response = await SendWebRequestAsync(
-                apiPath: "api/kernelspecs",
-                body: null,
-                contentType: "application/json",
+            HttpResponseMessage response = await _apiClient.SendRequestAsync(
+                relativeApiPath: "api/kernelspecs",
+                content: null,
                 method: HttpMethod.Get
             );
 
@@ -108,72 +107,34 @@ internal class JupyterHttpConnection : IJupyterConnection
                 name = kernelType
             },
             name = "",
-            path = $"dotnet-{kernelId}", 
+            path = $"dotnet-{kernelId}",
             type = "notebook"
         };
 
-        HttpResponseMessage response = await SendWebRequestAsync(
-            apiPath: "api/sessions",
-            body: JsonSerializer.Serialize(body),
-            contentType: "application/json",
-            method: HttpMethod.Post
-        );
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            throw new KernelLaunchException(kernelType, response.ReasonPhrase);
+            HttpResponseMessage response = await _apiClient.SendRequestAsync(
+                relativeApiPath: "api/sessions",
+                content: new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json"),
+                method: HttpMethod.Post
+            );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new KernelStartException(kernelType, response.ReasonPhrase);
+            }
+
+            byte[] bytes = await response.Content.ReadAsByteArrayAsync();
+            var session = JsonSerializer.Deserialize<KernelSessionInfo>(bytes);
+
+            var kernelApiClient = _apiClient.CreateClient($"api/kernels/{session.kernel.id}");
+
+            return new JupyterKernelHttpConnection(kernelApiClient, _authProvider);
         }
-
-        byte[] bytes = await response.Content.ReadAsByteArrayAsync();
-        var session = JsonSerializer.Deserialize<KernelSessionInfo>(bytes);
-
-        Uri socketUri = GetWebsocketUri($"/api/kernels/{session.kernel.id}/channels?token={_token}");
-        return new JupyterKernelHttpConnection(socketUri, GetHttpUri($"api/kernels/{session.kernel.id}"));
-    }
-
-
-    private async Task<HttpResponseMessage> SendWebRequestAsync(
-        string apiPath,
-        string body,
-        string contentType,
-        HttpMethod method)
-    {
-        _httpClient.DefaultRequestHeaders.Clear();
-        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(".NET internative");
-
-        if (_token is not null)
+        catch (Exception e)
         {
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"{_authType} {_token}");
+            throw new KernelStartException(kernelType, e.Message);
         }
-
-        var request = new HttpRequestMessage()
-        {
-            RequestUri = GetHttpUri(apiPath),
-            Method = method
-        };
-
-        if (body is not null)
-        {
-            request.Content = new StringContent(body, Encoding.UTF8, contentType);
-        }
-
-        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-        return await _httpClient.SendAsync(request);
     }
 
-    private Uri GetHttpUri(string apiPath)
-    {
-        return new Uri($"{_serverUri.AbsoluteUri}{apiPath}");
-    }
-
-    private Uri GetWebsocketUri(string apiPath)
-    {
-        string websocketScheme = _serverUri.Scheme == "http" ? "ws" : "wss";
-        string socketUri = $"{websocketScheme}://{_serverUri.Authority}{apiPath}";
-
-        return new Uri(socketUri);
-    }
-
-    
 }
