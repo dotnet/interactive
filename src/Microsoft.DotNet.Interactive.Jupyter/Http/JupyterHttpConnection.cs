@@ -49,16 +49,16 @@ internal class KernelSpecDetail
 
 internal class JupyterHttpConnection : IJupyterConnection
 {
-    private readonly ApiClient _apiClient;
+    private readonly HttpApiClient _apiClient;
     private readonly IAuthorizationProvider _authProvider;
     private readonly CompositeDisposable _disposables;
     private string[] _availableKernels;
 
     public JupyterHttpConnection(Uri serverUri, IAuthorizationProvider authProvider) :
-        this(new ApiClient(serverUri, authProvider), authProvider)
+        this(new HttpApiClient(serverUri, authProvider), authProvider)
     { }
 
-    public JupyterHttpConnection(ApiClient apiClient, IAuthorizationProvider authProvider)
+    public JupyterHttpConnection(HttpApiClient apiClient, IAuthorizationProvider authProvider)
     {
         _apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
         _authProvider = authProvider ?? throw new ArgumentNullException(nameof(authProvider));

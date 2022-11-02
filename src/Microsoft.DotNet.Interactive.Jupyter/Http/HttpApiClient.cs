@@ -1,17 +1,20 @@
-﻿using System;
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Http;
 
-internal class ApiClient : IDisposable
+internal class HttpApiClient : IDisposable
 {
     private readonly HttpClient _httpClient = new HttpClient();
     private readonly Uri _baseUri;
     private readonly IAuthorizationProvider _authProvider;
     
-    public ApiClient(Uri baseUri, IAuthorizationProvider authProvider)
+    public HttpApiClient(Uri baseUri, IAuthorizationProvider authProvider)
     {
         _baseUri = baseUri ?? throw new ArgumentNullException(nameof(baseUri));
         _authProvider = authProvider ?? throw new ArgumentNullException(nameof(authProvider));
@@ -19,9 +22,9 @@ internal class ApiClient : IDisposable
 
     public Uri BaseUri => _baseUri;
 
-    public virtual ApiClient CreateClient(string relativeApiPath)
+    public virtual HttpApiClient CreateClient(string relativeApiPath)
     {
-        return new ApiClient(new Uri(_baseUri, relativeApiPath), _authProvider);
+        return new HttpApiClient(new Uri(_baseUri, relativeApiPath), _authProvider);
     }
 
     public void Dispose()

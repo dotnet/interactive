@@ -21,22 +21,22 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Http;
 
 internal class JupyterKernelHttpConnection : IJupyterKernelConnection, IMessageSender, IMessageReceiver
 {
-    private readonly ApiClient _apiClient;
+    private readonly HttpApiClient _apiClient;
     private readonly IAuthorizationProvider _authProvider;
     private readonly ClientWebSocket _socket;
     private readonly Subject<JupyterMessage> _subject;
     private readonly CancellationTokenSource _cancellationTokenSource;
     private readonly CompositeDisposable _disposables;
 
-    public JupyterKernelHttpConnection(Uri serverUri, IAuthorizationProvider authProvider, ClientWebSocket socket = null) :
-        this(new ApiClient(serverUri, authProvider), authProvider, socket)
+    public JupyterKernelHttpConnection(Uri serverUri, IAuthorizationProvider authProvider) :
+        this(new HttpApiClient(serverUri, authProvider), authProvider)
     { }
 
-    public JupyterKernelHttpConnection(ApiClient apiClient, IAuthorizationProvider authProvider, ClientWebSocket socket = null)
+    public JupyterKernelHttpConnection(HttpApiClient apiClient, IAuthorizationProvider authProvider)
     {
         _apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
         _authProvider = authProvider ?? throw new ArgumentNullException(nameof(authProvider));
-        _socket = socket ?? new ClientWebSocket();
+        _socket = new ClientWebSocket();
         _subject = new Subject<JupyterMessage>();
         _cancellationTokenSource = new CancellationTokenSource();
         _disposables = new CompositeDisposable
