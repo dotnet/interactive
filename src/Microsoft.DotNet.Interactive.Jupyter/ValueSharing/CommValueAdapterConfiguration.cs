@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using System.Collections.Generic;
@@ -52,15 +51,15 @@ internal class CommValueAdapterConfiguration : IJupyterKernelConfiguration
         if (_commDefinitions.TryGetValue(language, out IValueAdapterCommDefinition definition))
         {
             var code = definition.GetTargetDefinition(TargetName);
-            var initialized = await RunOnKernelAsync(code, kernel);
+            var initialized = await kernel.RunOnKernelAsync(code);
             if (!initialized)
             {
                 return null; // don't try to create value adapter if we failed
             }
 
-            var adapter = await CreateValueAdapterAsync(kernel);
-            return adapter;
-        }
+        var adapter = await CreateValueAdapterAsync(kernel);
+        return adapter;
+    }
 
         return null;
     }
@@ -86,15 +85,5 @@ internal class CommValueAdapterConfiguration : IJupyterKernelConfiguration
         }
 
         return null;
-    }
-
-    private async Task<bool> RunOnKernelAsync(string code, Kernel kernel)
-    {
-        var results = await kernel.SendAsync(new SubmitCode(code));
-        var success = await results.KernelEvents
-                                         .OfType<CommandSucceeded>()
-                                         .FirstOrDefaultAsync();
-
-        return success is { };
     }
 }
