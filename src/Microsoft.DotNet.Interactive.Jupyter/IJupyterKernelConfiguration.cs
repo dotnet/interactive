@@ -3,9 +3,9 @@
 
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing;
+namespace Microsoft.DotNet.Interactive.Jupyter;
 
-internal interface IGetValueAdapter
+internal interface IJupyterKernelConfiguration
 {
-    Task<IValueAdapter> GetValueAdapter(KernelInfo kernelInfo);
+    Task<bool> ApplyAsync(JupyterKernel kernel);
 }
