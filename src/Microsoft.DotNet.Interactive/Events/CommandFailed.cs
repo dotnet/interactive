@@ -7,7 +7,7 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class CommandFailed : KernelEvent
+    public sealed class CommandFailed : KernelCommandCompletionEvent
     {
         public CommandFailed(
             Exception exception,

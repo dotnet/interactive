@@ -5,11 +5,12 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Events;
 
-public sealed class CommandSucceeded : KernelCommandCompletionEvent
+public abstract class KernelCommandCompletionEvent : KernelEvent
 {
-    public CommandSucceeded(KernelCommand command) : base(command)
+    private protected KernelCommandCompletionEvent(KernelCommand command, int executionOrder = 0) : base(command)
     {
+        ExecutionOrder = executionOrder;
     }
 
-    public override string ToString() => $"{nameof(CommandSucceeded)}: {Command}";
+    public int ExecutionOrder { get; }
 }

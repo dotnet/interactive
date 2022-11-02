@@ -72,8 +72,8 @@ public class PlaywrightKernelConnector
 
     public static async Task AddKernelsToCurrentRootAsync()
     {
-        if (Kernel.Root is CompositeKernel root &&
-            KernelInvocationContext.Current is { } context)
+        if (KernelInvocationContext.Current is { } context &&
+            context.HandlingKernel.RootKernel is CompositeKernel root)
         {
             var playwrightConnector = new PlaywrightKernelConnector();
 
@@ -86,9 +86,19 @@ public class PlaywrightKernelConnector
             var subscription = Kernel.Root
                                      .KernelEvents
                                      .OfType<DisplayEvent>()
-                                     .SelectMany(e => e.FormattedValues.Where(v => v.MimeType == "text/html"))
-                                     .Subscribe(v => htmlKernel.SendAsync(new SubmitCode(v.Value)));
-            
+                                     .Subscribe(async @event =>
+                                     {
+                                         if (@event.Command.OriginUri == htmlKernel.KernelInfo.Uri ||
+                                             @event.Command.OriginUri == jsKernel.KernelInfo.Uri)
+                                         {
+                                             return;
+                                         }
+
+                                         var html = new BrowserDisplayEvent(@event, root.SubmissionCount + 1).ToDisplayString(HtmlFormatter.MimeType);
+
+                                         await htmlKernel.SendAsync(new SubmitCode(html));
+                                     });
+
             htmlKernel.RegisterForDisposal(subscription);
 
             context.DisplayAs($@"
@@ -114,9 +124,9 @@ Added browser kernels:
 
         proxy.KernelInfo.SupportedKernelCommands.Add(new KernelCommandInfo(nameof(SubmitCode)));
 
-        switch (kernelName)
+        switch (language)
         {
-            case "html":
+            case BrowserKernelLanguage.Html:
                 proxy.RegisterCommandHandler<RequestValueInfos>((request, context) =>
                 {
                     context.Publish(new ValueInfosProduced(new KernelValueInfo[]
@@ -148,13 +158,18 @@ Added browser kernels:
                             request));
                 });
 
+                proxy.KernelInfo.RemoteUri = new Uri("kernel://browser/html");
+
                 break;
 
-            case "javascript":
+            case BrowserKernelLanguage.JavaScript:
                 proxy.KernelInfo.SupportedKernelCommands.Add(new(nameof(SubmitCode)));
                 proxy.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValue)));
                 proxy.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValueInfos)));
                 proxy.KernelInfo.SupportedKernelCommands.Add(new(nameof(SendValue)));
+
+                proxy.KernelInfo.RemoteUri = new Uri("kernel://browser/javascript");
+
                 proxy.UseValueSharing();
                 break;
         }
