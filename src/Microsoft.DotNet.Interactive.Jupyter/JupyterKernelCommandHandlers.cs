@@ -135,8 +135,7 @@ internal partial class JupyterKernel
         var executeRequest = Messaging.Message.Create(new ExecuteRequest(command.Code.NormalizeLineEndings()));
         var processMessages = Receiver.Messages.FilterByParent(executeRequest)
                                 .SelectContent()
-                                .Do(async replyMessage => await HandleExecuteReplyMessageAsync(replyMessage, command, context))
-                                .Do(m =>
+                                .Do(async m =>
                                 {
                                     if (m is ExecuteReply reply)
                                     {
@@ -146,9 +145,13 @@ internal partial class JupyterKernel
                                     {
                                         executionDone = true;
                                     }
+                                    else
+                                    {
+                                        await HandleExecuteReplyMessageAsync(m, command, context);
+                                    }
                                 })
                                 .TakeUntil(m => m.MessageType == JupyterMessageContentTypes.Error || (executionDone && results is not null));
-                                 // run until kernel idle or until execution is done
+        // run until kernel idle or until execution is done
 
         await Sender.SendAsync(executeRequest);
         await processMessages.ToTask(context.CancellationToken);

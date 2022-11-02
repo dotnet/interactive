@@ -22,9 +22,4 @@ public static class MessageObservableExtensions
     {
         return observable.Select(m => m.Content);
     }
-
-    public static IObservable<Protocol.Message> FilterByMessageType(this IObservable<Protocol.Message> observable, params string[] messageTypes)
-    {
-        return observable.Where(m => messageTypes.Contains(m.MessageType));
-    }
 }
