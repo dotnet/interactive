@@ -74,6 +74,18 @@ namespace Microsoft.DotNet.Interactive
                         GetImplementedCommandHandlerTypesFor));
 
             _kernelInfo = InitializeKernelInfo(name, languageName, languageVersion);
+
+            var counter = _kernelEvents.Subscribe(IncrementSubmissionCount);
+
+            RegisterForDisposal(counter);
+
+            void IncrementSubmissionCount(KernelEvent e)
+            {
+                if (e is KernelCommandCompletionEvent && e.Command is SubmitCode)
+                {
+                    SubmissionCount++;
+                }
+            }
         }
 
         private KernelInfo InitializeKernelInfo(string name, string languageName, string languageVersion)
@@ -94,6 +106,8 @@ namespace Microsoft.DotNet.Interactive
         public CompositeKernel ParentKernel { get; internal set; }
 
         public Kernel RootKernel { get; internal set; }
+
+        public int SubmissionCount { get; private set; }
 
         public SubmissionParser SubmissionParser { get; }
 

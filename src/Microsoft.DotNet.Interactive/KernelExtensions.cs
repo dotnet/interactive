@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
@@ -93,8 +94,8 @@ namespace Microsoft.DotNet.Interactive
             return kernel.SendAsync(new SubmitCode(code), CancellationToken.None);
         }
 
-        public static T UseImportMagicCommand<T>(this T kernel)
-            where T : Kernel
+        public static TKernel UseImportMagicCommand<TKernel>(this TKernel kernel)
+            where TKernel : Kernel
         {
             var command = new Command("#!import", "Imports and runs another notebook.");
             command.AddArgument(new Argument<FileInfo>("notebookFile").ExistingOnly());
