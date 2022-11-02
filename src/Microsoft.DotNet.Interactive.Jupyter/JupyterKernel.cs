@@ -30,9 +30,9 @@ internal partial class JupyterKernel : Kernel
         RegisterForDisposal(_commsManager);
     }
 
-    internal IMessageReceiver Receiver => _kernelConnection.Receiver;
+    private IMessageReceiver Receiver => _kernelConnection.Receiver;
 
-    internal IMessageSender Sender => _kernelConnection.Sender;
+    private IMessageSender Sender => _kernelConnection.Sender;
 
     public CommsManager Comms => _commsManager;
 

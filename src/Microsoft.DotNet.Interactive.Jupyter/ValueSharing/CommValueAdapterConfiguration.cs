@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using System.Collections.Generic;
@@ -87,20 +88,13 @@ internal class CommValueAdapterConfiguration : IJupyterKernelConfiguration
         return null;
     }
 
-    private async Task<bool> RunOnKernelAsync(string code, JupyterKernel kernel)
+    private async Task<bool> RunOnKernelAsync(string code, Kernel kernel)
     {
-        var executeRequest = Messaging.Message.Create(new ExecuteRequest(code.NormalizeLineEndings(),
-                                                                         silent: true,
-                                                                         storeHistory: false));
+        var results = await kernel.SendAsync(new SubmitCode(code));
+        var success = await results.KernelEvents
+                                         .OfType<CommandSucceeded>()
+                                         .FirstOrDefaultAsync();
 
-        var executeReply = kernel.Receiver.Messages.FilterByParent(executeRequest)
-                                .SelectContent()
-                                .TakeUntilMessageType(JupyterMessageContentTypes.ExecuteReply, JupyterMessageContentTypes.Error);
-        // run until we get a definitive pass or fail
-
-        await kernel.Sender.SendAsync(executeRequest);
-        var reply = await executeReply.ToTask();
-
-        return reply is ExecuteReplyOk;
+        return success is { };
     }
 }

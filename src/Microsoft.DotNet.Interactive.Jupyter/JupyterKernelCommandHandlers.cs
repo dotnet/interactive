@@ -52,8 +52,6 @@ internal partial class JupyterKernel
             // we don't get any line position back from kernel
             context.Publish(new HoverTextProduced(command, content, new LinePositionSpan(command.LinePosition, command.LinePosition)));
         }
-
-        context.Complete(command);
     }
 
     public async Task HandleAsync(RequestSignatureHelp command, KernelInvocationContext context)
@@ -84,8 +82,6 @@ internal partial class JupyterKernel
 
             context.Publish(new SignatureHelpProduced(command, signatureHelpItems, 0, 0));
         }
-
-        context.Complete(command);
     }
 
     public async Task HandleAsync(RequestCompletions command, KernelInvocationContext context)
@@ -126,39 +122,42 @@ internal partial class JupyterKernel
             SourceUtilities.GetLinePositionSpanFromStartAndEndIndices(command.Code, results.CursorStart, results.CursorEnd));
 
         context.Publish(completion);
-        context.Complete(command);
     }
 
     public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
     {
         CancelCommandIfRequested(context);
 
+        // these seem to be sometime getting out of order. Wait on both to be available. 
+        ExecuteReply results = null;
+        bool executionDone = false;
+
         var executeRequest = Messaging.Message.Create(new ExecuteRequest(command.Code.NormalizeLineEndings()));
-        var executeReply = Receiver.Messages.FilterByParent(executeRequest)
+        var processMessages = Receiver.Messages.FilterByParent(executeRequest)
                                 .SelectContent()
                                 .Do(async replyMessage => await HandleExecuteReplyMessageAsync(replyMessage, command, context))
-                                .TakeUntil(m => m.MessageType == JupyterMessageContentTypes.Error
-                                                || (m.MessageType == JupyterMessageContentTypes.Status
-                                                    && (m as Status)?.ExecutionState == StatusValues.Idle));
-                                // run until kernel idle
+                                .Do(m =>
+                                {
+                                    if (m is ExecuteReply reply)
+                                    {
+                                        results = reply;
+                                    }
+                                    else if (m is Status status && status.ExecutionState == StatusValues.Idle)
+                                    {
+                                        executionDone = true;
+                                    }
+                                })
+                                .TakeUntil(m => m.MessageType == JupyterMessageContentTypes.Error || (executionDone && results is not null));
+                                 // run until kernel idle or until execution is done
 
         await Sender.SendAsync(executeRequest);
-        await executeReply.ToTask(context.CancellationToken);
+        await processMessages.ToTask(context.CancellationToken);
     }
 
     private async Task HandleExecuteReplyMessageAsync(Protocol.Message message, SubmitCode command, KernelInvocationContext context)
     {
         switch (message)
         {
-            case (Status status):
-                if (status.ExecutionState == StatusValues.Idle)
-                {
-                    // Since Error will trigger CommandFailed event before Status.Idle is reported, assume that 
-                    // status idle means command is successful.
-                    context.Complete(command);
-                }
-                break;
-
             case (DisplayData displayData):
                 context.Publish(new DisplayedValueProduced(displayData.Data,
                                                         command,
@@ -208,14 +207,14 @@ internal partial class JupyterKernel
                             command,
                             new[] { new FormattedValue(PlainTextFormatter.MimeType, builder.ToString()) }));
 
-                context.Fail(command, null, error.EValue);
+                context.Fail(command, null, error.EName);
                 break;
             case (InputRequest inputRequest):
-                
+
                 string input = await GetInputAsync(inputRequest, context);
                 var reply = new InputReply(input);
                 await Sender.SendAsync(Messaging.Message.Create(reply, channel: MessageChannel.stdin));
-                
+
                 break;
             default:
                 break;
