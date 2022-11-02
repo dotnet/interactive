@@ -48,7 +48,9 @@ import {
     SubmitCode,
     SubmitCodeType,
     CancelType,
-    Cancel
+    Cancel,
+    ErrorProducedType,
+    ErrorProduced
 } from './dotnet-interactive/contracts';
 import { clearDebounce, createOutput } from './utilities';
 
@@ -70,6 +72,8 @@ export interface InteractiveClientConfiguration {
 }
 
 export class InteractiveClient {
+    private disposables: (() => void)[] = [];
+    private nextExecutionCount = 1;
     private nextOutputId: number = 1;
     private nextToken: number = 1;
     private tokenEventObservers: Map<string, Array<KernelEventEnvelopeObserver>> = new Map<string, Array<KernelEventEnvelopeObserver>>();
@@ -126,7 +130,7 @@ export class InteractiveClient {
         clearDebounce(`sighelp-${requestId}`);
     }
 
-    execute(source: string, language: string, outputObserver: { (outputs: Array<vscodeLike.NotebookCellOutput>): void }, diagnosticObserver: (diags: Array<Diagnostic>) => void, configuration: { token?: string | undefined, id?: string | undefined } | undefined): Promise<void> {
+    execute(source: string, language: string, outputObserver: { (outputs: Array<vscodeLike.NotebookCellOutput>): void }, diagnosticObserver: (diags: Array<Diagnostic>) => void, configuration: { token?: string | undefined, id?: string | undefined } | undefined): Promise<boolean> {
         if (configuration !== undefined && configuration.id !== undefined) {
             this.clearExistingLanguageServiceRequests(configuration.id);
         }
@@ -157,7 +161,7 @@ export class InteractiveClient {
                         case CommandSucceededType:
                             if (eventEnvelope.command?.id === commandId) {
                                 // only complete this promise if it's the root command
-                                resolve();
+                                resolve(!failureReported);
                             }
                             break;
                         case CommandFailedType:
@@ -173,10 +177,17 @@ export class InteractiveClient {
                                 }
                             }
                             break;
+                        case ErrorProducedType: {
+                            const err = <ErrorProduced>eventEnvelope.event;
+                            const errorOutput = this.config.createErrorOutput(err.message, this.getNextOutputId());
+                            outputs.push(errorOutput);
+                            reportOutputs();
+                            failureReported = true;
+                        }
                         case DiagnosticsProducedType:
                             {
                                 const diags = <DiagnosticsProduced>eventEnvelope.event;
-                                diagnostics.push(...diags.diagnostics);
+                                diagnostics.push(...(diags.diagnostics ?? []));
                                 reportDiagnostics();
                             }
                             break;
@@ -330,6 +341,14 @@ export class InteractiveClient {
 
     dispose() {
         this.config.channel.dispose();
+        for (let disposable of this.disposables) {
+            disposable();
+        }
+
+    }
+
+    public registerForDisposal(disposable: () => void) {
+        this.disposables.push(disposable);
     }
 
     private submitCommandAndGetResult<TEvent extends KernelEvent>(command: KernelCommand, commandType: KernelCommandType, expectedEventType: KernelEventType, token: string | undefined): Promise<TEvent> {
@@ -488,6 +507,16 @@ export class InteractiveClient {
     private IsEncodedMimeType(mimeType: string): boolean {
         const encdodedMimetypes = new Set<string>(["image/png", "image/jpeg", "image/gif"]);
         return encdodedMimetypes.has(mimeType);
+    }
+
+    resetExecutionCount() {
+        this.nextExecutionCount = 1;
+    }
+
+    getNextExecutionCount(): number {
+        const next = this.nextExecutionCount;
+        this.nextExecutionCount++;
+        return next;
     }
 
     private getNextOutputId(): string {

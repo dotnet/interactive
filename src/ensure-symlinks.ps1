@@ -25,6 +25,3 @@ EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode\tests" -
 
 EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode-insiders\src" -linkName "vscode-common" -destinationLocation "..\..\dotnet-interactive-vscode-common\src"
 EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode-insiders\tests" -linkName "vscode-common-tests" -destinationLocation "..\..\dotnet-interactive-vscode-common\tests"
-
-EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode-ads\src" -linkName "vscode-common" -destinationLocation "..\..\dotnet-interactive-vscode-common\src"
-EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode-ads\tests" -linkName "vscode-common-tests" -destinationLocation "..\..\dotnet-interactive-vscode-common\tests"

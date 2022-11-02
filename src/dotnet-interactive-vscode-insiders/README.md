@@ -32,8 +32,6 @@ With the Polyglot Notebooks extension, you can use multiple languages in the sam
 - Quick navigation via Table of Contents (Outline)
 - Customizable notebook layout
 
-
-
 ## Getting Started
 
 1.  Install the latest [Visual Studio Code](https://code.visualstudio.com/).
@@ -88,7 +86,6 @@ Telemetry is collected when .NET Interactive is started. Once .NET Interactive i
 * `dotnet interactive stdio`
 
 Read our [privacy statement](https://privacy.microsoft.com/privacystatement) to learn more.  See [here](https://github.com/dotnet/interactive/tree/main/docs#telemetry) to learn more about telemetry in Polyglot Notebooks. 
-
 
 ## License
 

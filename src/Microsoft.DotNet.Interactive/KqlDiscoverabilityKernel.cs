@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly HashSet<string> _kernelNameFilter;
         private const string DefaultKernelName = "kql";
 
-        public KqlDiscoverabilityKernel() : base(DefaultKernelName)
+        public KqlDiscoverabilityKernel() : base(DefaultKernelName, languageName: "KQL")
         {
             _kernelNameFilter = new HashSet<string>
             {
@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive
             };
         }
 
-        public Task HandleAsync(SubmitCode command, KernelInvocationContext context)
+        Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
         {
             var root = (Kernel)ParentKernel ?? this;
 

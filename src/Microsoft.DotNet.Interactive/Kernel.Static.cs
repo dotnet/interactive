@@ -2,21 +2,24 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
-
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive
 {
     public partial class Kernel
     {
+        private static readonly ConcurrentDictionary<Type, IReadOnlyCollection<Type>> _implementedCommandHandlerTypes = new();
+
         public static Kernel Current => KernelInvocationContext.Current.HandlingKernel;
 
         public static Kernel Root => KernelInvocationContext.Current.HandlingKernel?.RootKernel;
@@ -37,7 +40,7 @@ namespace Microsoft.DotNet.Interactive
         /// <returns>The user input value.</returns>
         public static async Task<string> GetInputAsync(string prompt = "", string typeHint = "text")
         {
-            return await GetInputAsync(prompt, false);
+            return await GetInputAsync(prompt, false, typeHint);
         }
         
         public static async Task<string> GetPasswordAsync(string prompt = "")
@@ -45,9 +48,12 @@ namespace Microsoft.DotNet.Interactive
             return await GetInputAsync(prompt, true);
         }
 
-        private static async Task<string> GetInputAsync(string prompt, bool isPassword)
+        private static async Task<string> GetInputAsync(string prompt, bool isPassword, string typeHint = "text")
         {
-            var command = new RequestInput(prompt, isPassword ? "password" : default);
+            var command = new RequestInput(
+                prompt, 
+                isPassword ? "password" : default,
+                inputTypeHint: typeHint);
 
             var results = await Root.SendAsync(command, CancellationToken.None);
 
@@ -96,10 +102,20 @@ namespace Microsoft.DotNet.Interactive
 
             var kernel = context.HandlingKernel;
 
-            Task.Run(async () =>
-            {
-                await kernel.SendAsync(new DisplayValue(formatted));
-            }).Wait(context.CancellationToken);
+            Task.Run(async () => { await kernel.SendAsync(new DisplayValue(formatted)); }).Wait(context.CancellationToken);
         }
+
+        private static IReadOnlyCollection<Type> GetImplementedCommandHandlerTypesFor(Type kernelType) =>
+            _implementedCommandHandlerTypes.GetOrAdd(
+                kernelType,
+                t => t.GetInterfaces()
+                      .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IKernelCommandHandler<>))
+                      .SelectMany(i => i.GenericTypeArguments)
+                      .ToArray());
+
+        protected delegate Task SetValueAsyncDelegate(
+            string name,
+            object value,
+            Type declaredType = null);
     }
 }

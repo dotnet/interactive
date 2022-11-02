@@ -25,18 +25,17 @@ namespace Microsoft.DotNet.Interactive
 
         public string Value { get; }
 
-        public static IReadOnlyCollection<FormattedValue> FromObject(object value, params  string[] mimeTypes)
+        public static IReadOnlyCollection<FormattedValue> FromObject(object value, params string[] mimeTypes)
         {
-            if (mimeTypes is null 
-                || mimeTypes.Length == 0 
-                || mimeTypes.Count(mimeType => !string.IsNullOrWhiteSpace(mimeType)) == 0)
+            if (mimeTypes is null || 
+                mimeTypes.Length == 0)
             {
-                mimeTypes =  Formatter.GetPreferredMimeTypesFor(value?.GetType()).ToArray();
+                mimeTypes = Formatter.GetPreferredMimeTypesFor(value?.GetType()).ToArray();
             }
 
-            var formattedValues = mimeTypes.Select( mimeType =>  new FormattedValue(
-                mimeType,
-                value.ToDisplayString(mimeType))).ToArray();
+            var formattedValues = mimeTypes.Select(mimeType => new FormattedValue(
+                                                       mimeType,
+                                                       value.ToDisplayString(mimeType))).ToArray();
 
             return formattedValues;
         }

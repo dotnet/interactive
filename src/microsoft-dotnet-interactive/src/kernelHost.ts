@@ -29,6 +29,10 @@ export class KernelHost {
         this._connectors.push(this._defaultConnector);
     }
 
+    public get defaultConnector(): connection.Connector {
+        return this._defaultConnector;
+    }
+
     public get uri(): string {
         return this._uri;
     }
@@ -85,6 +89,21 @@ export class KernelHost {
                 this._connectors.push(new connection.Connector(connector));
                 return true;
             }
+            return false;
+        }
+    }
+
+    public tryRemoveConnector(connector: { remoteUris?: string[] }) {
+        if (!connector.remoteUris) {
+            for (let uri of connector.remoteUris!) {
+                const index = this._connectors.findIndex(c => c.canReach(uri));
+                if (index >= 0) {
+                    this._connectors.splice(index, 1);
+                }
+            }
+            return true;
+        } else {
+
             return false;
         }
     }

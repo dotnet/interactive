@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.ValueSharing;
 
 namespace Microsoft.DotNet.Interactive.Connection;
 
@@ -18,12 +17,11 @@ public sealed class ProxyKernel : Kernel
     private readonly IKernelCommandAndEventSender _sender;
     private readonly IKernelCommandAndEventReceiver _receiver;
     private ExecutionContext _executionContext;
+    private bool _requiresRequestKernelInfoOnFirstCommand = true;
+    private string _suppressCompletionsForCommandId;
 
     private readonly Dictionary<string, (KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<KernelEvent> completionSource, KernelInvocationContext
         invocationContext)> _inflight = new();
-
-    private IKernelValueDeclarer _valueDeclarer;
-    private readonly Uri _remoteUri;
 
     public ProxyKernel(
         string name,
@@ -36,24 +34,22 @@ public sealed class ProxyKernel : Kernel
 
         if (remoteUri is not null)
         {
-            _remoteUri = remoteUri;
+            KernelInfo.RemoteUri = remoteUri;
         }
         else if (sender.RemoteHostUri is { } remoteHostUri)
         {
-            _remoteUri = new(remoteHostUri, name);
+            KernelInfo.RemoteUri = new(remoteHostUri, name);
         }
         else
         {
             throw new ArgumentNullException(nameof(remoteUri));
         }
 
-        KernelInfo.RemoteUri = _remoteUri;
-
         var subscription = _receiver.Subscribe(coe =>
         {
             if (coe.Event is { } e)
             {
-                if (e is KernelInfoProduced kip && e.RoutingSlip.Count > 0 && e.RoutingSlip.FirstOrDefault() == _remoteUri)
+                if (e is KernelInfoProduced {Command: NoCommand} kip && kip.KernelInfo.Uri == KernelInfo.RemoteUri)
                 {
                     UpdateKernelInfoFromEvent(kip);
                     PublishEvent(new KernelInfoProduced(KernelInfo, e.Command));
@@ -70,15 +66,17 @@ public sealed class ProxyKernel : Kernel
 
     private void UpdateKernelInfoFromEvent(KernelInfoProduced kernelInfoProduced)
     {
+        _requiresRequestKernelInfoOnFirstCommand = false;
         KernelInfo.LanguageName = kernelInfoProduced.KernelInfo.LanguageName;
         KernelInfo.LanguageVersion = kernelInfoProduced.KernelInfo.LanguageVersion;
         ((HashSet<KernelDirectiveInfo>)KernelInfo.SupportedDirectives).UnionWith(kernelInfoProduced.KernelInfo.SupportedDirectives);
         ((HashSet<KernelCommandInfo>)KernelInfo.SupportedKernelCommands).UnionWith(kernelInfoProduced.KernelInfo.SupportedKernelCommands);
     }
 
+
+
     private Task HandleByForwardingToRemoteAsync(KernelCommand command, KernelInvocationContext context)
     {
-
         if (command.OriginUri is null)
         {
             if (context.HandlingKernel == this)
@@ -86,7 +84,7 @@ public sealed class ProxyKernel : Kernel
                 command.OriginUri = KernelInfo.Uri;
             }
         }
-
+       
         _executionContext = ExecutionContext.Capture();
         var token = command.GetOrCreateToken();
 
@@ -95,10 +93,12 @@ public sealed class ProxyKernel : Kernel
         var targetKernelName = command.TargetKernelName;
         command.TargetKernelName = null;
         var completionSource = new TaskCompletionSource<KernelEvent>();
-
+       
         _inflight[token] = (command, _executionContext, completionSource, context);
-
+        
         ExecutionContext.SuppressFlow();
+
+        EnsureKernelInfoIsLoaded(command, context);
 
         var t = _sender.SendAsync(command, context.CancellationToken);
         t.ContinueWith(task =>
@@ -121,6 +121,25 @@ public sealed class ProxyKernel : Kernel
                 context.Fail(command, cf.Exception, cf.Message);
             }
         });
+    }
+
+    private void EnsureKernelInfoIsLoaded(KernelCommand command, KernelInvocationContext context)
+    {
+        if (_requiresRequestKernelInfoOnFirstCommand)
+        {
+            _requiresRequestKernelInfoOnFirstCommand = false;
+            if (command is not RequestKernelInfo)
+            {
+                var r = new RequestKernelInfo(KernelInfo.RemoteUri);
+
+                _suppressCompletionsForCommandId = r.GetOrCreateId();
+                r.Parent = command.Parent ?? command;
+                r.OriginUri = KernelInfo.Uri;
+                r.DestinationUri = KernelInfo.RemoteUri;
+
+                _sender.SendAsync(r, context.CancellationToken).GetAwaiter().GetResult();
+            }
+        }
     }
 
     private bool CanHandleLocally(KernelCommand command)
@@ -159,11 +178,11 @@ public sealed class ProxyKernel : Kernel
         {
             return base.HandleAsync(command, context);
         }
-        
+
         return HandleByForwardingToRemoteAsync(command, context);
     }
 
-    public override Task HandleAsync(RequestKernelInfo command, KernelInvocationContext context) =>
+    private protected override Task HandleRequestKernelInfoAsync(RequestKernelInfo command, KernelInvocationContext context) =>
         // override the default handler on Kernel and forward the command instead
         HandleByForwardingToRemoteAsync(command, context);
 
@@ -185,6 +204,10 @@ public sealed class ProxyKernel : Kernel
                 case CommandSucceeded cs when pending.command.IsEquivalentTo(kernelEvent.Command):
                     _inflight.Remove(token);
                     pending.completionSource.TrySetResult(cs);
+                    break;
+                case CommandFailed _ when kernelEvent.Command.GetOrCreateId() == _suppressCompletionsForCommandId:
+                case CommandSucceeded _ when kernelEvent.Command.GetOrCreateId() == _suppressCompletionsForCommandId:
+                    _suppressCompletionsForCommandId = null;
                     break;
                 case KernelInfoProduced kip when kip.KernelInfo.Uri == KernelInfo.RemoteUri:
                     {
@@ -250,11 +273,4 @@ public sealed class ProxyKernel : Kernel
 
         return commandOriginUri is null;
     }
-
-    internal IKernelValueDeclarer ValueDeclarer
-    {
-        set => _valueDeclarer = value;
-    }
-
-    internal override IKernelValueDeclarer GetValueDeclarer() => _valueDeclarer ?? KernelValueDeclarer.Default;
 }

@@ -29,42 +29,42 @@ public class ApiCompatibilityTests
                          .UsingExtension("txt");
     }
 
-    [FactSkipLinux]
+    [FactSkipLinux("Testing api contract changes, not needed on Linux too")]
     public void Interactive_api_is_not_changed()
     {
         var contract = ApiContract.GenerateContract<Kernel>();
         this.Assent(contract, _configuration);
     }
 
-    [FactSkipLinux]
+    [FactSkipLinux("Testing api contract changes, not needed on Linux too")]
     public void Formatting_api_is_not_changed()
     {
         var contract = ApiContract.GenerateContract<FormatContext>();
         this.Assent(contract, _configuration);
     }
 
-    [FactSkipLinux]
+    [FactSkipLinux("Testing api contract changes, not needed on Linux too")]
     public void Document_api_is_not_changed()
     {
         var contract = ApiContract.GenerateContract<InteractiveDocument>();
         this.Assent(contract, _configuration);
     }
 
-    [FactSkipLinux]
+    [FactSkipLinux("Testing api contract changes, not needed on Linux too")]
     public void PackageManagement_api_is_not_changed()
     {
         var contract = ApiContract.GenerateContract<PackageRestoreContext>();
         this.Assent(contract, _configuration);
     }
 
-    [FactSkipLinux]
+    [FactSkipLinux("Testing api contract changes, not needed on Linux too")]
     public void Journey_api_is_not_changed()
     {
         var contract = ApiContract.GenerateContract<Lesson>();
         this.Assent(contract, _configuration);
     }
 
-    [FactSkipLinux]
+    [FactSkipLinux("Testing api contract changes, not needed on Linux too")]
     public void csharp_api_is_not_changed()
     {
         var contract = ApiContract.GenerateContract<CSharpKernel>();
@@ -85,28 +85,28 @@ public class ApiCompatibilityTests
         this.Assent(contract, _configuration);
     }
 
-    [FactSkipLinux]
+    [FactSkipLinux("Testing api contract changes, not needed on Linux too")]
     public void powershell_api_is_not_changed()
     {
         var contract = ApiContract.GenerateContract<PowerShellKernel>();
         this.Assent(contract, _configuration);
     }
 
-    [FactSkipLinux]
+    [FactSkipLinux("Testing api contract changes, not needed on Linux too")]
     public void mssql_api_is_not_changed()
     {
         var contract = ApiContract.GenerateContract<MsSqlKernelConnector>();
         this.Assent(contract, _configuration);
     }
 
-    [FactSkipLinux]
+    [FactSkipLinux("Testing api contract changes, not needed on Linux too")]
     public void kql_api_is_not_changed()
     {
         var contract = ApiContract.GenerateContract<KqlKernelConnector>();
         this.Assent(contract, _configuration);
     }
 
-    [FactSkipLinux]
+    [FactSkipLinux("Testing api contract changes, not needed on Linux too")]
     public void mermaid_api_is_not_changed()
     {
         var contract = ApiContract.GenerateContract<MermaidKernel>();

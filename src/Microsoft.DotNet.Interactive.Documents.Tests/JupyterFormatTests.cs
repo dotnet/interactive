@@ -81,6 +81,22 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 });
     }
 
+    [Theory]
+    [InlineData("C#", "csharp")]
+    [InlineData("F#", "fsharp")]
+    [InlineData("f#", "fsharp")]
+    [InlineData("PowerShell", "powershell")]
+    public void Metadata_default_kernel_name_is_based_on_specified_language(string languageName, string kernelName)
+    {
+        var originalDoc = new InteractiveDocument().WithJupyterMetadata(languageName);
+
+        var parsedDoc = Notebook.Parse(originalDoc.ToJupyterJson());
+
+        parsedDoc.GetDefaultKernelName()
+                 .Should()
+                 .Be(kernelName);
+    }
+
     [Fact]
     public void missing_metadata_defaults_to_csharp_kernel()
     {
@@ -327,7 +343,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 {
                     cell_type = "code",
                     source = new[] { "#!F#\n", "// this is fsharp 2" }
-                },  
+                },
                 new
                 {
                     cell_type = "code",
@@ -578,7 +594,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
         };
 
         var notebook = SerializeAndParse(jupyter);
-            
+
         notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
@@ -603,7 +619,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
         };
 
         var notebook = SerializeAndParse(jupyter);
-            
+
         notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
@@ -970,6 +986,14 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                     name = "C#",
                     pygments_lexer = "csharp",
                     version = "10.0"
+                },
+                dotnet_interactive = new
+                {
+                    defaultKernelName = "csharp",
+                    items = new object[]
+                    {
+                        new { name = "csharp" }
+                    }
                 }
             })));
         jupyter["nbformat"]
@@ -1171,7 +1195,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
         };
 
         var notebook = SerializeAndParse(jupyter);
-            
+
         notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -1260,7 +1284,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                                                  {
                                                      { "text/html", new[] { "<div>this is html</div>" } }
                                                  },
-                                                 metadata = new{}
+                                                 metadata = new { }
                                              }
                                          )));
     }
@@ -1392,7 +1416,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
     }
 
     [Theory]
-    [InlineData("", new string[] {  })]
+    [InlineData("", new string[] { })]
     [InlineData("one", new[] { "one" })]
     [InlineData("one\n", new[] { "one\n" })]
     [InlineData("one\r\n", new[] { "one\r\n" })]
@@ -1443,7 +1467,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
     private async Task<string> RoundTripIpynb(string notebookFile)
     {
         var expectedContent = await File.ReadAllTextAsync(notebookFile);
-            
+
         var inputDoc = Notebook.Parse(expectedContent);
 
         var resultContent = inputDoc.ToJupyterJson();

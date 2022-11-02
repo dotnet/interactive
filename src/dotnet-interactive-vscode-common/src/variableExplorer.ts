@@ -13,7 +13,7 @@ import { DisposableSubscription } from './dotnet-interactive/disposables';
 import { isKernelEventEnvelope } from './dotnet-interactive';
 
 // creates a map of, e.g.:
-//   "dotnet-interactive.csharp" => "C# (.NET Interactive)""
+//   "dotnet-interactive.csharp" => "C#""
 const languageIdToAliasMap = new Map(
     vscode.extensions.all.map(e => <any[]>e.packageJSON?.contributes?.languages || [])
         .filter(l => l)
@@ -27,12 +27,12 @@ function debounce(callback: () => void) {
 }
 
 export function registerVariableExplorer(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.shareValueTo', async (variableInfo: { kernelName: string, valueName: string } | undefined) => {
+    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.shareValueWith', async (variableInfo: { kernelName: string, valueName: string } | undefined) => {
         if (variableInfo && vscode.window.activeNotebookEditor) {
             const client = await clientMapper.tryGetClient(versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor).uri);
             if (client) {
                 // creates a map of _only_ the available languages in this notebook, e.g.:
-                //   "C# (.NET Interactive)" => "dotnet-interactive.csharp"
+                //   "C#" => "dotnet-interactive.csharp"
                 const availableKernelDisplayNamesToLanguageNames = new Map(client.kernel.childKernels.map(k => {
                     const notebookLanguage = getNotebookSpecificLanguage(k.name);
                     let displayLanguage = notebookLanguage;
@@ -68,7 +68,13 @@ export function registerVariableExplorer(context: vscode.ExtensionContext, clien
     }));
 
     const webViewProvider = new WatchWindowTableViewProvider(clientMapper, context.extensionPath);
-    context.subscriptions.push(vscode.window.registerWebviewViewProvider('dotnet-interactive-panel-values', webViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
+    context.subscriptions.push(vscode.window.registerWebviewViewProvider('polyglot-notebook-panel-values', webViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
+    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.clearValueExplorer', () => {
+        webViewProvider.clearRows();
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.resetValueExplorerSubscriptions', async () => {
+        await webViewProvider.refreshSubscriptions();
+    }));
 
     vscode.window.onDidChangeActiveNotebookEditor(async _editor => {
         // TODO: update on client process restart
@@ -141,7 +147,36 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                     .share-column {
                         width: 10%;
                     }
+
+                    .share-data {
+                        text-align: center;
+                    }
+
+                    .share-symbol {
+                        padding: 2px;
+                        height: 16px;
+                        width: 16px;
+                    }
+                    .arrow {
+                        fill: var(--vscode-settings-textInputForeground);
+                    }
+                    .arrow-box {
+                        fill: var(--vscode-button-background);
+                    }
                 </style>
+                <svg style="display: none">
+                  <symbol id="share-icon" viewBox="0 0 16 16">
+                    <title>Share to</title>
+                    <g id="canvas">
+                      <path d="M16,16H0V0H16Z" fill="none" opacity="0" />
+                    </g>
+                    <g id="level-1">
+                      <path class="arrow" d="M10.5,9.5v-2a9.556,9.556,0,0,0-7,3c0-7,7-7,7-7v-2l4,4Z" opacity="0.1" />
+                      <path class="arrow" d="M15.207,5.5,10,.293V3.032C8.322,3.2,3,4.223,3,10.5v1.371l.883-1.05A9.133,9.133,0,0,1,10,8.014v2.693ZM4.085,9.26C4.834,4.081,10.254,4,10.5,4L11,4V2.707L13.793,5.5,11,8.293V7h-.5A10.141,10.141,0,0,0,4.085,9.26Z" />
+                      <path class="arrow-box" d="M12,10.121V15H0V4H1V14H11V11.121Z" />
+                    </g>
+                  </symbol>
+                </svg>
                 <script defer type="text/javascript" src="${apiFileUri.toString()}"></script>
                 <label for="filter">Filter</label>
                 <input id="filter" type="text" />
@@ -157,6 +192,37 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
     private setRows(rows: VariableGridRow[]) {
         if (this.webview) {
             this.webview.postMessage({ command: 'set-rows', rows });
+        }
+    }
+
+    clearRows() {
+        this.setRows([]);
+    }
+
+    async refreshSubscriptions(): Promise<void> {
+        this.currentNotebookSubscription?.dispose();
+        this.currentNotebookSubscription = undefined;
+        if (vscode.window.activeNotebookEditor) {
+            const notebook = versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
+            const client = await this.clientMapper.getOrAddClient(notebook.uri);
+
+            let sub = client.channel.receiver.subscribe({
+                next: (envelope) => {
+                    if (isKernelEventEnvelope(envelope)) {
+                        switch (envelope.eventType) {
+                            case contracts.CommandSucceededType:
+                            case contracts.CommandFailedType:
+                            case contracts.CommandCancelledType:
+                                if (envelope.command?.commandType === contracts.SubmitCodeType) {
+                                    debounce(() => this.refresh());
+                                }
+                                break;
+                        }
+                    }
+                }
+            });
+
+            this.currentNotebookSubscription = { dispose: () => sub.unsubscribe() };
         }
     }
 
@@ -196,11 +262,11 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                             const value = await client.requestValue(valueInfo.name, name);
                             const valueName = value.name;
                             const valueValue = value.formattedValue.value;
-                            const commandUrl = `command:dotnet-interactive.shareValueTo?${encodeURIComponent(JSON.stringify({ valueName, kernelName: name }))}`;
+                            const commandUrl = `command:polyglot-notebook.shareValueWith?${encodeURIComponent(JSON.stringify({ valueName, kernelName: name }))}`;
                             rows.push({
                                 name: valueName,
                                 value: valueValue,
-                                kernel: `#!${name}`,
+                                kernel: name,
                                 link: commandUrl,
                             });
                         } catch (e) {

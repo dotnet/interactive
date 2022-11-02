@@ -150,16 +150,6 @@ public class InteractiveDocument : IEnumerable
         }
     }
 
-    public string? GetDefaultKernelName()
-    {
-        if (TryGetKernelInfoFromMetadata(Metadata, out var kernelInfo))
-        {
-            return kernelInfo.DefaultKernelName;
-        }
-
-        return null;
-    }
-
     public static async Task<InteractiveDocument> LoadAsync(
         FileInfo file,
         KernelInfoCollection kernelInfos)
@@ -177,9 +167,22 @@ public class InteractiveDocument : IEnumerable
         };
     }
 
+    public string? GetDefaultKernelName()
+    {
+        if (TryGetKernelInfoFromMetadata(Metadata, out var kernelInfo))
+        {
+            return kernelInfo.DefaultKernelName;
+        }
+
+        return null;
+    }
+
     internal string? GetDefaultKernelName(KernelInfoCollection kernelInfos)
     {
-        string? defaultKernelName = null;
+        if (TryGetKernelInfoFromMetadata(Metadata, out var kernelInfoCollection))
+        {
+            return kernelInfoCollection.DefaultKernelName;
+        }
 
         if (Metadata is null)
         {
@@ -206,22 +209,61 @@ public class InteractiveDocument : IEnumerable
             }
         }
 
-        return defaultKernelName;
+        return null;
     }
 
     internal static bool TryGetKernelInfoFromMetadata(
         IDictionary<string, object>? metadata,
         [NotNullWhen(true)] out KernelInfoCollection? kernelInfo)
     {
-        if (metadata?.TryGetValue("kernelInfo", out var kernelInfoObj) == true &&
-            kernelInfoObj is JsonElement kernelInfoJson && kernelInfoJson.Deserialize<KernelInfoCollection>(ParserServerSerializer.JsonSerializerOptions) is
-                { } kernelInfoDeserialized)
+        if (metadata is not null)
         {
-            kernelInfo = kernelInfoDeserialized;
-            return true;
+            if (metadata.TryGetValue("kernelInfo", out var kernelInfoObj) &&
+                kernelInfoObj is JsonElement kernelInfoJson && kernelInfoJson.Deserialize<KernelInfoCollection>(ParserServerSerializer.JsonSerializerOptions) is
+                    { } kernelInfoDeserialized)
+            {
+                kernelInfo = kernelInfoDeserialized;
+                return true;
+            }
+
+            if (metadata.TryGetValue("dotnet_interactive", out var dotnetInteractiveObj))
+            {
+                if (dotnetInteractiveObj is IDictionary<string, object> dotnetInteractiveDict)
+                {
+                    kernelInfo = new();
+
+                    if (dotnetInteractiveDict.TryGetValue("defaultKernelName", out var nameObj) &&
+                        nameObj is string name)
+                    {
+                        kernelInfo.DefaultKernelName = name;
+                    }
+
+                    return true;
+
+                    // FIX: (TryGetKernelInfoFromMetadata) add items
+                }
+            }
+
+            // check for .ipynb / Jupyter metadata
+            if (metadata.TryGetValue("kernelspec", out var kernelspecObj))
+            {
+                if (kernelspecObj is IDictionary<string, object> kernelspecDict)
+                {
+                    if (kernelspecDict.TryGetValue("language", out var languageObj) &&
+                        languageObj is string defaultLanguage)
+                    {
+                        kernelInfo = new KernelInfoCollection
+                        {
+                            DefaultKernelName = defaultLanguage
+                        };
+                        return true;
+                    }
+                }
+            }
         }
 
-        kernelInfo = null;
+        // check if a KernelInfoCollection was directly serialized into the metadata
+        kernelInfo = default;
         return false;
     }
 

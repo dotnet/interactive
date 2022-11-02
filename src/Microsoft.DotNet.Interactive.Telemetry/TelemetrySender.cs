@@ -105,7 +105,7 @@ The .NET Core tools collect usage data in order to help us improve your experien
             return;
         }
 
-        foreach (TelemetryEvent entry in eventBuilder.GetTelemetryEventsFrom(parseResult))
+        foreach (var entry in eventBuilder.GetTelemetryEventsFrom(parseResult))
         {
             TrackEvent(entry.EventName, entry.Properties, entry.Metrics);
         }

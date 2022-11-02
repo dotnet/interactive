@@ -139,6 +139,26 @@ describe("compositeKernel", () => {
         expect(goReturnValueProduced.formattedValues[0].value).to.be.eq("21");
     });
 
+    it("can find kernels by name", () => {
+        const compositeKernel = new CompositeKernel("composite-kernel");
+        const python = new Kernel("python");
+        const go = new Kernel("go");
+        compositeKernel.add(python);
+        compositeKernel.add(go);
+
+        expect(compositeKernel.findKernelByName("python")).to.be.eq(python);
+    });
+
+    it("findKernelsByName returns the compositeKernel", () => {
+        const compositeKernel = new CompositeKernel("composite-kernel");
+        const python = new Kernel("python");
+        const go = new Kernel("go");
+        compositeKernel.add(python);
+        compositeKernel.add(go);
+
+        expect(compositeKernel.findKernelByName("composite-kernel")).to.be.eq(compositeKernel);
+    });
+
     it("routes commands to the appropriate kernels based on command type", async () => {
         const events: contracts.KernelEventEnvelope[] = [];
         const compositeKernel = new CompositeKernel("composite-kernel");

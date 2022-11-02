@@ -1,0 +1,26 @@
+{
+  "profile": "tabular-data-resource",
+  "schema": {
+    "primaryKey": [],
+    "fields": [
+      {
+        "name": "Key",
+        "type": "string"
+      },
+      {
+        "name": "Value",
+        "type": "integer"
+      }
+    ]
+  },
+  "data": [
+    {
+      "Key": "one",
+      "Value": 1
+    },
+    {
+      "Key": "two",
+      "Value": null
+    }
+  ]
+}

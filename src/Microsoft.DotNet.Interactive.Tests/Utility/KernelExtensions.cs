@@ -10,14 +10,34 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility;
 
 public static class KernelExtensions
 {
-    public static async Task<KernelInfo> GetKernelInfoAsync(this Kernel kernel)
+    public static async Task<(bool success, ValueInfosProduced valueInfosProduced)> TryRequestValueInfosAsync(this Kernel kernel)
     {
-        var result = await kernel.SendAsync(new RequestKernelInfo());
+        if (kernel.SupportsCommandType(typeof(RequestValueInfos)))
+        {
+            var result = await kernel.SendAsync(new RequestValueInfos());
 
-        return await result
-                     .KernelEvents
-                     .OfType<KernelInfoProduced>()
-                     .Select(e => e.KernelInfo)
-                     .SingleOrDefaultAsync();
+            var candidateResult = await result.KernelEvents.OfType<ValueInfosProduced>().FirstOrDefaultAsync();
+            if (candidateResult is { })
+            {
+                return (true, candidateResult);
+            }
+        }
+
+        return (false, default);
+    }
+
+    public static async Task<(bool success, ValueProduced valueProduced)> TryRequestValueAsync(this Kernel kernel, string valueName)
+    {
+        if (kernel.SupportsCommandType(typeof(RequestValue)))
+        {
+            var commandResult = await kernel.SendAsync(new RequestValue(valueName));
+
+            if (await commandResult.KernelEvents.OfType<ValueProduced>().FirstOrDefaultAsync() is { } valueProduced)
+            {
+                return (true, valueProduced);
+            }
+        }
+
+        return (false, default);
     }
 }

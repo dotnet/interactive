@@ -7,7 +7,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageDescription>Enables connections over HTTP to application-embedded .NET Interactive kernels, letting you send code to the kernel from Visual Studio Code, access kernel APIs with JavaScript, render data, and access packaged resources.</PackageDescription>
-    <PackageTags>interactive connect http signalr</PackageTags>
+    <PackageTags>polyglot notebook dotnet interactive connect http signalr</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

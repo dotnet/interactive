@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -17,9 +16,9 @@ namespace Microsoft.DotNet.Interactive
 {
     public class KeyValueStoreKernel :
         Kernel,
-        ISupportSetClrValue,
         IKernelCommandHandler<RequestValueInfos>,
         IKernelCommandHandler<RequestValue>,
+        IKernelCommandHandler<SendValue>,
         IKernelCommandHandler<SubmitCode>
     {
         internal const string DefaultKernelName = "value";
@@ -32,20 +31,14 @@ namespace Microsoft.DotNet.Interactive
         {
         }
 
-        public Task SetValueAsync(string name, object value, Type declaredType = null)
-        {
-            _values[name] = value;
-            return Task.CompletedTask;
-        }
-
-        public Task HandleAsync(RequestValueInfos command, KernelInvocationContext context)
+        Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
         {
             var valueInfos = _values.Select(e => new KernelValueInfo(e.Key, typeof(string))).ToArray();
             context.Publish(new ValueInfosProduced(valueInfos, command));
             return Task.CompletedTask;
         }
 
-        public Task HandleAsync(RequestValue command, KernelInvocationContext context)
+        Task IKernelCommandHandler<RequestValue>.HandleAsync(RequestValue command, KernelInvocationContext context)
         {
             if (_values.TryGetValue(command.Name, out var value))
             {
@@ -59,13 +52,22 @@ namespace Microsoft.DotNet.Interactive
             return Task.CompletedTask;
         }
 
+        async Task IKernelCommandHandler<SendValue>.HandleAsync(SendValue command, KernelInvocationContext context)
+        {
+            await SetValueAsync(command, context, (name, value, _) =>
+            {
+                _values[name] = value;
+                return Task.CompletedTask;
+            });
+        }
+
         // todo: change to ChooseKeyValueStoreKernelDirective after removing NetStandardc2.0 dependency
         public override ChooseKernelDirective ChooseKernelDirective =>
             _chooseKernelDirective ??= new(this);
 
         public IReadOnlyDictionary<string, object> Values => _values;
 
-        public async Task HandleAsync(
+        Task IKernelCommandHandler<SubmitCode>.HandleAsync(
             SubmitCode command,
             KernelInvocationContext context)
         {
@@ -75,7 +77,9 @@ namespace Microsoft.DotNet.Interactive
 
             var options = ValueDirectiveOptions.Create(parseResult, _chooseKernelDirective);
 
-            await StoreValueAsync(command, context, options, value);
+            StoreValue(command, context, options, value);
+
+            return Task.CompletedTask;
         }
 
         internal override bool AcceptsUnknownDirectives => true;
@@ -111,7 +115,7 @@ namespace Microsoft.DotNet.Interactive
 
                 _lastOperation = (hadValue, previousValue, newValue);
 
-                await StoreValueAsync(newValue, options, context);
+                StoreValue(newValue, options, context);
             }
             else
             {
@@ -119,7 +123,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private async Task StoreValueAsync(
+        private void StoreValue(
             KernelCommand command, 
             KernelInvocationContext context, 
             ValueDirectiveOptions options,
@@ -146,7 +150,7 @@ namespace Microsoft.DotNet.Interactive
             }
             else
             {
-                await StoreValueAsync(value, options, context);
+                StoreValue(value, options, context);
             }
 
             _lastOperation = default;
@@ -171,12 +175,12 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private async Task StoreValueAsync(
+        private void StoreValue(
             string value,
             ValueDirectiveOptions options,
             KernelInvocationContext context)
         {
-            await SetValueAsync(options.Name, value);
+            _values[options.Name] = value;
 
             if (options.MimeType is { } mimeType)
             {

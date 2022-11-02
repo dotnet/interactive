@@ -1,4 +1,4 @@
-﻿// Copyright(c).NET Foundation and contributors. All rights reserved.
+// Copyright(c).NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -138,15 +138,26 @@ namespace Microsoft.DotNet.Interactive.Formatting.TabularData
             type switch
             {
                 { } t when t == typeof(bool) => TableSchemaFieldType.Boolean,
+                { } t when t == typeof(bool?) => TableSchemaFieldType.Boolean,
                 { } t when t == typeof(DateTime) => TableSchemaFieldType.DateTime,
+                { } t when t == typeof(DateTime?) => TableSchemaFieldType.DateTime,
+                { } t when t == typeof(DateTimeOffset) => TableSchemaFieldType.DateTime,
+                { } t when t == typeof(DateTimeOffset?) => TableSchemaFieldType.DateTime,
                 { } t when t == typeof(int) => TableSchemaFieldType.Integer,
+                { } t when t == typeof(int?) => TableSchemaFieldType.Integer,
                 { } t when t == typeof(ushort) => TableSchemaFieldType.Integer,
+                { } t when t == typeof(ushort?) => TableSchemaFieldType.Integer,
                 { } t when t == typeof(uint) => TableSchemaFieldType.Integer,
+                { } t when t == typeof(uint?) => TableSchemaFieldType.Integer,
                 { } t when t == typeof(ulong) => TableSchemaFieldType.Integer,
                 { } t when t == typeof(long) => TableSchemaFieldType.Integer,
+                { } t when t == typeof(long?) => TableSchemaFieldType.Integer,
                 { } t when t == typeof(float) => TableSchemaFieldType.Number,
+                { } t when t == typeof(float?) => TableSchemaFieldType.Number,
                 { } t when t == typeof(double) => TableSchemaFieldType.Number,
+                { } t when t == typeof(double?) => TableSchemaFieldType.Number,
                 { } t when t == typeof(decimal) => TableSchemaFieldType.Number,
+                { } t when t == typeof(decimal?) => TableSchemaFieldType.Number,
                 { } t when t == typeof(string) => TableSchemaFieldType.String,
                 { } t when t == typeof(ReadOnlyMemory<char>) => TableSchemaFieldType.String,
                 _ => TableSchemaFieldType.Any
