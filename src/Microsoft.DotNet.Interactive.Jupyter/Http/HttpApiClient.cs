@@ -24,7 +24,7 @@ internal class HttpApiClient : IDisposable
 
     public virtual HttpApiClient CreateClient(string relativeApiPath)
     {
-        return new HttpApiClient(new Uri(_baseUri, relativeApiPath), _authProvider);
+        return new HttpApiClient(GetUri(relativeApiPath), _authProvider);
     }
 
     public void Dispose()
@@ -42,7 +42,7 @@ internal class HttpApiClient : IDisposable
 
         var request = new HttpRequestMessage()
         {
-            RequestUri = new Uri(_baseUri, relativeApiPath),
+            RequestUri = GetUri(relativeApiPath),
             Method = method, 
             Content = content
         };
@@ -50,5 +50,11 @@ internal class HttpApiClient : IDisposable
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
         return await _httpClient.SendAsync(request);
+    }
+
+    public Uri GetUri(string relativeApiPath)
+    {
+        // preserve the full base Uri 
+        return new Uri($"{_baseUri.AbsoluteUri.TrimEnd('/')}/{relativeApiPath.TrimStart('/')}");
     }
 }

@@ -72,7 +72,7 @@ internal class JupyterKernelHttpConnection : IJupyterKernelConnection, IMessageS
     private async Task ConnectSocketAsync()
     {
         var token = await _authProvider.GetTokenAsync();
-        var channelUri = GetWebSocketUri(new Uri($"{_apiClient.BaseUri.AbsoluteUri}/channels?token={token}"));
+        var channelUri = GetWebSocketUri(_apiClient.GetUri($"/channels?token={token}"));
         await _socket.ConnectAsync(channelUri, CancellationToken.None).ConfigureAwait(false);
     }
 
@@ -161,20 +161,25 @@ internal class JupyterKernelHttpConnection : IJupyterKernelConnection, IMessageS
         bool handled = false;
         if (message.Content is InterruptRequest)
         {
-            await InterruptKernelAsync();
-            handled = true;
+            handled = await InterruptKernelAsync();
+            if (handled)
+            {
+                _subject.OnNext(JupyterMessage.CreateReply(new InterruptReply(), message, message.Channel));
+            }
         }
 
         return handled;
     }
 
-    private async Task InterruptKernelAsync()
+    private async Task<bool> InterruptKernelAsync()
     {
         HttpResponseMessage response = await _apiClient.SendRequestAsync(
-                relativeApiPath: "api/interrupt",
+                relativeApiPath: "interrupt",
                 content: null,
                 method: HttpMethod.Post
             );
+
+        return response.IsSuccessStatusCode;
     }
 
     private Uri GetWebSocketUri(Uri uri)

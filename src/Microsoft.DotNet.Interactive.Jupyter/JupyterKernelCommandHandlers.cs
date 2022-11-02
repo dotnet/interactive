@@ -266,9 +266,9 @@ internal partial class JupyterKernel
 
     private void CancelCommandIfRequested(KernelInvocationContext context)
     {
-        if (context.CancellationToken.IsCancellationRequested)
+        context.CancellationToken.Register(async () =>
         {
-            context.Fail(context.Command, null, "Command cancelled");
-        }
+            await InterruptKernelExecutionAsync();
+        });
     }
 }
