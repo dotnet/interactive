@@ -40,7 +40,7 @@ public class RuntimeTelemetryTests : IDisposable
         var telemetrySender = new FakeTelemetrySender();
         using var kernel = new CompositeKernel
             {
-                new CSharpKernel().UseNugetDirective(),
+                new CSharpKernel(),
                 new FakeKernel("kql", "KQL"),
                 new FakeKernel("sql", "T-SQL")
             }
