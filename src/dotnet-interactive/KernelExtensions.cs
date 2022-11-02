@@ -7,12 +7,17 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.NamingConventionBinder;
 using System.Reflection;
+using System.Runtime.InteropServices.ComTypes;
 using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.DotNet.Interactive.Utility;
+using Microsoft.FSharp.Control;
+
+using static FSharp.Compiler.EditorServices.FindDeclExternalSymbol;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.App;
@@ -82,6 +87,20 @@ public static class KernelExtensions
         var sessionId = Guid.NewGuid().ToString();
         var subscription = kernel.KernelEvents.Subscribe(SendTelemetryFor);
 
+        kernel.AddMiddleware(async (command, context, next) =>
+        {
+            await next(command, context);
+            if (command is SubmitCode submitCode)
+            {
+                var properties = GetStandardPropertiesFromCommand(command);
+
+                telemetrySender.TrackEvent(
+                    "CodeSubmitted",
+                    properties: properties);
+            }
+
+        });
+
         kernel.RegisterForDisposal(subscription);
 
         return kernel;
@@ -90,58 +109,53 @@ public static class KernelExtensions
         {
             switch (@event.Command, kernelEvent: @event)
             {
-                case (SubmitCode, CommandSucceeded or CommandFailed):
-                {
-                    var properties = GetStandardProperties(@event);
-                    var measurements = GetStandardMeasurements(@event);
-                    telemetrySender.TrackEvent(
-                        "CodeSubmitted",
-                        measurements: measurements,
-                        properties: properties);
-                }
-                    break;
-
                 case (_, PackageAdded added):
-                {
-                    var properties = GetStandardProperties(@event);
-                    properties.Add("PackageName", added.PackageReference.PackageName.ToSha256HashWithNormalizedCasing());
-                    properties.Add("PackageVersion", added.PackageReference.PackageVersion.ToSha256Hash());
+                    {
+                        var properties = GetStandardPropertiesFromEvent(@event);
+                        properties.Add("PackageName", added.PackageReference.PackageName.ToSha256HashWithNormalizedCasing());
+                        properties.Add("PackageVersion", added.PackageReference.PackageVersion.ToSha256Hash());
 
-                    var measurements = GetStandardMeasurements(@event);
+                        var measurements = GetStandardMeasurementsFromEvent(@event);
 
-                    telemetrySender.TrackEvent(
-                        "PackageAdded",
-                        measurements: measurements,
-                        properties: properties);
-                }
+                        telemetrySender.TrackEvent(
+                            "PackageAdded",
+                            measurements: measurements,
+                            properties: properties);
+                    }
                     break;
             }
 
-            Dictionary<string, string> GetStandardProperties(KernelEvent kernelEvent)
-            {
-                Kernel handlingKernel = null;
-                if (kernelEvent.Command.TargetKernelName is not null)
-                {
-                    kernel.ChildKernels.TryGetByAlias(kernelEvent.Command.TargetKernelName, out handlingKernel);
-                }
+        }
+        
+        Dictionary<string, string> GetStandardPropertiesFromEvent(KernelEvent kernelEvent)
+        {
+            return GetStandardPropertiesFromCommand(kernelEvent.Command);
+        }
 
-                var properties = new Dictionary<string, string>
-                {
-                    ["KernelName"] = kernelEvent.Command.TargetKernelName?.ToSha256Hash(),
-                    ["KernelLanguageName"] = handlingKernel?.KernelInfo?.LanguageName?.ToSha256Hash(),
-                    ["KernelSessionId"] = sessionId
-                };
-                return properties;
+        Dictionary<string, string> GetStandardPropertiesFromCommand(KernelCommand kernelCommand)
+        {
+            Kernel handlingKernel = null;
+            if (kernelCommand.TargetKernelName is not null)
+            {
+                kernel.ChildKernels.TryGetByAlias(kernelCommand.TargetKernelName, out handlingKernel);
             }
 
-            Dictionary<string, double> GetStandardMeasurements(KernelEvent event1)
+            var properties = new Dictionary<string, string>
             {
-                return new Dictionary<string, double>
-                {
-                    ["ExecutionOrder"] = ++executionOrder,
-                    ["Succeeded"] = event1 is CommandSucceeded ? 1 : 0
-                };
-            }
+                ["KernelName"] = kernelCommand.TargetKernelName?.ToSha256Hash(),
+                ["KernelLanguageName"] = handlingKernel?.KernelInfo?.LanguageName?.ToSha256Hash(),
+                ["KernelSessionId"] = sessionId
+            };
+            return properties;
+        }
+
+        Dictionary<string, double> GetStandardMeasurementsFromEvent(KernelEvent event1)
+        {
+            return new Dictionary<string, double>
+            {
+                ["ExecutionOrder"] = ++executionOrder,
+                ["Succeeded"] = event1 is CommandSucceeded ? 1 : 0
+            };
         }
     }
 }
