@@ -2,7 +2,7 @@
 
 There are two ways to use .NET notebooks on your machine with .NET Interactive:
 
-* Install .NET Interactive as a Jupyter kernel for use with Jupyter Notebook, JupyterLab, nteract, Azure Data Studio, and others.
+* Install .NET Interactive as a Jupyter kernel for use with Jupyter Notebook, JupyterLab, nteract, and others.
 
 or 
 
