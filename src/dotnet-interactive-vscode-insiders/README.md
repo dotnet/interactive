@@ -78,7 +78,17 @@ You can file issues or feature requests on the [.NET Interactive](https://github
 
 ## Telemetry
 
-The Polyglot Notebooks extension for VS Code uses the `dotnet-interactive` tool which collects usage and sends telemetry to Microsoft to help us improve our products and services. Read our [privacy statement](https://privacy.microsoft.com/privacystatement) to learn more.  See [here](https://github.com/dotnet/interactive/tree/main/docs#telemetry) to learn more about telemetry in Polyglot Notebooks. 
+The Polyglot Notebooks extension for VS Code uses the `dotnet-interactive` tool which collects usage and sends telemetry to Microsoft to help us improve our products and services. 
+
+Telemetry is collected when .NET Interactive is started. Once .NET Interactive is running, we collect hashed versions of packages imported into the notebook and the languages used to run individual cells. We do not collect any additional code or clear text from cells. The telemetry is anonymous and reports only the values for a specific subset of the verbs in the .NET Interactive CLI. Those verbs are:
+
+* `dotnet interactive jupyter`
+* `dotnet interactive jupyter install`
+* `dotnet interactive http`
+* `dotnet interactive stdio`
+
+Read our [privacy statement](https://privacy.microsoft.com/privacystatement) to learn more.  See [here](https://github.com/dotnet/interactive/tree/main/docs#telemetry) to learn more about telemetry in Polyglot Notebooks. 
+
 
 ## License
 
