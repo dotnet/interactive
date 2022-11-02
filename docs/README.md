@@ -21,7 +21,7 @@ _Our documentation is still a work in progress. There are a number of topics lis
 
 As a powerful and versatile engine, .NET Interactive can be used to create and power a number of tools and experiences such as: 
 
-- Polyglot (multi-language) Notebooks
+- Polyglot Notebooks
 - REPLs
 - Embeddable script enginges
 
