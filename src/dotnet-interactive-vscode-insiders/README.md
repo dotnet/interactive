@@ -44,7 +44,7 @@ With the Polyglot Notebooks extension, you can use multiple languages in the sam
 
 ## Creating Notebooks
 
-To create a new polyglot notebook, open the Command Palette(`Ctrl+Shift+P`), and select **Polyglot Notebook: Create new blank notebook**. You can also create a new notebook with `Ctrl+Shift+Alt+N` key combination.
+To create a new polyglot notebook, open the Command Palette(`Ctrl+Shift+P`) on Windows or (`Cmd+Shift+P`) on MacOS, and select **Polyglot Notebook: Create new blank notebook**. You can also create a new notebook with `Ctrl+Shift+Alt+N` key combination on Windows. 
 
 ## Running Code
 
@@ -78,7 +78,7 @@ You can file issues or feature requests on the [.NET Interactive](https://github
 
 ## Telemetry
 
-The Polyglot Notebooks extension for VS Code uses the `dotnet-interactive` tool which collects usage and sends telemetry to Microsoft to help us improve our products and services.  Read our [privacy statement](https://privacy.microsoft.com/privacystatement) to learn more.  See [here](https://github.com/dotnet/interactive/tree/main/docs#telemetry) to learn more about telemetry in Polyglot Notebooks. 
+The Polyglot Notebooks extension for VS Code uses the `dotnet-interactive` tool which collects usage and sends telemetry to Microsoft to help us improve our products and services. Read our [privacy statement](https://privacy.microsoft.com/privacystatement) to learn more.  See [here](https://github.com/dotnet/interactive/tree/main/docs#telemetry) to learn more about telemetry in Polyglot Notebooks. 
 
 ## License
 
