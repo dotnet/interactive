@@ -29,7 +29,7 @@ As a powerful and versatile engine, .NET Interactive can be used to create and p
 
 Since .NET Interactive is capable of behaving as a kernel for notebooks, it enables a polyglot (multi-language) notebook experience. 
 
-In a Polyglot Notebook, you can use multiple languages and share variables between them. No more installing different Jupyter kernels, using wrapper libraries, or different tools to get the best language server support for the language of your choice. Always use the best language for the job and seamlessly transition between different states of your workflow, all within one notebook.
+In Polyglot Notebooks, you can use multiple languages and share variables between them. No more installing different Jupyter kernels, using wrapper libraries, or different tools to get the best language server support for the language of your choice. Always use the best language for the job and seamlessly transition between different states of your workflow, all within one notebook.
 
 ### Visual Studio Code
 
