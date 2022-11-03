@@ -47,7 +47,7 @@ export interface HtmlDomFragmentInserterConfiguration {
     updateContainerContent?: (container: HTMLElement, htmlFragment: string) => void,
     createMutationObserver?: (callback: MutationCallback) => MutationObserver,
     normalizeHtmlFragment?: (htmlFragment: string) => string,
-    jsEvaluator?: (js: string) => void
+    jsEvaluator?: (js: string) => Promise<void>,
 };
 
 export function htmlDomFragmentInserter(htmlFragment: string, configuration?: HtmlDomFragmentInserterConfiguration): Promise<string> {
@@ -64,7 +64,13 @@ export function htmlDomFragmentInserter(htmlFragment: string, configuration?: Ht
     });
     const updateContainerContent = configuration?.updateContainerContent ?? ((container, htmlFragment) => container.innerHTML = htmlFragment);
     const createMutationObserver = configuration?.createMutationObserver ?? (callback => new MutationObserver(callback));
-    const jsEvaluator = configuration?.jsEvaluator ?? ((js: string) => eval(js));
+    let jsEvaluator: (js: string) => Promise<void>;
+    if (configuration?.jsEvaluator) {
+        jsEvaluator = configuration.jsEvaluator;
+    } else {
+        const AsyncFunction = eval(`Object.getPrototypeOf(async function(){}).constructor`);
+        jsEvaluator = (code) => AsyncFunction("console", code);
+    }
     let container = getOrCreateContainer();
 
     const normalisedHtmlFragment = nomarliseFragment(htmlFragment);
@@ -87,12 +93,11 @@ export function htmlDomFragmentInserter(htmlFragment: string, configuration?: Ht
     mutationObserver.observe(container, { childList: true, subtree: true });
     updateContainerContent(container, normalisedHtmlFragment);
     return completionPromise.promise.then(() => {
-        container.querySelectorAll("script").forEach(script => {
+        container.querySelectorAll("script").forEach(async script => {
             if (script.textContent) {
                 try {
-                    jsEvaluator(script.textContent);
+                    await jsEvaluator(script.textContent);
                 } catch (e: any) {
-                    e;//?
                     Logger.default.error(e?.message ?? e);
                 }
             }
