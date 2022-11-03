@@ -20,7 +20,6 @@ internal class LocalJupyterConnection : IJupyterConnection
 {
     private readonly CompositeDisposable _disposables = new CompositeDisposable();
     private readonly IJupyterKernelSpecModule _kernelSpecModule;
-    private Process _kernelProcess;
 
     public LocalJupyterConnection(IJupyterKernelSpecModule kernelSpecModule = null)
     {
@@ -35,18 +34,6 @@ internal class LocalJupyterConnection : IJupyterConnection
 
     public async Task<IJupyterKernelConnection> CreateKernelConnectionAsync(string kernelType)
     {
-        var connectionInfo = await StartKernelAsync(kernelType);
-
-        if (connectionInfo != null && !_kernelProcess.HasExited) {
-            var kernelConnection = new ZMQKernelConnection(connectionInfo, _kernelProcess.Id);
-            return kernelConnection;
-        }
-
-        throw new KernelStartException(kernelType, $"Process Exited with exit code {_kernelProcess.ExitCode}. Ensure you are running in the correct environment.");
-    }
-
-    private async Task<ConnectionInformation> StartKernelAsync(string kernelType)
-    {
         // find the related kernel spec for the kernel type 
         var spec = GetKernelSpec(kernelType);
 
@@ -60,7 +47,7 @@ internal class LocalJupyterConnection : IJupyterConnection
 
         // avoid potential port race conditions by reserving ports up front 
         // and releasing before kernel launch.
-        List<string> kernelArgs = null;
+        Process kernelProcess = null;
         using (var tcpPortReservation = TcpPortReservations.ReserveFreePorts(5))
         {
             var reservedPorts = tcpPortReservation.Ports;
@@ -89,40 +76,57 @@ internal class LocalJupyterConnection : IJupyterConnection
             File.Copy(connectionInfoTempFilePath, runtimeConnectionFile);
             File.Delete(connectionInfoTempFilePath);
 
-            kernelArgs = new List<string>(spec.CommandArguments);
-            kernelArgs.Remove("{connection_file}");
-            kernelArgs.Add($"\"{runtimeConnectionFile}\"");
+            kernelProcess = CreateKernelProcess(spec, runtimeConnectionFile);
         }
 
-        if (kernelArgs != null)
+        if (kernelProcess == null)
         {
-            // use the process info in kernel spec and replace the {connection file} in the data with file path
-            // spawn a child process. This will create ZMQ sockets on the kernel. 
-            var command = kernelArgs[0];
-            var arguments = string.Join(" ", kernelArgs.Skip(1));
+            throw new KernelStartException(kernelType, "count not create process.");
+        }
+        await Task.Yield();
 
-            _kernelProcess = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = command,
-                    Arguments = arguments,
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    StandardOutputEncoding = Encoding.UTF8
-                },
-                EnableRaisingEvents = true
-            };
+        kernelProcess.Start();
 
-            await Task.Yield();
-
-            _kernelProcess.Start();
-            _disposables.Add(_kernelProcess);
+        if (connectionInfo == null || kernelProcess.HasExited)
+        {
+            throw new KernelStartException(kernelType, $"Process Exited with exit code {kernelProcess.ExitCode}. Ensure you are running in the correct environment.");
         }
 
-        // now pass the connection file to kernel connection and bind to the sockets. 
-        return connectionInfo;
+        var kernelConnection = new ZMQKernelConnection(connectionInfo, kernelProcess);
+        return kernelConnection;
+    }
+
+    private Process CreateKernelProcess(KernelSpec spec, string connectionFilePath)
+    {
+        List<string> kernelArgs = new(spec?.CommandArguments);
+
+        if (kernelArgs.Count == 0)
+        {
+            return null;
+        }
+        kernelArgs.Remove("{connection_file}");
+        kernelArgs.Add($"\"{connectionFilePath}\"");
+
+        // use the process info in kernel spec and replace the {connection_file} in the data with file path
+        // spawn a child process. This will create ZMQ sockets on the kernel. 
+        var command = kernelArgs[0];
+        var arguments = string.Join(" ", kernelArgs.Skip(1));
+
+        var kernelProcess = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = command,
+                Arguments = arguments,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                StandardOutputEncoding = Encoding.UTF8
+            },
+            EnableRaisingEvents = true
+        };
+
+        return kernelProcess;
     }
 
     public void Dispose()
@@ -132,7 +136,7 @@ internal class LocalJupyterConnection : IJupyterConnection
 
     private KernelSpec GetKernelSpec(string kernelType)
     {
-        var installedSpecs = _kernelSpecModule.GetInstalledKernelDirectories(); 
+        var installedSpecs = _kernelSpecModule.GetInstalledKernelDirectories();
 
         if (installedSpecs.ContainsKey(kernelType))
         {

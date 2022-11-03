@@ -3,9 +3,12 @@
 
 using Microsoft.DotNet.Interactive.Jupyter.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
+using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using NetMQ;
 using NetMQ.Sockets;
 using System;
+using System.Diagnostics;
+using System.IO;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Threading;
@@ -28,14 +31,16 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
     private readonly DealerSocket _control;
     private readonly Subject<JupyterMessage> _subject;
     private readonly CancellationTokenSource _cancellationTokenSource;
+    private Process _kernelProcess;
 
-    public ZMQKernelConnection(ConnectionInformation connectionInformation, int processId)
+    public ZMQKernelConnection(ConnectionInformation connectionInformation, Process kernelProcess)
     {
         if (connectionInformation is null)
         {
             throw new ArgumentNullException(nameof(connectionInformation));
         }
 
+        _kernelProcess = kernelProcess ?? throw new ArgumentNullException(nameof(kernelProcess));
         _shellAddress = $"{connectionInformation.Transport}://{connectionInformation.IP}:{connectionInformation.ShellPort}";
         _ioSubAddress = $"{connectionInformation.Transport}://{connectionInformation.IP}:{connectionInformation.IOPubPort}";
         _stdInAddress = $"{connectionInformation.Transport}://{connectionInformation.IP}:{connectionInformation.StdinPort}";
@@ -59,10 +64,11 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
                            _ioSubSocket,
                            _stdIn,
                            _control,
-                           _cancellationTokenSource
+                           _cancellationTokenSource,
+                           _kernelProcess
                        };
 
-        Uri = KernelHost.CreateHostUriForProcessId(processId);
+        Uri = KernelHost.CreateHostUriForProcessId(_kernelProcess.Id);
     }
 
     public Uri Uri { get; }
@@ -81,7 +87,17 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
 
     public Task SendAsync(JupyterMessage message)
     {
-        _shellChannel.Send(message);
+        if (TryHandle(message))
+        {
+            // handled here. no need to send to kernel
+            return Task.CompletedTask;
+        }
+
+        if (message.Channel == MessageChannel.shell)
+        {
+            _shellChannel.Send(message);
+        }
+
         return Task.CompletedTask;
     }
 
@@ -113,5 +129,26 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
 
         return Task.CompletedTask;
     }
-}
+    private bool TryHandle(JupyterMessage message)
+    {
+        bool handled = false;
+        if (message.Content is InterruptRequest)
+        {
+            handled = InterruptKernel();
+            if (handled)
+            {
+                _subject.OnNext(JupyterMessage.CreateReply(new InterruptReply(), message, message.Channel));
+            }
+        }
 
+        return handled;
+    }
+
+    private bool InterruptKernel()
+    {
+        StreamWriter writer = _kernelProcess.StandardInput;
+        writer.WriteLine(char.ConvertFromUtf32(3)); // signal SIGINT to interrupt
+        writer.Flush();
+        return true;
+    }
+}
