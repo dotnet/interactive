@@ -96,6 +96,7 @@ describe("htmlKernel", () => {
             },
             jsEvaluator: (code: string) => {
                 dom.window.eval(code);
+                return Promise.resolve();
             }
         };
         const kernel = createHtmlKernelForBrowser({ kernelName: "html", htmlDomFragmentInserterConfiguration });
