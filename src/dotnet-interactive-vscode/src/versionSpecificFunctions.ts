@@ -45,13 +45,6 @@ export async function handleCustomInputRequest(prompt: string, inputTypeHint: st
 export function hashBangConnect(clientMapper: ClientMapper, hostUri: string, kernelInfoProduced: contracts.KernelInfoProduced[], messageHandlerMap: Map<string, rxjs.Subject<KernelCommandOrEventEnvelope>>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
     Logger.default.info(`handling #!connect for ${documentUri.toString()}`);
     hashBangConnectPrivate(clientMapper, hostUri, kernelInfoProduced, messageHandlerMap, controllerPostMessage, documentUri);
-    clientMapper.onClientCreate((clientUri, _client) => {
-        if (clientUri.toString() === documentUri.toString()) {
-            Logger.default.info(`reconnecting webview kernels for ${documentUri.toString()}`);
-            hashBangConnectPrivate(clientMapper, hostUri, kernelInfoProduced, messageHandlerMap, controllerPostMessage, documentUri);
-            return Promise.resolve();
-        }
-    });
 }
 
 function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, kernelInfoProduced: contracts.KernelInfoProduced[], messageHandlerMap: Map<string, rxjs.Subject<KernelCommandOrEventEnvelope>>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
@@ -59,23 +52,22 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, ker
     Logger.default.info(`handling #!connect from '${hostUri}' for not ebook: ${documentUri.toString()}`);
 
     const documentUriString = documentUri.toString();
-    let messageHandler = messageHandlerMap.get(documentUriString);
-    if (!messageHandler) {
-        messageHandler = new rxjs.Subject<KernelCommandOrEventEnvelope>();
-        messageHandlerMap.set(documentUriString, messageHandler);
-    }
-
-    const extensionHostToWebviewSender = KernelCommandAndEventSender.FromFunction(envelope => {
-        controllerPostMessage({ envelope });
-    });
-
-    const WebviewToExtensionHostReceiver = KernelCommandAndEventReceiver.FromObservable(messageHandler);
-
 
     clientMapper.getOrAddClient(documentUri).then(client => {
 
+        let messageHandler = messageHandlerMap.get(documentUriString);
+        if (!messageHandler) {
+            messageHandler = new rxjs.Subject<KernelCommandOrEventEnvelope>();
+            messageHandlerMap.set(documentUriString, messageHandler);
+        }
+        let extensionHostToWebviewSender = KernelCommandAndEventSender.FromFunction(envelope => {
+            controllerPostMessage({ envelope });
+        });
+
+        let WebviewToExtensionHostReceiver = KernelCommandAndEventReceiver.FromObservable(messageHandler);
+
         Logger.default.info(`configuring routing for host '${hostUri}'`);
-        client.channel.receiver.subscribe({
+        let sub01 = client.channel.receiver.subscribe({
             next: envelope => {
                 if (isKernelEventEnvelope(envelope)) {
                     Logger.default.info(`forwarding event to '${hostUri}' ${JSON.stringify(envelope)}`);
@@ -84,7 +76,7 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, ker
             }
         });
 
-        WebviewToExtensionHostReceiver.subscribe({
+        let sub02 = WebviewToExtensionHostReceiver.subscribe({
             next: envelope => {
                 if (isKernelCommandEnvelope(envelope)) {
                     // handle command routing
@@ -149,6 +141,13 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, ker
             sender: extensionHostToWebviewSender,
             receiver: WebviewToExtensionHostReceiver,
             remoteUris: ["kernel://webview"]
+        });
+
+        client.registerForDisposal(() => {
+            messageHandlerMap.delete(documentUriString);
+            client.kernelHost.tryRemoveConnector({ remoteUris: ["kernel://webview"] });
+            sub01.unsubscribe();
+            sub02.unsubscribe();
         });
 
         for (const kernelInfo of kernelInfoProduced) {

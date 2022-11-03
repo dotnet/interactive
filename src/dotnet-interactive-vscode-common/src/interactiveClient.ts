@@ -48,7 +48,9 @@ import {
     SubmitCode,
     SubmitCodeType,
     CancelType,
-    Cancel
+    Cancel,
+    ErrorProducedType,
+    ErrorProduced
 } from './dotnet-interactive/contracts';
 import { clearDebounce, createOutput } from './utilities';
 
@@ -128,7 +130,7 @@ export class InteractiveClient {
         clearDebounce(`sighelp-${requestId}`);
     }
 
-    execute(source: string, language: string, outputObserver: { (outputs: Array<vscodeLike.NotebookCellOutput>): void }, diagnosticObserver: (diags: Array<Diagnostic>) => void, configuration: { token?: string | undefined, id?: string | undefined } | undefined): Promise<void> {
+    execute(source: string, language: string, outputObserver: { (outputs: Array<vscodeLike.NotebookCellOutput>): void }, diagnosticObserver: (diags: Array<Diagnostic>) => void, configuration: { token?: string | undefined, id?: string | undefined } | undefined): Promise<boolean> {
         if (configuration !== undefined && configuration.id !== undefined) {
             this.clearExistingLanguageServiceRequests(configuration.id);
         }
@@ -159,7 +161,7 @@ export class InteractiveClient {
                         case CommandSucceededType:
                             if (eventEnvelope.command?.id === commandId) {
                                 // only complete this promise if it's the root command
-                                resolve();
+                                resolve(!failureReported);
                             }
                             break;
                         case CommandFailedType:
@@ -175,10 +177,17 @@ export class InteractiveClient {
                                 }
                             }
                             break;
+                        case ErrorProducedType: {
+                            const err = <ErrorProduced>eventEnvelope.event;
+                            const errorOutput = this.config.createErrorOutput(err.message, this.getNextOutputId());
+                            outputs.push(errorOutput);
+                            reportOutputs();
+                            failureReported = true;
+                        }
                         case DiagnosticsProducedType:
                             {
                                 const diags = <DiagnosticsProduced>eventEnvelope.event;
-                                diagnostics.push(...diags.diagnostics);
+                                diagnostics.push(...(diags.diagnostics ?? []));
                                 reportDiagnostics();
                             }
                             break;

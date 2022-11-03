@@ -9,7 +9,7 @@ const expect = chai.expect;
 import { ClientMapper } from '../../src/vscode-common/clientMapper';
 import { TestDotnetInteractiveChannel } from './testDotnetInteractiveChannel';
 import { CallbackTestTestDotnetInteractiveChannel } from './callbackTestTestDotnetInteractiveChannel';
-import { CodeSubmissionReceivedType, CompleteCodeSubmissionReceivedType, CommandSucceededType, DisplayedValueProducedType, ReturnValueProducedType, DisplayedValueUpdatedType, CommandFailedType } from '../../src/vscode-common/dotnet-interactive/contracts';
+import { CodeSubmissionReceivedType, CompleteCodeSubmissionReceivedType, CommandSucceededType, DisplayedValueProducedType, ReturnValueProducedType, DisplayedValueUpdatedType, CommandFailedType, ErrorProducedType } from '../../src/vscode-common/dotnet-interactive/contracts';
 import { createUri, debounce, wait } from '../../src/vscode-common/utilities';
 import * as vscodeLike from '../../src/vscode-common/interfaces/vscode-like';
 import { createChannelConfig, decodeNotebookCellOutputs } from './utilities';
@@ -421,6 +421,28 @@ describe('InteractiveClient tests', () => {
                 ]
             }
         ]);
+    });
+
+    it('ErrorProduced resolve the execution promise reporting failuer', async () => {
+        const token = 'token';
+        const config = createChannelConfig(async (notebookPath) => new TestDotnetInteractiveChannel({
+            'SubmitCode': [
+                {
+                    eventType: ErrorProducedType,
+                    event: { message: "failed internal command" },
+                    token
+                },
+                {
+                    eventType: CommandSucceededType,
+                    event: {},
+                    token
+                }
+            ]
+        }));
+        const clientMapper = new ClientMapper(config);
+        const client = await clientMapper.getOrAddClient(createUri('test/path'));
+        const result = await client.execute('1+1', 'csharp', _ => { }, _ => { }, { token });
+        expect(result).to.be.equal(false);
     });
 
     it('CommandFailedEvent rejects the execution promise', (done) => {

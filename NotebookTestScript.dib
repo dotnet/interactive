@@ -108,6 +108,20 @@ value.Display("application/json", "text/html");
 
 #!markdown
 
+# Execute the next cell. It should fail with the message:
+```
+Error: Value 'undefinedVariableName' not found in kernel pwsh
+2
+```
+
+#!csharp
+
+#!share --from pwsh undefinedVariableName
+
+1+1
+
+#!markdown
+
 # Execute the next cell and verify the following error appears:
 
 ```
