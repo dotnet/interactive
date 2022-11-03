@@ -14,7 +14,7 @@ But every .NET Interactive notebook is capable of running multiple languages. Yo
 
 If you're editing a notebook in Visual Studio Code, you can also choose the language for a submission by clicking the language selector in a cell's lower right corner.
 
-<img src="https://user-images.githubusercontent.com/547415/94707927-dd20ee80-02f8-11eb-89da-7772235e20db.png" width="60%">
+![Language Picker](/images/LanguagePicker.png)
 
 The language-selection magic commands will still work in Visual Studio Code as well.
 

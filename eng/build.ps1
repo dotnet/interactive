@@ -17,9 +17,7 @@ try {
         "$repoRoot\src\dotnet-interactive-vscode\src\vscode-common",
         "$repoRoot\src\dotnet-interactive-vscode\tests\vscode-common-tests",
         "$repoRoot\src\dotnet-interactive-vscode-insiders\src\vscode-common",
-        "$repoRoot\src\dotnet-interactive-vscode-insiders\tests\vscode-common-tests",
-        "$repoRoot\src\dotnet-interactive-vscode-ads\src\vscode-common",
-        "$repoRoot\src\dotnet-interactive-vscode-ads\tests\vscode-common-tests"
+        "$repoRoot\src\dotnet-interactive-vscode-insiders\tests\vscode-common-tests"
     )
 
     foreach ($symlinkDir in $symlinkDirectories) {
@@ -34,8 +32,7 @@ try {
         "src\microsoft-dotnet-interactive",
         "src\microsoft-dotnet-interactive-browser",
         "src\dotnet-interactive-vscode",
-        "src\dotnet-interactive-vscode-insiders",
-        "src\dotnet-interactive-vscode-ads"
+        "src\dotnet-interactive-vscode-insiders"
     )
     foreach ($npmDir in $npmDirs) {
         Push-Location "$repoRoot\$npmDir"

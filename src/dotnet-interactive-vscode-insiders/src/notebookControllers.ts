@@ -171,9 +171,9 @@ export class DotNetNotebookKernel {
                     diagnosticCollection.set(cell.document.uri, diags.filter(d => d.severity !== contracts.DiagnosticSeverity.Hidden).map(vscodeUtilities.toVsCodeDiagnostic));
                 }
 
-                return client.execute(source, getSimpleLanguage(cell.document.languageId), outputObserver, diagnosticObserver, { id: cell.document.uri.toString() }).then(async () => {
+                return client.execute(source, getSimpleLanguage(cell.document.languageId), outputObserver, diagnosticObserver, { id: cell.document.uri.toString() }).then(async (success) => {
                     await outputUpdatePromise;
-                    endExecution(client, cell, true);
+                    endExecution(client, cell, success);
                 }).catch(async () => {
                     await outputUpdatePromise;
                     endExecution(client, cell, false);
