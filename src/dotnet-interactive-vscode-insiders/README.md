@@ -1,5 +1,4 @@
 This extension is currently **_in preview_**.
-_The Visual Studio Code notebook support that this extension uses is also in preview and design is ongoing, so the extension might not work._
 ---
 
 # Polyglot Notebooks
@@ -48,23 +47,23 @@ To create a new polyglot notebook, open the Command Palette(`Ctrl+Shift+P`) on W
 
 Execute code by selecting the subkernel in the bottom right of each cell, or use language magic commands to mix languages in one cell regardless of the chosen subkernel. 
 
-![Running Code](images/RunningCodeExample.gif)
+![Running Code](https://github.com/dotnet/interactive/raw/main/images/RunningCodeExample.gif)
 
 ## Variable Sharing + Variable Explorer 
 
 Share variables from subkernel to subkernel via the `#!share` magic command that is easily generated from the variable explorer. Use the Variable Explorer to manage the state and value of your variables. 
 
-![Variable Sharing via Variable Explorer](images/VariableSharingExample.gif)
+![Variable Sharing via Variable Explorer](https://github.com/dotnet/interactive/raw/main/images/VariableSharingExample.gif)
 
 ## Examples 
 
  - Connect to a SQL database, share the tabular result to JavaScript, and create your own custom visualizations.
 
-![SQL and JavaScript Example](images/SQLJavaScript.gif)
+![SQL and JavaScript Example](https://github.com/dotnet/interactive/raw/main/images/SQLJavaScript.gif)
 
  - Create powerful advanced diagrams and visualizations such as Class diagrams using code and text by leveraging [Mermaid](https://mermaid-js.github.io/mermaid/#/).
 
-![Mermaid Example](images/MermaidExample.gif)
+![Mermaid Example](https://github.com/dotnet/interactive/raw/main/images/MermaidExample.gif)
 
 ## Why do I need the .NET SDK? 
 
