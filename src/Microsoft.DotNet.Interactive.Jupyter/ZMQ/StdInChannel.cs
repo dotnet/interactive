@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
                 throw new ArgumentNullException(nameof(message));
             }
 
-            _sender.Send(
+            Send(
                 Message.Create(
                     message,
                     request.Header,
@@ -50,6 +50,11 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
             }
 
             throw new ArgumentOutOfRangeException($"Expecting an 'input_reply' message, but received '{msgType}'.");
+        }
+
+        public void Send(Message message)
+        {
+            _sender.Send(message);
         }
     }
 }

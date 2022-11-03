@@ -25,6 +25,8 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
     private readonly string _ioSubAddress;
     private readonly CompositeDisposable _disposables;
     private readonly RequestReplyChannel _shellChannel;
+    private readonly RequestReplyChannel _controlChannel;
+    private readonly StdInChannel _stdInChannel;
     private readonly string _stdInAddress;
     private readonly string _controlAddress;
     private readonly DealerSocket _stdIn;
@@ -54,7 +56,9 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
         _control = new DealerSocket();
 
         _shellChannel = new RequestReplyChannel(new MessageSender(_shell, signatureValidator));
-        
+        _stdInChannel = new StdInChannel(new MessageSender(_stdIn, signatureValidator), new MessageReceiver(_stdIn));
+        _controlChannel = new RequestReplyChannel(new MessageSender(_control, signatureValidator));
+
         _cancellationTokenSource = new CancellationTokenSource();
         _subject = new Subject<JupyterMessage>();
 
@@ -93,7 +97,15 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
             return Task.CompletedTask;
         }
 
-        if (message.Channel == MessageChannel.shell)
+        if (message.Channel == MessageChannel.control)
+        {
+            _controlChannel.Send(message);
+        }
+        else if (message.Channel == MessageChannel.stdin)
+        {
+            _stdInChannel.Send(message);
+        }
+        else
         {
             _shellChannel.Send(message);
         }
@@ -110,9 +122,9 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
         _control.Connect(_controlAddress);
 
         StartListening(_ioSubSocket, _cancellationTokenSource.Token);
-        StartListening(_shell, _cancellationTokenSource.Token);
         StartListening(_stdIn, _cancellationTokenSource.Token);
         StartListening(_control, _cancellationTokenSource.Token);
+        StartListening(_shell, _cancellationTokenSource.Token);
         return Task.CompletedTask;
     }
 

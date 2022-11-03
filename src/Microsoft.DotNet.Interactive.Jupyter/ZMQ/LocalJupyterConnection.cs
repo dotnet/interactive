@@ -3,6 +3,7 @@
 
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter.Connection;
+using Microsoft.DotNet.Interactive.Utility;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -112,20 +113,7 @@ internal class LocalJupyterConnection : IJupyterConnection
         var command = kernelArgs[0];
         var arguments = string.Join(" ", kernelArgs.Skip(1));
 
-        var kernelProcess = new Process
-        {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = command,
-                Arguments = arguments,
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                StandardOutputEncoding = Encoding.UTF8
-            },
-            EnableRaisingEvents = true
-        };
-
+        var kernelProcess = CommandLine.StartProcess(command, arguments, null);
         return kernelProcess;
     }
 
