@@ -210,11 +210,6 @@ function registerLegacyFileCommands(context: vscode.ExtensionContext, parserServ
         vscode.window.showWarningMessage(`The command '.NET Interactive: Save notebook as...' is deprecated.  Please use the 'Polyglot Notebook: Save notebook as...' command instead.`);
         await vscode.commands.executeCommand('polyglot-notebook.saveAsNotebook');
     }));
-
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.createNewInteractive', async () => {
-        vscode.window.showWarningMessage(`The command '.NET Interactive: Create Interactive Window' is deprecated.  Please use the 'Polyglot Notebook: Create Interactive Window' command instead.`);
-        await vscode.commands.executeCommand('polyglot-notebook.createNewInteractive');
-    }));
 }
 
 export function registerFileCommands(context: vscode.ExtensionContext, parserServer: NotebookParserServer, clientMapper: ClientMapper) {
@@ -359,20 +354,6 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
                     await vscode.commands.executeCommand('polyglot-notebook.openNotebook', uri);
                     break;
             }
-        }
-    }));
-
-    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.createNewInteractive', async () => {
-        const interactiveOpenArgs = [
-            {}, // showOptions
-            undefined, // resource uri
-            `${context.extension.id}/polyglot-notebook-window`, // controllerId
-            'Polyglot Notebook', // title
-        ];
-        const result = <any>(await vscode.commands.executeCommand('interactive.open', ...interactiveOpenArgs));
-        if (result && result.notebookUri && typeof result.notebookUri.toString === 'function') {
-            // this looks suspiciously like a uri, let's pre-load the backing process
-            clientMapper.getOrAddClient(result.notebookUri.toString());
         }
     }));
 }
