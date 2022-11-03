@@ -36,6 +36,7 @@
     "dotnet",
     "F#",
     "interactive programming",
+    "interactive",
     "ipynb",
     "Jupyter",
     "notebooks",
@@ -47,7 +48,6 @@
     "onNotebook:dotnet-interactive-legacy",
     "onNotebook:dotnet-interactive-window",
     "onNotebook:jupyter-notebook",
-    "onCommand:dotnet-interactive.createNewInteractive",
     "onCommand:dotnet-interactive.newNotebook",
     "onCommand:dotnet-interactive.openNotebook",
     "onCommand:dotnet-interactive.saveAsNotebook",
@@ -56,7 +56,6 @@
     "onNotebook:polyglot-notebook-window",
     "onNotebook:jupyter-notebook",
     "onCommand:dotnet-interactive.acquire",
-    "onCommand:polyglot-notebook.createNewInteractive",
     "onCommand:polyglot-notebook.newNotebook",
     "onCommand:polyglot-notebook.openNotebook",
     "onCommand:polyglot-notebook.saveAsNotebook",
@@ -206,10 +205,6 @@
         "title": "Install .NET Interactive"
       },
       {
-        "command": "polyglot-notebook.createNewInteractive",
-        "title": "Polyglot Notebook: Create Interactive Window"
-      },
-      {
         "command": "polyglot-notebook.openNotebook",
         "title": "Polyglot Notebook: Open notebook"
       },
@@ -236,10 +231,6 @@
       {
         "command": "polyglot-notebook.shareValueWith",
         "title": "Share value with..."
-      },
-      {
-        "command": "dotnet-interactive.createNewInteractive",
-        "title": ".NET Interactive: Create Interactive Window"
       },
       {
         "command": "dotnet-interactive.openNotebook",
