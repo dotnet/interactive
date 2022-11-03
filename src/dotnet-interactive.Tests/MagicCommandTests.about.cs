@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
     public class MagicCommandTests
     {
         [Collection("Do not parallelize")]
-        public class about
+        public class About
         {
             [Fact]
             public async Task it_shows_the_product_name_and_version_information()

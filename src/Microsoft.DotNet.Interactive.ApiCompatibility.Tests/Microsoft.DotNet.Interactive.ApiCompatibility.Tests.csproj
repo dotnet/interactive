@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <Deterministic Condition="'$(NCrunch)' == '1'">false</Deterministic>
     <NoWarn>$(NoWarn);VSTHRD200</NoWarn>    <!-- Ignore: Use "Async" suffix for async methods -->
     <NoWarn>$(NoWarn);8002</NoWarn>         <!-- Assent isn't strongly signed -->

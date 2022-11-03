@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <NoWarn>$(NoWarn);8002;CS8002</NoWarn>
     <NoWarn>$(NoWarn);VSTHRD200</NoWarn><!-- Ignore: Use "Async" suffix for async methods -->

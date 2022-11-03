@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
         public SignatureValidator(string key, string algorithm)
         {
             _encoder = new UTF8Encoding();
-            _signatureGenerator = HMAC.Create(algorithm);
+            _signatureGenerator = (HMAC)CryptoConfig.CreateFromName(algorithm);
             _signatureGenerator.Key = _encoder.GetBytes(key);
         }
 

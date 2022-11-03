@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <OutputType>Library</OutputType>
   </PropertyGroup>
 
@@ -40,7 +40,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="bin\Debug\net6.0\/Microsoft.DotNet.Interactive.ExtensionLab.dll" />
+    <None Remove="bin\Debug\net7.0\/Microsoft.DotNet.Interactive.ExtensionLab.dll" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <AssetTargetFallback>portable-net45+win8+wp8+wpa81</AssetTargetFallback>
     <NoWarn>$(NoWarn);VSTHRD002</NoWarn><!-- Ignore: Synchronosly awaiting... -->
     <NoWarn>$(NoWarn);VSTHRD100</NoWarn><!-- Ignore: Synchronosly awaiting... -->
