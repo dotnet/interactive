@@ -108,10 +108,7 @@ describe("htmlKernel", () => {
 
         const lastDisplayedValueProducedEvent = events.filter(e => e.eventType === contracts.DisplayedValueProducedType).at(-1)?.event as contracts.DisplayedValueProduced;
         expect(lastDisplayedValueProducedEvent).to.not.be.undefined;
-        dom.window.onload = () => {
-            dom.window.foo;//?
-            console.log(dom.window.foo);
-        };
+
         expect(lastDisplayedValueProducedEvent).to.deep.equal({
             displayedValueProduced:
             {
