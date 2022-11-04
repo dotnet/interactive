@@ -314,14 +314,14 @@ namespace Microsoft.DotNet.Interactive
             KernelCommand command,
             CancellationToken cancellationToken = default)
         {
-            using var disposable = new SerialDisposable();
-
-            KernelInvocationContext context = null;
-
             if (command is null)
             {
                 throw new ArgumentNullException(nameof(command));
             }
+
+            using var disposable = new SerialDisposable();
+
+            KernelInvocationContext context = null;
             command.ShouldPublishCompletionEvent ??= true;
 
             context = KernelInvocationContext.Establish(command);

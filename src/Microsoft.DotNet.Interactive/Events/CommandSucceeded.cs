@@ -7,7 +7,9 @@ namespace Microsoft.DotNet.Interactive.Events;
 
 public sealed class CommandSucceeded : KernelCommandCompletionEvent
 {
-    public CommandSucceeded(KernelCommand command) : base(command)
+    public CommandSucceeded(
+        KernelCommand command,
+        int executionOrder = 0) : base(command, executionOrder)
     {
     }
 
