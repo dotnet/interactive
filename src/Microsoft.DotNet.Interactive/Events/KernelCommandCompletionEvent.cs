@@ -7,7 +7,7 @@ namespace Microsoft.DotNet.Interactive.Events;
 
 public abstract class KernelCommandCompletionEvent : KernelEvent
 {
-    private protected KernelCommandCompletionEvent(KernelCommand command, int executionOrder = 0) : base(command)
+    private protected KernelCommandCompletionEvent(KernelCommand command, int executionOrder) : base(command)
     {
         ExecutionOrder = executionOrder;
     }

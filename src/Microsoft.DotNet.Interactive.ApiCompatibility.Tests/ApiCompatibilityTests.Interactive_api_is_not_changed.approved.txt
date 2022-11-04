@@ -565,13 +565,13 @@ Microsoft.DotNet.Interactive.Events
     .ctor(Microsoft.DotNet.Interactive.Commands.Cancel cancel)
     .ctor(Microsoft.DotNet.Interactive.Commands.Cancel cancel, Microsoft.DotNet.Interactive.Commands.KernelCommand cancelledCommand)
     public Microsoft.DotNet.Interactive.Commands.KernelCommand CancelledCommand { get;}
-  public class CommandFailed : KernelEvent
+  public class CommandFailed : KernelCommandCompletionEvent
     .ctor(System.Exception exception, Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.String message = null)
     .ctor(System.String message, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public System.Exception Exception { get;}
     public System.String Message { get; set;}
     public System.String ToString()
-  public class CommandSucceeded : KernelEvent
+  public class CommandSucceeded : KernelCommandCompletionEvent
     .ctor(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public System.String ToString()
   public class CompleteCodeSubmissionReceived : KernelEvent
@@ -626,6 +626,8 @@ Microsoft.DotNet.Interactive.Events
   public enum InsertTextFormat : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
     PlainText=1
     Snippet=2
+  public abstract class KernelCommandCompletionEvent : KernelEvent
+    public System.Int32 ExecutionOrder { get;}
   public abstract class KernelEvent
     public Microsoft.DotNet.Interactive.Commands.KernelCommand Command { get;}
     public Microsoft.DotNet.Interactive.EventRoutingSlip RoutingSlip { get;}

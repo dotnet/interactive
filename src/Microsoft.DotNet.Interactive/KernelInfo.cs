@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.Interactive
 
         public string LocalName { get; }
 
-        public Uri? Uri { get; set; }
+        public Uri Uri { get; set; }
 
         public Uri? RemoteUri { get; set; }
 

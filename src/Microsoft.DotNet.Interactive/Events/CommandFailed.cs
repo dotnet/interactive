@@ -12,7 +12,8 @@ namespace Microsoft.DotNet.Interactive.Events
         public CommandFailed(
             Exception exception,
             KernelCommand command,
-            string message = null) : base(command)
+            string message = null,
+            int executionOrder = 0) : base(command, executionOrder)
         {
             if (command is null)
             {
