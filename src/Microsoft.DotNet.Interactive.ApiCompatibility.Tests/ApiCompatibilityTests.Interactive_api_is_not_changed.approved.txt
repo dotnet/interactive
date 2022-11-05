@@ -123,6 +123,7 @@ Microsoft.DotNet.Interactive
     public System.String Name { get;}
     public CompositeKernel ParentKernel { get;}
     public Kernel RootKernel { get;}
+    public System.Int32 SubmissionCount { get;}
     public Microsoft.DotNet.Interactive.Parsing.SubmissionParser SubmissionParser { get;}
     public System.Void AddDirective(System.CommandLine.Command command)
     public System.Void AddMiddleware(KernelCommandPipelineMiddleware middleware, System.String caller = null)
@@ -210,7 +211,7 @@ Microsoft.DotNet.Interactive
     public static System.Collections.Generic.IEnumerable<Kernel> Subkernels(System.Boolean recursive = False)
     public static System.Collections.Generic.IEnumerable<Kernel> SubkernelsAndSelf(System.Boolean recursive = False)
     public static System.Threading.Tasks.Task<KernelCommandResult> SubmitCodeAsync(System.String code)
-    public static T UseImportMagicCommand<T>()
+    public static TKernel UseImportMagicCommand<TKernel>()
     public static T UseLogMagicCommand<T>()
     public static T UseQuitCommand<T>(System.Func<System.Threading.Tasks.Task> onQuitAsync = null)
     public static T UseValueSharing<T>()

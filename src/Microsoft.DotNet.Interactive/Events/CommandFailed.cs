@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Events
             Exception exception,
             KernelCommand command,
             string message = null,
-            int executionOrder = 0) : base(command, executionOrder)
+            int? executionOrder = default) : base(command, executionOrder)
         {
             if (command is null)
             {
@@ -29,7 +29,8 @@ namespace Microsoft.DotNet.Interactive.Events
 
         public CommandFailed(
             string message,
-            KernelCommand command) : this(null, command, message)
+            KernelCommand command,
+            int? executionOrder = default) : this(null, command, message, executionOrder)
         {
         }
 

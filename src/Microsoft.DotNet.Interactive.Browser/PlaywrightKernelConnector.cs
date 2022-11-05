@@ -86,7 +86,7 @@ public class PlaywrightKernelConnector
             var subscription = Kernel.Root
                                      .KernelEvents
                                      .OfType<DisplayEvent>()
-                                     .Subscribe(async @event =>
+                                     .Subscribe(@event =>
                                      {
                                          if (@event.Command.OriginUri == htmlKernel.KernelInfo.Uri ||
                                              @event.Command.OriginUri == jsKernel.KernelInfo.Uri)
@@ -96,7 +96,7 @@ public class PlaywrightKernelConnector
 
                                          var html = new BrowserDisplayEvent(@event, root.SubmissionCount + 1).ToDisplayString(HtmlFormatter.MimeType);
 
-                                         await htmlKernel.SendAsync(new SubmitCode(html));
+                                         htmlKernel.SendAsync(new SubmitCode(html)).ConfigureAwait(false);
                                      });
 
             htmlKernel.RegisterForDisposal(subscription);

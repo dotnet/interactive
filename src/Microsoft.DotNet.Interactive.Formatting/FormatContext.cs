@@ -32,6 +32,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public int Depth { get; private set; }
 
+        internal int Indent { get; set; }
+
         internal int TableDepth { get; private set; }
 
         public TextWriter Writer { get; }
@@ -60,6 +62,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
             TableDepth++;
             return Disposable.Create(() => TableDepth--);
         }
+
+        internal bool IsStartingObjectWithinSequence { get; set; }
 
         public void Dispose()
         {

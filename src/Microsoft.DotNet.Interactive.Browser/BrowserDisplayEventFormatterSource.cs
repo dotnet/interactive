@@ -3,6 +3,7 @@
 
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Html;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
@@ -40,6 +41,11 @@ internal class BrowserDisplayEventFormatterSource :
             _ => code(formattedValue.Value)
         };
 
+        var codeSummary = browserDisplayEvent.DisplayEvent.Command is SubmitCode submitCode
+                              ? submitCode.ToString().Substring("SubmitCode: ".Length)
+                              : "";
+        
+
         html = div[@class: "dni-treeview"](
             table(
                 tr(
@@ -47,8 +53,8 @@ internal class BrowserDisplayEventFormatterSource :
                     td(
                         details[open: ""](
                             summary(
-                                code("var x = 123;\nx")),
-                            div("this is some more stuff"))))),
+                                code(codeSummary)),
+                            div(html))))),
             hr
         );
 

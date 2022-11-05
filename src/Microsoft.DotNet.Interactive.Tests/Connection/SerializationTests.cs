@@ -239,14 +239,16 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
 
                 yield return new CommandFailed(
                     "Oooops!",
-                    new SubmitCode("123"));
+                    new SubmitCode("123"),
+                    executionOrder: 123);
 
                 yield return new CommandFailed(
                    new InvalidOperationException("Oooops!"),
                    new SubmitCode("123"),
-                   "oops");
+                   "oops",
+                   executionOrder: 123);
 
-                yield return new CommandSucceeded(new SubmitCode("123"));
+                yield return new CommandSucceeded(new SubmitCode("123"), executionOrder: 123);
 
                 yield return new CompleteCodeSubmissionReceived(new SubmitCode("123"));
 

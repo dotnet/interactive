@@ -152,6 +152,7 @@ Microsoft.DotNet.Interactive.Formatting
     .ctor(System.String json)
   public static class PlainTextFormatter
     public static System.Int32 MaxProperties { get; set;}
+    public static System.Boolean UseMultiLineFormatting { get; set;}
     public static ITypeFormatter GetPreferredFormatterFor(System.Type type)
     public static ITypeFormatter GetPreferredFormatterFor<T>()
   public class PlainTextFormatter<T> : TypeFormatter<T>, ITypeFormatter<T>, ITypeFormatter

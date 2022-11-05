@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -212,7 +212,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Contain($"<td>{PlainTextBegin}{{ System.Exception: not ok");
+                      .Contain($"<td>{PlainTextBegin}{{ Exception");
             }
 
             [Fact]
@@ -222,11 +222,11 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 var writer = new StringWriter();
 
-                formatter.Format(typeof(Dummy.DummyNotInSystemNamespace), writer);
+                formatter.Format(typeof(Dummy.ClassNotInSystemNamespace), writer);
 
                 writer.ToString()
                       .Should()
-                      .Be("Dummy.DummyNotInSystemNamespace");
+                      .Be("Dummy.ClassNotInSystemNamespace");
             }
 
             [Fact]
@@ -734,11 +734,11 @@ string";
             [Fact]
             public void It_shows_properties_up_to_default_max()
             {
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Dummy.DummyClassWithManyProperties));
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Dummy.ClassWithManyProperties));
 
                 var writer = new StringWriter();
 
-                formatter.Format(new Dummy.DummyClassWithManyProperties(), writer);
+                formatter.Format(new Dummy.ClassWithManyProperties(), writer);
 
                 writer.ToString().Should()
                       .BeEquivalentHtmlTo($@"<table>
@@ -797,12 +797,12 @@ string";
             [Fact]
             public void It_shows_properties_up_to_custom_max()
             {
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Dummy.DummyClassWithManyProperties));
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Dummy.ClassWithManyProperties));
 
                 var writer = new StringWriter();
                 HtmlFormatter.MaxProperties = 1;
 
-                formatter.Format(new Dummy.DummyClassWithManyProperties(), writer);
+                formatter.Format(new Dummy.ClassWithManyProperties(), writer);
 
                 writer.ToString().Should()
                       .BeEquivalentHtmlTo($@"<table>
@@ -823,15 +823,15 @@ string";
             [Fact]
             public void Setting_properties_to_zero_means_no_table_formatting_and_plaintext_gets_used()
             {
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Dummy.DummyClassWithManyProperties));
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Dummy.ClassWithManyProperties));
 
                 var writer = new StringWriter();
                 HtmlFormatter.MaxProperties = 0;
                 PlainTextFormatter.MaxProperties = 0;
 
-                formatter.Format(new Dummy.DummyClassWithManyProperties(), writer);
+                formatter.Format(new Dummy.ClassWithManyProperties(), writer);
 
-                writer.ToString().Should().Be($"{PlainTextBegin}Dummy.DummyClassWithManyProperties{PlainTextEnd}");
+                writer.ToString().Should().Be($"{PlainTextBegin}Dummy.ClassWithManyProperties{PlainTextEnd}");
             }
 
             [Fact]

@@ -1,82 +1,113 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.IO;
+using System.Buffers;
 
 namespace Microsoft.DotNet.Interactive.Formatting;
 
 internal class MultiLinePlainTextFormatter : IPlainTextFormatter
 {
-    private string   _indent = "    ";
-
-    public void WriteStartProperty(TextWriter writer)
+    public void WriteStartObject(FormatContext context)
     {
-      
-        writer.Write(_indent);
     }
 
-    public void WriteEndProperty(TextWriter writer)
+    public void WriteEndObject(FormatContext context)
     {
-     
     }
 
-    public void WriteStartObject(TextWriter writer)
+    public void WriteEndHeader(FormatContext context)
     {
-     
+        context.Writer.WriteLine();
+        // context.Indent++;
     }
 
-    public void WriteEndObject(TextWriter writer)
+    public void WriteStartProperty(FormatContext context)
     {
-     
+        if (context.IsStartingObjectWithinSequence)
+        {
+            WriteIndent(context, "  - ");
+            context.IsStartingObjectWithinSequence = false;
+        }
+        else
+        {
+            WriteIndent(context);
+        }
     }
 
-    public void WriteStartSequence(TextWriter writer)
+    public void WriteEndProperty(FormatContext context)
     {
-     
     }
 
-    public void WriteEndSequence(TextWriter writer)
+    public void WriteStartObjectWithinSequence(FormatContext context)
     {
-     
+        //context.Writer.Write("  - ");
     }
 
-    public void WriteStartTuple(TextWriter writer)
+    public void WriteObjectSequenceItemSeparator(FormatContext context)
     {
-     
+        context.Writer.WriteLine();
     }
 
-    public void WriteEndTuple(TextWriter writer)
+    public void WriteEndObjectWithinSequence(FormatContext context)
     {
-     
+        // context.Writer.WriteLine();
     }
 
-    public void WriteNameValueDelimiter(TextWriter writer)
+    public void WriteStartSequenceOfObjects(FormatContext context)
     {
-     
+        // WriteIndent(context);
     }
 
-    public void WritePropertyDelimiter(TextWriter writer)
+    public void WriteStartSequenceOfValues(FormatContext context)
     {
-     
+        context.Writer.Write("[ ");
     }
 
-    public void WriteElidedPropertiesMarker(TextWriter writer)
+    public void WriteEndSequenceOfObjects(FormatContext context)
     {
-     
     }
 
-    public void WriteSequenceDelimiter(TextWriter writer)
+    public void WriteEndSequenceOfValues(FormatContext context)
     {
-     
+        context.Writer.Write(" ]");
     }
 
-    public void WriteEndHeader(TextWriter writer)
+    public void WriteStartTuple(FormatContext context)
     {
-     
+        context.Writer.Write("( ");
     }
 
-    public void WriteStartSequenceItem(TextWriter writer)
+    public void WriteEndTuple(FormatContext context)
     {
-     
+        context.Writer.Write(" )");
+    }
+
+    public void WriteNameValueDelimiter(FormatContext context)
+    {
+        context.Writer.Write(": ");
+    }
+
+    public void WritePropertyListSeparator(FormatContext context)
+    {
+        context.Writer.WriteLine();
+    }
+
+    public void WriteElidedPropertiesMarker(FormatContext context)
+    {
+        WriteIndent(context);
+        context.Writer.Write("...");
+    }
+
+    public void WriteValueSequenceItemSeparator(FormatContext context)
+    {
+        context.Writer.Write(", ");
+    }
+
+    private void WriteIndent(FormatContext context, string bonus = "    ")
+    {
+        var effectiveIndent = context.Depth * 4;
+        var indent = new string(' ', effectiveIndent);
+        context.Writer.Write(indent);
+        context.Writer.Write(bonus);
     }
 }

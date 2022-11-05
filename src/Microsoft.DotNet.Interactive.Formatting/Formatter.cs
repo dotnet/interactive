@@ -10,8 +10,10 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
+using static Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -116,10 +118,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _defaultTypeFormatters.PushRange(CsvFormatter.DefaultFormatters.Reverse().ToArray());
             _defaultTypeFormatters.PushRange(HtmlFormatter.DefaultFormatters.Reverse().ToArray());
             _defaultTypeFormatters.PushRange(JsonFormatter.DefaultFormatters.Reverse().ToArray());
-            _defaultTypeFormatters.PushRange(PlainTextFormatter.DefaultFormatters.Reverse().ToArray());
+            _defaultTypeFormatters.PushRange(DefaultFormatters.Reverse().ToArray());
 
             // It is unclear if we need this default:
-            _defaultPreferredMimeTypes.Push((typeof(string), PlainTextFormatter.MimeType));
+            _defaultPreferredMimeTypes.Push((typeof(string), MimeType));
 
             ListExpansionLimit = 20;
             RecursionLimit = 6;
@@ -251,7 +253,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public static string ToDisplayString(
             this object obj,
-            string mimeType = PlainTextFormatter.MimeType)
+            string mimeType = MimeType)
         {
             if (mimeType is null)
             {
@@ -295,7 +297,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static void FormatTo<T>(
             this T obj,
             FormatContext context,
-            string mimeType = PlainTextFormatter.MimeType)
+            string mimeType = MimeType)
         {
             if (obj is not null)
             {
@@ -360,7 +362,25 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 return;
             }
 
-            PlainTextFormatter.Default.WriteStartSequence(writer);
+            var expandProperties = Formatter<T>.ExpandsProperties;
+
+            var formatter = Default as MultiLinePlainTextFormatter;
+
+            if (expandProperties)
+            {
+                if (formatter is not null)
+                {
+                    seq.GetType().WriteCSharpDeclarationTo(context.Writer, true);
+
+                    context.Writer.WriteLine();
+                }
+
+                Default.WriteStartSequenceOfObjects(context);
+            }
+            else
+            {
+                Default.WriteStartSequenceOfValues(context);
+            }
 
             listExpansionLimit ??= Formatter<T>.ListExpansionLimit;
 
@@ -371,15 +391,34 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 var item = itemsToWrite[i];
                 if (i < listExpansionLimit)
                 {
+                    // if (expandProperties)
+                    // {
+                    //     Default.WriteStartObjectWithinSequence(context);
+                    // }
+
                     // write out another item in the list
                     if (i > 0)
                     {
-                        PlainTextFormatter.Default.WriteSequenceDelimiter(writer);
+                        if (expandProperties)
+                        {
+                            Default.WriteObjectSequenceItemSeparator(context);
+                        }
+                        else
+                        {
+                            Default.WriteValueSequenceItemSeparator(context);
+                        }
                     }
 
-                    PlainTextFormatter.Default.WriteStartSequenceItem(writer);
+                    context.IsStartingObjectWithinSequence = true;
 
                     item.FormatTo(context);
+
+                    context.IsStartingObjectWithinSequence = false;
+
+                    if (expandProperties)
+                    {
+                        Default.WriteEndObjectWithinSequence(context);
+                    }
                 }
             }
 
@@ -395,7 +434,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 writer.Write("more)");
             }
 
-            PlainTextFormatter.Default.WriteEndSequence(writer);
+            if (expandProperties)
+            {
+                Default.WriteEndSequenceOfObjects(context);
+            }
+            else
+            {
+                Default.WriteEndSequenceOfValues(context);
+            }
         }
 
         /// <summary>
@@ -420,7 +466,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <param name="mimeType">The MimeType for this formatter. If it is not specified it defaults to <see cref="PlainTextFormatter.MimeType"/></param>
         public static void Register<T>(
             FormatDelegate<T> formatter,
-            string mimeType = PlainTextFormatter.MimeType)
+            string mimeType = MimeType)
         {
             Register(new AnonymousTypeFormatter<T>(formatter, mimeType));
         }
@@ -434,7 +480,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static void Register(
             Type type,
             FormatDelegate<object> formatter,
-            string mimeType = PlainTextFormatter.MimeType)
+            string mimeType = MimeType)
         {
             Register(new AnonymousTypeFormatter<object>(formatter, mimeType, type));
         }
@@ -448,7 +494,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static void Register(
             Type type,
             Action<object, TextWriter> formatter,
-            string mimeType = PlainTextFormatter.MimeType)
+            string mimeType = MimeType)
         {
             Register(new AnonymousTypeFormatter<object>((value, context) =>
             {
@@ -464,7 +510,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <param name="mimeType">The MimeType for this formatter. If it is not specified it defaults to <see cref="PlainTextFormatter.MimeType"/></param>
         public static void Register<T>(
             Action<T, TextWriter> formatter,
-            string mimeType = PlainTextFormatter.MimeType)
+            string mimeType = MimeType)
         {
             Register(new AnonymousTypeFormatter<object>((value, context) =>
             {
@@ -480,7 +526,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <param name="mimeType">The MimeType for this formatter. If it is not specified it defaults to <see cref="PlainTextFormatter.MimeType"/></param>
         public static void Register<T>(
             Func<T, string> formatter,
-            string mimeType = PlainTextFormatter.MimeType)
+            string mimeType = MimeType)
         {
             Register(new AnonymousTypeFormatter<T>((value, context) =>
             {

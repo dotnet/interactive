@@ -1,8 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.IO;
-
 namespace Microsoft.DotNet.Interactive.Formatting;
 
 internal class SingleLinePlainTextFormatter : IPlainTextFormatter
@@ -10,45 +8,56 @@ internal class SingleLinePlainTextFormatter : IPlainTextFormatter
     private const string EndObject = " }";
     private const string EndSequence = " ]";
     private const string EndTuple = " )";
-    private const string ItemSeparator = ", ";
+    private const string SequenceItemSeparator = ", ";
     private const string NameValueDelimiter = ": ";
-    private const string PropertySeparator = ", ";
+    private const string PropertyListSeparator = ", ";
     private const string StartObject = "{ ";
     private const string StartSequence = "[ ";
     private const string StartTuple = "( ";
 
-    public void WriteStartProperty(TextWriter writer)
+    public void WriteStartProperty(FormatContext context)
     {
     }
 
-    public void WriteEndProperty(TextWriter writer)
+    public void WriteEndProperty(FormatContext context)
     {
     }
 
-    public void WriteStartObject(TextWriter writer) => writer.Write(StartObject);
+    public void WriteStartObject(FormatContext context) => context.Writer.Write(StartObject);
 
-    public void WriteEndObject(TextWriter writer) => writer.Write(EndObject);
+    public void WriteEndObject(FormatContext context) => context.Writer.Write(EndObject);
 
-    public void WriteStartSequence(TextWriter writer) => writer.Write(StartSequence);
+    public void WriteStartSequenceOfValues(FormatContext context) => context.Writer.Write(StartSequence);
 
-    public void WriteEndSequence(TextWriter writer) => writer.Write(EndSequence);
-    public void WriteStartTuple(TextWriter writer) => writer.Write(StartTuple);
+    public void WriteStartSequenceOfObjects(FormatContext context) => context.Writer.Write(StartSequence);
 
-    public void WriteEndTuple(TextWriter writer) => writer.Write(EndTuple);
-
-    public void WriteNameValueDelimiter(TextWriter writer) => writer.Write(NameValueDelimiter);
-
-    public void WritePropertyDelimiter(TextWriter writer) => writer.Write(PropertySeparator);
-
-    public void WriteSequenceDelimiter(TextWriter writer) => writer.Write(ItemSeparator);
-
-    public void WriteEndHeader(TextWriter writer) => writer.Write(": ");
-
-    public void WriteElidedPropertiesMarker(TextWriter writer) => writer.Write("..");
-
-    public void WriteStartSequenceItem(TextWriter writer)
+    public void WriteStartObjectWithinSequence(FormatContext context)
     {
     }
+
+    public void WriteEndObjectWithinSequence(FormatContext context)
+    {
+    }
+
+    public void WriteEndSequenceOfObjects(FormatContext context) => context.Writer.Write(EndSequence);
+
+    public void WriteEndSequenceOfValues(FormatContext context) => context.Writer.Write(EndSequence);
+
+    public void WriteStartTuple(FormatContext context) => context.Writer.Write(StartTuple);
+
+    public void WriteEndTuple(FormatContext context) => context.Writer.Write(EndTuple);
+
+    public void WriteNameValueDelimiter(FormatContext context) => context.Writer.Write(NameValueDelimiter);
+
+    public void WritePropertyListSeparator(FormatContext context) => context.Writer.Write(PropertyListSeparator);
+
+    public void WriteValueSequenceItemSeparator(FormatContext context) => context.Writer.Write(SequenceItemSeparator);
+
+    public void WriteObjectSequenceItemSeparator(FormatContext context) => context.Writer.Write(", ");
+
+    public void WriteEndHeader(FormatContext context) => context.Writer.Write(": ");
+
+    public void WriteElidedPropertiesMarker(FormatContext context) => context.Writer.Write("..");
 
     public static IPlainTextFormatter Instance { get; } = new SingleLinePlainTextFormatter();
 }
