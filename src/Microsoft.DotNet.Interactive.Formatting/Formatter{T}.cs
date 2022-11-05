@@ -69,5 +69,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
             get => _listExpansionLimit ?? Formatter.ListExpansionLimit;
             set => _listExpansionLimit = value;
         }
+
+        public static bool ExpandsProperties
+        {
+            get
+            {
+                // FIX: (ExpandsProperties) optimize a bit
+                return !typeof(T).IsScalar();
+            }
+        }
     }
 }

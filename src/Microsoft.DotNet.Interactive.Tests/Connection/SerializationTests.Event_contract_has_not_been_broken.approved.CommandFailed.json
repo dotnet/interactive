@@ -1,6 +1,7 @@
 {
   "event": {
-    "message": "oops"
+    "message": "oops",
+    "executionOrder": 123
   },
   "eventType": "CommandFailed",
   "command": {

@@ -91,25 +91,36 @@ public static class PlainTextFormatter
 
         bool FormatObject(T target, FormatContext context)
         {
-            var writer = context.Writer;
-
             var reducedAccessors = accessors.Take(Math.Max(0, MaxProperties)).ToArray();
 
             // If we haven't got any members to show, just resort to ToString()
             if (reducedAccessors.Length == 0)
             {
-                // Write using `ToString()`
-                writer.Write(target);
+                context.Writer.Write(target.ToString());
                 return true;
             }
 
-            Default.WriteStartObject(writer);
+            var indent = context.Indent;
 
-            if (!Formatter<T>.TypeIsAnonymous)
+            Default.WriteStartObject(context);
+
+            if (Default is MultiLinePlainTextFormatter formatter)
             {
-                // Write using `ToString()`
-                writer.Write(target);
-                Default.WriteEndHeader(writer);
+                if (!context.IsStartingObjectWithinSequence)
+                {
+                    var type = target.GetType();
+                    type.WriteCSharpDeclarationTo(context.Writer, true);
+                    formatter.WriteEndHeader(context);
+                }
+            }
+            else
+            {
+                if (!Formatter<T>.TypeIsAnonymous)
+                {
+                    var type = target.GetType();
+                    type.WriteCSharpDeclarationTo(context.Writer, true);
+                    Default.WriteEndHeader(context);
+                }
             }
 
             for (var i = 0; i < reducedAccessors.Length; i++)
@@ -118,31 +129,33 @@ public static class PlainTextFormatter
 
                 object value = accessor.GetValueOrException(target);
 
-                Default.WriteStartProperty(writer);
-                writer.Write(accessor.Member.Name);
-                Default.WriteNameValueDelimiter(writer);
+                Default.WriteStartProperty(context);
+                context.Writer.Write(accessor.Member.Name);
+                Default.WriteNameValueDelimiter(context);
                 value.FormatTo(context);
-                Default.WriteEndProperty(writer);
+                Default.WriteEndProperty(context);
 
                 if (i < accessors.Length - 1)
                 {
-                    Default.WritePropertyDelimiter(writer);
+                    Default.WritePropertyListSeparator(context);
                 }
             }
+
             if (reducedAccessors.Length < accessors.Length)
             {
-                Default.WriteElidedPropertiesMarker(writer);
+                Default.WriteElidedPropertiesMarker(context);
             }
 
-            Default.WriteEndObject(writer);
+            Default.WriteEndObject(context);
+
+            context.Indent = indent;
+
             return true;
         }
 
         bool FormatAnyTuple(T target, FormatContext context)
         {
-            var writer = context.Writer;
-
-            Default.WriteStartTuple(writer);
+            Default.WriteStartTuple(context);
 
             for (var i = 0; i < accessors.Length; i++)
             {
@@ -150,15 +163,15 @@ public static class PlainTextFormatter
 
                 value.FormatTo(context);
 
-                Default.WriteEndProperty(writer);
+                Default.WriteEndProperty(context);
 
                 if (i < accessors.Length - 1)
                 {
-                    Default.WritePropertyDelimiter(writer);
+                    Default.WritePropertyListSeparator(context);
                 }
             }
 
-            Default.WriteEndTuple(writer);
+            Default.WriteEndTuple(context);
             return true;
         }
     }
@@ -174,23 +187,23 @@ public static class PlainTextFormatter
         new PlainTextFormatter<ExpandoObject>((expando, context) =>
         {
             var singleLineFormatter = new SingleLinePlainTextFormatter();
-            singleLineFormatter.WriteStartObject(context.Writer);
+            singleLineFormatter.WriteStartObject(context);
             var pairs = expando.ToArray();
             var length = pairs.Length;
             for (var i = 0; i < length; i++)
             {
                 var pair = pairs[i];
                 context.Writer.Write(pair.Key);
-                singleLineFormatter.WriteNameValueDelimiter(context.Writer);
+                singleLineFormatter.WriteNameValueDelimiter(context);
                 pair.Value.FormatTo(context);
 
                 if (i < length - 1)
                 {
-                    singleLineFormatter.WritePropertyDelimiter(context.Writer);
+                    singleLineFormatter.WritePropertyListSeparator(context);
                 }
             }
 
-            singleLineFormatter.WriteEndObject(context.Writer);
+            singleLineFormatter.WriteEndObject(context);
             return true;
         }),
 
@@ -204,7 +217,7 @@ public static class PlainTextFormatter
         {
             var singleLineFormatter = new SingleLinePlainTextFormatter();
             context.Writer.Write(pair.Key);
-            singleLineFormatter.WriteNameValueDelimiter(context.Writer);
+            singleLineFormatter.WriteNameValueDelimiter(context);
             pair.Value.FormatTo(context);
             return true;
         }),

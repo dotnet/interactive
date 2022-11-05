@@ -11,13 +11,21 @@ using System.Linq;
 using FluentAssertions.Extensions;
 using Xunit;
 using System.Numerics;
+using Dummy;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
 public class PlainTextFormatterTests : FormatterTestBase
 {
+    [Collection("Do not parallelize")]
     public class Objects : FormatterTestBase
     {
+        public Objects()
+        {
+            PlainTextFormatter.UseMultiLineFormatting = false;
+        }
+
+
         [Fact]
         public void Null_references_are_indicated()
         {
@@ -41,45 +49,45 @@ public class PlainTextFormatterTests : FormatterTestBase
         [Fact]
         public void It_emits_a_default_maximum_number_of_properties()
         {
-            var formatter = PlainTextFormatter.GetPreferredFormatterFor<Dummy.DummyClassWithManyProperties>();
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor<ClassWithManyProperties>();
 
             var writer = new StringWriter();
-            formatter.Format(new Dummy.DummyClassWithManyProperties(), writer);
+            formatter.Format(new Dummy.ClassWithManyProperties(), writer);
 
             var s = writer.ToString();
-            s.Should().Be("{ Dummy.DummyClassWithManyProperties: X1: 1, X2: 2, X3: 3, X4: 4, X5: 5, X6: 6, X7: 7, X8: 8, X9: 9, X10: 10, X11: 11, X12: 12, X13: 13, X14: 14, X15: 15, X16: 16, X17: 17, X18: 18, X19: 19, X20: 20, .. }");
+            s.Should().Be("{ ClassWithManyProperties: X1: 1, X2: 2, X3: 3, X4: 4, X5: 5, X6: 6, X7: 7, X8: 8, X9: 9, X10: 10, X11: 11, X12: 12, X13: 13, X14: 14, X15: 15, X16: 16, X17: 17, X18: 18, X19: 19, X20: 20, .. }");
         }
 
         [Fact]
         public void It_emits_a_configurable_maximum_number_of_properties()
         {
-            var formatter = PlainTextFormatter.GetPreferredFormatterFor<Dummy.DummyClassWithManyProperties>();
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor<ClassWithManyProperties>();
             PlainTextFormatter.MaxProperties = 1;
 
             var writer = new StringWriter();
-            formatter.Format(new Dummy.DummyClassWithManyProperties(), writer);
+            formatter.Format(new Dummy.ClassWithManyProperties(), writer);
 
             var s = writer.ToString();
-            s.Should().Be("{ Dummy.DummyClassWithManyProperties: X1: 1, .. }");
+            s.Should().Be("{ ClassWithManyProperties: X1: 1, .. }");
         }
 
         [Fact]
         public void When_Zero_properties_chosen_just_ToString_is_used()
         {
-            var formatter = PlainTextFormatter.GetPreferredFormatterFor<Dummy.DummyClassWithManyProperties>();
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor<ClassWithManyProperties>();
             PlainTextFormatter.MaxProperties = 0;
 
             var writer = new StringWriter();
-            formatter.Format(new Dummy.DummyClassWithManyProperties(), writer);
+            formatter.Format(new Dummy.ClassWithManyProperties(), writer);
 
             var s = writer.ToString();
-            s.Should().Be("Dummy.DummyClassWithManyProperties");
+            s.Should().Be("Dummy.ClassWithManyProperties");
         }
 
         [Fact]
         public void When_Zero_properties_available_to_choose_just_ToString_is_used()
         {
-            var formatter = PlainTextFormatter.GetPreferredFormatterFor<Dummy.DummyWithNoProperties>();
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor<DummyWithNoProperties>();
 
             var writer = new StringWriter();
             formatter.Format(new Dummy.DummyWithNoProperties(), writer);
@@ -196,7 +204,7 @@ public class PlainTextFormatterTests : FormatterTestBase
         {
             var log = new SomePropertyThrows().ToDisplayString();
 
-            log.Should().Contain("NotOk: { System.Exception: ");
+            log.Should().Contain("NotOk: { Exception: ");
         }
 
         [Fact]
@@ -364,8 +372,15 @@ public class PlainTextFormatterTests : FormatterTestBase
         }
     }
 
+    [Collection("Do not parallelize")]
     public class Sequences : FormatterTestBase
     {
+        public Sequences()
+        {
+            PlainTextFormatter.UseMultiLineFormatting = false;
+        }
+
+
         [Fact]
         public void Formatter_truncates_expansion_of_ICollection()
         {
@@ -506,16 +521,16 @@ public class PlainTextFormatterTests : FormatterTestBase
         {
             var list = new List<Widget>
             {
-                new Widget { Name = "widget x" },
-                new Widget { Name = "widget y" },
-                new Widget { Name = "widget z" }
+                new() { Name = "widget x" },
+                new() { Name = "widget y" },
+                new() { Name = "widget z" }
             };
 
             var formatter = PlainTextFormatter.GetPreferredFormatterFor<List<Widget>>();
 
             var formatted = list.ToDisplayString(formatter);
 
-            formatted.Should().Be("[ { Microsoft.DotNet.Interactive.Formatting.Tests.Widget: Name: widget x, Parts: <null> }, { Microsoft.DotNet.Interactive.Formatting.Tests.Widget: Name: widget y, Parts: <null> }, { Microsoft.DotNet.Interactive.Formatting.Tests.Widget: Name: widget z, Parts: <null> } ]");
+            formatted.Should().Be("[ { Widget: Name: widget x, Parts: <null> }, { Widget: Name: widget y, Parts: <null> }, { Widget: Name: widget z, Parts: <null> } ]");
         }
 
         [Fact]

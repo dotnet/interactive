@@ -1,24 +1,26 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.IO;
-
 namespace Microsoft.DotNet.Interactive.Formatting;
 
 internal interface IPlainTextFormatter
 {
-    void WriteStartProperty(TextWriter writer);
-    void WriteEndProperty(TextWriter writer);
-    void WriteStartObject(TextWriter writer);
-    void WriteEndObject(TextWriter writer);
-    void WriteStartSequence(TextWriter writer);
-    void WriteEndSequence(TextWriter writer);
-    void WriteStartTuple(TextWriter writer);
-    void WriteEndTuple(TextWriter writer);
-    void WriteNameValueDelimiter(TextWriter writer);
-    void WritePropertyDelimiter(TextWriter writer);
-    void WriteElidedPropertiesMarker(TextWriter writer);
-    void WriteSequenceDelimiter(TextWriter writer);
-    void WriteEndHeader(TextWriter writer);
-    void WriteStartSequenceItem(TextWriter writer);
+    void WriteStartProperty(FormatContext context);
+    void WriteEndProperty(FormatContext context);
+    void WriteStartObject(FormatContext context);
+    void WriteEndObject(FormatContext context);
+    void WriteStartSequenceOfValues(FormatContext context);
+    void WriteStartSequenceOfObjects(FormatContext context);
+    void WriteEndSequenceOfValues(FormatContext context);
+    void WriteStartTuple(FormatContext context);
+    void WriteEndTuple(FormatContext context);
+    void WriteNameValueDelimiter(FormatContext context);
+    void WritePropertyListSeparator(FormatContext context);
+    void WriteElidedPropertiesMarker(FormatContext context);
+    void WriteValueSequenceItemSeparator(FormatContext context);
+    void WriteObjectSequenceItemSeparator(FormatContext context);
+    void WriteStartObjectWithinSequence(FormatContext context);
+    void WriteEndHeader(FormatContext context);
+    void WriteEndSequenceOfObjects(FormatContext context);
+    void WriteEndObjectWithinSequence(FormatContext context);
 }

@@ -1,4 +1,4 @@
-// Copyright (c) .NET Foundation and contributors. All rights reserved.
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -8,14 +8,17 @@ using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using Dummy;
 using FluentAssertions;
 using FluentAssertions.Extensions;
 using Xunit;
+using static System.Environment;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
 public class PlainTextFormatterTests_MultiLine : FormatterTestBase
 {
+    [Collection("Do not parallelize")]
     public class Objects : FormatterTestBase
     {
         public Objects()
@@ -40,20 +43,23 @@ public class PlainTextFormatterTests_MultiLine : FormatterTestBase
             formatter.Format(new Widget { Name = "Bob" }, writer);
 
             var s = writer.ToString();
+
+            Console.WriteLine(s);
+
             s.Should().Contain("Name: Bob");
         }
 
         [Fact]
         public void It_emits_a_default_maximum_number_of_properties()
         {
-            var formatter = PlainTextFormatter.GetPreferredFormatterFor<Dummy.DummyClassWithManyProperties>();
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor<ClassWithManyProperties>();
 
             var writer = new StringWriter();
-            formatter.Format(new Dummy.DummyClassWithManyProperties(), writer);
+            formatter.Format(new ClassWithManyProperties(), writer);
 
             var s = writer.ToString();
             s.Should().Be(
-@"Dummy.DummyClassWithManyProperties
+@$"{nameof(ClassWithManyProperties)}
     X1: 1
     X2: 2
     X3: 3
@@ -74,45 +80,45 @@ public class PlainTextFormatterTests_MultiLine : FormatterTestBase
     X18: 18
     X19: 19
     X20: 20
-    ...");
+    ...".ReplaceLineEndings());
         }
 
         [Fact]
         public void It_emits_a_configurable_maximum_number_of_properties()
         {
-            var formatter = PlainTextFormatter.GetPreferredFormatterFor<Dummy.DummyClassWithManyProperties>();
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor<ClassWithManyProperties>();
             PlainTextFormatter.MaxProperties = 1;
 
             var writer = new StringWriter();
-            formatter.Format(new Dummy.DummyClassWithManyProperties(), writer);
+            formatter.Format(new Dummy.ClassWithManyProperties(), writer);
 
             var s = writer.ToString();
-            s.Should().Be("{ Dummy.DummyClassWithManyProperties: X1: 1, .. }");
+            s.Should().Be($"ClassWithManyProperties{NewLine}    X1: 1{NewLine}    ...");
         }
 
         [Fact]
         public void When_Zero_properties_chosen_just_ToString_is_used()
         {
-            var formatter = PlainTextFormatter.GetPreferredFormatterFor<Dummy.DummyClassWithManyProperties>();
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor<ClassWithManyPropertiesAndCustomToString>();
             PlainTextFormatter.MaxProperties = 0;
 
             var writer = new StringWriter();
-            formatter.Format(new Dummy.DummyClassWithManyProperties(), writer);
+            formatter.Format(new ClassWithManyPropertiesAndCustomToString(), writer);
 
             var s = writer.ToString();
-            s.Should().Be("Dummy.DummyClassWithManyProperties");
+            s.Should().Be($"{typeof(ClassWithManyPropertiesAndCustomToString)} custom ToString value");
         }
 
         [Fact]
         public void When_Zero_properties_available_to_choose_just_ToString_is_used()
         {
-            var formatter = PlainTextFormatter.GetPreferredFormatterFor<Dummy.DummyWithNoProperties>();
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor<Dummy.ClassWithNoPropertiesAndCustomToString>();
 
             var writer = new StringWriter();
-            formatter.Format(new Dummy.DummyWithNoProperties(), writer);
+            formatter.Format(new Dummy.ClassWithNoPropertiesAndCustomToString(), writer);
 
             var s = writer.ToString();
-            s.Should().Be("Dummy.DummyWithNoProperties");
+            s.Should().Be($"{typeof(ClassWithNoPropertiesAndCustomToString)} custom ToString value");
         }
 
         [Fact]
@@ -191,7 +197,9 @@ public class PlainTextFormatterTests_MultiLine : FormatterTestBase
 
             var output = obj.ToDisplayString(formatter);
 
-            output.Should().Be("{ ints: [ 3, 2, 1 ], count: 3 }");
+            output.Should().Match(@"<>f__AnonymousType*<Int32[],Int32>
+    ints: [ 3, 2, 1 ]
+    count: 3".ReplaceLineEndings());
         }
 
         [Fact]
@@ -223,7 +231,7 @@ public class PlainTextFormatterTests_MultiLine : FormatterTestBase
         {
             var log = new SomePropertyThrows().ToDisplayString();
 
-            log.Should().Contain("NotOk: { System.Exception: ");
+            log.Should().Contain("NotOk: Exception");
         }
 
         [Fact]
@@ -389,8 +397,73 @@ public class PlainTextFormatterTests_MultiLine : FormatterTestBase
                   .Should()
                   .Be("78923589327589332402359");
         }
+
+        [Fact]
+        public void Properties_that_are_complex_objects_are_shown_indented()
+        {
+            var obj = new
+            {
+                PropertyA = "A",
+                PropertyB = new
+                {
+                    PropertyB1 = "B.1",
+                    PropertyB2 = "B.2"
+                },
+                PropertyC = "C"
+            };
+
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor(obj.GetType());
+
+            var writer = new StringWriter();
+            formatter.Format(obj, writer);
+
+            writer.ToString().Should().Match(@"<>f__AnonymousType*<String,<>f__AnonymousType*<String,String>,String>
+    PropertyA: A
+    PropertyB: <>f__AnonymousType*<String,String>
+        PropertyB1: B.1
+        PropertyB2: B.2
+    PropertyC: C".ReplaceLineEndings());
+        }
+
+        [Fact]
+        public void Sequences_of_complex_objects_are_shown_indented()
+        {
+            var obj = new
+            {
+                PropertyA = "A",
+                PropertyB = new[]
+                {
+                    new
+                    {
+                        IntProperty = 1,
+                        StringProperty = "one"
+                    },
+                    new
+                    {
+                        IntProperty = 2,
+                        StringProperty = "two"
+                    }
+                },
+                PropertyC = "C"
+            };
+
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor(obj.GetType());
+
+            var writer = new StringWriter();
+            formatter.Format(obj, writer);
+
+            writer.ToString().Should().Match(@"<>f__AnonymousType*<String,<>f__AnonymousType*<Int32,String>[],String>
+    PropertyA: A
+    PropertyB: <>f__AnonymousType*<Int32,String>[]
+          - IntProperty: 1
+            StringProperty: one
+          - IntProperty: 2
+            StringProperty: two
+    PropertyC: C".ReplaceLineEndings());
+        }
     }
 
+    [Collection("Do not parallelize")]
     public class Sequences : FormatterTestBase
     {
         public Sequences()
@@ -492,6 +565,8 @@ public class PlainTextFormatterTests_MultiLine : FormatterTestBase
 
             var output = node.ToDisplayString(formatter);
 
+            Console.WriteLine(output);
+
             output.Should().Contain("1.1");
             output.Should().Contain("1.2");
             output.Should().Contain("1.3");
@@ -538,20 +613,36 @@ public class PlainTextFormatterTests_MultiLine : FormatterTestBase
         {
             var list = new List<Widget>
             {
-                new Widget { Name = "widget x" },
-                new Widget { Name = "widget y" },
-                new Widget { Name = "widget z" }
+                new() { Name = "widget x" },
+                new() { Name = "widget y" },
+                new() { Name = "widget z" }
             };
 
             var formatter = PlainTextFormatter.GetPreferredFormatterFor<List<Widget>>();
 
             var formatted = list.ToDisplayString(formatter);
 
-            formatted.Should().Be("[ { Microsoft.DotNet.Interactive.Formatting.Tests.Widget: Name: widget x, Parts: <null> }, { Microsoft.DotNet.Interactive.Formatting.Tests.Widget: Name: widget y, Parts: <null> }, { Microsoft.DotNet.Interactive.Formatting.Tests.Widget: Name: widget z, Parts: <null> } ]");
+            formatted.Should().Be(@"List<Widget>
+      - Name: widget x
+        Parts: <null>
+      - Name: widget y
+        Parts: <null>
+      - Name: widget z
+        Parts: <null>".ReplaceLineEndings());
+
+            /* or ... ?
+TheWidgets: Widget[]
+├─ Name: widget x
+│  Parts: <null>
+├─ Name: widget y
+│  Parts: <null>
+└─ Name: widget z
+   Parts: <null>
+             */
         }
 
         [Fact]
-        public void Properies_of_System_Type_instances_are_not_expanded()
+        public void Properties_of_System_Type_instances_are_not_expanded()
         {
             var formatter = PlainTextFormatter.GetPreferredFormatterFor(typeof(Type));
 
@@ -578,7 +669,6 @@ public class PlainTextFormatterTests_MultiLine : FormatterTestBase
             writer.ToString().Should().Be("Hi!");
         }
 
-
         [Fact]
         public void ReadOnlyMemory_of_int_is_formatted_like_a_int_array()
         {
@@ -602,7 +692,10 @@ public class PlainTextFormatterTests_MultiLine : FormatterTestBase
 
             formatter.Format(new object[] { 1, null, 3 }, writer);
 
-            writer.ToString().Should().Be("[ 1, <null>, 3 ]");
+            writer.ToString().Should().Be(@"  - 1
+  - <null>
+  - 3
+".ReplaceLineEndings());
         }
 
         [Fact]
