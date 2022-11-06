@@ -11,7 +11,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reactive.Disposables;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -27,16 +26,16 @@ internal class LocalJupyterConnection : IJupyterConnection
         _kernelSpecModule = kernelSpecModule ?? new JupyterKernelSpecModule();
     }
 
-    public Task<IReadOnlyCollection<string>> GetKernelSpecNamesAsync()
+    public async Task<IReadOnlyCollection<string>> GetKernelSpecNamesAsync()
     {
-        var specsDirs = _kernelSpecModule.GetInstalledKernelDirectories();
-        return Task.FromResult<IReadOnlyCollection<string>>(specsDirs?.Keys.ToArray());
+        var specs = await _kernelSpecModule.ListKernels();
+        return specs?.Keys.ToArray();
     }
 
     public async Task<IJupyterKernelConnection> CreateKernelConnectionAsync(string kernelType)
     {
         // find the related kernel spec for the kernel type 
-        var spec = GetKernelSpec(kernelType);
+        var spec = await GetKernelSpecAsync(kernelType);
 
         if (spec is null)
         {
@@ -122,20 +121,12 @@ internal class LocalJupyterConnection : IJupyterConnection
         _disposables.Dispose();
     }
 
-    private KernelSpec GetKernelSpec(string kernelType)
+    private async Task<KernelSpec> GetKernelSpecAsync(string kernelType)
     {
-        var installedSpecs = _kernelSpecModule.GetInstalledKernelDirectories();
-
+        var installedSpecs = await _kernelSpecModule.ListKernels();
         if (installedSpecs.ContainsKey(kernelType))
         {
-            var directory = installedSpecs[kernelType];
-            var kernelJsonPath = Path.Combine(directory.FullName, "kernel.json");
-            if (File.Exists(kernelJsonPath))
-            {
-                var kernelJson = JsonDocument.Parse(File.ReadAllText(kernelJsonPath));
-                var spec = JsonSerializer.Deserialize<KernelSpec>(kernelJson, JsonFormatter.SerializerOptions);
-                return spec;
-            }
+            return installedSpecs[kernelType];
         }
 
         return null;

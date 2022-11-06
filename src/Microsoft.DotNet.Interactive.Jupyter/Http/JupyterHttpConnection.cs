@@ -13,42 +13,42 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Http;
 
-#region JsonTypes
-internal class KernelSessionInfo
-{
-    public string id { get; set; }
-    public string path { get; set; }
-    public string name { get; set; }
-    public string type { get; set; }
-    public KernelInfo kernel { get; set; }
-}
-
-internal class KernelInfo
-{
-    public string id { get; set; }
-    public string name { get; set; }
-
-    public string last_activity { get; set; }
-    public string execution_state { get; set; }
-    public int connections { get; set; }
-}
-
-internal class KernelSpecs
-{
-    public string @default { get; set; }
-    public Dictionary<string, KernelSpecDetail> kernelspecs { get; set; }
-}
-
-internal class KernelSpecDetail
-{
-    public string name { get; set; }
-    public KernelSpec spec { get; set; }
-    public object resources { get; set; }
-}
-#endregion
-
 internal class JupyterHttpConnection : IJupyterConnection
 {
+    #region JsonTypes
+    private class KernelSessionInfo
+    {
+        public string id { get; set; }
+        public string path { get; set; }
+        public string name { get; set; }
+        public string type { get; set; }
+        public KernelInfo kernel { get; set; }
+    }
+
+    private class KernelInfo
+    {
+        public string id { get; set; }
+        public string name { get; set; }
+
+        public string last_activity { get; set; }
+        public string execution_state { get; set; }
+        public int connections { get; set; }
+    }
+
+    private class KernelSpecs
+    {
+        public string @default { get; set; }
+        public Dictionary<string, KernelSpecDetail> kernelspecs { get; set; }
+    }
+
+    private class KernelSpecDetail
+    {
+        public string name { get; set; }
+        public KernelSpec spec { get; set; }
+        public object resources { get; set; }
+    }
+    #endregion
+
     private readonly HttpApiClient _apiClient;
     private readonly IAuthorizationProvider _authProvider;
     private readonly CompositeDisposable _disposables;

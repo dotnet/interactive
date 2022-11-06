@@ -12,6 +12,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter
     {
         Task<CommandLineResult> InstallKernel(DirectoryInfo sourceDirectory);
         DirectoryInfo GetDefaultKernelSpecDirectory();
-        IReadOnlyDictionary<string, DirectoryInfo> GetInstalledKernelDirectories();
+        Task<IReadOnlyDictionary<string, KernelSpec>> ListKernels();
     }
 }

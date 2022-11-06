@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Jupyter;
 
-internal class KernelSpec
+public class KernelSpec
 {
     [JsonPropertyName("argv")]
     public IReadOnlyList<string> CommandArguments { get; set; }
@@ -18,5 +18,14 @@ internal class KernelSpec
     public string Language { get; set; }
 
     [JsonPropertyName("metadata")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public IReadOnlyDictionary<string, object> Metadata { get; set; }
+
+    [JsonPropertyName("env")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyDictionary<string, string> EnvironmentVariables { get; set; }
+
+    [JsonPropertyName("interrupt_mode")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string InterruptMode { get; set; }
 }
