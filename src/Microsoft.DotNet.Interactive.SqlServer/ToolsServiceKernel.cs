@@ -351,6 +351,10 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             {
                 context.PublishValueProduced(command, value);
             }
+            else
+            {
+                context.Fail(command, message: $"Value '{command.Name}' not found in kernel {Name}");
+            }
 
             return Task.CompletedTask;
         }
