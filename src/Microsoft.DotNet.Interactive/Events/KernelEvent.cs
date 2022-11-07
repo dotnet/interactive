@@ -19,7 +19,7 @@ public abstract class KernelEvent
     public KernelCommand Command { get; }
 
     [JsonIgnore]
-    public IRoutingSlip RoutingSlip { get; }
+    public EventRoutingSlip RoutingSlip { get; }
 
     public override string ToString()
     {

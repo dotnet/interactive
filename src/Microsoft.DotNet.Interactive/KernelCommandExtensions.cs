@@ -152,7 +152,7 @@ namespace Microsoft.DotNet.Interactive
 
         public static bool IsChildCommand(this KernelCommand src, KernelCommand candidateParentCommand)
         {
-            return src.Parent == candidateParentCommand || src.RoutingSlip.Contains(candidateParentCommand.RoutingSlip);
+            return src.Parent == candidateParentCommand || src.RoutingSlip.StartsWith(candidateParentCommand.RoutingSlip);
         }
     
 

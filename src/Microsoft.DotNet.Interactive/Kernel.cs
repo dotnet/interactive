@@ -623,12 +623,10 @@ namespace Microsoft.DotNet.Interactive
             {
                 return this;
             }
-            else
-            {
-                context.Fail(command, new CommandNotSupportedException(command.GetType(), this));
 
-                return null;
-            }
+            context.Fail(command, new CommandNotSupportedException(command.GetType(), this));
+
+            return null;
         }
 
         protected internal void PublishEvent(KernelEvent kernelEvent)

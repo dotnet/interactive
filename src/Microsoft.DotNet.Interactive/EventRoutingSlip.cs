@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive;
 public class EventRoutingSlip : RoutingSlipBase
 {
 
-    public EventRoutingSlip(IRoutingSlip source = null) : base(source)
+    public EventRoutingSlip(RoutingSlipBase source = null) : base(source)
     {
 
     }
@@ -30,7 +30,7 @@ public class EventRoutingSlip : RoutingSlipBase
 public class CommandRoutingSlip : RoutingSlipBase
 {
 
-    public CommandRoutingSlip(IRoutingSlip source = null) : base(source)
+    public CommandRoutingSlip(RoutingSlipBase source = null) : base(source)
     {
 
     }

@@ -19,7 +19,7 @@ public abstract class KernelCommand
     {
         Properties = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
         TargetKernelName = targetKernelName;
-        RoutingSlip = new RoutingSlip();
+        RoutingSlip = new CommandRoutingSlip();
         if (parent is {})
         {
             Parent = parent;
@@ -53,7 +53,7 @@ public abstract class KernelCommand
     public ParseResult KernelChooserParseResult { get; internal set; }
 
     [JsonIgnore]
-    public RoutingSlip RoutingSlip { get; private set; }
+    public CommandRoutingSlip RoutingSlip { get; }
 
     public virtual Task InvokeAsync(KernelInvocationContext context)
     {

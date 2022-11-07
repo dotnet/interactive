@@ -28,31 +28,6 @@ public class KernelRoutingTests : IDisposable
 
     public void Dispose() => _disposables.Dispose();
 
-    [Fact]
-    public void RoutingSlip_includes_parent_RoutingSlip()
-    {
-        var parent = new RoutingSlip();
-        parent.TryAdd(new Uri("kernel://a"));
-
-        var child = new RoutingSlip(parent);
-        child.TryAdd(new Uri("kernel://b"));
-
-        child.Contains(parent).Should().BeTrue();
-    }
-
-    [Fact]
-    public void RoutingSlip_identifies_childCommands()
-    {
-        var parent = new SubmitCode("code1");
-        parent.RoutingSlip.TryAdd(new Uri("kernel://1"));
-        parent.RoutingSlip.TryAdd(new Uri("kernel://2"));
-        var child = new SubmitCode("code2");
-        child.RoutingSlip.TryAdd(new Uri("kernel://1"));
-        child.RoutingSlip.TryAdd(new Uri("kernel://2"));
-        child.RoutingSlip.TryAdd(new Uri("kernel://5"));
-
-        child.IsChildCommand(parent).Should().BeTrue();
-    }
 
     [Fact]
     public async Task When_target_kernel_name_is_specified_then_ProxyKernel_does_not_split_magics()
@@ -295,7 +270,6 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
         
     }
 
-
     [Fact]
     public async Task commands_routing_slip_contains_proxy_kernels_that_have_been_traversed()
     {
@@ -351,7 +325,7 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
 
         events.Should().ContainSingle<ReturnValueProduced>()
             .Which
-            .RoutingSlip.ToArray().Should().ContainInOrder(
+            .RoutingSlip.ToUriArray().Should().ContainInOrder(
             new[]
             {
                 new Uri("kernel://local/csharp", UriKind.Absolute),
@@ -390,7 +364,7 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
 
         events.Should().ContainSingle<ReturnValueProduced>()
             .Which
-            .RoutingSlip.ToArray().Should().ContainInOrder(
+            .RoutingSlip.ToUriArray().Should().ContainInOrder(
             new[]
             {
                 new Uri("kernel://remote/csharp", UriKind.Absolute),

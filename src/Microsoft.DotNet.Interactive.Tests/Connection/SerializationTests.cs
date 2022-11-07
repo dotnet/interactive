@@ -156,7 +156,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
             foreach (var command in commands().Select(c =>
             {
                 c.Properties["id"] = "command-id";
-                c.RoutingSlip.TryAdd(new Uri("kernel://somelocation/kernelName", UriKind.Absolute));
+                c.RoutingSlip.StampAsArrived(new Uri("kernel://somelocation/kernelName", UriKind.Absolute));
+                c.RoutingSlip.Stamp(new Uri("kernel://somelocation/kernelName", UriKind.Absolute));
                 return c;
             }))
             {
@@ -221,7 +222,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
                          e.Command.Properties["id"] = "command-id";
                          if (e is not KernelReady)
                          {
-                             e.Command.RoutingSlip.TryAdd(new Uri("kernel://somelocation/kernelName"));
+                             e.Command.RoutingSlip.StampAsArrived(new Uri("kernel://somelocation/kernelName"));
+                             e.Command.RoutingSlip.Stamp(new Uri("kernel://somelocation/kernelName"));
                          }
                
                          e.RoutingSlip.Stamp(new Uri("kernel://somelocation/kernelName"));

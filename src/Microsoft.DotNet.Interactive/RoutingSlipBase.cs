@@ -7,17 +7,17 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Interactive;
 
-public abstract class RoutingSlipBase : IRoutingSlip
+public abstract class RoutingSlipBase
 {
     private readonly List<Entry> _entries;
 
     protected ICollection<Entry> Entries => _entries;
 
-    protected RoutingSlipBase(IRoutingSlip source = null)
+    protected RoutingSlipBase(RoutingSlipBase source = null)
     {
         _entries = source switch
         {
-            { } => new List<Entry>(source.ToArray().Select(e => new Entry { Uri = new Uri(e.AbsoluteUri), Completed = true })),
+            { } => new List<Entry>(source.ToUriArray().Select(e => new Entry { Uri = new Uri(e.AbsoluteUri), Completed = true })),
             _ => new List<Entry>()
         };
     }
@@ -30,25 +30,29 @@ public abstract class RoutingSlipBase : IRoutingSlip
 
     public abstract void Stamp(Uri uri);
 
-    public Uri[] ToArray()
+    public Uri[] ToUriArray()
     {
         var entries = _entries.Where(e => e.Completed).Select(e => e.Uri).ToArray();
         return entries;
     }
 
-    public bool StartsWith(IRoutingSlip other)
+    public bool Contains(Uri uri)
     {
-        return StartsWith(other.ToArray());
+        return _entries.Any(e => e.Uri == uri);
+    }
+
+    public bool StartsWith(RoutingSlipBase other)
+    {
+        return StartsWith(other.ToUriArray());
     }
 
     public bool StartsWith(params Uri[] uris)
     {
         var startsWith = true;
 
-
         if (uris.Length <= _entries.Count)
         {
-            if (_entries.Where((entry, i) => uris[i] != entry.Uri).Any())
+            if (uris.Where((entry, i) => _entries[i].Uri != entry).Any())
             {
                 startsWith = false;
             }
@@ -61,9 +65,9 @@ public abstract class RoutingSlipBase : IRoutingSlip
         return startsWith;
     }
 
-    public void Append(IRoutingSlip other)
+    public void Append(RoutingSlipBase other)
     {
-        var source = other.ToArray();
+        var source = other.ToUriArray();
         if (other.StartsWith(this))
         {
             source = source.Skip(_entries.Count).ToArray();
@@ -71,7 +75,14 @@ public abstract class RoutingSlipBase : IRoutingSlip
 
         foreach (var uri in source)
         {
-            Stamp(uri);
+            if (!Contains(uri))
+            {
+                _entries.Add(new Entry { Uri = uri, Completed = true });
+            }
+            else
+            {
+                throw new InvalidOperationException($"The uri {uri} is already in the routing slip");
+            }
         }
     }
 }
