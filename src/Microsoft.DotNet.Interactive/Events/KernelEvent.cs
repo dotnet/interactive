@@ -12,15 +12,14 @@ public abstract class KernelEvent
     protected KernelEvent(KernelCommand command)
     {
         Command = command ?? throw new ArgumentNullException(nameof(command));
-        RoutingSlip = new RoutingSlip();
+        RoutingSlip = new EventRoutingSlip();
     }
-
 
     [JsonIgnore]
     public KernelCommand Command { get; }
 
     [JsonIgnore]
-    public RoutingSlip RoutingSlip { get; }
+    public IRoutingSlip RoutingSlip { get; }
 
     public override string ToString()
     {

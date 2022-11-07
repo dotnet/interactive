@@ -190,7 +190,7 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
             {
                 var uri = new Uri(routingSlipItem.GetString(), UriKind.Absolute);
 
-                @event.RoutingSlip.TryAdd(uri);
+                @event.RoutingSlip.Stamp(uri);
             }
         }
 
@@ -226,7 +226,7 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
         {
             @event = eventEnvelope.Event,
             eventType = eventEnvelope.EventType,
-            routingSlip = eventEnvelope.Event.RoutingSlip.Select(uri => uri.AbsoluteUri).ToArray(),
+            routingSlip = eventEnvelope.Event.RoutingSlip.ToArray().Select(uri => uri.AbsoluteUri).ToArray(),
             command = commandSerializationModel
         };
 

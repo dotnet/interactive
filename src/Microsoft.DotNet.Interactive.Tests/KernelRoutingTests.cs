@@ -351,7 +351,7 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
 
         events.Should().ContainSingle<ReturnValueProduced>()
             .Which
-            .RoutingSlip.Should().ContainInOrder(
+            .RoutingSlip.ToArray().Should().ContainInOrder(
             new[]
             {
                 new Uri("kernel://local/csharp", UriKind.Absolute),
@@ -390,7 +390,7 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
 
         events.Should().ContainSingle<ReturnValueProduced>()
             .Which
-            .RoutingSlip.Should().ContainInOrder(
+            .RoutingSlip.ToArray().Should().ContainInOrder(
             new[]
             {
                 new Uri("kernel://remote/csharp", UriKind.Absolute),

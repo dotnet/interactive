@@ -224,7 +224,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
                              e.Command.RoutingSlip.TryAdd(new Uri("kernel://somelocation/kernelName"));
                          }
                
-                         e.RoutingSlip.TryAdd(new Uri("kernel://somelocation/kernelName"));
+                         e.RoutingSlip.Stamp(new Uri("kernel://somelocation/kernelName"));
                          return e;
                      }))
             {
