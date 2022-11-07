@@ -122,7 +122,7 @@ namespace Microsoft.DotNet.Interactive
                 _cancellationTokenSource.Token);
 
             var infoProduced = new KernelInfoProduced(_kernel.KernelInfo, KernelCommand.None);
-            infoProduced.TryAddToRoutingSlip(_kernel.KernelInfo.Uri);
+            infoProduced.RoutingSlip.TryAdd(_kernel.KernelInfo.Uri);
 
             await _defaultSender.SendAsync(
                 infoProduced,
@@ -131,7 +131,7 @@ namespace Microsoft.DotNet.Interactive
             foreach (var kernel in _kernel.ChildKernels.Where(k => k is not ProxyKernel))
             {
                 infoProduced = new KernelInfoProduced(kernel.KernelInfo, KernelCommand.None);
-                infoProduced.TryAddToRoutingSlip(kernel.KernelInfo.Uri);
+                infoProduced.RoutingSlip.TryAdd(kernel.KernelInfo.Uri);
                 await _defaultSender.SendAsync(
                     infoProduced,
                     _cancellationTokenSource.Token);

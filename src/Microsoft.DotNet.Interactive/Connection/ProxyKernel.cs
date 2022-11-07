@@ -215,7 +215,7 @@ public sealed class ProxyKernel : Kernel
                         var newEvent = new KernelInfoProduced(KernelInfo, kernelEvent.Command);
                         foreach (var kernelUri in kip.RoutingSlip)
                         {
-                            newEvent.TryAddToRoutingSlip(kernelUri);
+                            newEvent.RoutingSlip.TryAdd(kernelUri);
                         }
                         if (pending.executionContext is { } ec)
                         {
@@ -252,7 +252,7 @@ public sealed class ProxyKernel : Kernel
     {
         foreach (var kernelOrKernelHostUri in commandFromRemoteKernel.RoutingSlip.Skip(command.RoutingSlip.Count))
         {
-            command.TryAddToRoutingSlip(kernelOrKernelHostUri);
+            command.RoutingSlip.TryAdd(kernelOrKernelHostUri);
         }
     }
 

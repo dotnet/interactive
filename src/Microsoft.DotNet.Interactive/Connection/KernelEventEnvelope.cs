@@ -190,7 +190,7 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
             {
                 var uri = new Uri(routingSlipItem.GetString(), UriKind.Absolute);
 
-                @event.TryAddToRoutingSlip(uri);
+                @event.RoutingSlip.TryAdd(uri);
             }
         }
 

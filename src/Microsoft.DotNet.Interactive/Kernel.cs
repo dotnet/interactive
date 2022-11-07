@@ -638,7 +638,7 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentNullException(nameof(kernelEvent));
             }
 
-            kernelEvent.TryAddToRoutingSlip(this.GetKernelUri());
+            kernelEvent.RoutingSlip.TryAdd(this.GetKernelUri());
             _kernelEvents.OnNext(kernelEvent);
         }
 

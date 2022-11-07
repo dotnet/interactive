@@ -84,6 +84,4 @@ public abstract class KernelCommand
 
         return Handler(this, context);
     }
-
-    public bool TryAddToRoutingSlip(Uri uri) => Parent?.RoutingSlip.Contains(uri) != true && RoutingSlip.TryAdd(uri);
 }

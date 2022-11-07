@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive
         {
             EnsureMiddlewarePipelineIsInitialized();
 
-            command.TryAddToRoutingSlip(_kernel.GetKernelUri());
+            command.RoutingSlip.TryAdd(_kernel.GetKernelUri());
             
             try
             {
