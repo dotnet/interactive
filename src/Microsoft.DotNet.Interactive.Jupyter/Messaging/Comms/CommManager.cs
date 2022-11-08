@@ -5,6 +5,8 @@ using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Messaging.Comms;
@@ -73,6 +75,21 @@ internal class CommsManager : IDisposable
         await _sender.SendAsync(Messaging.Message.Create(new CommOpen(agent.CommId, targetName, data)));
 
         return agent;
+    }
+
+    public async Task<IReadOnlyDictionary<string, CommTarget>> CurrentCommsAsync()
+    {
+        var request = Messaging.Message.Create(new CommInfoRequest());
+
+        var reply = _receiver.Messages.FilterByParent(request)
+                                .SelectContent()
+                                .OfType<CommInfoReply>()
+                                .Take(1);
+
+        await _sender.SendAsync(request);
+        var results = await reply.ToTask();
+
+        return results?.Comms;
     }
 
     private async Task HandleCommOpenRequestAsync(CommOpen commOpen)

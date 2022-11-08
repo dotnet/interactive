@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string TargetName { get; }
 
-        public CommInfoRequest(string targetName)
+        public CommInfoRequest(string targetName = null)
         {
             TargetName = targetName;
         }
