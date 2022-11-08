@@ -3,6 +3,7 @@
 
 using FluentAssertions;
 using System;
+using System.Collections.Generic;
 
 using Xunit;
 
@@ -15,8 +16,8 @@ public class EventRoutingSlipTests
     public void can_be_stamped_with_kernel_uri()
     {
         var routingSlip = new EventRoutingSlip();
-        routingSlip.Stamp(new Uri("kernel://pid-1234"));
-        routingSlip.StartsWith(new Uri("kernel://pid-1234")).Should().BeTrue();
+        routingSlip.Stamp(new Uri("kernel://pid-1"));
+        routingSlip.StartsWith(new Uri("kernel://pid-1")).Should().BeTrue();
     }
 
 
@@ -24,74 +25,96 @@ public class EventRoutingSlipTests
     public void cannot_can_be_stamped_with_kernel_uri_twice()
     {
         var routingSlip = new EventRoutingSlip();
-        routingSlip.Stamp(new Uri("kernel://pid-1234"));
+        routingSlip.Stamp(new Uri("kernel://pid-1"));
 
-        var markAgain = () => routingSlip.Stamp(new Uri("kernel://pid-1234"));
+        var markAgain = () => routingSlip.Stamp(new Uri("kernel://pid-1"));
 
         markAgain.Should().ThrowExactly<InvalidOperationException>()
-            .WithMessage("The uri kernel://pid-1234/ is already in the routing slip");
+            .WithMessage("The uri kernel://pid-1/ is already in the routing slip");
     }
 
     [Fact]
     public void can_append_a_routingSlip_to_another()
     {
         var original = new EventRoutingSlip();
-        original.Stamp(new Uri("kernel://pid-1234"));
-        original.Stamp(new Uri("kernel://pid-5678"));
+        original.Stamp(new Uri("kernel://pid-1"));
+        original.Stamp(new Uri("kernel://pid-2"));
 
 
         var toBeAppended = new EventRoutingSlip();
-        toBeAppended.Stamp(new Uri("kernel://pid-4321"));
-        toBeAppended.Stamp(new Uri("kernel://pid-8765"));
+        toBeAppended.Stamp(new Uri("kernel://pid-3"));
+        toBeAppended.Stamp(new Uri("kernel://pid-4"));
 
         original.Append(toBeAppended);
 
         original.ToUriArray().Should().ContainInOrder(
-            new Uri("kernel://pid-1234"),
-            new Uri("kernel://pid-5678"),
-            new Uri("kernel://pid-4321"),
-            new Uri("kernel://pid-8765"));
+            new Uri("kernel://pid-1"),
+            new Uri("kernel://pid-2"),
+            new Uri("kernel://pid-3"),
+            new Uri("kernel://pid-4"));
+    }
+
+    [Theory]
+    [MemberData(nameof(EventRoutingSlipsToTest))]
+    public void starts_with_urls(Uri[] other, bool startsWith)
+    {
+        var original = new EventRoutingSlip();
+        original.Stamp(new Uri("kernel://pid-1"));
+        original.Stamp(new Uri("kernel://pid-2"));
+        original.Stamp(new Uri("kernel://pid-3"));
+
+       
+        original.StartsWith(other).Should().Be(startsWith);
+    }
+
+    public static IEnumerable<object[]> EventRoutingSlipsToTest()
+    {
+        yield return new object[] {Array.Empty<Uri>(), false};
+        yield return new object[] { new[] { new Uri("kernel://pid-1")}, true };
+        yield return new object[] { new[] { new Uri("kernel://pid-1"), new Uri("kernel://pid-2") }, true }; 
+        yield return new object[] { new[] { new Uri("kernel://pid-1"), new Uri("kernel://pid-2"), new Uri("kernel://pid-3") }, true };
+        yield return new object[] { new[] { new Uri("kernel://pid-1"), new Uri("kernel://pid-2"), new Uri("kernel://pid-4") }, false };
     }
 
     [Fact]
     public void can_append_a_routingSlip_to_another_skipping_entries_if_the_other_contains_it()
     {
         var original = new EventRoutingSlip();
-        original.Stamp(new Uri("kernel://pid-1234"));
-        original.Stamp(new Uri("kernel://pid-5678"));
+        original.Stamp(new Uri("kernel://pid-1"));
+        original.Stamp(new Uri("kernel://pid-2"));
 
 
         var toBeAppended = new EventRoutingSlip();
-        toBeAppended.Stamp(new Uri("kernel://pid-1234"));
-        toBeAppended.Stamp(new Uri("kernel://pid-5678"));
-        toBeAppended.Stamp(new Uri("kernel://pid-4321"));
-        toBeAppended.Stamp(new Uri("kernel://pid-8765"));
+        toBeAppended.Stamp(new Uri("kernel://pid-1"));
+        toBeAppended.Stamp(new Uri("kernel://pid-2"));
+        toBeAppended.Stamp(new Uri("kernel://pid-3"));
+        toBeAppended.Stamp(new Uri("kernel://pid-4"));
 
         original.Append(toBeAppended);
 
         original.ToUriArray().Should().ContainInOrder(
-            new Uri("kernel://pid-1234"),
-            new Uri("kernel://pid-5678"),
-            new Uri("kernel://pid-4321"),
-            new Uri("kernel://pid-8765"));
+            new Uri("kernel://pid-1"),
+            new Uri("kernel://pid-2"),
+            new Uri("kernel://pid-3"),
+            new Uri("kernel://pid-4"));
     }
 
     [Fact]
     public void fails_to_append_a_routingSlip_to_another_if_they_do_not_start_with_same_uris()
     {
         var original = new EventRoutingSlip();
-        original.Stamp(new Uri("kernel://pid-1234"));
-        original.Stamp(new Uri("kernel://pid-5678"));
-        original.Stamp(new Uri("kernel://pid-4321"));
+        original.Stamp(new Uri("kernel://pid-1"));
+        original.Stamp(new Uri("kernel://pid-2"));
+        original.Stamp(new Uri("kernel://pid-3"));
 
 
         var toBeAppended = new EventRoutingSlip();
-        toBeAppended.Stamp(new Uri("kernel://pid-1234"));
-        toBeAppended.Stamp(new Uri("kernel://pid-4321"));
-        toBeAppended.Stamp(new Uri("kernel://pid-8765"));
+        toBeAppended.Stamp(new Uri("kernel://pid-1"));
+        toBeAppended.Stamp(new Uri("kernel://pid-3"));
+        toBeAppended.Stamp(new Uri("kernel://pid-4"));
 
         var appendAction = () => original.Append(toBeAppended);
 
-        appendAction.Should().ThrowExactly<InvalidOperationException>().WithMessage("The uri kernel://pid-1234/ is already in the routing slip");
+        appendAction.Should().ThrowExactly<InvalidOperationException>().WithMessage("The uri kernel://pid-1/ is already in the routing slip");
     }
 }

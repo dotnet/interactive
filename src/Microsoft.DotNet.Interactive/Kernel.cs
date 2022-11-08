@@ -535,7 +535,7 @@ namespace Microsoft.DotNet.Interactive
                                 return false;
                             }
 
-                            return inner.IsChildCommand(outer);
+                            return inner.Parent == outer || inner.RoutingSlip.StartsWith(outer.RoutingSlip);
                           
                         });
                     RegisterForDisposal(scheduler);
@@ -637,7 +637,7 @@ namespace Microsoft.DotNet.Interactive
             }
 
             var kernelUri = this.GetKernelUri();
-            if (!kernelEvent.RoutingSlip.StartsWith(kernelUri))
+            if (!kernelEvent.RoutingSlip.Contains(kernelUri))
             {
                 kernelEvent.RoutingSlip.Stamp(kernelUri);
             }

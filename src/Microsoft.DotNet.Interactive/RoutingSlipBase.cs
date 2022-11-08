@@ -50,7 +50,7 @@ public abstract class RoutingSlipBase
     {
         var startsWith = true;
 
-        if (uris.Length <= _entries.Count)
+        if (uris.Length > 0 && uris.Length <= _entries.Count)
         {
             if (uris.Where((entry, i) => _entries[i].Uri != entry).Any())
             {
@@ -68,20 +68,23 @@ public abstract class RoutingSlipBase
     public void Append(RoutingSlipBase other)
     {
         var source = other.ToUriArray();
-        if (other.StartsWith(this))
+        if (source.Length > 0)
         {
-            source = source.Skip(_entries.Count).ToArray();
-        }
-
-        foreach (var uri in source)
-        {
-            if (!Contains(uri))
+            if (other.StartsWith(this))
             {
-                _entries.Add(new Entry { Uri = uri, Completed = true });
+                source = source.Skip(_entries.Count).ToArray();
             }
-            else
+
+            foreach (var uri in source)
             {
-                throw new InvalidOperationException($"The uri {uri} is already in the routing slip");
+                if (!Contains(uri))
+                {
+                    _entries.Add(new Entry {Uri = uri, Completed = true});
+                }
+                else
+                {
+                    throw new InvalidOperationException($"The uri {uri} is already in the routing slip");
+                }
             }
         }
     }
