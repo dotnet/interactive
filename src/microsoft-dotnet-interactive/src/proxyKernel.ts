@@ -14,6 +14,7 @@ export class ProxyKernel extends Kernel {
         super(name);
         this.kernelType = KernelType.proxy;
     }
+
     override getCommandHandler(commandType: contracts.KernelCommandType): IKernelCommandHandler | undefined {
         return {
             commandType,
@@ -25,8 +26,9 @@ export class ProxyKernel extends Kernel {
 
     private delegatePublication(envelope: contracts.KernelEventEnvelope, invocationContext: KernelInvocationContext): void {
         let alreadyBeenSeen = false;
-        if (envelope.routingSlip === undefined || !envelope.routingSlip.find(e => e === getKernelUri(this))) {
-            connection.tryAddUriToRoutingSlip(envelope, getKernelUri(this));
+        const kernelUri = getKernelUri(this);
+        if (kernelUri && !connection.eventRoutingSlipContains(envelope, kernelUri)) {
+            connection.stampEventRoutingSlip(envelope, kernelUri);
         } else {
             alreadyBeenSeen = true;
         }
@@ -70,11 +72,9 @@ export class ProxyKernel extends Kernel {
                             });
                     }
                     else if (envelope.command!.token === commandToken) {
+                        connection.appendToCommandRoutingSlip(commandInvocation.commandEnvelope, envelope.command!.routingSlip!);
+                        envelope.command!.routingSlip = commandInvocation.commandEnvelope.routingSlip;//?
 
-                        for (const kernelUri of envelope.command!.routingSlip!) {
-                            connection.tryAddUriToRoutingSlip(commandInvocation.commandEnvelope, kernelUri);
-                            envelope.command!.routingSlip = commandInvocation.commandEnvelope.routingSlip;//?
-                        }
 
                         switch (envelope.eventType) {
                             case contracts.KernelInfoProducedType:

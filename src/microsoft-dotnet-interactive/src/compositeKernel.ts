@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { tryAddUriToRoutingSlip } from "./connection";
+import { commandRoutingSlipContains, eventRoutingSlipContains, stampCommandRoutingSlip, stampEventRoutingSlip } from "./connection";
 import * as contracts from "./contracts";
 import { getKernelUri, IKernelCommandInvocation, Kernel, KernelType } from "./kernel";
 import { KernelHost } from "./kernelHost";
@@ -60,7 +60,10 @@ export class CompositeKernel extends Kernel {
         kernel.kernelEvents.subscribe({
             next: (event) => {
                 event;//?
-                tryAddUriToRoutingSlip(event, getKernelUri(this));
+                const kernelUri = getKernelUri(this);
+                if (!eventRoutingSlipContains(event, kernelUri)) {
+                    stampEventRoutingSlip(event, kernelUri);
+                }
                 event;//?
                 this.publishEvent(event);
             }
@@ -161,7 +164,12 @@ export class CompositeKernel extends Kernel {
             if (invocationContext !== null) {
                 invocationContext.handlingKernel = kernel;
             }
-            tryAddUriToRoutingSlip(commandEnvelope, getKernelUri(kernel));
+            const kernelUri = getKernelUri(kernel);
+            if (!commandRoutingSlipContains(commandEnvelope, kernelUri)) {
+                stampCommandRoutingSlip(commandEnvelope, getKernelUri(kernel));
+            } else {
+                "we should not be here";//?
+            }
             return kernel.handleCommand(commandEnvelope).finally(() => {
                 if (invocationContext !== null) {
                     invocationContext.handlingKernel = previusoHandlingKernel;

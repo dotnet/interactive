@@ -138,13 +138,17 @@ await delay(500);
 loadd3(["d3"], (d3) => {   
     const maxStrength = d3.max(graph.edges, (e) => e.weight);
     const maxPopularity = d3.max(graph.nodes, (n) => n.popularity);
+    const minPopularity = d3.min(graph.nodes, (n) => n.popularity);
+    const scale = d3.scaleSqrt()
+    .domain([0, 1])
+    .range([0, 1]);
     const nodes = d3.map(graph.nodes, (n, i) => ({id: i, language: n.language, popularity: n.popularity/maxPopularity}));
     const links = d3.map(graph.edges, (e, i) => ({source: e.source, target: e.destination, strength: e.weight/maxStrength}));
     const color = d3.scaleOrdinal(d3.map(graph.nodes, (n, i) => n.language), d3.schemeTableau10);
     const width = 1024;
     const height = 1024;
     const maxR = 50;
-    const collisionScale = 2.5;
+    const collisionScale = 3;
     const svg = d3.select("#forceLayout")
     .attr("width", width)
     .attr("height", height)
@@ -258,10 +262,10 @@ loadd3(["d3"], (d3) => {
     simulation = d3
     .forceSimulation()
     .nodes(nodes)
-    .force('collision', d3.forceCollide().radius(d => d.popularity * maxR * collisionScale))
-    .force("charge", d3.forceManyBody().strength(d => d.popularity * -100))
+    .force('collision', d3.forceCollide().radius(d => scale( d.popularity ) * maxR * collisionScale))
+    .force("charge", d3.forceManyBody().strength(d => scale( d.popularity ) * -200))
     .force("center", d3.forceCenter(width / 2, height / 2))
-    .force("link", d3.forceLink(links).strength ( (d) => d.strength))
+    .force("link", d3.forceLink(links).strength ( (d) => d.strength * 0.1))
     .force("bounds", boxingForce)
     .on("tick", tick);
 
@@ -269,12 +273,12 @@ loadd3(["d3"], (d3) => {
     .attr("fill", d => color(d.language))
     .attr("stroke", "#666")
     .attr("stroke-width", 1.5)
-    .attr("r", d => 5 + d.popularity * maxR)
+    .attr("r", d => 5 + scale( d.popularity )  * maxR)
     .classed("nodecircle", true);
     //.call(dragStuff(simulation));
 
     node.append("text")
-    .attr("x", d=>  8 + d.popularity * maxR)
+    .attr("x", d=>  8 +scale( d.popularity )  * maxR)
     .attr("y", "0.31em")
     .text(d => truncateText( d.language,10 ))
     .attr("fill", d => color(d.language))

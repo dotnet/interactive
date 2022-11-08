@@ -134,7 +134,7 @@ Console.Write(x);", targetKernelName: csharp.Name));
 
     private static async Task<Kernel> CreateJavaScriptProxyKernelAsync()
     {
-        var connector = new PlaywrightKernelConnector(!Debugger.IsAttached);
+        var connector = new PlaywrightKernelConnector(!Debugger.IsAttached, Debugger.IsAttached);
 
         var proxy = await connector.CreateKernelAsync("javascript");
 

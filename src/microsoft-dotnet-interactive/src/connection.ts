@@ -115,18 +115,114 @@ export function isArrayOfString(collection: any): collection is string[] {
     return Array.isArray(collection) && collection.length > 0 && typeof (collection[0]) === typeof ("");
 }
 
-export function tryAddUriToRoutingSlip(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope, kernelUri: string): boolean {
+export function ensureUriEnding(uri: string): string {
+    if (uri.endsWith("/")) {
+        return uri;
+    }
+    return uri + "/";
+}
+
+export function stampCommandRoutingSlip(kernelCommandEnvelope: contracts.KernelCommandEnvelope, kernelUri: string) {
+    if (kernelCommandEnvelope.routingSlip === undefined || kernelCommandEnvelope.routingSlip === null) {
+        kernelCommandEnvelope.routingSlip = [];
+    }
+
+    const normalizedUri = ensureUriEnding(kernelUri);
+    const canAdd = !kernelCommandEnvelope.routingSlip.find(e => e === normalizedUri);
+    if (canAdd) {
+        kernelCommandEnvelope.routingSlip.push(normalizedUri);
+        kernelCommandEnvelope.routingSlip;//?
+    } else {
+        throw new Error(`The uri ${normalizedUri} is already in the routing slip`);
+    }
+}
+
+export function stampEventRoutingSlip(kernelEventEnvelope: contracts.KernelEventEnvelope, kernelUri: string) {
+    if (kernelEventEnvelope.routingSlip === undefined || kernelEventEnvelope.routingSlip === null) {
+        kernelEventEnvelope.routingSlip = [];
+    }
+    const normalizedUri = ensureUriEnding(kernelUri);
+    const canAdd = !kernelEventEnvelope.routingSlip.find(e => e === normalizedUri);
+    if (canAdd) {
+        kernelEventEnvelope.routingSlip.push(normalizedUri);
+        kernelEventEnvelope.routingSlip;//?
+    } else {
+        throw new Error(`The uri ${normalizedUri} is already in the routing slip`);
+    }
+}
+
+function appendRoutingSlip(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope, kernelUris: string[]): void {
     if (kernelCommandOrEventEnvelope.routingSlip === undefined || kernelCommandOrEventEnvelope.routingSlip === null) {
         kernelCommandOrEventEnvelope.routingSlip = [];
     }
 
-    var canAdd = !kernelCommandOrEventEnvelope.routingSlip.find(e => e === kernelUri);
-    if (canAdd) {
-        kernelCommandOrEventEnvelope.routingSlip.push(kernelUri);
-        kernelCommandOrEventEnvelope.routingSlip;//?
+    let i = 0;
+    if (routingSlipStartsWith(kernelUris, kernelCommandOrEventEnvelope.routingSlip)) {
+        i = kernelCommandOrEventEnvelope.routingSlip.length;
     }
 
-    return canAdd;
+    for (i; i < kernelUris.length; i++) {
+        const kernelUri = ensureUriEnding(kernelUris[i]);
+        const canAdd = !kernelCommandOrEventEnvelope.routingSlip.find(e => e === kernelUri);
+        if (canAdd) {
+            kernelCommandOrEventEnvelope.routingSlip.push(kernelUri);
+        } else {
+            throw new Error(`The uri ${kernelUri} is already in the routing slip`);
+        }
+    }
+}
+
+export function appendToCommandRoutingSlip(kernelCommandEnvelope: contracts.KernelCommandEnvelope, kernelUris: string[]): void {
+    appendRoutingSlip(kernelCommandEnvelope, kernelUris);
+}
+
+export function appendToEventRoutingSlip(kernelEventEnvelope: contracts.KernelEventEnvelope, kernelUris: string[]): void {
+    appendRoutingSlip(kernelEventEnvelope, kernelUris);
+}
+
+export function eventRoutingSlipStartsWith(thisEvent: contracts.KernelEventEnvelope, other: string[] | contracts.KernelEventEnvelope): boolean {
+    const thisKernelUris = thisEvent.routingSlip ?? [];
+    const otherKernelUris = (other instanceof Array ? other : other?.routingSlip) ?? [];
+
+    return routingSlipStartsWith(thisKernelUris, otherKernelUris);
+}
+
+export function commandRoutingSlipStartsWith(thisCommand: contracts.KernelCommandEnvelope, other: string[] | contracts.KernelCommandEnvelope): boolean {
+    const thisKernelUris = thisCommand.routingSlip ?? [];
+    const otherKernelUris = (other instanceof Array ? other : other?.routingSlip) ?? [];
+
+    return routingSlipStartsWith(thisKernelUris, otherKernelUris);
+}
+
+
+function routingSlipStartsWith(thisKernelUris: string[], otherKernelUris: string[]): boolean {
+    let startsWith = true;
+
+    if (otherKernelUris.length > 0 && thisKernelUris.length >= otherKernelUris.length) {
+        for (let i = 0; i < otherKernelUris.length; i++) {
+            if (otherKernelUris[i] !== thisKernelUris[i]) {
+                startsWith = false;
+                break;
+            }
+        }
+    }
+    else {
+        startsWith = false;
+    }
+
+    return startsWith;
+}
+
+export function eventRoutingSlipContains(kernlEvent: contracts.KernelEventEnvelope, kernelUri: string): boolean {
+    return routingSlipContains(kernlEvent, kernelUri);
+}
+
+export function commandRoutingSlipContains(kernlEvent: contracts.KernelCommandEnvelope, kernelUri: string): boolean {
+    return routingSlipContains(kernlEvent, kernelUri);
+}
+
+function routingSlipContains(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope, kernelUri: string) {
+    return kernelCommandOrEventEnvelope?.routingSlip?.find(e => e === ensureUriEnding(kernelUri)) !== undefined;
 }
 
 export function ensureOrUpdateProxyForKernelInfo(kernelInfoProduced: contracts.KernelInfoProduced, compositeKernel: CompositeKernel) {
@@ -151,6 +247,8 @@ export function ensureOrUpdateProxyForKernelInfo(kernelInfoProduced: contracts.K
         }
     }
 }
+
+
 
 export function isKernelInfoForProxy(kernelInfo: contracts.KernelInfo): boolean {
     const hasUri = !!kernelInfo.uri;

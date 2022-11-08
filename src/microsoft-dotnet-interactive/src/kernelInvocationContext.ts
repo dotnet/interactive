@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as rxjs from "rxjs";
-import { tryAddUriToRoutingSlip } from "./connection";
+import { appendToCommandRoutingSlip, eventRoutingSlipContains, stampEventRoutingSlip, } from "./connection";
 import * as contracts from "./contracts";
 import { Disposable } from "./disposables";
 import { getKernelUri, Kernel } from "./kernel";
@@ -46,9 +46,7 @@ export class KernelInvocationContext implements Disposable {
 
                     const oldSlip = kernelCommandInvocation.routingSlip ?? [];
                     kernelCommandInvocation.routingSlip = [...(current._commandEnvelope.routingSlip ?? [])];
-                    for (const uri of oldSlip) {
-                        tryAddUriToRoutingSlip(kernelCommandInvocation, uri);
-                    }
+                    appendToCommandRoutingSlip(kernelCommandInvocation, oldSlip);
                 }
             }
         }
@@ -117,8 +115,13 @@ export class KernelInvocationContext implements Disposable {
         let command = kernelEvent.command;
 
         if (this.handlingKernel) {
-            tryAddUriToRoutingSlip(kernelEvent, getKernelUri(this.handlingKernel));
-            kernelEvent.routingSlip;//?
+            const kernelUri = getKernelUri(this.handlingKernel);
+            if (!eventRoutingSlipContains(kernelEvent, kernelUri)) {
+                stampEventRoutingSlip(kernelEvent, kernelUri);
+                kernelEvent.routingSlip;//?
+            } else {
+                "should not be here";//?
+            }
 
         } else {
             kernelEvent;//?

@@ -7,7 +7,6 @@ import { ProxyKernel } from "../src/proxyKernel";
 import { Logger } from "../src/logger";
 import * as rxjs from "rxjs";
 import * as connection from "../src/connection";
-import { clearTokenAndId } from "./testSupport";
 
 describe("proxyKernel", () => {
     before(() => {

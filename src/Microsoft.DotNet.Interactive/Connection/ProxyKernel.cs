@@ -85,6 +85,7 @@ public sealed class ProxyKernel : Kernel
        
         _executionContext = ExecutionContext.Capture();
         var token = command.GetOrCreateToken();
+        command.GetOrCreateId();
 
         command.OriginUri ??= KernelInfo.Uri;
 

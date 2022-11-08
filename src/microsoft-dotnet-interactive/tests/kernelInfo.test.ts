@@ -139,7 +139,7 @@ describe("kernelInfo", () => {
                         command: { targetKernelName: 'child1' },
                         commandType: 'SubmitCode',
                         id: 'commandId',
-                        routingSlip: ['kernel://local/root', 'kernel://local/child1'],
+                        routingSlip: ['kernel://local/root/', 'kernel://local/child1/'],
                         token: 'commandToken'
                     },
                     event:
@@ -158,7 +158,7 @@ describe("kernelInfo", () => {
                         }
                     },
                     eventType: 'KernelInfoProduced',
-                    routingSlip: ['kernel://local/child1', 'kernel://local/root']
+                    routingSlip: ['kernel://local/child1/', 'kernel://local/root/']
                 }]);
 
         });
@@ -200,7 +200,7 @@ describe("kernelInfo", () => {
                         }
                     },
                     eventType: 'KernelInfoProduced',
-                    routingSlip: ['kernel://local/child1', 'kernel://local/root']
+                    routingSlip: ['kernel://local/child1/', 'kernel://local/root/']
                 }]);
         });
 
@@ -267,9 +267,9 @@ describe("kernelInfo", () => {
                         },
                         token: 'commandToken',
                         id: 'commandId',
-                        routingSlip: ['kernel://local/root', 'kernel://local/child1']
+                        routingSlip: ['kernel://local/root/', 'kernel://local/child1/']
                     },
-                    routingSlip: ['kernel://local/child1', 'kernel://local/root']
+                    routingSlip: ['kernel://local/child1/', 'kernel://local/root/']
                 }]);
         });
 

@@ -535,7 +535,17 @@ namespace Microsoft.DotNet.Interactive
                                 return false;
                             }
 
-                            return inner.Parent == outer || inner.RoutingSlip.StartsWith(outer.RoutingSlip);
+                            if (inner.Parent == outer)
+                            {
+                                return true;
+                            }
+
+                            if (inner.GetOrCreateToken() == outer.GetOrCreateToken())
+                            {
+                                return true;
+                            }
+                            
+                            return inner.RoutingSlip.StartsWith(outer.RoutingSlip);
                           
                         });
                     RegisterForDisposal(scheduler);

@@ -34,8 +34,8 @@ describe("kernelRouting", () => {
 
         expect(Array.from(command.routingSlip!.values())).to.deep.equal(
             [
-                'kernel://local/vscode',
-                'kernel://local/javascript'
+                'kernel://local/vscode/',
+                'kernel://local/javascript/'
             ]);
     });
 
@@ -64,8 +64,8 @@ describe("kernelRouting", () => {
 
         expect(Array.from(events[0].routingSlip!.values())).to.deep.equal(
             [
-                'kernel://local/javascript',
-                'kernel://local/vscode'
+                'kernel://local/javascript/',
+                'kernel://local/vscode/'
             ]);
     });
 
@@ -107,10 +107,10 @@ describe("kernelRouting", () => {
 
         expect(Array.from(command.routingSlip!.values())).to.deep.equal(
             [
-                'kernel://local',
-                'kernel://local/javascript',
-                'kernel://remote',
-                'kernel://remote/javascript']);
+                'kernel://local/',
+                'kernel://local/javascript/',
+                'kernel://remote/',
+                'kernel://remote/javascript/']);
     });
 
     it.skip("event routing slip contains proxy kernels that have been traversed", async () => {

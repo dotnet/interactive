@@ -9,8 +9,9 @@ import { CompositeKernel } from "./compositeKernel";
 import { KernelScheduler } from "./kernelScheduler";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
 import * as disposables from "./disposables";
-import { tryAddUriToRoutingSlip } from "./connection";
+import { commandRoutingSlipContains, eventRoutingSlipContains, stampCommandRoutingSlip, stampEventRoutingSlip } from "./connection";
 import * as rxjs from "rxjs";
+import { stringify } from "uuid";
 
 export interface IKernelCommandInvocation {
     commandEnvelope: contracts.KernelCommandEnvelope;
@@ -129,7 +130,12 @@ export class Kernel {
     // nothing is ever going to look at the promise we return here.
     async send(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         this.ensureCommandTokenAndId(commandEnvelope);
-        tryAddUriToRoutingSlip(commandEnvelope, getKernelUri(this));
+        const kernelUri = getKernelUri(this);
+        if (!commandRoutingSlipContains(commandEnvelope, kernelUri)) {
+            stampCommandRoutingSlip(commandEnvelope, getKernelUri(this));
+        } else {
+            "should not be here";//?
+        }
         commandEnvelope.routingSlip;//?
         KernelInvocationContext.establish(commandEnvelope);
         return this.getScheduler().runAsync(commandEnvelope, (value) => this.executeCommand(value));
@@ -171,7 +177,12 @@ export class Kernel {
                     const message = `kernel ${this.name} of type ${KernelType[this.kernelType]} saw event ${e.eventType} with token ${e.command?.token}`;
                     message;//?
                     Logger.default.info(message);
-                    tryAddUriToRoutingSlip(e, getKernelUri(this));
+                    const kernelUri = getKernelUri(this);
+                    if (!eventRoutingSlipContains(e, kernelUri)) {
+                        stampEventRoutingSlip(e, kernelUri);
+                    } else {
+                        "should not get here";//?
+                    }
                     return e;
                 }))
                     .subscribe(this.publishEvent.bind(this));
@@ -253,7 +264,7 @@ export class Kernel {
                 eventType: contracts.KernelInfoProducedType,
                 event: event
             };
-            tryAddUriToRoutingSlip(envelope, getKernelUri(this));
+            stampEventRoutingSlip(envelope, getKernelUri(this));
             const context = KernelInvocationContext.current;
 
             if (context) {

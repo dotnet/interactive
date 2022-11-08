@@ -7,13 +7,13 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Interactive;
 
-public abstract class RoutingSlipBase
+public abstract class RoutingSlip
 {
     private readonly List<Entry> _entries;
 
     protected ICollection<Entry> Entries => _entries;
 
-    protected RoutingSlipBase(RoutingSlipBase source = null)
+    protected RoutingSlip(RoutingSlip source = null)
     {
         _entries = source switch
         {
@@ -41,7 +41,7 @@ public abstract class RoutingSlipBase
         return _entries.Any(e => e.Uri == uri);
     }
 
-    public bool StartsWith(RoutingSlipBase other)
+    public bool StartsWith(RoutingSlip other)
     {
         return StartsWith(other.ToUriArray());
     }
@@ -65,7 +65,7 @@ public abstract class RoutingSlipBase
         return startsWith;
     }
 
-    public void Append(RoutingSlipBase other)
+    public void Append(RoutingSlip other)
     {
         var source = other.ToUriArray();
         if (source.Length > 0)
