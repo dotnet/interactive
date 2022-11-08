@@ -218,7 +218,7 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
                 commandType = commandEnvelope.CommandType,
                 token = eventEnvelope.Event.Command.GetOrCreateToken(),
                 id = commandEnvelope.CommandId,
-                routingSlip = commandEnvelope.Command.RoutingSlip.ToUriArray().Select(uri => uri.AbsoluteUri).ToArray()
+                routingSlip = commandEnvelope.Command.RoutingSlip.ToUriArray()
             };
         }
 
@@ -226,7 +226,7 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
         {
             @event = eventEnvelope.Event,
             eventType = eventEnvelope.EventType,
-            routingSlip = eventEnvelope.Event.RoutingSlip.ToUriArray().Select(uri => uri.AbsoluteUri).ToArray(),
+            routingSlip = eventEnvelope.Event.RoutingSlip.ToUriArray(),
             command = commandSerializationModel
         };
 

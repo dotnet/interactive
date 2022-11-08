@@ -16,9 +16,9 @@ public class EventRoutingSlip : RoutingSlip
 
     public override void Stamp(Uri uri)
     {
-        if (Entries.SingleOrDefault(entry => entry.Uri == uri) is null)
+        if (Entries.SingleOrDefault(entry => entry.Uri == uri.AbsoluteUri) is null)
         {
-            Entries.Add(new Entry { Uri = new Uri(uri.AbsoluteUri), Completed = true });
+            Entries.Add(new Entry { Uri = uri.AbsoluteUri, Completed = true });
         }
         else
         {

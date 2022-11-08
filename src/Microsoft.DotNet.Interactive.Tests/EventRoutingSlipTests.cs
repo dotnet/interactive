@@ -34,24 +34,24 @@ public class EventRoutingSlipTests
     }
 
     [Fact]
-    public void can_append_a_routingSlip_to_another()
+    public void can_continue_a_routingSlip_with_another()
     {
         var original = new EventRoutingSlip();
         original.Stamp(new Uri("kernel://1"));
         original.Stamp(new Uri("kernel://2"));
 
 
-        var toBeAppended = new EventRoutingSlip();
-        toBeAppended.Stamp(new Uri("kernel://3"));
-        toBeAppended.Stamp(new Uri("kernel://4"));
+        var continuation = new EventRoutingSlip();
+        continuation.Stamp(new Uri("kernel://3"));
+        continuation.Stamp(new Uri("kernel://4"));
 
-        original.Append(toBeAppended);
+        original.ContinueWith(continuation);
 
         original.ToUriArray().Should().ContainInOrder(
-            new Uri("kernel://1"),
-            new Uri("kernel://2"),
-            new Uri("kernel://3"),
-            new Uri("kernel://4"));
+            "kernel://1",
+            "kernel://2",
+            "kernel://3",
+            "kernel://4");
     }
 
     [Theory]
@@ -77,30 +77,30 @@ public class EventRoutingSlipTests
     }
 
     [Fact]
-    public void can_append_a_routingSlip_to_another_skipping_entries_if_the_other_contains_it()
+    public void can_continue_a_routingSlip_to_another_skipping_entries_if_the_other_contains_it()
     {
         var original = new EventRoutingSlip();
         original.Stamp(new Uri("kernel://1"));
         original.Stamp(new Uri("kernel://2"));
 
 
-        var toBeAppended = new EventRoutingSlip();
-        toBeAppended.Stamp(new Uri("kernel://1"));
-        toBeAppended.Stamp(new Uri("kernel://2"));
-        toBeAppended.Stamp(new Uri("kernel://3"));
-        toBeAppended.Stamp(new Uri("kernel://4"));
+        var continuation = new EventRoutingSlip();
+        continuation.Stamp(new Uri("kernel://1"));
+        continuation.Stamp(new Uri("kernel://2"));
+        continuation.Stamp(new Uri("kernel://3"));
+        continuation.Stamp(new Uri("kernel://4"));
 
-        original.Append(toBeAppended);
+        original.ContinueWith(continuation);
 
         original.ToUriArray().Should().ContainInOrder(
-            new Uri("kernel://1"),
-            new Uri("kernel://2"),
-            new Uri("kernel://3"),
-            new Uri("kernel://4"));
+            "kernel://1",
+            "kernel://2",
+            "kernel://3",
+            "kernel://4");
     }
 
     [Fact]
-    public void fails_to_append_a_routingSlip_to_another_if_they_do_not_start_with_same_uris()
+    public void throws_exception_when_continuing_a_routingSlip_with_another_if_they_do_not_start_with_same_uri_sequence()
     {
         var original = new EventRoutingSlip();
         original.Stamp(new Uri("kernel://1"));
@@ -108,12 +108,12 @@ public class EventRoutingSlipTests
         original.Stamp(new Uri("kernel://3"));
 
 
-        var toBeAppended = new EventRoutingSlip();
-        toBeAppended.Stamp(new Uri("kernel://1"));
-        toBeAppended.Stamp(new Uri("kernel://3"));
-        toBeAppended.Stamp(new Uri("kernel://4"));
+        var continuation = new EventRoutingSlip();
+        continuation.Stamp(new Uri("kernel://1"));
+        continuation.Stamp(new Uri("kernel://3"));
+        continuation.Stamp(new Uri("kernel://4"));
 
-        var appendAction = () => original.Append(toBeAppended);
+        var appendAction = () => original.ContinueWith(continuation);
 
         appendAction.Should().ThrowExactly<InvalidOperationException>().WithMessage("The uri kernel://1/ is already in the routing slip");
     }

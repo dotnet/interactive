@@ -223,7 +223,7 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
             commandType = envelope.CommandType,
             token = envelope.Token,
             id = envelope.CommandId,
-            routingSlip = envelope.Command.RoutingSlip.ToUriArray().Select(uri => uri.AbsoluteUri).ToArray()
+            routingSlip = envelope.Command.RoutingSlip.ToUriArray()
         };
         return serializationModel;
     }

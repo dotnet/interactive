@@ -17,20 +17,20 @@ public abstract class RoutingSlip
     {
         _entries = source switch
         {
-            { } => new List<Entry>(source.ToUriArray().Select(e => new Entry { Uri = new Uri(e.AbsoluteUri), Completed = true })),
+            { } => new List<Entry>(source.ToUriArray().Select(e => new Entry { Uri = e, Completed = true })),
             _ => new List<Entry>()
         };
     }
     
     protected class Entry
     {
-        public Uri Uri { get; set; }
+        public string Uri { get; set; }
         public bool Completed { get; set; }
     }
 
     public abstract void Stamp(Uri uri);
 
-    public Uri[] ToUriArray()
+    public string[] ToUriArray()
     {
         var entries = _entries.Where(e => e.Completed).Select(e => e.Uri).ToArray();
         return entries;
@@ -38,7 +38,12 @@ public abstract class RoutingSlip
 
     public bool Contains(Uri uri)
     {
-        return _entries.Any(e => e.Uri == uri);
+        return Contains(uri.AbsoluteUri);
+    }
+
+    public bool Contains(string absoluteUri)
+    {
+        return _entries.Any(e => e.Uri == absoluteUri);
     }
 
     public bool StartsWith(RoutingSlip other)
@@ -46,13 +51,13 @@ public abstract class RoutingSlip
         return StartsWith(other.ToUriArray());
     }
 
-    public bool StartsWith(params Uri[] uris)
+    public bool StartsWith(params string[] absoluteUris)
     {
         var startsWith = true;
 
-        if (uris.Length > 0 && uris.Length <= _entries.Count)
+        if (absoluteUris.Length > 0 && absoluteUris.Length <= _entries.Count)
         {
-            if (uris.Where((entry, i) => _entries[i].Uri != entry).Any())
+            if (absoluteUris.Where((entry, i) => _entries[i].Uri != entry).Any())
             {
                 startsWith = false;
             }
@@ -65,7 +70,12 @@ public abstract class RoutingSlip
         return startsWith;
     }
 
-    public void Append(RoutingSlip other)
+    public bool StartsWith(params Uri[] uris)
+    {
+        return StartsWith(uris.Select(u => u.AbsoluteUri).ToArray());
+    }
+
+    public void ContinueWith(RoutingSlip other)
     {
         var source = other.ToUriArray();
         if (source.Length > 0)

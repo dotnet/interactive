@@ -16,7 +16,7 @@ public class CommandRoutingSlip : RoutingSlip
 
     public override void Stamp(Uri uri)
     {
-        if (Entries.SingleOrDefault(e => e.Uri == uri) is {Completed: false} entry)
+        if (Entries.SingleOrDefault(e => e.Uri == uri.AbsoluteUri) is {Completed: false} entry)
         {
             entry.Completed = true;
         }
@@ -28,9 +28,9 @@ public class CommandRoutingSlip : RoutingSlip
 
     public void StampAsArrived(Uri uri)
     {
-        if (Entries.SingleOrDefault(entry => entry.Uri == uri) is null)
+        if (Entries.SingleOrDefault(entry => entry.Uri == uri.AbsoluteUri) is null)
         {
-            Entries.Add(new Entry { Uri = new Uri(uri.AbsoluteUri), Completed = false });
+            Entries.Add(new Entry { Uri = uri.AbsoluteUri, Completed = false });
         }
         else
         {

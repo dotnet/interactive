@@ -193,7 +193,7 @@ public sealed class ProxyKernel : Kernel
 
         if (hasPending && HasSameOrigin(kernelEvent, KernelInfo))
         {
-            pending.command.RoutingSlip.Append(kernelEvent.Command.RoutingSlip);
+            pending.command.RoutingSlip.ContinueWith(kernelEvent.Command.RoutingSlip);
             switch (kernelEvent)
             {
                 case CommandFailed cf when pending.command.IsEquivalentTo(kernelEvent.Command):
@@ -213,7 +213,7 @@ public sealed class ProxyKernel : Kernel
                         UpdateKernelInfoFromEvent(kip);
                         var newEvent = new KernelInfoProduced(KernelInfo, kernelEvent.Command);
                         
-                        newEvent.RoutingSlip.Append(kip.RoutingSlip);
+                        newEvent.RoutingSlip.ContinueWith(kip.RoutingSlip);
                         
                         if (pending.executionContext is { } ec)
                         {

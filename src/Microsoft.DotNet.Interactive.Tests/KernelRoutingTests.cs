@@ -328,8 +328,8 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
             .RoutingSlip.ToUriArray().Should().ContainInOrder(
             new[]
             {
-                new Uri("kernel://local/csharp", UriKind.Absolute),
-                new Uri("kernel://local/.NET", UriKind.Absolute)
+                "kernel://local/csharp",
+                "kernel://local/.NET"
                
             });
     }
@@ -367,10 +367,10 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
             .RoutingSlip.ToUriArray().Should().ContainInOrder(
             new[]
             {
-                new Uri("kernel://remote/csharp", UriKind.Absolute),
-                new Uri("kernel://remote/", UriKind.Absolute),
-                new Uri("kernel://local/csharp-proxy", UriKind.Absolute),
-                new Uri("kernel://local/", UriKind.Absolute)
+                "kernel://remote/csharp",
+                "kernel://remote/",
+                "kernel://local/csharp-proxy",
+                "kernel://local/"
             });
     }
 }
