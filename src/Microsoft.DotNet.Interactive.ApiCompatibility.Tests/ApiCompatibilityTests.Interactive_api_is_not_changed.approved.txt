@@ -20,6 +20,10 @@ Microsoft.DotNet.Interactive
     .ctor(System.Exception innerException)
   public class CommandNotSupportedException : System.Exception, System.Runtime.Serialization.ISerializable
     .ctor(System.Type commandType, Kernel kernel)
+  public class CommandRoutingSlip : RoutingSlip
+    .ctor(RoutingSlip source = null)
+    public System.Void Stamp(System.Uri uri)
+    public System.Void StampAsArrived(System.Uri uri)
   public class CompositeKernel : Kernel, Microsoft.DotNet.Interactive.Extensions.IExtensibleKernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, System.Collections.Generic.IEnumerable<Kernel>, System.Collections.IEnumerable, System.IDisposable
     .ctor(System.String name = null)
     public KernelCollection ChildKernels { get;}
@@ -64,6 +68,9 @@ Microsoft.DotNet.Interactive
     .ctor(System.String displayId, System.String[] mimeTypes, KernelInvocationContext context)
     public System.Collections.Generic.IReadOnlyCollection<System.String> MimeTypes { get;}
     public System.Void Update(System.Object updatedValue)
+  public class EventRoutingSlip : RoutingSlip
+    .ctor(RoutingSlip source = null)
+    public System.Void Stamp(System.Uri uri)
   public class FormattedValue
     public static System.Collections.Generic.IReadOnlyCollection<FormattedValue> FromObject(System.Object value, System.String[] mimeTypes)
     .ctor(System.String mimeType, System.String value)
@@ -150,7 +157,6 @@ Microsoft.DotNet.Interactive
     public System.Boolean TryGetByUri(System.Uri uri, ref Kernel& kernel)
   public static class KernelCommandExtensions
     public static System.String GetOrCreateToken()
-    public static System.Boolean IsChildCommand(Microsoft.DotNet.Interactive.Commands.KernelCommand candidateParentCommand)
     public static System.Void PublishInternalEvents()
     public static System.Void SetToken(System.String token)
   public class KernelCommandInfo, System.IEquatable<KernelCommandInfo>
@@ -340,13 +346,16 @@ Microsoft.DotNet.Interactive
     public System.String PackageRoot { get;}
     public System.Collections.Generic.IReadOnlyList<System.String> ProbingPaths { get;}
     public System.String ToString()
-  public class RoutingSlip, System.Collections.Generic.IEnumerable<System.Uri>, System.Collections.Generic.IReadOnlyCollection<System.Uri>, System.Collections.Generic.IReadOnlyList<System.Uri>, System.Collections.IEnumerable
-    .ctor(RoutingSlip source = null)
-    public System.Int32 Count { get;}
-    public System.Uri Item { get;}
-    public System.Boolean Contains(System.Uri kernelOrKernelHostUri)
-    public System.Boolean Contains(RoutingSlip other)
-    public System.Boolean TryAdd(System.Uri kernelOrKernelHostUri)
+  public abstract class RoutingSlip
+    public System.Boolean Contains(System.Uri uri)
+    public System.Boolean Contains(System.String absoluteUri)
+    public System.Void ContinueWith(RoutingSlip other)
+    protected System.Collections.Generic.ICollection<Entry> get_Entries()
+    public System.Void Stamp(System.Uri uri)
+    public System.Boolean StartsWith(RoutingSlip other)
+    public System.Boolean StartsWith(System.String[] absoluteUris)
+    public System.Boolean StartsWith(System.Uri[] uris)
+    public System.String[] ToUriArray()
   public class ScriptContent, Microsoft.AspNetCore.Html.IHtmlContent
     .ctor(System.String scriptValue)
     public System.String ScriptValue { get;}
@@ -387,10 +396,9 @@ Microsoft.DotNet.Interactive.Commands
     public System.Uri OriginUri { get; set;}
     public KernelCommand Parent { get;}
     public System.Collections.Generic.IDictionary<System.String,System.Object> Properties { get;}
-    public Microsoft.DotNet.Interactive.RoutingSlip RoutingSlip { get;}
+    public Microsoft.DotNet.Interactive.CommandRoutingSlip RoutingSlip { get;}
     public System.String TargetKernelName { get;}
     public System.Threading.Tasks.Task InvokeAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context)
-    public System.Boolean TryAddToRoutingSlip(System.Uri uri)
   public abstract class LanguageServiceCommand : KernelCommand
     public System.String Code { get;}
     public Microsoft.DotNet.Interactive.LinePosition LinePosition { get;}
@@ -625,9 +633,8 @@ Microsoft.DotNet.Interactive.Events
     Snippet=2
   public abstract class KernelEvent
     public Microsoft.DotNet.Interactive.Commands.KernelCommand Command { get;}
-    public Microsoft.DotNet.Interactive.RoutingSlip RoutingSlip { get;}
+    public Microsoft.DotNet.Interactive.EventRoutingSlip RoutingSlip { get;}
     public System.String ToString()
-    public System.Boolean TryAddToRoutingSlip(System.Uri uri)
   public class KernelExtensionLoaded : KernelEvent
     .ctor(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     .ctor(Microsoft.DotNet.Interactive.IKernelExtension kernelExtension, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
