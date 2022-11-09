@@ -89,6 +89,29 @@ console.log(jsKernel.name);
 
 #!markdown
 
+# Execude the next cell. After execution, the output immediately below should be:
+
+```
+webview
+javascript
+vscode
+.NET
+sql
+kql
+csharp
+fsharp
+pwsh
+html
+value
+mermaid
+```
+
+#!javascript
+
+kernel.root.findKernels(s => true).forEach(k => console.log(k.name));
+
+#!markdown
+
 # Execute the next cell, the output should be displayed as HTML like so:
 
 | Name | Salary |

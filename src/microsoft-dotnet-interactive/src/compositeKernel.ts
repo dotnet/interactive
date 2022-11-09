@@ -306,7 +306,7 @@ class KernelCollection implements Iterable<Kernel> {
         });
 
         if (this._compositeKernel.host) {
-            kernel.kernelInfo.uri = `${this._compositeKernel.host.uri}/${kernel.name}`;//?
+            kernel.kernelInfo.uri = `${this._compositeKernel.host.uri}/${kernel.kernelInfo.localName}`;//?
             this._kernelsByLocalUri.set(kernel.kernelInfo.uri, kernel);
         }
 

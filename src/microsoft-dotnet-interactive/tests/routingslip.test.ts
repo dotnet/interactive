@@ -15,7 +15,7 @@ describe("kernel event routingSlip", () => {
 
         connection.stampEventRoutingSlip(envelope, "kernel://1");
 
-        expect(() => connection.stampEventRoutingSlip(envelope, "kernel://1/")).to.throw("The uri kernel://1/ is already in the routing slip");
+        expect(() => connection.stampEventRoutingSlip(envelope, "kernel://1")).to.throw("The uri kernel://1 is already in the routing slip");
     });
 
     it("can append a routing slip to another", () => {
@@ -23,14 +23,14 @@ describe("kernel event routingSlip", () => {
         let envelope: contracts.KernelEventEnvelope = {
             eventType: contracts.CommandSucceededType,
             event: {},
-            routingSlip: ["kernel://1/", "kernel://2/"]
+            routingSlip: ["kernel://1", "kernel://2"]
         };
 
-        let other = ["kernel://3/", "kernel://4/"];
+        let other = ["kernel://3", "kernel://4"];
 
         connection.continueEventRoutingSlip(envelope, other);
 
-        expect(envelope.routingSlip).to.deep.equal(['kernel://1/', 'kernel://2/', 'kernel://3/', 'kernel://4/']);
+        expect(envelope.routingSlip).to.deep.equal(['kernel://1', 'kernel://2', 'kernel://3', 'kernel://4']);
     });
 
     it("can append a routing slip to another if the other starts with the same list of uris", () => {
@@ -38,14 +38,14 @@ describe("kernel event routingSlip", () => {
         let envelope: contracts.KernelEventEnvelope = {
             eventType: contracts.CommandSucceededType,
             event: {},
-            routingSlip: ["kernel://1/", "kernel://2/"]
+            routingSlip: ["kernel://1", "kernel://2"]
         };
 
-        let other = ["kernel://1/", "kernel://2/", "kernel://3/", "kernel://4/"];
+        let other = ["kernel://1", "kernel://2", "kernel://3", "kernel://4"];
 
         connection.continueEventRoutingSlip(envelope, other);
 
-        expect(envelope.routingSlip).to.deep.equal(['kernel://1/', 'kernel://2/', 'kernel://3/', 'kernel://4/']);
+        expect(envelope.routingSlip).to.deep.equal(['kernel://1', 'kernel://2', 'kernel://3', 'kernel://4']);
     });
 
     it("cannot append a routing slip to another if the other adds in the same kernel", () => {
@@ -53,10 +53,10 @@ describe("kernel event routingSlip", () => {
         let envelope: contracts.KernelEventEnvelope = {
             eventType: contracts.CommandSucceededType,
             event: {},
-            routingSlip: ["kernel://1/", "kernel://2/"]
+            routingSlip: ["kernel://1", "kernel://2"]
         };
 
-        let other = ["kernel://1/", "kernel://3/", "kernel://4/", "kernel://5/"];
-        expect(() => connection.continueEventRoutingSlip(envelope, other)).to.throw("The uri kernel://1/ is already in the routing slip");
+        let other = ["kernel://1", "kernel://3", "kernel://4", "kernel://5"];
+        expect(() => connection.continueEventRoutingSlip(envelope, other)).to.throw("The uri kernel://1 is already in the routing slip");
     });
 });
