@@ -4,13 +4,25 @@
 using Microsoft.DotNet.Interactive.Utility;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
 using System.Threading.Tasks;
+using System.Linq;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
 {
     public class JupyterKernelSpecModule : IJupyterKernelSpecModule
     {
-        private Dictionary<string, DirectoryInfo> _installedKernelDirs = null;
+        private class KernelSpecListCommandResults
+        {
+            public Dictionary<string, KernelSpecResourceDetail> kernelspecs { get; set; }
+        }
+
+        private class KernelSpecResourceDetail
+        {
+            public string resource_dir { get; set; }
+            public KernelSpec spec { get; set; }
+        }
 
         private async Task<CommandLineResult> ExecuteCommand(string command, string args = "")
         {
@@ -22,39 +34,74 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             return ExecuteCommand($@"install ""{sourceDirectory.FullName}""", "--user");
         }
 
-        public IReadOnlyDictionary<string, DirectoryInfo> GetInstalledKernelDirectories()
+        public async Task<IReadOnlyDictionary<string, KernelSpec>> ListKernels()
         {
-            // do this only once. If a new kernel is installed, the kernel has to be reloaded. 
-            if (_installedKernelDirs == null)
+            var kernelSpecsList = await ExecuteCommand("list", "--json");
+            if (kernelSpecsList.ExitCode == 0)
             {
-                _installedKernelDirs = new Dictionary<string, DirectoryInfo>();
-
-                var dataDirectories = JupyterCommonDirectories.GetDataDirectories();
-                foreach (var directory in dataDirectories)
+                var results = JsonSerializer.Deserialize<KernelSpecListCommandResults>(string.Join(string.Empty, kernelSpecsList.Output));
+                return results.kernelspecs?.ToDictionary(r => r.Key, r =>
                 {
-                    var kernelDir = new DirectoryInfo(Path.Combine(directory.FullName, "kernels"));
-                    if (kernelDir.Exists)
-                    {
-                        var kernels = kernelDir.GetDirectories();
-                        foreach (var kernel in kernels)
-                        {
-                            if (!_installedKernelDirs.ContainsKey(kernel.Name))
-                            {
-                                _installedKernelDirs.Add(kernel.Name, kernel);
-                            }
-                        }
-                    }
-                }
+                    var spec = r.Value?.spec;
+                    spec.Name ??= r.Key;
+                    return spec;
+                });
             }
-
-            return _installedKernelDirs;
+            else
+            {
+                // fall back to custom lookup logic 
+                return LookupInstalledKernels();
+            }
         }
+
 
         public DirectoryInfo GetDefaultKernelSpecDirectory()
         {
             var dataDirectory = JupyterCommonDirectories.GetDataDirectory();
             var directory = new DirectoryInfo(Path.Combine(dataDirectory.FullName, "kernels"));
             return directory;
+        }
+
+        private IReadOnlyDictionary<string, KernelSpec> LookupInstalledKernels()
+        {
+            var specs = new Dictionary<string, KernelSpec>();
+
+            var dataDirectories = JupyterCommonDirectories.GetDataDirectories();
+            foreach (var directory in dataDirectories)
+            {
+                var kernelDir = new DirectoryInfo(Path.Combine(directory.FullName, "kernels"));
+                if (kernelDir.Exists)
+                {
+                    var kernels = kernelDir.GetDirectories();
+                    foreach (var kernel in kernels)
+                    {
+                        if (!specs.ContainsKey(kernel.Name))
+                        {
+                            var spec = GetKernelSpec(kernel);
+                            if (spec != null)
+                            {
+                                specs.Add(spec.Name, spec);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return specs;
+        }
+
+        private KernelSpec GetKernelSpec(DirectoryInfo directory)
+        {
+            var kernelJsonPath = Path.Combine(directory.FullName, "kernel.json");
+            if (File.Exists(kernelJsonPath))
+            {
+                var kernelJson = JsonDocument.Parse(File.ReadAllText(kernelJsonPath));
+                var spec = JsonSerializer.Deserialize<KernelSpec>(kernelJson, JsonFormatter.SerializerOptions);
+                spec.Name ??= directory.Name;
+                return spec;
+            }
+
+            return null;
         }
     }
 }

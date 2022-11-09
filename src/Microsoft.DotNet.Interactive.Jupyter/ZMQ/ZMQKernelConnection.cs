@@ -3,9 +3,12 @@
 
 using Microsoft.DotNet.Interactive.Jupyter.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
+using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using NetMQ;
 using NetMQ.Sockets;
 using System;
+using System.Diagnostics;
+using System.IO;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Threading;
@@ -22,20 +25,24 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
     private readonly string _ioSubAddress;
     private readonly CompositeDisposable _disposables;
     private readonly RequestReplyChannel _shellChannel;
+    private readonly RequestReplyChannel _controlChannel;
+    private readonly StdInChannel _stdInChannel;
     private readonly string _stdInAddress;
     private readonly string _controlAddress;
     private readonly DealerSocket _stdIn;
     private readonly DealerSocket _control;
     private readonly Subject<JupyterMessage> _subject;
     private readonly CancellationTokenSource _cancellationTokenSource;
+    private Process _kernelProcess;
 
-    public ZMQKernelConnection(ConnectionInformation connectionInformation, int processId)
+    public ZMQKernelConnection(ConnectionInformation connectionInformation, Process kernelProcess)
     {
         if (connectionInformation is null)
         {
             throw new ArgumentNullException(nameof(connectionInformation));
         }
 
+        _kernelProcess = kernelProcess ?? throw new ArgumentNullException(nameof(kernelProcess));
         _shellAddress = $"{connectionInformation.Transport}://{connectionInformation.IP}:{connectionInformation.ShellPort}";
         _ioSubAddress = $"{connectionInformation.Transport}://{connectionInformation.IP}:{connectionInformation.IOPubPort}";
         _stdInAddress = $"{connectionInformation.Transport}://{connectionInformation.IP}:{connectionInformation.StdinPort}";
@@ -49,7 +56,9 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
         _control = new DealerSocket();
 
         _shellChannel = new RequestReplyChannel(new MessageSender(_shell, signatureValidator));
-        
+        _stdInChannel = new StdInChannel(new MessageSender(_stdIn, signatureValidator), new MessageReceiver(_stdIn));
+        _controlChannel = new RequestReplyChannel(new MessageSender(_control, signatureValidator));
+
         _cancellationTokenSource = new CancellationTokenSource();
         _subject = new Subject<JupyterMessage>();
 
@@ -59,10 +68,11 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
                            _ioSubSocket,
                            _stdIn,
                            _control,
-                           _cancellationTokenSource
+                           _cancellationTokenSource,
+                           _kernelProcess
                        };
 
-        Uri = KernelHost.CreateHostUriForProcessId(processId);
+        Uri = KernelHost.CreateHostUriForProcessId(_kernelProcess.Id);
     }
 
     public Uri Uri { get; }
@@ -81,7 +91,25 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
 
     public Task SendAsync(JupyterMessage message)
     {
-        _shellChannel.Send(message);
+        if (TryHandle(message))
+        {
+            // handled here. no need to send to kernel
+            return Task.CompletedTask;
+        }
+
+        if (message.Channel == MessageChannel.control)
+        {
+            _controlChannel.Send(message);
+        }
+        else if (message.Channel == MessageChannel.stdin)
+        {
+            _stdInChannel.Send(message);
+        }
+        else
+        {
+            _shellChannel.Send(message);
+        }
+
         return Task.CompletedTask;
     }
 
@@ -94,9 +122,9 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
         _control.Connect(_controlAddress);
 
         StartListening(_ioSubSocket, _cancellationTokenSource.Token);
-        StartListening(_shell, _cancellationTokenSource.Token);
         StartListening(_stdIn, _cancellationTokenSource.Token);
         StartListening(_control, _cancellationTokenSource.Token);
+        StartListening(_shell, _cancellationTokenSource.Token);
         return Task.CompletedTask;
     }
 
@@ -113,5 +141,27 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
 
         return Task.CompletedTask;
     }
-}
+    private bool TryHandle(JupyterMessage message)
+    {
+        bool handled = false;
+        if (message.Content is InterruptRequest)
+        {
+            handled = InterruptKernel();
+            if (handled)
+            {
+                _subject.OnNext(JupyterMessage.CreateReply(new InterruptReply(), message, message.Channel));
+            }
+        }
 
+        return handled;
+    }
+
+    private bool InterruptKernel()
+    {
+        StreamWriter writer = _kernelProcess.StandardInput;
+        writer.Flush(); 
+        writer.WriteLine((char) 0x03); // signal SIGINT to interrupt
+        writer.Flush();
+        return true;
+    }
+}

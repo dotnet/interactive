@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
         public void Reply(ReplyMessage message, Message request)
         {
             var reply = Message.CreateReply(message, request, channel);
-            _sender.Send(reply);
+            Send(reply);
         }
 
         public void Send(Message message)

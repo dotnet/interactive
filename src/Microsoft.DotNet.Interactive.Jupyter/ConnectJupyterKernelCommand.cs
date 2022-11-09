@@ -18,8 +18,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter;
 
 public class ConnectJupyterKernelCommand : ConnectKernelCommand
 {
-    private List<CompletionItem> _kernelSpecCompletions;
-    private int? _optionHash = null;
+    private readonly IJupyterConnection _localConnection = JupyterConnection.Local;
+    private KeyValuePair<int, IEnumerable<CompletionItem>> _mruCompletionList;
 
     public ConnectJupyterKernelCommand() : base("jupyter",
                                         "Connects to a jupyter kernel")
@@ -27,10 +27,10 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
         AddOption(TargetUrl);
         AddOption(Token);
         AddOption(UseBearerAuth);
-        AddOption(KernelType.AddCompletions(ctx => GetKernelSpecsCompletions(ctx)));
+        AddOption(KernelSpecName.AddCompletions(ctx => GetKernelSpecsCompletions(ctx)));
     }
 
-    public Option<string> KernelType { get; } =
+    public Option<string> KernelSpecName { get; } =
     new("--kernel-spec", "The kernel spec to connect to")
     {
         IsRequired = true
@@ -43,7 +43,7 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
 
     public Option<string> Token { get; } =
     new("--token", "token to connect to the jupyter server")
-    { 
+    {
     };
 
     public Option<bool> UseBearerAuth { get; } =
@@ -55,10 +55,11 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
         KernelInvocationContext context,
         InvocationContext commandLineContext)
     {
-        var kernelType = commandLineContext.ParseResult.GetValueForOption(KernelType);
+        var kernelSpecName = commandLineContext.ParseResult.GetValueForOption(KernelSpecName);
 
-        var connection = GetJupyterConnection(commandLineContext.ParseResult);
-        JupyterKernelConnector connector = new JupyterKernelConnector(connection, kernelType);
+        var connection = GetJupyterConnection(commandLineContext.ParseResult) ?? _localConnection;
+        JupyterKernelConnector connector = new JupyterKernelConnector(connection, kernelSpecName);
+
         CompositeDisposable disposables = new CompositeDisposable
         {
             connection
@@ -74,51 +75,60 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
     private IJupyterConnection GetJupyterConnection(ParseResult parseResult)
     {
         var targetUrl = parseResult.GetValueForOption(TargetUrl);
+
+        if (targetUrl is null)
+        {
+            return null;
+        }
+
         var token = parseResult.GetValueForOption(Token);
         var useBearerAuth = parseResult.GetValueForOption(UseBearerAuth);
 
-        if (targetUrl is not null)
-        {
-            var connection = new JupyterHttpConnection(new Uri(targetUrl), new JupyterTokenProvider(token, useBearerAuth ? AuthorizationScheme.Bearer : null));
-            return connection;
-        }
-        else
-        {
-            var connection = new LocalJupyterConnection();
-            return connection;
-        }
+        var connection = new JupyterHttpConnection(new Uri(targetUrl), new JupyterTokenProvider(token, useBearerAuth ? AuthorizationScheme.Bearer : null));
+        return connection;
     }
 
-    private List<CompletionItem> GetKernelSpecsCompletions(CompletionContext ctx)
+    private IEnumerable<CompletionItem> GetKernelSpecsCompletions(CompletionContext ctx)
     {
-        var latestHash = GetOptionHash(ctx.ParseResult);
-        if (latestHash == _optionHash)
+        var hash = GetOptionHash(ctx.ParseResult);
+        if (_mruCompletionList.Key == hash)
         {
-            return _kernelSpecCompletions;
+            return _mruCompletionList.Value;
         }
 
-        _optionHash = latestHash;
-        _kernelSpecCompletions = new List<CompletionItem>();
+        IEnumerable<CompletionItem> completions;
         using (var connection = GetJupyterConnection(ctx.ParseResult))
         {
-            var specs = connection.GetKernelSpecNamesAsync().Result;
-            if (specs != null)
+            completions = GetKernelSpecsCompletions(connection ?? _localConnection);
+        }
+
+        if (completions is not null)
+        {
+            _mruCompletionList = new(hash, completions);
+        }
+        return completions;
+    }
+
+    private IEnumerable<CompletionItem> GetKernelSpecsCompletions(IJupyterConnection connection)
+    {
+        var completions = new List<CompletionItem>();
+        var specs = connection.GetKernelSpecsAsync().GetAwaiter().GetResult();
+        if (specs != null)
+        {
+            foreach (var s in specs)
             {
-                foreach (var s in specs)
-                {
-                    _kernelSpecCompletions.Add(new CompletionItem(s));
-                }
+                completions.Add(new CompletionItem(s.Name));
             }
         }
-        return _kernelSpecCompletions;
+
+        return completions;
     }
 
     private int GetOptionHash(ParseResult parseResult)
     {
         var targetUrl = parseResult.GetValueForOption(TargetUrl);
         var token = parseResult.GetValueForOption(Token);
-        var useBearerAuth = parseResult.GetValueForOption(UseBearerAuth);
 
-        return (targetUrl + token + useBearerAuth).GetHashCode();
+        return (targetUrl + token).GetHashCode();
     }
 }
