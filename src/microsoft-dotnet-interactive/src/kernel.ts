@@ -11,7 +11,6 @@ import { PromiseCompletionSource } from "./promiseCompletionSource";
 import * as disposables from "./disposables";
 import { commandRoutingSlipContains, eventRoutingSlipContains, stampCommandRoutingSlip, stampEventRoutingSlip } from "./connection";
 import * as rxjs from "rxjs";
-import { stringify } from "uuid";
 
 export interface IKernelCommandInvocation {
     commandEnvelope: contracts.KernelCommandEnvelope;
