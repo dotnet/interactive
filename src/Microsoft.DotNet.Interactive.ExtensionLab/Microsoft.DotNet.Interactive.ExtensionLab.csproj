@@ -8,7 +8,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageDescription>Experimental kernel extensions for dotnet-interactive</PackageDescription>
-    <PackageTags>dotnet-interactive</PackageTags>
+    <PackageTags>polyglot notebook dotnet interactive</PackageTags>
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <NoWarn>$(NoWarn);NU5100;VSTHRD002</NoWarn>
     <!-- dll outside of lib/ folder -->

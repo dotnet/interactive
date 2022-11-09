@@ -2,7 +2,40 @@
 
 _Our documentation is still a work in progress. There are a number of topics listed under [Features](#features) below that don't have outgoing links yet, but we've included them to give a better sense of the current feature set. Please open an issue if you'd like to know more about one of the topics we haven't gotten around to documenting yet._
 
-## Getting started 
+## What is .NET Interactive?
+
+.NET Interactive is an engine that can run multiple languages and share variables between them. Languages currently supported include: 
+
+- C# 
+- F#
+- PowerShell
+- JavaScript
+- SQL 
+- KQL (Kusto Query Language)
+- HTML*
+- Mermaid*
+
+*Variable sharing not available
+
+## What can .NET Interactive be used for? 
+
+As a powerful and versatile engine, .NET Interactive can be used to create and power a number of tools and experiences such as: 
+
+- Polyglot Notebooks
+- REPLs
+- Embeddable script enginges
+
+## Polyglot Notebooks
+
+Since .NET Interactive is capable of behaving as a kernel for notebooks, it enables a polyglot (multi-language) notebook experience. 
+
+In Polyglot Notebooks, you can use multiple languages and share variables between them. No more installing different Jupyter kernels, using wrapper libraries, or different tools to get the best language server support for the language of your choice. Always use the best language for the job and seamlessly transition between different states of your workflow, all within one notebook.
+
+### Visual Studio Code
+
+For the best experience when working with multi-language notebooks, we recommend installing the [Polyglot Notebooks Extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode).  
+
+
 
 ### Jupyter and nteract
 
@@ -12,9 +45,21 @@ There are several ways to get started using .NET Interactive with Jupyter, inclu
 * [Create and run .NET notebooks on your machine](NotebookswithJupyter.md).
 * [Share .NET notebooks online using Binder](CreateBinder.md).
 
-### Visual Studio Code
 
-Work is underway to add support for the new Visual Studio Code [native notebook feature](https://code.visualstudio.com/updates/v1_45#_github-issue-notebook). While we are still in the early stages of this effort, if you'd like to experiment with it you can find instructions [here](../src/dotnet-interactive-vscode/README.md). 
+## REPLs
+
+.NET Interactive can be used as the execution engine for REPLs. For an example using a CLI, see [.NET REPL](https://github.com/jonsequitur/dotnet-repl). In addition, .NET REPL can actually be used to set up automation for your Polyglot Notebooks. 
+ 
+
+## Acknowledgements 
+
+The multi-language experience of .NET Interactive is truly a collaborative effort amongst other groups at Microsoft. We'd like to thank the following teams for contributing their time and expertise to helping light up functionality for other languages. 
+
+- **PowerShell Team:** PowerShell
+- **Azure Data/SQL Team:** SQL, KQL
+
+
+## Other
 
 ### Small factor devices
 
@@ -22,7 +67,7 @@ We support running on devices like Raspberry Pi and [pi-top [4]](https://github.
 
 ### Telemetry
 
-Telemetry is collected when .NET Interactive is started. Once .NET Interactive is running, we do not collect telemetry from any further user actions. The telemetry is anonymous and reports only the values for a specific subset of the verbs in the .NET Interactive CLI. Those verbs are:
+Telemetry is collected when .NET Interactive is started. Once .NET Interactive is running, we collect hashed versions of packages imported into the notebook and the languages used to run individual cells. We do not collect any additional code or clear text from cells. The telemetry is anonymous and reports only the values for a specific subset of the verbs in the .NET Interactive CLI. Those verbs are:
 
 * `dotnet interactive jupyter`
 * `dotnet interactive jupyter install`

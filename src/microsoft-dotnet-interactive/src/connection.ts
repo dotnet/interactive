@@ -224,7 +224,6 @@ export class Connector implements Disposable {
                     this._remoteUris.add(uri);
                 }
             }
-
         }
 
         this._listener = this._receiver.subscribe({

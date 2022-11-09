@@ -74,6 +74,55 @@ describe("htmlKernel", () => {
         expect(lastDisplayedValueProducedEvent).to.deep.equal({ displayedValueProduced: { formattedValues: [{ mimeType: 'text/html', value: '<div id="0">a</div><div id="0">b</div>' }] } });
     });
 
+    it("evaluates script elements", async () => {
+        let events: contracts.KernelEventEnvelope[] = [];
+        const dom = new jd.JSDOM(`<!DOCTYPE html>`, { runScripts: "dangerously" });
+        const container = dom.window.document.createElement("div");
+        dom.window.document.body.appendChild(container);
+        let htmlDomFragmentInserterConfiguration: HtmlDomFragmentInserterConfiguration = {
+            getOrCreateContainer: () => {
+                return container;
+            },
+            updateContainerContent: (container: HTMLElement, htmlFragment: string) => {
+                container.innerHTML = container.innerHTML + htmlFragment;
+            },
+            normalizeHtmlFragment: (htmlFragment: string) => {
+                const container = dom.window.document.createElement("div");
+                container.innerHTML = htmlFragment;
+                return container.innerHTML;
+            },
+            createMutationObserver: (callback: MutationCallback) => {
+                return new dom.window.MutationObserver(callback);
+            },
+            jsEvaluator: (code: string) => {
+                dom.window.eval(code);
+                return Promise.resolve();
+            }
+        };
+        const kernel = createHtmlKernelForBrowser({ kernelName: "html", htmlDomFragmentInserterConfiguration });
+        kernel.subscribeToKernelEvents((e) => {
+            events.push(e);
+        });
+
+        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="0"><script>foo = 122;</script></div>' } });
+
+        const lastDisplayedValueProducedEvent = events.filter(e => e.eventType === contracts.DisplayedValueProducedType).at(-1)?.event as contracts.DisplayedValueProduced;
+        expect(lastDisplayedValueProducedEvent).to.not.be.undefined;
+
+        expect(lastDisplayedValueProducedEvent).to.deep.equal({
+            displayedValueProduced:
+            {
+                formattedValues:
+                    [{
+                        mimeType: 'text/html',
+                        value: '<div id="0"><script>foo = 122;</script></div>'
+                    }]
+            }
+        });
+
+        expect(dom.window.globalThis["foo"]).to.be.equal(122);
+    });
+
     it("can reuse container", async () => {
         let events: contracts.KernelEventEnvelope[] = [];
         const dom = new jd.JSDOM(`<!DOCTYPE html>`);

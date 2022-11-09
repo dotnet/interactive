@@ -6,7 +6,7 @@ import * as path from 'path';
 import { acquireDotnetInteractive } from './acquisition';
 import { InstallInteractiveArgs, InteractiveLaunchOptions } from './interfaces';
 import { ClientMapper } from './clientMapper';
-import { getEol, isAzureDataStudio, isInsidersBuild, toNotebookDocument } from './vscodeUtilities';
+import { getEol, isInsidersBuild, toNotebookDocument } from './vscodeUtilities';
 import { DotNetPathManager, KernelIdForJupyter } from './extension';
 import { computeToolInstallArguments, executeSafe, executeSafeAndLog, extensionToDocumentType, getVersionNumber } from './utilities';
 
@@ -19,9 +19,9 @@ import * as versionSpecificFunctions from '../versionSpecificFunctions';
 import { PromiseCompletionSource } from './dotnet-interactive/promiseCompletionSource';
 
 export function registerAcquisitionCommands(context: vscode.ExtensionContext, diagnosticChannel: ReportChannel) {
-    const config = vscode.workspace.getConfiguration('dotnet-interactive');
-    const minDotNetInteractiveVersion = config.get<string>('minimumInteractiveToolVersion');
-    const interactiveToolSource = config.get<string>('interactiveToolSource');
+    const dotnetConfig = vscode.workspace.getConfiguration('dotnet-interactive');
+    const minDotNetInteractiveVersion = dotnetConfig.get<string>('minimumInteractiveToolVersion');
+    const interactiveToolSource = dotnetConfig.get<string>('interactiveToolSource');
 
     let cachedInstallArgs: InstallInteractiveArgs | undefined = undefined;
     let acquirePromise: Promise<InteractiveLaunchOptions> | undefined = undefined;
@@ -109,25 +109,42 @@ function getCurrentNotebookDocument(): vscode.NotebookDocument | undefined {
     return versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
 }
 
-export function registerKernelCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
-
-    // azure data studio doesn't support the notebook toolbar
-    if (!isAzureDataStudio(context)) {
-        context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.notebookEditor.restartKernel', async (_notebookEditor) => {
-            await vscode.commands.executeCommand('dotnet-interactive.restartCurrentNotebookKernel');
-        }));
-
-        context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.notebookEditor.openValueViewer', async () => {
-            // vscode creates a command named `<viewId>.focus` for all contributed views, so we need to match the id
-            await vscode.commands.executeCommand('dotnet-interactive-panel-values.focus');
-        }));
-    }
+export function registerLegacyKernelCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.restartCurrentNotebookKernel', async (notebook?: vscode.NotebookDocument | undefined) => {
+        vscode.window.showWarningMessage(`The command '.NET Interactive: Restart the current notebook's kernel' is deprecated.  Please use the 'Polyglot Notebook: Restart the current notebook's kernel' command instead.`);
+        await await vscode.commands.executeCommand('polyglot-notebook.restartCurrentNotebookKernel', notebook);
+    }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.stopCurrentNotebookKernel', async (notebook?: vscode.NotebookDocument | undefined) => {
+        vscode.window.showWarningMessage(`The command '.NET Interactive: Stop the current notebook's kernel' is deprecated.  Please use the 'Polyglot Notebook: Stop the current notebook's kernel' command instead.`);
+        await await vscode.commands.executeCommand('polyglot-notebook.stopCurrentNotebookKernel', notebook);
+    }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.stopAllNotebookKernels', async () => {
+        vscode.window.showWarningMessage(`The command '.NET Interactive: Stop the current notebook's kernel' is deprecated.  Please use the 'Polyglot Notebook: Stop the current notebook's kernel' command instead.`);
+        await await vscode.commands.executeCommand('polyglot-notebook.stopAllNotebookKernels');
+    }));
+}
+
+export function registerKernelCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
+    // TODO: remove this
+    registerLegacyKernelCommands(context, clientMapper);
+
+    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.notebookEditor.restartKernel', async (_notebookEditor) => {
+        await vscode.commands.executeCommand('polyglot-notebook.restartCurrentNotebookKernel');
+    }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.notebookEditor.openValueViewer', async () => {
+        // vscode creates a command named `<viewId>.focus` for all contributed views, so we need to match the id
+        await vscode.commands.executeCommand('polyglot-notebook-panel-values.focus');
+    }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.restartCurrentNotebookKernel', async (notebook?: vscode.NotebookDocument | undefined) => {
         notebook = notebook || getCurrentNotebookDocument();
         if (notebook) {
             // clear the value explorer view
-            await vscode.commands.executeCommand('dotnet-interactive.clearValueExplorer');
+            await vscode.commands.executeCommand('polyglot-notebook.clearValueExplorer');
 
             // notifty the client that the kernel is about to restart
             const restartCompletionSource = new PromiseCompletionSource<void>();
@@ -136,20 +153,18 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
                 title: 'Restarting kernel...'
             },
                 (_progress, _token) => restartCompletionSource.promise);
-            await vscode.commands.executeCommand('dotnet-interactive.stopCurrentNotebookKernel', notebook);
+            await vscode.commands.executeCommand('polyglot-notebook.stopCurrentNotebookKernel', notebook);
             const _client = await clientMapper.getOrAddClient(notebook.uri);
             restartCompletionSource.resolve();
-            if (!isAzureDataStudio(context) && isInsidersBuild()) {
-                await vscode.commands.executeCommand('workbench.notebook.layout.webview.reset', notebook.uri);
-            }
+            await vscode.commands.executeCommand('workbench.notebook.layout.webview.reset', notebook.uri);
             vscode.window.showInformationMessage('Kernel restarted.');
 
             // notify the ValueExplorer that the kernel has restarted
-            await vscode.commands.executeCommand('dotnet-interactive.resetValueExplorerSubscriptions');
+            await vscode.commands.executeCommand('polyglot-notebook.resetValueExplorerSubscriptions');
         }
     }));
 
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.stopCurrentNotebookKernel', async (notebook?: vscode.NotebookDocument | undefined) => {
+    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.stopCurrentNotebookKernel', async (notebook?: vscode.NotebookDocument | undefined) => {
         notebook = notebook || getCurrentNotebookDocument();
         if (notebook) {
             for (const cell of notebook.getCells()) {
@@ -165,49 +180,72 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
         }
     }));
 
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.stopAllNotebookKernels', async () => {
+    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.stopAllNotebookKernels', async () => {
         vscode.workspace.notebookDocuments
             .filter(document => clientMapper.isDotNetClient(document.uri))
-            .forEach(async document => await vscode.commands.executeCommand('dotnet-interactive.stopCurrentNotebookKernel', document));
+            .forEach(async document => await vscode.commands.executeCommand('polyglot-notebook.stopCurrentNotebookKernel', document));
+    }));
+}
+
+function registerLegacyFileCommands(context: vscode.ExtensionContext, parserServer: NotebookParserServer, clientMapper: ClientMapper) {
+
+    const eol = getEol();
+
+    const notebookFileFilters = {
+        'Polyglot Notebooks': ['dib', 'dotnet-interactive'],
+        'Jupyter Notebooks': ['ipynb'],
+    };
+
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebook', async () => {
+        vscode.window.showWarningMessage(`The command '.NET Interactive: Create new blank notebook' is deprecated.  Please use the 'Polyglot Notebook: Create new blank notebook' command instead.`);
+        await vscode.commands.executeCommand('polyglot-notebook.newNotebook');
+    }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.openNotebook', async (notebookUri: vscode.Uri | undefined) => {
+        vscode.window.showWarningMessage(`The command '.NET Interactive: Open notebook' is deprecated.  Please use the 'Polyglot Notebook: Open notebook' command instead.`);
+        await vscode.commands.executeCommand('polyglot-notebook.openNotebook', notebookUri);
+    }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.saveAsNotebook', async () => {
+        vscode.window.showWarningMessage(`The command '.NET Interactive: Save notebook as...' is deprecated.  Please use the 'Polyglot Notebook: Save notebook as...' command instead.`);
+        await vscode.commands.executeCommand('polyglot-notebook.saveAsNotebook');
     }));
 }
 
 export function registerFileCommands(context: vscode.ExtensionContext, parserServer: NotebookParserServer, clientMapper: ClientMapper) {
 
+    // todo: delete this later
+    registerLegacyFileCommands(context, parserServer, clientMapper);
+
     const eol = getEol();
 
     const notebookFileFilters = {
-        '.NET Interactive Notebooks': ['dib', 'dotnet-interactive'],
+        'Polyglot Notebooks': ['dib', 'dotnet-interactive'],
         'Jupyter Notebooks': ['ipynb'],
     };
 
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebook', async () => {
-        if (isAzureDataStudio(context)) {
-            // only `.dib` is allowed
-            await vscode.commands.executeCommand('dotnet-interactive.newNotebookDib');
-        } else {
-            // offer to create either `.dib` or `.ipynb`
-            const newDibNotebookText = `Create as '.dib'`;
-            const newIpynbNotebookText = `Create as '.ipynb'`;
-            const selected = await vscode.window.showQuickPick([newDibNotebookText, newIpynbNotebookText]);
-            switch (selected) {
-                case newDibNotebookText:
-                    await vscode.commands.executeCommand('dotnet-interactive.newNotebookDib');
-                    break;
-                case newIpynbNotebookText:
-                    await vscode.commands.executeCommand('dotnet-interactive.newNotebookIpynb');
-                    break;
-                default:
-                    break;
-            }
+    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.newNotebook', async () => {
+        // offer to create either `.dib` or `.ipynb`
+        const newDibNotebookText = `Create as '.dib'`;
+        const newIpynbNotebookText = `Create as '.ipynb'`;
+        const selected = await vscode.window.showQuickPick([newDibNotebookText, newIpynbNotebookText]);
+        switch (selected) {
+            case newDibNotebookText:
+                await vscode.commands.executeCommand('polyglot-notebook.newNotebookDib');
+                break;
+            case newIpynbNotebookText:
+                await vscode.commands.executeCommand('polyglot-notebook.newNotebookIpynb');
+                break;
+            default:
+                break;
         }
     }));
 
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebookDib', async () => {
+    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.newNotebookDib', async () => {
         await newNotebook('.dib');
     }));
 
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebookIpynb', async () => {
+    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.newNotebookIpynb', async () => {
         // note, new .ipynb notebooks are currently affected by this bug: https://github.com/microsoft/vscode/issues/121974
         await newNotebook('.ipynb');
         await selectDotNetInteractiveKernelForJupyter();
@@ -215,7 +253,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
 
     async function newNotebook(extension: string): Promise<void> {
         const viewType = extension === '.dib' || extension === '.dotnet-interactive'
-            ? 'dotnet-interactive'
+            ? 'polyglot-notebook'
             : jupyterViewType;
 
         // get language
@@ -231,7 +269,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
         const cellMetadata = {
             custom: {
                 metadata: {
-                    dotnet_interactive: {
+                    polyglot_notebook: {
                         language: ipynbLanguageName
                     }
                 }
@@ -265,79 +303,59 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
         const _editor = await vscode.window.showNotebookDocument(notebook);
     }
 
-    if (!isAzureDataStudio(context)) {
-        context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.openNotebook', async (notebookUri: vscode.Uri | undefined) => {
-            // ensure we have a notebook uri
-            if (!notebookUri) {
-                const uris = await vscode.window.showOpenDialog({
-                    filters: notebookFileFilters
-                });
+    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.openNotebook', async (notebookUri: vscode.Uri | undefined) => {
+        // ensure we have a notebook uri
+        if (!notebookUri) {
+            const uris = await vscode.window.showOpenDialog({
+                filters: notebookFileFilters
+            });
 
-                if (uris && uris.length > 0) {
-                    notebookUri = uris[0];
-                }
-
-                if (!notebookUri) {
-                    // no appropriate uri
-                    return;
-                }
+            if (uris && uris.length > 0) {
+                notebookUri = uris[0];
             }
 
-            await openNotebook(notebookUri);
-        }));
-    }
+            if (!notebookUri) {
+                // no appropriate uri
+                return;
+            }
+        }
+
+        await openNotebook(notebookUri);
+    }));
 
     async function openNotebook(uri: vscode.Uri): Promise<void> {
         const extension = path.extname(uri.toString());
         const viewType = extension === '.dib' || extension === '.dotnet-interactive'
-            ? 'dotnet-interactive'
+            ? 'polyglot-notebook'
             : jupyterViewType;
         await vscode.commands.executeCommand('vscode.openWith', uri, viewType);
     }
 
-    if (!isAzureDataStudio(context)) {
-        context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.saveAsNotebook', async () => {
-            if (vscode.window.activeNotebookEditor) {
-                const uri = await vscode.window.showSaveDialog({
-                    filters: notebookFileFilters
-                });
+    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.saveAsNotebook', async () => {
+        if (vscode.window.activeNotebookEditor) {
+            const uri = await vscode.window.showSaveDialog({
+                filters: notebookFileFilters
+            });
 
-                if (!uri) {
-                    return;
-                }
-
-                const notebook = versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
-                const interactiveDocument = toNotebookDocument(notebook);
-                const uriPath = uri.toString();
-                const extension = path.extname(uriPath);
-                const documentType = extensionToDocumentType(extension);
-                const buffer = await parserServer.serializeNotebook(documentType, eol, interactiveDocument);
-                await vscode.workspace.fs.writeFile(uri, buffer);
-                switch (path.extname(uriPath)) {
-                    case '.dib':
-                    case '.dotnet-interactive':
-                        await vscode.commands.executeCommand('dotnet-interactive.openNotebook', uri);
-                        break;
-                }
+            if (!uri) {
+                return;
             }
-        }));
-    }
 
-    if (!isAzureDataStudio(context)) {
-        context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.createNewInteractive', async () => {
-            const interactiveOpenArgs = [
-                {}, // showOptions
-                undefined, // resource uri
-                `${context.extension.id}/dotnet-interactive-window`, // controllerId
-                '.NET Interactive', // title
-            ];
-            const result = <any>(await vscode.commands.executeCommand('interactive.open', ...interactiveOpenArgs));
-            if (result && result.notebookUri && typeof result.notebookUri.toString === 'function') {
-                // this looks suspiciously like a uri, let's pre-load the backing process
-                clientMapper.getOrAddClient(result.notebookUri.toString());
+            const notebook = versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
+            const interactiveDocument = toNotebookDocument(notebook);
+            const uriPath = uri.toString();
+            const extension = path.extname(uriPath);
+            const documentType = extensionToDocumentType(extension);
+            const buffer = await parserServer.serializeNotebook(documentType, eol, interactiveDocument);
+            await vscode.workspace.fs.writeFile(uri, buffer);
+            switch (path.extname(uriPath)) {
+                case '.dib':
+                case '.dotnet-interactive':
+                    await vscode.commands.executeCommand('polyglot-notebook.openNotebook', uri);
+                    break;
             }
-        }));
-    }
+        }
+    }));
 }
 
 export async function selectDotNetInteractiveKernelForJupyter(): Promise<void> {

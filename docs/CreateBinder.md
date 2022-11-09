@@ -1,7 +1,7 @@
 # Share your notebooks on [Binder](https://mybinder.org/)
 
-## How to share your .NET Jupyter Notebook 
-If you want to share notebooks you have made using the .NET Jupyter kernel, one easy way is to generate a Binder image that anyone can run on the web.
+## How to share your Notebook 
+If you want to share notebooks you have made using the .NET Interactive Jupyter kernel, one easy way is to generate a Binder image that anyone can run on the web.
 
 ### Prerequisites: 
 

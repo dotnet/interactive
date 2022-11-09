@@ -4,11 +4,11 @@ The .NET Interactive tool works with multiple frontends, and so depending on how
 
 ## Jupyter
 
-.NET Interactive is a Jupyter kernel. To install it for use with Jupyter (including Jupyter Notebook, JupyterLab, nteract, Azure Data Studio, and others), follow the instructions [here](NotebookswithJupyter.md). 
+.NET Interactive can be used as a Jupyter kernel. To install it for use with Jupyter (including Jupyter Notebook, JupyterLab, nteract, and others), follow the instructions [here](NotebookswithJupyter.md). 
 
 ## Visual Studio Code
 
-If you want a more lightweight installation and don't need Jupyter or Python, you can install the [.NET Interactive Notebooks extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode). 
+If you want a more lightweight installation and don't need Jupyter or Python, you can install the [Polyglot Notebooks extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode). 
 
 *Note: When installing for Jupyter, the `dotnet-interactive` tool is installed as a [global tool](https://docs.microsoft.com/en-us/dotnet/core/tools/global-tools#install-a-global-tool), but the Visual Studio Code extension instals a separate instance as a [local tool](https://docs.microsoft.com/en-us/dotnet/core/tools/global-tools#install-a-local-tool), which it manages for you.*
 

@@ -298,6 +298,34 @@ my_data_result");
         }
 
         [MsSqlFact]
+        public async Task When_variable_does_not_exist_then_an_error_is_returned()
+        {
+            var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
+            using var kernel = await CreateKernelAsync();
+            var result = await kernel.SubmitCodeAsync(
+                $"#!connect mssql --kernel-name adventureworks \"{connectionString}\"");
+
+
+            result.KernelEvents
+                .ToSubscribedList()
+                .Should()
+                .NotContainErrors();
+
+            var sqlKernel = kernel.FindKernelByName("sql-adventureworks");
+
+            result = await sqlKernel.SendAsync(new RequestValue("my_data_result"));
+
+            using var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should()
+                .ContainSingle<CommandFailed>()
+                .Which
+                .Message
+                .Should()
+                .Contain("Value 'my_data_result' not found in kernel sql-adventureworks");
+        }
+
+        [MsSqlFact]
         public async Task It_can_store_multiple_result_set_with_a_name()
         {
             var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();

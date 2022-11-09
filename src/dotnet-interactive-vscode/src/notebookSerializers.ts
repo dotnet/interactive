@@ -54,8 +54,8 @@ export function createAndRegisterNotebookSerializers(context: vscode.ExtensionCo
     };
 
     const serializers = new Map<string, vscode.NotebookSerializer>();
-    serializers.set('dotnet-interactive', createAndRegisterSerializer(contracts.DocumentSerializationType.Dib, 'dotnet-interactive'));
-    serializers.set('jupyter-notebook', createAndRegisterSerializer(contracts.DocumentSerializationType.Ipynb, 'dotnet-interactive-jupyter'));
+    serializers.set('polyglot-notebook', createAndRegisterSerializer(contracts.DocumentSerializationType.Dib, 'polyglot-notebook'));
+    serializers.set('jupyter-notebook', createAndRegisterSerializer(contracts.DocumentSerializationType.Ipynb, 'polyglot-notebook-jupyter'));
     return serializers;
 }
 

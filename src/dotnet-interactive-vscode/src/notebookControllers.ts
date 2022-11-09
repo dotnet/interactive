@@ -19,7 +19,7 @@ import * as rxjs from 'rxjs';
 
 const executionTasks: Map<string, vscode.NotebookCellExecution> = new Map();
 
-const viewType = 'dotnet-interactive';
+const viewType = 'polyglot-notebook';
 const legacyViewType = 'dotnet-interactive-legacy';
 
 export interface DotNetNotebookKernelConfiguration {
@@ -37,7 +37,7 @@ export class DotNetNotebookKernel {
 
         // .dib execution
         const dibController = vscode.notebooks.createNotebookController(
-            'dotnet-interactive',
+            'polyglot-notebook',
             viewType,
             '.NET Interactive',
             this.executeHandler.bind(this),
@@ -47,7 +47,7 @@ export class DotNetNotebookKernel {
 
         // .dotnet-interactive execution
         const legacyController = vscode.notebooks.createNotebookController(
-            'dotnet-interactive-legacy',
+            'polyglot-notebook-legacy',
             legacyViewType,
             '.NET Interactive',
             this.executeHandler.bind(this),
@@ -57,7 +57,7 @@ export class DotNetNotebookKernel {
 
         // .ipynb execution via Jupyter extension (optional)
         const jupyterController = vscode.notebooks.createNotebookController(
-            'dotnet-interactive-for-jupyter',
+            'polyglot-notebook-for-jupyter',
             jupyterViewType,
             '.NET Interactive',
             this.executeHandler.bind(this),
@@ -70,16 +70,6 @@ export class DotNetNotebookKernel {
             }
         });
         this.commonControllerInit(jupyterController);
-
-        // interactive window controller
-        const interactiveController = vscode.notebooks.createNotebookController(
-            'dotnet-interactive-window',
-            'interactive',
-            '.NET Interactive',
-            this.executeHandler.bind(this),
-            preloads
-        );
-        this.commonControllerInit(interactiveController);
 
         this.disposables.push(vscode.workspace.onDidOpenNotebookDocument(async notebook => {
             if (isDotNetNotebook(notebook)) {
@@ -171,9 +161,9 @@ export class DotNetNotebookKernel {
                     diagnosticCollection.set(cell.document.uri, diags.filter(d => d.severity !== contracts.DiagnosticSeverity.Hidden).map(vscodeUtilities.toVsCodeDiagnostic));
                 }
 
-                return client.execute(source, getSimpleLanguage(cell.document.languageId), outputObserver, diagnosticObserver, { id: cell.document.uri.toString() }).then(async () => {
+                return client.execute(source, getSimpleLanguage(cell.document.languageId), outputObserver, diagnosticObserver, { id: cell.document.uri.toString() }).then(async (success) => {
                     await outputUpdatePromise;
-                    endExecution(client, cell, true);
+                    endExecution(client, cell, success);
                 }).catch(async () => {
                     await outputUpdatePromise;
                     endExecution(client, cell, false);

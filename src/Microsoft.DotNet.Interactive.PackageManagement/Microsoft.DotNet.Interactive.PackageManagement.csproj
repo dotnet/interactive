@@ -10,7 +10,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageDescription>Core types for adding Nuget support when using interactive programming for .NET.</PackageDescription>
-    <PackageTags>interactive dotnet packagemanagement nuget</PackageTags>
+    <PackageTags>polyglot notebook dotnet interactive packagemanagement nuget</PackageTags>
     <RootNamespace>Microsoft.DotNet.Interactive</RootNamespace>
   </PropertyGroup>
 
@@ -27,6 +27,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="$(SystemSecurityCryptographyXmlVersion)" />
   </ItemGroup>
 
   <ItemGroup>

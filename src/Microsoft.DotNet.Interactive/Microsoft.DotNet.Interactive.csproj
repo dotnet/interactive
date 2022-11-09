@@ -10,7 +10,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageDescription Condition="'$(PackageDescription)'==''">Core types for building applications providing interactive programming for .NET.</PackageDescription>
-    <PackageTags Condition="'$(PackageTags)'==''">interactive</PackageTags>
+    <PackageTags Condition="'$(PackageTags)'==''">polyglot notebook dotnet interactive</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup>

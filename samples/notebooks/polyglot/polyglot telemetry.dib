@@ -1,0 +1,400 @@
+#!csharp
+
+#r "nuget: Microsoft.DotNet.Interactive.Kql, *-*"
+
+#!kql
+
+#!connect kql --kernel-name telemetry --cluster "https://dotnettel.kusto.windows.net" --database "trydotnetcli"
+
+#!kql
+
+#!kql-telemetry --name langauges
+let languageMapping = dynamic(
+    {
+       "040228846ead4a4195145fe089343cb0894d00a9380176a41a8f6c5ee70b4824":"C#",
+       "5a18c3116772f98a0ace349c5eb62990ca66989fd801f2e9e8c38443e5eff6aa":"F#",
+       "07239dbd2a1a1dd793be9062a205eb6be88c36af3fe7e4d6426aea45aa253815":"HTML",
+       "b27ad06d123c6145fba7e9217a4cfbf2488b4743810ed8c8ff14ad01a5bbe515":"JavaScript",
+       "55947b6cce205ad35af8e90940a0a3f4517a57311590ca38aa161cb5146faa52":"PowerShell",
+       "2d2eef3e092af52b5837160fe2e3954907a4bfed1469edd2e6422749a6b16b7a":"SQLite",
+       "78d962797297852b12ac46b6957e4143a332b4b1aa22c7310fcb726eabec6754":"KQL",
+       "a7056a455639d1c7deec82ee787db24a0c1878e2792b4597709f0facf7cc7b35":"SQL",
+       "b27ba710997adaf6099374edb801d44bef36c92e6d37e0190c7c1d12d4b32209":"T-SQL",
+       "1356a57a7a4b2869bf5e612c3d1761f1d26180b0577aec9267c964907b014d47":"Mermaid",
+       "8c2574892063f995fdf756bce07f46c1a5193e54cd52837ed91e32008ccf41ac":"R",
+       "18885f27b5af9012df19e496460f9294d5ab76128824c6f993787004f6d9a7db":"Python",
+       "11a4a60b518bf24989d481468076e5d5982884626aed9faeb35b8576fcd223e1":"Python",
+       "454349e422f05297191ead13e21d3db520e5abef52055e4964b82fb213f593a1":"R",
+       "d277670919a94ba361be1887d39852c3f31d7eed817343cbb70fcd8910841f86":"julia"
+  });
+ let mapKernel = (sha:string) { 
+  let mapped = tostring(languageMapping[sha]);
+  case(mapped != "", mapped, sha )
+ };
+ RawEventsCustomEvents
+ | where EventName contains "dotnet/interactive/cli/codesubmitted"
+ | where tostring(Properties["kernellanguagename"]) != "" and tostring(Properties["kernelsessionid"]) != ""
+ | project EventTimestamp, LanguageName = mapKernel(tostring(Properties["kernellanguagename"])), KernelSessionId = tostring(Properties["kernelsessionid"])
+ | where LanguageName  != ""
+ | summarize CommandCount = count(), LanguageCount = array_length(make_set(LanguageName)) , KernelLanguages = array_strcat( array_sort_asc( make_set(LanguageName) ), ":")by bin(EventTimestamp, 1d), KernelSessionId
+ | summarize LangaugeSetOccurences = count(), LanguageSetSize = max(LanguageCount) by  KernelLanguages
+ | order by LanguageSetSize
+
+#!csharp
+
+#!share --from kql-telemetry langauges
+
+#!csharp
+
+public class Edge{
+    public long weight {get;set;}
+    public int source {get;set;}
+    public int destination {get;set;}
+}
+
+public class Node{
+    public string language {get;set;}
+    public long popularity {get;set;}
+}
+
+public class Graph{
+    public List<Edge> edges {get;} = new List<Edge>();
+    public List<Node> nodes {get;} = new List<Node>();
+}
+
+#!csharp
+
+var nodelookup = new Dictionary<string, Node>();
+var graph = new Graph();
+foreach(var lang in langauges[0].Data){
+    var kernelLanguageNames = (lang.First(f => f.Key == "KernelLanguages").Value as string);
+    var languageNames = kernelLanguageNames.Split(":");    
+    var langaugeSetOccurences = (long)lang.First(f => f.Key == "LangaugeSetOccurences").Value;
+
+    for(var i = 0; i < languageNames.Length; i++){
+        var languageName = languageNames[i];
+        if(!nodelookup.ContainsKey(languageName)){
+            var node = new Node(){
+                language = languageName,
+                popularity = langaugeSetOccurences
+            };
+            nodelookup.Add(languageName, node);
+            graph.nodes.Add(node);
+        }else
+        {
+            nodelookup[languageName].popularity += langaugeSetOccurences;
+        }
+    }
+    for(var i = 0; i < languageNames.Length; i++){
+        for(var j = i+1; j < languageNames.Length; j++){
+            var languageName = languageNames[i];
+            var otherLanguageName = languageNames[j];
+            if(languageName != otherLanguageName){
+                var source = graph.nodes.IndexOf(nodelookup[languageName]);
+                var destination = graph.nodes.IndexOf(nodelookup[otherLanguageName]);
+                var edge = graph.edges.FirstOrDefault(e => e.source ==source && e.destination == destination);
+                if(edge == null){
+                    edge = new Edge(){
+                        source = source,
+                        destination = destination,
+                        weight = langaugeSetOccurences
+                    };
+                    graph.edges.Add(edge);
+                }else{
+                    edge.weight += langaugeSetOccurences;
+                }
+            }
+        }
+    }
+}
+
+#!csharp
+
+graph.nodes.Display();
+graph.edges.Display();
+
+#!javascript
+
+#!share --from csharp graph
+
+#!javascript
+
+loadd3 = (require.config({
+    paths: {
+        d3: 'https://cdn.jsdelivr.net/npm/d3@7.4.4/dist/d3.min'
+    }
+}) || require);
+
+delay = (delayAmount) => new Promise(resolve => setTimeout(resolve, delayAmount));
+
+#!html
+
+<svg id="forceLayout"></svg>
+
+#!javascript
+
+await delay(500);
+
+loadd3(["d3"], (d3) => {   
+    const maxStrength = d3.max(graph.edges, (e) => e.weight);
+    const maxPopularity = d3.max(graph.nodes, (n) => n.popularity);
+    const nodes = d3.map(graph.nodes, (n, i) => ({id: i, language: n.language, popularity: n.popularity/maxPopularity}));
+    const links = d3.map(graph.edges, (e, i) => ({source: e.source, target: e.destination, strength: e.weight/maxStrength}));
+    const color = d3.scaleOrdinal(d3.map(graph.nodes, (n, i) => n.language), d3.schemeTableau10);
+    const width = 1024;
+    const height = 1024;
+    const maxR = 50;
+    const collisionScale = 2.5;
+    const svg = d3.select("#forceLayout")
+    .attr("width", width)
+    .attr("height", height)
+    .attr("viewBox", [0, 0, width, height])
+    .attr("style", "max-width: 100%; height: auto; height: intrinsic; ");
+
+    const notToTruncate = new Set();
+
+    notToTruncate.add("C#");
+    notToTruncate.add("F#");
+    notToTruncate.add("HTML");
+    notToTruncate.add("JavaScript");
+    notToTruncate.add("PowerShell");
+    notToTruncate.add("SQLite");
+    notToTruncate.add("KQL");
+    notToTruncate.add("SQL");
+    notToTruncate.add("T-SQL");
+    notToTruncate.add("Mermaid");
+    notToTruncate.add("R");
+    notToTruncate.add("Python");
+    notToTruncate.add("Python");
+    notToTruncate.add("R");
+    notToTruncate.add("julia");
+    
+    function linkArc(d) {
+      const r = Math.hypot(d.target.x - d.source.x, d.target.y - d.source.y);
+      return `
+      M${d.source.x},${d.source.y}
+      A${r},${r} 0 0,1 ${d.target.x},${d.target.y}
+      `;
+    }
+
+    let quadtree = d3.quadtree()
+    .x(function(d) {return d.x;})
+    .y(function(d) {return d.y;});
+
+    function dragStuff(s) {
+      function dragstarted(event) {
+        if (!event.active) s.alphaTarget(0.3).restart();
+        event.subject.fx = event.subject.x;
+        event.subject.fy = event.subject.y;
+      }
+      
+      function dragged(event) {
+        event.subject.fx = event.x;
+        event.subject.fy = event.y;
+      }
+      
+      function dragended(event) {
+        if (!event.active) s.alphaTarget(0);
+        event.subject.fx = null;
+        event.subject.fy = null;
+      }
+      
+      return d3.drag()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended);
+    }
+
+    svg.selectAll("*").remove();
+
+    link = svg
+    .selectAll(".link")
+    .data(links)
+    .join("path")
+    .attr("fill", "none")
+    .attr("stroke",  d => color(nodes[d.source].language))
+    .attr("stroke-width", (d) => 1 + d.strength * 6)
+    .classed("link", true);
+
+    node = svg
+    .selectAll("g")
+    .data(nodes)
+    .join("g")
+    .classed("node_group", true);
+
+
+    function tick() {
+          link.attr("d", linkArc);
+          node.attr("transform", d => `translate(${d.x},${d.y})`);
+          quadtree.addAll(nodes);
+      }
+
+      // Custom force to put all nodes in a box
+    function boxingForce() {
+      for (let node of nodes) {
+        if(node.x < 0 || node.x > width) {
+          node.vx =  -node.vx/2;
+        }
+
+        if(node.y < 0 || node.y > height) {
+          node.vy = -node.vy/2;
+        }
+      // Of the positions exceed the box, set them to the boundary position.
+      // You may want to include your nodes width to not overlap with the box.
+      //node.x = Math.max(-x, Math.min(x, node.x));
+      //node.y = Math.max(-x, Math.min(x, node.y));
+      }
+    }
+    function truncateText(text, length) {
+      if(notToTruncate.has(text)) {
+        return text;
+      }
+      if (text.length > length) {
+        return text.substring(0, length) + "...";
+      } else {
+        return text;
+      }
+    }
+    simulation = d3
+    .forceSimulation()
+    .nodes(nodes)
+    .force('collision', d3.forceCollide().radius(d => d.popularity * maxR * collisionScale))
+    .force("charge", d3.forceManyBody().strength(d => d.popularity * -100))
+    .force("center", d3.forceCenter(width / 2, height / 2))
+    .force("link", d3.forceLink(links).strength ( (d) => d.strength))
+    .force("bounds", boxingForce)
+    .on("tick", tick);
+
+    node.append("circle")
+    .attr("fill", d => color(d.language))
+    .attr("stroke", "#666")
+    .attr("stroke-width", 1.5)
+    .attr("r", d => 5 + d.popularity * maxR)
+    .classed("nodecircle", true);
+    //.call(dragStuff(simulation));
+
+    node.append("text")
+    .attr("x", d=>  8 + d.popularity * maxR)
+    .attr("y", "0.31em")
+    .text(d => truncateText( d.language,10 ))
+    .attr("fill", d => color(d.language))
+    .classed("nodeText", true)
+    .raise ()
+    .clone(true).lower()
+      .attr("fill", "none")
+      .attr("stroke", "black")
+      .attr("stroke-width", 3)
+      .clone(true).lower()
+      .attr("fill", "none")
+      .attr("stroke", "rgba(255, 255, 255, 0.5)")
+      .attr("stroke-width", 4);
+
+    
+
+    svg.on('mousemove', (e) => handleMousemove(e, quadtree));
+
+      function handleMousemove(e,q) {
+
+        let pos = d3.pointer(e, svg.node());
+        let d = q.find(pos[0], pos[1], 20);
+        hoveredId = d ? d.id : undefined;
+        let selectedNode = undefined;
+        let colorOverride = undefined;
+
+        svg
+        .selectAll(".nodecircle")
+        .attr("fill", d => {
+          let c = color(d.language);
+          if(d.id === hoveredId) {
+            selectedNode = d;
+            c = d3.color(c).brighter();
+            colorOverride = d3.color(c).brighter(0.5);
+          }
+          return c;
+        });
+
+        const network = new Set();
+        if(hoveredId){
+          network.add(hoveredId);
+        }
+
+        svg
+        .selectAll(".link")
+        .attr("stroke",  d => {
+          let node = d.source;        
+          let c = color(node.language);
+          if(selectedNode){
+            const found = d.source.id === selectedNode.id || d.target.id === selectedNode.id;            
+            if(found){
+              c = colorOverride;
+              network.add(d.source.id);
+              network.add(d.target.id);
+            }
+          }
+          return c;
+        });
+
+        svg
+        .selectAll(".nodecircle")
+        .attr("stroke", d => {
+          let c = "#666";
+          if(network.has(d.id)) {
+            c = colorOverride;
+          }
+          return  c;
+        })
+        .attr("stroke-width", d => {
+          let c = 1.5;
+          if(network.has(d.id)) {
+            c = 4;
+          }
+          return  c;
+        });
+
+        svg
+        .selectAll(".link")
+        .each(function (d)  {  
+          if(selectedNode){
+            const found = d.source.id === selectedNode.id || d.target.id === selectedNode.id;            
+            if(found){
+              d3.select(this).attr("opacity",1).raise();
+            }else{
+              d3.select(this).attr("opacity",0.2);
+            }
+          }else{
+            d3.select(this).attr("opacity",1);
+          }       
+        });        
+
+        svg
+        .selectAll(".node_group")
+        .each(function (d)  {
+          if(selectedNode){
+            if(network.has(d.id)) {
+              d3.select(this).attr("opacity",1).raise();
+              d3.select(this).selectAll("text").raise();
+            }else{
+              d3.select(this).attr("opacity",0.2);
+            }
+          }else{
+            d3.select(this).attr("opacity",1);
+          }
+        });
+
+        svg
+        .selectAll(".nodecircle")
+        .each(function (d)  {         
+          if(network.has(d.id)) {
+            d3.select(this).raise();
+          }
+        });
+
+        svg
+        .selectAll(".nodeText")
+        .each(function (d)  {         
+          if(network.has(d.id)) {
+            d3.select(this).raise();
+          }
+        });
+      }     
+});
