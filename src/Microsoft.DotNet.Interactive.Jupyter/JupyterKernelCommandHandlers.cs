@@ -128,14 +128,13 @@ internal partial class JupyterKernel
     {
         CancelCommandIfRequested(context);
 
-        // these seem to be sometime getting out of order. Wait on both to be available. 
         ExecuteReply results = null;
-        bool executionDone = false;
+        bool messagesProcessed = false;
 
         var executeRequest = Messaging.Message.Create(
                                     new ExecuteRequest(
                                         command.Code.NormalizeLineEndings(), 
-                                        allowStdin: true, 
+                                        allowStdin: false, // TODO: ZMQ stdin channel is hanging. Disable until a consistent experience can be turned on. 
                                         stopOnError: true));
         var processMessages = Receiver.Messages.FilterByParent(executeRequest)
                                 .SelectContent()
@@ -147,15 +146,15 @@ internal partial class JupyterKernel
                                     }
                                     else if (m is Status status && status.ExecutionState == StatusValues.Idle)
                                     {
-                                        executionDone = true;
+                                        messagesProcessed = true;
                                     }
                                     else
                                     {
                                         await HandleExecuteReplyMessageAsync(m, command, context);
                                     }
                                 })
-                                .TakeUntil(m => m.MessageType == JupyterMessageContentTypes.Error || (executionDone && results is not null));
-        // run until kernel idle or until execution is done
+                                .TakeUntil(m => m.MessageType == JupyterMessageContentTypes.Error || (messagesProcessed && results is not null));
+                                // run until kernel idle or until execution is done
 
         await Sender.SendAsync(executeRequest);
         await processMessages.ToTask(context.CancellationToken);

@@ -4,13 +4,13 @@
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter.Connection;
 using Microsoft.DotNet.Interactive.Utility;
+using Pocket;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Reactive.Disposables;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -123,15 +123,22 @@ internal class JupyterConnection : IJupyterConnection
         {
             return null;
         }
-        kernelArgs.Remove("{connection_file}");
-        kernelArgs.Add($"\"{connectionFilePath}\"");
+
+        // point to the connection file with port information
+        var indexOfConnectionFile = kernelArgs.FindIndex(s => s == "{connection_file}");
+        kernelArgs[indexOfConnectionFile] = $"\"{connectionFilePath}\"";
 
         // use the process info in kernel spec and replace the {connection_file} in the data with file path
         // spawn a child process. This will create ZMQ sockets on the kernel. 
         var command = kernelArgs[0];
         var arguments = string.Join(" ", kernelArgs.Skip(1));
 
-        var kernelProcess = CommandLine.StartProcess(command, arguments, null);
+        Logger kernelLog = new(spec.Name);
+        var kernelProcess = CommandLine.StartProcess(command,
+                                                     arguments,
+                                                     null,
+                                                     o => kernelLog.Info(o),
+                                                     err => kernelLog.Error(err));
         return kernelProcess;
     }
 

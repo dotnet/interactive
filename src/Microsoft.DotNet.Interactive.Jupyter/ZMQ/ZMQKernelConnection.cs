@@ -159,7 +159,8 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
     private bool InterruptKernel()
     {
         StreamWriter writer = _kernelProcess.StandardInput;
-        writer.WriteLine(char.ConvertFromUtf32(3)); // signal SIGINT to interrupt
+        writer.Flush(); 
+        writer.WriteLine((char) 0x03); // signal SIGINT to interrupt
         writer.Flush();
         return true;
     }
