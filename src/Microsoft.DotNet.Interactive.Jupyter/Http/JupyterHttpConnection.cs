@@ -52,7 +52,7 @@ internal class JupyterHttpConnection : IJupyterConnection
     private readonly HttpApiClient _apiClient;
     private readonly IAuthorizationProvider _authProvider;
     private readonly CompositeDisposable _disposables;
-    private string[] _availableKernels;
+    private IEnumerable<KernelSpec> _availableKernels;
 
     public JupyterHttpConnection(Uri serverUri, IAuthorizationProvider authProvider) :
         this(new HttpApiClient(serverUri, authProvider), authProvider)
@@ -74,7 +74,7 @@ internal class JupyterHttpConnection : IJupyterConnection
         _disposables.Dispose();
     }
 
-    public async Task<IReadOnlyCollection<string>> GetKernelSpecNamesAsync()
+    public async Task<IEnumerable<KernelSpec>> GetKernelSpecsAsync()
     {
         if (_availableKernels == null)
         {
@@ -86,17 +86,22 @@ internal class JupyterHttpConnection : IJupyterConnection
 
             if (!response.IsSuccessStatusCode)
             {
-                return Array.Empty<string>();
+                return Array.Empty<KernelSpec>();
             }
 
             byte[] bytes = await response.Content.ReadAsByteArrayAsync();
             var list = JsonSerializer.Deserialize<KernelSpecs>(bytes);
-            _availableKernels = list?.kernelspecs?.Keys.ToArray();
+            _availableKernels = list?.kernelspecs?.Select(t => {
+                var spec = t.Value.spec;
+                spec.Name ??= t.Key;
+                return spec;
+            });
         }
+
         return _availableKernels;
     }
 
-    public async Task<IJupyterKernelConnection> CreateKernelConnectionAsync(string kernelType)
+    public async Task<IJupyterKernelConnection> CreateKernelConnectionAsync(string kernelSpecName)
     {
         string kernelId = Guid.NewGuid().ToString();
         var body = new
@@ -104,7 +109,7 @@ internal class JupyterHttpConnection : IJupyterConnection
             kernel = new
             {
                 id = kernelId,
-                name = kernelType
+                name = kernelSpecName
             },
             name = "",
             path = $"dotnet-{kernelId}",
@@ -121,7 +126,7 @@ internal class JupyterHttpConnection : IJupyterConnection
 
             if (!response.IsSuccessStatusCode)
             {
-                throw new KernelStartException(kernelType, response.ReasonPhrase);
+                throw new KernelStartException(kernelSpecName, response.ReasonPhrase);
             }
 
             byte[] bytes = await response.Content.ReadAsByteArrayAsync();
@@ -133,7 +138,7 @@ internal class JupyterHttpConnection : IJupyterConnection
         }
         catch (Exception e)
         {
-            throw new KernelStartException(kernelType, e.Message);
+            throw new KernelStartException(kernelSpecName, e.Message);
         }
     }
 

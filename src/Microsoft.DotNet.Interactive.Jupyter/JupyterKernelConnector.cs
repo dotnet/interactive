@@ -4,6 +4,7 @@
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.ValueSharing;
+using System;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Jupyter;
@@ -15,8 +16,8 @@ public class JupyterKernelConnector : IKernelConnector
 
     public JupyterKernelConnector(IJupyterConnection jupyterConnection, string kernelSpecName)
     {
-        _jupyterConnection = jupyterConnection;
-        _kernelSpecName = kernelSpecName;
+        _jupyterConnection = jupyterConnection ?? throw new ArgumentNullException(nameof(jupyterConnection));
+        _kernelSpecName = kernelSpecName ?? throw new ArgumentNullException(nameof(kernelSpecName));
     }
 
     public async Task<Kernel> CreateKernelAsync(string kernelName)

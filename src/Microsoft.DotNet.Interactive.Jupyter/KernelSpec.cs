@@ -8,6 +8,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter;
 
 public class KernelSpec
 {
+    [JsonIgnore]
+    public string Name { get; set; }
+
     [JsonPropertyName("argv")]
     public IReadOnlyList<string> CommandArguments { get; set; }
 

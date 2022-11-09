@@ -24,8 +24,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             public KernelSpec spec { get; set; }
         }
 
-        private IReadOnlyDictionary<string, KernelSpec> _installedKernelSpecs = null;
-
         private async Task<CommandLineResult> ExecuteCommand(string command, string args = "")
         {
             return await CommandLine.Execute("jupyter", $"kernelspec {command} {args}");
@@ -38,23 +36,24 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
         public async Task<IReadOnlyDictionary<string, KernelSpec>> ListKernels()
         {
-            if (_installedKernelSpecs == null)
+            var kernelSpecsList = await ExecuteCommand("list", "--json");
+            if (kernelSpecsList.ExitCode == 0)
             {
-
-                var kernelSpecsList = await ExecuteCommand("list", "--json");
-                if (kernelSpecsList.ExitCode == 0)
+                var results = JsonSerializer.Deserialize<KernelSpecListCommandResults>(string.Join(string.Empty, kernelSpecsList.Output));
+                return results.kernelspecs?.ToDictionary(r => r.Key, r =>
                 {
-                    var results = JsonSerializer.Deserialize<KernelSpecListCommandResults>(string.Join(string.Empty, kernelSpecsList.Output));
-                    _installedKernelSpecs = results.kernelspecs?.ToDictionary(r => r.Key, r => r.Value?.spec);
-                } else
-                {
-                    // fall back to custom lookup logic 
-                    _installedKernelSpecs = LookupInstalledKernels();
-                }
+                    var spec = r.Value?.spec;
+                    spec.Name ??= r.Key;
+                    return spec;
+                });
             }
-
-            return _installedKernelSpecs;
+            else
+            {
+                // fall back to custom lookup logic 
+                return LookupInstalledKernels();
+            }
         }
+
 
         public DirectoryInfo GetDefaultKernelSpecDirectory()
         {
@@ -81,7 +80,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                             var spec = GetKernelSpec(kernel);
                             if (spec != null)
                             {
-                                specs.Add(kernel.Name, spec);
+                                specs.Add(spec.Name, spec);
                             }
                         }
                     }
@@ -98,6 +97,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             {
                 var kernelJson = JsonDocument.Parse(File.ReadAllText(kernelJsonPath));
                 var spec = JsonSerializer.Deserialize<KernelSpec>(kernelJson, JsonFormatter.SerializerOptions);
+                spec.Name ??= directory.Name;
                 return spec;
             }
 

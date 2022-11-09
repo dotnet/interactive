@@ -16,30 +16,49 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ;
 
-internal class LocalJupyterConnection : IJupyterConnection
+internal class JupyterConnection : IJupyterConnection
 {
-    private readonly CompositeDisposable _disposables = new CompositeDisposable();
-    private readonly IJupyterKernelSpecModule _kernelSpecModule;
+    private static JupyterConnection _localJupyterConnection;
 
-    public LocalJupyterConnection(IJupyterKernelSpecModule kernelSpecModule = null)
+    public static JupyterConnection Local
     {
-        _kernelSpecModule = kernelSpecModule ?? new JupyterKernelSpecModule();
+        get
+        {
+            if (_localJupyterConnection == null)
+            {
+                _localJupyterConnection = new(new JupyterKernelSpecModule());
+            }
+
+            return _localJupyterConnection;
+        }
     }
 
-    public async Task<IReadOnlyCollection<string>> GetKernelSpecNamesAsync()
+    private readonly Task<IReadOnlyDictionary<string, KernelSpec>> _getKernelSpecs;
+
+    public JupyterConnection(IJupyterKernelSpecModule kernelSpecModule)
     {
-        var specs = await _kernelSpecModule.ListKernels();
-        return specs?.Keys.ToArray();
+        if (kernelSpecModule is null)
+        {
+            throw new ArgumentNullException(nameof(kernelSpecModule));
+        }
+
+        _getKernelSpecs = Task.Run(() => kernelSpecModule.ListKernels());
     }
 
-    public async Task<IJupyterKernelConnection> CreateKernelConnectionAsync(string kernelType)
+    public async Task<IEnumerable<KernelSpec>> GetKernelSpecsAsync()
+    {
+        var specs = await _getKernelSpecs;
+        return specs?.Values;
+    }
+
+    public async Task<IJupyterKernelConnection> CreateKernelConnectionAsync(string kernelSpecName)
     {
         // find the related kernel spec for the kernel type 
-        var spec = await GetKernelSpecAsync(kernelType);
+        var spec = await GetKernelSpecAsync(kernelSpecName);
 
         if (spec is null)
         {
-            throw new KernelStartException(kernelType, "kernel not found");
+            throw new KernelStartException(kernelSpecName, "kernel not found");
         }
 
         ConnectionInformation connectionInfo = null;
@@ -47,7 +66,7 @@ internal class LocalJupyterConnection : IJupyterConnection
 
         // avoid potential port race conditions by reserving ports up front 
         // and releasing before kernel launch.
-        Process kernelProcess = null;
+        string connectionFilePath = null;
         using (var tcpPortReservation = TcpPortReservations.ReserveFreePorts(5))
         {
             var reservedPorts = tcpPortReservation.Ports;
@@ -76,20 +95,20 @@ internal class LocalJupyterConnection : IJupyterConnection
             File.Copy(connectionInfoTempFilePath, runtimeConnectionFile);
             File.Delete(connectionInfoTempFilePath);
 
-            kernelProcess = CreateKernelProcess(spec, runtimeConnectionFile);
+            connectionFilePath = runtimeConnectionFile;
         }
 
+        var kernelProcess = CreateKernelProcess(spec, connectionFilePath);
         if (kernelProcess == null)
         {
-            throw new KernelStartException(kernelType, "count not create process.");
+            throw new KernelStartException(kernelSpecName, "count not create process.");
         }
-        await Task.Yield();
 
-        kernelProcess.Start();
+        await Task.Yield();
 
         if (connectionInfo == null || kernelProcess.HasExited)
         {
-            throw new KernelStartException(kernelType, $"Process Exited with exit code {kernelProcess.ExitCode}. Ensure you are running in the correct environment.");
+            throw new KernelStartException(kernelSpecName, $"Process Exited with exit code {kernelProcess.ExitCode}. Ensure you are running in the correct environment.");
         }
 
         var kernelConnection = new ZMQKernelConnection(connectionInfo, kernelProcess);
@@ -118,15 +137,14 @@ internal class LocalJupyterConnection : IJupyterConnection
 
     public void Dispose()
     {
-        _disposables.Dispose();
     }
 
-    private async Task<KernelSpec> GetKernelSpecAsync(string kernelType)
+    private async Task<KernelSpec> GetKernelSpecAsync(string kernelSpecName)
     {
-        var installedSpecs = await _kernelSpecModule.ListKernels();
-        if (installedSpecs.ContainsKey(kernelType))
+        var installedSpecs = await _getKernelSpecs;
+        if (installedSpecs.ContainsKey(kernelSpecName))
         {
-            return installedSpecs[kernelType];
+            return installedSpecs[kernelSpecName];
         }
 
         return null;
