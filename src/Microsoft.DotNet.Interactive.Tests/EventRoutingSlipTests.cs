@@ -48,10 +48,10 @@ public class EventRoutingSlipTests
         original.ContinueWith(continuation);
 
         original.ToUriArray().Should().ContainInOrder(
-            "kernel://1",
-            "kernel://2",
-            "kernel://3",
-            "kernel://4");
+            "kernel://1/",
+            "kernel://2/",
+            "kernel://3/",
+            "kernel://4/");
     }
 
     [Theory]
@@ -93,10 +93,10 @@ public class EventRoutingSlipTests
         original.ContinueWith(continuation);
 
         original.ToUriArray().Should().ContainInOrder(
-            "kernel://1",
-            "kernel://2",
-            "kernel://3",
-            "kernel://4");
+            "kernel://1/",
+            "kernel://2/",
+            "kernel://3/",
+            "kernel://4/");
     }
 
     [Fact]

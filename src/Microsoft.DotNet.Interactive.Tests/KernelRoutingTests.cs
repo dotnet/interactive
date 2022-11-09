@@ -187,8 +187,8 @@ Console.WriteLine(1);";
         command.RoutingSlip.ToUriArray().Should().BeEquivalentTo(
             new[]
             {
-                new Uri("kernel://local/.NET", UriKind.Absolute), 
-                new Uri("kernel://local/csharp", UriKind.Absolute)
+                "kernel://local/.NET",
+                "kernel://local/csharp"
             });
     }
 
@@ -218,9 +218,9 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
         fsharpEvent.Command.RoutingSlip.ToUriArray().Should().BeEquivalentTo(
             new[]
             {
-                new Uri("kernel://local/.NET", UriKind.Absolute),
-                new Uri("kernel://local/csharp", UriKind.Absolute),
-                new Uri("kernel://local/fsharp", UriKind.Absolute)
+                "kernel://local/.NET",
+                "kernel://local/csharp",
+                "kernel://local/fsharp"
             });
     }
 
@@ -299,10 +299,10 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
         command.RoutingSlip.ToUriArray().Should().BeEquivalentTo(
             new[]
             {
-                new Uri("kernel://local/", UriKind.Absolute),
-                new Uri("kernel://local/csharp-proxy", UriKind.Absolute),
-                new Uri("kernel://remote/", UriKind.Absolute),
-                new Uri("kernel://remote/csharp", UriKind.Absolute)
+                "kernel://local/",
+                "kernel://local/csharp-proxy",
+                "kernel://remote/",
+                "kernel://remote/csharp"
             });
     }
 

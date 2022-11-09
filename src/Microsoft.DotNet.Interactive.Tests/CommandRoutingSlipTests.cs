@@ -39,8 +39,8 @@ public class CommandRoutingSlipTests
         routingSlip.StampAsArrived(new Uri("kernel://3"));
 
         routingSlip.ToUriArray().Should().ContainInOrder(
-            "kernel://1",
-            "kernel://2");
+            "kernel://1/",
+            "kernel://2/");
     }
 
     [Fact]
@@ -90,10 +90,10 @@ public class CommandRoutingSlipTests
         original.ContinueWith(continuation);
 
         original.ToUriArray().Should().ContainInOrder(
-            "kernel://1",
-            "kernel://2",
-            "kernel://3",
-            "kernel://4");
+            "kernel://1/",
+            "kernel://2/",
+            "kernel://3/",
+            "kernel://4/");
     }
 
     [Fact]
@@ -113,10 +113,10 @@ public class CommandRoutingSlipTests
         original.ContinueWith(continuation);
 
         original.ToUriArray().Should().ContainInOrder(
-            "kernel://1",
-            "kernel://2",
-            "kernel://3",
-            "kernel://4");
+            "kernel://1/",
+            "kernel://2/",
+            "kernel://3/",
+            "kernel://4/");
     }
 
     [Theory]
@@ -157,7 +157,7 @@ public class CommandRoutingSlipTests
         original.ContinueWith(continuation);
 
         original.ToUriArray().Should().NotContain(
-            "kernel://4");
+            "kernel://4/");
     }
 
     [Fact]
