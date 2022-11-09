@@ -132,7 +132,11 @@ internal partial class JupyterKernel
         ExecuteReply results = null;
         bool executionDone = false;
 
-        var executeRequest = Messaging.Message.Create(new ExecuteRequest(command.Code.NormalizeLineEndings()));
+        var executeRequest = Messaging.Message.Create(
+                                    new ExecuteRequest(
+                                        command.Code.NormalizeLineEndings(), 
+                                        allowStdin: true, 
+                                        stopOnError: true));
         var processMessages = Receiver.Messages.FilterByParent(executeRequest)
                                 .SelectContent()
                                 .Do(async m =>
