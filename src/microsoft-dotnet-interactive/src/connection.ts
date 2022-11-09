@@ -151,7 +151,7 @@ export function stampEventRoutingSlip(kernelEventEnvelope: contracts.KernelEvent
     }
 }
 
-function appendRoutingSlip(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope, kernelUris: string[]): void {
+function continueRoutingSlip(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope, kernelUris: string[]): void {
     if (kernelCommandOrEventEnvelope.routingSlip === undefined || kernelCommandOrEventEnvelope.routingSlip === null) {
         kernelCommandOrEventEnvelope.routingSlip = [];
     }
@@ -172,12 +172,12 @@ function appendRoutingSlip(kernelCommandOrEventEnvelope: KernelCommandOrEventEnv
     }
 }
 
-export function appendToCommandRoutingSlip(kernelCommandEnvelope: contracts.KernelCommandEnvelope, kernelUris: string[]): void {
-    appendRoutingSlip(kernelCommandEnvelope, kernelUris);
+export function continueCommandRoutingSlip(kernelCommandEnvelope: contracts.KernelCommandEnvelope, kernelUris: string[]): void {
+    continueRoutingSlip(kernelCommandEnvelope, kernelUris);
 }
 
-export function appendToEventRoutingSlip(kernelEventEnvelope: contracts.KernelEventEnvelope, kernelUris: string[]): void {
-    appendRoutingSlip(kernelEventEnvelope, kernelUris);
+export function continueEventRoutingSlip(kernelEventEnvelope: contracts.KernelEventEnvelope, kernelUris: string[]): void {
+    continueRoutingSlip(kernelEventEnvelope, kernelUris);
 }
 
 export function eventRoutingSlipStartsWith(thisEvent: contracts.KernelEventEnvelope, other: string[] | contracts.KernelEventEnvelope): boolean {

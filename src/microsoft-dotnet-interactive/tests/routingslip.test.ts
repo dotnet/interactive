@@ -3,9 +3,6 @@
 
 import { expect } from "chai";
 import * as contracts from "../src/contracts";
-import { ProxyKernel } from "../src/proxyKernel";
-import { Logger } from "../src/logger";
-import * as rxjs from "rxjs";
 import * as connection from "../src/connection";
 
 describe("kernel event routingSlip", () => {
@@ -31,7 +28,7 @@ describe("kernel event routingSlip", () => {
 
         let other = ["kernel://3/", "kernel://4/"];
 
-        connection.appendToEventRoutingSlip(envelope, other);
+        connection.continueEventRoutingSlip(envelope, other);
 
         expect(envelope.routingSlip).to.deep.equal(['kernel://1/', 'kernel://2/', 'kernel://3/', 'kernel://4/']);
     });
@@ -46,7 +43,7 @@ describe("kernel event routingSlip", () => {
 
         let other = ["kernel://1/", "kernel://2/", "kernel://3/", "kernel://4/"];
 
-        connection.appendToEventRoutingSlip(envelope, other);
+        connection.continueEventRoutingSlip(envelope, other);
 
         expect(envelope.routingSlip).to.deep.equal(['kernel://1/', 'kernel://2/', 'kernel://3/', 'kernel://4/']);
     });
@@ -60,6 +57,6 @@ describe("kernel event routingSlip", () => {
         };
 
         let other = ["kernel://1/", "kernel://3/", "kernel://4/", "kernel://5/"];
-        expect(() => connection.appendToEventRoutingSlip(envelope, other)).to.throw("The uri kernel://1/ is already in the routing slip");
+        expect(() => connection.continueEventRoutingSlip(envelope, other)).to.throw("The uri kernel://1/ is already in the routing slip");
     });
 });

@@ -72,7 +72,7 @@ export class ProxyKernel extends Kernel {
                             });
                     }
                     else if (envelope.command!.token === commandToken) {
-                        connection.appendToCommandRoutingSlip(commandInvocation.commandEnvelope, envelope.command!.routingSlip!);
+                        connection.continueCommandRoutingSlip(commandInvocation.commandEnvelope, envelope.command!.routingSlip!);
                         envelope.command!.routingSlip = commandInvocation.commandEnvelope.routingSlip;//?
 
 

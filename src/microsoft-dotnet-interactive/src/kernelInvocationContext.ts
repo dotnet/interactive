@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as rxjs from "rxjs";
-import { appendToCommandRoutingSlip, eventRoutingSlipContains, stampEventRoutingSlip, } from "./connection";
+import { continueCommandRoutingSlip, eventRoutingSlipContains, stampEventRoutingSlip, } from "./connection";
 import * as contracts from "./contracts";
 import { Disposable } from "./disposables";
 import { getKernelUri, Kernel } from "./kernel";
@@ -46,7 +46,7 @@ export class KernelInvocationContext implements Disposable {
 
                     const oldSlip = kernelCommandInvocation.routingSlip ?? [];
                     kernelCommandInvocation.routingSlip = [...(current._commandEnvelope.routingSlip ?? [])];
-                    appendToCommandRoutingSlip(kernelCommandInvocation, oldSlip);
+                    continueCommandRoutingSlip(kernelCommandInvocation, oldSlip);
                 }
             }
         }
