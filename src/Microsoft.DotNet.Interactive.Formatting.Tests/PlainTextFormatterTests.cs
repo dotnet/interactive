@@ -304,31 +304,7 @@ public class PlainTextFormatterTests : FormatterTestBase
 
             output.Should().Contain("InternalId: 6");
         }
-
-        [Fact]
-        public void Tuple_values_are_formatted()
-        {
-            var tuple = Tuple.Create(123, "Hello", Enumerable.Range(1, 3));
-
-            var formatter = PlainTextFormatter.GetPreferredFormatterFor(tuple.GetType());
-
-            var formatted = tuple.ToDisplayString(formatter);
-
-            formatted.Should().Be("( 123, Hello, [ 1, 2, 3 ] )");
-        }
-            
-        [Fact]
-        public void ValueTuple_values_are_formatted()
-        {
-            var tuple = (123, "Hello", Enumerable.Range(1, 3));
-
-            var formatter = PlainTextFormatter.GetPreferredFormatterFor(tuple.GetType());
-
-            var formatted = tuple.ToDisplayString(formatter);
-
-            formatted.Should().Be("( 123, Hello, [ 1, 2, 3 ] )");
-        }
-
+        
         [Fact]
         public void Enums_are_formatted_using_their_names()
         {

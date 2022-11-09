@@ -333,7 +333,33 @@ public class PlainTextFormatterTests_MultiLine : FormatterTestBase
         }
 
         [Fact]
-        public void Tuple_values_are_formatted()
+        public void Tuple_values_are_formatted_on_one_line_when_all_scalar()
+        {
+            var tuple = Tuple.Create(123, "Hello");
+
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor(tuple.GetType());
+
+            var formatted = tuple.ToDisplayString(formatter);
+
+            Console.WriteLine(formatted);
+
+            formatted.Should().Be("( 123, Hello )");
+        }
+
+        [Fact]
+        public void ValueTuple_values_are_formatted_on_one_line_when_all_scalar()
+        {
+            var tuple = (123, "Hello");
+
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor(tuple.GetType());
+
+            var formatted = tuple.ToDisplayString(formatter);
+
+            formatted.Should().Be("( 123, Hello )");
+        }
+
+        [Fact]
+        public void Tuple_values_are_formatted_as_multi_line_when_not_all_scalar()
         {
             var tuple = Tuple.Create(123, "Hello", Enumerable.Range(1, 3));
 
@@ -341,11 +367,13 @@ public class PlainTextFormatterTests_MultiLine : FormatterTestBase
 
             var formatted = tuple.ToDisplayString(formatter);
 
-            formatted.Should().Be("( 123, Hello, [ 1, 2, 3 ] )");
+            formatted.Should().Be(@"  - 123
+  - Hello
+  - [ 1, 2, 3 ]");
         }
 
         [Fact]
-        public void ValueTuple_values_are_formatted()
+        public void ValueTuple_values_are_formatted_as_multi_line_when_not_all_scalar()
         {
             var tuple = (123, "Hello", Enumerable.Range(1, 3));
 
@@ -353,7 +381,9 @@ public class PlainTextFormatterTests_MultiLine : FormatterTestBase
 
             var formatted = tuple.ToDisplayString(formatter);
 
-            formatted.Should().Be("( 123, Hello, [ 1, 2, 3 ] )");
+            formatted.Should().Be(@"  - 123
+  - Hello
+  - [ 1, 2, 3 ]");
         }
 
         [Fact]
@@ -692,10 +722,10 @@ TheWidgets: Widget[]
 
             formatter.Format(new object[] { 1, null, 3 }, writer);
 
-            writer.ToString().Should().Be(@"  - 1
+            writer.ToString().Should().Be(@"Object[]
+  - 1
   - <null>
-  - 3
-".ReplaceLineEndings());
+  - 3".ReplaceLineEndings());
         }
 
         [Fact]

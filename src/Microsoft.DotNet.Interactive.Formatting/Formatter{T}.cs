@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -11,10 +13,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
     /// <typeparam name="T">The type for which formatting is provided.</typeparam>
     public static class Formatter<T>
     {
-        internal static readonly bool TypeIsAnonymous = typeof(T).IsAnonymous();
-        internal static readonly bool TypeIsException = typeof(Exception).IsAssignableFrom(typeof(T));
-        internal static readonly bool TypeIsTuple = typeof(T).IsTuple();
-        internal static readonly bool TypeIsValueTuple = typeof(T).IsValueTuple();
+        internal static readonly bool TypeIsAnonymous;
+        internal static readonly bool TypeIsException;
+        internal static readonly bool TypeIsTuple;
+        internal static readonly bool TypeIsValueTuple;
+        internal static readonly bool TypeIsTupleOfScalars;
 
         private static int? _listExpansionLimit;
 
@@ -23,6 +26,30 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// </summary>
         static Formatter()
         {
+            // FIX: (Formatter) optimize for mutually exclusive cases
+
+
+            TypeIsException = typeof(Exception).IsAssignableFrom(typeof(T));
+
+            TypeIsValueTuple = typeof(T).IsValueTuple();
+
+            TypeIsTuple = typeof(T).IsTuple();
+
+            TypeIsAnonymous = typeof(T).IsAnonymous();
+
+            if (TypeIsTuple)
+            {
+                var fieldTypes = typeof(T).GetProperties().Select(p => p.PropertyType);
+
+                TypeIsTupleOfScalars = fieldTypes.All(t => t.IsScalar());
+            }
+            else if (TypeIsValueTuple)
+            {
+                var fieldTypes = typeof(T).GetFields().Select(f => f.FieldType);
+
+                TypeIsTupleOfScalars = fieldTypes.All(t => t.IsScalar());
+            }
+
             void Initialize()
             {
                 _listExpansionLimit = null;

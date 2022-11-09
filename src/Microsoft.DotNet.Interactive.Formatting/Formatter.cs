@@ -391,12 +391,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 var item = itemsToWrite[i];
                 if (i < listExpansionLimit)
                 {
-                    // if (expandProperties)
-                    // {
-                    //     Default.WriteStartObjectWithinSequence(context);
-                    // }
-
-                    // write out another item in the list
                     if (i > 0)
                     {
                         if (expandProperties)
@@ -410,6 +404,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     }
 
                     context.IsStartingObjectWithinSequence = true;
+
+                    if (formatter is not null)
+                    {
+                        if (typeof(T) == typeof(object))
+                        {
+                            context.Writer.Write("  - ");
+                        }
+                    }
 
                     item.FormatTo(context);
 
