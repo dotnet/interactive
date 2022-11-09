@@ -65,20 +65,6 @@ console.log(`The value is ${x}.`);
 # Execude the next cell. After execution, the output immediately below should be:
 
 ```
-1234
-```
-
-And the `POLYGLOT NOTEBOOK: VALUES` window should contain a variable with name `asdf`, value `1234` and kernel Name `csharp`
-
-#!javascript
-
-await kernel.root.send({ commandType: 'SubmitCode', command: { code: 'var asdf = 1234; Console.WriteLine(asdf);', targetKernelName: 'csharp' } });
-
-#!markdown
-
-# Execude the next cell. After execution, the output immediately below should be:
-
-```
 javascript
 ```
 
@@ -109,6 +95,20 @@ mermaid
 #!javascript
 
 kernel.root.findKernels(s => true).forEach(k => console.log(k.name));
+
+#!markdown
+
+# Execude the next cell. After execution, the output immediately below should be:
+
+```
+1234
+```
+
+And the `POLYGLOT NOTEBOOK: VALUES` window should contain a variable with name `asdf`, value `1234` and kernel Name `csharp`
+
+#!javascript
+
+await kernel.root.send({ commandType: 'SubmitCode', command: { code: 'var asdf = 1234; Console.WriteLine(asdf);', targetKernelName: 'csharp' } });
 
 #!markdown
 
