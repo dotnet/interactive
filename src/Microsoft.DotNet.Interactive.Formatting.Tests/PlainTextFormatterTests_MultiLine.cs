@@ -491,6 +491,35 @@ public class PlainTextFormatterTests_MultiLine : FormatterTestBase
             StringProperty: two
     PropertyC: C".ReplaceLineEndings());
         }
+
+        [Fact]
+        public void Complex_objects_within_a_sequence_are_indented()
+        {
+            var obj = new object[]
+            {
+                1,
+                new
+                {
+                    PropertyA = "A",
+                    PropertyB = "B"
+                },
+                3
+            };
+
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor(obj.GetType());
+
+            var writer = new StringWriter();
+            formatter.Format(obj, writer);
+
+            Console.WriteLine(writer);
+
+            writer.ToString().Should().Match(@"
+Object[]
+  - 1
+  - PropertyA: A
+    PropertyB: B
+  - 3".ReplaceLineEndings());
+        }
     }
 
     [Collection("Do not parallelize")]
