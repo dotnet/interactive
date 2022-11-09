@@ -64,7 +64,7 @@ export const DotNetPathManager = new CachedDotNetPathManager();
 export async function activate(context: vscode.ExtensionContext) {
 
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
-    const minDotNetSdkVersion = config.get<string>('minimumDotNetSdkVersion') || '6.0';
+    const minDotNetSdkVersion = config.get<string>('minimumDotNetSdkVersion') || '7.0';
     const diagnosticsChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET Interactive : diagnostics'));
     const loggerChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET Interactive : logger'));
     DotNetPathManager.setOutputChannelAdapter(diagnosticsChannel);

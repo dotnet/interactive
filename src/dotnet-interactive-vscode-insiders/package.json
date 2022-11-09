@@ -156,7 +156,7 @@
         },
         "dotnet-interactive.minimumDotNetSdkVersion": {
           "type": "string",
-          "default": "6.0",
+          "default": "7.0",
           "description": "The minimum required version of the .NET SDK."
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
