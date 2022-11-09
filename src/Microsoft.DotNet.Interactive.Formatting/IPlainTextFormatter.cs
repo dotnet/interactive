@@ -19,7 +19,6 @@ internal interface IPlainTextFormatter
     void WriteElidedPropertiesMarker(FormatContext context);
     void WriteValueSequenceItemSeparator(FormatContext context);
     void WriteObjectSequenceItemSeparator(FormatContext context);
-    void WriteStartObjectWithinSequence(FormatContext context);
     void WriteEndHeader(FormatContext context);
     void WriteEndSequenceOfObjects(FormatContext context);
     void WriteEndObjectWithinSequence(FormatContext context);

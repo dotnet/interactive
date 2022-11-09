@@ -155,23 +155,50 @@ public static class PlainTextFormatter
 
         bool FormatAnyTuple(T target, FormatContext context)
         {
-            Default.WriteStartTuple(context);
-
-            for (var i = 0; i < accessors.Length; i++)
+            if (Formatter<T>.TypeIsTupleOfScalars && 
+                Default is MultiLinePlainTextFormatter)
             {
-                var value = accessors[i].GetValueOrException(target);
+                Default.WriteStartTuple(context);
 
-                value.FormatTo(context);
-
-                Default.WriteEndProperty(context);
-
-                if (i < accessors.Length - 1)
+                for (var i = 0; i < accessors.Length; i++)
                 {
-                    Default.WritePropertyListSeparator(context);
+                    var value = accessors[i].GetValueOrException(target);
+
+                    value.FormatTo(context);
+
+                    Default.WriteEndProperty(context);
+
+                    if (i < accessors.Length - 1)
+                    {
+                        Default.WriteValueSequenceItemSeparator(context);
+                    }
+                }
+
+                Default.WriteEndTuple(context);
+            }
+            else
+            {
+                for (var i = 0; i < accessors.Length; i++)
+                {
+                    var value = accessors[i].GetValueOrException(target);
+
+                    context.IsStartingObjectWithinSequence = true;
+
+                    Default.WriteStartProperty(context);
+
+                    value.FormatTo(context);
+
+                    context.IsStartingObjectWithinSequence = true;
+
+                    Default.WriteEndProperty(context);
+
+                    if (i < accessors.Length - 1)
+                    {
+                        Default.WritePropertyListSeparator(context);
+                    }
                 }
             }
 
-            Default.WriteEndTuple(context);
             return true;
         }
     }

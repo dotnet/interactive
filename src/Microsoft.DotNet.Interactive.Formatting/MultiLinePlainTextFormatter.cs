@@ -1,8 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Buffers;
-
 namespace Microsoft.DotNet.Interactive.Formatting;
 
 internal class MultiLinePlainTextFormatter : IPlainTextFormatter
@@ -36,11 +34,6 @@ internal class MultiLinePlainTextFormatter : IPlainTextFormatter
 
     public void WriteEndProperty(FormatContext context)
     {
-    }
-
-    public void WriteStartObjectWithinSequence(FormatContext context)
-    {
-        //context.Writer.Write("  - ");
     }
 
     public void WriteObjectSequenceItemSeparator(FormatContext context)

@@ -31,10 +31,6 @@ internal class SingleLinePlainTextFormatter : IPlainTextFormatter
 
     public void WriteStartSequenceOfObjects(FormatContext context) => context.Writer.Write(StartSequence);
 
-    public void WriteStartObjectWithinSequence(FormatContext context)
-    {
-    }
-
     public void WriteEndObjectWithinSequence(FormatContext context)
     {
     }
