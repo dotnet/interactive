@@ -8,6 +8,7 @@ import * as disposables from './disposables';
 import { Disposable } from './disposables';
 import { KernelType } from './kernel';
 import { Logger } from './logger';
+import { URI } from 'vscode-uri';
 
 export type KernelCommandOrEventEnvelope = contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope;
 
@@ -78,10 +79,11 @@ export class KernelCommandAndEventSender implements IKernelCommandAndEventSender
     send(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope): Promise<void> {
         if (this._sender) {
             try {
+                const serislized = JSON.parse(JSON.stringify(kernelCommandOrEventEnvelope));
                 if (typeof this._sender === "function") {
-                    this._sender(kernelCommandOrEventEnvelope);
+                    this._sender(serislized);
                 } else if (isObservable(this._sender)) {
-                    this._sender.next(kernelCommandOrEventEnvelope);
+                    this._sender.next(serislized);
                 } else {
                     return Promise.reject(new Error("Sender is not set"));
                 }
@@ -115,15 +117,14 @@ export function isArrayOfString(collection: any): collection is string[] {
     return Array.isArray(collection) && collection.length > 0 && typeof (collection[0]) === typeof ("");
 }
 
-
-
 export function createKernelUri(kernelUri: string): string {
     kernelUri;//?
-    const uri = new URL(kernelUri.replace("kernel:", "http:"));
-    const absoluteUri = uri.toString().replace("http:", "kernel:");
+    const uri = URI.parse(kernelUri);
+    uri.authority;//?
+    uri.path;//?
+    let absoluteUri = `${uri.scheme}://${uri.authority}${uri.path || "/"}`;
     return absoluteUri;//?
 }
-
 
 export function stampCommandRoutingSlip(kernelCommandEnvelope: contracts.KernelCommandEnvelope, kernelUri: string) {
     stampRoutingSlip(kernelCommandEnvelope, kernelUri);
@@ -143,7 +144,7 @@ function stampRoutingSlip(kernelCommandOrEventEnvelope: KernelCommandOrEventEnve
         kernelCommandOrEventEnvelope.routingSlip.push(normalizedUri);
         kernelCommandOrEventEnvelope.routingSlip;//?
     } else {
-        throw new Error(`The uri ${normalizedUri} is already in the routing slip`);
+        throw new Error(`The uri ${normalizedUri} is already in the routing slip [${kernelCommandOrEventEnvelope.routingSlip}]`);
     }
 }
 
@@ -152,18 +153,20 @@ function continueRoutingSlip(kernelCommandOrEventEnvelope: KernelCommandOrEventE
         kernelCommandOrEventEnvelope.routingSlip = [];
     }
 
-    let i = 0;
-    if (routingSlipStartsWith(kernelUris, kernelCommandOrEventEnvelope.routingSlip)) {
-        i = kernelCommandOrEventEnvelope.routingSlip.length;
+    let toContinue = createRoutingSlip(kernelUris);
+
+    if (routingSlipStartsWith(toContinue, kernelCommandOrEventEnvelope.routingSlip)) {
+        toContinue = toContinue.slice(kernelCommandOrEventEnvelope.routingSlip.length);
     }
 
-    for (i; i < kernelUris.length; i++) {
-        const normalizedUri = createKernelUri(kernelUris[i]);//?
+    const original = [...kernelCommandOrEventEnvelope.routingSlip];
+    for (let i = 0; i < toContinue.length; i++) {
+        const normalizedUri = toContinue[i];//?
         const canAdd = !kernelCommandOrEventEnvelope.routingSlip.find(e => createKernelUri(e) === normalizedUri);
         if (canAdd) {
             kernelCommandOrEventEnvelope.routingSlip.push(normalizedUri);
         } else {
-            throw new Error(`The uri ${normalizedUri} is already in the routing slip`);
+            throw new Error(`The uri ${normalizedUri} is already in the routing slip [${original}], cannot continue with routing slip [${kernelUris.map(e => createKernelUri(e))}]`);
         }
     }
 }
@@ -175,6 +178,10 @@ export function continueCommandRoutingSlip(kernelCommandEnvelope: contracts.Kern
 
 export function continueEventRoutingSlip(kernelEventEnvelope: contracts.KernelEventEnvelope, kernelUris: string[]): void {
     continueRoutingSlip(kernelEventEnvelope, kernelUris);
+}
+
+export function createRoutingSlip(kernelUris: string[]): string[] {
+    return Array.from(new Set(kernelUris.map(e => createKernelUri(e))));
 }
 
 export function eventRoutingSlipStartsWith(thisEvent: contracts.KernelEventEnvelope, other: string[] | contracts.KernelEventEnvelope): boolean {
@@ -219,7 +226,8 @@ export function commandRoutingSlipContains(kernlEvent: contracts.KernelCommandEn
 }
 
 function routingSlipContains(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope, kernelUri: string) {
-    return kernelCommandOrEventEnvelope?.routingSlip?.find(e => e === createKernelUri(kernelUri)) !== undefined;
+    const normalizedUri = createKernelUri(kernelUri);
+    return kernelCommandOrEventEnvelope?.routingSlip?.find(e => normalizedUri === createKernelUri(e)) !== undefined;
 }
 
 export function ensureOrUpdateProxyForKernelInfo(kernelInfoProduced: contracts.KernelInfoProduced, compositeKernel: CompositeKernel) {
@@ -229,13 +237,13 @@ export function ensureOrUpdateProxyForKernelInfo(kernelInfoProduced: contracts.K
         if (!kernel) {
             // add
             if (compositeKernel.host) {
-                Logger.default.info(`creating proxy for uri [${uriToLookup}] with info ${JSON.stringify(kernelInfoProduced)}`);
+                Logger.default.info(`creating proxy for uri[${uriToLookup}]with info ${JSON.stringify(kernelInfoProduced)} `);
                 kernel = compositeKernel.host.connectProxyKernel(kernelInfoProduced.kernelInfo.localName, uriToLookup, kernelInfoProduced.kernelInfo.aliases);
             } else {
                 throw new Error('no kernel host found');
             }
         } else {
-            Logger.default.info(`patching proxy for uri [${uriToLookup}] with info ${JSON.stringify(kernelInfoProduced)}`);
+            Logger.default.info(`patching proxy for uri[${uriToLookup}]with info ${JSON.stringify(kernelInfoProduced)} `);
         }
 
         if (kernel.kernelType === KernelType.proxy) {
