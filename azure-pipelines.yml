@@ -280,7 +280,7 @@ stages:
         - pwsh: |
             for ($i=1; $i -le 5; $i++) {
               Write-Host "Running tests, attempt $i"
-              dotnet test -l trx --no-build --blame-hang-timeout 15m --blame-hang-dump-type full --blame-crash -c $env:_BuildConfig --results-directory $env:Build_SourcesDirectory/artifacts/TestResults/$env:_BuildConfig
+              dotnet test -l trx --no-build --blame-hang-timeout 15m --blame-hang-dump-type full --blame-crash -c $env:BUILDCONFIG --results-directory $env:BUILDSOURCESDIRECTORY/artifacts/TestResults/$env:BUILDCONFIG
               if ($LASTEXITCODE -eq 0) {
                 break
               }
@@ -288,6 +288,9 @@ stages:
             exit $LASTEXITCODE
           displayName: Test / Blame
           workingDirectory: $(Build.SourcesDirectory)
+          env:
+            BUILDCONFIG: $(_BuildConfig)
+            BUILDSOURCESDIRECTORY: $(Build.SourcesDirectory)
           condition: ne(variables['SkipTests'], 'true')
 
         - pwsh: Get-ChildItem *.dmp -Recurse | Remove-Item
