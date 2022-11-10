@@ -8,6 +8,19 @@ import { Logger } from "../src/logger";
 import * as rxjs from "rxjs";
 import * as connection from "../src/connection";
 
+function removeCommandTokenAndId(envelope: connection.KernelCommandOrEventEnvelope) {
+    if (connection.isKernelEventEnvelope(envelope)) {
+        delete envelope.command?.id;
+        delete envelope.command?.token;
+
+    } else if (connection.isKernelCommandEnvelope(envelope)) {
+        delete envelope.id;
+        delete envelope.token;
+    }
+
+    return envelope;
+}
+
 describe("proxyKernel", () => {
     before(() => {
         Logger.configure("test", () => { });
@@ -79,7 +92,8 @@ describe("proxyKernel", () => {
         let command: contracts.KernelCommandEnvelope = { commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "1+2" } };
         await kernel.send(command);
 
-        expect(events[0]).to.deep.include({
+        events;//?
+        expect(removeCommandTokenAndId(events[0])).to.deep.include({
             eventType: contracts.ValueProducedType,
             event: {
                 name: "a",
@@ -88,10 +102,14 @@ describe("proxyKernel", () => {
                     value: "variable a"
                 }
             },
-            command: command
+            command: {
+                command: { code: '1+2' },
+                commandType: 'SubmitCode',
+                routingSlip: ['kernel://local/proxy'],
+            }
         });
 
-        expect(events[1]).to.deep.include({
+        expect(removeCommandTokenAndId(events[1])).to.deep.include({
             eventType: contracts.ValueProducedType,
             event: {
                 name: "b",
@@ -100,12 +118,20 @@ describe("proxyKernel", () => {
                     value: "variable b"
                 }
             },
-            command: command
+            command: {
+                command: { code: '1+2' },
+                commandType: 'SubmitCode',
+                routingSlip: ['kernel://local/proxy'],
+            }
         });
 
-        expect(events[2]).to.include({
+        expect(removeCommandTokenAndId(events[2])).to.deep.include({
             eventType: contracts.CommandSucceededType,
-            command: command
+            command: {
+                command: { code: '1+2', destinationUri: undefined, originUri: undefined },
+                commandType: 'SubmitCode',
+                routingSlip: ['kernel://local/proxy'],
+            }
         });
     });
 
@@ -128,7 +154,7 @@ describe("proxyKernel", () => {
         let command: contracts.KernelCommandEnvelope = { commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "1+2" }, id: "newId" };
         await kernel.send(command);
 
-        expect(events[0]).to.be.deep.include({
+        expect(removeCommandTokenAndId(events[0])).to.be.deep.include({
             eventType: contracts.ValueProducedType,
             event: {
                 name: "a",
@@ -137,10 +163,14 @@ describe("proxyKernel", () => {
                     value: "variable a"
                 }
             },
-            command: { ...command, id: "newId" }
+            command: {
+                command: { code: '1+2' },
+                commandType: 'SubmitCode',
+                routingSlip: ['kernel://local/proxy']
+            }
         });
 
-        expect(events[1]).to.be.deep.include({
+        expect(removeCommandTokenAndId(events[1])).to.be.deep.include({
             eventType: contracts.ValueProducedType,
             event: {
                 name: "b",
@@ -149,7 +179,11 @@ describe("proxyKernel", () => {
                     value: "variable b"
                 }
             },
-            command: { ...command, id: "newId" }
+            command: {
+                command: { code: '1+2' },
+                commandType: 'SubmitCode',
+                routingSlip: ['kernel://local/proxy']
+            }
         });
 
         expect(events[2]).to.include({
