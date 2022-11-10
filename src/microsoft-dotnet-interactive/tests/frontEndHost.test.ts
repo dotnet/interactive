@@ -56,7 +56,7 @@ describe("frontEndHost", () => {
         expect(seenMessages).to.deep.equal([{
             event: {},
             eventType: 'KernelReady',
-            routingSlip: ['kernel://testkernel/']
+            routingSlip: ['kernel://testKernel/']
         },
         {
             event:
@@ -64,16 +64,14 @@ describe("frontEndHost", () => {
                 kernelInfo:
                 {
                     aliases: [],
-                    languageName: undefined,
-                    languageVersion: undefined,
                     localName: 'testKernel',
                     supportedDirectives: [],
                     supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
-                    uri: 'kernel://testkernel/'
+                    uri: 'kernel://testKernel/'
                 }
             },
             eventType: 'KernelInfoProduced',
-            routingSlip: ['kernel://testkernel/']
+            routingSlip: ['kernel://testKernel/']
         },
         {
             event:
@@ -82,7 +80,6 @@ describe("frontEndHost", () => {
                 {
                     aliases: ['js'],
                     languageName: 'JavaScript',
-                    languageVersion: undefined,
                     localName: 'javascript',
                     supportedDirectives: [],
                     supportedKernelCommands:
@@ -91,11 +88,11 @@ describe("frontEndHost", () => {
                         { name: 'RequestValueInfos' },
                         { name: 'RequestValue' },
                         { name: 'SendValue' }],
-                    uri: 'kernel://testkernel/javascript'
+                    uri: 'kernel://testKernel/javascript'
                 }
             },
             eventType: 'KernelInfoProduced',
-            routingSlip: ['kernel://testkernel/javascript']
+            routingSlip: ['kernel://testKernel/javascript']
         }]);
     });
 
@@ -146,7 +143,7 @@ describe("frontEndHost", () => {
                 { name: 'SubmitCode' },
                 { name: 'RequestValueInfos' },
                 { name: 'RequestValue' }],
-            uri: 'kernel://testkernel/sql'
+            uri: 'kernel://testKernel/sql'
         });
     });
 
@@ -213,7 +210,7 @@ describe("frontEndHost", () => {
                 { name: 'SubmitCode' },
                 { name: 'RequestValueInfos' },
                 { name: 'RequestValue' }],
-            uri: 'kernel://testkernel/sql'
+            uri: 'kernel://testKernel/sql'
         });
     });
 
