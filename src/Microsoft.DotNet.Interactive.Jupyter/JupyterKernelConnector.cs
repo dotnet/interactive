@@ -3,6 +3,7 @@
 
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.Connection;
+using Microsoft.DotNet.Interactive.Jupyter.Messaging.Comms;
 using Microsoft.DotNet.Interactive.Jupyter.ValueSharing;
 using System;
 using System.Threading.Tasks;
@@ -23,10 +24,16 @@ public class JupyterKernelConnector : IKernelConnector
     public async Task<Kernel> CreateKernelAsync(string kernelName)
     {
         var kernelConnection = await _jupyterConnection.CreateKernelConnectionAsync(_kernelSpecName);
-        var kernel = await JupyterKernel.CreateAsync(kernelName, kernelConnection);
+        var commsManager = new CommsManager(kernelConnection.Sender, kernelConnection.Receiver);
 
-        var valueAdapterConfiguration = new CommValueAdapterConfiguration();
+        await kernelConnection.StartAsync();
+        var kernel = await JupyterKernel.CreateAsync(kernelName, kernelConnection.Uri, kernelConnection.Sender, kernelConnection.Receiver);
+
+        var valueAdapterConfiguration = new CommValueAdapterConfiguration(commsManager);
         await kernel.UseConfiguration(valueAdapterConfiguration);
+
+        kernel.RegisterForDisposal(commsManager);
+        kernel.RegisterForDisposal(kernelConnection);
         return kernel;
     }
 }

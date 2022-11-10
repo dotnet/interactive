@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             }
         }
 
-        private void Reply(bool isComplete, ZeroMQMessage request, IJupyterMessageSender jupyterMessageSender)
+        private void Reply(bool isComplete, ZeroMQMessage request, IJupyterMessageResponseSender jupyterMessageSender)
         {
             var status = isComplete ? "complete" : "incomplete";
             var indent = isComplete ? string.Empty : "*";

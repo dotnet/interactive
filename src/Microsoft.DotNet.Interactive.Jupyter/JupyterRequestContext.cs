@@ -18,11 +18,11 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         internal static JupyterRequestContext Current { get; set; }
 
         internal JupyterRequestContext(RequestReplyChannel serverChannel, PubSubChannel ioPubChannel, StdInChannel stdInChannel, ZeroMQMessage request, string kernelIdentity)
-            : this(new JupyterMessageSender(ioPubChannel, serverChannel, stdInChannel, kernelIdentity, request), request)
+            : this(new JupyterMessageResponseSender(ioPubChannel, serverChannel, stdInChannel, kernelIdentity, request), request)
         {
         }
 
-        public JupyterRequestContext(IJupyterMessageSender jupyterMessageSender, ZeroMQMessage request)
+        public JupyterRequestContext(IJupyterMessageResponseSender jupyterMessageSender, ZeroMQMessage request)
         {
             Token = Guid.NewGuid().ToString("N");
             JupyterMessageSender = jupyterMessageSender ?? throw new ArgumentNullException(nameof(jupyterMessageSender));
@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
         public string Token { get; }
 
-        public IJupyterMessageSender JupyterMessageSender { get; }
+        public IJupyterMessageResponseSender JupyterMessageSender { get; }
 
         public ZeroMQMessage JupyterRequestMessageEnvelope { get; }
 

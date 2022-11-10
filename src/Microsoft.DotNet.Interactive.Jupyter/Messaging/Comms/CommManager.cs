@@ -81,8 +81,8 @@ internal class CommsManager : IDisposable
     {
         var request = Messaging.Message.Create(new CommInfoRequest());
 
-        var reply = _receiver.Messages.FilterByParent(request)
-                                .SelectContent()
+        var reply = _receiver.Messages.ResponseOf(request)
+                                .Content()
                                 .OfType<CommInfoReply>()
                                 .Take(1);
 

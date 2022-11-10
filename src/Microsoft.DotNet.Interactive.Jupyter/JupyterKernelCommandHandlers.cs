@@ -136,8 +136,9 @@ internal partial class JupyterKernel
                                         command.Code.NormalizeLineEndings(), 
                                         allowStdin: false, // TODO: ZMQ stdin channel is hanging. Disable until a consistent experience can be turned on. 
                                         stopOnError: true));
-        var processMessages = Receiver.Messages.FilterByParent(executeRequest)
-                                .SelectContent()
+        var processMessages = Receiver.Messages
+                                .ResponseOf(executeRequest)
+                                .Content()
                                 .Do(async m =>
                                 {
                                     if (m is ExecuteReply reply)
@@ -219,7 +220,7 @@ internal partial class JupyterKernel
 
                 string input = await GetInputAsync(inputRequest, context);
                 var reply = new InputReply(input);
-                await Sender.SendAsync(Messaging.Message.Create(reply, channel: MessageChannel.stdin));
+                await Sender.SendAsync(Messaging.Message.Create(reply, channel: MessageChannelValues.stdin));
 
                 break;
             default:
@@ -264,7 +265,7 @@ internal partial class JupyterKernel
     {
         await RunOnKernelAsync<InterruptReply>(new InterruptRequest(),
                                                CancellationToken.None,
-                                               channel: MessageChannel.control);
+                                               channel: MessageChannelValues.control);
     }
 
     private void CancelCommandIfRequested(KernelInvocationContext context)

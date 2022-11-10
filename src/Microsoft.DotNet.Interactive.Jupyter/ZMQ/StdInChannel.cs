@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
                     request.Identifiers,
                     request.MetaData,
                     request.Signature,
-                    MessageChannel.stdin));
+                    MessageChannelValues.stdin));
 
             var msgReceived = _receiver.Receive();
             var msgType = msgReceived.Header.MessageType;

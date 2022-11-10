@@ -3,7 +3,9 @@
 
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
+using Microsoft.DotNet.Interactive.Jupyter.Messaging.Comms;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
+using System;
 using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
@@ -14,10 +16,13 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ValueSharing;
 internal class CommValueAdapterConfiguration : IJupyterKernelConfiguration
 {
     private static string TargetName = "value_adapter_comm";
-    private IReadOnlyDictionary<string, IValueAdapterCommDefinition> _commDefinitions;
+    private readonly IReadOnlyDictionary<string, IValueAdapterCommDefinition> _commDefinitions;
+    private readonly CommsManager _commsManager;
 
-    public CommValueAdapterConfiguration()
+    public CommValueAdapterConfiguration(CommsManager commsManager)
     {
+        _commsManager = commsManager ?? throw new ArgumentNullException(nameof(commsManager));
+
         var commDefinitions = new Dictionary<string, IValueAdapterCommDefinition>();
         commDefinitions[LanguageNameValues.Python] = new PythonValueAdapterCommTarget();
         commDefinitions[LanguageNameValues.R] = new RValueAdapterCommTarget();
@@ -57,16 +62,16 @@ internal class CommValueAdapterConfiguration : IJupyterKernelConfiguration
                 return null; // don't try to create value adapter if we failed
             }
 
-        var adapter = await CreateValueAdapterAsync(kernel);
-        return adapter;
-    }
+            var adapter = await CreateCommValueAdapterAsync();
+            return adapter;
+        }
 
         return null;
     }
 
-    private async Task<CommValueAdapter> CreateValueAdapterAsync(JupyterKernel kernel)
+    private async Task<CommValueAdapter> CreateCommValueAdapterAsync()
     {
-        var agent = await kernel.Comms.OpenCommAsync(TargetName);
+        var agent = await _commsManager.OpenCommAsync(TargetName);
 
         if (agent is not null)
         {

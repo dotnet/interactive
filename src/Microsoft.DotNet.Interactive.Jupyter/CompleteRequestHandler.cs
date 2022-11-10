@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             }
         }
 
-        private static void OnCompletionRequestCompleted(CompletionsProduced completionsProduced, IJupyterMessageSender jupyterMessageSender)
+        private static void OnCompletionRequestCompleted(CompletionsProduced completionsProduced, IJupyterMessageResponseSender jupyterMessageSender)
         {
             var startPosition = 0; 
             var endPosition = 0;
