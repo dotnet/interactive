@@ -78,23 +78,13 @@ console.log(jsKernel.name);
 # Execude the next cell. After execution, the output immediately below should be:
 
 ```
-webview
-javascript
-vscode
-.NET
-sql
-kql
-csharp
-fsharp
-pwsh
-html
-value
-mermaid
+[".NET","csharp","fsharp","html","javascript","kql","mermaid","pwsh","sql","value","vscode","webview"]
 ```
 
 #!javascript
 
-kernel.root.findKernels(s => true).forEach(k => console.log(k.name));
+kernels = Array.from(kernel.root.findKernels(s => true).map(k => k.name)).sort();
+return kernels;
 
 #!markdown
 
