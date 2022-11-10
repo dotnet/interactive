@@ -71,8 +71,6 @@ export class ProxyKernel extends Kernel {
                                 eventType: contracts.KernelInfoProducedType,
                                 event: { kernelInfo: this.kernelInfo }
                             });
-                    } else if (envelope.command!.token !== commandToken) {
-                        Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] not processing event, extepctedToken=${commandToken}, receivedTokem=${envelope.command!.token}`);
                     }
                     else if (envelope.command!.token === commandToken) {
                         Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] processing event, envelopeid=${envelope.command!.id}, commandid=${commandId}`);
