@@ -154,7 +154,7 @@ describe("kernelRouting", () => {
                 'kernel://remote/javascript',
                 'kernel://remote/',
                 'kernel://local/',
-                'kernel://localjavascript'
+                'kernel://local/javascript'
             ]);
     });
 });
