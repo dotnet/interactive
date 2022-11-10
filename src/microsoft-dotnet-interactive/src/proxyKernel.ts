@@ -73,10 +73,18 @@ export class ProxyKernel extends Kernel {
                             });
                     }
                     else if (envelope.command!.token === commandToken) {
-                        Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] processing event, envelopeid=${envelope.command!.id}, commandid=${commandId}`);
 
-                        connection.continueCommandRoutingSlip(commandInvocation.commandEnvelope, envelope.command!.routingSlip!);
-                        envelope.command!.routingSlip = commandInvocation.commandEnvelope.routingSlip;//?
+                        Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] processing event, envelopeid=${envelope.command!.id}, commandid=${commandId}`);
+                        Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] processing event, ${JSON.stringify(envelope)}`);
+
+                        try {
+                            const original = [...commandInvocation.commandEnvelope?.routingSlip ?? []];
+                            connection.continueCommandRoutingSlip(commandInvocation.commandEnvelope, envelope.command!.routingSlip!);
+                            envelope.command!.routingSlip = [...commandInvocation.commandEnvelope.routingSlip ?? []];//?
+                            Logger.default.warn(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, command routingSlip :${original}] has changed to: ${JSON.stringify(commandInvocation.commandEnvelope.routingSlip ?? [])}`);
+                        } catch (e: any) {
+                            Logger.default.error(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, error ${e?.message}`);
+                        }
 
                         switch (envelope.eventType) {
                             case contracts.KernelInfoProducedType:
@@ -127,12 +135,12 @@ export class ProxyKernel extends Kernel {
             commandInvocation.commandEnvelope.routingSlip;//?
             Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] forwarding command ${commandInvocation.commandEnvelope.commandType} to ${commandInvocation.commandEnvelope.command.destinationUri}`);
             this._sender.send(commandInvocation.commandEnvelope);
-            Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] about to await with token ${commandToken}`);
+            Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] about to await with token ${commandToken} and  commandid ${commandId}`);
             const enventEnvelope = await completionSource.promise;
             if (enventEnvelope.eventType === contracts.CommandFailedType) {
                 commandInvocation.context.fail((<contracts.CommandFailed>enventEnvelope.event).message);
             }
-            Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] done awaiting with token ${commandToken}`);
+            Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] done awaiting with token ${commandToken}} and  commandid ${commandId}`);
         }
         catch (e) {
             commandInvocation.context.fail((<any>e).message);
