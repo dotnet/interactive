@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as rxjs from "rxjs";
-import { continueCommandRoutingSlip, eventRoutingSlipContains, stampEventRoutingSlip, } from "./connection";
+import { eventRoutingSlipContains, stampEventRoutingSlip, } from "./connection";
 import * as contracts from "./contracts";
 import { Disposable } from "./disposables";
 import { getKernelUri, Kernel } from "./kernel";
