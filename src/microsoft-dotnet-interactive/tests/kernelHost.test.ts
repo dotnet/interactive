@@ -18,13 +18,12 @@ describe("kernelHost",
 
         it("provides uri for kernels", () => {
             const inMemory = createInMemoryChannels();
-            inMemory.local.messagesSent
             const compositeKernel = new CompositeKernel("vscode");
             const childKernel = new Kernel("test", "customLanguage");
             childKernel.registerCommandHandler({
                 commandType: "customCommand",
                 handle: (_commandInvocation) => { return Promise.resolve(); }
-            })
+            });
             compositeKernel.add(childKernel, ["test1", "test2"]);
 
             const kernelHost = new KernelHost(compositeKernel, inMemory.local.sender, inMemory.local.receiver, "kernel://vscode");
@@ -41,8 +40,6 @@ describe("kernelHost",
                     kernelInfo:
                     {
                         aliases: [],
-                        languageName: undefined,
-                        languageVersion: undefined,
                         localName: 'vscode',
                         supportedDirectives: [],
                         supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
@@ -59,7 +56,6 @@ describe("kernelHost",
                     {
                         aliases: ['test1', 'test2'],
                         languageName: 'customLanguage',
-                        languageVersion: undefined,
                         localName: 'test',
                         supportedDirectives: [],
                         supportedKernelCommands: [{ name: 'RequestKernelInfo' }, { name: 'customCommand' }],
