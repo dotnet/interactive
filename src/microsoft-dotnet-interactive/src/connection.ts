@@ -115,14 +115,15 @@ export function isArrayOfString(collection: any): collection is string[] {
     return Array.isArray(collection) && collection.length > 0 && typeof (collection[0]) === typeof ("");
 }
 
-export function ensureUriEnding(uri: string): string {
-    return uri;
 
-    if (uri.endsWith("/")) {
-        return uri;
-    }
-    return uri + "/";
+
+export function createKernelUri(kernelUri: string): string {
+    kernelUri;//?
+    const uri = new URL(kernelUri.replace("kernel:", "http:"));
+    const absoluteUri = uri.toString().replace("http:", "kernel:");
+    return absoluteUri;//?
 }
+
 
 export function stampCommandRoutingSlip(kernelCommandEnvelope: contracts.KernelCommandEnvelope, kernelUri: string) {
     stampRoutingSlip(kernelCommandEnvelope, kernelUri);
@@ -136,8 +137,8 @@ function stampRoutingSlip(kernelCommandOrEventEnvelope: KernelCommandOrEventEnve
     if (kernelCommandOrEventEnvelope.routingSlip === undefined || kernelCommandOrEventEnvelope.routingSlip === null) {
         kernelCommandOrEventEnvelope.routingSlip = [];
     }
-    const normalizedUri = ensureUriEnding(kernelUri);
-    const canAdd = !kernelCommandOrEventEnvelope.routingSlip.find(e => ensureUriEnding(e) === normalizedUri);
+    const normalizedUri = createKernelUri(kernelUri);
+    const canAdd = !kernelCommandOrEventEnvelope.routingSlip.find(e => createKernelUri(e) === normalizedUri);
     if (canAdd) {
         kernelCommandOrEventEnvelope.routingSlip.push(normalizedUri);
         kernelCommandOrEventEnvelope.routingSlip;//?
@@ -157,8 +158,8 @@ function continueRoutingSlip(kernelCommandOrEventEnvelope: KernelCommandOrEventE
     }
 
     for (i; i < kernelUris.length; i++) {
-        const normalizedUri = ensureUriEnding(kernelUris[i]);
-        const canAdd = !kernelCommandOrEventEnvelope.routingSlip.find(e => ensureUriEnding(e) === normalizedUri);
+        const normalizedUri = createKernelUri(kernelUris[i]);//?
+        const canAdd = !kernelCommandOrEventEnvelope.routingSlip.find(e => createKernelUri(e) === normalizedUri);
         if (canAdd) {
             kernelCommandOrEventEnvelope.routingSlip.push(normalizedUri);
         } else {
@@ -166,6 +167,7 @@ function continueRoutingSlip(kernelCommandOrEventEnvelope: KernelCommandOrEventE
         }
     }
 }
+
 
 export function continueCommandRoutingSlip(kernelCommandEnvelope: contracts.KernelCommandEnvelope, kernelUris: string[]): void {
     continueRoutingSlip(kernelCommandEnvelope, kernelUris);
@@ -195,7 +197,7 @@ function routingSlipStartsWith(thisKernelUris: string[], otherKernelUris: string
 
     if (otherKernelUris.length > 0 && thisKernelUris.length >= otherKernelUris.length) {
         for (let i = 0; i < otherKernelUris.length; i++) {
-            if (ensureUriEnding(otherKernelUris[i]) !== ensureUriEnding(thisKernelUris[i])) {
+            if (createKernelUri(otherKernelUris[i]) !== createKernelUri(thisKernelUris[i])) {
                 startsWith = false;
                 break;
             }
@@ -217,7 +219,7 @@ export function commandRoutingSlipContains(kernlEvent: contracts.KernelCommandEn
 }
 
 function routingSlipContains(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope, kernelUri: string) {
-    return kernelCommandOrEventEnvelope?.routingSlip?.find(e => e === ensureUriEnding(kernelUri)) !== undefined;
+    return kernelCommandOrEventEnvelope?.routingSlip?.find(e => e === createKernelUri(kernelUri)) !== undefined;
 }
 
 export function ensureOrUpdateProxyForKernelInfo(kernelInfoProduced: contracts.KernelInfoProduced, compositeKernel: CompositeKernel) {

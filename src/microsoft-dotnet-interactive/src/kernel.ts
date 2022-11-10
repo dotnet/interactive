@@ -94,7 +94,7 @@ export class Kernel {
         return this._scheduler;
     }
 
-    private ensureCommandTokenAndId(commandEnvelope: contracts.KernelCommandEnvelope) {
+    protected ensureCommandTokenAndId(commandEnvelope: contracts.KernelCommandEnvelope) {
         if (!commandEnvelope.token) {
             let nextToken = this._tokenGenerator.GetNewToken();
             if (KernelInvocationContext.current?.commandEnvelope) {

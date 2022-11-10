@@ -21,7 +21,8 @@ export class KernelHost {
 
     constructor(kernel: CompositeKernel, sender: connection.IKernelCommandAndEventSender, receiver: connection.IKernelCommandAndEventReceiver, hostUri: string) {
         this._kernel = kernel;
-        this._uri = hostUri || "kernel://vscode";
+        this._uri = connection.createKernelUri(hostUri || "kernel://vscode");
+
         this._kernel.host = this;
         this._scheduler = new KernelScheduler<contracts.KernelCommandEnvelope>();
 
@@ -50,8 +51,7 @@ export class KernelHost {
     }
 
     public addKernelInfo(kernel: Kernel, kernelInfo: contracts.KernelInfo) {
-
-        kernelInfo.uri = `${this._uri}/${kernel.name}`;//?
+        kernelInfo.uri = connection.createKernelUri(`${this._uri}${kernel.name}`);
         this._kernelToKernelInfo.set(kernel, kernelInfo);
         this._uriToKernel.set(kernelInfo.uri, kernel);
     }

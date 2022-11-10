@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { commandRoutingSlipContains, eventRoutingSlipContains, stampCommandRoutingSlip, stampEventRoutingSlip } from "./connection";
+import { commandRoutingSlipContains, createKernelUri, eventRoutingSlipContains, stampCommandRoutingSlip, stampEventRoutingSlip } from "./connection";
 import * as contracts from "./contracts";
 import { getKernelUri, IKernelCommandInvocation, Kernel, KernelType } from "./kernel";
 import { KernelHost } from "./kernelHost";
@@ -306,7 +306,7 @@ class KernelCollection implements Iterable<Kernel> {
         });
 
         if (this._compositeKernel.host) {
-            kernel.kernelInfo.uri = `${this._compositeKernel.host.uri}/${kernel.kernelInfo.localName}`;//?
+            kernel.kernelInfo.uri = createKernelUri(`${this._compositeKernel.host.uri}${kernel.kernelInfo.localName}`);//?
             this._kernelsByLocalUri.set(kernel.kernelInfo.uri, kernel);
         }
 

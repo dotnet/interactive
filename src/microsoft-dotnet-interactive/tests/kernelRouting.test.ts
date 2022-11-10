@@ -107,9 +107,9 @@ describe("kernelRouting", () => {
 
         expect(Array.from(command.routingSlip!.values())).to.deep.equal(
             [
-                'kernel://local',
+                'kernel://local/',
                 'kernel://local/javascript',
-                'kernel://remote',
+                'kernel://remote/',
                 'kernel://remote/javascript']);
     });
 
@@ -152,8 +152,8 @@ describe("kernelRouting", () => {
         expect(Array.from(events[0].routingSlip!.values())).to.deep.equal(
             [
                 'kernel://remote/javascript',
-                'kernel://remote',
-                'kernel://local',
+                'kernel://remote/',
+                'kernel://local/',
                 'kernel://localjavascript'
             ]);
     });

@@ -33,7 +33,7 @@ describe("kernelHost",
             expect(inMemory.local.messagesSent).to.deep.equal([{
                 event: {},
                 eventType: 'KernelReady',
-                routingSlip: ['kernel://vscode']
+                routingSlip: ['kernel://vscode/']
             },
             {
                 event:
@@ -46,11 +46,11 @@ describe("kernelHost",
                         localName: 'vscode',
                         supportedDirectives: [],
                         supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
-                        uri: 'kernel://vscode'
+                        uri: 'kernel://vscode/'
                     }
                 },
                 eventType: 'KernelInfoProduced',
-                routingSlip: ['kernel://vscode']
+                routingSlip: ['kernel://vscode/']
             },
             {
                 event:

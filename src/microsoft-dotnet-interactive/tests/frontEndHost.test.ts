@@ -56,7 +56,7 @@ describe("frontEndHost", () => {
         expect(seenMessages).to.deep.equal([{
             event: {},
             eventType: 'KernelReady',
-            routingSlip: ['kernel://testKernel']
+            routingSlip: ['kernel://testkernel/']
         },
         {
             event:
@@ -69,11 +69,11 @@ describe("frontEndHost", () => {
                     localName: 'testKernel',
                     supportedDirectives: [],
                     supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
-                    uri: 'kernel://testKernel'
+                    uri: 'kernel://testkernel/'
                 }
             },
             eventType: 'KernelInfoProduced',
-            routingSlip: ['kernel://testKernel']
+            routingSlip: ['kernel://testkernel/']
         },
         {
             event:
@@ -91,11 +91,11 @@ describe("frontEndHost", () => {
                         { name: 'RequestValueInfos' },
                         { name: 'RequestValue' },
                         { name: 'SendValue' }],
-                    uri: 'kernel://testKernel/javascript'
+                    uri: 'kernel://testkernel/javascript'
                 }
             },
             eventType: 'KernelInfoProduced',
-            routingSlip: ['kernel://testKernel/javascript']
+            routingSlip: ['kernel://testkernel/javascript']
         }]);
     });
 
@@ -135,27 +135,18 @@ describe("frontEndHost", () => {
         const kernel = compositeKernel.findKernelByName('sql');
         expect(kernel).to.not.be.undefined;
         expect(kernel!.kernelInfo).to.deep.equal({
-            localName: 'sql',
-            uri: 'kernel://testKernel/sql',
-            remoteUri: 'kernel://remote/sql',
             aliases: [],
             languageName: 'SQL',
             languageVersion: '10',
+            localName: 'sql',
+            remoteUri: 'kernel://remote/sql',
             supportedDirectives: [],
-            supportedKernelCommands: [
-                {
-                    name: contracts.RequestKernelInfoType
-                },
-                {
-                    name: contracts.SubmitCodeType
-                },
-                {
-                    name: contracts.RequestValueInfosType
-                },
-                {
-                    name: contracts.RequestValueType
-                }
-            ]
+            supportedKernelCommands:
+                [{ name: 'RequestKernelInfo' },
+                { name: 'SubmitCode' },
+                { name: 'RequestValueInfos' },
+                { name: 'RequestValue' }],
+            uri: 'kernel://testkernel/sql'
         });
     });
 
@@ -211,27 +202,18 @@ describe("frontEndHost", () => {
         const kernel = compositeKernel.findKernelByName('sql');
         expect(kernel).to.not.be.undefined;
         expect(kernel!.kernelInfo).to.deep.equal({
-            localName: 'sql',
-            uri: 'kernel://testKernel/sql',
-            remoteUri: 'kernel://remote/sql',
             aliases: [],
             languageName: 'SQL',
             languageVersion: '10',
+            localName: 'sql',
+            remoteUri: 'kernel://remote/sql',
             supportedDirectives: [],
-            supportedKernelCommands: [
-                {
-                    name: contracts.RequestKernelInfoType
-                },
-                {
-                    name: contracts.SubmitCodeType
-                },
-                {
-                    name: contracts.RequestValueInfosType
-                },
-                {
-                    name: contracts.RequestValueType
-                }
-            ]
+            supportedKernelCommands:
+                [{ name: 'RequestKernelInfo' },
+                { name: 'SubmitCode' },
+                { name: 'RequestValueInfos' },
+                { name: 'RequestValue' }],
+            uri: 'kernel://testkernel/sql'
         });
     });
 
