@@ -31,7 +31,8 @@
   "dependencies": {
     "@microsoft/signalr": "6.0.5",
     "tslib": "2.4.0",
-    "rxjs": "7.5.6"
+    "rxjs": "7.5.6",
+    "vscode-uri": "3.0.6"
   },
   "devDependencies": {
     "@testdeck/mocha": "0.2.0",
