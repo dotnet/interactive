@@ -23,6 +23,7 @@ Microsoft.DotNet.Interactive
   public class CommandRoutingSlip : RoutingSlip
     .ctor(RoutingSlip source = null)
     public System.Void Stamp(System.Uri uri)
+    public System.Void StampAs(System.Uri uri, System.String tag)
     public System.Void StampAsArrived(System.Uri uri)
   public class CompositeKernel : Kernel, Microsoft.DotNet.Interactive.Extensions.IExtensibleKernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, System.Collections.Generic.IEnumerable<Kernel>, System.Collections.IEnumerable, System.IDisposable
     .ctor(System.String name = null)

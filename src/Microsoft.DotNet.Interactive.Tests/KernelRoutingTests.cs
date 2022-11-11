@@ -187,8 +187,10 @@ Console.WriteLine(1);";
         command.RoutingSlip.ToUriArray().Should().BeEquivalentTo(
             new[]
             {
-                "kernel://local/.NET",
-                "kernel://local/csharp"
+                "kernel://local/.NET?tag=arrived", 
+                "kernel://local/csharp?tag=arrived", 
+                "kernel://local/csharp", 
+                "kernel://local/.NET"
             });
     }
 
@@ -299,10 +301,14 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
         command.RoutingSlip.ToUriArray().Should().BeEquivalentTo(
             new[]
             {
-                "kernel://local/",
-                "kernel://local/csharp-proxy",
-                "kernel://remote/",
-                "kernel://remote/csharp"
+                "kernel://local/?tag=arrived", 
+                "kernel://local/csharp-proxy?tag=arrived", 
+                "kernel://remote/?tag=arrived", 
+                "kernel://remote/csharp?tag=arrived", 
+                "kernel://remote/csharp", 
+                "kernel://remote/", 
+                "kernel://local/csharp-proxy", 
+                "kernel://local/"
             });
     }
 

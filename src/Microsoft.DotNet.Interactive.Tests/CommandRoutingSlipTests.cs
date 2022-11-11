@@ -25,7 +25,7 @@ public class CommandRoutingSlipTests
     {
         var routingSlip = new CommandRoutingSlip();
         routingSlip.StampAsArrived(new Uri("kernel://1"));
-        routingSlip.StartsWith(new Uri("kernel://1")).Should().BeTrue();
+        routingSlip.StartsWith(new Uri("kernel://1/?tag=arrived")).Should().BeTrue();
     }
 
     [Fact]
@@ -39,9 +39,11 @@ public class CommandRoutingSlipTests
         routingSlip.StampAsArrived(new Uri("kernel://3"));
 
         routingSlip.ToUriArray().Should().ContainInOrder(
+            "kernel://1/?tag=arrived",
             "kernel://1/",
+            "kernel://2/?tag=arrived",
             "kernel://2/",
-            "kernel://3/?completed=false");
+            "kernel://3/?tag=arrived");
     }
 
     [Fact]
@@ -50,7 +52,7 @@ public class CommandRoutingSlipTests
         var routingSlip = new CommandRoutingSlip();
         routingSlip.StampAsArrived(new Uri("kernel://1"));
         routingSlip.Stamp(new Uri("kernel://1"));
-        routingSlip.StartsWith(new Uri("kernel://1")).Should().BeTrue();
+        routingSlip.StartsWith(new Uri("kernel://1/?tag=arrived")).Should().BeTrue();
     }
 
     [Fact]
@@ -62,7 +64,7 @@ public class CommandRoutingSlipTests
         var markAgain = () => routingSlip.StampAsArrived(new Uri("kernel://1"));
 
         markAgain.Should().ThrowExactly<InvalidOperationException>()
-            .WithMessage("The uri kernel://1/ is already in the routing slip");
+            .WithMessage("The uri kernel://1/?tag=arrived is already in the routing slip");
     }
 
     [Fact]
@@ -73,7 +75,7 @@ public class CommandRoutingSlipTests
         var markAgain = () => routingSlip.Stamp(new Uri("kernel://1"));
 
         markAgain.Should().ThrowExactly<InvalidOperationException>()
-            .WithMessage("The uri kernel://1/ is not in the routing slip or has already been completed");
+            .WithMessage("The uri kernel://1/ is not in the routing slip");
     }
 
     [Fact]
@@ -135,14 +137,15 @@ public class CommandRoutingSlipTests
     public static IEnumerable<object[]> EventRoutingSlipsToTest()
     {
         yield return new object[] { Array.Empty<Uri>(), false };
-        yield return new object[] { new[] { new Uri("kernel://1") }, true };
-        yield return new object[] { new[] { new Uri("kernel://1"), new Uri("kernel://2") }, true };
-        yield return new object[] { new[] { new Uri("kernel://1"), new Uri("kernel://2"), new Uri("kernel://3") }, true };
-        yield return new object[] { new[] { new Uri("kernel://1"), new Uri("kernel://2"), new Uri("kernel://4") }, false };
+        yield return new object[] { new[] { new Uri("kernel://1") }, false };
+        yield return new object[] { new[] { new Uri("kernel://1/?tag=arrived"), new Uri("kernel://1") }, true };
+        yield return new object[] { new[] { new Uri("kernel://1/?tag=arrived"), new Uri("kernel://1"), new Uri("kernel://2/?tag=arrived"), new Uri("kernel://2") }, true };
+        yield return new object[] { new[] { new Uri("kernel://1/?tag=arrived"), new Uri("kernel://1"), new Uri("kernel://2/?tag=arrived"), new Uri("kernel://2"), new Uri("kernel://3/?tag=arrived"), new Uri("kernel://3") }, true };
+        yield return new object[] { new[] { new Uri("kernel://1/?tag=arrived"), new Uri("kernel://1"), new Uri("kernel://2/?tag=arrived"), new Uri("kernel://2"), new Uri("kernel://4?tag=arrived") }, false };
     }
 
     [Fact]
-    public void continuing_a_routingSlip_with_another_contains_only_fully_Stamped_kernel_uris()
+    public void continuing_a_routingSlip_with_another_contains_all_kernel_uris()
     {
         var original = new CommandRoutingSlip();
         original.FullStamp(new Uri("kernel://1"));
@@ -157,8 +160,8 @@ public class CommandRoutingSlipTests
 
         original.ContinueWith(continuation);
 
-        original.ToUriArray().Should().NotContain(
-            "kernel://4/");
+        original.ToUriArray().Should().Contain(
+            "kernel://4/?tag=arrived");
     }
 
     [Fact]

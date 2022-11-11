@@ -14,35 +14,39 @@ public class CommandRoutingSlip : RoutingSlip
 
     }
 
+    public void StampAs(Uri uri, string tag)
+    {
+        var absoluteUri = GetAbsoluteUriWithoutQuery(uri);
+        var entry = new Entry { Uri = absoluteUri, Tag = tag };
+        if (Entries.SingleOrDefault(e => entry.AbsoluteUri == e.AbsoluteUri) is null)
+        {
+            Entries.Add(entry);
+        }
+        else
+        {
+            throw new InvalidOperationException($"The uri {entry.AbsoluteUri} is already in the routing slip");
+        }
+    }
 
     public override void Stamp(Uri uri)
     {
         var absoluteUri = GetAbsoluteUriWithoutQuery(uri);
-        var notCompleted = uri.Query.Contains("completed=false");
-        if (Entries.SingleOrDefault(e => e.Uri == absoluteUri) is {Completed: false} entry)
+        if (Entries.SingleOrDefault(e => e.Uri == absoluteUri) is null)
         {
-            if(notCompleted)
-            {
-                throw new InvalidOperationException($"The uri {uri} is not valid for this routing slip");
-            }
-            entry.Completed = true;
+            throw new InvalidOperationException($"The uri {absoluteUri} is not in the routing slip");
+
         }
-        else
+
+        if (Entries.SingleOrDefault(e => e.Uri == absoluteUri) is {Tag: null} entry)
         {
-            throw new InvalidOperationException($"The uri {uri} is not in the routing slip or has already been completed");
+            throw new InvalidOperationException($"The uri {entry.AbsoluteUri} is already in the routing slip");
         }
+
+        Entries.Add(new Entry{Uri = absoluteUri} );
     }
 
     public void StampAsArrived(Uri uri)
     {
-        var absoluteUri = GetAbsoluteUriWithoutQuery(uri);
-        if (Entries.SingleOrDefault(entry => entry.Uri == absoluteUri) is null)
-        {
-            Entries.Add(new Entry { Uri = absoluteUri, Completed = false });
-        }
-        else
-        {
-            throw new InvalidOperationException($"The uri {uri} is already in the routing slip");
-        }
+        StampAs(uri, "arrived");
     }
 }

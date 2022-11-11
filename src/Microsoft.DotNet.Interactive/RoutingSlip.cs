@@ -17,7 +17,7 @@ public abstract class RoutingSlip
     {
         _entries = source switch
         {
-            { } => new List<Entry>(source.ToUriArray().Select(e => new Entry { Uri = e, Completed = true })),
+            { } => new List<Entry>(source.ToUriArray().Select(e => new Entry { Uri = e })),
             _ => new List<Entry>()
         };
     }
@@ -30,21 +30,11 @@ public abstract class RoutingSlip
         return entries;
     } 
 
-    public bool Contains(Uri uri)
-    {
-        return Contains(uri.AbsoluteUri);
-    }
+    public bool Contains(Uri uri) => Contains(uri.AbsoluteUri);
 
-    public bool Contains(string uri)
-    {
-        return _entries.Any(e => e.Uri == uri);
-    }
-
-   
-    public bool StartsWith(RoutingSlip other)
-    {
-        return StartsWith(other._entries);
-    }
+    public bool Contains(string uri) => _entries.Any(e => e.AbsoluteUri == uri);
+    
+    public bool StartsWith(RoutingSlip other) => StartsWith(other._entries);
 
     public bool StartsWith(params string[] uris)
     {
@@ -52,7 +42,7 @@ public abstract class RoutingSlip
 
         if (uris.Length > 0 && uris.Length <= _entries.Count)
         {
-            if (uris.Where((entry, i) => _entries[i].Uri != entry).Any())
+            if (uris.Where((entry, i) => _entries[i].AbsoluteUri != entry).Any())
             {
                 startsWith = false;
             }
@@ -65,10 +55,7 @@ public abstract class RoutingSlip
         return startsWith;
     }
 
-    public bool StartsWith(params Uri[] uris)
-    {
-        return StartsWith(uris.Select(GetAbsoluteUriWithoutQuery).ToArray());
-    }
+    public bool StartsWith(params Uri[] uris) => StartsWith(uris.Select(u => u.AbsoluteUri).ToArray());
 
     public void ContinueWith(RoutingSlip other)
     {
@@ -77,13 +64,6 @@ public abstract class RoutingSlip
         {
             if (other.StartsWith(this))
             {
-                for (var i = 0; i < _entries.Count; i++)
-                {
-                    if (!_entries[i].Completed)
-                    {
-                        _entries[i].Completed = source[i].Completed;
-                    }
-                }
                 source = source.Skip(_entries.Count).ToList();
             }
 
@@ -92,7 +72,7 @@ public abstract class RoutingSlip
 
                 if (!Contains(entry))
                 {
-                    _entries.Add(new Entry {Uri = entry.Uri, Completed = entry.Completed });
+                    _entries.Add(new Entry {Uri = entry.Uri, Tag = entry.Tag });
                 }
                 else
                 {
@@ -103,7 +83,7 @@ public abstract class RoutingSlip
     }
     protected bool Contains(Entry entry)
     {
-        return _entries.Any(e => e.Uri == entry.Uri);
+        return _entries.Any(e => e.AbsoluteUri == entry.AbsoluteUri);
     }
 
     protected bool StartsWith(List<Entry> entries)
@@ -112,7 +92,7 @@ public abstract class RoutingSlip
 
         if (entries.Count > 0 && entries.Count <= _entries.Count)
         {
-            if (entries.Where((entry, i) => _entries[i].Uri != entry.Uri).Any())
+            if (entries.Where((entry, i) => _entries[i].AbsoluteUri != entry.AbsoluteUri).Any())
             {
                 startsWith = false;
             }
@@ -138,7 +118,7 @@ public abstract class RoutingSlip
     protected class Entry
     {
         private string _uri;
-        private bool _completed;
+        private string _tag;
         public string AbsoluteUri { get; private set; }
 
         public string Uri
@@ -158,27 +138,24 @@ public abstract class RoutingSlip
             {
                 var uriBuilder = new UriBuilder(_uri);
 
-                if (!_completed)
+                if (!string.IsNullOrWhiteSpace(_tag))
                 {
-                    uriBuilder.Query = _completed
-                        ? ""
-                        : "completed=false";
+                    uriBuilder.Query = $"tag={_tag}";
                 }
+               
                 AbsoluteUri = uriBuilder.Uri.AbsoluteUri;
             }
 
         }
 
-        public bool Completed
+        public string Tag
         {
-            get => _completed;
+            get => _tag;
             set
             {
-                _completed = value;
+                _tag = value;
                 Update();
-
             }
         }
     }
-
 }

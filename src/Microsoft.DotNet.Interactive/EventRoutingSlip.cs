@@ -16,13 +16,14 @@ public class EventRoutingSlip : RoutingSlip
 
     public override void Stamp(Uri uri)
     {
-        if (Entries.SingleOrDefault(entry => entry.Uri == uri.AbsoluteUri) is null)
+        var absoluteUri = GetAbsoluteUriWithoutQuery(uri);
+        if (Entries.SingleOrDefault(entry => entry.Uri == absoluteUri) is null)
         {
-            Entries.Add(new Entry { Uri = uri.AbsoluteUri, Completed = true });
+            Entries.Add(new Entry { Uri = absoluteUri });
         }
         else
         {
-            throw new InvalidOperationException($"The uri {uri} is already in the routing slip");
+            throw new InvalidOperationException($"The uri {absoluteUri} is already in the routing slip");
         }
     }
 }
