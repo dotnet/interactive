@@ -27,6 +27,7 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
         AddOption(TargetUrl);
         AddOption(Token);
         AddOption(UseBearerAuth);
+        AddOption(InitScript);
         AddOption(KernelSpecName.AddCompletions(ctx => GetKernelSpecsCompletions(ctx)));
     }
 
@@ -51,14 +52,20 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
     {
     };
 
+    public Option<string> InitScript { get; } =
+    new("--init-script", "Script to run on kernel initialization")
+    {
+    };
+
     public override async Task<Kernel> ConnectKernelAsync(
         KernelInvocationContext context,
         InvocationContext commandLineContext)
     {
         var kernelSpecName = commandLineContext.ParseResult.GetValueForOption(KernelSpecName);
+        var initScript = commandLineContext.ParseResult.GetValueForOption(InitScript);
 
         var connection = GetJupyterConnection(commandLineContext.ParseResult) ?? _localConnection;
-        JupyterKernelConnector connector = new JupyterKernelConnector(connection, kernelSpecName);
+        JupyterKernelConnector connector = new JupyterKernelConnector(connection, kernelSpecName, initScript);
 
         CompositeDisposable disposables = new CompositeDisposable
         {

@@ -35,7 +35,7 @@ internal class HttpApiClient : IDisposable
     public virtual async Task<HttpResponseMessage> SendRequestAsync(string relativeApiPath, HttpContent content, HttpMethod method)
     {
         _httpClient.DefaultRequestHeaders.Clear();
-        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(".NET internative");
+        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(".NET interactive");
 
         var token = await _authProvider.GetTokenAsync();
         _httpClient.DefaultRequestHeaders.Add("Authorization", $"{_authProvider.AuthScheme} {token}");

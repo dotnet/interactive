@@ -14,11 +14,13 @@ public class JupyterKernelConnector : IKernelConnector
 {
     private readonly IJupyterConnection _jupyterConnection;
     private readonly string _kernelSpecName;
+    private readonly string _initScript;
 
-    public JupyterKernelConnector(IJupyterConnection jupyterConnection, string kernelSpecName)
+    public JupyterKernelConnector(IJupyterConnection jupyterConnection, string kernelSpecName, string initScript)
     {
         _jupyterConnection = jupyterConnection ?? throw new ArgumentNullException(nameof(jupyterConnection));
         _kernelSpecName = kernelSpecName ?? throw new ArgumentNullException(nameof(kernelSpecName));
+        _initScript = initScript;
     }
 
     public async Task<Kernel> CreateKernelAsync(string kernelName)
@@ -29,6 +31,11 @@ public class JupyterKernelConnector : IKernelConnector
         await kernelConnection.StartAsync();
         var kernel = await JupyterKernel.CreateAsync(kernelName, kernelConnection.Uri, kernelConnection.Sender, kernelConnection.Receiver);
 
+        if (!string.IsNullOrEmpty(_initScript))
+        {
+            await kernel.RunOnKernelAsync(_initScript);
+        }
+        
         var valueAdapterConfiguration = new CommValueAdapterConfiguration(commsManager);
         await kernel.UseConfiguration(valueAdapterConfiguration);
 
