@@ -348,13 +348,15 @@ Microsoft.DotNet.Interactive
     public System.String ToString()
   public abstract class RoutingSlip
     public System.Boolean Contains(System.Uri uri)
-    public System.Boolean Contains(System.String absoluteUri)
+    public System.Boolean Contains(System.String uri)
+    protected System.Boolean Contains(Entry entry)
     public System.Void ContinueWith(RoutingSlip other)
     protected System.Collections.Generic.ICollection<Entry> get_Entries()
     public System.Void Stamp(System.Uri uri)
     public System.Boolean StartsWith(RoutingSlip other)
-    public System.Boolean StartsWith(System.String[] absoluteUris)
+    public System.Boolean StartsWith(System.String[] uris)
     public System.Boolean StartsWith(System.Uri[] uris)
+    protected System.Boolean StartsWith(System.Collections.Generic.List<Entry> entries)
     public System.String[] ToUriArray()
   public class ScriptContent, Microsoft.AspNetCore.Html.IHtmlContent
     .ctor(System.String scriptValue)
