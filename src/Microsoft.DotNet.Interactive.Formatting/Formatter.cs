@@ -362,11 +362,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 return;
             }
 
-            var expandProperties = Formatter<T>.ExpandsProperties;
-
             var formatter = Default as MultiLinePlainTextFormatter;
 
-            if (expandProperties)
+            if (Formatter<T>.TypeIsScalar)
+            {
+                Default.WriteStartSequenceOfValues(context);
+            }
+            else
             {
                 if (formatter is not null)
                 {
@@ -376,10 +378,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 }
 
                 Default.WriteStartSequenceOfObjects(context);
-            }
-            else
-            {
-                Default.WriteStartSequenceOfValues(context);
             }
 
             listExpansionLimit ??= Formatter<T>.ListExpansionLimit;
@@ -393,13 +391,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     if (i > 0)
                     {
-                        if (expandProperties)
+                        if (Formatter<T>.TypeIsScalar)
                         {
-                            Default.WriteObjectSequenceItemSeparator(context);
+                            Default.WriteValueSequenceItemSeparator(context);
                         }
                         else
                         {
-                            Default.WriteValueSequenceItemSeparator(context);
+                            Default.WriteObjectSequenceItemSeparator(context);
                         }
                     }
 
@@ -417,7 +415,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                     context.IsStartingObjectWithinSequence = false;
 
-                    if (expandProperties)
+                    if (!Formatter<T>.TypeIsScalar)
                     {
                         Default.WriteEndObjectWithinSequence(context);
                     }
@@ -436,7 +434,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 writer.Write("more)");
             }
 
-            if (expandProperties)
+            if (!Formatter<T>.TypeIsScalar)
             {
                 Default.WriteEndSequenceOfObjects(context);
             }
