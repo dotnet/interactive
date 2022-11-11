@@ -9,7 +9,7 @@ import { CompositeKernel } from "./compositeKernel";
 import { KernelScheduler } from "./kernelScheduler";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
 import * as disposables from "./disposables";
-import { commandRoutingSlipContains, eventRoutingSlipContains, stampCommandRoutingSlip, stampEventRoutingSlip } from "./connection";
+import * as routingslip from "./routingslip";
 import * as rxjs from "rxjs";
 
 export interface IKernelCommandInvocation {
@@ -130,8 +130,8 @@ export class Kernel {
     async send(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         this.ensureCommandTokenAndId(commandEnvelope);
         const kernelUri = getKernelUri(this);
-        if (!commandRoutingSlipContains(commandEnvelope, kernelUri)) {
-            stampCommandRoutingSlip(commandEnvelope, getKernelUri(this));
+        if (!routingslip.commandRoutingSlipContains(commandEnvelope, kernelUri)) {
+            routingslip.stampCommandRoutingSlip(commandEnvelope, getKernelUri(this));
         } else {
             "should not be here";//?
         }
@@ -177,8 +177,8 @@ export class Kernel {
                     message;//?
                     Logger.default.info(message);
                     const kernelUri = getKernelUri(this);
-                    if (!eventRoutingSlipContains(e, kernelUri)) {
-                        stampEventRoutingSlip(e, kernelUri);
+                    if (!routingslip.eventRoutingSlipContains(e, kernelUri)) {
+                        routingslip.stampEventRoutingSlip(e, kernelUri);
                     } else {
                         "should not get here";//?
                     }
@@ -263,7 +263,7 @@ export class Kernel {
                 eventType: contracts.KernelInfoProducedType,
                 event: event
             };
-            stampEventRoutingSlip(envelope, getKernelUri(this));
+            routingslip.stampEventRoutingSlip(envelope, getKernelUri(this));
             const context = KernelInvocationContext.current;
 
             if (context) {

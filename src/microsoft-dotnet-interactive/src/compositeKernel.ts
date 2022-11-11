@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { commandRoutingSlipContains, createKernelUri, eventRoutingSlipContains, stampCommandRoutingSlip, stampEventRoutingSlip } from "./connection";
+import * as routingslip from "./routingslip";
 import * as contracts from "./contracts";
 import { getKernelUri, IKernelCommandInvocation, Kernel, KernelType } from "./kernel";
 import { KernelHost } from "./kernelHost";
@@ -61,8 +61,8 @@ export class CompositeKernel extends Kernel {
             next: (event) => {
                 event;//?
                 const kernelUri = getKernelUri(this);
-                if (!eventRoutingSlipContains(event, kernelUri)) {
-                    stampEventRoutingSlip(event, kernelUri);
+                if (!routingslip.eventRoutingSlipContains(event, kernelUri)) {
+                    routingslip.stampEventRoutingSlip(event, kernelUri);
                 }
                 event;//?
                 this.publishEvent(event);
@@ -165,8 +165,8 @@ export class CompositeKernel extends Kernel {
                 invocationContext.handlingKernel = kernel;
             }
             const kernelUri = getKernelUri(kernel);
-            if (!commandRoutingSlipContains(commandEnvelope, kernelUri)) {
-                stampCommandRoutingSlip(commandEnvelope, getKernelUri(kernel));
+            if (!routingslip.commandRoutingSlipContains(commandEnvelope, kernelUri)) {
+                routingslip.stampCommandRoutingSlip(commandEnvelope, getKernelUri(kernel));
             } else {
                 "we should not be here";//?
             }
@@ -306,7 +306,7 @@ class KernelCollection implements Iterable<Kernel> {
         });
 
         if (this._compositeKernel.host) {
-            kernel.kernelInfo.uri = createKernelUri(`${this._compositeKernel.host.uri}${kernel.kernelInfo.localName}`);//?
+            kernel.kernelInfo.uri = routingslip.createKernelUri(`${this._compositeKernel.host.uri}${kernel.kernelInfo.localName}`);//?
             this._kernelsByLocalUri.set(kernel.kernelInfo.uri, kernel);
         }
 

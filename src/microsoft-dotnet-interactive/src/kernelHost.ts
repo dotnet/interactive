@@ -4,6 +4,7 @@
 import { CompositeKernel } from './compositeKernel';
 import * as contracts from './contracts';
 import * as connection from './connection';
+import * as routingSlip from './routingslip';
 import { Kernel } from './kernel';
 import { ProxyKernel } from './proxyKernel';
 import { Logger } from './logger';
@@ -21,7 +22,7 @@ export class KernelHost {
 
     constructor(kernel: CompositeKernel, sender: connection.IKernelCommandAndEventSender, receiver: connection.IKernelCommandAndEventReceiver, hostUri: string) {
         this._kernel = kernel;
-        this._uri = connection.createKernelUri(hostUri || "kernel://vscode");
+        this._uri = routingSlip.createKernelUri(hostUri || "kernel://vscode");
 
         this._kernel.host = this;
         this._scheduler = new KernelScheduler<contracts.KernelCommandEnvelope>();
@@ -51,7 +52,7 @@ export class KernelHost {
     }
 
     public addKernelInfo(kernel: Kernel, kernelInfo: contracts.KernelInfo) {
-        kernelInfo.uri = connection.createKernelUri(`${this._uri}${kernel.name}`);
+        kernelInfo.uri = routingSlip.createKernelUri(`${this._uri}${kernel.name}`);
         this._kernelToKernelInfo.set(kernel, kernelInfo);
         this._uriToKernel.set(kernelInfo.uri, kernel);
     }

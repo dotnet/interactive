@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as rxjs from "rxjs";
-import { eventRoutingSlipContains, stampEventRoutingSlip, } from "./connection";
+import * as routingslip from "./routingslip";
 import * as contracts from "./contracts";
 import { Disposable } from "./disposables";
 import { getKernelUri, Kernel } from "./kernel";
@@ -112,8 +112,8 @@ export class KernelInvocationContext implements Disposable {
 
         if (this.handlingKernel) {
             const kernelUri = getKernelUri(this.handlingKernel);
-            if (!eventRoutingSlipContains(kernelEvent, kernelUri)) {
-                stampEventRoutingSlip(kernelEvent, kernelUri);
+            if (!routingslip.eventRoutingSlipContains(kernelEvent, kernelUri)) {
+                routingslip.stampEventRoutingSlip(kernelEvent, kernelUri);
                 kernelEvent.routingSlip;//?
             } else {
                 "should not be here";//?

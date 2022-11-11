@@ -5,6 +5,7 @@ import * as contracts from "./contracts";
 import { Logger } from "./logger";
 import { Kernel, IKernelCommandHandler, IKernelCommandInvocation, getKernelUri, KernelType } from "./kernel";
 import * as connection from "./connection";
+import * as routingSlip from "./routingslip";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
 import { KernelInvocationContext } from "./kernelInvocationContext";
 
@@ -27,8 +28,8 @@ export class ProxyKernel extends Kernel {
     private delegatePublication(envelope: contracts.KernelEventEnvelope, invocationContext: KernelInvocationContext): void {
         let alreadyBeenSeen = false;
         const kernelUri = getKernelUri(this);
-        if (kernelUri && !connection.eventRoutingSlipContains(envelope, kernelUri)) {
-            connection.stampEventRoutingSlip(envelope, kernelUri);
+        if (kernelUri && !routingSlip.eventRoutingSlipContains(envelope, kernelUri)) {
+            routingSlip.stampEventRoutingSlip(envelope, kernelUri);
         } else {
             alreadyBeenSeen = true;
         }
@@ -79,7 +80,7 @@ export class ProxyKernel extends Kernel {
 
                         try {
                             const original = [...commandInvocation.commandEnvelope?.routingSlip ?? []];
-                            connection.continueCommandRoutingSlip(commandInvocation.commandEnvelope, envelope.command!.routingSlip!);
+                            routingSlip.continueCommandRoutingSlip(commandInvocation.commandEnvelope, envelope.command!.routingSlip!);
                             envelope.command!.routingSlip = [...commandInvocation.commandEnvelope.routingSlip ?? []];//?
                             Logger.default.warn(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, command routingSlip :${original}] has changed to: ${JSON.stringify(commandInvocation.commandEnvelope.routingSlip ?? [])}`);
                         } catch (e: any) {
