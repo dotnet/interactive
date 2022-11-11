@@ -21,43 +21,38 @@ public abstract class RoutingSlip
             _ => new List<Entry>()
         };
     }
-    
-    protected class Entry
-    {
-        public string Uri { get; set; }
-        public bool Completed { get; set; }
-    }
 
     public abstract void Stamp(Uri uri);
 
     public string[] ToUriArray()
     {
-        var entries = _entries.Where(e => e.Completed).Select(e => e.Uri).ToArray();
+        var entries = _entries.Select(e => e.AbsoluteUri).ToArray();
         return entries;
-    }
+    } 
 
     public bool Contains(Uri uri)
     {
         return Contains(uri.AbsoluteUri);
     }
 
-    public bool Contains(string absoluteUri)
+    public bool Contains(string uri)
     {
-        return _entries.Any(e => e.Uri == absoluteUri);
+        return _entries.Any(e => e.Uri == uri);
     }
 
+   
     public bool StartsWith(RoutingSlip other)
     {
-        return StartsWith(other.ToUriArray());
+        return StartsWith(other._entries);
     }
 
-    public bool StartsWith(params string[] absoluteUris)
+    public bool StartsWith(params string[] uris)
     {
         var startsWith = true;
 
-        if (absoluteUris.Length > 0 && absoluteUris.Length <= _entries.Count)
+        if (uris.Length > 0 && uris.Length <= _entries.Count)
         {
-            if (absoluteUris.Where((entry, i) => _entries[i].Uri != entry).Any())
+            if (uris.Where((entry, i) => _entries[i].Uri != entry).Any())
             {
                 startsWith = false;
             }
@@ -72,30 +67,118 @@ public abstract class RoutingSlip
 
     public bool StartsWith(params Uri[] uris)
     {
-        return StartsWith(uris.Select(u => u.AbsoluteUri).ToArray());
+        return StartsWith(uris.Select(GetAbsoluteUriWithoutQuery).ToArray());
     }
 
     public void ContinueWith(RoutingSlip other)
     {
-        var source = other.ToUriArray();
-        if (source.Length > 0)
+        var source = other._entries;
+        if (source.Count > 0)
         {
             if (other.StartsWith(this))
             {
-                source = source.Skip(_entries.Count).ToArray();
+                for (var i = 0; i < _entries.Count; i++)
+                {
+                    if (!_entries[i].Completed)
+                    {
+                        _entries[i].Completed = source[i].Completed;
+                    }
+                }
+                source = source.Skip(_entries.Count).ToList();
             }
 
-            foreach (var uri in source)
+            foreach (var entry in source)
             {
-                if (!Contains(uri))
+
+                if (!Contains(entry))
                 {
-                    _entries.Add(new Entry {Uri = uri, Completed = true});
+                    _entries.Add(new Entry {Uri = entry.Uri, Completed = entry.Completed });
                 }
                 else
                 {
-                    throw new InvalidOperationException($"The uri {uri} is already in the routing slip");
+                    throw new InvalidOperationException($"The uri {entry.Uri} is already in the routing slip");
                 }
             }
         }
     }
+    protected bool Contains(Entry entry)
+    {
+        return _entries.Any(e => e.Uri == entry.Uri);
+    }
+
+    protected bool StartsWith(List<Entry> entries)
+    {
+        var startsWith = true;
+
+        if (entries.Count > 0 && entries.Count <= _entries.Count)
+        {
+            if (entries.Where((entry, i) => _entries[i].Uri != entry.Uri).Any())
+            {
+                startsWith = false;
+            }
+        }
+        else
+        {
+            startsWith = false;
+        }
+
+        return startsWith;
+    }
+
+    protected static string GetAbsoluteUriWithoutQuery(Uri uri)
+    {
+        var absoluteUri = uri.AbsoluteUri;
+        if (!string.IsNullOrWhiteSpace(uri.Query))
+        {
+            absoluteUri = absoluteUri.Replace(uri.Query, string.Empty);
+        }
+        return absoluteUri;
+    }
+
+    protected class Entry
+    {
+        private string _uri;
+        private bool _completed;
+        public string AbsoluteUri { get; private set; }
+
+        public string Uri
+        {
+            get => _uri;
+            set
+            {
+                _uri = value;
+                Update();
+            }
+        }
+
+        private void Update()
+        {
+            AbsoluteUri = null;
+            if (!string.IsNullOrWhiteSpace(_uri))
+            {
+                var uriBuilder = new UriBuilder(_uri);
+
+                if (!_completed)
+                {
+                    uriBuilder.Query = _completed
+                        ? ""
+                        : "completed=false";
+                }
+                AbsoluteUri = uriBuilder.Uri.AbsoluteUri;
+            }
+
+        }
+
+        public bool Completed
+        {
+            get => _completed;
+            set
+            {
+                _completed = value;
+                Update();
+
+            }
+        }
+    }
+
 }

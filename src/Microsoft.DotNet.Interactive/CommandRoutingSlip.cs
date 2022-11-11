@@ -8,16 +8,23 @@ namespace Microsoft.DotNet.Interactive;
 
 public class CommandRoutingSlip : RoutingSlip
 {
-
+    
     public CommandRoutingSlip(RoutingSlip source = null) : base(source)
     {
 
     }
 
+
     public override void Stamp(Uri uri)
     {
-        if (Entries.SingleOrDefault(e => e.Uri == uri.AbsoluteUri) is {Completed: false} entry)
+        var absoluteUri = GetAbsoluteUriWithoutQuery(uri);
+        var notCompleted = uri.Query.Contains("completed=false");
+        if (Entries.SingleOrDefault(e => e.Uri == absoluteUri) is {Completed: false} entry)
         {
+            if(notCompleted)
+            {
+                throw new InvalidOperationException($"The uri {uri} is not valid for this routing slip");
+            }
             entry.Completed = true;
         }
         else
@@ -28,9 +35,10 @@ public class CommandRoutingSlip : RoutingSlip
 
     public void StampAsArrived(Uri uri)
     {
-        if (Entries.SingleOrDefault(entry => entry.Uri == uri.AbsoluteUri) is null)
+        var absoluteUri = GetAbsoluteUriWithoutQuery(uri);
+        if (Entries.SingleOrDefault(entry => entry.Uri == absoluteUri) is null)
         {
-            Entries.Add(new Entry { Uri = uri.AbsoluteUri, Completed = false });
+            Entries.Add(new Entry { Uri = absoluteUri, Completed = false });
         }
         else
         {

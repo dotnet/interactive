@@ -186,9 +186,12 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
             foreach (var routingSlipItem in routingSlipProperty.EnumerateArray())
             {
                 var uri = new Uri(routingSlipItem.GetString(), UriKind.Absolute);
-
                 command.RoutingSlip.StampAsArrived(uri);
-                command.RoutingSlip.Stamp(uri);
+                var completed = !uri.Query.Contains("completed=false");
+                if (completed)
+                {
+                    command.RoutingSlip.Stamp(uri);
+                }
             }
         }
 

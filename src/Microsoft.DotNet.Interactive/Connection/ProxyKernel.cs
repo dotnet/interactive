@@ -193,7 +193,10 @@ public sealed class ProxyKernel : Kernel
 
         if (hasPending && HasSameOrigin(kernelEvent, KernelInfo))
         {
-            pending.command.RoutingSlip.ContinueWith(kernelEvent.Command.RoutingSlip);
+            if (kernelEvent.Command.IsEquivalentTo(pending.command))
+            {
+                pending.command.RoutingSlip.ContinueWith(kernelEvent.Command.RoutingSlip);
+            }
             switch (kernelEvent)
             {
                 case CommandFailed cf when pending.command.IsEquivalentTo(kernelEvent.Command):

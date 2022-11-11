@@ -17,6 +17,7 @@
       "destinationUri": null
     },
     "routingSlip": [
+      "kernel://somelocation/kernelA?completed=false",
       "kernel://somelocation/kernelName"
     ]
   },
