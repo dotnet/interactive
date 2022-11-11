@@ -131,13 +131,15 @@ export class Kernel {
         this.ensureCommandTokenAndId(commandEnvelope);
         const kernelUri = getKernelUri(this);
         if (!routingslip.commandRoutingSlipContains(commandEnvelope, kernelUri)) {
-            routingslip.stampCommandRoutingSlip(commandEnvelope, getKernelUri(this));
+            routingslip.stampCommandRoutingSlipAsArrived(commandEnvelope, kernelUri);
         } else {
             "should not be here";//?
         }
         commandEnvelope.routingSlip;//?
         KernelInvocationContext.establish(commandEnvelope);
-        return this.getScheduler().runAsync(commandEnvelope, (value) => this.executeCommand(value));
+        return this.getScheduler().runAsync(commandEnvelope, (value) => this.executeCommand(value).finally(() => {
+            routingslip.stampCommandRoutingSlip(commandEnvelope, kernelUri);
+        }));
     }
 
     private async executeCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {

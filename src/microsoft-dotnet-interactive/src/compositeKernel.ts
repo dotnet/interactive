@@ -166,13 +166,18 @@ export class CompositeKernel extends Kernel {
             }
             const kernelUri = getKernelUri(kernel);
             if (!routingslip.commandRoutingSlipContains(commandEnvelope, kernelUri)) {
-                routingslip.stampCommandRoutingSlip(commandEnvelope, getKernelUri(kernel));
+                routingslip.stampCommandRoutingSlipAsArrived(commandEnvelope, kernelUri);
             } else {
                 "we should not be here";//?
             }
             return kernel.handleCommand(commandEnvelope).finally(() => {
                 if (invocationContext !== null) {
                     invocationContext.handlingKernel = previusoHandlingKernel;
+                }
+                if (!routingslip.commandRoutingSlipContains(commandEnvelope, kernelUri)) {
+                    routingslip.stampCommandRoutingSlip(commandEnvelope, kernelUri);
+                } else {
+                    "we should not be here";//?
                 }
             });
         }

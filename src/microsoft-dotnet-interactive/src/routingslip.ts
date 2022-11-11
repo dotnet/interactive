@@ -15,8 +15,60 @@ export function createKernelUri(kernelUri: string): string {
     return absoluteUri;//?
 }
 
+export function createKernelUriWithQuery(kernelUri: string): string {
+    kernelUri;//?
+    const uri = URI.parse(kernelUri);
+    uri.authority;//?
+    uri.path;//?
+    let absoluteUri = `${uri.scheme}://${uri.authority}${uri.path || "/"}`;
+    if (uri.query) {
+        absoluteUri += `?${uri.query}`;
+    }
+    return absoluteUri;//?
+}
+
+export function stampCommandRoutingSlipAsArrived(kernelCommandEnvelope: contracts.KernelCommandEnvelope, kernelUri: string) {
+    if (kernelCommandEnvelope.routingSlip === undefined || kernelCommandEnvelope.routingSlip === null) {
+        kernelCommandEnvelope.routingSlip = [];
+    }
+    kernelUri;//?
+    const uri = URI.parse(kernelUri);
+    let absoluteUri = `${uri.scheme}://${uri.authority}${uri.path || "/"}`;
+    let absoluteUriWithQuery = `${absoluteUri}?completed=false`;
+    const canAdd = !kernelCommandEnvelope.routingSlip.find(e => {
+        const normalizedUri = createKernelUri(e);
+        return normalizedUri === absoluteUri || normalizedUri === absoluteUriWithQuery;
+    });
+    if (canAdd) {
+        kernelCommandEnvelope.routingSlip.push(absoluteUriWithQuery);
+        kernelCommandEnvelope.routingSlip;//?
+    } else {
+        throw new Error(`The uri ${absoluteUri} is already in the routing slip [${kernelCommandEnvelope.routingSlip}]`);
+    }
+}
+
 export function stampCommandRoutingSlip(kernelCommandEnvelope: contracts.KernelCommandEnvelope, kernelUri: string) {
-    stampRoutingSlip(kernelCommandEnvelope, kernelUri);
+    if (kernelCommandEnvelope.routingSlip === undefined || kernelCommandEnvelope.routingSlip === null) {
+        throw new Error("The command does not have a routing slip");
+    }
+    kernelCommandEnvelope.routingSlip;//?
+    kernelUri;//?
+    const uri = URI.parse(kernelUri);
+    let absoluteUri = `${uri.scheme}://${uri.authority}${uri.path || "/"}`;
+    let absoluteUriWithQuery = `${absoluteUri}?completed=false`;
+
+    const toMark = kernelCommandEnvelope.routingSlip.findIndex(e => {
+        const normalizedUri = createKernelUriWithQuery(e);//?
+        e;//?
+        return normalizedUri === absoluteUriWithQuery;
+    });
+
+    toMark;//?
+    if (toMark >= 0) {
+        kernelCommandEnvelope.routingSlip[toMark] = absoluteUri;
+    } else {
+        throw new Error(`The uri ${absoluteUri} is not in the routing slip [${kernelCommandEnvelope.routingSlip}]`);
+    }
 }
 
 export function stampEventRoutingSlip(kernelEventEnvelope: contracts.KernelEventEnvelope, kernelUri: string) {
