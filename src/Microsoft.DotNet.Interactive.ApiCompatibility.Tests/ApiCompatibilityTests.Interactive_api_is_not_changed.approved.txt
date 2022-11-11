@@ -567,13 +567,13 @@ Microsoft.DotNet.Interactive.Events
     .ctor(Microsoft.DotNet.Interactive.Commands.Cancel cancel, Microsoft.DotNet.Interactive.Commands.KernelCommand cancelledCommand)
     public Microsoft.DotNet.Interactive.Commands.KernelCommand CancelledCommand { get;}
   public class CommandFailed : KernelCommandCompletionEvent
-    .ctor(System.Exception exception, Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.String message = null)
-    .ctor(System.String message, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
+    .ctor(System.Exception exception, Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.String message = null, System.Nullable<System.Int32> executionOrder = null)
+    .ctor(System.String message, Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Nullable<System.Int32> executionOrder = null)
     public System.Exception Exception { get;}
     public System.String Message { get; set;}
     public System.String ToString()
   public class CommandSucceeded : KernelCommandCompletionEvent
-    .ctor(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
+    .ctor(Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Int32 executionOrder = 0)
     public System.String ToString()
   public class CompleteCodeSubmissionReceived : KernelEvent
     .ctor(Microsoft.DotNet.Interactive.Commands.SubmitCode submitCode)
@@ -628,7 +628,7 @@ Microsoft.DotNet.Interactive.Events
     PlainText=1
     Snippet=2
   public abstract class KernelCommandCompletionEvent : KernelEvent
-    public System.Int32 ExecutionOrder { get;}
+    public System.Nullable<System.Int32> ExecutionOrder { get;}
   public abstract class KernelEvent
     public Microsoft.DotNet.Interactive.Commands.KernelCommand Command { get;}
     public Microsoft.DotNet.Interactive.EventRoutingSlip RoutingSlip { get;}
