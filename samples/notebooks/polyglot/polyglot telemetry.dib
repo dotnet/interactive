@@ -2,6 +2,34 @@
 
 #r "nuget: Microsoft.DotNet.Interactive.Kql, *-*"
 
+#!csharp
+
+using System.Security.Cryptography;
+using System.Text;
+
+string ToSha256Hash(string text)
+{
+    var sha256 = SHA256.Create();
+    return HashInFormat(sha256, text);
+}
+
+string ToSha256HashWithNormalizedCasing(string text)
+{
+    return ToSha256Hash(text.ToUpperInvariant());
+}
+
+string HashInFormat(SHA256 sha256, string text)
+{
+    byte[] bytes = Encoding.UTF8.GetBytes(text);
+    byte[] hash = sha256.ComputeHash(bytes);
+    StringBuilder hashString = new StringBuilder();
+    foreach (byte x in hash)
+    {
+        hashString.AppendFormat("{0:x2}", x);
+    }
+    return hashString.ToString();
+}
+
 #!kql
 
 #!connect kql --kernel-name telemetry --cluster "https://dotnettel.kusto.windows.net" --database "trydotnetcli"
@@ -25,7 +53,10 @@ let languageMapping = dynamic(
        "18885f27b5af9012df19e496460f9294d5ab76128824c6f993787004f6d9a7db":"Python",
        "11a4a60b518bf24989d481468076e5d5982884626aed9faeb35b8576fcd223e1":"Python",
        "454349e422f05297191ead13e21d3db520e5abef52055e4964b82fb213f593a1":"R",
-       "d277670919a94ba361be1887d39852c3f31d7eed817343cbb70fcd8910841f86":"julia"
+       "d277670919a94ba361be1887d39852c3f31d7eed817343cbb70fcd8910841f86":"julia",
+       "eca37636c0711d96f605f252e43a4f3d0811a2ce7495c004b43eea2a9f7216e8":"Perl",
+       "f0c929a9e723bc62724e30c7e396e576019dfcb8cfd0a3f264ee5d72e64e49d1":"Perl",
+       "99f9df7b726d831976eb87646f4f89cc019dc122a2d4ddcd1f838f1dbfb340a2":"lisp"
   });
  let mapKernel = (sha:string) { 
   let mapped = tostring(languageMapping[sha]);
