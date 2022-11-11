@@ -29,7 +29,7 @@ public class CommandRoutingSlipTests
     }
 
     [Fact]
-    public void the_uri_array_contains_only_stamped_kernel_uri()
+    public void the_uri_array_contains_all_uris()
     {
         var routingSlip = new CommandRoutingSlip();
         routingSlip.StampAsArrived(new Uri("kernel://1"));
@@ -40,7 +40,8 @@ public class CommandRoutingSlipTests
 
         routingSlip.ToUriArray().Should().ContainInOrder(
             "kernel://1/",
-            "kernel://2/");
+            "kernel://2/",
+            "kernel://3/?completed=false");
     }
 
     [Fact]

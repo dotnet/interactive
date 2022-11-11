@@ -102,8 +102,46 @@ foreach(var lang in langauges[0].Data){
     var languageNames = kernelLanguageNames.Split(":");    
     var langaugeSetOccurences = (long)lang.First(f => f.Key == "LangaugeSetOccurences").Value;
 
-    for(var i = 0; i < languageNames.Length; i++){
-        var languageName = languageNames[i];
+    if(languageNames.Length > 1)
+    {
+        for(var i = 0; i < languageNames.Length; i++){
+            var languageName = languageNames[i];
+            if(!nodelookup.ContainsKey(languageName)){
+                var node = new Node(){
+                    language = languageName,
+                    popularity = langaugeSetOccurences
+                };
+                nodelookup.Add(languageName, node);
+                graph.nodes.Add(node);
+            }else
+            {
+                nodelookup[languageName].popularity += langaugeSetOccurences;
+            }
+        }
+        for(var i = 0; i < languageNames.Length; i++){
+            for(var j = i+1; j < languageNames.Length; j++){
+                var languageName = languageNames[i];
+                var otherLanguageName = languageNames[j];
+                if(languageName != otherLanguageName){
+                    var source = graph.nodes.IndexOf(nodelookup[languageName]);
+                    var destination = graph.nodes.IndexOf(nodelookup[otherLanguageName]);
+                    var edge = graph.edges.FirstOrDefault(e => e.source ==source && e.destination == destination);
+                    if(edge == null){
+                        edge = new Edge(){
+                            source = source,
+                            destination = destination,
+                            weight = langaugeSetOccurences
+                        };
+                        graph.edges.Add(edge);
+                    }else{
+                        edge.weight += langaugeSetOccurences;
+                    }
+                }
+            }
+        }
+    }
+    else{
+        var languageName = languageNames[0] + " (single language)";
         if(!nodelookup.ContainsKey(languageName)){
             var node = new Node(){
                 language = languageName,
@@ -114,27 +152,6 @@ foreach(var lang in langauges[0].Data){
         }else
         {
             nodelookup[languageName].popularity += langaugeSetOccurences;
-        }
-    }
-    for(var i = 0; i < languageNames.Length; i++){
-        for(var j = i+1; j < languageNames.Length; j++){
-            var languageName = languageNames[i];
-            var otherLanguageName = languageNames[j];
-            if(languageName != otherLanguageName){
-                var source = graph.nodes.IndexOf(nodelookup[languageName]);
-                var destination = graph.nodes.IndexOf(nodelookup[otherLanguageName]);
-                var edge = graph.edges.FirstOrDefault(e => e.source ==source && e.destination == destination);
-                if(edge == null){
-                    edge = new Edge(){
-                        source = source,
-                        destination = destination,
-                        weight = langaugeSetOccurences
-                    };
-                    graph.edges.Add(edge);
-                }else{
-                    edge.weight += langaugeSetOccurences;
-                }
-            }
         }
     }
 }
@@ -281,7 +298,8 @@ loadd3(["d3"], (d3) => {
       }
     }
     function truncateText(text, length) {
-      if(notToTruncate.has(text)) {
+      var l = text.split(" ");
+      if(notToTruncate.has(l[0])) {
         return text;
       }
       if (text.length > length) {
@@ -321,7 +339,7 @@ loadd3(["d3"], (d3) => {
       .attr("stroke-width", 3)
       .clone(true).lower()
       .attr("fill", "none")
-      .attr("stroke", "rgba(255, 255, 255, 0.5)")
+      .attr("stroke", "rgba(255, 255, 255, 0.2)")
       .attr("stroke-width", 4);
 
     
