@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.DotNet.Interactive.Connection;
+using Microsoft.DotNet.Interactive.Jupyter.CommandEvents;
 using Microsoft.DotNet.Interactive.Jupyter.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging.Comms;
 using Microsoft.DotNet.Interactive.Jupyter.ValueSharing;
@@ -35,9 +36,12 @@ public class JupyterKernelConnector : IKernelConnector
         {
             await kernel.RunOnKernelAsync(_initScript);
         }
-        
-        var valueAdapterConfiguration = new CommValueAdapterConfiguration(commsManager);
-        await kernel.UseConfiguration(valueAdapterConfiguration);
+
+        var configuration = new CommCommandEventAdapterConfiguration(commsManager);
+        await kernel.UseConfiguration(configuration);
+
+        //var valueAdapterConfiguration = new CommValueAdapterConfiguration(commsManager);
+        //await kernel.UseConfiguration(valueAdapterConfiguration);
 
         kernel.RegisterForDisposal(commsManager);
         kernel.RegisterForDisposal(kernelConnection);

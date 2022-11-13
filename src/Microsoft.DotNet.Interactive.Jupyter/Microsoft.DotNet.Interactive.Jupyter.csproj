@@ -6,7 +6,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="CommandEvents\KernelAdapters\coe_comm_adapter.py" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\InvocationContextExtensions.cs" Link="Utility\InvocationContextExtensions.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="CommandEvents\KernelAdapters\python\coe_comm_adapter.py" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Markdig.Signed" Version="0.23.0" />
