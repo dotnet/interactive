@@ -238,7 +238,8 @@ export class Kernel {
         }
 
         if (commandEnvelope.command.destinationUri) {
-            if (this.kernelInfo.uri !== commandEnvelope.command.destinationUri) {
+            const normalizedUri = routingslip.createKernelUri(commandEnvelope.command.destinationUri);
+            if (this.kernelInfo.uri !== normalizedUri) {
                 return false;
             }
         }

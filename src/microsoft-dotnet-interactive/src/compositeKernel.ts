@@ -202,7 +202,8 @@ export class CompositeKernel extends Kernel {
 
         let kernel: Kernel | null = null;
         if (commandEnvelope.command.destinationUri) {
-            kernel = this._childKernels.tryGetByUri(commandEnvelope.command.destinationUri) ?? null;
+            const normalized = routingslip.createKernelUri(commandEnvelope.command.destinationUri);
+            kernel = this._childKernels.tryGetByUri(normalized) ?? null;
             if (kernel) {
                 return kernel;
             }
@@ -335,8 +336,7 @@ class KernelCollection implements Iterable<Kernel> {
     }
 
     public tryGetByUri(uri: string): Kernel | undefined {
-        const normalized = routingslip.createKernelUri(uri);
-        let kernel = this._kernelsByLocalUri.get(normalized) || this._kernelsByRemoteUri.get(normalized);
+        let kernel = this._kernelsByLocalUri.get(uri) || this._kernelsByRemoteUri.get(uri);
         return kernel;
     }
 
