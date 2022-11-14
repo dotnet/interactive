@@ -51,14 +51,14 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.JitAsmDecompiler
                 return true;
             }
 
-            var method = _runtime.GetMethodByAddress(address);
+            var method = _runtime.GetMethodByInstructionPointer(address);
             if (method is null)
             {
                 symbol = default;
                 return false;
             }
 
-            symbol = new SymbolResult(address, method.GetFullSignature());
+            symbol = new SymbolResult(address, method.Signature);
             return true;
         }
     }

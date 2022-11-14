@@ -29,6 +29,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 using Iced.Intel;
 
@@ -76,7 +77,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.JitAsmDecompiler
 
                 using var runtimeLease = _runtimePool.GetOrCreate();
                 var runtime = runtimeLease.Object;
-                runtime.Flush();
+                runtime.FlushCachedData();
 
                 var context = new JitWriteContext(codeWriter, runtime);
 
@@ -106,7 +107,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.JitAsmDecompiler
         {
             writer.WriteLine(
                 "; {0:G} CLR {1} on {2}",
-                clr.Flavor, clr.Version, clr.DacInfo.TargetArchitecture.ToString("G").ToLowerInvariant()
+                clr.Flavor, clr.Version, clr.DebuggingLibraries.First().TargetArchitecture.ToString("G").ToLowerInvariant()
             );
         }
 
@@ -184,7 +185,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.JitAsmDecompiler
 
             if (clrMethod is null || regions is null)
             {
-                context.Runtime.Flush();
+                context.Runtime.FlushCachedData();
                 clrMethod = context.Runtime.GetMethodByHandle((ulong)handle.Value.ToInt64());
                 regions = FindNonEmptyHotColdInfo(clrMethod);
             }
@@ -192,7 +193,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.JitAsmDecompiler
             if (clrMethod is null || regions is null)
             {
                 var address = (ulong)handle.GetFunctionPointer().ToInt64();
-                clrMethod = context.Runtime.GetMethodByAddress(address);
+                clrMethod = context.Runtime.GetMethodByInstructionPointer(address);
                 regions = FindNonEmptyHotColdInfo(clrMethod);
             }
 
@@ -200,7 +201,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.JitAsmDecompiler
             if (clrMethod is not null)
             {
                 writer.WriteLine();
-                writer.WriteLine(clrMethod.GetFullSignature());
+                writer.WriteLine(clrMethod.Signature);
             }
             else
             {
@@ -218,11 +219,11 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.JitAsmDecompiler
                 return;
             }
 
-            var methodAddress = regions.HotStart;
-            var methodLength = regions.HotSize;
+            var methodAddress = regions.Value.HotStart;
+            var methodLength = regions.Value.HotSize;
 
             var reader = new MemoryCodeReader(new IntPtr(unchecked((long)methodAddress)), methodLength);
-            var decoder = Decoder.Create(MapArchitectureToBitness(context.Runtime.DataTarget.Architecture), reader);
+            var decoder = Decoder.Create(MapArchitectureToBitness(context.Runtime.DataTarget.DataReader.Architecture), reader);
 
             var instructions = new InstructionList();
             decoder.IP = methodAddress;
@@ -262,7 +263,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.JitAsmDecompiler
             context.Writer.WriteLine(signature ?? "Unknown Method");
         }
 
-        private HotColdRegions FindNonEmptyHotColdInfo(ClrMethod method)
+        private HotColdRegions? FindNonEmptyHotColdInfo(ClrMethod method)
         {
             if (method is null)
                 return null;
@@ -276,10 +277,10 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.JitAsmDecompiler
             if (method.Type is null)
                 return null;
 
-            var methodSignature = method.GetFullSignature();
+            var methodSignature = method.Signature;
             foreach (var other in method.Type.Methods)
             {
-                if (other.MetadataToken == method.MetadataToken && other.GetFullSignature() == methodSignature && other.HotColdInfo.HotSize > 0)
+                if (other.MetadataToken == method.MetadataToken && other.Signature == methodSignature && other.HotColdInfo.HotSize > 0)
                     return other.HotColdInfo;
             }
 
@@ -288,7 +289,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.JitAsmDecompiler
 
         private int MapArchitectureToBitness(Architecture architecture) => architecture switch
         {
-            Architecture.Amd64 => 64,
+            Architecture.X64 => 64,
             Architecture.X86 => 32,
             _ => throw new Exception($"Unsupported architecture {architecture}.")
         };
