@@ -31,7 +31,7 @@ internal class CommCommandEventChannelConfiguration : IJupyterKernelConfiguratio
 
     public async Task<bool> ApplyAsync(JupyterKernel kernel)
     {
-        var channel = await GetCommandEventAdapter(kernel);
+        var channel = await GetCommandEventChannelAsync(kernel);
 
         if (channel is not null)
         {
@@ -49,7 +49,7 @@ internal class CommCommandEventChannelConfiguration : IJupyterKernelConfiguratio
         return false;
     }
 
-    private async Task<CommCommandEventChannel> GetCommandEventAdapter(JupyterKernel kernel)
+    private async Task<CommCommandEventChannel> GetCommandEventChannelAsync(JupyterKernel kernel)
     {
         string language = kernel.KernelInfo.LanguageName?.ToLowerInvariant();
         if (_commDefinitions.TryGetValue(language, out string definition))
