@@ -105,7 +105,7 @@ describe("proxyKernel", () => {
             command: {
                 command: { code: '1+2' },
                 commandType: 'SubmitCode',
-                routingSlip: ['kernel://local/proxy'],
+                routingSlip: ['kernel://local/proxy?tag=arrived']
             }
         });
 
@@ -121,7 +121,7 @@ describe("proxyKernel", () => {
             command: {
                 command: { code: '1+2' },
                 commandType: 'SubmitCode',
-                routingSlip: ['kernel://local/proxy'],
+                routingSlip: ['kernel://local/proxy?tag=arrived']
             }
         });
 
@@ -130,7 +130,7 @@ describe("proxyKernel", () => {
             command: {
                 command: { code: '1+2', destinationUri: undefined, originUri: undefined },
                 commandType: 'SubmitCode',
-                routingSlip: ['kernel://local/proxy'],
+                routingSlip: ['kernel://local/proxy?tag=arrived', 'kernel://local/proxy'],
             }
         });
     });
@@ -166,7 +166,7 @@ describe("proxyKernel", () => {
             command: {
                 command: { code: '1+2' },
                 commandType: 'SubmitCode',
-                routingSlip: ['kernel://local/proxy']
+                routingSlip: ['kernel://local/proxy?tag=arrived']
             }
         });
 
@@ -182,7 +182,7 @@ describe("proxyKernel", () => {
             command: {
                 command: { code: '1+2' },
                 commandType: 'SubmitCode',
-                routingSlip: ['kernel://local/proxy']
+                routingSlip: ['kernel://local/proxy?tag=arrived']
             }
         });
 

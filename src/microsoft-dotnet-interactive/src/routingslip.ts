@@ -4,6 +4,7 @@
 import * as contracts from './contracts';
 import { URI } from 'vscode-uri';
 import { KernelCommandOrEventEnvelope } from './connection';
+import { throwError } from 'rxjs';
 
 
 export function createKernelUri(kernelUri: string): string {
@@ -28,24 +29,10 @@ export function createKernelUriWithQuery(kernelUri: string): string {
 }
 
 export function stampCommandRoutingSlipAsArrived(kernelCommandEnvelope: contracts.KernelCommandEnvelope, kernelUri: string) {
-    if (kernelCommandEnvelope.routingSlip === undefined || kernelCommandEnvelope.routingSlip === null) {
-        kernelCommandEnvelope.routingSlip = [];
-    }
-    kernelUri;//?
-    const uri = URI.parse(kernelUri);
-    let absoluteUri = `${uri.scheme}://${uri.authority}${uri.path || "/"}`;
-    let absoluteUriWithQuery = `${absoluteUri}?completed=false`;
-    const canAdd = !kernelCommandEnvelope.routingSlip.find(e => {
-        const normalizedUri = createKernelUri(e);
-        return normalizedUri === absoluteUri || normalizedUri === absoluteUriWithQuery;
-    });
-    if (canAdd) {
-        kernelCommandEnvelope.routingSlip.push(absoluteUriWithQuery);
-        kernelCommandEnvelope.routingSlip;//?
-    } else {
-        throw new Error(`The uri ${absoluteUri} is already in the routing slip [${kernelCommandEnvelope.routingSlip}]`);
-    }
+    stampCommandRoutingSlipAs(kernelCommandEnvelope, kernelUri, "arrived");
 }
+
+
 
 export function stampCommandRoutingSlip(kernelCommandEnvelope: contracts.KernelCommandEnvelope, kernelUri: string) {
     if (kernelCommandEnvelope.routingSlip === undefined || kernelCommandEnvelope.routingSlip === null) {
@@ -53,20 +40,13 @@ export function stampCommandRoutingSlip(kernelCommandEnvelope: contracts.KernelC
     }
     kernelCommandEnvelope.routingSlip;//?
     kernelUri;//?
-    const uri = URI.parse(kernelUri);
-    let absoluteUri = `${uri.scheme}://${uri.authority}${uri.path || "/"}`;
-    let absoluteUriWithQuery = `${absoluteUri}?completed=false`;
-
-    const toMark = kernelCommandEnvelope.routingSlip.findIndex(e => {
-        const normalizedUri = createKernelUriWithQuery(e);//?
-        e;//?
-        return normalizedUri === absoluteUriWithQuery;
-    });
-
-    toMark;//?
-    if (toMark >= 0) {
-        kernelCommandEnvelope.routingSlip[toMark] = absoluteUri;
-    } else {
+    let absoluteUri = createKernelUri(kernelUri); //?
+    if (kernelCommandEnvelope.routingSlip.find(e => e === absoluteUri)) {
+        throw Error(`The uri ${absoluteUri} is already in the routing slip [${kernelCommandEnvelope.routingSlip}]`);
+    } else if (kernelCommandEnvelope.routingSlip.find(e => e.startsWith(absoluteUri))) {
+        kernelCommandEnvelope.routingSlip.push(absoluteUri);
+    }
+    else {
         throw new Error(`The uri ${absoluteUri} is not in the routing slip [${kernelCommandEnvelope.routingSlip}]`);
     }
 }
@@ -75,12 +55,18 @@ export function stampEventRoutingSlip(kernelEventEnvelope: contracts.KernelEvent
     stampRoutingSlip(kernelEventEnvelope, kernelUri);
 }
 
+function stampCommandRoutingSlipAs(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope, kernelUri: string, tag: string) {
+    const absoluteUri = `${createKernelUri(kernelUri)}?tag=${tag}`;//?
+    stampRoutingSlip(kernelCommandOrEventEnvelope, absoluteUri);
+}
+
+
 function stampRoutingSlip(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope, kernelUri: string) {
     if (kernelCommandOrEventEnvelope.routingSlip === undefined || kernelCommandOrEventEnvelope.routingSlip === null) {
         kernelCommandOrEventEnvelope.routingSlip = [];
     }
-    const normalizedUri = createKernelUri(kernelUri);
-    const canAdd = !kernelCommandOrEventEnvelope.routingSlip.find(e => createKernelUri(e) === normalizedUri);
+    const normalizedUri = createKernelUriWithQuery(kernelUri);
+    const canAdd = !kernelCommandOrEventEnvelope.routingSlip.find(e => createKernelUriWithQuery(e) === normalizedUri);
     if (canAdd) {
         kernelCommandOrEventEnvelope.routingSlip.push(normalizedUri);
         kernelCommandOrEventEnvelope.routingSlip;//?

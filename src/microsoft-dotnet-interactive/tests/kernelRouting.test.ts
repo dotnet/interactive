@@ -29,14 +29,16 @@ describe("kernelRouting", () => {
         composite.subscribeToKernelEvents(e => events.push(e));
 
         await composite.send(command);
+        events;//?
+        const succededEvent = events.find(e => e.eventType === contracts.CommandSucceededType);
 
-        expect(command.routingSlip).not.to.be.undefined;
+        expect(succededEvent).not.to.be.undefined;
 
-        expect(Array.from(command.routingSlip!.values())).to.deep.equal(
-            [
-                'kernel://local/vscode',
-                'kernel://local/javascript'
-            ]);
+        succededEvent;//?
+        expect(Array.from(succededEvent!.command!.routingSlip!.values())).to.deep.equal(
+            ['kernel://local/vscode?tag=arrived',
+                'kernel://local/javascript?tag=arrived',
+                'kernel://local/vscode']);
     });
 
     it("event routing slip contains kernels that have been traversed", async () => {
@@ -106,11 +108,11 @@ describe("kernelRouting", () => {
         expect(command.routingSlip).not.to.be.undefined;
 
         expect(Array.from(command.routingSlip!.values())).to.deep.equal(
-            [
-                'kernel://local/',
-                'kernel://local/javascript',
+            ['kernel://local/?tag=arrived',
+                'kernel://local/javascript?tag=arrived',
                 'kernel://remote/',
-                'kernel://remote/javascript']);
+                'kernel://remote/javascript',
+                'kernel://local/']);
     });
 
     it.skip("event routing slip contains proxy kernels that have been traversed", async () => {

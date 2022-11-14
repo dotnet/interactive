@@ -72,7 +72,7 @@ describe("kernel command routingSlip", () => {
 
         routingSlip.stampCommandRoutingSlipAsArrived(envelope, "kernel://a");
 
-        expect(() => routingSlip.stampCommandRoutingSlipAsArrived(envelope, "kernel://a")).to.throw("The uri kernel://a/ is already in the routing slip [kernel://a/?completed=false]");
+        expect(() => routingSlip.stampCommandRoutingSlipAsArrived(envelope, "kernel://a")).to.throw("The uri kernel://a/?tag=arrived is already in the routing slip [kernel://a/?tag=arrived]");
     });
 
     it("can be stamped on arrival", () => {
@@ -84,7 +84,7 @@ describe("kernel command routingSlip", () => {
 
         routingSlip.stampCommandRoutingSlipAsArrived(envelope, "kernel://a");
 
-        expect(envelope.routingSlip).to.deep.equal(['kernel://a/?completed=false']);
+        expect(envelope.routingSlip).to.deep.equal(['kernel://a/?tag=arrived']);
     });
 
     it("can be stamped", () => {
@@ -97,7 +97,7 @@ describe("kernel command routingSlip", () => {
         routingSlip.stampCommandRoutingSlipAsArrived(envelope, "kernel://a");
         routingSlip.stampCommandRoutingSlip(envelope, "kernel://a");
 
-        expect(envelope.routingSlip).to.deep.equal(['kernel://a/']);
+        expect(envelope.routingSlip).to.deep.equal(['kernel://a/?tag=arrived', 'kernel://a/']);
     });
 
     it("cannot be stamped if the uri is not stamped as arrived before", () => {
