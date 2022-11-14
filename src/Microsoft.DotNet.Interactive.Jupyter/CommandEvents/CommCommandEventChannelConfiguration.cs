@@ -18,30 +18,30 @@ using Stream = System.IO.Stream;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.CommandEvents;
 
-internal class CommCommandEventAdapterConfiguration : IJupyterKernelConfiguration
+internal class CommCommandEventChannelConfiguration : IJupyterKernelConfiguration
 {
-    private static string TargetName = "dotnet_coe_adapter_comm";
+    private static string TargetName = "dotnet_coe_handler_comm";
     private static IReadOnlyDictionary<string, string> _commDefinitions = GetCommDefinitions();
     private readonly CommsManager _commsManager;
 
-    public CommCommandEventAdapterConfiguration(CommsManager commsManager)
+    public CommCommandEventChannelConfiguration(CommsManager commsManager)
     {
         _commsManager = commsManager ?? throw new ArgumentNullException(nameof(commsManager));
     }
 
     public async Task<bool> ApplyAsync(JupyterKernel kernel)
     {
-        var adapter = await GetCommandEventAdapter(kernel);
+        var channel = await GetCommandEventAdapter(kernel);
 
-        if (adapter is not null)
+        if (channel is not null)
         {
-            kernel.RegisterCommandHandler<RequestValue>(adapter.HandleAsync);
-            kernel.RegisterCommandHandler<RequestValueInfos>(adapter.HandleAsync);
-            kernel.RegisterCommandHandler<SendValue>(adapter.HandleAsync);
+            kernel.RegisterCommandHandler<RequestValue>(channel.HandleAsync);
+            kernel.RegisterCommandHandler<RequestValueInfos>(channel.HandleAsync);
+            kernel.RegisterCommandHandler<SendValue>(channel.HandleAsync);
             kernel.UseValueSharing();
             kernel.UseWho();
 
-            kernel.RegisterForDisposal(adapter);
+            kernel.RegisterForDisposal(channel);
 
             return true;
         }
@@ -49,7 +49,7 @@ internal class CommCommandEventAdapterConfiguration : IJupyterKernelConfiguratio
         return false;
     }
 
-    private async Task<CommCommandEventAdapter> GetCommandEventAdapter(JupyterKernel kernel)
+    private async Task<CommCommandEventChannel> GetCommandEventAdapter(JupyterKernel kernel)
     {
         string language = kernel.KernelInfo.LanguageName?.ToLowerInvariant();
         if (_commDefinitions.TryGetValue(language, out string definition))
@@ -57,17 +57,17 @@ internal class CommCommandEventAdapterConfiguration : IJupyterKernelConfiguratio
             var initialized = await kernel.RunOnKernelAsync(definition);
             if (!initialized)
             {
-                return null; // don't try to create value adapter if we failed
+                return null; // don't try to create a channel if we failed
             }
 
-            var adapter = await CreateCommandEventAdapterAsync(kernel);
-            return adapter;
+            var channel = await CreateCommandEventChannelAsync();
+            return channel;
         }
 
         return null;
     }
 
-    private async Task<CommCommandEventAdapter> CreateCommandEventAdapterAsync(JupyterKernel kernel)
+    private async Task<CommCommandEventChannel> CreateCommandEventChannelAsync()
     {
         var agent = await _commsManager.OpenCommAsync(TargetName);
 
@@ -82,7 +82,7 @@ internal class CommCommandEventAdapterConfiguration : IJupyterKernelConfiguratio
                 var payload = CommandEventCommEnvelop.FromDataDictionary(messageReceived.Data);
                 if (payload.EventEnvelope.Event is KernelReady)
                 {
-                    return new CommCommandEventAdapter(agent);
+                    return new CommCommandEventChannel(agent);
                 }
             }
         }
@@ -92,8 +92,8 @@ internal class CommCommandEventAdapterConfiguration : IJupyterKernelConfiguratio
 
     private static IReadOnlyDictionary<string, string> GetCommDefinitions()
     {
-        var assembly = Assembly.GetAssembly(typeof(CommCommandEventAdapterConfiguration));
-        string resourceNamePrefix = $"{assembly.GetName().Name}.CommandEvents.KernelAdapters.";
+        var assembly = Assembly.GetAssembly(typeof(CommCommandEventChannelConfiguration));
+        string resourceNamePrefix = $"{assembly.GetName().Name}.CommandEvents.LanguageHandlers.";
         var resourcePaths = assembly.GetManifestResourceNames()
             .Where(str => str.StartsWith(resourceNamePrefix));
 

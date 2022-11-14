@@ -37,7 +37,7 @@ public class JupyterKernelConnector : IKernelConnector
             await kernel.RunOnKernelAsync(_initScript);
         }
 
-        var configuration = new CommCommandEventAdapterConfiguration(commsManager);
+        var configuration = new CommCommandEventChannelConfiguration(commsManager);
         await kernel.UseConfiguration(configuration);
 
         //var valueAdapterConfiguration = new CommValueAdapterConfiguration(commsManager);

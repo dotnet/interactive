@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="CommandEvents\KernelAdapters\coe_comm_adapter.py" />
+    <None Remove="CommandEvents\LanguageHandlers\coe_comm_adapter.py" />
   </ItemGroup>
 
   <ItemGroup>
@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="CommandEvents\KernelAdapters\python\coe_comm_adapter.py" />
+    <EmbeddedResource Include="CommandEvents\LanguageHandlers\python\coe_comm_handler.py" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Markdig.Signed" Version="0.23.0" />
