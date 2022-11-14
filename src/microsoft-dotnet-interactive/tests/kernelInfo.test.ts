@@ -12,7 +12,7 @@ import { Kernel } from "../src/kernel";
 
 describe("kernelInfo", () => {
     describe("for composite kernel", () => {
-        it("returns kernel info for all children", async () => {
+        it("returns kernel info for all children and its own", async () => {
             const compositeKernel = new CompositeKernel("root");
             compositeKernel.add(new JavascriptKernel("child1"), ["child1Js"]);
             compositeKernel.add(new JavascriptKernel("child2"), ["child2Js"]);
@@ -24,8 +24,16 @@ describe("kernelInfo", () => {
             sub.dispose();
             const kernelInfos = events.filter(e => e.eventType === contracts.KernelInfoProducedType).map(e => (<contracts.KernelInfoProduced>(e.event)).kernelInfo);
 
-            expect(kernelInfos.length).to.equal(2);
+            expect(kernelInfos.length).to.equal(3);
             expect(kernelInfos).to.deep.equal([{
+                aliases: [],
+                languageName: undefined,
+                languageVersion: undefined,
+                localName: 'root',
+                supportedDirectives: [],
+                supportedKernelCommands: [{ name: 'RequestKernelInfo' }]
+            },
+            {
                 aliases: ['child1Js'],
                 languageName: 'JavaScript',
                 languageVersion: undefined,
@@ -67,8 +75,11 @@ describe("kernelInfo", () => {
             sub.dispose();
             const kernelInfos = events.filter(e => e.eventType === contracts.KernelInfoProducedType).map(e => (<contracts.KernelInfoProduced>(e.event)).kernelInfo.uri);
 
-            expect(kernelInfos.length).to.equal(2);
-            expect(kernelInfos).to.deep.equal(['kernel://local/child1', 'kernel://local/child2']);
+            expect(kernelInfos.length).to.equal(3);
+            expect(kernelInfos).to.deep.equal([
+                'kernel://local/',
+                'kernel://local/child1',
+                'kernel://local/child2']);
         });
 
         it("when kernels are added it produces KernelInfoProduced events", () => {

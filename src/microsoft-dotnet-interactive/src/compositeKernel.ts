@@ -38,6 +38,15 @@ export class CompositeKernel extends Kernel {
     }
 
     protected override async handleRequestKernelInfo(invocation: IKernelCommandInvocation): Promise<void> {
+
+        const eventEnvelope: contracts.KernelEventEnvelope = {
+            eventType: contracts.KernelInfoProducedType,
+            command: invocation.commandEnvelope,
+            event: <contracts.KernelInfoProduced>{ kernelInfo: this.kernelInfo }
+        };//?
+
+        invocation.context.publish(eventEnvelope);
+
         for (let kernel of this._childKernels) {
             if (kernel.supportsCommand(invocation.commandEnvelope.commandType)) {
                 await kernel.handleCommand({ command: {}, commandType: contracts.RequestKernelInfoType });
@@ -105,10 +114,11 @@ export class CompositeKernel extends Kernel {
     }
 
     findKernelByUri(uri: string): Kernel | undefined {
-        if (this.kernelInfo.uri === uri) {
+        const normalized = routingslip.createKernelUri(uri);
+        if (this.kernelInfo.uri === normalized) {
             return this;
         }
-        return this._childKernels.tryGetByUri(uri);
+        return this._childKernels.tryGetByUri(normalized);
     }
 
     findKernelByName(name: string): Kernel | undefined {
@@ -325,9 +335,11 @@ class KernelCollection implements Iterable<Kernel> {
     }
 
     public tryGetByUri(uri: string): Kernel | undefined {
-        let kernel = this._kernelsByLocalUri.get(uri) || this._kernelsByRemoteUri.get(uri);
+        const normalized = routingslip.createKernelUri(uri);
+        let kernel = this._kernelsByLocalUri.get(normalized) || this._kernelsByRemoteUri.get(normalized);
         return kernel;
     }
+
     notifyThatHostWasSet() {
         for (let kernel of this._kernels) {
             this.updateKernelInfoAndIndex(kernel);
