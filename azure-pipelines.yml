@@ -302,9 +302,8 @@ stages:
               "Microsoft.DotNet.Interactive.Tests"
             )
             foreach ($testAssembly in $normalTestAssemblies) {
-              Write-Host "Testing assembly $testAssembly"
               for ($i=1; $i -le 5; $i++) {
-                Write-Host "Running attempt $i"
+                Write-Host "Testing assembly $testAssembly, attempt $i"
                 dotnet test $env:BUILDSOURCESDIRECTORY/src/$testAssembly/ -l trx --no-build --blame-hang-timeout 15m --blame-hang-dump-type full --blame-crash -c $env:BUILDCONFIG --results-directory $env:BUILDSOURCESDIRECTORY/artifacts/TestResults/$env:BUILDCONFIG
                 if ($LASTEXITCODE -eq 0) {
                   break
