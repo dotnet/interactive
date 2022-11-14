@@ -68,7 +68,8 @@ let languageMapping = dynamic(
  | project EventTimestamp, LanguageName = mapKernel(tostring(Properties["kernellanguagename"])), KernelSessionId = tostring(Properties["kernelsessionid"])
  | where LanguageName  != ""
  | summarize CommandCount = count(), LanguageCount = array_length(make_set(LanguageName)) , KernelLanguages = array_strcat( array_sort_asc( make_set(LanguageName) ), ":")by bin(EventTimestamp, 1d), KernelSessionId
- | summarize LangaugeSetOccurences = count(), LanguageSetSize = max(LanguageCount) by  KernelLanguages
+ | where CommandCount > 1
+ | summarize LangaugeSetOccurences = count(), LanguageSetSize = max(LanguageCount) by  bin(EventTimestamp, 1d), KernelLanguages
  | order by LanguageSetSize
 
 #!csharp
@@ -77,8 +78,70 @@ let languageMapping = dynamic(
 
 #!csharp
 
+public class polyglotNotebook{
+    public string LanguageSet {get;set;}
+    public int Popularity {get;set;}
+    public double Temperature {get;set;}
+    public string[] LanguageNames {get;set;}
+    public DateTime LastUsed {get;set;}
+    public DateTime FirstUsed {get;set;}
+}
+
+#!csharp
+
+var notebooks = new List<polyglotNotebook>();
+
+var dataPoints = langauges[0].Data.GroupBy(d => (DateTime)d.First(f => (f.Key == "EventTimestamp")).Value).ToDictionary(e => e.Key, e => e.ToList());
+var minDate = dataPoints.Keys.Min();
+var maxDate = dataPoints.Keys.Max();
+
+foreach(var day in Enumerable.Range(0, (maxDate - minDate).Days + 1).Select(m => minDate.AddDays(m))){
+    if(dataPoints.TryGetValue(day, out var data)){
+        var today = new HashSet<string>();
+        foreach(var lang in data){
+            var kernelLanguageNames = (lang.First(f => f.Key == "KernelLanguages").Value as string);
+            today.Add(kernelLanguageNames);
+            var polyglotNotebook = notebooks.FirstOrDefault(pn => pn.LanguageSet == kernelLanguageNames);
+            if(polyglotNotebook is null){
+                polyglotNotebook = new polyglotNotebook();
+                polyglotNotebook.LanguageSet = kernelLanguageNames;
+                polyglotNotebook.Popularity = 1;
+                polyglotNotebook.Temperature = 1.0;
+                polyglotNotebook.LanguageNames = kernelLanguageNames.Split(":");   
+                polyglotNotebook.FirstUsed = day;
+                polyglotNotebook.LastUsed = day;
+                notebooks.Add(polyglotNotebook);
+            }
+            else{
+                polyglotNotebook.LastUsed = day;
+                polyglotNotebook.Popularity++;
+                polyglotNotebook.Temperature *= 1.1;
+            }
+            var languageNames = kernelLanguageNames.Split(":");    
+            var langaugeSetOccurences = (long)lang.First(f => f.Key == "LangaugeSetOccurences").Value;
+        }
+
+        foreach(var notebook in notebooks){
+            if(!today.Contains(notebook.LanguageSet)){
+                notebook.Temperature *= 0.7;
+            }
+        }
+    }else{
+        foreach(var polyglotNotebook in notebooks){
+            polyglotNotebook.Temperature *= 0.7;
+        }
+    }   
+}
+
+#!csharp
+
+notebooks
+
+#!csharp
+
 public class Edge{
     public long weight {get;set;}
+    public double temperature {get;set;}
     public int source {get;set;}
     public int destination {get;set;}
 }
@@ -97,11 +160,8 @@ public class Graph{
 
 var nodelookup = new Dictionary<string, Node>();
 var graph = new Graph();
-foreach(var lang in langauges[0].Data){
-    var kernelLanguageNames = (lang.First(f => f.Key == "KernelLanguages").Value as string);
-    var languageNames = kernelLanguageNames.Split(":");    
-    var langaugeSetOccurences = (long)lang.First(f => f.Key == "LangaugeSetOccurences").Value;
-
+foreach(var notebook in notebooks){
+    var languageNames = notebook.LanguageNames;
     if(languageNames.Length > 1)
     {
         for(var i = 0; i < languageNames.Length; i++){
@@ -109,13 +169,13 @@ foreach(var lang in langauges[0].Data){
             if(!nodelookup.ContainsKey(languageName)){
                 var node = new Node(){
                     language = languageName,
-                    popularity = langaugeSetOccurences
+                    popularity = notebook.Popularity
                 };
                 nodelookup.Add(languageName, node);
                 graph.nodes.Add(node);
             }else
             {
-                nodelookup[languageName].popularity += langaugeSetOccurences;
+                nodelookup[languageName].popularity += notebook.Popularity;
             }
         }
         for(var i = 0; i < languageNames.Length; i++){
@@ -130,11 +190,13 @@ foreach(var lang in langauges[0].Data){
                         edge = new Edge(){
                             source = source,
                             destination = destination,
-                            weight = langaugeSetOccurences
+                            weight = notebook.Popularity,
+                            temperature = notebook.Temperature
                         };
                         graph.edges.Add(edge);
                     }else{
-                        edge.weight += langaugeSetOccurences;
+                        edge.weight += notebook.Popularity;
+                        edge.temperature += notebook.Temperature;
                     }
                 }
             }
@@ -145,13 +207,13 @@ foreach(var lang in langauges[0].Data){
         if(!nodelookup.ContainsKey(languageName)){
             var node = new Node(){
                 language = languageName,
-                popularity = langaugeSetOccurences
+                popularity = notebook.Popularity
             };
             nodelookup.Add(languageName, node);
             graph.nodes.Add(node);
         }else
         {
-            nodelookup[languageName].popularity += langaugeSetOccurences;
+            nodelookup[languageName].popularity += notebook.Popularity;
         }
     }
 }
@@ -184,19 +246,19 @@ delay = (delayAmount) => new Promise(resolve => setTimeout(resolve, delayAmount)
 await delay(500);
 
 loadd3(["d3"], (d3) => {   
-    const maxStrength = d3.max(graph.edges, (e) => e.weight);
+    const maxStrength = d3.max(graph.edges, (e) => e.temperature);
     const maxPopularity = d3.max(graph.nodes, (n) => n.popularity);
     const minPopularity = d3.min(graph.nodes, (n) => n.popularity);
     const scale = d3.scaleSqrt()
     .domain([0, 1])
     .range([0, 1]);
     const nodes = d3.map(graph.nodes, (n, i) => ({id: i, language: n.language, popularity: n.popularity/maxPopularity}));
-    const links = d3.map(graph.edges, (e, i) => ({source: e.source, target: e.destination, strength: e.weight/maxStrength}));
+    const links = d3.map(graph.edges, (e, i) => ({source: e.source, target: e.destination, strength: e.temperature/maxStrength}));
     const color = d3.scaleOrdinal(d3.map(graph.nodes, (n, i) => n.language), d3.schemeTableau10);
-    const width = 1024;
-    const height = 1024;
+    const width = 2048;
+    const height = 2048;
     const maxR = 50;
-    const collisionScale = 3;
+    const collisionScale = 2.5;
     const svg = d3.select("#forceLayout")
     .attr("width", width)
     .attr("height", height)
@@ -314,7 +376,7 @@ loadd3(["d3"], (d3) => {
     .force('collision', d3.forceCollide().radius(d => scale( d.popularity ) * maxR * collisionScale))
     .force("charge", d3.forceManyBody().strength(d => scale( d.popularity ) * -200))
     .force("center", d3.forceCenter(width / 2, height / 2))
-    .force("link", d3.forceLink(links).strength ( (d) => d.strength * 0.1))
+    .force("link", d3.forceLink(links).strength ( (d) => d.strength * 1.7))
     .force("bounds", boxingForce)
     .on("tick", tick);
 
