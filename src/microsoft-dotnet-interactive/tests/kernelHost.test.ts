@@ -16,7 +16,7 @@ describe("kernelHost",
             Logger.configure("test", () => { });
         });
 
-        it("provides uri for kernels", () => {
+        it("provides uri for kernels and produces events as it connects", () => {
             const inMemory = createInMemoryChannels();
             const compositeKernel = new CompositeKernel("vscode");
             const childKernel = new Kernel("test", "customLanguage");
@@ -81,6 +81,21 @@ describe("kernelHost",
             expect(kernelInfo!.uri).to.not.be.undefined;
             expect(kernelInfo!.uri).to.equal("kernel://vscode/test");
             expect(kernelInfo!.aliases).to.be.deep.eq(["test1", "test2"]);
+
+        });
+
+
+        it("provides uri for root kernel", () => {
+            const inMemory = createInMemoryChannels();
+            const compositeKernel = new CompositeKernel("vscode");
+            const kernelHost = new KernelHost(compositeKernel, inMemory.local.sender, inMemory.local.receiver, "kernel://vscode");
+
+            const childKernel = new Kernel("test");
+            compositeKernel.add(childKernel, ["test1", "test2"]);
+
+
+            const vscodeKernel = compositeKernel.findKernelByUri("kernel://vscode/");//?
+            expect(vscodeKernel).not.to.be.undefined;
 
         });
 
