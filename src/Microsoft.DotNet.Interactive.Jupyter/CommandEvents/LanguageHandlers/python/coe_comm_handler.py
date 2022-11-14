@@ -1,4 +1,7 @@
-﻿import json
+﻿# Copyright (c) .NET Foundation and contributors. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+import json
 def __get_dotnet_coe_comm_handler(): 
     
     class CommandEventCommTarget:

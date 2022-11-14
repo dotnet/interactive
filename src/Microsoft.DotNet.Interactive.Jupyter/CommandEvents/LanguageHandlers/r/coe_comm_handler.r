@@ -1,4 +1,7 @@
-﻿library(IRkernel);
+﻿# Copyright (c) .NET Foundation and contributors. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+library(IRkernel);
 library(jsonlite);
 
 .dotnet_coe_comm_hander_env <- new.env();
