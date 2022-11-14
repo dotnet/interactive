@@ -4,15 +4,16 @@ def __get_dotnet_coe_comm_handler():
     class CommandEventCommTarget:
         __control_comm = None
         __coe_handler = None
-        _is_debug = False
 
         def handle_control_comm_opened(self, comm, msg):
+            if comm is None:
+                raise RuntimeError('Control comm required to open')
+                
             self.__control_comm = comm
-            if (comm is not None):
-                self.__control_comm.on_msg(self.handle_control_comm_msg)
+            self.__control_comm.on_msg(self.handle_control_comm_msg)
 
             self.__coe_handler = CommandEventHandler()
-            self.__send_control_comm_msg(self.__coe_handler.is_ready())
+            self.__control_comm.send(self.__coe_handler.is_ready())
 
         def handle_control_comm_msg(self, msg):
             # This shouldn't happen unless someone calls this method manually
@@ -21,14 +22,8 @@ def __get_dotnet_coe_comm_handler():
 
             data = msg['content']['data']
             response = self.__coe_handler.handle_command(data)
-            self.__send_control_comm_msg(response)
-
-        def __send_control_comm_msg(self, payload):
-            if self._is_debug:
-                print (payload)
-            else:
-                self.__control_comm.send(payload)
-    
+            self.__control_comm.send(response)
+            
     
     class CommandEventHandler:          
         __exclude_types = ["<class 'module'>"]        
@@ -62,10 +57,7 @@ def __get_dotnet_coe_comm_handler():
             results = [KernelValueInfo(x, str(type(variables[x]))) for x in results_who_ls ]
             results = list(filter(lambda v: v.nativeType not in self.__exclude_types, results))
             
-            if (results is not None):
-                return EventEnvelope(ValueInfosProduced(results), command)
-            
-            return EventEnvelope(CommandFailed(f'Failed to get variables.'))
+            return EventEnvelope(ValueInfosProduced(results), command)
             
         def __handle_request_value(self, command):
             requestValue = RequestValue(command['command'])
@@ -88,10 +80,7 @@ def __get_dotnet_coe_comm_handler():
 
             formattedValue = FormattedValue(mimeType) # This will be formatted in the .NET kernel
             
-            if (rawValue is not None): 
-                return EventEnvelope(ValueProduced(name, rawValue, formattedValue), command)
-            
-            return EventEnvelope(CommandFailed(f'Failed to get value for "{name}"'))
+            return EventEnvelope(ValueProduced(name, rawValue, formattedValue), command)
         
         def __handle_send_value(self, command):
             sendValue = SendValue(command['command'])

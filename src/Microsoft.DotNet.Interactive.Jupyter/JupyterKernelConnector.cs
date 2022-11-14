@@ -5,7 +5,6 @@ using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.CommandEvents;
 using Microsoft.DotNet.Interactive.Jupyter.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging.Comms;
-using Microsoft.DotNet.Interactive.Jupyter.ValueSharing;
 using System;
 using System.Threading.Tasks;
 
@@ -39,9 +38,6 @@ public class JupyterKernelConnector : IKernelConnector
 
         var configuration = new CommCommandEventChannelConfiguration(commsManager);
         await kernel.UseConfiguration(configuration);
-
-        //var valueAdapterConfiguration = new CommValueAdapterConfiguration(commsManager);
-        //await kernel.UseConfiguration(valueAdapterConfiguration);
 
         kernel.RegisterForDisposal(commsManager);
         kernel.RegisterForDisposal(kernelConnection);
