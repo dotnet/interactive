@@ -23,6 +23,8 @@ import {
     KernelEventType,
     KernelInfoProduced,
     KernelInfoProducedType,
+    Quit,
+    QuitType,
     RequestCompletions,
     RequestCompletionsType,
     RequestDiagnostics,
@@ -340,11 +342,15 @@ export class InteractiveClient {
     }
 
     dispose() {
+        const command: Quit = {};
+        this.config.channel.sender.send({
+            commandType: QuitType,
+            command,
+        });
         this.config.channel.dispose();
         for (let disposable of this.disposables) {
             disposable();
         }
-
     }
 
     public registerForDisposal(disposable: () => void) {

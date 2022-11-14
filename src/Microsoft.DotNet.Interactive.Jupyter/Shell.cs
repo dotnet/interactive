@@ -73,6 +73,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
             _disposables = new CompositeDisposable
                            {
+                               _kernel,
                                _shell,
                                _ioPubSocket,
                                _stdIn,
