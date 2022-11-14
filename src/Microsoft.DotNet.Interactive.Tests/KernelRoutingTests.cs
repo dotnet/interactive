@@ -28,31 +28,6 @@ public class KernelRoutingTests : IDisposable
 
     public void Dispose() => _disposables.Dispose();
 
-    [Fact]
-    public void RoutingSlip_includes_parent_RoutingSlip()
-    {
-        var parent = new RoutingSlip();
-        parent.TryAdd(new Uri("kernel://a"));
-
-        var child = new RoutingSlip(parent);
-        child.TryAdd(new Uri("kernel://b"));
-
-        child.Contains(parent).Should().BeTrue();
-    }
-
-    [Fact]
-    public void RoutingSlip_identifies_childCommands()
-    {
-        var parent = new SubmitCode("code1");
-        parent.RoutingSlip.TryAdd(new Uri("kernel://1"));
-        parent.RoutingSlip.TryAdd(new Uri("kernel://2"));
-        var child = new SubmitCode("code2");
-        child.RoutingSlip.TryAdd(new Uri("kernel://1"));
-        child.RoutingSlip.TryAdd(new Uri("kernel://2"));
-        child.RoutingSlip.TryAdd(new Uri("kernel://5"));
-
-        child.IsChildCommand(parent).Should().BeTrue();
-    }
 
     [Fact]
     public async Task When_target_kernel_name_is_specified_then_ProxyKernel_does_not_split_magics()
@@ -209,11 +184,13 @@ Console.WriteLine(1);";
 
         await compositeKernel.SendAsync(command);
 
-        command.RoutingSlip.Should().BeEquivalentTo(
+        command.RoutingSlip.ToUriArray().Should().BeEquivalentTo(
             new[]
             {
-                new Uri("kernel://local/.NET", UriKind.Absolute), 
-                new Uri("kernel://local/csharp", UriKind.Absolute)
+                "kernel://local/.NET?tag=arrived", 
+                "kernel://local/csharp?tag=arrived", 
+                "kernel://local/csharp", 
+                "kernel://local/.NET"
             });
     }
 
@@ -240,12 +217,12 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
 
         var fsharpEvent = events.OfType<ReturnValueProduced>().First();
 
-        fsharpEvent.Command.RoutingSlip.Should().BeEquivalentTo(
+        fsharpEvent.Command.RoutingSlip.ToUriArray().Should().BeEquivalentTo(
             new[]
             {
-                new Uri("kernel://local/.NET", UriKind.Absolute),
-                new Uri("kernel://local/csharp", UriKind.Absolute),
-                new Uri("kernel://local/fsharp", UriKind.Absolute)
+                "kernel://local/.NET",
+                "kernel://local/csharp",
+                "kernel://local/fsharp"
             });
     }
 
@@ -295,7 +272,6 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
         
     }
 
-
     [Fact]
     public async Task commands_routing_slip_contains_proxy_kernels_that_have_been_traversed()
     {
@@ -322,13 +298,17 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
 
         await localCompositeKernel.SendAsync(command);
 
-        command.RoutingSlip.Should().BeEquivalentTo(
+        command.RoutingSlip.ToUriArray().Should().BeEquivalentTo(
             new[]
             {
-                new Uri("kernel://local/", UriKind.Absolute),
-                new Uri("kernel://local/csharp-proxy", UriKind.Absolute),
-                new Uri("kernel://remote/", UriKind.Absolute),
-                new Uri("kernel://remote/csharp", UriKind.Absolute)
+                "kernel://local/?tag=arrived", 
+                "kernel://local/csharp-proxy?tag=arrived", 
+                "kernel://remote/?tag=arrived", 
+                "kernel://remote/csharp?tag=arrived", 
+                "kernel://remote/csharp", 
+                "kernel://remote/", 
+                "kernel://local/csharp-proxy", 
+                "kernel://local/"
             });
     }
 
@@ -351,11 +331,11 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
 
         events.Should().ContainSingle<ReturnValueProduced>()
             .Which
-            .RoutingSlip.Should().ContainInOrder(
+            .RoutingSlip.ToUriArray().Should().ContainInOrder(
             new[]
             {
-                new Uri("kernel://local/csharp", UriKind.Absolute),
-                new Uri("kernel://local/.NET", UriKind.Absolute)
+                "kernel://local/csharp",
+                "kernel://local/.NET"
                
             });
     }
@@ -390,13 +370,13 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
 
         events.Should().ContainSingle<ReturnValueProduced>()
             .Which
-            .RoutingSlip.Should().ContainInOrder(
+            .RoutingSlip.ToUriArray().Should().ContainInOrder(
             new[]
             {
-                new Uri("kernel://remote/csharp", UriKind.Absolute),
-                new Uri("kernel://remote/", UriKind.Absolute),
-                new Uri("kernel://local/csharp-proxy", UriKind.Absolute),
-                new Uri("kernel://local/", UriKind.Absolute)
+                "kernel://remote/csharp",
+                "kernel://remote/",
+                "kernel://local/csharp-proxy",
+                "kernel://local/"
             });
     }
 }

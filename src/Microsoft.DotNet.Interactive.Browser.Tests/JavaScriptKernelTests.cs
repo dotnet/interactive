@@ -11,7 +11,6 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
 using Pocket.For.Xunit;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Browser.Tests;
@@ -134,7 +133,7 @@ Console.Write(x);", targetKernelName: csharp.Name));
 
     private static async Task<Kernel> CreateJavaScriptProxyKernelAsync()
     {
-        var connector = new PlaywrightKernelConnector(!Debugger.IsAttached);
+        var connector = new PlaywrightKernelConnector(!Debugger.IsAttached, Debugger.IsAttached);
 
         var proxy = await connector.CreateKernelAsync("javascript");
 

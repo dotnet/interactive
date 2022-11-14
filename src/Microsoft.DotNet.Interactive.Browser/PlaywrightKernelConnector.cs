@@ -24,7 +24,7 @@ public class PlaywrightKernelConnector : IKernelConnector
     private readonly RefCountDisposable _refCountDisposable;
     private readonly AsyncLazy<(IPage page, Subject<CommandOrEvent> commandsAndEvents)> _oneTimeBrowserSetup;
 
-    public PlaywrightKernelConnector(bool launchBrowserHeadless = false)
+    public PlaywrightKernelConnector(bool launchBrowserHeadless = false, bool enableLog = false)
     {
         var playwrightDisposable = new SerialDisposable();
 
@@ -61,7 +61,7 @@ public class PlaywrightKernelConnector : IKernelConnector
 
             await page.EvaluateAsync(jsSource);
 
-            await page.EvaluateAsync(@"dotnetInteractive.setup({hostName : ""browser""});");
+            await page.EvaluateAsync($@"dotnetInteractive.setup({{hostName : ""browser"", enableLogger: {enableLog.ToString().ToLowerInvariant()}}});");
 
             playwrightDisposable.Disposable = Disposable.Create(() => { playwright.Dispose(); });
 

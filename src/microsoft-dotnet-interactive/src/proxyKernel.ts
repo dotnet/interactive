@@ -5,6 +5,7 @@ import * as contracts from "./contracts";
 import { Logger } from "./logger";
 import { Kernel, IKernelCommandHandler, IKernelCommandInvocation, getKernelUri, KernelType } from "./kernel";
 import * as connection from "./connection";
+import * as routingSlip from "./routingslip";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
 import { KernelInvocationContext } from "./kernelInvocationContext";
 
@@ -14,6 +15,7 @@ export class ProxyKernel extends Kernel {
         super(name);
         this.kernelType = KernelType.proxy;
     }
+
     override getCommandHandler(commandType: contracts.KernelCommandType): IKernelCommandHandler | undefined {
         return {
             commandType,
@@ -25,8 +27,9 @@ export class ProxyKernel extends Kernel {
 
     private delegatePublication(envelope: contracts.KernelEventEnvelope, invocationContext: KernelInvocationContext): void {
         let alreadyBeenSeen = false;
-        if (envelope.routingSlip === undefined || !envelope.routingSlip.find(e => e === getKernelUri(this))) {
-            connection.tryAddUriToRoutingSlip(envelope, getKernelUri(this));
+        const kernelUri = getKernelUri(this);
+        if (kernelUri && !routingSlip.eventRoutingSlipContains(envelope, kernelUri)) {
+            routingSlip.stampEventRoutingSlip(envelope, kernelUri);
         } else {
             alreadyBeenSeen = true;
         }
@@ -52,6 +55,7 @@ export class ProxyKernel extends Kernel {
     }
 
     private async _commandHandler(commandInvocation: IKernelCommandInvocation): Promise<void> {
+        this.ensureCommandTokenAndId(commandInvocation.commandEnvelope);
         const commandToken = commandInvocation.commandEnvelope.token;
         const commandId = commandInvocation.commandEnvelope.id;
         const completionSource = new PromiseCompletionSource<contracts.KernelEventEnvelope>();
@@ -71,9 +75,16 @@ export class ProxyKernel extends Kernel {
                     }
                     else if (envelope.command!.token === commandToken) {
 
-                        for (const kernelUri of envelope.command!.routingSlip!) {
-                            connection.tryAddUriToRoutingSlip(commandInvocation.commandEnvelope, kernelUri);
-                            envelope.command!.routingSlip = commandInvocation.commandEnvelope.routingSlip;//?
+                        Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] processing event, envelopeid=${envelope.command!.id}, commandid=${commandId}`);
+                        Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] processing event, ${JSON.stringify(envelope)}`);
+
+                        try {
+                            const original = [...commandInvocation.commandEnvelope?.routingSlip ?? []];
+                            routingSlip.continueCommandRoutingSlip(commandInvocation.commandEnvelope, envelope.command!.routingSlip!);
+                            envelope.command!.routingSlip = [...commandInvocation.commandEnvelope.routingSlip ?? []];//?
+                            Logger.default.warn(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, command routingSlip :${original}] has changed to: ${JSON.stringify(commandInvocation.commandEnvelope.routingSlip ?? [])}`);
+                        } catch (e: any) {
+                            Logger.default.error(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, error ${e?.message}`);
                         }
 
                         switch (envelope.eventType) {
@@ -100,8 +111,10 @@ export class ProxyKernel extends Kernel {
                             case contracts.CommandSucceededType:
                                 Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] finished, envelopeid=${envelope.command!.id}, commandid=${commandId}`);
                                 if (envelope.command!.id === commandId) {
+                                    Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] resolving promise, envelopeid=${envelope.command!.id}, commandid=${commandId}`);
                                     completionSource.resolve(envelope);
                                 } else {
+                                    Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] not resolving promise, envelopeid=${envelope.command!.id}, commandid=${commandId}`);
                                     this.delegatePublication(envelope, commandInvocation.context);
                                 }
                                 break;
@@ -123,12 +136,12 @@ export class ProxyKernel extends Kernel {
             commandInvocation.commandEnvelope.routingSlip;//?
             Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] forwarding command ${commandInvocation.commandEnvelope.commandType} to ${commandInvocation.commandEnvelope.command.destinationUri}`);
             this._sender.send(commandInvocation.commandEnvelope);
-            Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] about to await with token ${commandToken}`);
+            Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] about to await with token ${commandToken} and  commandid ${commandId}`);
             const enventEnvelope = await completionSource.promise;
             if (enventEnvelope.eventType === contracts.CommandFailedType) {
                 commandInvocation.context.fail((<contracts.CommandFailed>enventEnvelope.event).message);
             }
-            Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] done awaiting with token ${commandToken}`);
+            Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] done awaiting with token ${commandToken}} and  commandid ${commandId}`);
         }
         catch (e) {
             commandInvocation.context.fail((<any>e).message);

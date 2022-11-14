@@ -230,12 +230,12 @@ public class KernelInfoTests
             var events = result.KernelEvents.ToSubscribedList();
 
             events.Should()
-                  .ContainSingle<KernelInfoProduced>()
-                  .Which
-                  .KernelInfo
-                  .Uri
-                  .Should()
-                  .Be(new Uri("kernel://local/csharp"));
+                .ContainSingle<KernelInfoProduced>(k => k.KernelInfo.LocalName == "csharp")
+                .Which
+                .KernelInfo
+                .Uri
+                .Should()
+                .Be(new Uri("kernel://local/csharp"));
         }
 
         [Fact]

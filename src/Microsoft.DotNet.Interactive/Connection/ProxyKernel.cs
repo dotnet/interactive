@@ -72,9 +72,7 @@ public sealed class ProxyKernel : Kernel
         ((HashSet<KernelDirectiveInfo>)KernelInfo.SupportedDirectives).UnionWith(kernelInfoProduced.KernelInfo.SupportedDirectives);
         ((HashSet<KernelCommandInfo>)KernelInfo.SupportedKernelCommands).UnionWith(kernelInfoProduced.KernelInfo.SupportedKernelCommands);
     }
-
-
-
+    
     private Task HandleByForwardingToRemoteAsync(KernelCommand command, KernelInvocationContext context)
     {
         if (command.OriginUri is null)
@@ -87,6 +85,7 @@ public sealed class ProxyKernel : Kernel
        
         _executionContext = ExecutionContext.Capture();
         var token = command.GetOrCreateToken();
+        command.GetOrCreateId();
 
         command.OriginUri ??= KernelInfo.Uri;
 
@@ -194,7 +193,10 @@ public sealed class ProxyKernel : Kernel
 
         if (hasPending && HasSameOrigin(kernelEvent, KernelInfo))
         {
-            PatchRoutingSlip(pending.command, kernelEvent.Command);
+            if (kernelEvent.Command.IsEquivalentTo(pending.command))
+            {
+                pending.command.RoutingSlip.ContinueWith(kernelEvent.Command.RoutingSlip);
+            }
             switch (kernelEvent)
             {
                 case CommandFailed cf when pending.command.IsEquivalentTo(kernelEvent.Command):
@@ -213,10 +215,9 @@ public sealed class ProxyKernel : Kernel
                     {
                         UpdateKernelInfoFromEvent(kip);
                         var newEvent = new KernelInfoProduced(KernelInfo, kernelEvent.Command);
-                        foreach (var kernelUri in kip.RoutingSlip)
-                        {
-                            newEvent.TryAddToRoutingSlip(kernelUri);
-                        }
+                        
+                        newEvent.RoutingSlip.ContinueWith(kip.RoutingSlip);
+                        
                         if (pending.executionContext is { } ec)
                         {
                             ExecutionContext.Run(ec, _ =>
@@ -245,14 +246,6 @@ public sealed class ProxyKernel : Kernel
                     }
                     break;
             }
-        }
-    }
-
-    private void PatchRoutingSlip(KernelCommand command, KernelCommand commandFromRemoteKernel)
-    {
-        foreach (var kernelOrKernelHostUri in commandFromRemoteKernel.RoutingSlip.Skip(command.RoutingSlip.Count))
-        {
-            command.TryAddToRoutingSlip(kernelOrKernelHostUri);
         }
     }
 

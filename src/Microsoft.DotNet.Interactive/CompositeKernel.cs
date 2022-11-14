@@ -235,6 +235,8 @@ namespace Microsoft.DotNet.Interactive
             RequestKernelInfo command,
             KernelInvocationContext context)
         {
+            context.Publish(new KernelInfoProduced(KernelInfo, command));
+
             foreach (var childKernel in ChildKernels)
             {
                 if (childKernel.SupportsCommand(command))

@@ -12,7 +12,7 @@ import { Kernel } from "../src/kernel";
 
 describe("kernelInfo", () => {
     describe("for composite kernel", () => {
-        it("returns kernel info for all children", async () => {
+        it("returns kernel info for all children and its own", async () => {
             const compositeKernel = new CompositeKernel("root");
             compositeKernel.add(new JavascriptKernel("child1"), ["child1Js"]);
             compositeKernel.add(new JavascriptKernel("child2"), ["child2Js"]);
@@ -24,8 +24,16 @@ describe("kernelInfo", () => {
             sub.dispose();
             const kernelInfos = events.filter(e => e.eventType === contracts.KernelInfoProducedType).map(e => (<contracts.KernelInfoProduced>(e.event)).kernelInfo);
 
-            expect(kernelInfos.length).to.equal(2);
+            expect(kernelInfos.length).to.equal(3);
             expect(kernelInfos).to.deep.equal([{
+                aliases: [],
+                languageName: undefined,
+                languageVersion: undefined,
+                localName: 'root',
+                supportedDirectives: [],
+                supportedKernelCommands: [{ name: 'RequestKernelInfo' }]
+            },
+            {
                 aliases: ['child1Js'],
                 languageName: 'JavaScript',
                 languageVersion: undefined,
@@ -67,8 +75,11 @@ describe("kernelInfo", () => {
             sub.dispose();
             const kernelInfos = events.filter(e => e.eventType === contracts.KernelInfoProducedType).map(e => (<contracts.KernelInfoProduced>(e.event)).kernelInfo.uri);
 
-            expect(kernelInfos.length).to.equal(2);
-            expect(kernelInfos).to.deep.equal(['kernel://local/child1', 'kernel://local/child2']);
+            expect(kernelInfos.length).to.equal(3);
+            expect(kernelInfos).to.deep.equal([
+                'kernel://local/',
+                'kernel://local/child1',
+                'kernel://local/child2']);
         });
 
         it("when kernels are added it produces KernelInfoProduced events", () => {
@@ -139,7 +150,10 @@ describe("kernelInfo", () => {
                         command: { targetKernelName: 'child1' },
                         commandType: 'SubmitCode',
                         id: 'commandId',
-                        routingSlip: ['kernel://local/root', 'kernel://local/child1'],
+                        routingSlip:
+                            ['kernel://local/root?tag=arrived',
+                                'kernel://local/child1?tag=arrived',
+                                'kernel://local/root'],
                         token: 'commandToken'
                     },
                     event:
@@ -244,31 +258,34 @@ describe("kernelInfo", () => {
                 .to
                 .deep
                 .equal([{
-                    eventType: 'KernelInfoProduced',
+                    command:
+                    {
+                        command:
+                        {
+                            code: 'kernel.root.add(new Kernel("child2", "customLanguage"), ["child2Js"]);',
+                            targetKernelName: 'child1'
+                        },
+                        commandType: 'SubmitCode',
+                        id: 'commandId',
+                        routingSlip:
+                            ['kernel://local/root?tag=arrived',
+                                'kernel://local/child1?tag=arrived',
+                                'kernel://local/root'],
+                        token: 'commandToken'
+                    },
                     event:
                     {
                         kernelInfo:
                         {
-                            localName: 'child2',
-                            languageName: "customLanguage",
-                            aliases: ["child2Js"],
+                            aliases: ['child2Js'],
+                            languageName: 'customLanguage',
                             languageVersion: undefined,
+                            localName: 'child2',
                             supportedDirectives: [],
                             supportedKernelCommands: [{ name: 'RequestKernelInfo' }]
                         }
                     },
-                    command:
-                    {
-                        commandType: 'SubmitCode',
-                        command:
-                        {
-                            code: `kernel.root.add(new Kernel("child2", "customLanguage"), ["child2Js"]);`,
-                            targetKernelName: 'child1'
-                        },
-                        token: 'commandToken',
-                        id: 'commandId',
-                        routingSlip: ['kernel://local/root', 'kernel://local/child1']
-                    },
+                    eventType: 'KernelInfoProduced',
                     routingSlip: ['kernel://local/child1', 'kernel://local/root']
                 }]);
         });

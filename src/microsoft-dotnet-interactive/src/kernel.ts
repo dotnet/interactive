@@ -9,7 +9,7 @@ import { CompositeKernel } from "./compositeKernel";
 import { KernelScheduler } from "./kernelScheduler";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
 import * as disposables from "./disposables";
-import { tryAddUriToRoutingSlip } from "./connection";
+import * as routingslip from "./routingslip";
 import * as rxjs from "rxjs";
 
 export interface IKernelCommandInvocation {
@@ -94,7 +94,7 @@ export class Kernel {
         return this._scheduler;
     }
 
-    private ensureCommandTokenAndId(commandEnvelope: contracts.KernelCommandEnvelope) {
+    protected ensureCommandTokenAndId(commandEnvelope: contracts.KernelCommandEnvelope) {
         if (!commandEnvelope.token) {
             let nextToken = this._tokenGenerator.GetNewToken();
             if (KernelInvocationContext.current?.commandEnvelope) {
@@ -129,10 +129,17 @@ export class Kernel {
     // nothing is ever going to look at the promise we return here.
     async send(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         this.ensureCommandTokenAndId(commandEnvelope);
-        tryAddUriToRoutingSlip(commandEnvelope, getKernelUri(this));
+        const kernelUri = getKernelUri(this);
+        if (!routingslip.commandRoutingSlipContains(commandEnvelope, kernelUri)) {
+            routingslip.stampCommandRoutingSlipAsArrived(commandEnvelope, kernelUri);
+        } else {
+            "should not be here";//?
+        }
         commandEnvelope.routingSlip;//?
         KernelInvocationContext.establish(commandEnvelope);
-        return this.getScheduler().runAsync(commandEnvelope, (value) => this.executeCommand(value));
+        return this.getScheduler().runAsync(commandEnvelope, (value) => this.executeCommand(value).finally(() => {
+            routingslip.stampCommandRoutingSlip(commandEnvelope, kernelUri);
+        }));
     }
 
     private async executeCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
@@ -171,7 +178,12 @@ export class Kernel {
                     const message = `kernel ${this.name} of type ${KernelType[this.kernelType]} saw event ${e.eventType} with token ${e.command?.token}`;
                     message;//?
                     Logger.default.info(message);
-                    tryAddUriToRoutingSlip(e, getKernelUri(this));
+                    const kernelUri = getKernelUri(this);
+                    if (!routingslip.eventRoutingSlipContains(e, kernelUri)) {
+                        routingslip.stampEventRoutingSlip(e, kernelUri);
+                    } else {
+                        "should not get here";//?
+                    }
                     return e;
                 }))
                     .subscribe(this.publishEvent.bind(this));
@@ -226,7 +238,8 @@ export class Kernel {
         }
 
         if (commandEnvelope.command.destinationUri) {
-            if (this.kernelInfo.uri !== commandEnvelope.command.destinationUri) {
+            const normalizedUri = routingslip.createKernelUri(commandEnvelope.command.destinationUri);
+            if (this.kernelInfo.uri !== normalizedUri) {
                 return false;
             }
         }
@@ -253,7 +266,7 @@ export class Kernel {
                 eventType: contracts.KernelInfoProducedType,
                 event: event
             };
-            tryAddUriToRoutingSlip(envelope, getKernelUri(this));
+            routingslip.stampEventRoutingSlip(envelope, getKernelUri(this));
             const context = KernelInvocationContext.current;
 
             if (context) {

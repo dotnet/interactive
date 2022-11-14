@@ -535,7 +535,17 @@ namespace Microsoft.DotNet.Interactive
                                 return false;
                             }
 
-                            return inner.IsChildCommand(outer);
+                            if (inner.Parent == outer)
+                            {
+                                return true;
+                            }
+
+                            if (inner.GetOrCreateToken() == outer.GetOrCreateToken())
+                            {
+                                return true;
+                            }
+                            
+                            return inner.RoutingSlip.StartsWith(outer.RoutingSlip);
                           
                         });
                     RegisterForDisposal(scheduler);
@@ -623,12 +633,10 @@ namespace Microsoft.DotNet.Interactive
             {
                 return this;
             }
-            else
-            {
-                context.Fail(command, new CommandNotSupportedException(command.GetType(), this));
 
-                return null;
-            }
+            context.Fail(command, new CommandNotSupportedException(command.GetType(), this));
+
+            return null;
         }
 
         protected internal void PublishEvent(KernelEvent kernelEvent)
@@ -638,7 +646,16 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentNullException(nameof(kernelEvent));
             }
 
-            kernelEvent.TryAddToRoutingSlip(this.GetKernelUri());
+            var kernelUri = this.GetKernelUri();
+            if (!kernelEvent.RoutingSlip.Contains(kernelUri))
+            {
+                kernelEvent.RoutingSlip.Stamp(kernelUri);
+            }
+            else
+            {
+                //todo: we should not be here
+            }
+           
             _kernelEvents.OnNext(kernelEvent);
         }
 
