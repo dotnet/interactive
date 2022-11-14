@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Jupyter;
 
-public class JupyterKernelConnector : IKernelConnector
+internal class JupyterKernelConnector : IKernelConnector
 {
     private readonly IJupyterConnection _jupyterConnection;
     private readonly string _kernelSpecName;
