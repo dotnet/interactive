@@ -64,6 +64,7 @@ export class Kernel {
             localName: name,
             languageName: languageName,
             aliases: [],
+            uri: routingslip.createKernelUri(`kernel://local/${name}`),
             languageVersion: languageVersion,
             supportedDirectives: [],
             supportedKernelCommands: []

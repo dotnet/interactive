@@ -36,9 +36,12 @@ describe("kernelRouting", () => {
 
         succededEvent;//?
         expect(Array.from(succededEvent!.command!.routingSlip!.values())).to.deep.equal(
-            ['kernel://local/vscode?tag=arrived',
-                'kernel://local/javascript?tag=arrived',
-                'kernel://local/vscode']);
+            [
+                'kernel://local/vscode?tag=arrived',
+                'kernel://local/vscode/javascript?tag=arrived',
+                'kernel://local/vscode/javascript',
+                'kernel://local/vscode'
+            ]);
     });
 
     it("event routing slip contains kernels that have been traversed", async () => {
@@ -66,7 +69,7 @@ describe("kernelRouting", () => {
 
         expect(Array.from(events[0].routingSlip!.values())).to.deep.equal(
             [
-                'kernel://local/javascript',
+                'kernel://local/vscode/javascript',
                 'kernel://local/vscode'
             ]);
     });
@@ -108,11 +111,14 @@ describe("kernelRouting", () => {
         expect(command.routingSlip).not.to.be.undefined;
 
         expect(Array.from(command.routingSlip!.values())).to.deep.equal(
-            ['kernel://local/?tag=arrived',
+            [
+                'kernel://local/?tag=arrived',
                 'kernel://local/javascript?tag=arrived',
                 'kernel://remote/',
                 'kernel://remote/javascript',
-                'kernel://local/']);
+                'kernel://local/javascript',
+                'kernel://local/'
+            ]);
     });
 
     it.skip("event routing slip contains proxy kernels that have been traversed", async () => {
