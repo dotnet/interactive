@@ -278,6 +278,7 @@ stages:
             DOTNET_INTERACTIVE_FRONTEND_NAME: CI
 
         - pwsh: |
+            $retryCount = 5
             $normalTestAssemblies = @(
               "Microsoft.DotNet.Interactive.ApiCompatibility.Tests",
               "Microsoft.DotNet.Interactive.AspNetCore.Tests",
@@ -295,14 +296,10 @@ stages:
               "Microsoft.DotNet.Interactive.PowerShell.Tests",
               "Microsoft.DotNet.Interactive.SqlServer.Tests",
               "Microsoft.DotNet.Interactive.Telemetry.Tests",
-              "dotnet-interactive.Tests",
-              #
-              # this one frequently crashes
-              #
-              "Microsoft.DotNet.Interactive.Tests"
+              "dotnet-interactive.Tests"
             )
             foreach ($testAssembly in $normalTestAssemblies) {
-              for ($i=1; $i -le 5; $i++) {
+              for ($i=1; $i -le $retryCount; $i++) {
                 Write-Host "Testing assembly $testAssembly, attempt $i"
                 dotnet test $env:BUILDSOURCESDIRECTORY/src/$testAssembly/ -l trx --no-build --blame-hang-timeout 15m --blame-hang-dump-type full --blame-crash -c $env:BUILDCONFIG --results-directory $env:BUILDSOURCESDIRECTORY/artifacts/TestResults/$env:BUILDCONFIG
                 if ($LASTEXITCODE -eq 0) {
@@ -313,6 +310,68 @@ stages:
                 exit $LASTEXITCODE
               }
             }
+
+            #
+            # this one frequently crashes; running tests one class at a time
+            #
+            $flakyTestAssembly = "Microsoft.DotNet.Interactive.Tests"
+            $testClasses = @(
+              "Microsoft.DotNet.Interactive.Tests.CompositeKernelTests",
+              "Microsoft.DotNet.Interactive.Tests.ConnectDirectiveTests",
+              "Microsoft.DotNet.Interactive.Tests.DataExplorerTests",
+              "Microsoft.DotNet.Interactive.Tests.DirectiveTests",
+              "Microsoft.DotNet.Interactive.Tests.HtmlKernelTests",
+              "Microsoft.DotNet.Interactive.Tests.ImportantNotebookTests",
+              "Microsoft.DotNet.Interactive.Tests.InputsWithinMagicCommandsTests",
+              "Microsoft.DotNet.Interactive.Tests.JavaScriptKernelTests",
+              "Microsoft.DotNet.Interactive.Tests.KernelCommandNestingTests",
+              "Microsoft.DotNet.Interactive.Tests.KernelExtensionsTests",
+              "Microsoft.DotNet.Interactive.Tests.KernelInfoTests",
+              "Microsoft.DotNet.Interactive.Tests.KernelInvocationContextTests",
+              "Microsoft.DotNet.Interactive.Tests.KernelRoutingTests",
+              "Microsoft.DotNet.Interactive.Tests.KernelSchedulerTests",
+              "Microsoft.DotNet.Interactive.Tests.KernelTests",
+              "Microsoft.DotNet.Interactive.Tests.KeyValueStoreKernelTests",
+              "Microsoft.DotNet.Interactive.Tests.LanguageKernelAssemblyReferenceTests",
+              "Microsoft.DotNet.Interactive.Tests.LanguageKernelExtensionLoadingTests",
+              "Microsoft.DotNet.Interactive.Tests.LanguageKernelFormattingTests",
+              "Microsoft.DotNet.Interactive.Tests.LanguageKernelPackageTests",
+              "Microsoft.DotNet.Interactive.Tests.LanguageKernelScriptReferenceTests",
+              "Microsoft.DotNet.Interactive.Tests.LanguageKernelTests",
+              "Microsoft.DotNet.Interactive.Tests.LogDirectiveTests",
+              "Microsoft.DotNet.Interactive.Tests.NamedPipeConnectionTests",
+              "Microsoft.DotNet.Interactive.Tests.PackageReferenceTests",
+              "Microsoft.DotNet.Interactive.Tests.PackageRestoreContextTests",
+              "Microsoft.DotNet.Interactive.Tests.QuitCommandTests",
+              "Microsoft.DotNet.Interactive.Tests.SqlDiscoverabilityKernelTests",
+              "Microsoft.DotNet.Interactive.Tests.VariableSharingTests",
+              "Microsoft.DotNet.Interactive.Tests.VariableSharingWithinMagicCommandsTests",
+              "Microsoft.DotNet.Interactive.Tests.Connection.KernelCommandAndEventSenderTests",
+              "Microsoft.DotNet.Interactive.Tests.Connection.KernelCommandEnvelopeTests",
+              "Microsoft.DotNet.Interactive.Tests.Connection.KernelEventEnvelopeTests",
+              "Microsoft.DotNet.Interactive.Tests.Connection.KernelHostTests",
+              "Microsoft.DotNet.Interactive.Tests.Connection.ObservableCommandAndEventReceiverTests",
+              "Microsoft.DotNet.Interactive.Tests.Connection.SerializationTests",
+              "Microsoft.DotNet.Interactive.Tests.Connection.TokenTests",
+              "Microsoft.DotNet.Interactive.Tests.LanguageServices.CompletionTests",
+              "Microsoft.DotNet.Interactive.Tests.LanguageServices.HoverTextTests",
+              "Microsoft.DotNet.Interactive.Tests.LanguageServices.SignatureHelpTests",
+              "Microsoft.DotNet.Interactive.Tests.Parsing.DirectiveTokenTests",
+              "Microsoft.DotNet.Interactive.Tests.Parsing.SubmissionParserTests",
+              "Microsoft.DotNet.Interactive.Tests.Utility.AsyncContextTests",
+              "Microsoft.DotNet.Interactive.Tests.Utility.MultiplexingTextWriterTests",
+              "Microsoft.DotNet.Interactive.Tests.Utility.UtilityTests"
+            )
+            foreach ($testClass in $testClasses) {
+              for ($i=1; $i -le $retryCount; $i++) {
+                Write-Host "Testing assembly $flakyTestAssembly::$testClass, attempt $i"
+                dotnet test $env:BUILDSOURCESDIRECTORY/src/$flakyTestAssembly/ --filter FullyQualifiedName~$testClass -l trx --no-build --blame-hang-timeout 15m --blame-hang-dump-type full --blame-crash -c $env:BUILDCONFIG --results-directory $env:BUILDSOURCESDIRECTORY/artifacts/TestResults/$env:BUILDCONFIG
+                if ($LASTEXITCODE -eq 0) {
+                  break
+                }
+              }
+            }
+
             exit $LASTEXITCODE
           displayName: Test / Blame
           workingDirectory: $(Build.SourcesDirectory)
