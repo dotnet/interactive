@@ -88,6 +88,19 @@ public sealed class ProxyKernel : Kernel
         command.GetOrCreateId();
 
         command.OriginUri ??= KernelInfo.Uri;
+        
+        if (command.DestinationUri is null)
+        {
+            command.DestinationUri = KernelInfo.RemoteUri;
+        }
+
+        if (command is RequestKernelInfo requestKernelInfo)
+        {
+            if (requestKernelInfo.RoutingSlip.Contains(KernelInfo.RemoteUri, false))
+            {
+                return Task.CompletedTask;
+            }
+        }
 
         var targetKernelName = command.TargetKernelName;
         command.TargetKernelName = null;

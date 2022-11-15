@@ -348,9 +348,10 @@ Microsoft.DotNet.Interactive
     public System.Collections.Generic.IReadOnlyList<System.String> ProbingPaths { get;}
     public System.String ToString()
   public abstract class RoutingSlip
-    public System.Boolean Contains(System.Uri uri)
+    public System.Boolean Contains(System.Uri uri, System.Boolean includeTags = True)
     public System.Boolean Contains(System.String uri)
     protected System.Boolean Contains(Entry entry)
+    public System.Boolean ContainsUriWithoutTags(System.String uri)
     public System.Void ContinueWith(RoutingSlip other)
     protected System.Collections.Generic.ICollection<Entry> get_Entries()
     public System.Void Stamp(System.Uri uri)

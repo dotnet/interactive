@@ -241,7 +241,9 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (childKernel.SupportsCommand(command))
                 {
-                    await childKernel.HandleAsync(command, context);
+                    var childCommand = new RequestKernelInfo(childKernel.Name);
+                    childCommand.RoutingSlip.ContinueWith(command.RoutingSlip);
+                    await childKernel.HandleAsync(childCommand, context);
                 }
             }
         }

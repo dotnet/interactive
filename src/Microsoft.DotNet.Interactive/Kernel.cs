@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly HashSet<Type> _supportedCommandTypes;
 
         private readonly Subject<KernelEvent> _kernelEvents = new();
-        private readonly CompositeDisposable _disposables;
+        private readonly CompositeDisposable _disposables = new();
         private readonly ConcurrentDictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
         private readonly ImmediateScheduler<KernelCommand, KernelCommandResult> _fastPathScheduler = new();
         private FrontendEnvironment _frontendEnvironment;
@@ -63,7 +63,6 @@ namespace Microsoft.DotNet.Interactive
 
             SubmissionParser = new SubmissionParser(this);
 
-            _disposables = new CompositeDisposable();
             _disposables.Add(Disposable.Create(() => _kernelEvents.OnCompleted()));
 
             Pipeline = new KernelCommandPipeline(this);
