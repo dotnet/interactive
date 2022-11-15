@@ -24,35 +24,41 @@ def __get_dotnet_coe_comm_handler():
                 raise RuntimeError('Control comm has not been properly opened')
 
             data = msg['content']['data']
-            response = self.__coe_handler.handle_command(data)
+            response = self.__coe_handler.handle_command_or_event(data)
             self.__control_comm.send(response)
             
     
     class CommandEventHandler:          
         __exclude_types = ["<class 'module'>"]        
         
-        def handle_command(self, data):
+        
+        def handle_command_or_event(self, data):
             try:
+                msg_type = data['type']
                 commandOrEvent = json.loads(data['commandOrEvent'])
-                self.__debugLog('handle_command.last_data_recv', commandOrEvent)
+                # self.__debugLog('handle_command_or_event.last_data_recv', commandOrEvent)
                 
-                commandType = commandOrEvent['commandType']
-                
-                envelop = None
-                if (commandType == SendValue.__name__):
-                    envelop = self.__handle_send_value(commandOrEvent)
-                elif (commandType == RequestValue.__name__):
-                    envelop = self.__handle_request_value(commandOrEvent)
-                elif (commandType == RequestValueInfos.__name__):
-                    envelop = self.__handle_request_value_infos(commandOrEvent)
-                else: 
-                    envelop = EventEnvelope(CommandFailed(f'command "{commandType}" not supported'))
-                
-                return envelop.payload()
-                
+                if (msg_type == "command"):
+                    return self.__handle_command(commandOrEvent)
+                    
             except Exception as e: 
-                self. __debugLog('handle_command.commandFailed', e)
+                self. __debugLog('handle_command_or_event.commandFailed', e)
                 return EventEnvelope(CommandFailed(f'failed to process comm data. {str(e)}')).payload()
+        
+        def __handle_command(self, commandOrEvent):
+            commandType = commandOrEvent['commandType']
+
+            envelop = None
+            if (commandType == SendValue.__name__):
+                envelop = self.__handle_send_value(commandOrEvent)
+            elif (commandType == RequestValue.__name__):
+                envelop = self.__handle_request_value(commandOrEvent)
+            elif (commandType == RequestValueInfos.__name__):
+                envelop = self.__handle_request_value_infos(commandOrEvent)
+            else: 
+                envelop = EventEnvelope(CommandFailed(f'command "{commandType}" not supported'))
+
+            return envelop.payload()
 
         def __handle_request_value_infos(self, command):
             results_who_ls = %who_ls

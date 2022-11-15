@@ -27,7 +27,7 @@ library(jsonlite);
 
 .dotnet_coe_comm_hander_env$eventEnvelope <- function(event, eventType, command = NA) {
     if (!is.na(command) && !is.null(command)) {
-        # we don't care about routing slip here and there are some json serialization issues with R boxing
+        # we don't care about routing slip here and there are some json serialization issues with R un-boxing
         # for now, let's remove it or make it empty
         command$routingSlip <- list()
     }
@@ -143,24 +143,32 @@ library(jsonlite);
     )
 }
 
-.dotnet_coe_comm_hander_env$handle_command <- function(msg) {
+.dotnet_coe_comm_hander_env$handle_command <- function(commandOrEvent) {
+    commandType <- commandOrEvent$commandType
+
+    result <- .dotnet_coe_comm_hander_env$fail(
+                sprintf('command "%s" not supported', commandType)
+            )
+
+    if (commandType == .dotnet_coe_comm_hander_env$SendValue) {
+        result <- .dotnet_coe_comm_hander_env$handle_send_value(commandOrEvent)
+    } else if (commandType == .dotnet_coe_comm_hander_env$RequestValue) {
+        result <- .dotnet_coe_comm_hander_env$handle_request_value(commandOrEvent)
+    } else if (commandType == .dotnet_coe_comm_hander_env$RequestValueInfos) {
+        result <- .dotnet_coe_comm_hander_env$handle_request_value_infos(commandOrEvent)
+    }
+
+    return (result)
+}
+
+.dotnet_coe_comm_hander_env$handle_command_or_event <- function(msg) {
     response <- tryCatch({
+            msg_type <- msg$type
             commandOrEvent <- fromJSON(msg$commandOrEvent)
-            commandType <- commandOrEvent$commandType
-            
-            result <- .dotnet_coe_comm_hander_env$fail(
-                        sprintf('command "%s" not supported', commandType)
-                    )
         
-            if (commandType == .dotnet_coe_comm_hander_env$SendValue) {
-                result <- .dotnet_coe_comm_hander_env$handle_send_value(commandOrEvent)
-            } else if (commandType == .dotnet_coe_comm_hander_env$RequestValue) {
-                result <- .dotnet_coe_comm_hander_env$handle_request_value(commandOrEvent)
-            } else if (commandType == .dotnet_coe_comm_hander_env$RequestValueInfos) {
-                result <- .dotnet_coe_comm_hander_env$handle_request_value_infos(commandOrEvent)
-            }
-        
-            return (result)
+            if (msg_type == 'command') {
+                return (.dotnet_coe_comm_hander_env$handle_command(commandOrEvent))
+            } 
         },
         error=function(cond) {
             return (
@@ -175,7 +183,7 @@ library(jsonlite);
 .dotnet_coe_comm_hander_env$coe_handler_connect_to_comm <- function(comm, data) {
     comm$on_msg(function(msg) {
         # assign('.debug.onmsg', msg, globalenv());
-        response <- .dotnet_coe_comm_hander_env$handle_command(msg);
+        response <- .dotnet_coe_comm_hander_env$handle_command_or_event(msg);
         comm$send(response);  
     })
 
