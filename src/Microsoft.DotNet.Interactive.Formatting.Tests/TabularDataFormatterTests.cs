@@ -9,6 +9,7 @@ using Assent;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Xunit;
+using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
 {
@@ -191,7 +192,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             tabularDataResource
                 .ToDisplayString("text/html")
                 .Should()
-                .Be("<table><thead><tr><td><span>name</span></td><td><span>deliciousness</span></td><td><span>color</span></td><td><span>available</span></td></tr></thead><tbody><tr><td>Granny Smith apple</td><td><div class=\"dni-plaintext\">12</div></td><td>green</td><td><div class=\"dni-plaintext\">True</div></td></tr><tr><td>Rainier cherry</td><td><div class=\"dni-plaintext\">9000</div></td><td>yellow</td><td><div class=\"dni-plaintext\">True</div></td></tr></tbody></table>");
+                .Be($"<table><thead><tr><td><span>name</span></td><td><span>deliciousness</span></td><td><span>color</span></td><td><span>available</span></td></tr></thead><tbody><tr><td>Granny Smith apple</td><td>{PlainTextBegin}12{PlainTextEnd}</td><td>green</td><td>{PlainTextBegin}True{PlainTextEnd}</td></tr><tr><td>Rainier cherry</td><td>{PlainTextBegin}9000{PlainTextEnd}</td><td>yellow</td><td>{PlainTextBegin}True{PlainTextEnd}</td></tr></tbody></table>");
         }
 
         [Fact]

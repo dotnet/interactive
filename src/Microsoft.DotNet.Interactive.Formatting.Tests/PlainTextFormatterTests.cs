@@ -6,26 +6,20 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
-using FluentAssertions;
 using System.Linq;
-using FluentAssertions.Extensions;
-using Xunit;
 using System.Numerics;
 using Dummy;
+using FluentAssertions;
+using FluentAssertions.Extensions;
+using Xunit;
+using static System.Environment;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
-public class PlainTextFormatterTests : FormatterTestBase
+public class PlainTextFormatterTests_MultiLine : FormatterTestBase
 {
-    [Collection("Do not parallelize")]
     public class Objects : FormatterTestBase
     {
-        public Objects()
-        {
-            PlainTextFormatter.UseMultiLineFormatting = false;
-        }
-
-
         [Fact]
         public void Null_references_are_indicated()
         {
@@ -43,6 +37,9 @@ public class PlainTextFormatterTests : FormatterTestBase
             formatter.Format(new Widget { Name = "Bob" }, writer);
 
             var s = writer.ToString();
+
+            Console.WriteLine(s);
+
             s.Should().Contain("Name: Bob");
         }
 
@@ -52,10 +49,32 @@ public class PlainTextFormatterTests : FormatterTestBase
             var formatter = PlainTextFormatter.GetPreferredFormatterFor<ClassWithManyProperties>();
 
             var writer = new StringWriter();
-            formatter.Format(new Dummy.ClassWithManyProperties(), writer);
+            formatter.Format(new ClassWithManyProperties(), writer);
 
             var s = writer.ToString();
-            s.Should().Be("{ ClassWithManyProperties: X1: 1, X2: 2, X3: 3, X4: 4, X5: 5, X6: 6, X7: 7, X8: 8, X9: 9, X10: 10, X11: 11, X12: 12, X13: 13, X14: 14, X15: 15, X16: 16, X17: 17, X18: 18, X19: 19, X20: 20, .. }");
+            s.Should().Be(
+@$"{nameof(ClassWithManyProperties)}
+    X1: 1
+    X2: 2
+    X3: 3
+    X4: 4
+    X5: 5
+    X6: 6
+    X7: 7
+    X8: 8
+    X9: 9
+    X10: 10
+    X11: 11
+    X12: 12
+    X13: 13
+    X14: 14
+    X15: 15
+    X16: 16
+    X17: 17
+    X18: 18
+    X19: 19
+    X20: 20
+    ...".ReplaceLineEndings());
         }
 
         [Fact]
@@ -68,32 +87,32 @@ public class PlainTextFormatterTests : FormatterTestBase
             formatter.Format(new Dummy.ClassWithManyProperties(), writer);
 
             var s = writer.ToString();
-            s.Should().Be("{ ClassWithManyProperties: X1: 1, .. }");
+            s.Should().Be($"ClassWithManyProperties{NewLine}    X1: 1{NewLine}    ...");
         }
 
         [Fact]
         public void When_Zero_properties_chosen_just_ToString_is_used()
         {
-            var formatter = PlainTextFormatter.GetPreferredFormatterFor<ClassWithManyProperties>();
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor<ClassWithManyPropertiesAndCustomToString>();
             PlainTextFormatter.MaxProperties = 0;
 
             var writer = new StringWriter();
-            formatter.Format(new Dummy.ClassWithManyProperties(), writer);
+            formatter.Format(new ClassWithManyPropertiesAndCustomToString(), writer);
 
             var s = writer.ToString();
-            s.Should().Be("Dummy.ClassWithManyProperties");
+            s.Should().Be($"{typeof(ClassWithManyPropertiesAndCustomToString)} custom ToString value");
         }
 
         [Fact]
         public void When_Zero_properties_available_to_choose_just_ToString_is_used()
         {
-            var formatter = PlainTextFormatter.GetPreferredFormatterFor<DummyWithNoProperties>();
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor<Dummy.ClassWithNoPropertiesAndCustomToString>();
 
             var writer = new StringWriter();
-            formatter.Format(new Dummy.DummyWithNoProperties(), writer);
+            formatter.Format(new Dummy.ClassWithNoPropertiesAndCustomToString(), writer);
 
             var s = writer.ToString();
-            s.Should().Be("Dummy.DummyWithNoProperties");
+            s.Should().Be($"{typeof(ClassWithNoPropertiesAndCustomToString)} custom ToString value");
         }
 
         [Fact]
@@ -172,7 +191,9 @@ public class PlainTextFormatterTests : FormatterTestBase
 
             var output = obj.ToDisplayString(formatter);
 
-            output.Should().Be("{ ints: [ 3, 2, 1 ], count: 3 }");
+            output.Should().Match(@"<>f__AnonymousType*<Int32[],Int32>
+    ints: [ 3, 2, 1 ]
+    count: 3".ReplaceLineEndings());
         }
 
         [Fact]
@@ -184,9 +205,10 @@ public class PlainTextFormatterTests : FormatterTestBase
 
             var formatter = PlainTextFormatter.GetPreferredFormatterFor<ExpandoObject>();
 
-            var expandoString = ((object) expando).ToDisplayString(formatter);
+            var expandoString = ((object)expando).ToDisplayString(formatter);
 
-            expandoString.Should().Be("{ Name: socks, Parts: <null> }");
+            expandoString.Should().Be(@"Name: socks
+Parts: <null>".ReplaceLineEndings());
         }
 
         [Fact]
@@ -204,7 +226,7 @@ public class PlainTextFormatterTests : FormatterTestBase
         {
             var log = new SomePropertyThrows().ToDisplayString();
 
-            log.Should().Contain("NotOk: { Exception: ");
+            log.Should().Contain("NotOk: Exception");
         }
 
         [Fact]
@@ -304,7 +326,61 @@ public class PlainTextFormatterTests : FormatterTestBase
 
             output.Should().Contain("InternalId: 6");
         }
-        
+
+        [Fact]
+        public void Tuple_values_are_formatted_on_one_line_when_all_scalar()
+        {
+            var tuple = Tuple.Create(123, "Hello");
+
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor(tuple.GetType());
+
+            var formatted = tuple.ToDisplayString(formatter);
+
+            Console.WriteLine(formatted);
+
+            formatted.Should().Be("( 123, Hello )");
+        }
+
+        [Fact]
+        public void ValueTuple_values_are_formatted_on_one_line_when_all_scalar()
+        {
+            var tuple = (123, "Hello");
+
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor(tuple.GetType());
+
+            var formatted = tuple.ToDisplayString(formatter);
+
+            formatted.Should().Be("( 123, Hello )");
+        }
+
+        [Fact]
+        public void Tuple_values_are_formatted_as_multi_line_when_not_all_scalar()
+        {
+            var tuple = Tuple.Create(123, "Hello", Enumerable.Range(1, 3));
+
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor(tuple.GetType());
+
+            var formatted = tuple.ToDisplayString(formatter);
+
+            formatted.Should().Be(@"  - 123
+  - Hello
+  - [ 1, 2, 3 ]");
+        }
+
+        [Fact]
+        public void ValueTuple_values_are_formatted_as_multi_line_when_not_all_scalar()
+        {
+            var tuple = (123, "Hello", Enumerable.Range(1, 3));
+
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor(tuple.GetType());
+
+            var formatted = tuple.ToDisplayString(formatter);
+
+            formatted.Should().Be(@"  - 123
+  - Hello
+  - [ 1, 2, 3 ]");
+        }
+
         [Fact]
         public void Enums_are_formatted_using_their_names()
         {
@@ -346,17 +422,104 @@ public class PlainTextFormatterTests : FormatterTestBase
                   .Should()
                   .Be("78923589327589332402359");
         }
+
+        [Fact]
+        public void Properties_that_are_complex_objects_are_shown_indented()
+        {
+            var obj = new
+            {
+                PropertyA = "A",
+                PropertyB = new
+                {
+                    PropertyB1 = "B.1",
+                    PropertyB2 = "B.2"
+                },
+                PropertyC = "C"
+            };
+
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor(obj.GetType());
+
+            var writer = new StringWriter();
+            formatter.Format(obj, writer);
+
+            writer.ToString().Should().Match(@"<>f__AnonymousType*<String,<>f__AnonymousType*<String,String>,String>
+    PropertyA: A
+    PropertyB: <>f__AnonymousType*<String,String>
+        PropertyB1: B.1
+        PropertyB2: B.2
+    PropertyC: C".ReplaceLineEndings());
+        }
+
+        [Fact]
+        public void Sequences_of_complex_objects_are_shown_indented()
+        {
+            var obj = new
+            {
+                PropertyA = "A",
+                PropertyB = new[]
+                {
+                    new
+                    {
+                        IntProperty = 1,
+                        StringProperty = "one"
+                    },
+                    new
+                    {
+                        IntProperty = 2,
+                        StringProperty = "two"
+                    }
+                },
+                PropertyC = "C"
+            };
+
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor(obj.GetType());
+
+            var writer = new StringWriter();
+            formatter.Format(obj, writer);
+
+            writer.ToString().Should().Match(@"<>f__AnonymousType*<String,<>f__AnonymousType*<Int32,String>[],String>
+    PropertyA: A
+    PropertyB: <>f__AnonymousType*<Int32,String>[]
+          - IntProperty: 1
+            StringProperty: one
+          - IntProperty: 2
+            StringProperty: two
+    PropertyC: C".ReplaceLineEndings());
+        }
+
+        [Fact]
+        public void Complex_objects_within_a_sequence_are_indented()
+        {
+            var obj = new object[]
+            {
+                1,
+                new
+                {
+                    PropertyA = "A",
+                    PropertyB = "B"
+                },
+                3
+            };
+
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor(obj.GetType());
+
+            var writer = new StringWriter();
+            formatter.Format(obj, writer);
+
+            Console.WriteLine(writer);
+
+            writer.ToString().Should().Match(@"
+Object[]
+  - 1
+  - PropertyA: A
+    PropertyB: B
+  - 3".ReplaceLineEndings());
+        }
     }
 
     [Collection("Do not parallelize")]
     public class Sequences : FormatterTestBase
     {
-        public Sequences()
-        {
-            PlainTextFormatter.UseMultiLineFormatting = false;
-        }
-
-
         [Fact]
         public void Formatter_truncates_expansion_of_ICollection()
         {
@@ -451,6 +614,8 @@ public class PlainTextFormatterTests : FormatterTestBase
 
             var output = node.ToDisplayString(formatter);
 
+            Console.WriteLine(output);
+
             output.Should().Contain("1.1");
             output.Should().Contain("1.2");
             output.Should().Contain("1.3");
@@ -506,11 +671,27 @@ public class PlainTextFormatterTests : FormatterTestBase
 
             var formatted = list.ToDisplayString(formatter);
 
-            formatted.Should().Be("[ { Widget: Name: widget x, Parts: <null> }, { Widget: Name: widget y, Parts: <null> }, { Widget: Name: widget z, Parts: <null> } ]");
+            formatted.Should().Be(@"List<Widget>
+      - Name: widget x
+        Parts: <null>
+      - Name: widget y
+        Parts: <null>
+      - Name: widget z
+        Parts: <null>".ReplaceLineEndings());
+
+            /* or ... ?
+TheWidgets: Widget[]
+├─ Name: widget x
+│  Parts: <null>
+├─ Name: widget y
+│  Parts: <null>
+└─ Name: widget z
+   Parts: <null>
+             */
         }
 
         [Fact]
-        public void Properies_of_System_Type_instances_are_not_expanded()
+        public void Properties_of_System_Type_instances_are_not_expanded()
         {
             var formatter = PlainTextFormatter.GetPreferredFormatterFor(typeof(Type));
 
@@ -537,7 +718,6 @@ public class PlainTextFormatterTests : FormatterTestBase
             writer.ToString().Should().Be("Hi!");
         }
 
-
         [Fact]
         public void ReadOnlyMemory_of_int_is_formatted_like_a_int_array()
         {
@@ -561,14 +741,17 @@ public class PlainTextFormatterTests : FormatterTestBase
 
             formatter.Format(new object[] { 1, null, 3 }, writer);
 
-            writer.ToString().Should().Be("[ 1, <null>, 3 ]");
+            writer.ToString().Should().Be(@"Object[]
+  - 1
+  - <null>
+  - 3".ReplaceLineEndings());
         }
 
         [Fact]
         public void Strings_with_escaped_sequences_are_preserved()
         {
             var formatter = PlainTextFormatter.GetPreferredFormatterFor(typeof(string));
-                
+
             var value = "hola! \n \t \" \" ' ' the joy of escapes! and    white  space  ";
 
             var writer = new StringWriter();

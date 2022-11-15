@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.Interactive
                                             tr(
                                                 td(v.Name),
                                                 td(v.Type),
-                                                td(div[@class: "dni-plaintext"](v.Value.ToDisplayString()))
+                                                td(div[@class: "dni-plaintext"](pre(v.Value.ToDisplayString())))
                                             ))));
             }
             else

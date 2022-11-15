@@ -56,7 +56,7 @@ public sealed partial class FormatterTests
         }
 
         [Theory]
-        [InlineData("text/html", "<div class=\"dni-plaintext\"># { This is the &lt;input&gt; &quot;yes&quot;\t\b\n\r }</div>")]
+        [InlineData("text/html", "<div class=\"dni-plaintext\"><pre># { This is the &lt;input&gt; &quot;yes&quot;\t\b\n\r }</pre></div>")]
         [InlineData("text/plain", "# { This is the <input> \"yes\"\t\b\n\r }")]
         [InlineData("application/json", "\"# { This is the <input> \\\"yes\\\"\\t\\b\\n\\r }\"")]
         public void When_input_is_a_string_with_unusual_characters_then_it_is_encoded_appropriately(string mimeType, string expected)
@@ -66,7 +66,6 @@ public sealed partial class FormatterTests
             var result = input.ToDisplayString(mimeType);
 
             result.Should().Be(expected);
-
         }
 
         [Theory]

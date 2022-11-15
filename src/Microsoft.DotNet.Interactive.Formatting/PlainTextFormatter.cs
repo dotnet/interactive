@@ -104,23 +104,11 @@ public static class PlainTextFormatter
 
             Default.WriteStartObject(context);
 
-            if (Default is MultiLinePlainTextFormatter formatter)
+            if (!context.IsStartingObjectWithinSequence)
             {
-                if (!context.IsStartingObjectWithinSequence)
-                {
-                    var type = target.GetType();
-                    type.WriteCSharpDeclarationTo(context.Writer, true);
-                    formatter.WriteEndHeader(context);
-                }
-            }
-            else
-            {
-                if (!Formatter<T>.TypeIsAnonymous)
-                {
-                    var type = target.GetType();
-                    type.WriteCSharpDeclarationTo(context.Writer, true);
-                    Default.WriteEndHeader(context);
-                }
+                var type = target.GetType();
+                type.WriteCSharpDeclarationTo(context.Writer, true);
+                Default.WriteEndHeader(context);
             }
 
             for (var i = 0; i < reducedAccessors.Length; i++)
@@ -155,8 +143,7 @@ public static class PlainTextFormatter
 
         bool FormatAnyTuple(T target, FormatContext context)
         {
-            if (Formatter<T>.TypeIsTupleOfScalars && 
-                Default is MultiLinePlainTextFormatter)
+            if (Formatter<T>.TypeIsTupleOfScalars)
             {
                 Default.WriteStartTuple(context);
 
@@ -213,24 +200,23 @@ public static class PlainTextFormatter
     {
         new PlainTextFormatter<ExpandoObject>((expando, context) =>
         {
-            var singleLineFormatter = new SingleLinePlainTextFormatter();
-            singleLineFormatter.WriteStartObject(context);
+            Default.WriteStartObject(context);
             var pairs = expando.ToArray();
             var length = pairs.Length;
             for (var i = 0; i < length; i++)
             {
                 var pair = pairs[i];
                 context.Writer.Write(pair.Key);
-                singleLineFormatter.WriteNameValueDelimiter(context);
+                Default.WriteNameValueDelimiter(context);
                 pair.Value.FormatTo(context);
 
                 if (i < length - 1)
                 {
-                    singleLineFormatter.WritePropertyListSeparator(context);
+                    Default.WritePropertyListSeparator(context);
                 }
             }
 
-            singleLineFormatter.WriteEndObject(context);
+            Default.WriteEndObject(context);
             return true;
         }),
 
@@ -242,9 +228,8 @@ public static class PlainTextFormatter
 
         new PlainTextFormatter<KeyValuePair<string, object>>((pair, context) =>
         {
-            var singleLineFormatter = new SingleLinePlainTextFormatter();
             context.Writer.Write(pair.Key);
-            singleLineFormatter.WriteNameValueDelimiter(context);
+            Default.WriteNameValueDelimiter(context);
             pair.Value.FormatTo(context);
             return true;
         }),
@@ -334,22 +319,6 @@ public static class PlainTextFormatter
         })
     };
 
-    internal static IPlainTextFormatter Default = new SingleLinePlainTextFormatter();
-
-    public static bool UseMultiLineFormatting
-    {
-        // FIX: (UseMultiLineFormatting) delete and remove single line mode?
-        get => Default is MultiLinePlainTextFormatter;
-        set
-        {
-            if (value)
-            {
-                Default = new MultiLinePlainTextFormatter();
-            }
-            else
-            {
-                Default = new SingleLinePlainTextFormatter();
-            }
-        }
-    }
+    internal static IPlainTextFormatter Default = new MultiLinePlainTextFormatter();
+    
 }

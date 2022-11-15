@@ -10,6 +10,7 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
+using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 {
@@ -56,7 +57,7 @@ display(123);
                       .Should()
                       .ContainSingle(v =>
                                          v.MimeType == "text/html" &&
-                                         v.Value == "<div class=\"dni-plaintext\">123</div>");
+                                         v.Value == $"{PlainTextBegin}123{PlainTextEnd}");
 
                 events.Should()
                       .ContainSingle<DisplayedValueProduced>(

@@ -49,7 +49,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
             object text, 
             FormatContext context)
         {
-            PocketView tag = div(text.ToDisplayString(PlainTextFormatter.MimeType));
+            context.Require("dni-table-styles", TableStyles());
+
+            PocketView tag = div(pre(text.ToDisplayString(PlainTextFormatter.MimeType)));
             tag.HtmlAttributes["class"] = "dni-plaintext";
             tag.WriteTo(context);
         }
@@ -172,7 +174,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             // Transform ReadOnlyMemory to an array for formatting
             new AnonymousTypeFormatter<object>(type: typeof(ReadOnlyMemory<>),
-                                               mimeType: HtmlFormatter.MimeType,
+                                               mimeType: MimeType,
                                                format: (value, context) =>
                                                {
                                                    var actualType = value.GetType();
@@ -181,7 +183,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                                                    var array = toArray.Invoke(null, new[] { value });
 
-                                                   array.FormatTo(context, HtmlFormatter.MimeType);
+                                                   array.FormatTo(context, MimeType);
 
                                                    return true;
                                                }),
@@ -197,14 +199,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
             new HtmlFormatter<IEnumerable>((value, context) =>
             {
                 var type = value.GetType();
-                var formatter = HtmlFormatter.GetDefaultFormatterForAnyEnumerable(type);
+                var formatter = GetDefaultFormatterForAnyEnumerable(type);
                 return formatter.Format(value, context);
             }),
 
             // BigInteger should be displayed as plain text
             new HtmlFormatter<BigInteger>((value, context) =>
             {
-                HtmlFormatter.FormatAndStyleAsPlainText(value, context);
+                FormatAndStyleAsPlainText(value, context);
                 return true;
             }),
 
@@ -212,7 +214,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             new HtmlFormatter<object>((value, context) =>
             {
                 var type = value.GetType();
-                var formatter = HtmlFormatter.GetDefaultFormatterForAnyObject(type);
+                var formatter = GetDefaultFormatterForAnyObject(type);
                 return formatter.Format(value, context);
             }),
 
@@ -221,11 +223,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 if (value is null)
                 {
-                    HtmlFormatter.FormatAndStyleAsPlainText(Formatter.NullString, context);
+                    FormatAndStyleAsPlainText(Formatter.NullString, context);
                 }
                 else
                 {
-                    HtmlFormatter.FormatAndStyleAsPlainText(value, context);
+                    FormatAndStyleAsPlainText(value, context);
                 }
 
                 return true;
@@ -233,7 +235,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             new HtmlFormatter<JsonDocument>((doc, context) =>
             {
-                doc.RootElement.FormatTo(context, HtmlFormatter.MimeType);
+                doc.RootElement.FormatTo(context, MimeType);
                 return true;
             }),
 
@@ -302,8 +304,17 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         return false;
                 }
 
-                var styleElementId = "dni-styles-JsonElement";
-                PocketView css = style[id: styleElementId](new HtmlString(@"    
+                context.Require("dni-table-styles", TableStyles());
+
+                view.WriteTo(context);
+
+                return true;
+            })
+        };
+
+        internal static PocketView TableStyles() =>
+            // FIX: (TableStyles) 
+            style[id: "dni-table-styles"](new HtmlString(@"
 .dni-code-hint {
     font-style: italic;
     overflow: hidden;
@@ -321,13 +332,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
 details.dni-treeview {
     padding-left: 1em;
-}"));
-                context.Require(styleElementId, css);
+}
 
-                view.WriteTo(context);
-
-                return true;
-            })
-        };
+tr .dni-plaintext pre {
+    text-align: start;`
+}
+"));
     }
 }
