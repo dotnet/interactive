@@ -247,10 +247,15 @@ await delay(500);
 
 loadd3(["d3"], (d3) => {   
     const maxStrength = d3.max(graph.edges, (e) => e.temperature);
+    const minStrength = d3.min(graph.edges, (e) => e.temperature);
     const maxPopularity = d3.max(graph.nodes, (n) => n.popularity);
     const minPopularity = d3.min(graph.nodes, (n) => n.popularity);
     const scale = d3.scaleSqrt()
     .domain([0, 1])
+    .range([0, 1]);
+
+    const tempScale = d3.scaleLog()
+    .domain([minStrength, maxStrength])
     .range([0, 1]);
     const nodes = d3.map(graph.nodes, (n, i) => ({id: i, language: n.language, popularity: n.popularity/maxPopularity}));
     const links = d3.map(graph.edges, (e, i) => ({source: e.source, target: e.destination, strength: e.temperature/maxStrength}));
@@ -327,7 +332,7 @@ loadd3(["d3"], (d3) => {
     .join("path")
     .attr("fill", "none")
     .attr("stroke",  d => color(nodes[d.source].language))
-    .attr("stroke-width", (d) => 1 + d.strength * 6)
+    .attr("stroke-width", (d) => 3 + tempScale(d.strength) * 10)
     .classed("link", true);
 
     node = svg
@@ -376,7 +381,7 @@ loadd3(["d3"], (d3) => {
     .force('collision', d3.forceCollide().radius(d => scale( d.popularity ) * maxR * collisionScale))
     .force("charge", d3.forceManyBody().strength(d => scale( d.popularity ) * -200))
     .force("center", d3.forceCenter(width / 2, height / 2))
-    .force("link", d3.forceLink(links).strength ( (d) => d.strength * 1.7))
+    .force("link", d3.forceLink(links).strength ( (d) => tempScale(d.strength)  * 1.2))
     .force("bounds", boxingForce)
     .on("tick", tick);
 
