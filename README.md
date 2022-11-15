@@ -87,9 +87,13 @@ Telemetry
 The .NET Core tools collect usage data in order to help us improve your experience.The data is anonymous and doesn't include command-line arguments. The data is collected by Microsoft and shared with the community. You can opt-out of telemetry by setting the DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 ```
 
+We provide a number of packages that can be used to write custom [extensions](./docs/extending-dotnet-interactive.md) for .NET Interactive or to build your own interactive experiences.
+
 To disable this message and the .NET Core welcome message, set the `DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT` environment variable to `true`. Note that this variable has no effect on telemetry opt out.
 
+## Contribution Guidelines
 
+You can contribute to .NET Interactive with issues and pull requests. Simply filing issues for problems you encounter is a great way to contribute. Contributing code improvements is greatly appreciated. You can read more about our contribution guidelines [here](CONTRIBUTING.md).
 
 
 
