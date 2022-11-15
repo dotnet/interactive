@@ -27,13 +27,6 @@ namespace Microsoft.DotNet.Interactive
 {
     public static class KernelExtensions
     {
-        internal static Uri GetKernelUri(this Kernel kernel)
-        {
-            // FIX: (GetKernelUri) remove the fallback, inline, and see if that breaks anything
-            var uri = kernel.KernelInfo.Uri ?? new Uri($"kernel://local/{kernel.KernelInfo.LocalName}", UriKind.Absolute);
-            return uri;
-        }
-        
         public static T UseQuitCommand<T>(this T kernel, Func<Task> onQuitAsync = null) where T : Kernel
         {
             kernel.RegisterCommandHandler<Quit>(async (_, _) =>

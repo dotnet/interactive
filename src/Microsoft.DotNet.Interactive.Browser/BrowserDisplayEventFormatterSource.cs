@@ -58,8 +58,6 @@ internal class BrowserDisplayEventFormatterSource :
             hr
         );
 
-        // FIX: (Format) 
-
         html.WriteTo(context.Writer, HtmlEncoder.Default);
 
         return true;
