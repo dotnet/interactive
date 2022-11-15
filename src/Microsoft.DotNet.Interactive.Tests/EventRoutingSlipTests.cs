@@ -17,7 +17,9 @@ public class EventRoutingSlipTests
     {
         var routingSlip = new EventRoutingSlip();
         routingSlip.Stamp(new Uri("kernel://1"));
-        routingSlip.StartsWith(new Uri("kernel://1")).Should().BeTrue();
+        var other = new EventRoutingSlip();
+        other.Stamp(new Uri("kernel://1"));
+        routingSlip.StartsWith(other).Should().BeTrue();
     }
 
 
@@ -56,7 +58,7 @@ public class EventRoutingSlipTests
 
     [Theory]
     [MemberData(nameof(EventRoutingSlipsToTest))]
-    public void starts_with_urls(Uri[] other, bool startsWith)
+    public void starts_with_urls(EventRoutingSlip other, bool startsWith)
     {
         var original = new EventRoutingSlip();
         original.Stamp(new Uri("kernel://1"));
@@ -69,11 +71,34 @@ public class EventRoutingSlipTests
 
     public static IEnumerable<object[]> EventRoutingSlipsToTest()
     {
-        yield return new object[] {Array.Empty<Uri>(), false};
-        yield return new object[] { new[] { new Uri("kernel://1")}, true };
-        yield return new object[] { new[] { new Uri("kernel://1"), new Uri("kernel://2") }, true }; 
-        yield return new object[] { new[] { new Uri("kernel://1"), new Uri("kernel://2"), new Uri("kernel://3") }, true };
-        yield return new object[] { new[] { new Uri("kernel://1"), new Uri("kernel://2"), new Uri("kernel://4") }, false };
+        var routingSlip = new EventRoutingSlip();
+        
+        yield return new object[] { routingSlip, false};
+
+        routingSlip = new EventRoutingSlip();
+        routingSlip.Stamp(new Uri("kernel://1"));
+        
+        yield return new object[] { routingSlip, true};
+
+        routingSlip = new EventRoutingSlip();
+        routingSlip.Stamp(new Uri("kernel://1"));
+        routingSlip.Stamp(new Uri("kernel://2"));
+        
+        yield return new object[] {routingSlip, true };
+
+        routingSlip = new EventRoutingSlip();
+        routingSlip.Stamp(new Uri("kernel://1"));
+        routingSlip.Stamp(new Uri("kernel://2"));
+        routingSlip.Stamp(new Uri("kernel://3"));
+        
+        yield return new object[] {  routingSlip, true };
+
+        routingSlip = new EventRoutingSlip();
+        routingSlip.Stamp(new Uri("kernel://1"));
+        routingSlip.Stamp(new Uri("kernel://2"));
+        routingSlip.Stamp(new Uri("kernel://4"));
+        
+        yield return new object[] { routingSlip, false };
     }
 
     [Fact]
