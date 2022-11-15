@@ -137,7 +137,7 @@ export class ProxyKernel extends Kernel {
 
             if (commandInvocation.commandEnvelope.commandType === contracts.RequestKernelInfoType) {
                 const destinationUri = this.kernelInfo.remoteUri!;
-                if (routingSlip.commandRoutingSlipContains(commandInvocation.commandEnvelope, destinationUri)) {
+                if (routingSlip.commandRoutingSlipContains(commandInvocation.commandEnvelope, destinationUri, true)) {
                     return Promise.resolve();
                 }
             }
