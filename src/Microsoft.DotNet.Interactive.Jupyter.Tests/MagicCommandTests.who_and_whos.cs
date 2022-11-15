@@ -10,6 +10,8 @@ using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
+using static System.Environment;
+using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 
 #pragma warning disable 8509 // don't warn on incomplete pattern matches
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests
@@ -50,7 +52,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                         "let mutable x = 1",
                         "x <- 2",
                         "let y = \"hi>!\"",
-                        "let z = [| x :> obj; y :> obj |]",
+                        "let z = [| x :> obj; y :> obj |]"
                     },
                 };
 
@@ -73,9 +75,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                       .As<string>()
                       .Should()
                       .ContainAll(
-                          "<td>x</td><td><span><a href=\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-5.0\">System.Int32</a></span></td><td><div class=\"dni-plaintext\">2</div></td>",
-                          "<td>y</td><td><span><a href=\"https://docs.microsoft.com/dotnet/api/system.string?view=net-5.0\">System.String</a></span></td><td><div class=\"dni-plaintext\">hi&gt;!</div></td>",
-                          "<td>z</td><td><span><a href=\"https://docs.microsoft.com/dotnet/api/system.object[]?view=net-5.0\">System.Object[]</a></span></td><td><div class=\"dni-plaintext\">[ 2, hi&gt;! ]</div></td>");
+                          $"<td>x</td><td><span><a href=\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-5.0\">System.Int32</a></span></td><td>{PlainTextBegin}2{PlainTextEnd}</td>",
+                          $"<td>y</td><td><span><a href=\"https://docs.microsoft.com/dotnet/api/system.string?view=net-5.0\">System.String</a></span></td><td>{PlainTextBegin}hi&gt;!{PlainTextEnd}</td>",
+                          $"<td>z</td><td><span><a href=\"https://docs.microsoft.com/dotnet/api/system.object[]?view=net-5.0\">System.Object[]</a></span></td><td>{PlainTextBegin}Object[]{NewLine}  - 2{NewLine}  - hi&gt;!{PlainTextEnd}</td>");
             }
 
             [Theory]

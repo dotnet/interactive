@@ -13,14 +13,15 @@ using FluentAssertions;
 using FluentAssertions.Extensions;
 using Xunit;
 using Xunit.Abstractions;
+using static System.Environment;
 using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
 {
     public static class Tags
     {
-        public const string PlainTextBegin = "<div class=\"dni-plaintext\">";
-        public const string PlainTextEnd = "</div>";
+        public const string PlainTextBegin = "<div class=\"dni-plaintext\"><pre>";
+        public const string PlainTextEnd = "</pre></div>";
     }
 
     public class HtmlFormatterTests : FormatterTestBase
@@ -157,7 +158,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Contain($"<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td><td>{PlainTextBegin}{{ BA: 456 }}{PlainTextEnd}</td></tr></tbody></table>");
+                      .Match($"<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td><td>{PlainTextBegin}&lt;&gt;f__AnonymousType*&lt;Int32&gt;{NewLine}        BA: 456{PlainTextEnd}</td></tr></tbody></table>");
             }
 
             [Fact]
@@ -212,7 +213,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Contain($"<td>{PlainTextBegin}{{ Exception");
+                      .Contain($"<td>{PlainTextBegin}Exception");
             }
 
             [Fact]
@@ -1110,7 +1111,7 @@ string";
       </td>
       <td></td>
       <td>
-        <div class=""dni-plaintext"">123</div>
+        {PlainTextBegin}123{PlainTextEnd}
       </td>
       <td>two</td>
     </tr>
@@ -1122,7 +1123,7 @@ string";
         </span>
       </td>
       <td>
-        <div class=""dni-plaintext"">456</div>
+        {PlainTextBegin}456{PlainTextEnd}
       </td>
       <td></td>
       <td></td>
@@ -1135,7 +1136,7 @@ string";
         </span>
       </td>
       <td>
-        <div class=""dni-plaintext"">[ 7, 8, 9 ]</div>
+        {PlainTextBegin}[ 7, 8, 9 ]{PlainTextEnd}
       </td>
       <td></td>
       <td></td>
@@ -1300,7 +1301,7 @@ string";
 
                 var text = value.ToDisplayString("text/html");
 
-                text.Should().Be("<div class=\"dni-plaintext\">hola! \n \t &quot; &quot; &#39; &#39; the joy of escapes! ==&gt; &amp;   white  space  </div>");
+                text.Should().Be($"{PlainTextBegin}hola! \n \t &quot; &quot; &#39; &#39; the joy of escapes! ==&gt; &amp;   white  space  {PlainTextEnd}");
             }
 
             [Fact]
@@ -1310,7 +1311,7 @@ string";
 
                 var text = value.ToDisplayString("text/html");
 
-                text.Should().Be($"<div class=\"dni-plaintext\">{value.HtmlEncode()}</div>");
+                text.Should().Be($"{PlainTextBegin}{value.HtmlEncode()}{PlainTextEnd}");
             }
         }
     }

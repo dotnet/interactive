@@ -17,6 +17,7 @@ using Pocket;
 using Recipes;
 using Xunit;
 using Xunit.Abstractions;
+using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests
@@ -267,7 +268,7 @@ f();"));
                                 .Which
                                 .Data
                                 .Should()
-                                .ContainSingle(d => d.Key.Equals("text/html") && d.Value.Equals("<div class=\"dni-plaintext\">4</div>"));
+                                .ContainSingle(d => d.Key.Equals("text/html") && d.Value.Equals($"{PlainTextBegin}4{PlainTextEnd}"));
         }
 
         [Fact]
@@ -306,7 +307,8 @@ f();"));
                                 .Which
                                 .Data
                                 .Should()
-                                .ContainSingle(d => d.Key.Equals("text/html") && d.Value.Equals("<div class=\"dni-plaintext\">123</div>"));
+                                .ContainSingle(d => d.Key.Equals("text/html") && 
+                                                    d.Value.Equals($"{PlainTextBegin}123{PlainTextEnd}"));
         }
 
         [Theory]
@@ -382,7 +384,7 @@ f();"));
             JupyterMessageSender.PubSubMessages
                 .OfType<ExecuteResult>()
                 .Should()
-                .Contain(dp => dp.Data["text/html"] as string == $"<div class=\"dni-plaintext\">{typeof(PasswordString).FullName}</div>");
+                .Contain(dp => dp.Data["text/html"] as string == $"{PlainTextBegin}{typeof(PasswordString).FullName}{PlainTextEnd}");
         }
 
         [Theory]
