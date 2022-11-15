@@ -246,8 +246,6 @@ public class InteractiveDocument : IEnumerable
                         }
 
                         return true;
-
-                        // FIX: (TryGetKernelInfoFromMetadata) add items
                     }
                 }
             }

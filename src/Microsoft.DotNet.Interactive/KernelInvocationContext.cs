@@ -220,8 +220,7 @@ namespace Microsoft.DotNet.Interactive
 
             if (HandlingKernel is { })
             {
-                var kernelUri = HandlingKernel.GetKernelUri();
-                @event.RoutingSlip.Stamp(kernelUri);
+                @event.RoutingSlip.Stamp(HandlingKernel.KernelInfo.Uri);
             }
 
             if (!publishOnAmbientContextOnly && _childCommands.TryGetValue(command, out var events))
