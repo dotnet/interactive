@@ -13,7 +13,7 @@ stages:
   - job: Publish_NPM
     pool:
       name: NetCore1ESPool-Internal
-      demands: ImageOverride -equals build.windows.10.amd64.vs2019
+      demands: ImageOverride -equals windows.10.vs2019.amd64
     variables:
     - group: AzureDevOps-Artifact-Feeds-Pats
     - name: NodeJSVersion
