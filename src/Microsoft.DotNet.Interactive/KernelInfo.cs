@@ -33,6 +33,7 @@ namespace Microsoft.DotNet.Interactive
             LanguageName = languageName;
             LanguageVersion = languageVersion;
             NameAndAliases = new HashSet<string> { LocalName };
+            Uri = new Uri($"kernel://local/{LocalName}");
 
             if (aliases is not null)
             {
