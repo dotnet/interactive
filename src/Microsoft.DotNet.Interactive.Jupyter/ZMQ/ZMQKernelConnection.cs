@@ -97,11 +97,11 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
             return Task.CompletedTask;
         }
 
-        if (message.Channel == MessageChannel.control)
+        if (message.Channel == MessageChannelValues.control)
         {
             _controlChannel.Send(message);
         }
-        else if (message.Channel == MessageChannel.stdin)
+        else if (message.Channel == MessageChannelValues.stdin)
         {
             _stdInChannel.Send(message);
         }

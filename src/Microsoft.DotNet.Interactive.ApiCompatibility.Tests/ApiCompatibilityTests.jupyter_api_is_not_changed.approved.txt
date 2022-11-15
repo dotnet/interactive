@@ -1,0 +1,403 @@
+Microsoft.DotNet.Interactive.Jupyter
+  public class CompleteRequestHandler : RequestHandlerBase<Microsoft.DotNet.Interactive.Jupyter.Protocol.CompleteRequest>, System.IDisposable
+    .ctor(Microsoft.DotNet.Interactive.Kernel kernel, System.Reactive.Concurrency.IScheduler scheduler = null)
+    public System.Threading.Tasks.Task Handle(JupyterRequestContext context)
+    protected System.Void OnKernelEventReceived(Microsoft.DotNet.Interactive.Events.KernelEvent event, JupyterRequestContext context)
+  public class ConnectionInformation
+    public static ConnectionInformation Load(System.IO.FileInfo file)
+    .ctor()
+    public System.Int32 ControlPort { get; set;}
+    public System.Int32 HBPort { get; set;}
+    public System.Int32 IOPubPort { get; set;}
+    public System.String IP { get; set;}
+    public System.String Key { get; set;}
+    public System.Int32 ShellPort { get; set;}
+    public System.String SignatureScheme { get; set;}
+    public System.Int32 StdinPort { get; set;}
+    public System.String Transport { get; set;}
+  public class ConnectJupyterKernelCommand : Microsoft.DotNet.Interactive.Connection.ConnectKernelCommand, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
+    .ctor()
+    public System.CommandLine.Option<System.String> InitScript { get;}
+    public System.CommandLine.Option<System.String> KernelSpecName { get;}
+    public System.CommandLine.Option<System.String> TargetUrl { get;}
+    public System.CommandLine.Option<System.String> Token { get;}
+    public System.CommandLine.Option<System.Boolean> UseBearerAuth { get;}
+    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> ConnectKernelAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context, System.CommandLine.Invocation.InvocationContext commandLineContext)
+  public static class Constants
+  public class ExecuteRequestHandler : RequestHandlerBase<Microsoft.DotNet.Interactive.Jupyter.Protocol.ExecuteRequest>, System.IDisposable
+    .ctor(Microsoft.DotNet.Interactive.Kernel kernel, System.Reactive.Concurrency.IScheduler scheduler = null)
+    public System.Threading.Tasks.Task Handle(JupyterRequestContext context)
+    protected System.Void OnKernelEventReceived(Microsoft.DotNet.Interactive.Events.KernelEvent event, JupyterRequestContext context)
+  public class Heartbeat, Microsoft.Extensions.Hosting.IHostedService
+    .ctor(ConnectionInformation connectionInformation)
+    public System.Threading.Tasks.Task StartAsync(System.Threading.CancellationToken cancellationToken)
+    public System.Threading.Tasks.Task StopAsync(System.Threading.CancellationToken cancellationToken)
+  public abstract class IJupyterKernelSpecModule
+    public System.IO.DirectoryInfo GetDefaultKernelSpecDirectory()
+    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Utility.CommandLineResult> InstallKernel(System.IO.DirectoryInfo sourceDirectory)
+    public System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyDictionary<System.String,KernelSpec>> ListKernels()
+  public abstract class IJupyterMessageResponseSender
+    public System.Void Send(Microsoft.DotNet.Interactive.Jupyter.Protocol.PubSubMessage message)
+    public System.Void Send(Microsoft.DotNet.Interactive.Jupyter.Protocol.ReplyMessage message)
+    public System.String Send(Microsoft.DotNet.Interactive.Jupyter.Protocol.InputRequest message)
+  public class InterruptRequestHandler : RequestHandlerBase<Microsoft.DotNet.Interactive.Jupyter.Protocol.InterruptRequest>, System.IDisposable
+    .ctor(Microsoft.DotNet.Interactive.Kernel kernel, System.Reactive.Concurrency.IScheduler scheduler = null)
+    public System.Threading.Tasks.Task Handle(JupyterRequestContext context)
+    protected System.Void OnKernelEventReceived(Microsoft.DotNet.Interactive.Events.KernelEvent event, JupyterRequestContext context)
+  public class IsCompleteRequestHandler : RequestHandlerBase<Microsoft.DotNet.Interactive.Jupyter.Protocol.IsCompleteRequest>, System.IDisposable
+    .ctor(Microsoft.DotNet.Interactive.Kernel kernel, System.Reactive.Concurrency.IScheduler scheduler = null)
+    public System.Threading.Tasks.Task Handle(JupyterRequestContext context)
+    protected System.Void OnKernelEventReceived(Microsoft.DotNet.Interactive.Events.KernelEvent event, JupyterRequestContext context)
+  public class JupyterClientKernelExtension, Microsoft.DotNet.Interactive.IKernelExtension
+    .ctor()
+    public System.Threading.Tasks.Task OnLoadAsync(Microsoft.DotNet.Interactive.Kernel kernel)
+  public class JupyterKernelSpecModule, IJupyterKernelSpecModule
+    .ctor()
+    public System.IO.DirectoryInfo GetDefaultKernelSpecDirectory()
+    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Utility.CommandLineResult> InstallKernel(System.IO.DirectoryInfo sourceDirectory)
+    public System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyDictionary<System.String,KernelSpec>> ListKernels()
+  public class JupyterRequestContext
+    .ctor(IJupyterMessageResponseSender jupyterMessageSender, Microsoft.DotNet.Interactive.Jupyter.Messaging.Message request)
+    public IJupyterMessageResponseSender JupyterMessageSender { get;}
+    public Microsoft.DotNet.Interactive.Jupyter.Messaging.Message JupyterRequestMessageEnvelope { get;}
+    public System.String Token { get;}
+    public System.Void Complete()
+    public System.Threading.Tasks.Task Done()
+    public T GetRequestContent<T>()
+  public static class JupyterRequestContextExtensions
+    public static System.String GetLanguage()
+  public class JupyterRequestContextHandler
+    .ctor(Microsoft.DotNet.Interactive.Kernel kernel)
+    public System.Threading.Tasks.Task Handle(JupyterRequestContext context)
+  public class JupyterRequestContextScheduler
+    .ctor(System.Func<JupyterRequestContext,System.Threading.Tasks.Task> handle)
+    public System.Threading.Tasks.Task Schedule(JupyterRequestContext context)
+  public static class KernelExtensions
+    public static T UseDefaultMagicCommands<T>()
+    public static Microsoft.DotNet.Interactive.CSharp.CSharpKernel UseJupyterHelpers()
+    public static Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel UseJupyterHelpers()
+  public static class KernelFormattingExtensions
+    public static Microsoft.DotNet.Interactive.CSharp.CSharpKernel UseMathAndLaTeX()
+    public static Microsoft.DotNet.Interactive.FSharp.FSharpKernel UseMathAndLaTeX()
+  public class KernelSpec
+    .ctor()
+    public System.Collections.Generic.IReadOnlyList<System.String> CommandArguments { get; set;}
+    public System.String DisplayName { get; set;}
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.String> EnvironmentVariables { get; set;}
+    public System.String InterruptMode { get; set;}
+    public System.String Language { get; set;}
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Metadata { get; set;}
+    public System.String Name { get; set;}
+  public abstract class RequestHandlerBase<T>, System.IDisposable
+    public System.Void Dispose()
+    protected Microsoft.DotNet.Interactive.Kernel get_Kernel()
+    protected System.IObservable<Microsoft.DotNet.Interactive.Events.KernelEvent> get_KernelEvents()
+    protected System.Void OnKernelEventReceived(Microsoft.DotNet.Interactive.Events.KernelEvent event, JupyterRequestContext context)
+    protected System.Threading.Tasks.Task SendAsync(JupyterRequestContext context, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
+  public class Shell, Microsoft.Extensions.Hosting.IHostedService
+    .ctor(Microsoft.DotNet.Interactive.Kernel kernel, JupyterRequestContextScheduler scheduler, ConnectionInformation connectionInformation, Microsoft.Extensions.Hosting.IHostApplicationLifetime applicationLifetime)
+    public System.Threading.Tasks.Task StartAsync(System.Threading.CancellationToken cancellationToken)
+    public System.Threading.Tasks.Task StopAsync(System.Threading.CancellationToken cancellationToken)
+  public class ShutdownRequestHandler : RequestHandlerBase<Microsoft.DotNet.Interactive.Jupyter.Protocol.ShutdownRequest>, System.IDisposable
+    .ctor(Microsoft.DotNet.Interactive.Kernel kernel, System.Reactive.Concurrency.IScheduler scheduler)
+    public System.Threading.Tasks.Task Handle(JupyterRequestContext context)
+    protected System.Void OnKernelEventReceived(Microsoft.DotNet.Interactive.Events.KernelEvent event, JupyterRequestContext context)
+  public class SupportedDirectives
+    .ctor(System.String kernelName, System.Collections.Generic.IReadOnlyList<System.CommandLine.Command> commands)
+    public System.Collections.Generic.IReadOnlyList<System.CommandLine.Command> Commands { get;}
+    public System.String KernelName { get;}
+  public static class TopLevelMethods
+    public static System.String input(System.String prompt = )
+    public static Microsoft.DotNet.Interactive.PasswordString password(System.String prompt = )
+Microsoft.DotNet.Interactive.Jupyter.Connection
+  public abstract class IJupyterConnection, System.IDisposable
+    public System.Threading.Tasks.Task<IJupyterKernelConnection> CreateKernelConnectionAsync(System.String kernelSpecName)
+    public System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Jupyter.KernelSpec>> GetKernelSpecsAsync()
+  public abstract class IJupyterKernelConnection, System.IDisposable
+    public Microsoft.DotNet.Interactive.Jupyter.Messaging.IMessageReceiver Receiver { get;}
+    public Microsoft.DotNet.Interactive.Jupyter.Messaging.IMessageSender Sender { get;}
+    public System.Uri Uri { get;}
+    public System.Threading.Tasks.Task StartAsync()
+Microsoft.DotNet.Interactive.Jupyter.Formatting
+  public class LaTeXString
+    public static LaTeXString op_Implicit(System.String source)
+    .ctor(System.String latexCode)
+    public System.String ToString()
+  public class MathString
+    public static MathString op_Implicit(System.String source)
+    .ctor(System.String latexCode)
+    public System.String ToString()
+Microsoft.DotNet.Interactive.Jupyter.Messaging
+  public class Header
+    public static Header Create<T>(T messageContent, System.String session)
+    public static Header Create<T>(System.String session)
+    .ctor(System.String messageType, System.String messageId, System.String version, System.String session, System.String username, System.String date = null)
+    public System.String Date { get;}
+    public System.String MessageId { get;}
+    public System.String MessageType { get;}
+    public System.String Session { get;}
+    public System.String Username { get;}
+    public System.String Version { get;}
+  public abstract class IMessageReceiver
+    public System.IObservable<Message> Messages { get;}
+  public abstract class IMessageSender
+    public System.Threading.Tasks.Task SendAsync(Message message)
+  public static class JsonElementExtensions
+    public static System.Object[] ToArray()
+    public static System.Collections.Generic.IDictionary<System.String,System.Object> ToDictionary()
+    public static System.Object ToObject()
+    public static System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> ToReadOnlyDictionary()
+  public class Message
+    public static Message Create<T>(T content, Header parentHeader = null, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.Byte>> identifiers = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> metaData = null, System.String signature = null, System.String channel = shell)
+    public static Message CreatePubSub<T>(T content, Message request, System.String kernelIdentity = null)
+    public static Message CreateReply<T>(T content, Message request, System.String channel = shell)
+    .ctor(Header header, Microsoft.DotNet.Interactive.Jupyter.Protocol.Message content = null, Header parentHeader = null, System.String signature = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> metaData = null, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.Byte>> identifiers = null, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.Byte>> buffers = null, System.String channel = shell)
+    public System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.Byte>> Buffers { get;}
+    public System.String Channel { get;}
+    public Microsoft.DotNet.Interactive.Jupyter.Protocol.Message Content { get;}
+    public Header Header { get;}
+    public System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.Byte>> Identifiers { get;}
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> MetaData { get;}
+    public Header ParentHeader { get;}
+    public System.String Signature { get;}
+  public static class MessageExtensions
+    public static T DeserializeFromJsonString<T>(System.String source)
+    public static Message DeserializeMessage(System.String signature, System.String headerJson, System.String parentHeaderJson, System.String metadataJson, System.String contentJson, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.Byte>> identifiers, System.Text.Json.JsonSerializerOptions options = null)
+    public static System.Boolean IsEmptyJson(System.String source)
+  public static class MessageObservableExtensions
+    public static System.IObservable<Microsoft.DotNet.Interactive.Jupyter.Protocol.Message> Content()
+    public static System.IObservable<Message> ResponseOf(Message parentMessage)
+    public static System.IObservable<Microsoft.DotNet.Interactive.Jupyter.Protocol.Message> TakeUntilMessageType(System.String[] messageTypes)
+  public static class MetadataExtensions
+    public static System.Collections.Generic.Dictionary<System.String,System.Object> DeserializeMetadataFromJsonString(System.String metadataJson)
+Microsoft.DotNet.Interactive.Jupyter.Protocol
+  public class ClearOutput : PubSubMessage
+    .ctor(System.Boolean wait = False)
+    public System.Boolean Wait { get;}
+  public class CommClose : Message
+    .ctor(System.String commId, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> data = null)
+    public System.String CommId { get;}
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Data { get;}
+  public class CommCloseConverter : Microsoft.DotNet.Interactive.JsonConverter<CommClose>
+    .ctor()
+    public CommClose Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+    public System.Void Write(System.Text.Json.Utf8JsonWriter writer, CommClose value, System.Text.Json.JsonSerializerOptions options)
+  public class CommInfoReply : ReplyMessage
+    .ctor(System.Collections.Generic.IReadOnlyDictionary<System.String,CommTarget> comms)
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,CommTarget> Comms { get;}
+  public class CommInfoRequest : RequestMessage
+    .ctor(System.String targetName = null)
+    public System.String TargetName { get;}
+  public class CommMsg : Message
+    .ctor(System.String commId, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> data = null)
+    public System.String CommId { get;}
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Data { get;}
+  public class CommOpen : Message
+    .ctor(System.String commId, System.String targetName, System.Object data)
+    public System.String CommId { get;}
+    public System.Object Data { get;}
+    public System.String TargetName { get;}
+  public class CommTarget
+    .ctor(System.String targetName)
+    public System.String TargetName { get; set;}
+  public class CompleteReply : ReplyMessage
+    .ctor(System.Int32 cursorStart = 0, System.Int32 cursorEnd = 0, System.Collections.Generic.IReadOnlyList<System.String> matches = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Collections.Generic.IReadOnlyList<CompletionResultMetadata>> metaData = null, System.String status = null)
+    public System.Int32 CursorEnd { get;}
+    public System.Int32 CursorStart { get;}
+    public System.Collections.Generic.IReadOnlyList<System.String> Matches { get;}
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Collections.Generic.IReadOnlyList<CompletionResultMetadata>> MetaData { get;}
+    public System.String Status { get;}
+  public class CompleteRequest : RequestMessage
+    .ctor(System.String code, System.Int32 cursorPosition = 0)
+    public System.String Code { get; set;}
+    public System.Int32 CursorPosition { get; set;}
+  public class CompletionResultMetadata
+    .ctor(System.Int32 start = 0, System.Int32 end = 0, System.String text = null, System.String type = null, System.String displayText = null)
+    public System.String DisplayText { get;}
+    public System.Int32 End { get;}
+    public System.Int32 Start { get;}
+    public System.String Text { get;}
+    public System.String Type { get;}
+  public class CSharpLanguageInfo : LanguageInfo
+    .ctor(System.String version = 10.0)
+  public class DisplayData : PubSubMessage
+    .ctor(System.String source = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> data = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> metaData = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> transient = null)
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Data { get;}
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> MetaData { get;}
+    public System.String Source { get;}
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Transient { get;}
+  public class Error : PubSubMessage
+    .ctor(System.String eValue, System.String eName = null, System.Collections.Generic.IReadOnlyList<System.String> traceback = null)
+    public System.String EName { get;}
+    public System.String EValue { get;}
+    public System.Collections.Generic.IReadOnlyList<System.String> Traceback { get;}
+  public class ExecuteInput : PubSubMessage
+    .ctor(System.String code = null, System.Int32 executionCount = 0)
+    public System.String Code { get;}
+    public System.Int32 ExecutionCount { get;}
+  public class ExecuteReply : ReplyMessage
+    .ctor(System.String status = null, System.Int32 executionCount = 0)
+    public System.Int32 ExecutionCount { get;}
+    public System.String Status { get;}
+  public class ExecuteReplyError : ExecuteReply
+    .ctor(System.String eName, System.String eValue, System.Int32 executionCount = 0, System.Collections.Generic.IReadOnlyList<System.String> traceback = null)
+    .ctor(Error error, System.Int32 executionCount = 0, System.Collections.Generic.IReadOnlyList<System.String> traceback = null)
+    public System.String EName { get;}
+    public System.String EValue { get;}
+    public System.Collections.Generic.IReadOnlyList<System.String> Traceback { get;}
+  public class ExecuteReplyOk : ExecuteReply
+    .ctor(System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyDictionary<System.String,System.String>> payload = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.String> userExpressions = null, System.Int32 executionCount = 0)
+    public System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyDictionary<System.String,System.String>> Payload { get;}
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.String> UserExpressions { get;}
+  public class ExecuteRequest : RequestMessage
+    .ctor(System.String code, System.Boolean silent = False, System.Boolean storeHistory = False, System.Boolean allowStdin = True, System.Boolean stopOnError = False, System.Collections.Generic.IReadOnlyDictionary<System.String,System.String> userExpressions = null)
+    public System.Boolean AllowStdin { get;}
+    public System.String Code { get;}
+    public System.Boolean Silent { get;}
+    public System.Boolean StopOnError { get;}
+    public System.Boolean StoreHistory { get;}
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.String> UserExpressions { get;}
+  public class ExecuteResult : PubSubMessage
+    .ctor(System.Int32 executionCount, System.String source = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> data = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> metaData = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> transient = null)
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Data { get;}
+    public System.Int32 ExecutionCount { get;}
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> MetaData { get;}
+    public System.String Source { get;}
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Transient { get;}
+  public static class ExecutionStateValues
+  public class FSharpLanguageInfo : LanguageInfo
+    .ctor(System.String version = 6.0)
+  public abstract class HistoryElement
+    public System.Int32 LineNumber { get;}
+    public System.Int32 Session { get;}
+  public class HistoryReply : ReplyMessage
+    .ctor(System.Collections.Generic.IReadOnlyList<HistoryElement> history = null)
+    public System.Collections.Generic.IReadOnlyList<HistoryElement> History { get;}
+  public class HistoryReplyConverter : Microsoft.DotNet.Interactive.JsonConverter<HistoryReply>
+    .ctor()
+    public HistoryReply Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+    public System.Void Write(System.Text.Json.Utf8JsonWriter writer, HistoryReply value, System.Text.Json.JsonSerializerOptions options)
+  public class HistoryRequest : RequestMessage
+    .ctor(System.Int32 session, System.String accessType = range, System.Int32 start = 0, System.Int32 stop = 0, System.Int32 n = 0, System.String pattern = null, System.Boolean unique = False, System.Boolean raw = False, System.Boolean output = False)
+    public System.String AccessType { get;}
+    public System.Int32 N { get;}
+    public System.Boolean Output { get;}
+    public System.String Pattern { get;}
+    public System.Boolean Raw { get;}
+    public System.Int32 Session { get;}
+    public System.Int32 Start { get;}
+    public System.Int32 Stop { get;}
+    public System.Boolean Unique { get;}
+  public class InputHistoryElement : HistoryElement
+    .ctor(System.Int32 session, System.Int32 lineNumber, System.String input)
+    public System.String Input { get;}
+  public class InputOutputHistoryElement : InputHistoryElement
+    .ctor(System.Int32 session, System.Int32 lineNumber, System.String input, System.String output)
+    public System.String Output { get;}
+  public class InputReply : ReplyMessage
+    .ctor(System.String value)
+    public System.String Value { get;}
+  public class InputRequest : RequestMessage
+    .ctor(System.String prompt = null, System.Boolean password = False)
+    public System.Boolean Password { get; set;}
+    public System.String Prompt { get;}
+  public class InspectReply : ReplyMessage
+    public static InspectReply Error(System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> data, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> metaData)
+    public static InspectReply Ok(System.Boolean found, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> data, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> metaData)
+    .ctor(System.String status, System.Boolean found, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> data = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> metaData = null)
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Data { get;}
+    public System.Boolean Found { get;}
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> MetaData { get;}
+    public System.String Status { get;}
+  public class InspectRequest : RequestMessage
+    .ctor(System.String code, System.Int32 cursorPos, System.Int32 detailLevel)
+    public System.String Code { get;}
+    public System.Int32 CursorPos { get;}
+    public System.Int32 DetailLevel { get;}
+  public class InterruptReply : ReplyMessage
+    .ctor()
+  public class InterruptRequest : RequestMessage
+    .ctor()
+  public class IsCompleteReply : ReplyMessage
+    .ctor(System.String indent, System.String status)
+    public System.String Indent { get;}
+    public System.String Status { get;}
+  public class IsCompleteRequest : RequestMessage
+    .ctor(System.String code)
+    public System.String Code { get; set;}
+  public class JupyterMessageContentTypes
+    .ctor()
+  public class KernelInfoReply : ReplyMessage
+    .ctor(System.String protocolVersion, System.String implementation, System.String implementationVersion, LanguageInfo languageInfo, System.String banner = null, System.Collections.Generic.IReadOnlyList<Link> helpLinks = null)
+    public System.String Banner { get;}
+    public System.Collections.Generic.IReadOnlyList<Link> HelpLinks { get;}
+    public System.String Implementation { get;}
+    public System.String ImplementationVersion { get;}
+    public LanguageInfo LanguageInfo { get;}
+    public System.String ProtocolVersion { get;}
+    public System.String Status { get;}
+  public class KernelInfoRequest : RequestMessage
+    .ctor()
+  public class KernelShutdownReply : ReplyMessage
+    .ctor()
+  public class LanguageInfo
+    .ctor(System.String name, System.String version, System.String mimeType, System.String fileExtension, System.String pygmentsLexer = null, System.Object codeMirrorMode = null, System.String nbConvertExporter = null)
+    public System.Object CodeMirrorMode { get; set;}
+    public System.String FileExtension { get;}
+    public System.String MimeType { get;}
+    public System.String Name { get;}
+    public System.String NbConvertExporter { get;}
+    public System.String PygmentsLexer { get;}
+    public System.String Version { get;}
+  public class Link
+    .ctor()
+    public System.String Text { get; set;}
+    public System.String Url { get; set;}
+  public abstract class Message
+    public static Message Empty { get;}
+    public static Message FromJsonString(System.String jsonString, System.String messageType)
+    public static System.String GetMessageType(Message source)
+    public static System.String GetMessageType(System.Type type)
+    public static Message TryFromJsonString(System.String jsonString, System.String messageType)
+    public System.String MessageType { get;}
+  public class PowerShellLanguageInfo : LanguageInfo
+    .ctor(System.String version = 7.0)
+  public abstract class PubSubMessage : Message
+  public abstract class ReplyMessage : Message
+  public abstract class RequestMessage : Message
+  public class ShutdownReply : ReplyMessage
+    .ctor(System.Boolean restart = False)
+    public System.Boolean Restart { get;}
+  public class ShutdownRequest : RequestMessage
+    .ctor(System.Boolean restart = False)
+    public System.Boolean Restart { get;}
+  public class Status : PubSubMessage
+    .ctor(System.String executionState)
+    public System.String ExecutionState { get;}
+  public static class StatusValues
+  public class Stream : PubSubMessage
+    public static System.String StandardError { get;}
+    public static System.String StandardOutput { get;}
+    public static Stream StdErr(System.String text)
+    public static Stream StdOut(System.String text)
+    .ctor(System.String name, System.String text)
+    public System.String Name { get;}
+    public System.String Text { get;}
+  public class UpdateDisplayData : PubSubMessage
+    .ctor(System.String source = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> data = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> metaData = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> transient = null)
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Data { get;}
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> MetaData { get;}
+    public System.String Source { get;}
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Transient { get;}
+Microsoft.DotNet.Interactive.Jupyter.ZMQ
+  public class MessageReceiver
+    .ctor(NetMQ.NetMQSocket socket)
+    public Microsoft.DotNet.Interactive.Jupyter.Messaging.Message Receive()
+  public class MessageSender
+    .ctor(NetMQ.IOutgoingSocket socket, SignatureValidator signatureValidator)
+    public System.Void Send(Microsoft.DotNet.Interactive.Jupyter.Messaging.Message message)
+  public static class NetMQExtensions
+    public static Microsoft.DotNet.Interactive.Jupyter.Messaging.Message GetMessage()
+  public class SignatureValidator
+    .ctor(System.String key, System.String algorithm)
+    public System.String CreateSignature(Microsoft.DotNet.Interactive.Jupyter.Messaging.Message message)

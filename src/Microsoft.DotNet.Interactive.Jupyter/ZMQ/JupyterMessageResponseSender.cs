@@ -7,7 +7,7 @@ using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
 {
-    internal class JupyterMessageSender : IJupyterMessageSender
+    internal class JupyterMessageResponseSender : IJupyterMessageResponseSender
     {
         private readonly PubSubChannel _pubSubChannel;
         private readonly RequestReplyChannel _shellChannel;
@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
         private readonly string _kernelIdentity;
         private readonly Message _request;
 
-        public JupyterMessageSender(PubSubChannel pubSubChannel, RequestReplyChannel shellChannel, StdInChannel stdInChannel, string kernelIdentity, Message request)
+        public JupyterMessageResponseSender(PubSubChannel pubSubChannel, RequestReplyChannel shellChannel, StdInChannel stdInChannel, string kernelIdentity, Message request)
         {
             if (string.IsNullOrWhiteSpace(kernelIdentity))
             {

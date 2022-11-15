@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
         private readonly MessageSender _sender;
         private readonly string channel;
 
-        public RequestReplyChannel(MessageSender sender, string channel = MessageChannel.shell)
+        public RequestReplyChannel(MessageSender sender, string channel = MessageChannelValues.shell)
         {
             _sender = sender ?? throw new ArgumentNullException(nameof(sender));
             this.channel = channel;

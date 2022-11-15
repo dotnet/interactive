@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
         private void OnCommandFailed(
             CommandFailed commandFailed,
-            IJupyterMessageSender jupyterMessageSender)
+            IJupyterMessageResponseSender jupyterMessageSender)
         {
             var traceBack = new List<string>();
             var emsg = commandFailed.Message;
@@ -140,7 +140,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
         private void OnDisplayEvent(DisplayEvent displayEvent,
             ZeroMQMessage request,
-            IJupyterMessageSender jupyterMessageSender)
+            IJupyterMessageResponseSender jupyterMessageSender)
         {
             if (displayEvent is ReturnValueProduced && displayEvent.Value is DisplayedValue)
             {
@@ -212,7 +212,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         private void OnLogEvent(
             DiagnosticLogEntryProduced logEvent,
             ZeroMQMessage request,
-            IJupyterMessageSender jupyterMessageSender)
+            IJupyterMessageResponseSender jupyterMessageSender)
         {
             var transient = CreateTransient();
 
@@ -249,7 +249,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             return defaultText;
         }
 
-        private void OnCommandHandled(IJupyterMessageSender jupyterMessageSender)
+        private void OnCommandHandled(IJupyterMessageResponseSender jupyterMessageSender)
         {
             // reply ok
             var executeReplyPayload = new ExecuteReplyOk(executionCount: _executionCount);

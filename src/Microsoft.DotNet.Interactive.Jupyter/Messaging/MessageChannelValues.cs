@@ -3,7 +3,7 @@
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Messaging
 {
-    internal class MessageChannel
+    internal class MessageChannelValues
     {
         public const string shell = nameof(shell);
 

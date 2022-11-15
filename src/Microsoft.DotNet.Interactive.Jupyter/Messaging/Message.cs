@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Messaging
             IReadOnlyDictionary<string, object> metaData = null,
             IReadOnlyList<IReadOnlyList<byte>> identifiers = null,
             IReadOnlyList<IReadOnlyList<byte>> buffers = null, 
-            string channel = MessageChannel.shell)
+            string channel = MessageChannelValues.shell)
         {
             Header = header;
             ParentHeader = parentHeader;
@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Messaging
             IReadOnlyList<IReadOnlyList<byte>> identifiers = null,
             IReadOnlyDictionary<string, object> metaData = null,
             string signature = null,
-            string channel = MessageChannel.shell)
+            string channel = MessageChannelValues.shell)
             where T : Protocol.Message
         {
             if (content is null)
@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Messaging
         public static Message CreateReply<T>(
             T content,
             Message request,
-            string channel = MessageChannel.shell)
+            string channel = MessageChannelValues.shell)
             where T : ReplyMessage
         {
             if (content is null)
@@ -128,7 +128,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Messaging
 
             var topic = Topic(content, kernelIdentity);
             var identifiers = topic is null ? null : new[] { Topic(content, kernelIdentity) };
-            var replyMessage = Create(content, request.Header, identifiers: identifiers, metaData: request.MetaData, signature: request.Signature, channel: MessageChannel.iopub);
+            var replyMessage = Create(content, request.Header, identifiers: identifiers, metaData: request.MetaData, signature: request.Signature, channel: MessageChannelValues.iopub);
 
             return replyMessage;
         }
