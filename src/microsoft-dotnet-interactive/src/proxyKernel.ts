@@ -134,6 +134,13 @@ export class ProxyKernel extends Kernel {
             }
 
             commandInvocation.commandEnvelope.routingSlip;//?
+
+            if (commandInvocation.commandEnvelope.commandType === contracts.RequestKernelInfoType) {
+                const destinationUri = this.kernelInfo.remoteUri!;
+                if (routingSlip.commandRoutingSlipContains(commandInvocation.commandEnvelope, destinationUri)) {
+                    return Promise.resolve();
+                }
+            }
             Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] forwarding command ${commandInvocation.commandEnvelope.commandType} to ${commandInvocation.commandEnvelope.command.destinationUri}`);
             this._sender.send(commandInvocation.commandEnvelope);
             Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] about to await with token ${commandToken} and  commandid ${commandId}`);

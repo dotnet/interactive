@@ -28,12 +28,13 @@ public abstract class RoutingSlip
     {
         var entries = _entries.Select(e => e.AbsoluteUri).ToArray();
         return entries;
-    } 
+    }
 
-    public bool Contains(Uri uri) => Contains(uri.AbsoluteUri);
+    public bool Contains(Uri uri, bool includeTags = true) => includeTags ? Contains(uri.AbsoluteUri) : ContainsUriWithoutTags(GetAbsoluteUriWithoutQuery(uri));
 
     public bool Contains(string uri) => _entries.Any(e => e.AbsoluteUri == uri);
-    
+    public bool ContainsUriWithoutTags(string uri) => _entries.Any(e => e.Uri == uri);
+
     public bool StartsWith(RoutingSlip other) => StartsWith(other._entries);
 
     public bool StartsWith(params string[] uris)

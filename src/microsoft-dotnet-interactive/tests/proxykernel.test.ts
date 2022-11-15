@@ -103,7 +103,10 @@ describe("proxyKernel", () => {
                 }
             },
             command: {
-                command: { code: '1+2' },
+                command: {
+                    code: '1+2',
+                    originUri: 'kernel://local/proxy'
+                },
                 commandType: 'SubmitCode',
                 routingSlip: ['kernel://local/proxy?tag=arrived']
             }
@@ -119,7 +122,10 @@ describe("proxyKernel", () => {
                 }
             },
             command: {
-                command: { code: '1+2' },
+                command: {
+                    code: '1+2',
+                    originUri: 'kernel://local/proxy'
+                },
                 commandType: 'SubmitCode',
                 routingSlip: ['kernel://local/proxy?tag=arrived']
             }
@@ -128,9 +134,14 @@ describe("proxyKernel", () => {
         expect(removeCommandTokenAndId(events[2])).to.deep.include({
             eventType: contracts.CommandSucceededType,
             command: {
-                command: { code: '1+2', destinationUri: undefined, originUri: undefined },
+                command:
+                {
+                    code: '1+2',
+                    destinationUri: undefined,
+                    originUri: 'kernel://local/proxy'
+                },
                 commandType: 'SubmitCode',
-                routingSlip: ['kernel://local/proxy?tag=arrived', 'kernel://local/proxy'],
+                routingSlip: ['kernel://local/proxy?tag=arrived', 'kernel://local/proxy']
             }
         });
     });
@@ -164,7 +175,10 @@ describe("proxyKernel", () => {
                 }
             },
             command: {
-                command: { code: '1+2' },
+                command: {
+                    code: '1+2', originUri:
+                        'kernel://local/proxy'
+                },
                 commandType: 'SubmitCode',
                 routingSlip: ['kernel://local/proxy?tag=arrived']
             }
@@ -180,7 +194,10 @@ describe("proxyKernel", () => {
                 }
             },
             command: {
-                command: { code: '1+2' },
+                command: {
+                    code: '1+2',
+                    originUri: 'kernel://local/proxy'
+                },
                 commandType: 'SubmitCode',
                 routingSlip: ['kernel://local/proxy?tag=arrived']
             }
@@ -227,7 +244,8 @@ describe("proxyKernel", () => {
             supportedKernelCommands:
                 [{ name: 'RequestKernelInfo' },
                 { name: 'customCommand1' },
-                { name: 'customCommand2' }]
+                { name: 'customCommand2' }],
+            uri: 'kernel://local/proxy'
         });
     });
 });

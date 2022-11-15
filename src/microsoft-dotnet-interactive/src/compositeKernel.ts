@@ -49,7 +49,15 @@ export class CompositeKernel extends Kernel {
 
         for (let kernel of this._childKernels) {
             if (kernel.supportsCommand(invocation.commandEnvelope.commandType)) {
-                await kernel.handleCommand({ command: {}, commandType: contracts.RequestKernelInfoType });
+                const childCommand: contracts.KernelCommandEnvelope = {
+                    commandType: contracts.RequestKernelInfoType,
+                    command: {
+                        targetKernelName: kernel.kernelInfo.localName
+                    },
+                    routingSlip: []
+                };
+                routingslip.continueCommandRoutingSlip(childCommand, invocation.commandEnvelope.routingSlip || []);
+                await kernel.handleCommand(childCommand);
             }
         }
     }
@@ -321,10 +329,15 @@ class KernelCollection implements Iterable<Kernel> {
             this._kernelsByNameOrAlias.set(alias, kernel);
         });
 
-        if (this._compositeKernel.host) {
-            kernel.kernelInfo.uri = routingslip.createKernelUri(`${this._compositeKernel.host.uri}${kernel.kernelInfo.localName}`);//?
-            this._kernelsByLocalUri.set(kernel.kernelInfo.uri, kernel);
+        let baseUri = this._compositeKernel.host?.uri || this._compositeKernel.kernelInfo.uri;
+
+        if (!baseUri!.endsWith("/")) {
+            baseUri += "/";
+
         }
+        kernel.kernelInfo.uri = routingslip.createKernelUri(`${baseUri}${kernel.kernelInfo.localName}`);//?
+        this._kernelsByLocalUri.set(kernel.kernelInfo.uri, kernel);
+
 
         if (kernel.kernelType === KernelType.proxy) {
             this._kernelsByRemoteUri.set(kernel.kernelInfo.remoteUri!, kernel);

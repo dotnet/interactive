@@ -142,15 +142,15 @@ function routingSlipStartsWith(thisKernelUris: string[], otherKernelUris: string
     return startsWith;
 }
 
-export function eventRoutingSlipContains(kernlEvent: contracts.KernelEventEnvelope, kernelUri: string): boolean {
-    return routingSlipContains(kernlEvent, kernelUri);
+export function eventRoutingSlipContains(kernlEvent: contracts.KernelEventEnvelope, kernelUri: string, includeTags: boolean = true): boolean {
+    return routingSlipContains(kernlEvent, kernelUri, includeTags);
 }
 
-export function commandRoutingSlipContains(kernlEvent: contracts.KernelCommandEnvelope, kernelUri: string): boolean {
-    return routingSlipContains(kernlEvent, kernelUri);
+export function commandRoutingSlipContains(kernlEvent: contracts.KernelCommandEnvelope, kernelUri: string, includeTags: boolean = true): boolean {
+    return routingSlipContains(kernlEvent, kernelUri, includeTags);
 }
 
-function routingSlipContains(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope, kernelUri: string) {
+function routingSlipContains(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope, kernelUri: string, includeTags: boolean = true): boolean {
     const normalizedUri = createKernelUri(kernelUri);
-    return kernelCommandOrEventEnvelope?.routingSlip?.find(e => normalizedUri === createKernelUri(e)) !== undefined;
+    return kernelCommandOrEventEnvelope?.routingSlip?.find(e => normalizedUri === (includeTags ? createKernelUriWithQuery(e) : createKernelUri(e))) !== undefined;
 }
