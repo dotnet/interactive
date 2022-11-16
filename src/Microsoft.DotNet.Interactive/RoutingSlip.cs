@@ -9,54 +9,43 @@ namespace Microsoft.DotNet.Interactive;
 
 public abstract class RoutingSlip
 {
-    private readonly List<Entry> _entries;
+    private readonly List<Entry> _entries = new();
 
-    protected ICollection<Entry> Entries => _entries;
-
-    protected RoutingSlip(RoutingSlip source = null)
-    {
-        _entries = source switch
-        {
-            { } => new List<Entry>(source.ToUriArray().Select(e => new Entry { Uri = e })),
-            _ => new List<Entry>()
-        };
-    }
+    private protected ICollection<Entry> Entries => _entries;
 
     public abstract void Stamp(Uri uri);
 
     public string[] ToUriArray()
     {
-        var entries = _entries.Select(e => e.AbsoluteUri).ToArray();
+        var entries = _entries.Select(e => e.AbsoluteUriWithQuery).ToArray();
         return entries;
     }
 
-    public bool Contains(Uri uri, bool includeTags = true) => includeTags ? Contains(uri.AbsoluteUri) : ContainsUriWithoutTags(GetAbsoluteUriWithoutQuery(uri));
+    public bool Contains(Uri uri, bool ignoreQuery = false) => ignoreQuery ? ContainsUriWithoutQuery(GetAbsoluteUriWithoutQuery(uri)) : Contains(uri.AbsoluteUri);
 
-    public bool Contains(string uri) => _entries.Any(e => e.AbsoluteUri == uri);
-    public bool ContainsUriWithoutTags(string uri) => _entries.Any(e => e.Uri == uri);
-
-    public bool StartsWith(RoutingSlip other) => StartsWith(other._entries);
-
-    public bool StartsWith(params string[] uris)
+    private bool Contains(string uri)
     {
-        var startsWith = true;
-
-        if (uris.Length > 0 && uris.Length <= _entries.Count)
+        for (var i = 0; i < _entries.Count; i++)
         {
-            if (uris.Where((entry, i) => _entries[i].AbsoluteUri != entry).Any())
-            {
-                startsWith = false;
-            }
-        }
-        else
-        {
-            startsWith = false;
+            var e = _entries[i];
+            if (e.AbsoluteUriWithQuery == uri) return true;
         }
 
-        return startsWith;
+        return false;
     }
 
-    public bool StartsWith(params Uri[] uris) => StartsWith(uris.Select(u => u.AbsoluteUri).ToArray());
+    private bool ContainsUriWithoutQuery(string uriWithoutQuery)
+    {
+        for (var i = 0; i < _entries.Count; i++)
+        {
+            var e = _entries[i];
+            if (e.AbsoluteUriWithoutQuery == uriWithoutQuery) return true;
+        }
+
+        return false;
+    }
+
+    public bool StartsWith(RoutingSlip other) => StartsWith(other._entries);
 
     public void ContinueWith(RoutingSlip other)
     {
@@ -70,32 +59,36 @@ public abstract class RoutingSlip
 
             foreach (var entry in source)
             {
-
                 if (!Contains(entry))
                 {
-                    _entries.Add(new Entry {Uri = entry.Uri, Tag = entry.Tag });
+                    _entries.Add(new Entry(entry.AbsoluteUriWithoutQuery, entry.Tag));
                 }
                 else
                 {
-                    throw new InvalidOperationException($"The uri {entry.Uri} is already in the routing slip");
+                    throw new InvalidOperationException($"The uri {entry.AbsoluteUriWithoutQuery} is already in the routing slip");
                 }
             }
         }
     }
-    protected bool Contains(Entry entry)
+
+    private protected bool Contains(Entry entry)
     {
-        return _entries.Any(e => e.AbsoluteUri == entry.AbsoluteUri);
+        return _entries.Any(e => e.AbsoluteUriWithQuery == entry.AbsoluteUriWithQuery);
     }
 
-    protected bool StartsWith(List<Entry> entries)
+    private protected bool StartsWith(List<Entry> entries)
     {
         var startsWith = true;
 
         if (entries.Count > 0 && entries.Count <= _entries.Count)
         {
-            if (entries.Where((entry, i) => _entries[i].AbsoluteUri != entry.AbsoluteUri).Any())
+            for (int i = 0; i < entries.Count; i++)
             {
-                startsWith = false;
+                if (_entries[i].AbsoluteUriWithQuery != entries[i].AbsoluteUriWithQuery)
+                {
+                    startsWith = false;
+                    break;
+                }
             }
         }
         else
@@ -116,47 +109,33 @@ public abstract class RoutingSlip
         return absoluteUri;
     }
 
-    protected class Entry
+    private protected class Entry
     {
-        private string _uri;
-        private string _tag;
-        public string AbsoluteUri { get; private set; }
-
-        public string Uri
+        public Entry(string absoluteUriWithoutQuery, string tag = null)
         {
-            get => _uri;
-            set
+            if (string.IsNullOrWhiteSpace(absoluteUriWithoutQuery))
             {
-                _uri = value;
-                Update();
-            }
-        }
-
-        private void Update()
-        {
-            AbsoluteUri = null;
-            if (!string.IsNullOrWhiteSpace(_uri))
-            {
-                var uriBuilder = new UriBuilder(_uri);
-
-                if (!string.IsNullOrWhiteSpace(_tag))
-                {
-                    uriBuilder.Query = $"tag={_tag}";
-                }
-               
-                AbsoluteUri = uriBuilder.Uri.AbsoluteUri;
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(absoluteUriWithoutQuery));
             }
 
+            AbsoluteUriWithoutQuery = GetAbsoluteUriWithoutQuery(new Uri(absoluteUriWithoutQuery, UriKind.Absolute));
+
+            Tag = tag;
+
+            var uriBuilder = new UriBuilder(AbsoluteUriWithoutQuery);
+
+            if (!string.IsNullOrWhiteSpace(Tag))
+            {
+                uriBuilder.Query = $"tag={Tag}";
+            }
+
+            AbsoluteUriWithQuery = uriBuilder.Uri.AbsoluteUri;
         }
 
-        public string Tag
-        {
-            get => _tag;
-            set
-            {
-                _tag = value;
-                Update();
-            }
-        }
+        public string AbsoluteUriWithoutQuery { get; }
+
+        public string Tag { get; }
+
+        public string AbsoluteUriWithQuery { get; }
     }
 }

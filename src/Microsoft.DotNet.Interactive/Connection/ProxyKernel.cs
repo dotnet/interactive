@@ -96,7 +96,7 @@ public sealed class ProxyKernel : Kernel
 
         if (command is RequestKernelInfo requestKernelInfo)
         {
-            if (requestKernelInfo.RoutingSlip.Contains(KernelInfo.RemoteUri, false))
+            if (requestKernelInfo.RoutingSlip.Contains(KernelInfo.RemoteUri, true))
             {
                 return Task.CompletedTask;
             }

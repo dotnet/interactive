@@ -32,8 +32,6 @@ export function stampCommandRoutingSlipAsArrived(kernelCommandEnvelope: contract
     stampCommandRoutingSlipAs(kernelCommandEnvelope, kernelUri, "arrived");
 }
 
-
-
 export function stampCommandRoutingSlip(kernelCommandEnvelope: contracts.KernelCommandEnvelope, kernelUri: string) {
     if (kernelCommandEnvelope.routingSlip === undefined || kernelCommandEnvelope.routingSlip === null) {
         throw new Error("The command does not have a routing slip");
@@ -142,15 +140,15 @@ function routingSlipStartsWith(thisKernelUris: string[], otherKernelUris: string
     return startsWith;
 }
 
-export function eventRoutingSlipContains(kernlEvent: contracts.KernelEventEnvelope, kernelUri: string, includeTags: boolean = true): boolean {
-    return routingSlipContains(kernlEvent, kernelUri, includeTags);
+export function eventRoutingSlipContains(kernlEvent: contracts.KernelEventEnvelope, kernelUri: string, ignoreQuery: boolean = false): boolean {
+    return routingSlipContains(kernlEvent, kernelUri, ignoreQuery);
 }
 
-export function commandRoutingSlipContains(kernlEvent: contracts.KernelCommandEnvelope, kernelUri: string, includeTags: boolean = true): boolean {
-    return routingSlipContains(kernlEvent, kernelUri, includeTags);
+export function commandRoutingSlipContains(kernlEvent: contracts.KernelCommandEnvelope, kernelUri: string, ignoreQuery: boolean = false): boolean {
+    return routingSlipContains(kernlEvent, kernelUri, ignoreQuery);
 }
 
-function routingSlipContains(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope, kernelUri: string, includeTags: boolean = true): boolean {
-    const normalizedUri = createKernelUri(kernelUri);
-    return kernelCommandOrEventEnvelope?.routingSlip?.find(e => normalizedUri === (includeTags ? createKernelUriWithQuery(e) : createKernelUri(e))) !== undefined;
+function routingSlipContains(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope, kernelUri: string, ignoreQuery: boolean = false): boolean {
+    const normalizedUri = ignoreQuery ? createKernelUri(kernelUri) : createKernelUriWithQuery(kernelUri);
+    return kernelCommandOrEventEnvelope?.routingSlip?.find(e => normalizedUri === (!ignoreQuery ? createKernelUriWithQuery(e) : createKernelUri(e))) !== undefined;
 }

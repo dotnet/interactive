@@ -21,7 +21,7 @@ Microsoft.DotNet.Interactive
   public class CommandNotSupportedException : System.Exception, System.Runtime.Serialization.ISerializable
     .ctor(System.Type commandType, Kernel kernel)
   public class CommandRoutingSlip : RoutingSlip
-    .ctor(RoutingSlip source = null)
+    .ctor()
     public System.Void Stamp(System.Uri uri)
     public System.Void StampAs(System.Uri uri, System.String tag)
     public System.Void StampAsArrived(System.Uri uri)
@@ -70,7 +70,7 @@ Microsoft.DotNet.Interactive
     public System.Collections.Generic.IReadOnlyCollection<System.String> MimeTypes { get;}
     public System.Void Update(System.Object updatedValue)
   public class EventRoutingSlip : RoutingSlip
-    .ctor(RoutingSlip source = null)
+    .ctor()
     public System.Void Stamp(System.Uri uri)
   public class FormattedValue
     public static System.Collections.Generic.IReadOnlyCollection<FormattedValue> FromObject(System.Object value, System.String[] mimeTypes)
@@ -348,17 +348,13 @@ Microsoft.DotNet.Interactive
     public System.Collections.Generic.IReadOnlyList<System.String> ProbingPaths { get;}
     public System.String ToString()
   public abstract class RoutingSlip
-    public System.Boolean Contains(System.Uri uri, System.Boolean includeTags = True)
-    public System.Boolean Contains(System.String uri)
-    protected System.Boolean Contains(Entry entry)
-    public System.Boolean ContainsUriWithoutTags(System.String uri)
+    public System.Boolean Contains(System.Uri uri, System.Boolean ignoreQuery = False)
+     System.Boolean Contains(Entry entry)
     public System.Void ContinueWith(RoutingSlip other)
-    protected System.Collections.Generic.ICollection<Entry> get_Entries()
+     System.Collections.Generic.ICollection<Entry> get_Entries()
     public System.Void Stamp(System.Uri uri)
     public System.Boolean StartsWith(RoutingSlip other)
-    public System.Boolean StartsWith(System.String[] uris)
-    public System.Boolean StartsWith(System.Uri[] uris)
-    protected System.Boolean StartsWith(System.Collections.Generic.List<Entry> entries)
+     System.Boolean StartsWith(System.Collections.Generic.List<Entry> entries)
     public System.String[] ToUriArray()
   public class ScriptContent, Microsoft.AspNetCore.Html.IHtmlContent
     .ctor(System.String scriptValue)

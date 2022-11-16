@@ -25,7 +25,9 @@ public class CommandRoutingSlipTests
     {
         var routingSlip = new CommandRoutingSlip();
         routingSlip.StampAsArrived(new Uri("kernel://1"));
-        routingSlip.StartsWith(new Uri("kernel://1/?tag=arrived")).Should().BeTrue();
+        var other = new CommandRoutingSlip();
+        other.StampAsArrived(new Uri("kernel://1"));
+        routingSlip.StartsWith(other).Should().BeTrue();
     }
 
     [Fact]
@@ -52,7 +54,10 @@ public class CommandRoutingSlipTests
         var routingSlip = new CommandRoutingSlip();
         routingSlip.StampAsArrived(new Uri("kernel://1"));
         routingSlip.Stamp(new Uri("kernel://1"));
-        routingSlip.StartsWith(new Uri("kernel://1/?tag=arrived")).Should().BeTrue();
+
+        var other = new CommandRoutingSlip();
+        other.StampAsArrived(new Uri("kernel://1"));
+        routingSlip.StartsWith(other).Should().BeTrue();
     }
 
     [Fact]
@@ -123,8 +128,8 @@ public class CommandRoutingSlipTests
     }
 
     [Theory]
-    [MemberData(nameof(EventRoutingSlipsToTest))]
-    public void starts_with_urls(Uri[] other, bool startsWith)
+    [MemberData(nameof(CommandRoutingSlipsToTest))]
+    public void starts_with_urls(CommandRoutingSlip other, bool startsWith)
     {
         var original = new CommandRoutingSlip();
         original.FullStamp(new Uri("kernel://1"));
@@ -134,14 +139,36 @@ public class CommandRoutingSlipTests
         original.StartsWith(other).Should().Be(startsWith);
     }
 
-    public static IEnumerable<object[]> EventRoutingSlipsToTest()
+    public static IEnumerable<object[]> CommandRoutingSlipsToTest()
     {
-        yield return new object[] { Array.Empty<Uri>(), false };
-        yield return new object[] { new[] { new Uri("kernel://1") }, false };
-        yield return new object[] { new[] { new Uri("kernel://1/?tag=arrived"), new Uri("kernel://1") }, true };
-        yield return new object[] { new[] { new Uri("kernel://1/?tag=arrived"), new Uri("kernel://1"), new Uri("kernel://2/?tag=arrived"), new Uri("kernel://2") }, true };
-        yield return new object[] { new[] { new Uri("kernel://1/?tag=arrived"), new Uri("kernel://1"), new Uri("kernel://2/?tag=arrived"), new Uri("kernel://2"), new Uri("kernel://3/?tag=arrived"), new Uri("kernel://3") }, true };
-        yield return new object[] { new[] { new Uri("kernel://1/?tag=arrived"), new Uri("kernel://1"), new Uri("kernel://2/?tag=arrived"), new Uri("kernel://2"), new Uri("kernel://4?tag=arrived") }, false };
+        var routingSlip = new CommandRoutingSlip();
+        
+        yield return new object[] { routingSlip, false };
+
+        routingSlip = new CommandRoutingSlip();
+        routingSlip.FullStamp(new Uri("kernel://1"));
+        
+        yield return new object[] { routingSlip, true };
+
+        routingSlip = new CommandRoutingSlip();
+        routingSlip.FullStamp(new Uri("kernel://1"));
+        routingSlip.FullStamp(new Uri("kernel://2"));
+
+        yield return new object[] { routingSlip, true };
+
+        routingSlip = new CommandRoutingSlip();
+        routingSlip.FullStamp(new Uri("kernel://1"));
+        routingSlip.FullStamp(new Uri("kernel://2"));
+        routingSlip.FullStamp(new Uri("kernel://3"));
+
+        yield return new object[] { routingSlip, true };
+
+        routingSlip = new CommandRoutingSlip();
+        routingSlip.FullStamp(new Uri("kernel://1"));
+        routingSlip.FullStamp(new Uri("kernel://2"));
+        routingSlip.FullStamp(new Uri("kernel://3"));
+        routingSlip.StampAsArrived(new Uri("kernel://4"));
+        yield return new object[] {routingSlip, false };
     }
 
     [Fact]
