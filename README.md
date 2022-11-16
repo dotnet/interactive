@@ -1,4 +1,4 @@
-# .NET Interactive Documentation 
+# .NET Interactive
 
 ## What is .NET Interactive?
 
