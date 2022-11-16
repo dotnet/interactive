@@ -312,9 +312,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             })
         };
 
-        internal static PocketView TableStyles() =>
-            // FIX: (TableStyles) 
-            style[id: "dni-table-styles"](new HtmlString(@"
+        private static readonly Lazy<IHtmlContent> _tableStyles = new(() => style[id: "dni-table-styles"](new HtmlString(@"
 .dni-code-hint {
     font-style: italic;
     overflow: hidden;
@@ -337,6 +335,8 @@ details.dni-treeview {
 tr .dni-plaintext pre {
     text-align: start;`
 }
-"));
+"))); // FIX: (HtmlFormatter) table styles aren't quite right. 
+
+        internal static IHtmlContent TableStyles() => _tableStyles.Value;
     }
 }
