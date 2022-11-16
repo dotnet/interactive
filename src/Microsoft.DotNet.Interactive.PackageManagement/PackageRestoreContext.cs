@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive
 {
     public class PackageRestoreContext : IDisposable
     {
-        private const string restoreTfm = "net6.0";
+        private const string restoreTfm = "net7.0";
         private readonly ConcurrentDictionary<string, PackageReference> _requestedPackageReferences = new(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, ResolvedPackageReference> _resolvedPackageReferences = new(StringComparer.OrdinalIgnoreCase);
 
@@ -224,8 +224,8 @@ namespace Microsoft.DotNet.Interactive
         }
 
         private IResolveDependenciesResult Resolve(
-            IEnumerable<Tuple<string, string>> packageManagerTextLines, 
-            string executionTfm, 
+            IEnumerable<Tuple<string, string>> packageManagerTextLines,
+            string executionTfm,
             ResolvingErrorReport reportError)
         {
             IDependencyManagerProvider iDependencyManager = _dependencyProvider.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget");
@@ -238,10 +238,10 @@ namespace Microsoft.DotNet.Interactive
             }
 
             return _dependencyProvider.Resolve(
-                iDependencyManager, 
-                ".csx", 
-                packageManagerTextLines, 
-                reportError, 
+                iDependencyManager,
+                ".csx",
+                packageManagerTextLines,
+                reportError,
                 executionTfm);
         }
 

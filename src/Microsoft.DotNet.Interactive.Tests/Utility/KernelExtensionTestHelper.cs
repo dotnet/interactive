@@ -132,7 +132,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 <Project Sdk=""Microsoft.NET.Sdk"">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <IsPackable>true</IsPackable>
     <PackageId>{packageName}</PackageId>
     <PackageVersion>{packageVersion}</PackageVersion>
@@ -163,7 +163,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 "),
                 ("global.json", @"{
   ""sdk"": {
-    ""version"": ""6.0.100"",
+    ""version"": ""7.0.100"",
     ""allowPrerelease"": true,
     ""rollForward"": ""latestMinor""
   }
@@ -271,7 +271,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 <Project Sdk=""Microsoft.NET.Sdk"">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <AssemblyName>{extensionName}</AssemblyName>
   </PropertyGroup>
 
@@ -285,7 +285,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 "),
                 ("global.json", @"{
   ""sdk"": {
-    ""version"": ""6.0.100"",
+    ""version"": ""7.0.100"",
     ""allowPrerelease"": true,
     ""rollForward"": ""latestMinor""
   }
