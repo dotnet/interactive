@@ -83,22 +83,43 @@ public class PlaywrightKernelConnector
             var htmlKernel = await playwrightConnector.CreateKernelAsync("html-browser", BrowserKernelLanguage.Html);
             root.Add(htmlKernel);
 
-            var subscription = Kernel.Root
-                                     .KernelEvents
-                                     .OfType<DisplayEvent>()
-                                     .Subscribe(@event =>
-                                     {
-                                         if (@event.Command.OriginUri == htmlKernel.KernelInfo.Uri ||
-                                             @event.Command.OriginUri == jsKernel.KernelInfo.Uri)
-                                         {
-                                             return;
-                                         }
+            if (root.FindKernelByName("javascript") is { } defaultJsKernel)
+            {
+                await defaultJsKernel.SubmitCodeAsync(@"
+notebookCSS = [...document.styleSheets]
+  .map((styleSheet) => {
+    try {
+      return [...styleSheet.cssRules]
+        .map((rule) => rule.cssText)
+        .join('');
+    } catch (e) {
+    }
+  })
+  .filter(Boolean)
+  .join('\n');
+");
+                await jsKernel.SubmitCodeAsync(@"
+#!share --from javascript notebookCSS
+document.head.insertAdjacentHTML('afterbegin', `<style>${notebookCSS}</style>`);   
+");
+            }
 
-                                         var html = new BrowserDisplayEvent(@event, root.SubmissionCount + 1).ToDisplayString(HtmlFormatter.MimeType);
+            var subscription = root
+                               .KernelEvents
+                               .OfType<DisplayEvent>()
+                               .Subscribe(@event =>
+                               {
+                                   if (@event.Command.OriginUri == htmlKernel.KernelInfo.Uri ||
+                                       @event.Command.OriginUri == jsKernel.KernelInfo.Uri)
+                                   {
+                                       return;
+                                   }
 
-                                         var htmlCommand = new SubmitCode(html);
-                                         htmlKernel.SendAsync(htmlCommand).ConfigureAwait(false);
-                                     });
+                                   var html = new BrowserDisplayEvent(@event, root.SubmissionCount + 1).ToDisplayString(HtmlFormatter.MimeType);
+
+                                   var htmlCommand = new SubmitCode(html);
+                                   htmlKernel.SendAsync(htmlCommand).ConfigureAwait(false);
+                               });
 
             htmlKernel.RegisterForDisposal(subscription);
 
