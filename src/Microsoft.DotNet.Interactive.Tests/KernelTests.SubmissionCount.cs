@@ -125,5 +125,18 @@ await Kernel.Root.SendAsync(new SubmitCode(""456"", ""fake""));
 
             kernel.SubmissionCount.Should().Be(2);
         }
+
+        [Fact]
+        public async Task Failed_commands_increment_submission_count()
+        {
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel()
+            };
+
+            await kernel.SubmitCodeAsync("this does not compile");
+
+            kernel.SubmissionCount.Should().Be(1);
+        }
     }
 }
