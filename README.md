@@ -40,9 +40,9 @@ For the **best experience** when working with multi-language notebooks, we recom
 
 There are several ways to get started using .NET Interactive with Jupyter, including Jupyter Notebook, JupyterLab, and nteract.
 
-* [Try sample notebooks online using Binder](NotebooksOnBinder.md).
-* [Create and run notebooks on your machine](NotebookswithJupyter.md).
-* [Share notebooks online using Binder](CreateBinder.md).
+* [Try sample notebooks online using Binder](docs/NotebooksOnBinder.md).
+* [Create and run notebooks on your machine](docs/NotebookswithJupyter.md).
+* [Share notebooks online using Binder](docs/CreateBinder.md).
 
 
 ## REPLs
