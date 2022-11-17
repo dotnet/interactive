@@ -13,7 +13,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
     public static class Formatter<T>
     {
         internal static readonly bool TypeIsAnonymous;
-        internal static readonly bool TypeIsException;
         internal static readonly bool TypeIsTuple;
         internal static readonly bool TypeIsValueTuple;
         internal static readonly bool TypeIsTupleOfScalars;
@@ -27,9 +26,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
         static Formatter()
         {
             if (TypeIsScalar = typeof(T).IsScalar())
-            {
-            }
-            else if (TypeIsException = typeof(Exception).IsAssignableFrom(typeof(T)))
             {
             }
             else if (TypeIsTuple = typeof(T).IsTuple())

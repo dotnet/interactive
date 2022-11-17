@@ -10,6 +10,7 @@ using System.Numerics;
 using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.CSharp;
 
@@ -53,31 +54,6 @@ public static class PlainTextFormatter
             return FormatAnyTuple;
         }
 
-        if (Formatter<T>.TypeIsException)
-        {
-            // filter out internal values from the Data dictionary, since they're intended to be surfaced in other ways
-            var dataAccessor = accessors.SingleOrDefault(a => a.Member.Name == "Data");
-            if (dataAccessor is not null)
-            {
-                var originalGetData = dataAccessor.Getter;
-                dataAccessor.Getter = e => ((IDictionary) originalGetData(e))
-                                           .Cast<DictionaryEntry>()
-                                           .ToDictionary(de => de.Key, de => de.Value);
-            }
-
-            // replace the default stack trace with the full stack trace when present
-            var stackTraceAccessor = accessors.SingleOrDefault(a => a.Member.Name == "StackTrace");
-            if (stackTraceAccessor is not null)
-            {
-                stackTraceAccessor.Getter = e =>
-                {
-                    var ex = e as Exception;
-
-                    return ex.StackTrace;
-                };
-            }
-        }
-
         if (typeof(T).IsEnum)
         {
             return (enumValue, context) =>
@@ -102,13 +78,11 @@ public static class PlainTextFormatter
 
             var indent = context.Indent;
 
-            Default.WriteStartObject(context);
-
             if (!context.IsStartingObjectWithinSequence)
             {
                 var type = target.GetType();
                 type.WriteCSharpDeclarationTo(context.Writer, true);
-                Default.WriteEndHeader(context);
+                context.Writer.WriteLine();
             }
 
             for (var i = 0; i < reducedAccessors.Length; i++)
@@ -117,24 +91,22 @@ public static class PlainTextFormatter
 
                 object value = accessor.GetValueOrException(target);
 
-                Default.WriteStartProperty(context);
+                WriteStartProperty(context);
                 context.Writer.Write(accessor.Member.Name);
-                Default.WriteNameValueDelimiter(context);
+                context.Writer.Write(": ");
                 value.FormatTo(context);
-                Default.WriteEndProperty(context);
 
                 if (i < accessors.Length - 1)
                 {
-                    Default.WritePropertyListSeparator(context);
+                    context.Writer.WriteLine();
                 }
             }
 
             if (reducedAccessors.Length < accessors.Length)
             {
-                Default.WriteElidedPropertiesMarker(context);
+                WriteIndent(context);
+                context.Writer.Write("...");
             }
-
-            Default.WriteEndObject(context);
 
             context.Indent = indent;
 
@@ -145,7 +117,7 @@ public static class PlainTextFormatter
         {
             if (Formatter<T>.TypeIsTupleOfScalars)
             {
-                Default.WriteStartTuple(context);
+                context.Writer.Write("( ");
 
                 for (var i = 0; i < accessors.Length; i++)
                 {
@@ -153,15 +125,13 @@ public static class PlainTextFormatter
 
                     value.FormatTo(context);
 
-                    Default.WriteEndProperty(context);
-
                     if (i < accessors.Length - 1)
                     {
-                        Default.WriteValueSequenceItemSeparator(context);
+                        context.Writer.Write(", ");
                     }
                 }
 
-                Default.WriteEndTuple(context);
+                context.Writer.Write(" )");
             }
             else
             {
@@ -171,17 +141,15 @@ public static class PlainTextFormatter
 
                     context.IsStartingObjectWithinSequence = true;
 
-                    Default.WriteStartProperty(context);
+                    WriteStartProperty(context);
 
                     value.FormatTo(context);
 
                     context.IsStartingObjectWithinSequence = true;
 
-                    Default.WriteEndProperty(context);
-
                     if (i < accessors.Length - 1)
                     {
-                        Default.WritePropertyListSeparator(context);
+                        context.Writer.WriteLine();
                     }
                 }
             }
@@ -198,25 +166,32 @@ public static class PlainTextFormatter
 
     internal static ITypeFormatter[] DefaultFormatters =
     {
+        new PlainTextFormatter<Exception>((exception, context) =>
+        {
+            var s = exception.ToString();
+
+            context.Writer.Write(s.IndentAtNewLines(context));
+
+            return true;
+        }),
+
         new PlainTextFormatter<ExpandoObject>((expando, context) =>
         {
-            Default.WriteStartObject(context);
             var pairs = expando.ToArray();
             var length = pairs.Length;
             for (var i = 0; i < length; i++)
             {
                 var pair = pairs[i];
                 context.Writer.Write(pair.Key);
-                Default.WriteNameValueDelimiter(context);
+                context.Writer.Write(": ");
                 pair.Value.FormatTo(context);
 
                 if (i < length - 1)
                 {
-                    Default.WritePropertyListSeparator(context);
+                    context.Writer.WriteLine();
                 }
             }
 
-            Default.WriteEndObject(context);
             return true;
         }),
 
@@ -229,7 +204,7 @@ public static class PlainTextFormatter
         new PlainTextFormatter<KeyValuePair<string, object>>((pair, context) =>
         {
             context.Writer.Write(pair.Key);
-            Default.WriteNameValueDelimiter(context);
+            context.Writer.Write(": ");
             pair.Value.FormatTo(context);
             return true;
         }),
@@ -319,6 +294,27 @@ public static class PlainTextFormatter
         })
     };
 
-    internal static IPlainTextFormatter Default = new MultiLinePlainTextFormatter();
-    
+    private static string IndentAtNewLines(this string s, FormatContext context) => 
+        Regex.Replace(s, @"^\s+", new string(' ', (context.Depth + 1) * 4), RegexOptions.Multiline);
+
+    internal static void WriteIndent(FormatContext context, string bonus = "    ")
+    {
+        var effectiveIndent = context.Depth * 4;
+        var indent = new string(' ', effectiveIndent);
+        context.Writer.Write(indent);
+        context.Writer.Write(bonus);
+    }
+
+    public static void WriteStartProperty(FormatContext context)
+    {
+        if (context.IsStartingObjectWithinSequence)
+        {
+            WriteIndent(context, "  - ");
+            context.IsStartingObjectWithinSequence = false;
+        }
+        else
+        {
+            WriteIndent(context);
+        }
+    }
 }

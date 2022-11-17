@@ -275,11 +275,15 @@ export interface CodeSubmissionReceived extends KernelEvent {
 export interface CommandCancelled extends KernelEvent {
 }
 
-export interface CommandFailed extends KernelEvent {
+export interface CommandFailed extends KernelCommandCompletionEvent {
     message: string;
 }
 
-export interface CommandSucceeded extends KernelEvent {
+export interface KernelCommandCompletionEvent extends KernelEvent {
+    executionOrder?: number;
+}
+
+export interface CommandSucceeded extends KernelCommandCompletionEvent {
 }
 
 export interface CompleteCodeSubmissionReceived extends KernelEvent {
@@ -456,7 +460,7 @@ export interface KernelInfo {
     languageName?: string;
     languageVersion?: string;
     localName: string;
-    uri?: string;
+    uri: string;
     remoteUri?: string;
     supportedKernelCommands: Array<KernelCommandInfo>;
     supportedDirectives: Array<KernelDirectiveInfo>;

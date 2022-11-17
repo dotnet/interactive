@@ -362,22 +362,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 return;
             }
 
-            var formatter = Default as MultiLinePlainTextFormatter;
-
             if (Formatter<T>.TypeIsScalar)
             {
-                Default.WriteStartSequenceOfValues(context);
+                context.Writer.Write("[ ");
             }
             else
             {
-                if (formatter is not null)
-                {
-                    seq.GetType().WriteCSharpDeclarationTo(context.Writer, true);
+                seq.GetType().WriteCSharpDeclarationTo(context.Writer, true);
 
-                    context.Writer.WriteLine();
-                }
-
-                Default.WriteStartSequenceOfObjects(context);
+                context.Writer.WriteLine();
             }
 
             listExpansionLimit ??= Formatter<T>.ListExpansionLimit;
@@ -393,32 +386,24 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     {
                         if (Formatter<T>.TypeIsScalar)
                         {
-                            Default.WriteValueSequenceItemSeparator(context);
+                            context.Writer.Write(", ");
                         }
                         else
                         {
-                            Default.WriteObjectSequenceItemSeparator(context);
+                            context.Writer.WriteLine();
                         }
                     }
 
                     context.IsStartingObjectWithinSequence = true;
 
-                    if (formatter is not null)
+                    if (typeof(T) == typeof(object))
                     {
-                        if (typeof(T) == typeof(object))
-                        {
-                            context.Writer.Write("  - ");
-                        }
+                        context.Writer.Write("  - ");
                     }
 
                     item.FormatTo(context);
 
                     context.IsStartingObjectWithinSequence = false;
-
-                    if (!Formatter<T>.TypeIsScalar)
-                    {
-                        Default.WriteEndObjectWithinSequence(context);
-                    }
                 }
             }
 
@@ -434,13 +419,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 writer.Write("more)");
             }
 
-            if (!Formatter<T>.TypeIsScalar)
+            if (Formatter<T>.TypeIsScalar)
             {
-                Default.WriteEndSequenceOfObjects(context);
-            }
-            else
-            {
-                Default.WriteEndSequenceOfValues(context);
+                context.Writer.Write(" ]");
             }
         }
 

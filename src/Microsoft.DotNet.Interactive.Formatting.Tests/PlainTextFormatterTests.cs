@@ -222,13 +222,21 @@ Parts: <null>".ReplaceLineEndings());
         }
 
         [Fact]
-        public void When_a_property_throws_then_then_exception_is_written_in_place_of_the_property()
+        public void When_a_property_throws_then_then_exception_is_written_in_place_of_the_property_and_indented()
         {
             var log = new SomePropertyThrows().ToDisplayString();
 
-            log.Should().Contain("NotOk: Exception");
+            log.Should().Match(
+@"SomePropertyThrows
+        Fine: Fine
+        NotOk: System.Exception: not ok
+            at Microsoft.DotNet.Interactive.Formatting.Tests.SomePropertyThrows.get_NotOk()*
+            at lambda_method*(Closure, SomePropertyThrows)
+            at Microsoft.DotNet.Interactive.Formatting.MemberAccessor`1.GetValueOrException(T instance)*
+        Ok: ok
+        PerfectlyFine: PerfectlyFine".ReplaceLineEndings());
         }
-
+        
         [Fact]
         public void Recursive_formatter_calls_do_not_cause_exceptions()
         {
@@ -593,32 +601,6 @@ Object[]
         }
 
         [Fact]
-        public void Formatter_iterates_IEnumerable_property_when_its_reflected_type_is_array()
-        {
-            var node = new Node
-            {
-                Id = "1",
-                NodesArray =
-                    new[]
-                    {
-                        new Node { Id = "1.1" },
-                        new Node { Id = "1.2" },
-                        new Node { Id = "1.3" },
-                    }
-            };
-
-            var formatter = PlainTextFormatter.GetPreferredFormatterFor<Node>();
-
-            var output = node.ToDisplayString(formatter);
-
-            Console.WriteLine(output);
-
-            output.Should().Contain("1.1");
-            output.Should().Contain("1.2");
-            output.Should().Contain("1.3");
-        }
-
-        [Fact]
         public void Formatter_iterates_IEnumerable_property_when_its_actual_type_is_an_array_of_objects()
         {
             var node = new Node
@@ -761,10 +743,36 @@ TheWidgets: Widget[]
         [Fact]
         public void Sequences_in_an_object_property_are_indented()
         {
-            
+            var node = new Node("1");
+            var node1_2 = new Node("1.2");
+            node1_2.Nodes = new Node[]
+            {
+                new("1.2.1"),
+            };
+            node.Nodes = new Node[]
+            {
+                new("1.1"),
+                node1_2,
+                new("1.3")
+            };
 
-            // TODO (Sequences_in_an_object_property_are_indented) write test
-            throw new NotImplementedException();
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor(node.GetType());
+
+            var writer = new StringWriter();
+            formatter.Format(node, writer);
+
+            writer.ToString().Should().Contain(
+@"Node
+    Id: 1
+    Nodes: Node[]
+          - Id: 1.1
+            Nodes: <null>
+          - Id: 1.2
+            Nodes: Node[]
+                  - Id: 1.2.1
+                    Nodes: <null>
+          - Id: 1.3
+            Nodes: <null>".ReplaceLineEndings());
         }
     }
 }
