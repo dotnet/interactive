@@ -227,8 +227,8 @@ describe("proxyKernel", () => {
                             supportedKernelCommands: [{ name: "customCommand1" }, { name: "customCommand2" }],
                             supportedDirectives: []
                         }
-                    },
-                    command: { ...e, id: "newId" }
+                    }
+
                 });
 
                 remoteToLocal.next({ eventType: contracts.CommandSucceededType, event: <contracts.CommandSucceeded>{}, command: e });
