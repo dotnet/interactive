@@ -155,6 +155,7 @@ Microsoft.DotNet.Interactive.Formatting
     public static System.Int32 MaxProperties { get; set;}
     public static ITypeFormatter GetPreferredFormatterFor(System.Type type)
     public static ITypeFormatter GetPreferredFormatterFor<T>()
+    public static System.Void WriteStartProperty(FormatContext context)
   public class PlainTextFormatter<T> : TypeFormatter<T>, ITypeFormatter<T>, ITypeFormatter
     public static PlainTextFormatter<T> CreateForAnyEnumerable(System.Boolean includeInternals = False)
     public static PlainTextFormatter<T> CreateForAnyObject(System.Boolean includeInternals = False)

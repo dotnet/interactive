@@ -81,10 +81,15 @@ namespace Microsoft.DotNet.Interactive
 
             void IncrementSubmissionCount(KernelEvent e)
             {
-                if (e is KernelCommandCompletionEvent && 
-                    e.Command is SubmitCode)
+                if (e is KernelCommandCompletionEvent)
                 {
-                    SubmissionCount++;
+                    if (e.Command is SubmitCode)
+                    {
+                        if (e.Command.RoutingSlip.Count == 0 || e.Command.RoutingSlip.Contains(KernelInfo.Uri, true))
+                        {
+                            SubmissionCount++;
+                        }
+                    }
                 }
             }
         }

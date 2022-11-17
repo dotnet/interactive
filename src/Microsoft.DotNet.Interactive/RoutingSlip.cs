@@ -19,12 +19,29 @@ public abstract class RoutingSlip
     {
         var entries = _entries.Select(e => e.AbsoluteUriWithQuery).ToArray();
         return entries;
-    }
+    }   
 
-    public bool Contains(Uri uri, bool ignoreQuery = false) => ignoreQuery ? ContainsUriWithoutQuery(GetAbsoluteUriWithoutQuery(uri)) : Contains(uri.AbsoluteUri);
+    public int Count => _entries.Count;
+
+    public bool Contains(Uri uri, bool ignoreQuery = false)
+    {
+        if (uri == null)
+        {
+            throw new ArgumentNullException(nameof(uri));
+        }
+
+        return ignoreQuery
+                   ? ContainsUriWithoutQuery(GetAbsoluteUriWithoutQuery(uri))
+                   : Contains(uri.AbsoluteUri);
+    }
 
     private bool Contains(string uri)
     {
+        if (uri == null)
+        {
+            throw new ArgumentNullException(nameof(uri));
+        }
+
         for (var i = 0; i < _entries.Count; i++)
         {
             var e = _entries[i];
@@ -137,5 +154,7 @@ public abstract class RoutingSlip
         public string Tag { get; }
 
         public string AbsoluteUriWithQuery { get; }
+
+        public override string ToString() => AbsoluteUriWithQuery;
     }
 }
