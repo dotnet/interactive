@@ -96,7 +96,12 @@ public class PlaywrightKernelConnector
 
                                          var html = new BrowserDisplayEvent(@event, root.SubmissionCount + 1).ToDisplayString(HtmlFormatter.MimeType);
 
-                                         htmlKernel.SendAsync(new SubmitCode(html)).ConfigureAwait(false);
+                                         var htmlCommand = new SubmitCode(html);
+                                         htmlKernel.SendAsync(htmlCommand).ContinueWith(r =>
+                                         {
+                                             // FIX: (AddKernelsToCurrentRootAsync) 
+                                             var routingSlip = htmlCommand.RoutingSlip;
+                                         }).ConfigureAwait(false);
                                      });
 
             htmlKernel.RegisterForDisposal(subscription);

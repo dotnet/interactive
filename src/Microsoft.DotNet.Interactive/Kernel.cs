@@ -81,7 +81,8 @@ namespace Microsoft.DotNet.Interactive
 
             void IncrementSubmissionCount(KernelEvent e)
             {
-                if (e is KernelCommandCompletionEvent && e.Command is SubmitCode)
+                if (e is KernelCommandCompletionEvent && 
+                    e.Command is SubmitCode)
                 {
                     SubmissionCount++;
                 }
