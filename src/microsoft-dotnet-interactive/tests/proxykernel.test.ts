@@ -215,13 +215,28 @@ describe("proxyKernel", () => {
 
         localToRemote.subscribe(e => {
             if (connection.isKernelCommandEnvelope(e)) {
-                remoteToLocal.next({ eventType: contracts.KernelInfoProducedType, event: <contracts.KernelInfoProduced>{ kernelInfo: { localName: "remoteKernel", aliases: [], languageName: "gsharp", languageVersion: "1.2.3", supportedKernelCommands: [{ name: "customCommand1" }, { name: "customCommand2" }], supportedDirectives: [] } }, command: { ...e, id: "newId" } });
+                remoteToLocal.next({
+                    eventType: contracts.KernelInfoProducedType,
+                    event: <contracts.KernelInfoProduced>{
+                        kernelInfo: {
+                            localName: "remoteKernel",
+                            aliases: [],
+                            uri: 'kernel://local/remoteKernel',
+                            languageName: "gsharp",
+                            languageVersion: "1.2.3",
+                            supportedKernelCommands: [{ name: "customCommand1" }, { name: "customCommand2" }],
+                            supportedDirectives: []
+                        }
+                    },
+                    command: { ...e, id: "newId" }
+                });
 
                 remoteToLocal.next({ eventType: contracts.CommandSucceededType, event: <contracts.CommandSucceeded>{}, command: e });
             }
         });
 
         let kernel = new ProxyKernel("proxy", connection.KernelCommandAndEventSender.FromObserver(localToRemote), connection.KernelCommandAndEventReceiver.FromObservable(remoteToLocal));
+
         kernel.registerCommandHandler({
             commandType: "customCommand1",
             handle: (invocation) => {
