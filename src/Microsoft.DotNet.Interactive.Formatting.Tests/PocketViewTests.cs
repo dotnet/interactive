@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Html;
 using Xunit;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
+using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
 {
@@ -48,7 +49,9 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         {
             string output = ul(Enumerable.Range(1, 3).Select(i => li(i))).ToString();
 
-            output.Should().Be($"<ul><li>{PlainTextBegin}1{PlainTextEnd}</li><li>{PlainTextBegin}2{PlainTextEnd}</li><li>{PlainTextBegin}3{PlainTextEnd}</li></ul>");
+            output.RemoveStyleElement()
+                  .Should()
+                  .Be($"<ul><li>{PlainTextBegin}1{PlainTextEnd}</li><li>{PlainTextBegin}2{PlainTextEnd}</li><li>{PlainTextBegin}3{PlainTextEnd}</li></ul>");
         }
 
         [Fact]
@@ -159,7 +162,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         public void A_transform_can_be_used_to_add_attributes()
         {
             dynamic _ = new PocketView();
-
+            
             _.div = PocketView.Transform(
                 (tag, model) => tag.HtmlAttributes.Class("foo"));
 

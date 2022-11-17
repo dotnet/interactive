@@ -11,6 +11,7 @@ using System.Numerics;
 using System.Text.Json;
 using FluentAssertions;
 using FluentAssertions.Extensions;
+using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
 using static System.Environment;
@@ -42,7 +43,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             {
                 string value = null;
 
-                value.ToDisplayString(HtmlFormatter.MimeType)
+                value.ToDisplayString(HtmlFormatter.MimeType).RemoveStyleElement()
                      .Should()
                      .Be($"{PlainTextBegin}&lt;null&gt;{PlainTextEnd}");
             }
@@ -52,7 +53,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             {
                 var formatter = HtmlFormatter.GetPreferredFormatterFor<string>();
 
-                var s = "hello".ToDisplayString(formatter);
+                var s = "hello".ToDisplayString(formatter).RemoveStyleElement();
 
                 s.Should().Be($"{PlainTextBegin}hello{PlainTextEnd}");
             }
@@ -66,7 +67,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 var formatter = HtmlFormatter.GetPreferredFormatterFor<ExpandoObject>();
 
-                var output = ((object) expando).ToDisplayString(formatter);
+                var output = ((object) expando).ToDisplayString(formatter).RemoveStyleElement();
 
                 output.Should().BeEquivalentHtmlTo($@"
 <table>
@@ -303,7 +304,7 @@ string";
 
                 formatter.Format(instance, writer);
 
-                writer.ToString()
+                writer.ToString().RemoveStyleElement()
                       .Should()
                       .BeEquivalentHtmlTo(
                           $"{PlainTextBegin}{instance.HtmlEncode()}{PlainTextEnd}");
@@ -320,8 +321,9 @@ string";
 
                 formatter.Format(instance, writer);
 
-                writer.ToString()
-                    .Should()
+                var html = writer.ToString().RemoveStyleElement();
+
+                html.Should()
                     .Be($"{PlainTextBegin}78923589327589332402359{PlainTextEnd}");
             }
         }
@@ -344,6 +346,7 @@ string";
                 formatter.Format(instance, writer);
 
                 writer.ToString()
+                      .RemoveStyleElement()
                       .Should()
                       .BeEquivalentHtmlTo(
                           @$"
@@ -398,9 +401,10 @@ string";
                 formatter.Format(instance, writer);
 
                 writer.ToString()
+                      .RemoveStyleElement()
                       .Should()
                       .BeEquivalentHtmlTo(
-                          $"<table><thead><tr><th><i>key</i></th><th>TypeName</th><th>Id</th></tr></thead><tbody><tr><td>first</td><td>entity one</td><td>123</td></tr><tr><td>second</td><td>entity two</td><td>456</td></tr></tbody></table>");
+                          "<table><thead><tr><th><i>key</i></th><th>TypeName</th><th>Id</th></tr></thead><tbody><tr><td>first</td><td>entity one</td><td>123</td></tr><tr><td>second</td><td>entity two</td><td>456</td></tr></tbody></table>");
             }
 
             [Fact]
@@ -419,6 +423,7 @@ string";
                 formatter.Format(instance, writer);
 
                 writer.ToString()
+                      .RemoveStyleElement()
                       .Should()
                       .BeEquivalentHtmlTo(
                           $@"<table>
@@ -470,7 +475,7 @@ string";
             {
                 var text = "hello<b>world  </b>  \n\n  ";
 
-                var html = text.ToDisplayString("text/html");
+                var html = text.ToDisplayString("text/html").RemoveStyleElement();
 
                 html.Should().Be($"{PlainTextBegin}hello&lt;b&gt;world  &lt;/b&gt;  \n\n  {PlainTextEnd}");
             }
@@ -481,6 +486,7 @@ string";
                 var strings = new[] { "apple", "banana", "cherry" };
 
                 strings.ToDisplayString("text/html")
+                       .RemoveStyleElement()
                        .Should()
                        .BeEquivalentHtmlTo(
                            $@"
@@ -503,7 +509,7 @@ string";
                         { "kiwi", "plantain", "apple" }
                     .OrderBy(fruit => fruit.Length);
 
-                var html = sorted.ToDisplayString("text/html");
+                var html = sorted.ToDisplayString("text/html").RemoveStyleElement();
 
                 html.Should()
                     .BeEquivalentHtmlTo($@"
@@ -524,7 +530,7 @@ string";
             {
                 var list = new List<string>();
 
-                var html = list.ToDisplayString("text/html");
+                var html = list.ToDisplayString("text/html").RemoveStyleElement();
 
                 html.Should().BeEquivalentHtmlTo("<i>(empty)</i>");
             }
@@ -534,7 +540,7 @@ string";
             {
                 var list = new Dictionary<int, int>();
 
-                var html = list.ToDisplayString("text/html");
+                var html = list.ToDisplayString("text/html").RemoveStyleElement();
 
                 html.Should().BeEquivalentHtmlTo("<i>(empty)</i>");
             }
@@ -611,7 +617,7 @@ string";
 
                 var objects = new object[] { date1, date2 };
 
-                var html = objects.ToDisplayString("text/html");
+                var html = objects.ToDisplayString("text/html").RemoveStyleElement();
 
                 html.Should().BeEquivalentHtmlTo(
                     $"<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td><span>{date1.ToDisplayString("text/plain")}</span></td></tr><tr><td>1</td><td><span>{date2.ToDisplayString("text/plain")}</span></td></tr></tbody></table>");
@@ -622,7 +628,7 @@ string";
             {
                 var objects = new object[] { typeof(string), typeof(int) };
 
-                var html = objects.ToDisplayString("text/html");
+                var html = objects.ToDisplayString("text/html").RemoveStyleElement();
 
                 html.Should().BeEquivalentHtmlTo($@"<table>
       <thead>
@@ -659,7 +665,7 @@ string";
             {
                 var dict = new SomeDictUsingInterfaceImpls();
 
-                var html = dict.ToDisplayString("text/html");
+                var html = dict.ToDisplayString("text/html").RemoveStyleElement();
 
                 html.Should().BeEquivalentHtmlTo(
                     $"<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>{PlainTextBegin}1{PlainTextEnd}</td><td>2</td></tr></tbody></table>");
@@ -692,7 +698,7 @@ string";
 
                 formatter.Format(readOnlyMemory, writer);
                 
-                writer.ToString()
+                writer.ToString().RemoveStyleElement()
                       .Should()
                       .BeEquivalentHtmlTo(
                           $@"
@@ -717,7 +723,7 @@ string";
 
                 formatter.Format(new object[] { 8, null, 9 }, writer);
 
-                writer.ToString().Should()
+                writer.ToString().RemoveStyleElement().Should()
                       .BeEquivalentHtmlTo(
                           $@"
 <table>
@@ -832,7 +838,10 @@ string";
 
                 formatter.Format(new Dummy.ClassWithManyProperties(), writer);
 
-                writer.ToString().Should().Be($"{PlainTextBegin}Dummy.ClassWithManyProperties{PlainTextEnd}");
+                writer.ToString()
+                      .RemoveStyleElement()
+                      .Should()
+                      .Be($"{PlainTextBegin}Dummy.ClassWithManyProperties{PlainTextEnd}");
             }
 
             [Fact]
@@ -851,7 +860,7 @@ string";
 
                 formatter.Format(GetCollection(), writer);
 
-                writer.ToString().Should()
+                writer.ToString().RemoveStyleElement().Should()
                       .BeEquivalentHtmlTo($@"<table>
       <thead>
         <tr>
@@ -907,7 +916,8 @@ string";
                     new { name = "apple", color = "green" }
                 };
 
-                var result= objects.ToDisplayString("text/html");
+                var result= objects.ToDisplayString("text/html").RemoveStyleElement();
+
                 result
                        .Should()
                        .BeEquivalentHtmlTo(
@@ -991,7 +1001,8 @@ string";
                     Enumerable.Range(1, 3),
                 };
 
-                var result = objects.ToDisplayString("text/html");
+                var result = objects.ToDisplayString("text/html").RemoveStyleElement();
+
                 result
                     .Should()
                     .BeEquivalentHtmlTo(
@@ -1074,7 +1085,8 @@ string";
                     new [] { 7, 8, 9 } 
                 };
 
-                var result = objects.ToDisplayString("text/html");
+                var result = objects.ToDisplayString("text/html").RemoveStyleElement();
+
                 result
                     .Should()
                     .BeEquivalentHtmlTo(
@@ -1288,7 +1300,7 @@ string";
 
                 var jsonDocument = JsonDocument.Parse(jsonString);
 
-                var html = jsonDocument.ToDisplayString(HtmlFormatter.MimeType);
+                var html = jsonDocument.ToDisplayString(HtmlFormatter.MimeType).RemoveStyleElement();
 
                 html.Should().Contain(
                     "<tr><td><span>&quot;apple&quot;</span></td></tr><tr><td><span>&quot;banana&quot;</span></td></tr><tr><td><span>&quot;cherry&quot;</span></td></tr>");
@@ -1299,7 +1311,7 @@ string";
             {
                 var value = "hola! \n \t \" \" ' ' the joy of escapes! ==> &   white  space  ";
 
-                var text = value.ToDisplayString("text/html");
+                var text = value.ToDisplayString("text/html").RemoveStyleElement();
 
                 text.Should().Be($"{PlainTextBegin}hola! \n \t &quot; &quot; &#39; &#39; the joy of escapes! ==&gt; &amp;   white  space  {PlainTextEnd}");
             }
@@ -1309,7 +1321,7 @@ string";
             {
                 var value = "hola! ʰ˽˵ΘϱϪԘÓŴ𝓌🦁♿🌪🍒☝🏿";
 
-                var text = value.ToDisplayString("text/html");
+                var text = value.ToDisplayString("text/html").RemoveStyleElement();
 
                 text.Should().Be($"{PlainTextBegin}{value.HtmlEncode()}{PlainTextEnd}");
             }

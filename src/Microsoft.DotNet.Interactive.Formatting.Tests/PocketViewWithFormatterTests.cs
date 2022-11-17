@@ -3,6 +3,7 @@
 
 using System;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Xunit;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
@@ -18,7 +19,10 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         {
             PocketView view = b(123);
 
-            view.ToDisplayString(mimeType).Should().Be($"<b>{PlainTextBegin}123{PlainTextEnd}</b>");
+            view.ToDisplayString(mimeType)
+                .RemoveStyleElement()
+                .Should()
+                .Be($"<b>{PlainTextBegin}123{PlainTextEnd}</b>");
         }
 
         [Fact]

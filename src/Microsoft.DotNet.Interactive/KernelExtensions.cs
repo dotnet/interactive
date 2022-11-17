@@ -329,8 +329,8 @@ namespace Microsoft.DotNet.Interactive
         public static TKernel UseWho<TKernel>(this TKernel kernel)
             where TKernel : Kernel
         {
-            if (kernel.KernelInfo.SupportsCommand(nameof(RequestValueInfos))
-                    && kernel.KernelInfo.SupportsCommand(nameof(RequestValue)))
+            if (kernel.KernelInfo.SupportsCommand(nameof(RequestValueInfos)) && 
+                kernel.KernelInfo.SupportsCommand(nameof(RequestValue)))
             {
                 kernel.AddDirective(who());
                 kernel.AddDirective(whos());
