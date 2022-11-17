@@ -11,7 +11,6 @@ Microsoft.DotNet.Interactive.Formatting
     public System.Collections.Generic.IDictionary<System.String,System.Object> Destructure(T instance)
     public System.Object GetValue(T instance, System.String propertyName)
   public class FormatContext, System.IDisposable
-    .ctor()
     .ctor(System.IO.TextWriter writer)
     public System.Int32 Depth { get;}
     public System.IO.TextWriter Writer { get;}
@@ -55,6 +54,7 @@ Microsoft.DotNet.Interactive.Formatting
     public static TTag Prepend<TTag>(Microsoft.AspNetCore.Html.IHtmlContent content)
     public static TTag PrependTo<TTag>(HtmlTag toTag)
     public static TTag SelfClosing<TTag>()
+    public static PocketView Table(System.Collections.Generic.IReadOnlyList<Microsoft.AspNetCore.Html.IHtmlContent> headers, System.Collections.Generic.IReadOnlyList<Microsoft.AspNetCore.Html.IHtmlContent> rows)
     public static HtmlTag Tag()
     public static Microsoft.AspNetCore.Html.IHtmlContent ToHtmlContent()
     public static TTag WithAttributes<TTag>(System.Collections.Generic.IDictionary<System.String,System.Object> htmlAttributes)
@@ -97,6 +97,7 @@ Microsoft.DotNet.Interactive.Formatting
     public static System.Int32 MaxProperties { get; set;}
     public static ITypeFormatter GetPreferredFormatterFor(System.Type type)
     public static ITypeFormatter GetPreferredFormatterFor<T>()
+    public static System.Void RequireDefaultStyles()
   public class HtmlFormatter<T> : TypeFormatter<T>, ITypeFormatter<T>, ITypeFormatter
     .ctor(FormatDelegate<T> format)
     .ctor(Action<T,FormatContext> format)
@@ -152,7 +153,6 @@ Microsoft.DotNet.Interactive.Formatting
     .ctor(System.String json)
   public static class PlainTextFormatter
     public static System.Int32 MaxProperties { get; set;}
-    public static System.Boolean UseMultiLineFormatting { get; set;}
     public static ITypeFormatter GetPreferredFormatterFor(System.Type type)
     public static ITypeFormatter GetPreferredFormatterFor<T>()
   public class PlainTextFormatter<T> : TypeFormatter<T>, ITypeFormatter<T>, ITypeFormatter
@@ -171,7 +171,6 @@ Microsoft.DotNet.Interactive.Formatting
     .ctor(System.String tagName, PocketView nested = null)
     public HtmlAttributes HtmlAttributes { get;}
     public HtmlTag HtmlTag { get;}
-    public System.String Name { get;}
     public System.Void AddDependency(System.String id, Microsoft.AspNetCore.Html.IHtmlContent content)
     public System.Void SetContent(System.Object[] args)
     public System.String ToString()
@@ -180,7 +179,6 @@ Microsoft.DotNet.Interactive.Formatting
     public System.Boolean TryInvoke(System.Dynamic.InvokeBinder binder, System.Object[] args, ref System.Object& result)
     public System.Boolean TryInvokeMember(System.Dynamic.InvokeMemberBinder binder, System.Object[] args, ref System.Object& result)
     public System.Boolean TrySetMember(System.Dynamic.SetMemberBinder binder, System.Object value)
-    public System.Void WriteTo(System.IO.TextWriter writer)
     public System.Void WriteTo(System.IO.TextWriter writer, System.Text.Encodings.Web.HtmlEncoder encoder)
     public System.Void WriteTo(FormatContext context)
   public static class PocketViewTags

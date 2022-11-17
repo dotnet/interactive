@@ -214,7 +214,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Contain($"<td>{PlainTextBegin}Exception");
+                      .Contain($"<td>{PlainTextBegin}System.Exception");
             }
 
             [Fact]

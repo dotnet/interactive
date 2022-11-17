@@ -61,6 +61,11 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
     {
         private string _id;
 
+        public Node(string id = null)
+        {
+            _id = id;
+        }
+
         public string Id
         {
             get => _id;
@@ -68,8 +73,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         }
 
         public IEnumerable<Node> Nodes { get; set; }
-
-        public Node[] NodesArray { get; set; }
 
         internal string InternalId => Id;
     }
