@@ -20,6 +20,8 @@ namespace Microsoft.DotNet.Interactive
         {
             PocketView output = null;
 
+            context.RequireDefaultStyles();
+
             if (instance.Detailed)
             {
                 output = table(

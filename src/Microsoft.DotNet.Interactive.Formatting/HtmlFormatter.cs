@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             object text, 
             FormatContext context)
         {
-            context.Require("dni-table-styles", TableStyles());
+            context.RequireDefaultStyles();
 
             PocketView tag = div(pre(text.ToDisplayString(PlainTextFormatter.MimeType)));
             tag.HtmlAttributes["class"] = "dni-plaintext";
@@ -128,7 +128,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 // If PlainTextPreformat is true, then strings
                 // will have line breaks and white-space preserved
-                HtmlFormatter.FormatAndStyleAsPlainText(s, context);
+                FormatAndStyleAsPlainText(s, context);
                 return true;
             }),
 
@@ -150,7 +150,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                      type.Namespace.StartsWith("System.") ||
                      type.Namespace.StartsWith("Microsoft."));
 
-                if (type.IsAnonymous() || !isKnownDocType)
+                if (!isKnownDocType || type.IsAnonymous())
                 {
                     context.Writer.Write(text.HtmlEncode());
                 }
@@ -304,7 +304,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         return false;
                 }
 
-                context.Require("dni-table-styles", TableStyles());
+                context.RequireDefaultStyles();
 
                 view.WriteTo(context);
 
@@ -312,31 +312,38 @@ namespace Microsoft.DotNet.Interactive.Formatting
             })
         };
 
-        private static readonly Lazy<IHtmlContent> _tableStyles = new(() => style[id: "dni-table-styles"](new HtmlString(@"
+        private static readonly Lazy<IHtmlContent> _defaultStyles = new(() => style(new HtmlString(@"
 .dni-code-hint {
     font-style: italic;
     overflow: hidden;
     white-space: nowrap;
 }
-
 .dni-treeview {
     white-space: nowrap;
 }
-
 .dni-treeview td {
     vertical-align: top;
     text-align: start;
 }
-
 details.dni-treeview {
     padding-left: 1em;
 }
-
-tr .dni-plaintext pre {
-    text-align: start;`
+table td { 
+    vertical-align: top; 
 }
-"))); // FIX: (HtmlFormatter) table styles aren't quite right. 
+table td {
+    text-align: start;
+}
+table th {
+    text-align: start;
+}
+")));
 
-        internal static IHtmlContent TableStyles() => _tableStyles.Value;
+        internal static IHtmlContent DefaultStyles() => _defaultStyles.Value;
+
+        public static void RequireDefaultStyles(this FormatContext context)
+        {
+            context.RequireOnComplete("dni-styles", DefaultStyles());
+        }
     }
 }

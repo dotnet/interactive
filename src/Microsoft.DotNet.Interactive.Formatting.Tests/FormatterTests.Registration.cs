@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
@@ -63,7 +64,7 @@ public sealed partial class FormatterTests
         {
             var input = "# { This is the <input> \"yes\"\t\b\n\r }";
 
-            var result = input.ToDisplayString(mimeType);
+            var result = input.ToDisplayString(mimeType).RemoveStyleElement();
 
             result.Should().Be(expected);
         }

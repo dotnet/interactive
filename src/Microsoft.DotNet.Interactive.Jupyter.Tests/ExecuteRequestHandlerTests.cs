@@ -11,6 +11,7 @@ using FluentAssertions.Execution;
 using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
+using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests;
 using Pocket;
@@ -268,7 +269,8 @@ f();"));
                                 .Which
                                 .Data
                                 .Should()
-                                .ContainSingle(d => d.Key.Equals("text/html") && d.Value.Equals($"{PlainTextBegin}4{PlainTextEnd}"));
+                                .ContainSingle(d => d.Key.Equals("text/html") && 
+                                                    d.Value.As<string>().RemoveStyleElement().Equals($"{PlainTextBegin}4{PlainTextEnd}"));
         }
 
         [Fact]
@@ -308,7 +310,7 @@ f();"));
                                 .Data
                                 .Should()
                                 .ContainSingle(d => d.Key.Equals("text/html") && 
-                                                    d.Value.Equals($"{PlainTextBegin}123{PlainTextEnd}"));
+                                                    d.Value.As<string>().RemoveStyleElement().Equals($"{PlainTextBegin}123{PlainTextEnd}"));
         }
 
         [Theory]
@@ -384,7 +386,7 @@ f();"));
             JupyterMessageSender.PubSubMessages
                 .OfType<ExecuteResult>()
                 .Should()
-                .Contain(dp => dp.Data["text/html"] as string == $"{PlainTextBegin}{typeof(PasswordString).FullName}{PlainTextEnd}");
+                .Contain(dp => (dp.Data["text/html"] as string).RemoveStyleElement() == $"{PlainTextBegin}{typeof(PasswordString).FullName}{PlainTextEnd}");
         }
 
         [Theory]

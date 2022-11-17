@@ -11,6 +11,7 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
+using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 {
@@ -57,7 +58,7 @@ display(123);
                       .Should()
                       .ContainSingle(v =>
                                          v.MimeType == "text/html" &&
-                                         v.Value == $"{PlainTextBegin}123{PlainTextEnd}");
+                                         v.Value.RemoveStyleElement() == $"{PlainTextBegin}123{PlainTextEnd}");
 
                 events.Should()
                       .ContainSingle<DisplayedValueProduced>(

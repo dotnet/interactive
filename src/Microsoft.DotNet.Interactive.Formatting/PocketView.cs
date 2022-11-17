@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -42,12 +42,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             HtmlTag = tagName.Tag();
         }
-
-        protected PocketView(HtmlTag htmlTag)
-        {
-            HtmlTag = htmlTag;
-        }
-
+        
         public HtmlTag HtmlTag { get; }
 
         /// <summary>
@@ -269,38 +264,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
         }
 
         /// <summary>
-        ///   Gets HTML tag type.
-        /// </summary>
-        /// <value>The type of the tag.</value>
-        public string Name
-        {
-            get
-            {
-                if (HtmlTag is null)
-                {
-                    return "";
-                }
-
-                return HtmlTag.Name;
-            }
-        }
-
-        /// <summary>
         ///   Gets the HTML attributes to be rendered into the tag.
         /// </summary>
         /// <value>The HTML attributes.</value>
         public HtmlAttributes HtmlAttributes => HtmlTag.HtmlAttributes;
 
-        /// <summary>
-        ///   Renders the tag to the specified <see cref = "TextWriter" />.
-        /// </summary>
-        /// <param name = "writer">The writer.</param>
-        /// <param name="encoder">An HTML encoder.</param>
-        public void WriteTo(TextWriter writer)
-        {
-            HtmlTag?.WriteTo(writer);
-        }
-        
         /// <summary>
         ///   Renders the tag to the specified <see cref = "TextWriter" />.
         /// </summary>
@@ -320,7 +288,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 for (var i = 0; i < _dependentContent.Count; i++)
                 {
                     var item = _dependentContent[i];
-                    context.Require(item.id, item.content);
+                    context.RequireOnComplete(item.id, item.content);
                 }
 
                 _dependentContent = null;

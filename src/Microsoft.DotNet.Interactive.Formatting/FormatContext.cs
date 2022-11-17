@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public class FormatContext : IDisposable
     {
-        private Dictionary<string, IHtmlContent> _requiredContent;
+        private Dictionary<string, Action<FormatContext>> _requiredContent;
 
         public FormatContext(TextWriter writer)
         {
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public TextWriter Writer { get; }
 
-        internal void Require(string id, IHtmlContent content)
+        internal void RequireOnComplete(string id, IHtmlContent content)
         {
             if (_requiredContent is null)
             {
@@ -36,8 +36,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             if (!_requiredContent.ContainsKey(id))
             {
-                _requiredContent.Add(id, content);
+                _requiredContent.Add(id, WriteContent);
             }
+
+            void WriteContent(FormatContext context) => content.WriteTo(context.Writer, HtmlEncoder.Default);
         }
 
         internal IDisposable IncrementDepth()
@@ -58,9 +60,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             if (_requiredContent is not null)
             {
-                foreach (var content in _requiredContent.Values)
+                foreach (var require in _requiredContent.Values)
                 {
-                    content.WriteTo(Writer, HtmlEncoder.Default);
+                    require(this);
                 }
 
                 _requiredContent = null;

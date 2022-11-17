@@ -505,9 +505,7 @@ Parts: <null>".ReplaceLineEndings());
 
             var writer = new StringWriter();
             formatter.Format(obj, writer);
-
-            Console.WriteLine(writer);
-
+            
             writer.ToString().Should().Match(@"
 Object[]
   - 1
@@ -517,7 +515,6 @@ Object[]
         }
     }
 
-    [Collection("Do not parallelize")]
     public class Sequences : FormatterTestBase
     {
         [Fact]
@@ -759,6 +756,15 @@ TheWidgets: Widget[]
             formatter.Format(value, writer);
 
             writer.ToString().Should().Be(value);
+        }
+
+        [Fact]
+        public void Sequences_in_an_object_property_are_indented()
+        {
+            
+
+            // TODO (Sequences_in_an_object_property_are_indented) write test
+            throw new NotImplementedException();
         }
     }
 }
