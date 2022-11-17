@@ -328,12 +328,18 @@ namespace Microsoft.DotNet.Interactive.Formatting
 details.dni-treeview {
     padding-left: 1em;
 }
-table td { 
-    vertical-align: top; 
-}
 table td {
     text-align: start;
 }
+table tr { 
+    vertical-align: top; 
+    margin: 0em 0px;
+}
+table tr td pre 
+{ 
+    vertical-align: top !important; 
+    margin: 0em 0px !important;
+} 
 table th {
     text-align: start;
 }

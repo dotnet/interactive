@@ -168,9 +168,7 @@ public static class PlainTextFormatter
     {
         new PlainTextFormatter<Exception>((exception, context) =>
         {
-            var s = exception.ToString();
-
-            context.Writer.Write(s.IndentAtNewLines(context));
+            context.Writer.Write(exception.ToString().IndentAtNewLines(context));
 
             return true;
         }),
