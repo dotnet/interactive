@@ -65,13 +65,19 @@ export class ProxyKernel extends Kernel {
                 if (connection.isKernelEventEnvelope(envelope)) {
                     if (envelope.eventType === contracts.KernelInfoProducedType &&
                         (envelope.command === null || envelope.command === undefined)) {
+
                         const kernelInfoProduced = <contracts.KernelInfoProduced>envelope.event;
-                        this.updateKernelInfoFromEvent(kernelInfoProduced);
-                        this.publishEvent(
-                            {
-                                eventType: contracts.KernelInfoProducedType,
-                                event: { kernelInfo: this.kernelInfo }
-                            });
+                        kernelInfoProduced.kernelInfo;//?
+                        this.kernelInfo;//?
+                        if (kernelInfoProduced.kernelInfo.uri === this.kernelInfo.remoteUri) {
+
+                            this.updateKernelInfoFromEvent(kernelInfoProduced);
+                            this.publishEvent(
+                                {
+                                    eventType: contracts.KernelInfoProducedType,
+                                    event: { kernelInfo: this.kernelInfo }
+                                });
+                        }
                     }
                     else if (envelope.command!.token === commandToken) {
 

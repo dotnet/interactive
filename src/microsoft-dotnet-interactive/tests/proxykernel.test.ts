@@ -7,6 +7,7 @@ import { ProxyKernel } from "../src/proxyKernel";
 import { Logger } from "../src/logger";
 import * as rxjs from "rxjs";
 import * as connection from "../src/connection";
+import { Kernel } from "../src/kernel";
 
 function removeCommandTokenAndId(envelope: connection.KernelCommandOrEventEnvelope) {
     if (connection.isKernelEventEnvelope(envelope)) {
@@ -236,7 +237,7 @@ describe("proxyKernel", () => {
         });
 
         let kernel = new ProxyKernel("proxy", connection.KernelCommandAndEventSender.FromObserver(localToRemote), connection.KernelCommandAndEventReceiver.FromObservable(remoteToLocal));
-
+        kernel.kernelInfo.remoteUri = 'kernel://local/remoteKernel';
         kernel.registerCommandHandler({
             commandType: "customCommand1",
             handle: (invocation) => {
@@ -255,6 +256,7 @@ describe("proxyKernel", () => {
             languageName: 'gsharp',
             languageVersion: '1.2.3',
             localName: 'proxy',
+            remoteUri: 'kernel://local/remoteKernel',
             supportedDirectives: [],
             supportedKernelCommands:
                 [{ name: 'RequestKernelInfo' },

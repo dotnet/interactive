@@ -35,7 +35,7 @@ internal class BrowserDisplayEventFormatterSource :
                              @event.FormattedValues.FirstOrDefault(v => v.MimeType == PlainTextFormatter.MimeType) ??
                              @event.FormattedValues.FirstOrDefault();
 
-        IHtmlContent html = formattedValue.MimeType switch
+        IHtmlContent html = formattedValue!.MimeType switch
         {
             HtmlFormatter.MimeType => new HtmlString(formattedValue.Value),
             _ => code(formattedValue.Value)
