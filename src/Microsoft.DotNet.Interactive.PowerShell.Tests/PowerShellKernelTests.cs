@@ -233,38 +233,39 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             var outputs = result.KernelEvents.ToSubscribedList();
 
             var mimeType = "text/html";
-            var formattedHtml = @"<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>prop1</td><td>value1</td></tr><tr><td>prop2</td><td>value2</td></tr><tr><td>prop3</td><td>value3</td></tr></tbody></table>"", but ""<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>prop1</td><td>value1</td></tr><tr><td>prop2</td><td>value2</td></tr><tr><td>prop3</td><td>value3</td></tr></tbody></table><style>
-		.dni-code-hint {
-		    font-style: italic;
-		    overflow: hidden;
-		    white-space: nowrap;
-		}
-		.dni-treeview {
-		    white-space: nowrap;
-		}
-		.dni-treeview td {
-		    vertical-align: top;
-		    text-align: start;
-		}
-		details.dni-treeview {
-		    padding-left: 1em;
-		}
-		table td {
-		    text-align: start;
-		}
-		table tr { 
-		    vertical-align: top; 
-		    margin: 0em 0px;
-		}
-		table tr td pre 
-		{ 
-		    vertical-align: top !important; 
-		    margin: 0em 0px !important;
-		} 
-		table th {
-		    text-align: start;
-		}
-		</style>";
+            var formattedHtml =
+                @"<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>prop1</td><td>value1</td></tr><tr><td>prop2</td><td>value2</td></tr><tr><td>prop3</td><td>value3</td></tr></tbody></table><style>
+.dni-code-hint {
+    font-style: italic;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.dni-treeview {
+    white-space: nowrap;
+}
+.dni-treeview td {
+    vertical-align: top;
+    text-align: start;
+}
+details.dni-treeview {
+    padding-left: 1em;
+}
+table td {
+    text-align: start;
+}
+table tr { 
+    vertical-align: top; 
+    margin: 0em 0px;
+}
+table tr td pre 
+{ 
+    vertical-align: top !important; 
+    margin: 0em 0px !important;
+} 
+table th {
+    text-align: start;
+}
+</style>";
             var fv = new FormattedValue(mimeType, formattedHtml);
 
             outputs.Should().SatisfyRespectively(
