@@ -9,6 +9,7 @@ using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Journey;
+using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Kql;
 using Microsoft.DotNet.Interactive.Mermaid;
 using Microsoft.DotNet.Interactive.PowerShell;
@@ -110,6 +111,13 @@ public class ApiCompatibilityTests
     public void mermaid_api_is_not_changed()
     {
         var contract = ApiContract.GenerateContract<MermaidKernel>();
+        this.Assent(contract, _configuration);
+    }
+
+    [FactSkipLinux("Testing api contract changes, not needed on Linux too")]
+    public void jupyter_api_is_not_changed()
+    {
+        var contract = ApiContract.GenerateContract<ConnectionInformation>();
         this.Assent(contract, _configuration);
     }
 }

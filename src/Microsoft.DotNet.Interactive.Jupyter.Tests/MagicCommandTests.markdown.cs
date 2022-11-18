@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 {
     public partial class MagicCommandTests
     {
-        public class markdown
+        public class Markdown
         {
             [Fact]
             public async Task markdown_renders_markdown_content_as_html()

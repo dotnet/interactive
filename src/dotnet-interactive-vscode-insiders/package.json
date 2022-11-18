@@ -172,7 +172,7 @@
         },
         "dotnet-interactive.minimumDotNetSdkVersion": {
           "type": "string",
-          "default": "6.0",
+          "default": "7.0",
           "description": "The minimum required version of the .NET SDK."
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
@@ -602,6 +602,7 @@
     "compare-versions": "3.6.0",
     "node-fetch": "2.6.7",
     "uuid": "8.3.2",
-    "rxjs": "7.5.6"
+    "rxjs": "7.5.6",
+    "vscode-uri": "3.0.6"
   }
 }

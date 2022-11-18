@@ -188,7 +188,7 @@ public class A
                     "ctor()", "get_P1()");
         }
 
-        [Theory]
+        [Theory(Skip = "Utility will be determined later")]
         [InlineData("Script")]
         [InlineData("Regular")]
         public async Task inspect_with_kind_settings_calls_inspector_and_produces_output(string kind)

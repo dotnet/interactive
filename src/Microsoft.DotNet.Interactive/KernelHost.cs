@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
+using Pocket;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -111,10 +112,16 @@ namespace Microsoft.DotNet.Interactive
                     // this needs to be dispatched this way so that it does not block the current thread, which we see in certain bidirectional command scenarios (RequestInput sent by the SubmissionParser during magic command token interpolation) in stdio mode only (i.e. System.Console.In implementation details), and it has proven non-reproducible in tests.
                     _eventLoop?.Schedule(async () =>
                     {
-                        await _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
+                        try
+                        {
+                            await _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Log.Error(e);
+                        }
                     });
                 }
-                
             });
 
             await _defaultSender.SendAsync(
@@ -122,7 +129,7 @@ namespace Microsoft.DotNet.Interactive
                 _cancellationTokenSource.Token);
 
             var infoProduced = new KernelInfoProduced(_kernel.KernelInfo, KernelCommand.None);
-            infoProduced.TryAddToRoutingSlip(_kernel.KernelInfo.Uri);
+            infoProduced.RoutingSlip.Stamp(_kernel.KernelInfo.Uri);
 
             await _defaultSender.SendAsync(
                 infoProduced,
@@ -131,7 +138,7 @@ namespace Microsoft.DotNet.Interactive
             foreach (var kernel in _kernel.ChildKernels.Where(k => k is not ProxyKernel))
             {
                 infoProduced = new KernelInfoProduced(kernel.KernelInfo, KernelCommand.None);
-                infoProduced.TryAddToRoutingSlip(kernel.KernelInfo.Uri);
+                infoProduced.RoutingSlip.Stamp(kernel.KernelInfo.Uri);
                 await _defaultSender.SendAsync(
                     infoProduced,
                     _cancellationTokenSource.Token);

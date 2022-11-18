@@ -187,7 +187,14 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
             {
                 var uri = new Uri(routingSlipItem.GetString(), UriKind.Absolute);
 
-                command.TryAddToRoutingSlip(uri);
+                if (string.IsNullOrWhiteSpace(uri.Query))
+                {
+                    command.RoutingSlip.Stamp(uri);
+                }else
+                {
+                    var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+                    command.RoutingSlip.StampAs(uri, query["tag"] );
+                }
             }
         }
 
@@ -222,7 +229,7 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
             commandType = envelope.CommandType,
             token = envelope.Token,
             id = envelope.CommandId,
-            routingSlip = envelope.Command.RoutingSlip.Select(uri => uri.AbsoluteUri).ToArray()
+            routingSlip = envelope.Command.RoutingSlip.ToUriArray()
         };
         return serializationModel;
     }

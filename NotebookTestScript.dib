@@ -65,6 +65,32 @@ console.log(`The value is ${x}.`);
 # Execude the next cell. After execution, the output immediately below should be:
 
 ```
+javascript
+```
+
+#!javascript
+
+const jsKernel = kernel.root.findKernelByName('javascript');
+console.log(jsKernel.name);
+
+#!markdown
+
+# Execude the next cell. After execution, the output immediately below should be:
+
+```
+[".NET","csharp","fsharp","html","javascript","kql","mermaid","pwsh","sql","value","vscode","webview"]
+```
+
+#!javascript
+
+kernels = Array.from(kernel.root.findKernels(s => true).map(k => k.name)).sort();
+return kernels;
+
+#!markdown
+
+# Execude the next cell. After execution, the output immediately below should be:
+
+```
 1234
 ```
 
@@ -73,19 +99,6 @@ And the `POLYGLOT NOTEBOOK: VALUES` window should contain a variable with name `
 #!javascript
 
 await kernel.root.send({ commandType: 'SubmitCode', command: { code: 'var asdf = 1234; Console.WriteLine(asdf);', targetKernelName: 'csharp' } });
-
-#!markdown
-
-# Execude the next cell. After execution, the output immediately below should be:
-
-```
-javascript
-```
-
-#!javascript
-
-const jsKernel = kernel.root.findKernelByName('javascript');
-console.log(jsKernel.name);
 
 #!markdown
 

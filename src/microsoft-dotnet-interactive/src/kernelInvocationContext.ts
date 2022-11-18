@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as rxjs from "rxjs";
-import { tryAddUriToRoutingSlip } from "./connection";
+import * as routingslip from "./routingslip";
 import * as contracts from "./contracts";
 import { Disposable } from "./disposables";
 import { getKernelUri, Kernel } from "./kernel";
@@ -43,12 +43,6 @@ export class KernelInvocationContext implements Disposable {
                 const found = current._childCommands.includes(kernelCommandInvocation);
                 if (!found) {
                     current._childCommands.push(kernelCommandInvocation);
-
-                    const oldSlip = kernelCommandInvocation.routingSlip ?? [];
-                    kernelCommandInvocation.routingSlip = [...(current._commandEnvelope.routingSlip ?? [])];
-                    for (const uri of oldSlip) {
-                        tryAddUriToRoutingSlip(kernelCommandInvocation, uri);
-                    }
                 }
             }
         }
@@ -117,8 +111,13 @@ export class KernelInvocationContext implements Disposable {
         let command = kernelEvent.command;
 
         if (this.handlingKernel) {
-            tryAddUriToRoutingSlip(kernelEvent, getKernelUri(this.handlingKernel));
-            kernelEvent.routingSlip;//?
+            const kernelUri = getKernelUri(this.handlingKernel);
+            if (!routingslip.eventRoutingSlipContains(kernelEvent, kernelUri)) {
+                routingslip.stampEventRoutingSlip(kernelEvent, kernelUri);
+                kernelEvent.routingSlip;//?
+            } else {
+                "should not be here";//?
+            }
 
         } else {
             kernelEvent;//?
@@ -149,6 +148,15 @@ export function areCommandsTheSame(envelope1: contracts.KernelCommandEnvelope, e
     envelope1;//?
     envelope2;//?
     envelope1 === envelope2;//?
-    return envelope1 === envelope2
-        || (envelope1?.commandType === envelope2?.commandType && envelope1?.token === envelope2?.token && envelope1?.id === envelope2?.id);
+    if (envelope1 === envelope2) {
+        return true;
+    }
+
+    const sameCommandType = envelope1?.commandType === envelope2?.commandType; //?
+    const sameToken = envelope1?.token === envelope2?.token; //?
+    const sameCommandId = envelope1?.id === envelope2?.id; //?
+    if (sameCommandType && sameToken && sameCommandId) {
+        return true;
+    }
+    return false;
 }

@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 {
     public partial class MagicCommandTests
     {
-        public class time
+        public class Time
         {
             [Fact]
             public async Task time_produces_time_elapsed_to_run_the_code_submission()

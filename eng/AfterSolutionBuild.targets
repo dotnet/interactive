@@ -43,8 +43,8 @@
     <ItemGroup>
       <SymbolPackageWithBadFiles Include="$(ArtifactsShippingPackagesDir)\Microsoft.dotnet-interactive.*.symbols.nupkg" />
 
-      <SymbolPackageFilesToStrip Include="tools/net6.0/any/runtimes/linux-musl-x64/native/libpsl-native.so" />
-      <SymbolPackageFilesToStrip Include="tools/net6.0/any/runtimes/linux-x64/native/libmi.so" />
+      <SymbolPackageFilesToStrip Include="tools/net7.0/any/runtimes/linux-musl-x64/native/libpsl-native.so" />
+      <SymbolPackageFilesToStrip Include="tools/net7.0/any/runtimes/linux-x64/native/libmi.so" />
     </ItemGroup>
     <PropertyGroup>
       <PackageTempPath>$([System.IO.Path]::GetTempPath())/$([System.Guid]::NewGuid())</PackageTempPath>

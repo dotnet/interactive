@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly HashSet<Type> _supportedCommandTypes;
 
         private readonly Subject<KernelEvent> _kernelEvents = new();
-        private readonly CompositeDisposable _disposables;
+        private readonly CompositeDisposable _disposables = new();
         private readonly ConcurrentDictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
         private readonly ImmediateScheduler<KernelCommand, KernelCommandResult> _fastPathScheduler = new();
         private FrontendEnvironment _frontendEnvironment;
@@ -63,7 +63,6 @@ namespace Microsoft.DotNet.Interactive
 
             SubmissionParser = new SubmissionParser(this);
 
-            _disposables = new CompositeDisposable();
             _disposables.Add(Disposable.Create(() => _kernelEvents.OnCompleted()));
 
             Pipeline = new KernelCommandPipeline(this);
@@ -535,7 +534,17 @@ namespace Microsoft.DotNet.Interactive
                                 return false;
                             }
 
-                            return inner.IsChildCommand(outer);
+                            if (inner.Parent == outer)
+                            {
+                                return true;
+                            }
+
+                            if (inner.GetOrCreateToken() == outer.GetOrCreateToken())
+                            {
+                                return true;
+                            }
+                            
+                            return inner.RoutingSlip.StartsWith(outer.RoutingSlip);
                           
                         });
                     RegisterForDisposal(scheduler);
@@ -623,12 +632,10 @@ namespace Microsoft.DotNet.Interactive
             {
                 return this;
             }
-            else
-            {
-                context.Fail(command, new CommandNotSupportedException(command.GetType(), this));
 
-                return null;
-            }
+            context.Fail(command, new CommandNotSupportedException(command.GetType(), this));
+
+            return null;
         }
 
         protected internal void PublishEvent(KernelEvent kernelEvent)
@@ -638,7 +645,16 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentNullException(nameof(kernelEvent));
             }
 
-            kernelEvent.TryAddToRoutingSlip(this.GetKernelUri());
+            var kernelUri = this.GetKernelUri();
+            if (!kernelEvent.RoutingSlip.Contains(kernelUri))
+            {
+                kernelEvent.RoutingSlip.Stamp(kernelUri);
+            }
+            else
+            {
+                //todo: we should not be here
+            }
+           
             _kernelEvents.OnNext(kernelEvent);
         }
 

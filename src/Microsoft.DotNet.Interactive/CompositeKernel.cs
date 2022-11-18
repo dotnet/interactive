@@ -235,11 +235,15 @@ namespace Microsoft.DotNet.Interactive
             RequestKernelInfo command,
             KernelInvocationContext context)
         {
+            context.Publish(new KernelInfoProduced(KernelInfo, command));
+
             foreach (var childKernel in ChildKernels)
             {
                 if (childKernel.SupportsCommand(command))
                 {
-                    await childKernel.HandleAsync(command, context);
+                    var childCommand = new RequestKernelInfo(childKernel.Name);
+                    childCommand.RoutingSlip.ContinueWith(command.RoutingSlip);
+                    await childKernel.HandleAsync(childCommand, context);
                 }
             }
         }

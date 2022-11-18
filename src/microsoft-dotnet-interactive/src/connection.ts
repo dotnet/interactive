@@ -8,6 +8,7 @@ import * as disposables from './disposables';
 import { Disposable } from './disposables';
 import { KernelType } from './kernel';
 import { Logger } from './logger';
+import { URI } from 'vscode-uri';
 
 export type KernelCommandOrEventEnvelope = contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope;
 
@@ -78,10 +79,11 @@ export class KernelCommandAndEventSender implements IKernelCommandAndEventSender
     send(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope): Promise<void> {
         if (this._sender) {
             try {
+                const serislized = JSON.parse(JSON.stringify(kernelCommandOrEventEnvelope));
                 if (typeof this._sender === "function") {
-                    this._sender(kernelCommandOrEventEnvelope);
+                    this._sender(serislized);
                 } else if (isObservable(this._sender)) {
-                    this._sender.next(kernelCommandOrEventEnvelope);
+                    this._sender.next(serislized);
                 } else {
                     return Promise.reject(new Error("Sender is not set"));
                 }
@@ -115,19 +117,6 @@ export function isArrayOfString(collection: any): collection is string[] {
     return Array.isArray(collection) && collection.length > 0 && typeof (collection[0]) === typeof ("");
 }
 
-export function tryAddUriToRoutingSlip(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope, kernelUri: string): boolean {
-    if (kernelCommandOrEventEnvelope.routingSlip === undefined || kernelCommandOrEventEnvelope.routingSlip === null) {
-        kernelCommandOrEventEnvelope.routingSlip = [];
-    }
-
-    var canAdd = !kernelCommandOrEventEnvelope.routingSlip.find(e => e === kernelUri);
-    if (canAdd) {
-        kernelCommandOrEventEnvelope.routingSlip.push(kernelUri);
-        kernelCommandOrEventEnvelope.routingSlip;//?
-    }
-
-    return canAdd;
-}
 
 export function ensureOrUpdateProxyForKernelInfo(kernelInfoProduced: contracts.KernelInfoProduced, compositeKernel: CompositeKernel) {
     const uriToLookup = kernelInfoProduced.kernelInfo.remoteUri ?? kernelInfoProduced.kernelInfo.uri;
@@ -136,13 +125,13 @@ export function ensureOrUpdateProxyForKernelInfo(kernelInfoProduced: contracts.K
         if (!kernel) {
             // add
             if (compositeKernel.host) {
-                Logger.default.info(`creating proxy for uri [${uriToLookup}] with info ${JSON.stringify(kernelInfoProduced)}`);
+                Logger.default.info(`creating proxy for uri[${uriToLookup}]with info ${JSON.stringify(kernelInfoProduced)} `);
                 kernel = compositeKernel.host.connectProxyKernel(kernelInfoProduced.kernelInfo.localName, uriToLookup, kernelInfoProduced.kernelInfo.aliases);
             } else {
                 throw new Error('no kernel host found');
             }
         } else {
-            Logger.default.info(`patching proxy for uri [${uriToLookup}] with info ${JSON.stringify(kernelInfoProduced)}`);
+            Logger.default.info(`patching proxy for uri[${uriToLookup}]with info ${JSON.stringify(kernelInfoProduced)} `);
         }
 
         if (kernel.kernelType === KernelType.proxy) {
@@ -151,6 +140,8 @@ export function ensureOrUpdateProxyForKernelInfo(kernelInfoProduced: contracts.K
         }
     }
 }
+
+
 
 export function isKernelInfoForProxy(kernelInfo: contracts.KernelInfo): boolean {
     const hasUri = !!kernelInfo.uri;

@@ -12,23 +12,17 @@ public abstract class KernelEvent
     protected KernelEvent(KernelCommand command)
     {
         Command = command ?? throw new ArgumentNullException(nameof(command));
-        RoutingSlip = new RoutingSlip();
+        RoutingSlip = new EventRoutingSlip();
     }
-
 
     [JsonIgnore]
     public KernelCommand Command { get; }
 
     [JsonIgnore]
-    public RoutingSlip RoutingSlip { get; }
+    public EventRoutingSlip RoutingSlip { get; }
 
     public override string ToString()
     {
         return $"{GetType().Name}";
-    }
-
-    public bool TryAddToRoutingSlip(Uri uri)
-    {
-        return RoutingSlip.TryAdd(uri);
     }
 }

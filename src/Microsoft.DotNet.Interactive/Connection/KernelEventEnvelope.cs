@@ -190,7 +190,7 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
             {
                 var uri = new Uri(routingSlipItem.GetString(), UriKind.Absolute);
 
-                @event.TryAddToRoutingSlip(uri);
+                @event.RoutingSlip.Stamp(uri);
             }
         }
 
@@ -218,7 +218,7 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
                 commandType = commandEnvelope.CommandType,
                 token = eventEnvelope.Event.Command.GetOrCreateToken(),
                 id = commandEnvelope.CommandId,
-                routingSlip = commandEnvelope.Command.RoutingSlip.Select(uri => uri.AbsoluteUri).ToArray()
+                routingSlip = commandEnvelope.Command.RoutingSlip.ToUriArray()
             };
         }
 
@@ -226,7 +226,7 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
         {
             @event = eventEnvelope.Event,
             eventType = eventEnvelope.EventType,
-            routingSlip = eventEnvelope.Event.RoutingSlip.Select(uri => uri.AbsoluteUri).ToArray(),
+            routingSlip = eventEnvelope.Event.RoutingSlip.ToUriArray(),
             command = commandSerializationModel
         };
 

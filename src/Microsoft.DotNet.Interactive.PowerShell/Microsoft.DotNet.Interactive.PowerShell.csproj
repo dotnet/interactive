@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <NoWarn>$(NoWarn);2003;CS8002;NU1608;</NoWarn> <!-- AssemblyInformationalVersionAttribute contains a non-standard value -->
     <NoWarn>$(NoWarn);NU5100</NoWarn><!-- dll outside of lib/ folder; expected since it's under contentFiles/any/any/Modules/ -->

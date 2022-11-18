@@ -4,18 +4,21 @@
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.Playwright;
+
 using Pocket;
 using Pocket.For.Xunit;
+
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Png;
 
-using Xunit;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Browser.Tests;

@@ -7,15 +7,39 @@ import * as frontEndHost from './webview/frontEndHost';
 import * as rxjs from "rxjs";
 import * as connection from "./connection";
 import { Kernel } from "./kernel";
+import { LogEntry, LogLevel } from "./logger";
 
 export type SetupConfiguration = {
     global?: any,
     hostName: string,
     htmlKernelConfiguration?: HtmlKernelInBrowserConfiguration,
+    enableLogger?: boolean,
 };
 
 export function setup(configuration?: SetupConfiguration) {
 
+    let logWriter = (_entry: LogEntry) => { };
+
+    if (configuration?.enableLogger) {
+        const log = console.log;
+        const error = console.error;
+        const warn = console.warn;
+        logWriter = (entry: LogEntry) => {
+            const messageLogLevel = LogLevel[entry.logLevel];
+            const message = `[${messageLogLevel}] ${entry.source}: ${entry.message}`;
+            switch (entry.logLevel) {
+                case LogLevel.Error:
+                    error(message);
+                    break;
+                case LogLevel.Warn:
+                    warn(message);
+                    break;
+                default:
+                    log(message);
+                    break;
+            }
+        };
+    }
     const remoteToLocal = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
     const localToRemote = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
 
@@ -38,9 +62,7 @@ export function setup(configuration?: SetupConfiguration) {
         global,
         compositeKernelName,
         configureRequire,
-        _entry => {
-
-        },
+        logWriter,
         localToRemote,
         remoteToLocal,
         () => {
