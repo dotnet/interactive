@@ -347,6 +347,7 @@ Microsoft.DotNet.Interactive
     public System.Collections.Generic.IReadOnlyList<System.String> ProbingPaths { get;}
     public System.String ToString()
   public abstract class RoutingSlip
+    public System.Int32 Count { get;}
     public System.Boolean Contains(System.Uri uri, System.Boolean ignoreQuery = False)
      System.Boolean Contains(Entry entry)
     public System.Void ContinueWith(RoutingSlip other)
