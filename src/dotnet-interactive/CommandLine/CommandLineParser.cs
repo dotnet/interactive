@@ -317,7 +317,7 @@ public static class CommandLineParser
                         frontendEnvironment, 
                         startupOptions,
                         telemetrySender);
-                    
+
                     services.AddKernel(kernel);
 
                     kernel.UseQuitCommand();

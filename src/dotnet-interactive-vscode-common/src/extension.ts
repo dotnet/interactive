@@ -34,6 +34,7 @@ import { ChildProcessLineAdapter } from './childProcessLineAdapter';
 import { NotebookParserServer } from './notebookParserServer';
 import { registerVariableExplorer } from './variableExplorer';
 import { KernelCommandAndEventChannel } from './DotnetInteractiveChannel';
+import { ActiveNotebookTracker } from './activeNotebookTracker';
 
 export const KernelIdForJupyter = 'polyglot-notebook-for-jupyter';
 
@@ -226,14 +227,9 @@ export async function activate(context: vscode.ExtensionContext) {
     const serializerMap = registerWithVsCode(context, clientMapper, parserServer, clientMapperConfig.createErrorOutput, ...preloads);
     registerFileCommands(context, parserServer, clientMapper);
 
-    context.subscriptions.push(vscode.workspace.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
     context.subscriptions.push(vscode.workspace.onDidRenameFiles(e => handleFileRenames(e, clientMapper)));
-
-    // clean up processes
     context.subscriptions.push(serializerLineAdapter);
-    clientMapper.onClientCreate((_uri, client) => {
-        context.subscriptions.push(client);
-    });
+    context.subscriptions.push(new ActiveNotebookTracker(context, clientMapper));
 
     // language registration
     context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(async e => await updateNotebookCellLanguageInMetadata(e)));

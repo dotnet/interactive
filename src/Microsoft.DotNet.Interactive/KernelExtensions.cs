@@ -574,5 +574,16 @@ namespace Microsoft.DotNet.Interactive
                 }
             }
         }
+
+        internal static bool TryRegisterForDisposal<T>(this Kernel kernel, T candidateDisposable)
+        {
+            if (candidateDisposable is IDisposable disposable)
+            {
+                kernel.RegisterForDisposal(disposable);
+                return true;
+            }
+
+            return false;
+        }
     }
 }
