@@ -1,4 +1,6 @@
-Install supported dotnet SDK
-============================
+# .NET 7 SDK **REQUIRED**
 
-The Polyglot Notebok extension requires the dotnet SDK version 7.0 or later, and it can be installed from [here](https://dotnet.microsoft.com/en-us/download).  Once installed please restart VS Code.
+## The Polyglot Notebooks extension now requires .NET SDK Version 7.0 or higher.
+
+## 1. Install [here](https://dotnet.microsoft.com/en-us/download)
+## 2. Restart VS Code
