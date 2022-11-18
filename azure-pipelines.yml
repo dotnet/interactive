@@ -455,6 +455,8 @@ stages:
   - template: eng/common/templates/post-build/post-build.yml
     parameters:
       publishingInfraVersion: 3
+      # signing validation currently has issues with dotnet 7; disabling as per internal guidance
+      enableSigningValidation: false
       # Symbol validation is not entirely reliable as of yet, so should be turned off until https://github.com/dotnet/arcade/issues/2871 is resolved.
       enableSymbolValidation: false
       # SourceLink improperly looks for generated files.  See https://github.com/dotnet/arcade/issues/3069
