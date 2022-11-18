@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as contracts from './dotnet-interactive/contracts';
+import * as helpService from './helpService';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -88,17 +89,23 @@ export async function activate(context: vscode.ExtensionContext) {
     registerAcquisitionCommands(context, diagnosticsChannel);
 
     // check sdk version
+    let showHelpPage = false;
     try {
         const dotnetVersion = await getDotNetVersionOrThrow(DotNetPathManager.getDotNetPath(), diagnosticsChannel);
         if (!isVersionSufficient(dotnetVersion, minDotNetSdkVersion)) {
+            showHelpPage = true;
             const message = `The .NET SDK version ${dotnetVersion} is not sufficient. The minimum required version is ${minDotNetSdkVersion}.`;
             diagnosticsChannel.appendLine(message);
             vscode.window.showErrorMessage(message);
-            throw new Error(message);
         }
     } catch (e) {
+        showHelpPage = true;
         vscode.window.showErrorMessage(`Please install the .NET SDK version ${minDotNetSdkVersion} from https://dotnet.microsoft.com/en-us/download`);
-        throw e;
+    }
+
+    if (showHelpPage) {
+        const helpServiceInstance = new helpService.HelpService(context);
+        await helpServiceInstance.showHelpPageAndThrow(helpService.DotNetVersion);
     }
 
     async function kernelChannelCreator(notebookUri: vscodeLike.Uri): Promise<KernelCommandAndEventChannel> {
