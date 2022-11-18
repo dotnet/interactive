@@ -21,7 +21,7 @@ As a powerful and versatile engine, .NET Interactive can be used to create and p
 
 - Polyglot Notebooks
 - REPLs
-- Embeddable script enginges
+- Embeddable script engines
 
 ## Polyglot Notebooks
 
