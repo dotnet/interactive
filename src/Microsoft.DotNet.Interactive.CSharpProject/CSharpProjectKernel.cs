@@ -55,7 +55,7 @@ public class CSharpProjectKernel :
         }
     }
 
-    public CSharpProjectKernel(string name = "csharp") : base(name, "C#")
+    public CSharpProjectKernel(string name = "csharp") : base(name, "C#", languageVersion:"11.0")
     {
     }
 
@@ -297,7 +297,7 @@ public class CSharpProjectKernel :
     {
         var packageBuilder = new PackageBuilder("console");
         packageBuilder.CreateUsingDotnet("console");
-        packageBuilder.TrySetLanguageVersion("8.0");
+        packageBuilder.TrySetLanguageVersion("11.0");
         packageBuilder.AddPackageReference("Newtonsoft.Json", "13.0.1");
         var package = packageBuilder.GetPackage() as Package;
         await package!.CreateWorkspaceForRunAsync();

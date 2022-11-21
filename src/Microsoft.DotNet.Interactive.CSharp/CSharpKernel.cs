@@ -59,7 +59,7 @@ public class CSharpKernel :
     {
 
     }
-    public CSharpKernel(string name) : base(name, "C#", "10.0")
+    public CSharpKernel(string name) : base(name, "C#", "11.0")
     {
         _workspace = new InteractiveWorkspace();
 
@@ -67,7 +67,7 @@ public class CSharpKernel :
         //...so we wait for RunAsync to read Directory.GetCurrentDirectory() the first time.
 
         _scriptOptions = ScriptOptions.Default
-            .WithLanguageVersion(LanguageVersion.Latest)
+            .WithLanguageVersion(LanguageVersion.CSharp11)
             .AddImports(
                 "System",
                 "System.Text",
