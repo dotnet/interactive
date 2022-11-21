@@ -13,15 +13,13 @@ namespace Microsoft.DotNet.Interactive.Commands;
 [DebuggerStepThrough]
 public abstract class KernelCommand
 {
-    private KernelCommand _parent;
-
     protected KernelCommand(
         string targetKernelName = null, 
         KernelCommand parent = null)
     {
         Properties = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
         TargetKernelName = targetKernelName;
-        RoutingSlip = new RoutingSlip();
+        RoutingSlip = new CommandRoutingSlip();
         if (parent is {})
         {
             Parent = parent;
@@ -32,25 +30,7 @@ public abstract class KernelCommand
     public KernelCommandInvocation Handler { get; set; }
 
     [JsonIgnore]
-    public KernelCommand Parent
-    {
-        get => _parent;
-        internal set
-        {
-            if (value is null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-            
-            _parent = value;
-            var currentSlip = RoutingSlip;
-            RoutingSlip = new RoutingSlip(_parent?.RoutingSlip);
-            foreach (var uri in currentSlip)
-            {
-                RoutingSlip.TryAdd(uri);
-            }
-        }
-    }
+    public KernelCommand Parent { get; internal set; }
 
     [JsonIgnore]
     public IDictionary<string, object> Properties { get; }
@@ -73,7 +53,7 @@ public abstract class KernelCommand
     public ParseResult KernelChooserParseResult { get; internal set; }
 
     [JsonIgnore]
-    public RoutingSlip RoutingSlip { get; private set; }
+    public CommandRoutingSlip RoutingSlip { get; }
 
     public virtual Task InvokeAsync(KernelInvocationContext context)
     {
@@ -84,6 +64,4 @@ public abstract class KernelCommand
 
         return Handler(this, context);
     }
-
-    public bool TryAddToRoutingSlip(Uri uri) => Parent?.RoutingSlip.Contains(uri) != true && RoutingSlip.TryAdd(uri);
 }

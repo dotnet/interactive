@@ -88,6 +88,20 @@ public class JupyterFormatTests : DocumentFormatTestsBase
     [InlineData("PowerShell", "powershell")]
     public void Metadata_default_kernel_name_is_based_on_specified_language(string languageName, string kernelName)
     {
+        var document = new InteractiveDocument().WithJupyterMetadata(languageName);
+
+        document.GetDefaultKernelName()
+                .Should()
+                .Be(kernelName);
+    }
+
+    [Theory]
+    [InlineData("C#", "csharp")]
+    [InlineData("F#", "fsharp")]
+    [InlineData("f#", "fsharp")]
+    [InlineData("PowerShell", "powershell")]
+    public void Metadata_default_kernel_name_is_based_on_specified_language_when_serialized_and_deserialized(string languageName, string kernelName)
+    {
         var originalDoc = new InteractiveDocument().WithJupyterMetadata(languageName);
 
         var parsedDoc = Notebook.Parse(originalDoc.ToJupyterJson());

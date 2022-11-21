@@ -228,19 +228,25 @@ public class InteractiveDocument : IEnumerable
 
             if (metadata.TryGetValue("dotnet_interactive", out var dotnetInteractiveObj))
             {
-                if (dotnetInteractiveObj is IDictionary<string, object> dotnetInteractiveDict)
+                switch (dotnetInteractiveObj)
                 {
-                    kernelInfo = new();
+                    case KernelInfoCollection kernelInfoCollection:
 
-                    if (dotnetInteractiveDict.TryGetValue("defaultKernelName", out var nameObj) &&
-                        nameObj is string name)
+                        kernelInfo = kernelInfoCollection;
+                        return true;
+
+                    case IDictionary<string, object> dotnetInteractiveDict:
                     {
-                        kernelInfo.DefaultKernelName = name;
+                        kernelInfo = new();
+
+                        if (dotnetInteractiveDict.TryGetValue("defaultKernelName", out var nameObj) &&
+                            nameObj is string name)
+                        {
+                            kernelInfo.DefaultKernelName = name;
+                        }
+
+                        return true;
                     }
-
-                    return true;
-
-                    // FIX: (TryGetKernelInfoFromMetadata) add items
                 }
             }
 

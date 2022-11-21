@@ -64,7 +64,7 @@ public sealed partial class FormatterTests
 
             formattedAfter.Should().Be(formattedBefore);
         }
-
+        
         [TypeFormatterSource(typeof(CustomFormatterSource))]
         private class TypeWithCustomFormatter
         {

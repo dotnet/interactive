@@ -1,5 +1,7 @@
 {
-  "event": {},
+  "event": {
+    "executionOrder": 123
+  },
   "eventType": "CommandSucceeded",
   "command": {
     "token": "the-token",
@@ -13,6 +15,7 @@
       "destinationUri": null
     },
     "routingSlip": [
+      "kernel://somelocation/kernelName?tag=arrived",
       "kernel://somelocation/kernelName"
     ]
   },

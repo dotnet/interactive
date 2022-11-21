@@ -49,7 +49,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
             object text, 
             FormatContext context)
         {
-            PocketView tag = div(text.ToDisplayString(PlainTextFormatter.MimeType));
+            context.RequireDefaultStyles();
+
+            PocketView tag = div(pre(text.ToDisplayString(PlainTextFormatter.MimeType)));
             tag.HtmlAttributes["class"] = "dni-plaintext";
             tag.WriteTo(context);
         }
@@ -126,7 +128,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 // If PlainTextPreformat is true, then strings
                 // will have line breaks and white-space preserved
-                HtmlFormatter.FormatAndStyleAsPlainText(s, context);
+                FormatAndStyleAsPlainText(s, context);
                 return true;
             }),
 
@@ -148,7 +150,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                      type.Namespace.StartsWith("System.") ||
                      type.Namespace.StartsWith("Microsoft."));
 
-                if (type.IsAnonymous() || !isKnownDocType)
+                if (!isKnownDocType || type.IsAnonymous())
                 {
                     context.Writer.Write(text.HtmlEncode());
                 }
@@ -172,7 +174,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             // Transform ReadOnlyMemory to an array for formatting
             new AnonymousTypeFormatter<object>(type: typeof(ReadOnlyMemory<>),
-                                               mimeType: HtmlFormatter.MimeType,
+                                               mimeType: MimeType,
                                                format: (value, context) =>
                                                {
                                                    var actualType = value.GetType();
@@ -181,7 +183,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                                                    var array = toArray.Invoke(null, new[] { value });
 
-                                                   array.FormatTo(context, HtmlFormatter.MimeType);
+                                                   array.FormatTo(context, MimeType);
 
                                                    return true;
                                                }),
@@ -197,14 +199,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
             new HtmlFormatter<IEnumerable>((value, context) =>
             {
                 var type = value.GetType();
-                var formatter = HtmlFormatter.GetDefaultFormatterForAnyEnumerable(type);
+                var formatter = GetDefaultFormatterForAnyEnumerable(type);
                 return formatter.Format(value, context);
             }),
 
             // BigInteger should be displayed as plain text
             new HtmlFormatter<BigInteger>((value, context) =>
             {
-                HtmlFormatter.FormatAndStyleAsPlainText(value, context);
+                FormatAndStyleAsPlainText(value, context);
                 return true;
             }),
 
@@ -212,7 +214,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             new HtmlFormatter<object>((value, context) =>
             {
                 var type = value.GetType();
-                var formatter = HtmlFormatter.GetDefaultFormatterForAnyObject(type);
+                var formatter = GetDefaultFormatterForAnyObject(type);
                 return formatter.Format(value, context);
             }),
 
@@ -221,11 +223,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 if (value is null)
                 {
-                    HtmlFormatter.FormatAndStyleAsPlainText(Formatter.NullString, context);
+                    FormatAndStyleAsPlainText(Formatter.NullString, context);
                 }
                 else
                 {
-                    HtmlFormatter.FormatAndStyleAsPlainText(value, context);
+                    FormatAndStyleAsPlainText(value, context);
                 }
 
                 return true;
@@ -233,7 +235,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             new HtmlFormatter<JsonDocument>((doc, context) =>
             {
-                doc.RootElement.FormatTo(context, HtmlFormatter.MimeType);
+                doc.RootElement.FormatTo(context, MimeType);
                 return true;
             }),
 
@@ -302,32 +304,52 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         return false;
                 }
 
-                var styleElementId = "dni-styles-JsonElement";
-                PocketView css = style[id: styleElementId](new HtmlString(@"    
-.dni-code-hint {
-    font-style: italic;
-    overflow: hidden;
-    white-space: nowrap;
-}
-
-.dni-treeview {
-    white-space: nowrap;
-}
-
-.dni-treeview td {
-    vertical-align: top;
-    text-align: start;
-}
-
-details.dni-treeview {
-    padding-left: 1em;
-}"));
-                context.Require(styleElementId, css);
+                context.RequireDefaultStyles();
 
                 view.WriteTo(context);
 
                 return true;
             })
         };
+
+        private static readonly Lazy<IHtmlContent> _defaultStyles = new(() => style(new HtmlString(@"
+.dni-code-hint {
+    font-style: italic;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.dni-treeview {
+    white-space: nowrap;
+}
+.dni-treeview td {
+    vertical-align: top;
+    text-align: start;
+}
+details.dni-treeview {
+    padding-left: 1em;
+}
+table td {
+    text-align: start;
+}
+table tr { 
+    vertical-align: top; 
+    margin: 0em 0px;
+}
+table tr td pre 
+{ 
+    vertical-align: top !important; 
+    margin: 0em 0px !important;
+} 
+table th {
+    text-align: start;
+}
+")));
+
+        internal static IHtmlContent DefaultStyles() => _defaultStyles.Value;
+
+        public static void RequireDefaultStyles(this FormatContext context)
+        {
+            context.RequireOnComplete("dni-styles", DefaultStyles());
+        }
     }
 }

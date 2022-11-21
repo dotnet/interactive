@@ -20,7 +20,12 @@ Microsoft.DotNet.Interactive
     .ctor(System.Exception innerException)
   public class CommandNotSupportedException : System.Exception, System.Runtime.Serialization.ISerializable
     .ctor(System.Type commandType, Kernel kernel)
-  public class CompositeKernel : Kernel, Microsoft.DotNet.Interactive.Extensions.IExtensibleKernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, System.Collections.Generic.IEnumerable<Kernel>, System.Collections.IEnumerable, System.IDisposable
+  public class CommandRoutingSlip : RoutingSlip
+    .ctor()
+    public System.Void Stamp(System.Uri uri)
+    public System.Void StampAs(System.Uri uri, System.String tag)
+    public System.Void StampAsArrived(System.Uri uri)
+  public class CompositeKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, System.Collections.Generic.IEnumerable<Kernel>, System.Collections.IEnumerable, System.IDisposable
     .ctor(System.String name = null)
     public KernelCollection ChildKernels { get;}
     public System.String DefaultKernelName { get; set;}
@@ -64,6 +69,9 @@ Microsoft.DotNet.Interactive
     .ctor(System.String displayId, System.String[] mimeTypes, KernelInvocationContext context)
     public System.Collections.Generic.IReadOnlyCollection<System.String> MimeTypes { get;}
     public System.Void Update(System.Object updatedValue)
+  public class EventRoutingSlip : RoutingSlip
+    .ctor()
+    public System.Void Stamp(System.Uri uri)
   public class FormattedValue
     public static System.Collections.Generic.IReadOnlyCollection<FormattedValue> FromObject(System.Object value, System.String[] mimeTypes)
     .ctor(System.String mimeType, System.String value)
@@ -77,8 +85,6 @@ Microsoft.DotNet.Interactive
     public System.Threading.Tasks.Task HandleAsync(TCommand command, KernelInvocationContext context)
   public abstract class IKernelExtension
     public System.Threading.Tasks.Task OnLoadAsync(Kernel kernel)
-  public abstract class IKernelExtensionLoader
-    public System.Threading.Tasks.Task LoadFromDirectoryAsync(System.IO.DirectoryInfo directory, Kernel kernel, KernelInvocationContext context)
   public abstract class IKernelScheduler<T,TResult>
     public Task<TResult> RunAsync(T value, KernelSchedulerDelegate<T,TResult> onExecuteAsync, System.String scope = default, System.Threading.CancellationToken cancellationToken = null)
   public class InstallPackagesMessage
@@ -117,6 +123,7 @@ Microsoft.DotNet.Interactive
     public System.String Name { get;}
     public CompositeKernel ParentKernel { get;}
     public Kernel RootKernel { get;}
+    public System.Int32 SubmissionCount { get;}
     public Microsoft.DotNet.Interactive.Parsing.SubmissionParser SubmissionParser { get;}
     public System.Void AddDirective(System.CommandLine.Command command)
     public System.Void AddMiddleware(KernelCommandPipelineMiddleware middleware, System.String caller = null)
@@ -150,7 +157,6 @@ Microsoft.DotNet.Interactive
     public System.Boolean TryGetByUri(System.Uri uri, ref Kernel& kernel)
   public static class KernelCommandExtensions
     public static System.String GetOrCreateToken()
-    public static System.Boolean IsChildCommand(Microsoft.DotNet.Interactive.Commands.KernelCommand candidateParentCommand)
     public static System.Void PublishInternalEvents()
     public static System.Void SetToken(System.String token)
   public class KernelCommandInfo, System.IEquatable<KernelCommandInfo>
@@ -205,7 +211,7 @@ Microsoft.DotNet.Interactive
     public static System.Collections.Generic.IEnumerable<Kernel> Subkernels(System.Boolean recursive = False)
     public static System.Collections.Generic.IEnumerable<Kernel> SubkernelsAndSelf(System.Boolean recursive = False)
     public static System.Threading.Tasks.Task<KernelCommandResult> SubmitCodeAsync(System.String code)
-    public static T UseImportMagicCommand<T>()
+    public static TKernel UseImportMagicCommand<TKernel>()
     public static T UseLogMagicCommand<T>()
     public static T UseQuitCommand<T>(System.Func<System.Threading.Tasks.Task> onQuitAsync = null)
     public static T UseValueSharing<T>()
@@ -340,13 +346,16 @@ Microsoft.DotNet.Interactive
     public System.String PackageRoot { get;}
     public System.Collections.Generic.IReadOnlyList<System.String> ProbingPaths { get;}
     public System.String ToString()
-  public class RoutingSlip, System.Collections.Generic.IEnumerable<System.Uri>, System.Collections.Generic.IReadOnlyCollection<System.Uri>, System.Collections.Generic.IReadOnlyList<System.Uri>, System.Collections.IEnumerable
-    .ctor(RoutingSlip source = null)
+  public abstract class RoutingSlip
     public System.Int32 Count { get;}
-    public System.Uri Item { get;}
-    public System.Boolean Contains(System.Uri kernelOrKernelHostUri)
-    public System.Boolean Contains(RoutingSlip other)
-    public System.Boolean TryAdd(System.Uri kernelOrKernelHostUri)
+    public System.Boolean Contains(System.Uri uri, System.Boolean ignoreQuery = False)
+     System.Boolean Contains(Entry entry)
+    public System.Void ContinueWith(RoutingSlip other)
+     System.Collections.Generic.ICollection<Entry> get_Entries()
+    public System.Void Stamp(System.Uri uri)
+    public System.Boolean StartsWith(RoutingSlip other)
+     System.Boolean StartsWith(System.Collections.Generic.List<Entry> entries)
+    public System.String[] ToUriArray()
   public class ScriptContent, Microsoft.AspNetCore.Html.IHtmlContent
     .ctor(System.String scriptValue)
     public System.String ScriptValue { get;}
@@ -362,9 +371,6 @@ Microsoft.DotNet.Interactive
     .ctor(Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource data)
     protected Microsoft.AspNetCore.Html.IHtmlContent ToHtml()
 Microsoft.DotNet.Interactive.Commands
-  public class AddPackage : KernelCommand
-    .ctor(Microsoft.DotNet.Interactive.PackageReference packageReference)
-    public Microsoft.DotNet.Interactive.PackageReference PackageReference { get;}
   public class Cancel : KernelCommand
     .ctor(System.String targetKernelName = null)
     public System.Threading.Tasks.Task InvokeAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context)
@@ -387,10 +393,9 @@ Microsoft.DotNet.Interactive.Commands
     public System.Uri OriginUri { get; set;}
     public KernelCommand Parent { get;}
     public System.Collections.Generic.IDictionary<System.String,System.Object> Properties { get;}
-    public Microsoft.DotNet.Interactive.RoutingSlip RoutingSlip { get;}
+    public Microsoft.DotNet.Interactive.CommandRoutingSlip RoutingSlip { get;}
     public System.String TargetKernelName { get;}
     public System.Threading.Tasks.Task InvokeAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context)
-    public System.Boolean TryAddToRoutingSlip(System.Uri uri)
   public abstract class LanguageServiceCommand : KernelCommand
     public System.String Code { get;}
     public Microsoft.DotNet.Interactive.LinePosition LinePosition { get;}
@@ -562,14 +567,14 @@ Microsoft.DotNet.Interactive.Events
     .ctor(Microsoft.DotNet.Interactive.Commands.Cancel cancel)
     .ctor(Microsoft.DotNet.Interactive.Commands.Cancel cancel, Microsoft.DotNet.Interactive.Commands.KernelCommand cancelledCommand)
     public Microsoft.DotNet.Interactive.Commands.KernelCommand CancelledCommand { get;}
-  public class CommandFailed : KernelEvent
-    .ctor(System.Exception exception, Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.String message = null)
-    .ctor(System.String message, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
+  public class CommandFailed : KernelCommandCompletionEvent
+    .ctor(System.Exception exception, Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.String message = null, System.Nullable<System.Int32> executionOrder = null)
+    .ctor(System.String message, Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Nullable<System.Int32> executionOrder = null)
     public System.Exception Exception { get;}
     public System.String Message { get; set;}
     public System.String ToString()
-  public class CommandSucceeded : KernelEvent
-    .ctor(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
+  public class CommandSucceeded : KernelCommandCompletionEvent
+    .ctor(Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Int32 executionOrder = 0)
     public System.String ToString()
   public class CompleteCodeSubmissionReceived : KernelEvent
     .ctor(Microsoft.DotNet.Interactive.Commands.SubmitCode submitCode)
@@ -623,11 +628,12 @@ Microsoft.DotNet.Interactive.Events
   public enum InsertTextFormat : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
     PlainText=1
     Snippet=2
+  public abstract class KernelCommandCompletionEvent : KernelEvent
+    public System.Nullable<System.Int32> ExecutionOrder { get;}
   public abstract class KernelEvent
     public Microsoft.DotNet.Interactive.Commands.KernelCommand Command { get;}
-    public Microsoft.DotNet.Interactive.RoutingSlip RoutingSlip { get;}
+    public Microsoft.DotNet.Interactive.EventRoutingSlip RoutingSlip { get;}
     public System.String ToString()
-    public System.Boolean TryAddToRoutingSlip(System.Uri uri)
   public class KernelExtensionLoaded : KernelEvent
     .ctor(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     .ctor(Microsoft.DotNet.Interactive.IKernelExtension kernelExtension, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
@@ -664,16 +670,6 @@ Microsoft.DotNet.Interactive.Events
   public class WorkingDirectoryChanged : KernelEvent
     .ctor(System.String workingDirectory, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public System.String WorkingDirectory { get;}
-Microsoft.DotNet.Interactive.Extensions
-  public class AssemblyBasedExtensionLoader, Microsoft.DotNet.Interactive.IKernelExtensionLoader
-    .ctor()
-    public System.Threading.Tasks.Task LoadFromAssembliesInDirectory(System.IO.DirectoryInfo directory, Microsoft.DotNet.Interactive.Kernel kernel, Microsoft.DotNet.Interactive.KernelInvocationContext context)
-    public System.Threading.Tasks.Task LoadFromDirectoryAsync(System.IO.DirectoryInfo directory, Microsoft.DotNet.Interactive.Kernel kernel, Microsoft.DotNet.Interactive.KernelInvocationContext context)
-  public abstract class IExtensibleKernel
-    public System.Threading.Tasks.Task LoadExtensionsFromDirectoryAsync(System.IO.DirectoryInfo directory, Microsoft.DotNet.Interactive.KernelInvocationContext invocationContext)
-  public class ScriptBasedExtensionLoader, Microsoft.DotNet.Interactive.IKernelExtensionLoader
-    .ctor()
-    public System.Threading.Tasks.Task LoadFromDirectoryAsync(System.IO.DirectoryInfo directory, Microsoft.DotNet.Interactive.Kernel kernel, Microsoft.DotNet.Interactive.KernelInvocationContext context)
 Microsoft.DotNet.Interactive.Http
   public static class JavascriptUtilities
     public static System.String GetCodeForEnsureRequireJs(System.Uri requireJsUri = null, System.String onRequirejsLoadedCallBackName = null)

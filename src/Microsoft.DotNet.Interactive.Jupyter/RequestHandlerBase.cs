@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
+using Pocket;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
 {
@@ -35,7 +36,17 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             using var sub = Kernel
                       .KernelEvents
                       .Where(ShouldForward)
-                      .Subscribe(e => OnKernelEventReceived(e, context));
+                      .Subscribe(e =>
+                      {
+                          try
+                          {
+                              OnKernelEventReceived(e, context);
+                          }
+                          catch (Exception ex)
+                          {
+                              Logger.Log.Error(ex);
+                          }
+                      });
 
             await Kernel.SendAsync(
                 command,

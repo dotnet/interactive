@@ -27,12 +27,6 @@ namespace Microsoft.DotNet.Interactive
 {
     public static class KernelExtensions
     {
-        internal static Uri GetKernelUri(this Kernel kernel)
-        {
-            var uri = kernel.KernelInfo.Uri ?? new Uri($"kernel://local/{kernel.KernelInfo.LocalName}", UriKind.Absolute);
-            return uri;
-        }
-        
         public static T UseQuitCommand<T>(this T kernel, Func<Task> onQuitAsync = null) where T : Kernel
         {
             kernel.RegisterCommandHandler<Quit>(async (_, _) =>
@@ -93,8 +87,8 @@ namespace Microsoft.DotNet.Interactive
             return kernel.SendAsync(new SubmitCode(code), CancellationToken.None);
         }
 
-        public static T UseImportMagicCommand<T>(this T kernel)
-            where T : Kernel
+        public static TKernel UseImportMagicCommand<TKernel>(this TKernel kernel)
+            where TKernel : Kernel
         {
             var command = new Command("#!import", "Imports and runs another notebook.");
             command.AddArgument(new Argument<FileInfo>("notebookFile").ExistingOnly());
@@ -335,8 +329,8 @@ namespace Microsoft.DotNet.Interactive
         public static TKernel UseWho<TKernel>(this TKernel kernel)
             where TKernel : Kernel
         {
-            if (kernel.KernelInfo.SupportsCommand(nameof(RequestValueInfos))
-                    && kernel.KernelInfo.SupportsCommand(nameof(RequestValue)))
+            if (kernel.KernelInfo.SupportsCommand(nameof(RequestValueInfos)) && 
+                kernel.KernelInfo.SupportsCommand(nameof(RequestValue)))
             {
                 kernel.AddDirective(who());
                 kernel.AddDirective(whos());
@@ -579,6 +573,17 @@ namespace Microsoft.DotNet.Interactive
                     }
                 }
             }
+        }
+
+        internal static bool TryRegisterForDisposal<T>(this Kernel kernel, T candidateDisposable)
+        {
+            if (candidateDisposable is IDisposable disposable)
+            {
+                kernel.RegisterForDisposal(disposable);
+                return true;
+            }
+
+            return false;
         }
     }
 }

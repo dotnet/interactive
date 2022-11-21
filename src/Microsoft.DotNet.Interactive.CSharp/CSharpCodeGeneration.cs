@@ -10,9 +10,12 @@ namespace Microsoft.DotNet.Interactive.CSharp
     {
         public static void WriteCSharpDeclarationTo(
             this Type type,
-            TextWriter writer)
+            TextWriter writer,
+            bool excludeNamespace = false)
         {
-            var typeName = type.FullName ?? type.Name;
+            var typeName = excludeNamespace
+                               ? type.Name
+                               : type.FullName ?? type.Name;
 
             if (typeName.Contains("`"))
             {
@@ -22,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
                 for (var i = 0; i < genericArguments.Length; i++)
                 {
-                    genericArguments[i].WriteCSharpDeclarationTo(writer);
+                    genericArguments[i].WriteCSharpDeclarationTo(writer, excludeNamespace);
                     if (i < genericArguments.Length - 1)
                     {
                         writer.Write(",");
@@ -30,6 +33,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 }
 
                 writer.Write(">");
+
+                if (type.IsArray)
+                {
+                    writer.Write("[]");
+                }
             }
             else
             {

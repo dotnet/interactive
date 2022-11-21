@@ -61,6 +61,11 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
     {
         private string _id;
 
+        public Node(string id = null)
+        {
+            _id = id;
+        }
+
         public string Id
         {
             get => _id;
@@ -68,8 +73,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         }
 
         public IEnumerable<Node> Nodes { get; set; }
-
-        public Node[] NodesArray { get; set; }
 
         internal string InternalId => Id;
     }
@@ -93,7 +96,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
 namespace Dummy
 {
-    public class DummyNotInSystemNamespace
+    public class ClassNotInSystemNamespace
     {
     }
 
@@ -101,8 +104,46 @@ namespace Dummy
     {
     }
 
-    public class DummyClassWithManyProperties
+    public class ClassWithNoPropertiesAndCustomToString
     {
+        public override string ToString()
+        {
+            return $"{base.ToString()} custom ToString value";
+        }
+    }
+
+    public class ClassWithManyProperties
+    {
+        public int X1 { get; } = 1;
+        public int X2 { get; } = 2;
+        public int X3 { get; } = 3;
+        public int X4 { get; } = 4;
+        public int X5 { get; } = 5;
+        public int X6 { get; } = 6;
+        public int X7 { get; } = 7;
+        public int X8 { get; } = 8;
+        public int X9 { get; } = 9;
+        public int X10 { get; } = 10;
+        public int X11 { get; } = 11;
+        public int X12 { get; } = 12;
+        public int X13 { get; } = 13;
+        public int X14 { get; } = 14;
+        public int X15 { get; } = 15;
+        public int X16 { get; } = 16;
+        public int X17 { get; } = 17;
+        public int X18 { get; } = 18;
+        public int X19 { get; } = 19;
+        public int X20 { get; } = 20;
+        public int X21 { get; } = 21;
+    }
+
+    public class ClassWithManyPropertiesAndCustomToString
+    {
+        public override string ToString()
+        {
+            return $"{base.ToString()} custom ToString value";
+        }
+
         public int X1 { get; } = 1;
         public int X2 { get; } = 2;
         public int X3 { get; } = 3;

@@ -89,7 +89,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     IEnumerable<object> values =
                         reducedMembers.Select(m => m.GetValueOrException(instance))
                                       .Select(v => td(
-                                                  div[@class: "dni-plaintext"](v.ToDisplayString(PlainTextFormatter.MimeType))));
+                                                  div[@class: "dni-plaintext"](pre(v.ToDisplayString(PlainTextFormatter.MimeType)))));
 
                     PocketView t =
                         table(
@@ -132,6 +132,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             bool BuildTable(T source, FormatContext context)
             {
+                context.RequireDefaultStyles();
+
                 using var _ = context.IncrementTableDepth();
 
                 if (context.TableDepth > 1)
@@ -290,6 +292,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 var table = Html.Table(headers, rows);
 
                 table.WriteTo(context);
+
                 return true;
             }
         }

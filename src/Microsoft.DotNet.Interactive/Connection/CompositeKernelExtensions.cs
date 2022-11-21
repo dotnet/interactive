@@ -13,6 +13,9 @@ public static class CompositeKernelExtensions
         IKernelCommandAndEventReceiver receiver,
         Uri hostUri)
     {
-        return new KernelHost(kernel, sender, receiver, hostUri);
+        var host = new KernelHost(kernel, sender, receiver, hostUri);
+        kernel.TryRegisterForDisposal(sender);
+        kernel.TryRegisterForDisposal(receiver);
+        return host;
     }
 }

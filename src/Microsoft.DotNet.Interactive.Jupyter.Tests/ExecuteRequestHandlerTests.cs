@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -11,12 +11,14 @@ using FluentAssertions.Execution;
 using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
+using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests;
 using Pocket;
 using Recipes;
 using Xunit;
 using Xunit.Abstractions;
+using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests
@@ -267,7 +269,8 @@ f();"));
                                 .Which
                                 .Data
                                 .Should()
-                                .ContainSingle(d => d.Key.Equals("text/html") && d.Value.Equals("<div class=\"dni-plaintext\">4</div>"));
+                                .ContainSingle(d => d.Key.Equals("text/html") && 
+                                                    d.Value.As<string>().RemoveStyleElement().Equals($"{PlainTextBegin}4{PlainTextEnd}"));
         }
 
         [Fact]
@@ -306,7 +309,8 @@ f();"));
                                 .Which
                                 .Data
                                 .Should()
-                                .ContainSingle(d => d.Key.Equals("text/html") && d.Value.Equals("<div class=\"dni-plaintext\">123</div>"));
+                                .ContainSingle(d => d.Key.Equals("text/html") && 
+                                                    d.Value.As<string>().RemoveStyleElement().Equals($"{PlainTextBegin}123{PlainTextEnd}"));
         }
 
         [Theory]
@@ -382,7 +386,7 @@ f();"));
             JupyterMessageSender.PubSubMessages
                 .OfType<ExecuteResult>()
                 .Should()
-                .Contain(dp => dp.Data["text/html"] as string == $"<div class=\"dni-plaintext\">{typeof(PasswordString).FullName}</div>");
+                .Contain(dp => (dp.Data["text/html"] as string).RemoveStyleElement() == $"{PlainTextBegin}{typeof(PasswordString).FullName}{PlainTextEnd}");
         }
 
         [Theory]

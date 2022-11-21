@@ -7,7 +7,20 @@ import { ProxyKernel } from "../src/proxyKernel";
 import { Logger } from "../src/logger";
 import * as rxjs from "rxjs";
 import * as connection from "../src/connection";
-import { clearTokenAndId } from "./testSupport";
+import { Kernel } from "../src/kernel";
+
+function removeCommandTokenAndId(envelope: connection.KernelCommandOrEventEnvelope) {
+    if (connection.isKernelEventEnvelope(envelope)) {
+        delete envelope.command?.id;
+        delete envelope.command?.token;
+
+    } else if (connection.isKernelCommandEnvelope(envelope)) {
+        delete envelope.id;
+        delete envelope.token;
+    }
+
+    return envelope;
+}
 
 describe("proxyKernel", () => {
     before(() => {
@@ -80,7 +93,8 @@ describe("proxyKernel", () => {
         let command: contracts.KernelCommandEnvelope = { commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "1+2" } };
         await kernel.send(command);
 
-        expect(events[0]).to.deep.include({
+        events;//?
+        expect(removeCommandTokenAndId(events[0])).to.deep.include({
             eventType: contracts.ValueProducedType,
             event: {
                 name: "a",
@@ -89,10 +103,17 @@ describe("proxyKernel", () => {
                     value: "variable a"
                 }
             },
-            command: command
+            command: {
+                command: {
+                    code: '1+2',
+                    originUri: 'kernel://local/proxy'
+                },
+                commandType: 'SubmitCode',
+                routingSlip: ['kernel://local/proxy?tag=arrived']
+            }
         });
 
-        expect(events[1]).to.deep.include({
+        expect(removeCommandTokenAndId(events[1])).to.deep.include({
             eventType: contracts.ValueProducedType,
             event: {
                 name: "b",
@@ -101,12 +122,28 @@ describe("proxyKernel", () => {
                     value: "variable b"
                 }
             },
-            command: command
+            command: {
+                command: {
+                    code: '1+2',
+                    originUri: 'kernel://local/proxy'
+                },
+                commandType: 'SubmitCode',
+                routingSlip: ['kernel://local/proxy?tag=arrived']
+            }
         });
 
-        expect(events[2]).to.include({
+        expect(removeCommandTokenAndId(events[2])).to.deep.include({
             eventType: contracts.CommandSucceededType,
-            command: command
+            command: {
+                command:
+                {
+                    code: '1+2',
+                    destinationUri: undefined,
+                    originUri: 'kernel://local/proxy'
+                },
+                commandType: 'SubmitCode',
+                routingSlip: ['kernel://local/proxy?tag=arrived', 'kernel://local/proxy']
+            }
         });
     });
 
@@ -129,7 +166,7 @@ describe("proxyKernel", () => {
         let command: contracts.KernelCommandEnvelope = { commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "1+2" }, id: "newId" };
         await kernel.send(command);
 
-        expect(events[0]).to.be.deep.include({
+        expect(removeCommandTokenAndId(events[0])).to.be.deep.include({
             eventType: contracts.ValueProducedType,
             event: {
                 name: "a",
@@ -138,10 +175,17 @@ describe("proxyKernel", () => {
                     value: "variable a"
                 }
             },
-            command: { ...command, id: "newId" }
+            command: {
+                command: {
+                    code: '1+2', originUri:
+                        'kernel://local/proxy'
+                },
+                commandType: 'SubmitCode',
+                routingSlip: ['kernel://local/proxy?tag=arrived']
+            }
         });
 
-        expect(events[1]).to.be.deep.include({
+        expect(removeCommandTokenAndId(events[1])).to.be.deep.include({
             eventType: contracts.ValueProducedType,
             event: {
                 name: "b",
@@ -150,7 +194,14 @@ describe("proxyKernel", () => {
                     value: "variable b"
                 }
             },
-            command: { ...command, id: "newId" }
+            command: {
+                command: {
+                    code: '1+2',
+                    originUri: 'kernel://local/proxy'
+                },
+                commandType: 'SubmitCode',
+                routingSlip: ['kernel://local/proxy?tag=arrived']
+            }
         });
 
         expect(events[2]).to.include({
@@ -165,13 +216,28 @@ describe("proxyKernel", () => {
 
         localToRemote.subscribe(e => {
             if (connection.isKernelCommandEnvelope(e)) {
-                remoteToLocal.next({ eventType: contracts.KernelInfoProducedType, event: <contracts.KernelInfoProduced>{ kernelInfo: { localName: "remoteKernel", aliases: [], languageName: "gsharp", languageVersion: "1.2.3", supportedKernelCommands: [{ name: "customCommand1" }, { name: "customCommand2" }], supportedDirectives: [] } }, command: { ...e, id: "newId" } });
+                remoteToLocal.next({
+                    eventType: contracts.KernelInfoProducedType,
+                    event: <contracts.KernelInfoProduced>{
+                        kernelInfo: {
+                            localName: "remoteKernel",
+                            aliases: [],
+                            uri: 'kernel://local/remoteKernel',
+                            languageName: "gsharp",
+                            languageVersion: "1.2.3",
+                            supportedKernelCommands: [{ name: "customCommand1" }, { name: "customCommand2" }],
+                            supportedDirectives: []
+                        }
+                    }
+
+                });
 
                 remoteToLocal.next({ eventType: contracts.CommandSucceededType, event: <contracts.CommandSucceeded>{}, command: e });
             }
         });
 
         let kernel = new ProxyKernel("proxy", connection.KernelCommandAndEventSender.FromObserver(localToRemote), connection.KernelCommandAndEventReceiver.FromObservable(remoteToLocal));
+        kernel.kernelInfo.remoteUri = 'kernel://local/remoteKernel';
         kernel.registerCommandHandler({
             commandType: "customCommand1",
             handle: (invocation) => {
@@ -190,11 +256,13 @@ describe("proxyKernel", () => {
             languageName: 'gsharp',
             languageVersion: '1.2.3',
             localName: 'proxy',
+            remoteUri: 'kernel://local/remoteKernel',
             supportedDirectives: [],
             supportedKernelCommands:
                 [{ name: 'RequestKernelInfo' },
                 { name: 'customCommand1' },
-                { name: 'customCommand2' }]
+                { name: 'customCommand2' }],
+            uri: 'kernel://local/proxy'
         });
     });
 });

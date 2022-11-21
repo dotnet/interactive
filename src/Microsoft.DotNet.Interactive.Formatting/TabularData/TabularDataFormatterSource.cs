@@ -16,6 +16,8 @@ namespace Microsoft.DotNet.Interactive.Formatting.TabularData
         {
             yield return new HtmlFormatter<TabularDataResource>((value, context) =>
             {
+                context.RequireDefaultStyles();
+
                 IReadOnlyList<IHtmlContent> headers =
                     value.Schema
                          .Fields

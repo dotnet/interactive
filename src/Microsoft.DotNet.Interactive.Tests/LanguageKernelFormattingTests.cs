@@ -13,15 +13,13 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
+using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 
 #pragma warning disable 8509
 namespace Microsoft.DotNet.Interactive.Tests
 {
     public class LanguageKernelFormattingTests : LanguageKernelTestBase
     {
-        public const string PlainTextBegin = "<div class=\"dni-plaintext\">";
-        public const string PlainTextEnd = "</div>";
-
         public LanguageKernelFormattingTests(ITestOutputHelper output) : base(output)
         {
         }
@@ -40,7 +38,7 @@ using {typeof(PocketView).Namespace};
 
         [Theory]
         // PocketView
-        [InlineData(Language.CSharp, "b(123)", "<b>" + PlainTextBegin + "123" + PlainTextEnd + "</b>")]
+        [InlineData(Language.CSharp, "b(123)", $"<b>{PlainTextBegin}123{PlainTextEnd}</b>")]
         [InlineData(Language.FSharp, "b [] [str \"123\" ]", "<b>123</b>")]
         // sequence
         [InlineData(Language.CSharp, "new[] { 1, 2, 3, 4 }", "<table>")]

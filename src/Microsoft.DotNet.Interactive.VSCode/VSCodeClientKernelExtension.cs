@@ -3,10 +3,8 @@
 
 using System;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.PowerShell;
 
 namespace Microsoft.DotNet.Interactive.VSCode;

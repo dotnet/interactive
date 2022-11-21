@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Extensions;
 
 namespace Microsoft.DotNet.Interactive.Events
 {

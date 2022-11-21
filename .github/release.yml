@@ -20,9 +20,15 @@ changelog:
     - title: Area-Automation 
       labels:
         - Area-Automation
+    - title: Area-Auth
+      labels:
+        - Area-Auth
     - title: Area-C#
       labels:
         - Area-C#
+    - title: Area-Python
+      labels:
+        - Area-Python
     - title: Area-Documentation
       labels:
         - Area-Documentation
@@ -77,6 +83,12 @@ changelog:
     - title: Area-WebAssembly
       labels:
         - Area-WebAssembly
+    - title: Area-Accessibility
+      labels:
+        - Area-Accessibility
+    - title: Area-Jupyter sub-kernels
+      labels:
+        - Area-Jupyter sub-kernels
     - title: Other Changes
       labels:
         - "*"

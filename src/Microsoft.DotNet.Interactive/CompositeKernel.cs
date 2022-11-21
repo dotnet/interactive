@@ -17,20 +17,17 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive
 {
     public sealed class CompositeKernel :
         Kernel,
-        IExtensibleKernel,
         IEnumerable<Kernel>
     {
         private readonly ConcurrentQueue<PackageAdded> _packagesToCheckForExtensions = new();
         private readonly KernelCollection _childKernels;
-        private readonly AssemblyBasedExtensionLoader _extensionLoader = new();
-        private readonly ScriptBasedExtensionLoader _scriptExtensionLoader = new();
+        private readonly PackageDirectoryExtensionLoader _extensionLoader = new();
         private string _defaultKernelName;
         private Command _connectDirective;
         private KernelHost _host;
@@ -235,11 +232,15 @@ namespace Microsoft.DotNet.Interactive
             RequestKernelInfo command,
             KernelInvocationContext context)
         {
+            context.Publish(new KernelInfoProduced(KernelInfo, command));
+
             foreach (var childKernel in ChildKernels)
             {
                 if (childKernel.SupportsCommand(command))
                 {
-                    await childKernel.HandleAsync(command, context);
+                    var childCommand = new RequestKernelInfo(childKernel.Name);
+                    childCommand.RoutingSlip.ContinueWith(command.RoutingSlip);
+                    await childKernel.HandleAsync(childCommand, context);
                 }
             }
         }
@@ -306,11 +307,6 @@ namespace Microsoft.DotNet.Interactive
             KernelInvocationContext context)
         {
             await _extensionLoader.LoadFromDirectoryAsync(
-                directory,
-                this,
-                context);
-
-            await _scriptExtensionLoader.LoadFromDirectoryAsync(
                 directory,
                 this,
                 context);

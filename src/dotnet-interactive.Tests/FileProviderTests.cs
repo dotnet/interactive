@@ -2,14 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.IO;
 using System.Threading.Tasks;
 
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-
 using Xunit;
 using Xunit.Abstractions;
 
@@ -17,13 +15,9 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 {
     public class FileProviderTests : LanguageKernelTestBase
     {
-
-
         public FileProviderTests(ITestOutputHelper output) : base(output)
         {
         }
-
-     
 
         [Theory]
         [InlineData(Language.CSharp)]
@@ -48,7 +42,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var kernel = CreateKernel(language);
             var provider = new FileProvider(kernel, typeof(Program).Assembly);
 
-            var extensionPackage = KernelExtensionTestHelper.GetOrCreateSimpleExtension();
+            var extensionPackage = await KernelExtensionTestHelper.GetSimpleExtensionAsync();
 
             await kernel.SubmitCodeAsync($@"
 #i ""nuget:{extensionPackage.PackageLocation}""
@@ -68,7 +62,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var kernel = CreateKernel(language);
             var provider = new FileProvider(kernel, typeof(Program).Assembly);
 
-            var extensionPackage = KernelExtensionTestHelper.GetOrCreateFileProviderExtension();
+            var extensionPackage = await KernelExtensionTestHelper.GetFileProviderExtensionAsync();
 
             await kernel.SubmitCodeAsync($@"
 #i ""nuget:{extensionPackage.PackageLocation}""

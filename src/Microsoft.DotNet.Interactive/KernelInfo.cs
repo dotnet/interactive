@@ -33,6 +33,7 @@ namespace Microsoft.DotNet.Interactive
             LanguageName = languageName;
             LanguageVersion = languageVersion;
             NameAndAliases = new HashSet<string> { LocalName };
+            Uri = new Uri($"kernel://local/{LocalName}");
 
             if (aliases is not null)
             {
@@ -52,7 +53,7 @@ namespace Microsoft.DotNet.Interactive
 
         public string LocalName { get; }
 
-        public Uri? Uri { get; set; }
+        public Uri Uri { get; set; }
 
         public Uri? RemoteUri { get; set; }
 

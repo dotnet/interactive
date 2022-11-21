@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static TTag Append<TTag>(this TTag toTag, params IHtmlContent[] contents) where TTag : HtmlTag
         {
             var writeOriginalContent = toTag.Content;
-            toTag.Content = (context) =>
+            toTag.Content = context =>
             {
                 writeOriginalContent?.Invoke(context);
 
@@ -134,30 +134,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static TTag Containing<TTag>(this TTag tag, IHtmlContent content) where TTag : HtmlTag
         {
             tag.Content = (context) => context.Writer.Write(content.ToString(), context);
-            return tag;
-        }
-
-        internal static TTag Containing<TTag>(this TTag tag, params HtmlTag[] tags) where TTag : HtmlTag
-        {
-            return tag.Containing((IEnumerable<HtmlTag>)tags);
-        }
-
-        internal static TTag Containing<TTag>(this TTag tag, IEnumerable<HtmlTag> tags) where TTag : HtmlTag
-        {
-            tag.Content = (context) =>
-            {
-                foreach (var childTag in tags)
-                {
-                    childTag.WriteTo(context);
-                }
-            };
-            return tag;
-        }
-
-        internal static TTag Containing<TTag>(this TTag tag, Action<FormatContext> content) 
-            where TTag : HtmlTag
-        {
-            tag.Content = content;
             return tag;
         }
 
@@ -209,7 +185,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             return tag;
         }
 
-        internal static PocketView Table(
+        public static PocketView Table(
             IReadOnlyList<IHtmlContent> headers,
             IReadOnlyList<IHtmlContent> rows) =>
             table(

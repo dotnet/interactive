@@ -58,41 +58,7 @@ public sealed partial class FormatterTests
 
             output.Should().Be(((object) null).ToDisplayString());
         }
-
-        [Fact]
-        public void Exceptions_always_get_properties_formatters()
-        {
-            var exception = new ReflectionTypeLoadException(
-                new[]
-                {
-                    typeof(FileStyleUriParser),
-                    typeof(AssemblyKeyFileAttribute)
-                },
-                new Exception[]
-                {
-                    new DataMisalignedException()
-                });
-
-            var message = exception.ToDisplayString();
-
-            message.Should().Contain(nameof(DataMisalignedException.Data));
-            message.Should().Contain(nameof(DataMisalignedException.HResult));
-            message.Should().Contain(nameof(DataMisalignedException.StackTrace));
-        }
-
-        [Fact]
-        public void Exception_Data_is_included_by_default()
-        {
-            var ex = new InvalidOperationException("oh noes!", new NullReferenceException());
-            var key = "a very important int";
-            ex.Data[key] = 123456;
-
-            var msg = ex.ToDisplayString();
-
-            msg.Should().Contain(key);
-            msg.Should().Contain("123456");
-        }
-
+        
         [Fact]
         public void Exception_StackTrace_is_included_by_default()
         {
@@ -109,7 +75,7 @@ public sealed partial class FormatterTests
             }
 
             msg.Should()
-               .Contain($"StackTrace:    at {typeof(FormatterTests)}.{nameof(Defaults)}.{MethodInfo.GetCurrentMethod().Name}");
+               .Contain($"at {typeof(FormatterTests)}.{nameof(Defaults)}.{MethodInfo.GetCurrentMethod().Name}");
         }
 
         [Fact]

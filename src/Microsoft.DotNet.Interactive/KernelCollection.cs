@@ -97,6 +97,11 @@ public class KernelCollection : IReadOnlyCollection<Kernel>
             kernel.KernelInfo.Uri = new Uri(host.Uri, kernel.Name);
             _kernelsByLocalUri.TryAdd(kernel.KernelInfo.Uri, kernel);
         }
+        else
+        {
+            kernel.KernelInfo.Uri = new Uri(_compositeKernel.KernelInfo.Uri, kernel.Name);
+            _kernelsByLocalUri.TryAdd(kernel.KernelInfo.Uri, kernel);
+        }
 
         if (kernel is ProxyKernel proxyKernel)
         {

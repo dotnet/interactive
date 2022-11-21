@@ -9,9 +9,9 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Parsing;
 
-namespace Microsoft.DotNet.Interactive.Extensions
+namespace Microsoft.DotNet.Interactive
 {
-    internal static class EventExtensions
+    internal static class KernelEventExtensions
     {
         public static LinePositionSpan CalculateLineOffsetFromParentCommand(this KernelEvent @event, LinePositionSpan initialRange)
         {
