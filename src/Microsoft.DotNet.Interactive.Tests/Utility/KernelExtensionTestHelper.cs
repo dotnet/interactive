@@ -15,94 +15,70 @@ using Microsoft.DotNet.Interactive.Utility;
 namespace Microsoft.DotNet.Interactive.Tests.Utility
 {
     public record ExtensionPackage(string PackageLocation, string Name, string Version);
+
     public static class KernelExtensionTestHelper
     {
-        private static readonly object _simpleExtensionPackageLock = new();
-        private static readonly object _fileProviderExtensionPackageLock = new();
-        private static readonly object _scriptBasedExtensionPackageLock = new();
-        private static ExtensionPackage _simpleExtensionPackage;
-        private static ExtensionPackage _fileProviderExtensionPackage;
-        private static ExtensionPackage _scriptBasedExtensionPackage;
-
-        private static readonly string _microsoftDotNetInteractiveDllPath = typeof(IKernelExtension).Assembly.Location;
-
-        public static ExtensionPackage GetOrCreateSimpleExtension()
+        private static readonly AsyncLazy<ExtensionPackage> _simpleExtensionPackage = new(async () =>
         {
-            lock (_simpleExtensionPackageLock)
-            {
-                if (_simpleExtensionPackage is null)
-                {
-                    var projectDir = DirectoryUtility.CreateDirectory();
+            var projectDir = DirectoryUtility.CreateDirectory();
 
-                    var packageName = $"MyTestExtension.{Path.GetRandomFileName()}";
-                    var packageVersion = "2.0.0-" + Guid.NewGuid().ToString("N");
+            var packageName = $"MyTestExtension.{Path.GetRandomFileName()}";
+            var packageVersion = "2.0.0-" + Guid.NewGuid().ToString("N");
 
-                    _simpleExtensionPackage = KernelExtensionTestHelper.CreateExtensionNupkg(
-                        projectDir,
-                        $"await kernel.SendAsync(new SubmitCode(\"\\\"SimpleExtension\\\"\"));",
-                        packageName,
-                        packageVersion,
-                        timeout: TimeSpan.FromMinutes(5)).Result;
-                }
-            }
+            return await CreateExtensionNupkg(
+                       projectDir,
+                       $"await kernel.SendAsync(new SubmitCode(\"\\\"SimpleExtension\\\"\"));",
+                       packageName,
+                       packageVersion,
+                       timeout: TimeSpan.FromMinutes(5));
+        });
 
-            return _simpleExtensionPackage;
-        }
-
-        public static ExtensionPackage GetOrCreateFileProviderExtension()
+        private static readonly AsyncLazy<ExtensionPackage> _fileProviderExtensionPackage = new(async () =>
         {
-            lock (_fileProviderExtensionPackageLock)
-            {
-                if (_fileProviderExtensionPackage is null)
-                {
-                    var projectDir = DirectoryUtility.CreateDirectory();
-                    var fileToEmbed = new FileInfo(Path.Combine(projectDir.FullName, "file.txt"));
-                    File.WriteAllText(fileToEmbed.FullName, "for testing only");
-                    var packageName = $"MyTestExtension.{Path.GetRandomFileName()}";
-                    var packageVersion = "2.0.0-" + Guid.NewGuid().ToString("N");
+            var projectDir = DirectoryUtility.CreateDirectory();
+            var fileToEmbed = new FileInfo(Path.Combine(projectDir.FullName, "file.txt"));
+            await File.WriteAllTextAsync(fileToEmbed.FullName, "for testing only");
+            var packageName = $"MyTestExtension.{Path.GetRandomFileName()}";
+            var packageVersion = "2.0.0-" + Guid.NewGuid().ToString("N");
 
-                    _fileProviderExtensionPackage = KernelExtensionTestHelper.CreateExtensionNupkg(
-                        projectDir,
-                        $"await kernel.SendAsync(new SubmitCode(\"\\\"FileProviderExtension\\\"\"));",
-                        packageName,
-                        packageVersion,
-                        fileToEmbed: fileToEmbed,
-                        timeout: TimeSpan.FromMinutes(5)).Result;
-                }
-            }
+            return await CreateExtensionNupkg(
+                       projectDir,
+                       $"await kernel.SendAsync(new SubmitCode(\"\\\"FileProviderExtension\\\"\"));",
+                       packageName,
+                       packageVersion,
+                       fileToEmbed: fileToEmbed,
+                       timeout: TimeSpan.FromMinutes(5));
+        });
 
-            return _fileProviderExtensionPackage;
-        }
-
-        public static ExtensionPackage GetOrCreateScriptBasedExtensionPackage()
+        private static readonly AsyncLazy<ExtensionPackage> _scriptBasedExtensionPackage = new(async () =>
         {
-            lock (_scriptBasedExtensionPackageLock)
-            {
-                if (_scriptBasedExtensionPackage is null)
-                {
-                    var projectDir = DirectoryUtility.CreateDirectory();
-                    var packageName = $"MyTestExtension.{Path.GetRandomFileName()}";
-                    var packageVersion = "2.0.0-" + Guid.NewGuid().ToString("N");
+            var projectDir = DirectoryUtility.CreateDirectory();
+            var packageName = $"MyTestExtension.{Path.GetRandomFileName()}";
+            var packageVersion = "2.0.0-" + Guid.NewGuid().ToString("N");
 
-                    var extensionScriptPath = new FileInfo(Path.Combine(projectDir.FullName, "extension.dib"));
-                    var extensionScriptContent = @"
+            var extensionScriptPath = new FileInfo(Path.Combine(projectDir.FullName, "extension.dib"));
+            var extensionScriptContent = @"
 #!csharp
 ""ScriptExtension""
 ";
-                    File.WriteAllText(extensionScriptPath.FullName, extensionScriptContent);
+            File.WriteAllText(extensionScriptPath.FullName, extensionScriptContent);
 
-                    _scriptBasedExtensionPackage = KernelExtensionTestHelper.CreateExtensionNupkg(
-                        projectDir,
-                        "// this extension does nothing from the assembly",
-                        packageName,
-                        packageVersion,
-                        additionalPackageFiles: new[] { (extensionScriptPath, "interactive-extensions/dotnet") },
-                        timeout: TimeSpan.FromMinutes(5)).Result;
-                }
-            }
+            return await CreateExtensionNupkg(
+                       projectDir,
+                       "// this extension does nothing from the assembly",
+                       packageName,
+                       packageVersion,
+                       additionalPackageFiles: new[] { (extensionScriptPath, "interactive-extensions/dotnet") },
+                       timeout: TimeSpan.FromMinutes(5));
+        });
 
-            return _scriptBasedExtensionPackage;
-        }
+        private static readonly string _microsoftDotNetInteractiveDllPath = typeof(IKernelExtension).Assembly.Location;
+
+        public static Task<ExtensionPackage> GetSimpleExtensionAsync() => _simpleExtensionPackage.ValueAsync();
+
+        public static Task<ExtensionPackage> GetFileProviderExtensionAsync() => _fileProviderExtensionPackage.ValueAsync();
+
+        public static Task<ExtensionPackage> GetScriptExtensionPackageAsync() => _scriptBasedExtensionPackage.ValueAsync();
 
         public static async Task<ExtensionPackage> CreateExtensionNupkg(
             DirectoryInfo projectDir,
@@ -132,7 +108,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 <Project Sdk=""Microsoft.NET.Sdk"">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <IsPackable>true</IsPackable>
     <PackageId>{packageName}</PackageId>
     <PackageVersion>{packageVersion}</PackageVersion>
@@ -163,7 +139,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 "),
                 ("global.json", @"{
   ""sdk"": {
-    ""version"": ""6.0.100"",
+    ""version"": ""7.0.100"",
     ""allowPrerelease"": true,
     ""rollForward"": ""latestMinor""
   }
@@ -271,7 +247,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 <Project Sdk=""Microsoft.NET.Sdk"">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <AssemblyName>{extensionName}</AssemblyName>
   </PropertyGroup>
 
@@ -285,7 +261,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 "),
                 ("global.json", @"{
   ""sdk"": {
-    ""version"": ""6.0.100"",
+    ""version"": ""7.0.100"",
     ""allowPrerelease"": true,
     ""rollForward"": ""latestMinor""
   }

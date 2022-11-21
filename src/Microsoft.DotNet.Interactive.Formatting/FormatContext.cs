@@ -12,31 +12,22 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public class FormatContext : IDisposable
     {
-        private Dictionary<string, IHtmlContent> _requiredContent;
-        private readonly bool _disposeWriter;
-
-        public FormatContext() : this(new StringWriter(), true)
-        {
-        }
+        private Dictionary<string, Action<FormatContext>> _requiredContent;
 
         public FormatContext(TextWriter writer)
         {
             Writer = writer;
         }
         
-        private FormatContext(TextWriter writer, bool disposeWriter)
-        {
-            Writer = writer;
-            _disposeWriter = disposeWriter;
-        }
-
         public int Depth { get; private set; }
+
+        internal int Indent { get; set; }
 
         internal int TableDepth { get; private set; }
 
         public TextWriter Writer { get; }
 
-        internal void Require(string id, IHtmlContent content)
+        internal void RequireOnComplete(string id, IHtmlContent content)
         {
             if (_requiredContent is null)
             {
@@ -45,8 +36,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             if (!_requiredContent.ContainsKey(id))
             {
-                _requiredContent.Add(id, content);
+                _requiredContent.Add(id, WriteContent);
             }
+
+            void WriteContent(FormatContext context) => content.WriteTo(context.Writer, HtmlEncoder.Default);
         }
 
         internal IDisposable IncrementDepth()
@@ -61,21 +54,18 @@ namespace Microsoft.DotNet.Interactive.Formatting
             return Disposable.Create(() => TableDepth--);
         }
 
+        internal bool IsStartingObjectWithinSequence { get; set; }
+
         public void Dispose()
         {
             if (_requiredContent is not null)
             {
-                foreach (var content in _requiredContent.Values)
+                foreach (var require in _requiredContent.Values)
                 {
-                    content.WriteTo(Writer, HtmlEncoder.Default);
+                    require(this);
                 }
 
                 _requiredContent = null;
-            }
-
-            if (_disposeWriter)
-            {
-                Writer.Dispose();
             }
         }
     }

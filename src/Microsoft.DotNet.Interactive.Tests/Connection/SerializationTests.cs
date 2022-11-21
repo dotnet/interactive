@@ -156,7 +156,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
             foreach (var command in commands().Select(c =>
             {
                 c.Properties["id"] = "command-id";
-                c.TryAddToRoutingSlip(new Uri("kernel://somelocation/kernelName", UriKind.Absolute));
+                c.RoutingSlip.StampAsArrived(new Uri("kernel://somelocation/kernelName", UriKind.Absolute));
+                c.RoutingSlip.Stamp(new Uri("kernel://somelocation/kernelName", UriKind.Absolute));
                 return c;
             }))
             {
@@ -165,8 +166,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
 
             IEnumerable<KernelCommand> commands()
             {
-                yield return new AddPackage(new PackageReference("MyAwesomePackage", "1.2.3"));
-
                 yield return new ChangeWorkingDirectory("/path/to/somewhere");
 
                 yield return new DisplayError("oops!");
@@ -221,10 +220,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
                          e.Command.Properties["id"] = "command-id";
                          if (e is not KernelReady)
                          {
-                             e.Command.TryAddToRoutingSlip(new Uri("kernel://somelocation/kernelName"));
+                             e.Command.RoutingSlip.StampAsArrived(new Uri("kernel://somelocation/kernelName"));
+                             e.Command.RoutingSlip.Stamp(new Uri("kernel://somelocation/kernelName"));
                          }
                
-                         e.TryAddToRoutingSlip(new Uri("kernel://somelocation/kernelName"));
+                         e.RoutingSlip.Stamp(new Uri("kernel://somelocation/kernelName"));
                          return e;
                      }))
             {
@@ -233,23 +233,24 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
 
             IEnumerable<KernelEvent> events()
             {
-                var submitCode = new SubmitCode("123");
 
                 yield return new CodeSubmissionReceived(
-                    submitCode);
+                    new SubmitCode("123"));
 
                 yield return new CommandFailed(
                     "Oooops!",
-                    submitCode);
+                    new SubmitCode("123"),
+                    executionOrder: 123);
 
                 yield return new CommandFailed(
                    new InvalidOperationException("Oooops!"),
-                   submitCode,
-                   "oops");
+                   new SubmitCode("123"),
+                   "oops",
+                   executionOrder: 123);
 
-                yield return new CommandSucceeded(submitCode);
+                yield return new CommandSucceeded(new SubmitCode("123"), executionOrder: 123);
 
-                yield return new CompleteCodeSubmissionReceived(submitCode);
+                yield return new CompleteCodeSubmissionReceived(new SubmitCode("123"));
 
                 var requestCompletion = new RequestCompletions("Console.Wri", new LinePosition(0, 11));
 
@@ -267,7 +268,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
                     },
                     requestCompletion);
 
-                yield return new DiagnosticLogEntryProduced("oops!", submitCode);
+                yield return new DiagnosticLogEntryProduced("oops!", new SubmitCode("123"));
 
                 yield return new DiagnosticsProduced(
                     new[]
@@ -280,7 +281,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
                             "code",
                             "message")
                     },
-                    submitCode);
+                    new SubmitCode("123"));
 
                 yield return new DisplayedValueProduced(
                     new HtmlString("<b>hi!</b>"),
@@ -299,9 +300,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
                         new FormattedValue("text/html", "<b>hi!</b>"),
                     });
 
-                yield return new ErrorProduced("oops!", submitCode);
+                yield return new ErrorProduced("oops!", new SubmitCode("123"));
 
-                yield return new IncompleteCodeSubmissionReceived(submitCode);
+                yield return new IncompleteCodeSubmissionReceived(new SubmitCode("123"));
 
                 var requestHoverTextCommand = new RequestHoverText("document-contents", new LinePosition(1, 2));
 
@@ -363,7 +364,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection
                     1);
 
                 yield return new StandardErrorValueProduced(
-                    submitCode,
+                    new SubmitCode("123"),
                     new[]
                     {
                         new FormattedValue("text/plain", "oops!")

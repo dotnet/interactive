@@ -17,6 +17,8 @@
       "destinationUri": null
     },
     "routingSlip": [
+      "kernel://somelocation/kernelA?tag=arrived",
+      "kernel://somelocation/kernelName?tag=arrived",
       "kernel://somelocation/kernelName"
     ]
   },

@@ -26,7 +26,7 @@ describe("dotnet-interactive", () => {
     let commandType2: contracts.KernelCommandType = <contracts.KernelCommandType>"CustomCommand2";
 
     let makeKernel = async () => {
-        let kernel = new Kernel("client-side kernel");
+        let kernel = new Kernel("client-side-kernel");
         return kernel;
     };
     describe("client-side kernel", () => {

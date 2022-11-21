@@ -142,6 +142,7 @@ public static class CommandLineParser
 
         return new CommandLineBuilder(rootCommand)
             .UseDefaults()
+            .CancelOnProcessTermination()
             .AddMiddleware(async (context, next) =>
             {
                 if (context.ParseResult.Errors.Count == 0)
@@ -316,7 +317,7 @@ public static class CommandLineParser
                         frontendEnvironment, 
                         startupOptions,
                         telemetrySender);
-                    
+
                     services.AddKernel(kernel);
 
                     kernel.UseQuitCommand();

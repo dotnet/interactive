@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Options;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.DotNet.Interactive.Utility;
@@ -59,7 +60,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
             var sourceFiles = workspace.GetSourceFiles();
 
             // get project and ensure the solution is up-to-date
-            var (_compilation, project) = await package.GetCompilationForLanguageServices(
+            var (_, project) = await package.GetCompilationForLanguageServices(
                                      sourceFiles,
                                      GetSourceCodeKind(request),
                                      GetUsings(request.Workspace));
@@ -73,40 +74,42 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
 
             var service = CompletionService.GetService(selectedDocument);
 
-            var (_line, _column, absolutePosition) = workspace.GetTextLocation(request.ActiveBufferId);
-            var completionList = await service.GetCompletionsAsync(selectedDocument, absolutePosition);
-            var semanticModel = await selectedDocument.GetSemanticModelAsync();
+            var (_, _, absolutePosition) = workspace.GetTextLocation(request.ActiveBufferId);
+            var semanticModel = await selectedDocument!.GetSemanticModelAsync();
             var diagnostics = DiagnosticsExtractor.ExtractSerializableDiagnosticsFromSemanticModel(request.ActiveBufferId, semanticModel, workspace);
 
-            var symbols = Recommender.GetRecommendedSymbolsAtPosition(
-                              semanticModel,
-                              absolutePosition,
-                              solution.Workspace);
-
+            var symbols = await Recommender.GetRecommendedSymbolsAtPositionAsync(
+                selectedDocument,
+                absolutePosition,
+                solution.Workspace.Options);
+            
             var symbolToSymbolKey = new Dictionary<(string, int), ISymbol>();
+            
             foreach (var symbol in symbols)
             {
-                var key = (symbol.Name, (int) symbol.Kind);
+                var key = (symbol.Name, (int)symbol.Kind);
                 if (!symbolToSymbolKey.ContainsKey(key))
                 {
                     symbolToSymbolKey[key] = symbol;
                 }
             }
 
-            if (completionList == null)
+            if (service is null)
             {
                 return new CompletionResult(requestId: request.RequestId, diagnostics: diagnostics);
             }
+            
+            var completionList = await service.GetCompletionsAsync(selectedDocument!, absolutePosition);
 
-            var completionItems = completionList.Items
-                                                .Where(i => i != null)
-                                                .Select(item => item.ToModel(symbolToSymbolKey, selectedDocument));
+            var completionItems = completionList.ItemsList
+                .Select(item => item.ToModel(symbolToSymbolKey, selectedDocument));
 
             return new CompletionResult(completionItems
-                                        .Deduplicate()
-                                        .ToArray(),
-                                        requestId: request.RequestId,
-                                        diagnostics: diagnostics);
+                    .Deduplicate()
+                    .ToArray(),
+                requestId: request.RequestId,
+                diagnostics: diagnostics);
+
         }
 
         private SourceCodeKind GetSourceCodeKind(WorkspaceRequest request)
@@ -170,7 +173,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn
             var workspace = await request.Workspace.InlineBuffersAsync();
 
             var sourceFiles = workspace.GetSourceFiles();
-            var (_compilation, project) = await package.GetCompilationForLanguageServices(sourceFiles, GetSourceCodeKind(request), GetUsings(request.Workspace));
+            var (_, project) = await package.GetCompilationForLanguageServices(sourceFiles, GetSourceCodeKind(request), GetUsings(request.Workspace));
             var documents = project.Documents.ToList();
 
             var selectedDocument = documents.FirstOrDefault(doc => doc.IsMatch( request.ActiveBufferId.FileName))

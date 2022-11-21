@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 {
     public partial class MagicCommandTests
     {
-        public class lsmagic
+        public class LSMmagic
         {
             [Fact]
             public async Task lsmagic_lists_registered_magic_commands()

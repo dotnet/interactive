@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Text.Json;
@@ -19,12 +20,12 @@ using Disposable = System.Reactive.Disposables.Disposable;
 
 namespace Microsoft.DotNet.Interactive.Browser;
 
-public class PlaywrightKernelConnector : IKernelConnector
+public class PlaywrightKernelConnector
 {
     private readonly RefCountDisposable _refCountDisposable;
     private readonly AsyncLazy<(IPage page, Subject<CommandOrEvent> commandsAndEvents)> _oneTimeBrowserSetup;
 
-    public PlaywrightKernelConnector(bool launchBrowserHeadless = false)
+    public PlaywrightKernelConnector(bool launchBrowserHeadless = false, bool enableLog = false)
     {
         var playwrightDisposable = new SerialDisposable();
 
@@ -61,7 +62,7 @@ public class PlaywrightKernelConnector : IKernelConnector
 
             await page.EvaluateAsync(jsSource);
 
-            await page.EvaluateAsync(@"dotnetInteractive.setup({hostName : ""browser""});");
+            await page.EvaluateAsync($@"dotnetInteractive.setup({{hostName : ""browser"", enableLogger: {enableLog.ToString().ToLowerInvariant()}}});");
 
             playwrightDisposable.Disposable = Disposable.Create(() => { playwright.Dispose(); });
 
@@ -69,7 +70,72 @@ public class PlaywrightKernelConnector : IKernelConnector
         });
     }
 
-    public Task<Kernel> CreateKernelAsync(string kernelName)
+    public static async Task AddKernelsToCurrentRootAsync()
+    {
+        if (KernelInvocationContext.Current is { } context &&
+            context.HandlingKernel.RootKernel is CompositeKernel root)
+        {
+            var playwrightConnector = new PlaywrightKernelConnector();
+
+            var jsKernel = await playwrightConnector.CreateKernelAsync("javascript-browser", BrowserKernelLanguage.JavaScript);
+            root.Add(jsKernel);
+
+            var htmlKernel = await playwrightConnector.CreateKernelAsync("html-browser", BrowserKernelLanguage.Html);
+            root.Add(htmlKernel);
+
+            if (root.FindKernelByName("javascript") is { } defaultJsKernel)
+            {
+                await defaultJsKernel.SubmitCodeAsync(@"
+notebookCSS = [...document.styleSheets]
+  .map((styleSheet) => {
+    try {
+      return [...styleSheet.cssRules]
+        .map((rule) => rule.cssText)
+        .join('');
+    } catch (e) {
+    }
+  })
+  .filter(Boolean)
+  .join('\n');
+");
+                await jsKernel.SubmitCodeAsync(@"
+#!share --from javascript notebookCSS
+document.head.insertAdjacentHTML('afterbegin', `<style>${notebookCSS}</style>`);   
+");
+            }
+
+            var subscription = root
+                               .KernelEvents
+                               .OfType<DisplayEvent>()
+                               .Subscribe(@event =>
+                               {
+                                   if (@event.Command.OriginUri == htmlKernel.KernelInfo.Uri ||
+                                       @event.Command.OriginUri == jsKernel.KernelInfo.Uri)
+                                   {
+                                       return;
+                                   }
+
+                                   var html = new BrowserDisplayEvent(@event, root.SubmissionCount + 1).ToDisplayString(HtmlFormatter.MimeType);
+
+                                   var htmlCommand = new SubmitCode(html);
+                                   htmlKernel.SendAsync(htmlCommand).ConfigureAwait(false);
+                               });
+
+            htmlKernel.RegisterForDisposal(subscription);
+
+            context.DisplayAs($@"
+Added browser kernels:
+* `{htmlKernel.ChooseKernelDirective.Name}`: Render HTML in an external browser
+* `{jsKernel.ChooseKernelDirective.Name}`: Run JavaScript in the same external browser",
+                              "text/markdown");
+        }
+        else
+        {
+            throw new InvalidOperationException($"{nameof(AddKernelsToCurrentRootAsync)} can only be called within the context of an active {nameof(KernelInvocationContext)}");
+        }
+    }
+
+    public Task<Kernel> CreateKernelAsync(string kernelName, BrowserKernelLanguage language)
     {
         var senderAndReceiver = new PlaywrightSenderAndReceiver(_oneTimeBrowserSetup);
 
@@ -80,9 +146,9 @@ public class PlaywrightKernelConnector : IKernelConnector
 
         proxy.KernelInfo.SupportedKernelCommands.Add(new KernelCommandInfo(nameof(SubmitCode)));
 
-        switch (kernelName)
+        switch (language)
         {
-            case "html":
+            case BrowserKernelLanguage.Html:
                 proxy.RegisterCommandHandler<RequestValueInfos>((request, context) =>
                 {
                     context.Publish(new ValueInfosProduced(new KernelValueInfo[]
@@ -114,13 +180,18 @@ public class PlaywrightKernelConnector : IKernelConnector
                             request));
                 });
 
+                proxy.KernelInfo.RemoteUri = new Uri("kernel://browser/html");
+
                 break;
 
-            case "javascript":
+            case BrowserKernelLanguage.JavaScript:
                 proxy.KernelInfo.SupportedKernelCommands.Add(new(nameof(SubmitCode)));
                 proxy.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValue)));
                 proxy.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValueInfos)));
                 proxy.KernelInfo.SupportedKernelCommands.Add(new(nameof(SendValue)));
+
+                proxy.KernelInfo.RemoteUri = new Uri("kernel://browser/javascript");
+
                 proxy.UseValueSharing();
                 break;
         }

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as contracts from './dotnet-interactive/contracts';
+import * as helpService from './helpService';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -34,6 +35,7 @@ import { ChildProcessLineAdapter } from './childProcessLineAdapter';
 import { NotebookParserServer } from './notebookParserServer';
 import { registerVariableExplorer } from './variableExplorer';
 import { KernelCommandAndEventChannel } from './DotnetInteractiveChannel';
+import { ActiveNotebookTracker } from './activeNotebookTracker';
 
 export const KernelIdForJupyter = 'polyglot-notebook-for-jupyter';
 
@@ -65,7 +67,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const dotnetConfig = vscode.workspace.getConfiguration('dotnet-interactive');
     const polyglotConfig = vscode.workspace.getConfiguration('polyglot-notebook');
-    const minDotNetSdkVersion = dotnetConfig.get<string>('minimumDotNetSdkVersion') || '6.0';
+    const minDotNetSdkVersion = dotnetConfig.get<string>('minimumDotNetSdkVersion') || '7.0';
     const diagnosticsChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('Polyglot Notebook : diagnostics'));
     const loggerChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('Polyglot Notebook : logger'));
     DotNetPathManager.setOutputChannelAdapter(diagnosticsChannel);
@@ -87,17 +89,23 @@ export async function activate(context: vscode.ExtensionContext) {
     registerAcquisitionCommands(context, diagnosticsChannel);
 
     // check sdk version
+    let showHelpPage = false;
     try {
         const dotnetVersion = await getDotNetVersionOrThrow(DotNetPathManager.getDotNetPath(), diagnosticsChannel);
         if (!isVersionSufficient(dotnetVersion, minDotNetSdkVersion)) {
+            showHelpPage = true;
             const message = `The .NET SDK version ${dotnetVersion} is not sufficient. The minimum required version is ${minDotNetSdkVersion}.`;
             diagnosticsChannel.appendLine(message);
             vscode.window.showErrorMessage(message);
-            throw new Error(message);
         }
     } catch (e) {
+        showHelpPage = true;
         vscode.window.showErrorMessage(`Please install the .NET SDK version ${minDotNetSdkVersion} from https://dotnet.microsoft.com/en-us/download`);
-        throw e;
+    }
+
+    if (showHelpPage) {
+        const helpServiceInstance = new helpService.HelpService(context);
+        await helpServiceInstance.showHelpPageAndThrow(helpService.DotNetVersion);
     }
 
     async function kernelChannelCreator(notebookUri: vscodeLike.Uri): Promise<KernelCommandAndEventChannel> {
@@ -226,14 +234,9 @@ export async function activate(context: vscode.ExtensionContext) {
     const serializerMap = registerWithVsCode(context, clientMapper, parserServer, clientMapperConfig.createErrorOutput, ...preloads);
     registerFileCommands(context, parserServer, clientMapper);
 
-    context.subscriptions.push(vscode.workspace.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
     context.subscriptions.push(vscode.workspace.onDidRenameFiles(e => handleFileRenames(e, clientMapper)));
-
-    // clean up processes
     context.subscriptions.push(serializerLineAdapter);
-    clientMapper.onClientCreate((_uri, client) => {
-        context.subscriptions.push(client);
-    });
+    context.subscriptions.push(new ActiveNotebookTracker(context, clientMapper));
 
     // language registration
     context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(async e => await updateNotebookCellLanguageInMetadata(e)));

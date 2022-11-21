@@ -2,17 +2,18 @@ Updating to new version of stable
 =================================
 
 1. Copy `<root>/src/dotnet-interactive-vscode-insiders/package.json` to `<root>/src/dotnet-interactive-vscode/`
-2. Copy `<root>/src/dotnet-interactive-vscode-insiders/src/*` to `<root>/src/dotnet-interactive-vscode/src/` **EXCEPT** for the `vscode-common` symlinked directory.
-3. Increment verion number in `vscodeStableVersion.txt` to match the upcoming stable release of VS Code.
-4. `.\update-api.ps1`
-5. `.\update-versions.ps1 -updateAll`
-6. For each directory:
+2. Copy `<root>/src/dotnet-interactive-vscode-insiders/help/*` to `<root>/src/dotnet-interactive-vscode/help/`
+3. Copy `<root>/src/dotnet-interactive-vscode-insiders/src/*` to `<root>/src/dotnet-interactive-vscode/src/` **EXCEPT** for the `vscode-common` symlinked directory.
+4. Increment verion number in `vscodeStableVersion.txt` to match the upcoming stable release of VS Code.
+5. `.\update-api.ps1`
+6. `.\update-versions.ps1 -updateAll`
+7. For each directory:
    - `<root>/src/dotnet-interactive-vscode`
    - `<root>/src/dotnet-interactive-vscode-insiders`
      - `npm i`
      - `npm run compile`
      - `npm run test`
-7. `git add .`, `git commit`
+8. `git add .`, `git commit`
 
 Validating
 ==========

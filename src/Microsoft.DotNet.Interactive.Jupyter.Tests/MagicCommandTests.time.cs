@@ -10,12 +10,14 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
+using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
+using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 {
     public partial class MagicCommandTests
     {
-        public class time
+        public class Time
         {
             [Fact]
             public async Task time_produces_time_elapsed_to_run_the_code_submission()
@@ -56,7 +58,7 @@ display(123);
                       .Should()
                       .ContainSingle(v =>
                                          v.MimeType == "text/html" &&
-                                         v.Value == "<div class=\"dni-plaintext\">123</div>");
+                                         v.Value.RemoveStyleElement() == $"{PlainTextBegin}123{PlainTextEnd}");
 
                 events.Should()
                       .ContainSingle<DisplayedValueProduced>(

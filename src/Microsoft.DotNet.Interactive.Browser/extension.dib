@@ -1,0 +1,5 @@
+#!csharp
+
+#!csharp
+
+await Microsoft.DotNet.Interactive.Browser.PlaywrightKernelConnector.AddKernelsToCurrentRootAsync();

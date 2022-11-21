@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <AssetTargetFallback>portable-net45+win8+wp8+wpa81</AssetTargetFallback>
     <NoWarn>$(NoWarn);8002</NoWarn><!-- Assent isn't strongly signed -->
@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Microsoft.DotNet.Interactive.CSharpProject\%28Recipes%29\AsyncLazy{T}.cs" Link="Utility\AsyncLazy{T}.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Jupyter\(Recipes)\BareObjectConverter.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Jupyter\(Recipes)\JsonSerializationExtensions.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\InvocationContextExtensions.cs" Link="Utility\InvocationContextExtensions.cs" />
@@ -64,6 +65,7 @@
   <ItemGroup>
     <ProjectReference Include="..\dotnet-interactive\dotnet-interactive.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.CSharp\Microsoft.DotNet.Interactive.CSharp.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting.Tests\Microsoft.DotNet.Interactive.Formatting.Tests.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.FSharp\Microsoft.DotNet.Interactive.FSharp.fsproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Http\Microsoft.DotNet.Interactive.Http.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.PowerShell\Microsoft.DotNet.Interactive.PowerShell.csproj" />
@@ -73,7 +75,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Update="xunit.runner.visualstudio" Version="2.4.3">
+    <PackageReference Update="xunit.runner.visualstudio" Version="$(xunitrunnervisualstudioVersion)">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

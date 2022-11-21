@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly HashSet<Type> _supportedCommandTypes;
 
         private readonly Subject<KernelEvent> _kernelEvents = new();
-        private readonly CompositeDisposable _disposables;
+        private readonly CompositeDisposable _disposables = new();
         private readonly ConcurrentDictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
         private readonly ImmediateScheduler<KernelCommand, KernelCommandResult> _fastPathScheduler = new();
         private FrontendEnvironment _frontendEnvironment;
@@ -63,7 +63,6 @@ namespace Microsoft.DotNet.Interactive
 
             SubmissionParser = new SubmissionParser(this);
 
-            _disposables = new CompositeDisposable();
             _disposables.Add(Disposable.Create(() => _kernelEvents.OnCompleted()));
 
             Pipeline = new KernelCommandPipeline(this);
@@ -75,6 +74,24 @@ namespace Microsoft.DotNet.Interactive
                         GetImplementedCommandHandlerTypesFor));
 
             _kernelInfo = InitializeKernelInfo(name, languageName, languageVersion);
+
+            var counter = _kernelEvents.Subscribe(IncrementSubmissionCount);
+
+            RegisterForDisposal(counter);
+
+            void IncrementSubmissionCount(KernelEvent e)
+            {
+                if (e is KernelCommandCompletionEvent)
+                {
+                    if (e.Command is SubmitCode)
+                    {
+                        if (e.Command.RoutingSlip.Count == 0 || e.Command.RoutingSlip.Contains(KernelInfo.Uri, true))
+                        {
+                            SubmissionCount++;
+                        }
+                    }
+                }
+            }
         }
 
         private KernelInfo InitializeKernelInfo(string name, string languageName, string languageVersion)
@@ -95,6 +112,8 @@ namespace Microsoft.DotNet.Interactive
         public CompositeKernel ParentKernel { get; internal set; }
 
         public Kernel RootKernel { get; internal set; }
+
+        public int SubmissionCount { get; private set; }
 
         public SubmissionParser SubmissionParser { get; }
 
@@ -301,14 +320,14 @@ namespace Microsoft.DotNet.Interactive
             KernelCommand command,
             CancellationToken cancellationToken = default)
         {
-            using var disposable = new SerialDisposable();
-
-            KernelInvocationContext context = null;
-
             if (command is null)
             {
                 throw new ArgumentNullException(nameof(command));
             }
+
+            using var disposable = new SerialDisposable();
+
+            KernelInvocationContext context = null;
             command.ShouldPublishCompletionEvent ??= true;
 
             context = KernelInvocationContext.Establish(command);
@@ -535,7 +554,17 @@ namespace Microsoft.DotNet.Interactive
                                 return false;
                             }
 
-                            return inner.IsChildCommand(outer);
+                            if (inner.Parent == outer)
+                            {
+                                return true;
+                            }
+
+                            if (inner.GetOrCreateToken() == outer.GetOrCreateToken())
+                            {
+                                return true;
+                            }
+                            
+                            return inner.RoutingSlip.StartsWith(outer.RoutingSlip);
                           
                         });
                     RegisterForDisposal(scheduler);
@@ -623,12 +652,10 @@ namespace Microsoft.DotNet.Interactive
             {
                 return this;
             }
-            else
-            {
-                context.Fail(command, new CommandNotSupportedException(command.GetType(), this));
 
-                return null;
-            }
+            context.Fail(command, new CommandNotSupportedException(command.GetType(), this));
+
+            return null;
         }
 
         protected internal void PublishEvent(KernelEvent kernelEvent)
@@ -638,7 +665,11 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentNullException(nameof(kernelEvent));
             }
 
-            kernelEvent.TryAddToRoutingSlip(this.GetKernelUri());
+            if (!kernelEvent.RoutingSlip.Contains(KernelInfo.Uri))
+            {
+                kernelEvent.RoutingSlip.Stamp(KernelInfo.Uri);
+            }
+           
             _kernelEvents.OnNext(kernelEvent);
         }
 

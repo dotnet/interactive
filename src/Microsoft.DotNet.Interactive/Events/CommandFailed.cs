@@ -7,12 +7,13 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class CommandFailed : KernelEvent
+    public sealed class CommandFailed : KernelCommandCompletionEvent
     {
         public CommandFailed(
             Exception exception,
             KernelCommand command,
-            string message = null) : base(command)
+            string message = null,
+            int? executionOrder = default) : base(command, executionOrder)
         {
             if (command is null)
             {
@@ -28,7 +29,8 @@ namespace Microsoft.DotNet.Interactive.Events
 
         public CommandFailed(
             string message,
-            KernelCommand command) : this(null, command, message)
+            KernelCommand command,
+            int? executionOrder = default) : this(null, command, message, executionOrder)
         {
         }
 

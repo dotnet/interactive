@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public interface IKernelExtensionLoader 
+    internal interface IKernelExtensionLoader 
     {
         Task LoadFromDirectoryAsync(
             DirectoryInfo directory,

@@ -1,7 +1,8 @@
-﻿// Copyright (c) Microsoft. All rights reserved. 
+// Copyright (c) Microsoft. All rights reserved. 
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Linq;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -11,10 +12,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
     /// <typeparam name="T">The type for which formatting is provided.</typeparam>
     public static class Formatter<T>
     {
-        internal static readonly bool TypeIsAnonymous = typeof(T).IsAnonymous();
-        internal static readonly bool TypeIsException = typeof(Exception).IsAssignableFrom(typeof(T));
-        internal static readonly bool TypeIsTuple = typeof(T).IsTuple();
-        internal static readonly bool TypeIsValueTuple = typeof(T).IsValueTuple();
+        internal static readonly bool TypeIsAnonymous;
+        internal static readonly bool TypeIsTuple;
+        internal static readonly bool TypeIsValueTuple;
+        internal static readonly bool TypeIsTupleOfScalars;
+        internal static readonly bool TypeIsScalar;
 
         private static int? _listExpansionLimit;
 
@@ -23,6 +25,26 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// </summary>
         static Formatter()
         {
+            if (TypeIsScalar = typeof(T).IsScalar())
+            {
+            }
+            else if (TypeIsTuple = typeof(T).IsTuple())
+            {
+                var fieldTypes = typeof(T).GetProperties().Select(p => p.PropertyType);
+
+                TypeIsTupleOfScalars = fieldTypes.All(t => t.IsScalar());
+            }
+            else if (TypeIsValueTuple = typeof(T).IsValueTuple())
+            {
+                var fieldTypes = typeof(T).GetFields().Select(f => f.FieldType);
+
+                TypeIsTupleOfScalars = fieldTypes.All(t => t.IsScalar());
+            }
+            else
+            {
+                TypeIsAnonymous = typeof(T).IsAnonymous();
+            }
+
             void Initialize()
             {
                 _listExpansionLimit = null;

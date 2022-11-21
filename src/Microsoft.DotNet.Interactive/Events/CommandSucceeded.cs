@@ -3,14 +3,15 @@
 
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Events
-{
-    public class CommandSucceeded : KernelEvent
-    {
-        public CommandSucceeded(KernelCommand command) : base(command)
-        {
-        }
+namespace Microsoft.DotNet.Interactive.Events;
 
-        public override string ToString() => $"{nameof(CommandSucceeded)}: {Command}";
+public sealed class CommandSucceeded : KernelCommandCompletionEvent
+{
+    public CommandSucceeded(
+        KernelCommand command,
+        int executionOrder = 0) : base(command, executionOrder)
+    {
     }
+
+    public override string ToString() => $"{nameof(CommandSucceeded)}: {Command}";
 }

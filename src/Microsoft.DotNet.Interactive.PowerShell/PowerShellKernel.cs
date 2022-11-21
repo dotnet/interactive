@@ -52,6 +52,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         private PowerShell pwsh => _lazyPwsh.Value;
 
         public Func<string, string> ReadInput { get; set; }
+
         public Func<string, PasswordString> ReadPassword { get; set; }
 
         internal AzShellConnectionUtils AzShell { get; set; }

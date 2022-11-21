@@ -2,6 +2,34 @@
 
 #r "nuget: Microsoft.DotNet.Interactive.Kql, *-*"
 
+#!csharp
+
+using System.Security.Cryptography;
+using System.Text;
+
+string ToSha256Hash(string text)
+{
+    var sha256 = SHA256.Create();
+    return HashInFormat(sha256, text);
+}
+
+string ToSha256HashWithNormalizedCasing(string text)
+{
+    return ToSha256Hash(text.ToUpperInvariant());
+}
+
+string HashInFormat(SHA256 sha256, string text)
+{
+    byte[] bytes = Encoding.UTF8.GetBytes(text);
+    byte[] hash = sha256.ComputeHash(bytes);
+    StringBuilder hashString = new StringBuilder();
+    foreach (byte x in hash)
+    {
+        hashString.AppendFormat("{0:x2}", x);
+    }
+    return hashString.ToString();
+}
+
 #!kql
 
 #!connect kql --kernel-name telemetry --cluster "https://dotnettel.kusto.windows.net" --database "trydotnetcli"
@@ -25,7 +53,10 @@ let languageMapping = dynamic(
        "18885f27b5af9012df19e496460f9294d5ab76128824c6f993787004f6d9a7db":"Python",
        "11a4a60b518bf24989d481468076e5d5982884626aed9faeb35b8576fcd223e1":"Python",
        "454349e422f05297191ead13e21d3db520e5abef52055e4964b82fb213f593a1":"R",
-       "d277670919a94ba361be1887d39852c3f31d7eed817343cbb70fcd8910841f86":"julia"
+       "d277670919a94ba361be1887d39852c3f31d7eed817343cbb70fcd8910841f86":"julia",
+       "eca37636c0711d96f605f252e43a4f3d0811a2ce7495c004b43eea2a9f7216e8":"Perl",
+       "f0c929a9e723bc62724e30c7e396e576019dfcb8cfd0a3f264ee5d72e64e49d1":"Perl",
+       "99f9df7b726d831976eb87646f4f89cc019dc122a2d4ddcd1f838f1dbfb340a2":"lisp"
   });
  let mapKernel = (sha:string) { 
   let mapped = tostring(languageMapping[sha]);
@@ -37,7 +68,8 @@ let languageMapping = dynamic(
  | project EventTimestamp, LanguageName = mapKernel(tostring(Properties["kernellanguagename"])), KernelSessionId = tostring(Properties["kernelsessionid"])
  | where LanguageName  != ""
  | summarize CommandCount = count(), LanguageCount = array_length(make_set(LanguageName)) , KernelLanguages = array_strcat( array_sort_asc( make_set(LanguageName) ), ":")by bin(EventTimestamp, 1d), KernelSessionId
- | summarize LangaugeSetOccurences = count(), LanguageSetSize = max(LanguageCount) by  KernelLanguages
+ | where CommandCount > 1
+ | summarize LangaugeSetOccurences = count(), LanguageSetSize = max(LanguageCount) by  bin(EventTimestamp, 1d), KernelLanguages
  | order by LanguageSetSize
 
 #!csharp
@@ -46,8 +78,70 @@ let languageMapping = dynamic(
 
 #!csharp
 
+public class polyglotNotebook{
+    public string LanguageSet {get;set;}
+    public int Popularity {get;set;}
+    public double Temperature {get;set;}
+    public string[] LanguageNames {get;set;}
+    public DateTime LastUsed {get;set;}
+    public DateTime FirstUsed {get;set;}
+}
+
+#!csharp
+
+var notebooks = new List<polyglotNotebook>();
+
+var dataPoints = langauges[0].Data.GroupBy(d => (DateTime)d.First(f => (f.Key == "EventTimestamp")).Value).ToDictionary(e => e.Key, e => e.ToList());
+var minDate = dataPoints.Keys.Min();
+var maxDate = dataPoints.Keys.Max();
+
+foreach(var day in Enumerable.Range(0, (maxDate - minDate).Days + 1).Select(m => minDate.AddDays(m))){
+    if(dataPoints.TryGetValue(day, out var data)){
+        var today = new HashSet<string>();
+        foreach(var lang in data){
+            var kernelLanguageNames = (lang.First(f => f.Key == "KernelLanguages").Value as string);
+            today.Add(kernelLanguageNames);
+            var polyglotNotebook = notebooks.FirstOrDefault(pn => pn.LanguageSet == kernelLanguageNames);
+            if(polyglotNotebook is null){
+                polyglotNotebook = new polyglotNotebook();
+                polyglotNotebook.LanguageSet = kernelLanguageNames;
+                polyglotNotebook.Popularity = 1;
+                polyglotNotebook.Temperature = 1.0;
+                polyglotNotebook.LanguageNames = kernelLanguageNames.Split(":");   
+                polyglotNotebook.FirstUsed = day;
+                polyglotNotebook.LastUsed = day;
+                notebooks.Add(polyglotNotebook);
+            }
+            else{
+                polyglotNotebook.LastUsed = day;
+                polyglotNotebook.Popularity++;
+                polyglotNotebook.Temperature *= 1.1;
+            }
+            var languageNames = kernelLanguageNames.Split(":");    
+            var langaugeSetOccurences = (long)lang.First(f => f.Key == "LangaugeSetOccurences").Value;
+        }
+
+        foreach(var notebook in notebooks){
+            if(!today.Contains(notebook.LanguageSet)){
+                notebook.Temperature *= 0.7;
+            }
+        }
+    }else{
+        foreach(var polyglotNotebook in notebooks){
+            polyglotNotebook.Temperature *= 0.7;
+        }
+    }   
+}
+
+#!csharp
+
+notebooks
+
+#!csharp
+
 public class Edge{
     public long weight {get;set;}
+    public double temperature {get;set;}
     public int source {get;set;}
     public int destination {get;set;}
 }
@@ -66,44 +160,60 @@ public class Graph{
 
 var nodelookup = new Dictionary<string, Node>();
 var graph = new Graph();
-foreach(var lang in langauges[0].Data){
-    var kernelLanguageNames = (lang.First(f => f.Key == "KernelLanguages").Value as string);
-    var languageNames = kernelLanguageNames.Split(":");    
-    var langaugeSetOccurences = (long)lang.First(f => f.Key == "LangaugeSetOccurences").Value;
-
-    for(var i = 0; i < languageNames.Length; i++){
-        var languageName = languageNames[i];
+foreach(var notebook in notebooks){
+    var languageNames = notebook.LanguageNames;
+    if(languageNames.Length > 1)
+    {
+        for(var i = 0; i < languageNames.Length; i++){
+            var languageName = languageNames[i];
+            if(!nodelookup.ContainsKey(languageName)){
+                var node = new Node(){
+                    language = languageName,
+                    popularity = notebook.Popularity
+                };
+                nodelookup.Add(languageName, node);
+                graph.nodes.Add(node);
+            }else
+            {
+                nodelookup[languageName].popularity += notebook.Popularity;
+            }
+        }
+        for(var i = 0; i < languageNames.Length; i++){
+            for(var j = i+1; j < languageNames.Length; j++){
+                var languageName = languageNames[i];
+                var otherLanguageName = languageNames[j];
+                if(languageName != otherLanguageName){
+                    var source = graph.nodes.IndexOf(nodelookup[languageName]);
+                    var destination = graph.nodes.IndexOf(nodelookup[otherLanguageName]);
+                    var edge = graph.edges.FirstOrDefault(e => e.source ==source && e.destination == destination);
+                    if(edge == null){
+                        edge = new Edge(){
+                            source = source,
+                            destination = destination,
+                            weight = notebook.Popularity,
+                            temperature = notebook.Temperature
+                        };
+                        graph.edges.Add(edge);
+                    }else{
+                        edge.weight += notebook.Popularity;
+                        edge.temperature += notebook.Temperature;
+                    }
+                }
+            }
+        }
+    }
+    else{
+        var languageName = languageNames[0] + " (single language)";
         if(!nodelookup.ContainsKey(languageName)){
             var node = new Node(){
                 language = languageName,
-                popularity = langaugeSetOccurences
+                popularity = notebook.Popularity
             };
             nodelookup.Add(languageName, node);
             graph.nodes.Add(node);
         }else
         {
-            nodelookup[languageName].popularity += langaugeSetOccurences;
-        }
-    }
-    for(var i = 0; i < languageNames.Length; i++){
-        for(var j = i+1; j < languageNames.Length; j++){
-            var languageName = languageNames[i];
-            var otherLanguageName = languageNames[j];
-            if(languageName != otherLanguageName){
-                var source = graph.nodes.IndexOf(nodelookup[languageName]);
-                var destination = graph.nodes.IndexOf(nodelookup[otherLanguageName]);
-                var edge = graph.edges.FirstOrDefault(e => e.source ==source && e.destination == destination);
-                if(edge == null){
-                    edge = new Edge(){
-                        source = source,
-                        destination = destination,
-                        weight = langaugeSetOccurences
-                    };
-                    graph.edges.Add(edge);
-                }else{
-                    edge.weight += langaugeSetOccurences;
-                }
-            }
+            nodelookup[languageName].popularity += notebook.Popularity;
         }
     }
 }
@@ -136,13 +246,22 @@ delay = (delayAmount) => new Promise(resolve => setTimeout(resolve, delayAmount)
 await delay(500);
 
 loadd3(["d3"], (d3) => {   
-    const maxStrength = d3.max(graph.edges, (e) => e.weight);
+    const maxStrength = d3.max(graph.edges, (e) => e.temperature);
+    const minStrength = d3.min(graph.edges, (e) => e.temperature);
     const maxPopularity = d3.max(graph.nodes, (n) => n.popularity);
+    const minPopularity = d3.min(graph.nodes, (n) => n.popularity);
+    const scale = d3.scaleSqrt()
+    .domain([0, 1])
+    .range([0, 1]);
+
+    const tempScale = d3.scaleLog()
+    .domain([minStrength, maxStrength])
+    .range([0, 1]);
     const nodes = d3.map(graph.nodes, (n, i) => ({id: i, language: n.language, popularity: n.popularity/maxPopularity}));
-    const links = d3.map(graph.edges, (e, i) => ({source: e.source, target: e.destination, strength: e.weight/maxStrength}));
+    const links = d3.map(graph.edges, (e, i) => ({source: e.source, target: e.destination, strength: e.temperature/maxStrength}));
     const color = d3.scaleOrdinal(d3.map(graph.nodes, (n, i) => n.language), d3.schemeTableau10);
-    const width = 1024;
-    const height = 1024;
+    const width = 2048;
+    const height = 2048;
     const maxR = 50;
     const collisionScale = 2.5;
     const svg = d3.select("#forceLayout")
@@ -213,7 +332,7 @@ loadd3(["d3"], (d3) => {
     .join("path")
     .attr("fill", "none")
     .attr("stroke",  d => color(nodes[d.source].language))
-    .attr("stroke-width", (d) => 1 + d.strength * 6)
+    .attr("stroke-width", (d) => 3 + tempScale(d.strength) * 10)
     .classed("link", true);
 
     node = svg
@@ -246,7 +365,8 @@ loadd3(["d3"], (d3) => {
       }
     }
     function truncateText(text, length) {
-      if(notToTruncate.has(text)) {
+      var l = text.split(" ");
+      if(notToTruncate.has(l[0])) {
         return text;
       }
       if (text.length > length) {
@@ -258,10 +378,10 @@ loadd3(["d3"], (d3) => {
     simulation = d3
     .forceSimulation()
     .nodes(nodes)
-    .force('collision', d3.forceCollide().radius(d => d.popularity * maxR * collisionScale))
-    .force("charge", d3.forceManyBody().strength(d => d.popularity * -100))
+    .force('collision', d3.forceCollide().radius(d => scale( d.popularity ) * maxR * collisionScale))
+    .force("charge", d3.forceManyBody().strength(d => scale( d.popularity ) * -200))
     .force("center", d3.forceCenter(width / 2, height / 2))
-    .force("link", d3.forceLink(links).strength ( (d) => d.strength))
+    .force("link", d3.forceLink(links).strength ( (d) => tempScale(d.strength)  * 1.2))
     .force("bounds", boxingForce)
     .on("tick", tick);
 
@@ -269,12 +389,12 @@ loadd3(["d3"], (d3) => {
     .attr("fill", d => color(d.language))
     .attr("stroke", "#666")
     .attr("stroke-width", 1.5)
-    .attr("r", d => 5 + d.popularity * maxR)
+    .attr("r", d => 5 + scale( d.popularity )  * maxR)
     .classed("nodecircle", true);
     //.call(dragStuff(simulation));
 
     node.append("text")
-    .attr("x", d=>  8 + d.popularity * maxR)
+    .attr("x", d=>  8 +scale( d.popularity )  * maxR)
     .attr("y", "0.31em")
     .text(d => truncateText( d.language,10 ))
     .attr("fill", d => color(d.language))
@@ -286,7 +406,7 @@ loadd3(["d3"], (d3) => {
       .attr("stroke-width", 3)
       .clone(true).lower()
       .attr("fill", "none")
-      .attr("stroke", "rgba(255, 255, 255, 0.5)")
+      .attr("stroke", "rgba(255, 255, 255, 0.2)")
       .attr("stroke-width", 4);
 
     
