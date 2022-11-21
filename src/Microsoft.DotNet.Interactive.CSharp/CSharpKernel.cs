@@ -435,7 +435,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }
 
             var items = new List<CompletionItem>();
-            foreach (var item in completionList.Items)
+            foreach (var item in completionList.ItemsList)
             {
                 var description = await service.GetDescriptionAsync(document, item, contextCancellationToken);
                 var completionItem = item.ToModel(description);

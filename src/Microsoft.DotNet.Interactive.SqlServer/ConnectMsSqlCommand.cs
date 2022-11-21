@@ -3,76 +3,75 @@
 
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.CommandLine.Parsing;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 
-namespace Microsoft.DotNet.Interactive.SqlServer
+namespace Microsoft.DotNet.Interactive.SqlServer;
+
+public class ConnectMsSqlCommand : ConnectKernelCommand
 {
-    public class ConnectMsSqlCommand : ConnectKernelCommand
+    private readonly string ResolvedToolsServicePath;
+
+    public ConnectMsSqlCommand(string resolvedToolsServicePath)
+        : base("mssql", "Connects to a Microsoft SQL Server database")
     {
-        private readonly string ResolvedToolsServicePath;
+        ResolvedToolsServicePath = resolvedToolsServicePath;
+        Add(ConnectionStringArgument);
+        Add(CreateDbContextOption);
+    }
 
-        public ConnectMsSqlCommand(string resolvedToolsServicePath)
-            : base("mssql", "Connects to a Microsoft SQL Server database")
+    private static Option<bool> CreateDbContextOption { get; } =
+        new("--create-dbcontext",
+            "Scaffold a DbContext in the C# kernel.");
+
+    private Argument<MsSqlConnectionString> ConnectionStringArgument { get; } =
+        new("connectionString",
+            description: "The connection string used to connect to the database",
+            parse: s => new(s.Tokens.Single().Value));
+
+    public override async Task<Kernel> ConnectKernelAsync(
+        KernelInvocationContext context,
+        InvocationContext commandLineContext)
+    {
+        var connector = new MsSqlKernelConnector(
+            commandLineContext.ParseResult.GetValueForOption(CreateDbContextOption),
+            commandLineContext.ParseResult.GetValueForArgument(ConnectionStringArgument).Value);
+        connector.PathToService = ResolvedToolsServicePath;
+
+        var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
+
+        var kernel = await connector.CreateKernelAsync(localName);
+
+        if (connector.CreateDbContext)
         {
-            ResolvedToolsServicePath = resolvedToolsServicePath;
-            Add(ConnectionStringArgument);
-            Add(CreateDbContextOption);
+            await InitializeDbContextAsync(localName, connector, context);
         }
 
-        private static Option<bool> CreateDbContextOption { get; } =
-            new("--create-dbcontext",
-                "Scaffold a DbContext in the C# kernel.");
+        return kernel;
+    }
 
-        private Argument<MsSqlConnectionString> ConnectionStringArgument { get; } =
-            new("connectionString",
-                description: "The connection string used to connect to the database",
-                parse: s => new(s.Tokens.Single().Value));
+    private async Task InitializeDbContextAsync(string kernelName, MsSqlKernelConnector options, KernelInvocationContext context)
+    {
+        CSharpKernel csharpKernel = null;
 
-        public override async Task<Kernel> ConnectKernelAsync(
-            KernelInvocationContext context,
-            InvocationContext commandLineContext)
+        context.HandlingKernel.VisitSubkernelsAndSelf(k =>
         {
-            var connector = new MsSqlKernelConnector(
-                commandLineContext.ParseResult.GetValueForOption(CreateDbContextOption),
-                commandLineContext.ParseResult.GetValueForArgument(ConnectionStringArgument).Value);
-            connector.PathToService = ResolvedToolsServicePath;
-
-            var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
-
-            var kernel = await connector.CreateKernelAsync(localName);
-
-            if (connector.CreateDbContext)
+            if (k is CSharpKernel csk)
             {
-                await InitializeDbContextAsync(localName, connector, context);
+                csharpKernel = csk;
             }
+        });
 
-            return kernel;
+        if (csharpKernel is null)
+        {
+            return;
         }
 
-        private async Task InitializeDbContextAsync(string kernelName, MsSqlKernelConnector options, KernelInvocationContext context)
-        {
-            CSharpKernel csharpKernel = null;
+        context.DisplayAs($"Scaffolding a `DbContext` and initializing an instance of it called `{kernelName}` in the C# kernel.", "text/markdown");
 
-            context.HandlingKernel.VisitSubkernelsAndSelf(k =>
-            {
-                if (k is CSharpKernel csk)
-                {
-                    csharpKernel = csk;
-                }
-            });
-
-            if (csharpKernel is null)
-            {
-                return;
-            }
-
-            context.DisplayAs($"Scaffolding a `DbContext` and initializing an instance of it called `{kernelName}` in the C# kernel.", "text/markdown");
-
-            var submission1 = @$"  
+        var submission1 = @$"  
 #r ""nuget: Microsoft.EntityFrameworkCore.Design, 6.0.10""
 #r ""nuget: Microsoft.EntityFrameworkCore.SqlServer, 6.0.10""
 #r ""nuget: Humanizer.Core, 2.14.1""
@@ -132,16 +131,15 @@ foreach (var file in  new[] {{ model.ContextFile.Code }}.Concat(model.Additional
 }}
 ";
 
-            await csharpKernel.SubmitCodeAsync(submission1);
+        await csharpKernel.SubmitCodeAsync(submission1);
 
-            csharpKernel.TryGetValue("code", out string submission2);
+        csharpKernel.TryGetValue("code", out string submission2);
 
-            await csharpKernel.SubmitCodeAsync(submission2);
+        await csharpKernel.SubmitCodeAsync(submission2);
 
-            var submission3 = $@"
+        var submission3 = $@"
 var {kernelName} = new {kernelName}Context();";
 
-            await csharpKernel.SubmitCodeAsync(submission3);
-        }
+        await csharpKernel.SubmitCodeAsync(submission3);
     }
 }
