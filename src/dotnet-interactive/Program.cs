@@ -99,7 +99,7 @@ namespace Microsoft.DotNet.Interactive.App
 
             return webHost;
 
-            static HttpPort GetFreePort(StartupOptions startupOptions)
+            static HttpPort GetFreePort(StartupOptions startupOptions, int maxRetries = 50)
             {
                 using var __ = Log.OnEnterAndExit(nameof(GetFreePort));
                 if (startupOptions.HttpPort is not null && !startupOptions.HttpPort.IsAuto)
@@ -107,22 +107,23 @@ namespace Microsoft.DotNet.Interactive.App
                     return startupOptions.HttpPort;
                 }
 
-                var currentPort = 0;
-                var endPort = 0;
+                var startPort = 49152; // RFC 6335 compatible
+                var endPort = 65535;
 
                 if (startupOptions.HttpPortRange is not null)
                 {
-                    currentPort = startupOptions.HttpPortRange.Start;
+                    startPort = startupOptions.HttpPortRange.Start;
                     endPort = startupOptions.HttpPortRange.End;
                 }
 
-                for (; currentPort <= endPort; currentPort++)
+                var random = new Random();
+                for (var i=0; i<maxRetries ; i++)
                 {
                     try
                     {
-                        var l = new TcpListener(IPAddress.Loopback, currentPort);
+                        var port = random.Next(startPort, endPort);
+                        var l = new TcpListener(IPAddress.Loopback, port);
                         l.Start();
-                        var port = ((IPEndPoint)l.LocalEndpoint).Port;
                         l.Stop();
                         return new HttpPort(port);
                     }
