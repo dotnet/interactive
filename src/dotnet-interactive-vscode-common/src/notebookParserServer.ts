@@ -2,10 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as contracts from './dotnet-interactive/contracts';
-import { defaultNotebookCellLanguage } from './interactiveNotebook';
 import { MessageClient } from './messageClient';
 import { isNotebookParserServerResponse, isNotebookParserServerError, isNotebookParseResponse, isNotebookSerializeResponse } from './interfaces/utilities';
 import { Eol } from './interfaces';
+import * as constants from './constants';
 
 export class NotebookParserServer {
     private nextId: number = 1;
@@ -18,7 +18,7 @@ export class NotebookParserServer {
             type: contracts.RequestType.Parse,
             id: this.getNextId(),
             serializationType,
-            defaultLanguage: defaultNotebookCellLanguage,
+            defaultLanguage: constants.CellLanguageIdentifier,
             rawData,
         };
 
@@ -32,7 +32,7 @@ export class NotebookParserServer {
                     // ensure at least one cell
                     notebookCells.push({
                         executionOrder: 0,
-                        kernelName: defaultNotebookCellLanguage,
+                        kernelName: 'csharp',
                         contents: '',
                         outputs: [],
                     });
@@ -53,7 +53,7 @@ export class NotebookParserServer {
             type: contracts.RequestType.Serialize,
             id: this.getNextId(),
             serializationType,
-            defaultLanguage: defaultNotebookCellLanguage,
+            defaultLanguage: 'csharp',
             newLine: eol,
             document,
         };

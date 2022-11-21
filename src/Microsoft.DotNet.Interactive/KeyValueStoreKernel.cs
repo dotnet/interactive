@@ -29,6 +29,7 @@ namespace Microsoft.DotNet.Interactive
 
         public KeyValueStoreKernel(string name = DefaultKernelName) : base(name)
         {
+            KernelInfo.DisplayName = "Value Storage";
         }
 
         Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)

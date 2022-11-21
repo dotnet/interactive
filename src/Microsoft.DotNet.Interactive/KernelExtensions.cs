@@ -66,10 +66,10 @@ namespace Microsoft.DotNet.Interactive
                 })
                 .LastOrDefault();
 
-          
+
             return root switch
             {
-                CompositeKernel c => predicate(c) ? new[] { kernel }.Concat(c.ChildKernels.Where(predicate)) :  c.ChildKernels.Where(predicate),
+                CompositeKernel c => predicate(c) ? new[] { kernel }.Concat(c.ChildKernels.Where(predicate)) : c.ChildKernels.Where(predicate),
                 _ when predicate(kernel) => new[] { kernel },
                 _ => Enumerable.Empty<Kernel>()
             };
@@ -124,7 +124,7 @@ namespace Microsoft.DotNet.Interactive
                         kernelAliases.Add(alias[2..]);
                     }
 
-                    kernelInfos.Add(new Documents.KernelInfo(kernelChooser.Name[2..], kernelAliases));
+                    kernelInfos.Add(new Documents.KernelInfo(kernelChooser.Name[2..], aliases: kernelAliases));
                 }
 
                 return kernelInfos;
@@ -198,7 +198,7 @@ namespace Microsoft.DotNet.Interactive
             var sourceValueNameArg = new Argument<string>(
                 "name",
                 "The name of the value to share. (This is also the default name value created in the destination kernel, unless --as is used to specify a different one.)");
-            
+
             sourceValueNameArg.AddCompletions(_ =>
             {
                 if (kernel.ParentKernel is { } composite)
@@ -245,8 +245,8 @@ namespace Microsoft.DotNet.Interactive
 
             var mimeTypeOption = new Option<string>("--mime-type", "Share the value as a string formatted to the specified MIME type.")
                 .AddCompletions(
-                    JsonFormatter.MimeType, 
-                    HtmlFormatter.MimeType, 
+                    JsonFormatter.MimeType,
+                    HtmlFormatter.MimeType,
                     PlainTextFormatter.MimeType);
 
             var asOption = new Option<string>("--as", "The name to give the the value in the importing kernel.");
@@ -270,9 +270,9 @@ namespace Microsoft.DotNet.Interactive
                 if (kernel.FindKernelByName(from) is { } fromKernel)
                 {
                     await fromKernel.GetValueAndSendTo(
-                        kernel, 
-                        valueName, 
-                        mimeType, 
+                        kernel,
+                        valueName,
+                        mimeType,
                         importAsName);
                 }
                 else
@@ -290,7 +290,7 @@ namespace Microsoft.DotNet.Interactive
             this Kernel fromKernel,
             Kernel toKernel,
             string fromName,
-            string requestedMimeType, 
+            string requestedMimeType,
             string toName)
         {
             var supportedRequestValue = fromKernel.SupportsCommandType(typeof(RequestValue));
@@ -325,7 +325,7 @@ namespace Microsoft.DotNet.Interactive
                 }
             }
         }
-        
+
         public static TKernel UseWho<TKernel>(this TKernel kernel)
             where TKernel : Kernel
         {

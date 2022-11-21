@@ -51,16 +51,32 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         }
 
         [Fact]
-        public void cell_language_can_be_pulled_from_metadata_when_present()
+        public void cell_language_can_be_pulled_from_dotnet_interactive_metadata_when_present()
         {
             var metaData = new Dictionary<string, object>
             {
-                { "dotnet_interactive", new InputCellMetadata( "fsharp") }
+                // the value specified is `language`, but in reality this was the kernel name
+                { "dotnet_interactive", new InputCellMetadata(language: "fsharp") }
             };
             var request = ZeroMQMessage.Create(new IsCompleteRequest("1+1"), metaData: metaData);
             var context = new JupyterRequestContext(JupyterMessageSender, request);
-            var language = context.GetLanguage();
-            language
+            var kernelName = context.GetKernelName();
+            kernelName
+                .Should()
+                .Be("fsharp");
+        }
+
+        [Fact]
+        public void cell_language_can_be_pulled_from_polyglot_notebook_metadata_when_present()
+        {
+            var metaData = new Dictionary<string, object>
+            {
+                { "polyglot_notebook", new InputCellMetadata(kernelName: "fsharp") }
+            };
+            var request = ZeroMQMessage.Create(new IsCompleteRequest("1+1"), metaData: metaData);
+            var context = new JupyterRequestContext(JupyterMessageSender, request);
+            var kernelName = context.GetKernelName();
+            kernelName
                 .Should()
                 .Be("fsharp");
         }
@@ -70,7 +86,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         {
             var request = ZeroMQMessage.Create(new IsCompleteRequest("1+1"));
             var context = new JupyterRequestContext(JupyterMessageSender, request);
-            var language = context.GetLanguage();
+            var language = context.GetKernelName();
             language
                 .Should()
                 .BeNull();

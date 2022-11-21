@@ -5,40 +5,62 @@ import * as vscode from 'vscode';
 import * as contracts from './vscode-common/dotnet-interactive/contracts';
 import * as utilities from './vscode-common/interfaces/utilities';
 import * as vscodeLike from './vscode-common/interfaces/vscode-like';
-import { getNotebookSpecificLanguage, getSimpleLanguage, languageToCellKind } from './vscode-common/interactiveNotebook';
-import { getEol, vsCodeCellOutputToContractCellOutput } from './vscode-common/vscodeUtilities';
+import { languageToCellKind } from './vscode-common/interactiveNotebook';
+import * as vscodeUtilities from './vscode-common/vscodeUtilities';
 import { NotebookParserServer } from './vscode-common/notebookParserServer';
 import { Eol } from './vscode-common/interfaces';
+import * as metadataUtilities from './vscode-common/metadataUtilities';
+import * as constants from './vscode-common/constants';
 
 function toInteractiveDocumentElement(cell: vscode.NotebookCellData): contracts.InteractiveDocumentElement {
+    // just need to match the shape
+    const fakeCell: vscodeLike.NotebookCell = {
+        kind: 0,
+        metadata: cell.metadata ?? {}
+    };
+    const notebookCellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(fakeCell);
     const outputs = cell.outputs || [];
     return {
         executionOrder: cell.executionSummary?.executionOrder ?? 0,
-        kernelName: getSimpleLanguage(cell.languageId),
+        kernelName: cell.languageId === 'markdown' ? 'markdown' : notebookCellMetadata.kernelName ?? 'csharp',
         contents: cell.value,
-        outputs: outputs.map(vsCodeCellOutputToContractCellOutput)
+        outputs: outputs.map(vscodeUtilities.vsCodeCellOutputToContractCellOutput)
     };
 }
 
 async function deserializeNotebookByType(parserServer: NotebookParserServer, serializationType: contracts.DocumentSerializationType, rawData: Uint8Array): Promise<vscode.NotebookData> {
     const interactiveDocument = await parserServer.parseInteractiveDocument(serializationType, rawData);
+    const notebookMetadata = metadataUtilities.getNotebookDocumentMetadataFromInteractiveDocument(interactiveDocument);
+    const createForIpynb = serializationType === contracts.DocumentSerializationType.Ipynb;
+    const rawNotebookDocumentMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookMetadata, createForIpynb);
     const notebookData: vscode.NotebookData = {
-        cells: interactiveDocument.elements.map(toVsCodeNotebookCellData)
+        cells: interactiveDocument.elements.map(element => toVsCodeNotebookCellData(element)),
+        metadata: rawNotebookDocumentMetadata
     };
     return notebookData;
 }
 
 async function serializeNotebookByType(parserServer: NotebookParserServer, serializationType: contracts.DocumentSerializationType, eol: Eol, data: vscode.NotebookData): Promise<Uint8Array> {
+    // just need to match the shape
+    const fakeNotebookDocument: vscodeLike.NotebookDocument = {
+        uri: {
+            fsPath: 'unused',
+            scheme: 'unused'
+        },
+        metadata: data.metadata ?? {}
+    };
+    const notebookMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(fakeNotebookDocument);
+    const rawInteractiveDocumentNotebookMetadata = metadataUtilities.getRawInteractiveDocumentMetadataFromNotebookDocumentMetadata(notebookMetadata);
     const interactiveDocument: contracts.InteractiveDocument = {
         elements: data.cells.map(toInteractiveDocumentElement),
-        metadata: {}
+        metadata: rawInteractiveDocumentNotebookMetadata
     };
     const rawData = await parserServer.serializeNotebook(serializationType, eol, interactiveDocument);
     return rawData;
 }
 
 export function createAndRegisterNotebookSerializers(context: vscode.ExtensionContext, parserServer: NotebookParserServer): Map<string, vscode.NotebookSerializer> {
-    const eol = getEol();
+    const eol = vscodeUtilities.getEol();
     const createAndRegisterSerializer = (serializationType: contracts.DocumentSerializationType, notebookType: string): vscode.NotebookSerializer => {
         const serializer: vscode.NotebookSerializer = {
             deserializeNotebook(content: Uint8Array, _token: vscode.CancellationToken): Promise<vscode.NotebookData> {
@@ -54,8 +76,8 @@ export function createAndRegisterNotebookSerializers(context: vscode.ExtensionCo
     };
 
     const serializers = new Map<string, vscode.NotebookSerializer>();
-    serializers.set('polyglot-notebook', createAndRegisterSerializer(contracts.DocumentSerializationType.Dib, 'polyglot-notebook'));
-    serializers.set('jupyter-notebook', createAndRegisterSerializer(contracts.DocumentSerializationType.Ipynb, 'polyglot-notebook-jupyter'));
+    serializers.set(constants.NotebookViewType, createAndRegisterSerializer(contracts.DocumentSerializationType.Dib, constants.NotebookViewType));
+    serializers.set(constants.JupyterViewType, createAndRegisterSerializer(contracts.DocumentSerializationType.Ipynb, constants.JupyterNotebookViewType));
     return serializers;
 }
 
@@ -63,7 +85,12 @@ function toVsCodeNotebookCellData(cell: contracts.InteractiveDocumentElement): v
     const cellData = new vscode.NotebookCellData(
         <number>languageToCellKind(cell.kernelName),
         cell.contents,
-        getNotebookSpecificLanguage(cell.kernelName));
+        cell.kernelName === 'markdown' ? 'markdown' : constants.CellLanguageIdentifier);
+    const notebookCellMetadata: metadataUtilities.NotebookCellMetadata = {
+        kernelName: cell.kernelName
+    };
+    const rawNotebookCellMetadata = metadataUtilities.getRawNotebookCellMetadataFromNotebookCellMetadata(notebookCellMetadata);
+    cellData.metadata = rawNotebookCellMetadata;
     cellData.outputs = cell.outputs.map(outputElementToVsCodeCellOutput);
     return cellData;
 }

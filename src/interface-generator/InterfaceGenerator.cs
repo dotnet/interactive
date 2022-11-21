@@ -35,6 +35,11 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
             { typeof(Uri), "string" },
         };
 
+        private static readonly Dictionary<Type, string> TypeNameOverrides = new()
+        {
+            { typeof(Documents.KernelInfo), "DocumentKernelInfo" }
+        };
+
         private static readonly HashSet<Type> AlwaysEmitTypes = new()
         {
             typeof(KernelCommand),
@@ -43,6 +48,7 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
             typeof(ReturnValueElement),
             typeof(TextElement),
             typeof(ErrorElement),
+            typeof(Documents.KernelInfo),
         };
 
         private static readonly HashSet<Type> ParserServerTypes = new()
@@ -246,9 +252,14 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 
         private static string TypeName(Type type)
         {
-            if (WellKnownTypes.TryGetValue(type, out var name))
+            if (WellKnownTypes.TryGetValue(type, out var wellKnownName))
             {
-                return name;
+                return wellKnownName;
+            }
+
+            if (TypeNameOverrides.TryGetValue(type, out var overrideName))
+            {
+                return overrideName;
             }
 
             return type.Name;

@@ -225,6 +225,7 @@ describe("proxyKernel", () => {
                             uri: 'kernel://local/remoteKernel',
                             languageName: "gsharp",
                             languageVersion: "1.2.3",
+                            displayName: "G#",
                             supportedKernelCommands: [{ name: "customCommand1" }, { name: "customCommand2" }],
                             supportedDirectives: []
                         }
@@ -255,6 +256,7 @@ describe("proxyKernel", () => {
             aliases: [],
             languageName: 'gsharp',
             languageVersion: '1.2.3',
+            displayName: 'G#',
             localName: 'proxy',
             remoteUri: 'kernel://local/remoteKernel',
             supportedDirectives: [],
@@ -266,5 +268,3 @@ describe("proxyKernel", () => {
         });
     });
 });
-
-

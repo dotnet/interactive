@@ -48,7 +48,7 @@ Microsoft.DotNet.Interactive.Jupyter
     public System.Threading.Tasks.Task Done()
     public T GetRequestContent<T>()
   public static class JupyterRequestContextExtensions
-    public static System.String GetLanguage()
+    public static System.String GetKernelName()
   public class JupyterRequestContextHandler
     .ctor(Microsoft.DotNet.Interactive.Kernel kernel)
     public System.Threading.Tasks.Task Handle(JupyterRequestContext context)
@@ -169,7 +169,7 @@ Microsoft.DotNet.Interactive.Jupyter.Protocol
     public System.String Code { get; set;}
     public System.Int32 CursorPosition { get; set;}
   public class CSharpLanguageInfo : LanguageInfo
-    .ctor(System.String version = 10.0)
+    .ctor(System.String version = 11.0)
   public class DisplayData : PubSubMessage
     .ctor(System.String source = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> data = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> metaData = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> transient = null)
     public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Data { get;}

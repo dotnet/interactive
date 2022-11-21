@@ -156,7 +156,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         }
 
         [Fact]
-        public void Input_cell_honors_custom_metadata()
+        public void Input_cell_honors_custom_dotnet_interactive_metadata()
         {
             var socket = new TextSocket();
             var sender = new MessageSender(socket, new SignatureValidator("key", "HMACSHA256"));
@@ -177,7 +177,40 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 
             var metaData = new Dictionary<string, object>
             {
-                { "dotnet_interactive", new InputCellMetadata("fsharp") }
+                { "dotnet_interactive", new InputCellMetadata(language: "fsharp") }
+            };
+
+            var replyMessage = new Message(header, content: executeResult, metaData: metaData);
+
+            sender.Send(replyMessage);
+
+            var encoded = socket.GetEncodedMessage();
+            this.Assent(encoded, _configuration);
+        }
+
+        [Fact]
+        public void Input_cell_honors_custom_polyglot_notebook_metadata()
+        {
+            var socket = new TextSocket();
+            var sender = new MessageSender(socket, new SignatureValidator("key", "HMACSHA256"));
+            var transient = new Dictionary<string, object> { { "display_id", "none" } };
+            var output = "some result";
+            var executeResult = new ExecuteResult(
+                12,
+                transient: transient,
+                data: new Dictionary<string, object> {
+                    { "text/html", output },
+                    { "text/plain", output }
+
+                });
+
+            var header = new Header(messageType: JupyterMessageContentTypes.ExecuteResult, messageId: Guid.Empty.ToString(),
+                version: "5.3", username: Constants.USERNAME, session: "test session",
+                date: DateTime.MinValue.ToString("yyyy-MM-ddTHH:mm:ssZ"));
+
+            var metaData = new Dictionary<string, object>
+            {
+                { "polyglot_notebook", new InputCellMetadata(kernelName: "fsharp") }
             };
 
             var replyMessage = new Message(header, content: executeResult, metaData: metaData);

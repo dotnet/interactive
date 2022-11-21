@@ -8,7 +8,6 @@ import * as disposables from './disposables';
 import { Disposable } from './disposables';
 import { KernelType } from './kernel';
 import { Logger } from './logger';
-import { URI } from 'vscode-uri';
 
 export type KernelCommandOrEventEnvelope = contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope;
 
@@ -21,7 +20,6 @@ export function isKernelEventEnvelope(commandOrEvent: KernelCommandOrEventEnvelo
 }
 
 export interface IKernelCommandAndEventReceiver extends rxjs.Subscribable<KernelCommandOrEventEnvelope> {
-
 }
 
 export interface IKernelCommandAndEventSender {
@@ -117,15 +115,17 @@ export function isArrayOfString(collection: any): collection is string[] {
     return Array.isArray(collection) && collection.length > 0 && typeof (collection[0]) === typeof ("");
 }
 
+export const onKernelInfoUpdates: ((compositeKernel: CompositeKernel) => void)[] = [];
 
 export function ensureOrUpdateProxyForKernelInfo(kernelInfoProduced: contracts.KernelInfoProduced, compositeKernel: CompositeKernel) {
-    const uriToLookup = kernelInfoProduced.kernelInfo.remoteUri ?? kernelInfoProduced.kernelInfo.uri;
+    const uriToLookup = kernelInfoProduced.kernelInfo.uri ?? kernelInfoProduced.kernelInfo.remoteUri;
     if (uriToLookup) {
         let kernel = compositeKernel.findKernelByUri(uriToLookup);
         if (!kernel) {
             // add
             if (compositeKernel.host) {
-                Logger.default.info(`creating proxy for uri[${uriToLookup}]with info ${JSON.stringify(kernelInfoProduced)} `);
+                Logger.default.info(`creating proxy for uri[${uriToLookup}]with info ${JSON.stringify(kernelInfoProduced)}`);
+                // check for clash with `kernelInfo.localName`
                 kernel = compositeKernel.host.connectProxyKernel(kernelInfoProduced.kernelInfo.localName, uriToLookup, kernelInfoProduced.kernelInfo.aliases);
             } else {
                 throw new Error('no kernel host found');
@@ -138,10 +138,12 @@ export function ensureOrUpdateProxyForKernelInfo(kernelInfoProduced: contracts.K
             // patch
             updateKernelInfo(kernel.kernelInfo, kernelInfoProduced.kernelInfo);
         }
+
+        for (const updater of onKernelInfoUpdates) {
+            updater(compositeKernel);
+        }
     }
 }
-
-
 
 export function isKernelInfoForProxy(kernelInfo: contracts.KernelInfo): boolean {
     const hasUri = !!kernelInfo.uri;
@@ -152,6 +154,7 @@ export function isKernelInfoForProxy(kernelInfo: contracts.KernelInfo): boolean 
 export function updateKernelInfo(destination: contracts.KernelInfo, incoming: contracts.KernelInfo) {
     destination.languageName = incoming.languageName ?? destination.languageName;
     destination.languageVersion = incoming.languageVersion ?? destination.languageVersion;
+    destination.displayName = incoming.displayName;
 
     const supportedDirectives = new Set<string>();
     const supportedCommands = new Set<string>();

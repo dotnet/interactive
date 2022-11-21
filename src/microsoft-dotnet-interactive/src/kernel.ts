@@ -59,13 +59,14 @@ export class Kernel {
         return this._eventSubject.asObservable();
     }
 
-    constructor(readonly name: string, languageName?: string, languageVersion?: string) {
+    constructor(readonly name: string, languageName?: string, languageVersion?: string, displayName?: string) {
         this._kernelInfo = {
             localName: name,
             languageName: languageName,
             aliases: [],
             uri: routingslip.createKernelUri(`kernel://local/${name}`),
             languageVersion: languageVersion,
+            displayName: displayName ?? name,
             supportedDirectives: [],
             supportedKernelCommands: []
         };

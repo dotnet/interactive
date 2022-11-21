@@ -7,20 +7,18 @@ import * as contracts from './vscode-common/dotnet-interactive/contracts';
 import * as vscodeLike from './vscode-common/interfaces/vscode-like';
 import * as diagnostics from './vscode-common/diagnostics';
 import * as vscodeUtilities from './vscode-common/vscodeUtilities';
-import { getSimpleLanguage, isDotnetInteractiveLanguage, jupyterViewType, notebookCellLanguages } from './vscode-common/interactiveNotebook';
-import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, isDotNetNotebookMetadata, withDotNetKernelMetadata } from './vscode-common/ipynbUtilities';
 import { reshapeOutputValueForVsCode } from './vscode-common/interfaces/utilities';
 import { selectDotNetInteractiveKernelForJupyter } from './vscode-common/commands';
 import { ErrorOutputCreator, InteractiveClient } from './vscode-common/interactiveClient';
 import { LogEntry, Logger } from './vscode-common/dotnet-interactive/logger';
-import * as verstionSpecificFunctions from './versionSpecificFunctions';
-import { KernelCommandOrEventEnvelope } from './vscode-common/dotnet-interactive/connection';
+import { isKernelEventEnvelope, KernelCommandOrEventEnvelope } from './vscode-common/dotnet-interactive/connection';
 import * as rxjs from 'rxjs';
+import * as metadataUtilities from './vscode-common/metadataUtilities';
+import * as constants from './vscode-common/constants';
+import * as versionSpecificFunctions from './versionSpecificFunctions';
+import * as semanticTokens from './vscode-common/documentSemanticTokenProvider';
 
 const executionTasks: Map<string, vscode.NotebookCellExecution> = new Map();
-
-const viewType = 'polyglot-notebook';
-const legacyViewType = 'dotnet-interactive-legacy';
 
 export interface DotNetNotebookKernelConfiguration {
     clientMapper: ClientMapper,
@@ -32,13 +30,13 @@ export class DotNetNotebookKernel {
 
     private disposables: { dispose(): void }[] = [];
 
-    constructor(readonly config: DotNetNotebookKernelConfiguration) {
+    constructor(readonly config: DotNetNotebookKernelConfiguration, readonly tokensProvider: semanticTokens.DocumentSemanticTokensProvider) {
         const preloads = config.preloadUris.map(uri => new vscode.NotebookRendererScript(uri));
 
         // .dib execution
         const dibController = vscode.notebooks.createNotebookController(
-            'polyglot-notebook',
-            viewType,
+            constants.NotebookControllerId,
+            constants.NotebookViewType,
             '.NET Interactive',
             this.executeHandler.bind(this),
             preloads
@@ -47,8 +45,8 @@ export class DotNetNotebookKernel {
 
         // .dotnet-interactive execution
         const legacyController = vscode.notebooks.createNotebookController(
-            'polyglot-notebook-legacy',
-            legacyViewType,
+            constants.LegacyNotebookControllerId,
+            constants.LegacyNotebookViewType,
             '.NET Interactive',
             this.executeHandler.bind(this),
             preloads
@@ -57,8 +55,8 @@ export class DotNetNotebookKernel {
 
         // .ipynb execution via Jupyter extension (optional)
         const jupyterController = vscode.notebooks.createNotebookController(
-            'polyglot-notebook-for-jupyter',
-            jupyterViewType,
+            constants.JupyterNotebookControllerId,
+            constants.JupyterViewType,
             '.NET Interactive',
             this.executeHandler.bind(this),
             preloads
@@ -72,15 +70,31 @@ export class DotNetNotebookKernel {
         this.commonControllerInit(jupyterController);
 
         this.disposables.push(vscode.workspace.onDidOpenNotebookDocument(async notebook => {
-            if (isDotNetNotebook(notebook)) {
-                // eagerly spin up the backing process
-                const client = await config.clientMapper.getOrAddClient(notebook.uri);
-                client.resetExecutionCount();
+            await this.onNotebookOpen(notebook, config.clientMapper, jupyterController);
+        }));
 
-                if (notebook.notebookType === jupyterViewType) {
-                    jupyterController.updateNotebookAffinity(notebook, vscode.NotebookControllerAffinity.Preferred);
-                    await selectDotNetInteractiveKernelForJupyter();
-                    await updateNotebookMetadata(notebook, this.config.clientMapper);
+        // ...but we may have to look at already opened ones if we were activated late
+        for (const notebook of vscode.workspace.notebookDocuments) {
+            this.onNotebookOpen(notebook, config.clientMapper, jupyterController);
+        }
+
+        this.disposables.push(vscode.workspace.onDidOpenTextDocument(async textDocument => {
+            if (vscode.window.activeNotebookEditor) {
+                const notebook = vscode.window.activeNotebookEditor.notebook;
+                if (metadataUtilities.isDotNetNotebook(notebook)) {
+                    const notebookMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(notebook);
+                    const cells = notebook.getCells();
+                    const foundCell = cells.find(cell => cell.document === textDocument);
+                    if (foundCell && foundCell.index > 0) {
+                        // if we found the cell and it's not the first, ensure it has kernel metadata
+                        const cellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(foundCell);
+                        if (!cellMetadata.kernelName) {
+                            // no kernel metadata; copy from previous cell
+                            const previousCell = cells[foundCell.index - 1];
+                            const previousCellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(previousCell);
+                            await vscodeUtilities.setCellKernelName(foundCell, previousCellMetadata.kernelName ?? notebookMetadata.kernelInfo.defaultKernelName);
+                        }
+                    }
                 }
             }
         }));
@@ -90,10 +104,29 @@ export class DotNetNotebookKernel {
         this.disposables.forEach(d => d.dispose());
     }
 
+    private async onNotebookOpen(notebook: vscode.NotebookDocument, clientMapper: ClientMapper, jupyterController: vscode.NotebookController): Promise<void> {
+        if (metadataUtilities.isDotNetNotebook(notebook)) {
+            // prepare initial grammar
+            const kernelInfos = metadataUtilities.getKernelInfosFromNotebookDocument(notebook);
+            this.tokensProvider.dynamicTokenProvider.rebuildNotebookGrammar(notebook.uri, kernelInfos);
+
+            // eagerly spin up the backing process
+            const client = await clientMapper.getOrAddClient(notebook.uri);
+            client.resetExecutionCount();
+
+            if (notebook.notebookType === constants.JupyterViewType) {
+                jupyterController.updateNotebookAffinity(notebook, vscode.NotebookControllerAffinity.Preferred);
+                await selectDotNetInteractiveKernelForJupyter();
+            }
+
+            await updateNotebookMetadata(notebook, this.config.clientMapper);
+        }
+    }
+
     private uriMessageHandlerMap: Map<string, rxjs.Subject<KernelCommandOrEventEnvelope>> = new Map();
 
     private commonControllerInit(controller: vscode.NotebookController) {
-        controller.supportedLanguages = notebookCellLanguages;
+        controller.supportedLanguages = [constants.CellLanguageIdentifier];
         controller.supportsExecutionOrder = true;
         this.disposables.push(controller.onDidReceiveMessage(e => {
             const notebookUri = e.editor.notebook.uri;
@@ -109,7 +142,7 @@ export class DotNetNotebookKernel {
                     this.config.clientMapper.getOrAddClient(notebookUri).then(() => {
                         const kernelInfoProduced = (<contracts.KernelEventEnvelope[]>(e.message.kernelInfoProduced)).map(e => <contracts.KernelInfoProduced>e.event);
                         const hostUri = e.message.hostUri;
-                        verstionSpecificFunctions.hashBangConnect(this.config.clientMapper, hostUri, kernelInfoProduced, this.uriMessageHandlerMap, (arg) => controller.postMessage(arg), notebookUri);
+                        versionSpecificFunctions.hashBangConnect(this.config.clientMapper, hostUri, kernelInfoProduced, this.uriMessageHandlerMap, (arg) => controller.postMessage(arg), notebookUri);
                     });
                     break;
             }
@@ -161,7 +194,7 @@ export class DotNetNotebookKernel {
                     diagnosticCollection.set(cell.document.uri, diags.filter(d => d.severity !== contracts.DiagnosticSeverity.Hidden).map(vscodeUtilities.toVsCodeDiagnostic));
                 }
 
-                return client.execute(source, getSimpleLanguage(cell.document.languageId), outputObserver, diagnosticObserver, { id: cell.document.uri.toString() }).then(async (success) => {
+                return client.execute(source, vscodeUtilities.getCellKernelName(cell), outputObserver, diagnosticObserver, { id: cell.document.uri.toString() }).then(async (success) => {
                     await outputUpdatePromise;
                     endExecution(client, cell, success);
                 }).catch(async () => {
@@ -183,27 +216,67 @@ async function updateNotebookMetadata(notebook: vscode.NotebookDocument, clientM
     try {
         // update various metadata
         await updateDocumentKernelspecMetadata(notebook);
-        await updateCellLanguages(notebook);
+        await updateCellLanguagesAndKernels(notebook);
 
         // force creation of the client so we don't have to wait for the user to execute a cell to get the tool
-        await clientMapper.getOrAddClient(notebook.uri);
+        const client = await clientMapper.getOrAddClient(notebook.uri);
+        await updateKernelInfoMetadata(client, notebook);
     } catch (err) {
         vscode.window.showErrorMessage(`Failed to set document metadata for '${notebook.uri}': ${err}`);
     }
 }
 
-export async function updateCellLanguages(document: vscode.NotebookDocument): Promise<void> {
-    const documentLanguageInfo = getLanguageInfoMetadata(document.metadata);
+async function updateKernelInfoMetadata(client: InteractiveClient, document: vscode.NotebookDocument): Promise<void> {
+    const isIpynb = metadataUtilities.isIpynbNotebook(document);
+    client.channel.receiver.subscribe({
+        next: async (commandOrEventEnvelope) => {
+            if (isKernelEventEnvelope(commandOrEventEnvelope) && commandOrEventEnvelope.eventType === contracts.KernelInfoProducedType) {
+                // got info about a kernel; either update an existing entry, or add a new one
+                let metadataChanged = false;
+                const kernelInfoProduced = <contracts.KernelInfoProduced>commandOrEventEnvelope.event;
+                const notebookMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(document);
+                for (const item of notebookMetadata.kernelInfo.items) {
+                    if (item.name === kernelInfoProduced.kernelInfo.localName) {
+                        metadataChanged = true;
+                        item.languageName = kernelInfoProduced.kernelInfo.languageName;
+                        item.aliases = kernelInfoProduced.kernelInfo.aliases;
+                    }
+                }
 
-    // update cell language
+                if (!metadataChanged) {
+                    // nothing changed, must be a new kernel
+                    notebookMetadata.kernelInfo.items.push({
+                        name: kernelInfoProduced.kernelInfo.localName,
+                        languageName: kernelInfoProduced.kernelInfo.languageName,
+                        aliases: kernelInfoProduced.kernelInfo.aliases
+                    });
+                }
+
+                const existingRawNotebookDocumentMetadata = document.metadata;
+                const updatedRawNotebookDocumentMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookMetadata, isIpynb);
+                const newRawNotebookDocumentMetadata = metadataUtilities.mergeRawMetadata(existingRawNotebookDocumentMetadata, updatedRawNotebookDocumentMetadata);
+                await versionSpecificFunctions.replaceNotebookMetadata(document.uri, newRawNotebookDocumentMetadata);
+            }
+        }
+    });
+
+    const notebookDocumentMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(document);
+    const kernelNotebokMetadata = metadataUtilities.getNotebookDocumentMetadataFromCompositeKernel(client.kernel);
+    const mergedMetadata = metadataUtilities.mergeNotebookDocumentMetadata(notebookDocumentMetadata, kernelNotebokMetadata);
+    const rawNotebookDocumentMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(mergedMetadata, isIpynb);
+    await versionSpecificFunctions.replaceNotebookMetadata(document.uri, rawNotebookDocumentMetadata);
+}
+
+async function updateCellLanguagesAndKernels(document: vscode.NotebookDocument): Promise<void> {
+    const notebookMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(document);
+
+    // update cell language and kernel
     await Promise.all(document.getCells().map(async (cell) => {
-        const cellMetadata = getDotNetMetadata(cell.metadata);
-        const cellText = cell.document.getText();
-        const newLanguage = cell.kind === vscode.NotebookCellKind.Code
-            ? getCellLanguage(cellText, cellMetadata, documentLanguageInfo, cell.document.languageId)
-            : 'markdown';
-        if (cell.document.languageId !== newLanguage) {
-            await vscode.languages.setTextDocumentLanguage(cell.document, newLanguage);
+        const cellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(cell);
+        await vscodeUtilities.ensureCellLanguage(cell);
+        if (!cellMetadata.kernelName) {
+            // no kernel specified; apply global
+            vscodeUtilities.setCellKernelName(cell, notebookMetadata.kernelInfo.defaultKernelName);
         }
     }));
 }
@@ -258,32 +331,7 @@ function generateVsCodeNotebookCellOutputItem(data: Uint8Array, mime: string, st
 }
 
 async function updateDocumentKernelspecMetadata(document: vscode.NotebookDocument): Promise<void> {
-    const documentKernelMetadata = withDotNetKernelMetadata(document.metadata);
-    const notebookEdit = vscode.NotebookEdit.updateNotebookMetadata(documentKernelMetadata);
-    const edit = new vscode.WorkspaceEdit();
-    edit.set(document.uri, [notebookEdit]);
-    await vscode.workspace.applyEdit(edit);
-}
-
-function isDotNetNotebook(notebook: vscode.NotebookDocument): boolean {
-    if (notebook.uri.toString().endsWith('.dib')) {
-        return true;
-    }
-
-    if (isDotNetNotebookMetadata(notebook.metadata)) {
-        // metadata looked correct
-        return true;
-    }
-
-    if (notebook.uri.scheme === 'untitled' && notebook.cellCount === 1) {
-        // untitled with a single cell, check cell
-        const cell = notebook.cellAt(0);
-        if (isDotnetInteractiveLanguage(cell.document.languageId) && cell.document.getText() === '') {
-            // language was one of ours and cell was emtpy
-            return true;
-        }
-    }
-
-    // doesn't look like us
-    return false;
+    const documentMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(document);
+    const newMetadata = metadataUtilities.createNewIpynbMetadataWithNotebookDocumentMetadata(document.metadata, documentMetadata);
+    await versionSpecificFunctions.replaceNotebookMetadata(document.uri, newMetadata);
 }

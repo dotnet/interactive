@@ -58,11 +58,13 @@ import { clearDebounce, createOutput } from './utilities';
 
 import * as vscodeLike from './interfaces/vscode-like';
 import { CompositeKernel } from './dotnet-interactive/compositeKernel';
+import { ProxyKernel } from './dotnet-interactive/proxyKernel';
 import { Guid } from './dotnet-interactive/tokenGenerator';
 import { KernelHost } from './dotnet-interactive/kernelHost';
 import { KernelCommandAndEventChannel } from './DotnetInteractiveChannel';
 import * as connection from './dotnet-interactive/connection';
 import { DisposableSubscription } from './dotnet-interactive/disposables';
+import { Logger } from './dotnet-interactive/logger';
 
 export interface ErrorOutputCreator {
     (message: string, outputId?: string): vscodeLike.NotebookCellOutput;
@@ -254,14 +256,14 @@ export class InteractiveClient {
 
     }
 
-    completion(language: string, code: string, line: number, character: number, token?: string | undefined): Promise<CompletionsProduced> {
+    completion(kernelName: string, code: string, line: number, character: number, token?: string | undefined): Promise<CompletionsProduced> {
         let command: RequestCompletions = {
             code: code,
             linePosition: {
                 line,
                 character
             },
-            targetKernelName: language
+            targetKernelName: kernelName
         };
         return this.submitCommandAndGetResult<CompletionsProduced>(command, RequestCompletionsType, CompletionsProducedType, token);
     }
@@ -290,10 +292,10 @@ export class InteractiveClient {
         return this.submitCommandAndGetResult<SignatureHelpProduced>(command, RequestSignatureHelpType, SignatureHelpProducedType, token);
     }
 
-    async getDiagnostics(language: string, code: string, token?: string | undefined): Promise<Array<Diagnostic>> {
+    async getDiagnostics(kernelName: string, code: string, token?: string | undefined): Promise<Array<Diagnostic>> {
         const command: RequestDiagnostics = {
             code,
-            targetKernelName: language
+            targetKernelName: kernelName
         };
         const diagsProduced = await this.submitCommandAndGetResult<DiagnosticsProduced>(command, RequestDiagnosticsType, DiagnosticsProducedType, token);
         return diagsProduced.diagnostics;

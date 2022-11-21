@@ -37,14 +37,13 @@ export interface Uri {
 }
 
 export interface NotebookCell {
-    cellKind: NotebookCellKind;
-    document: Document;
-    readonly language: string;
-    //outputs: CellOutput[];
+    readonly kind: NotebookCellKind;
+    metadata: { [key: string]: any };
 }
 
 export interface NotebookDocument {
     readonly uri: Uri;
+    readonly metadata: { [key: string]: any };
 }
 
 export interface NotebookCellData {

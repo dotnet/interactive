@@ -18,12 +18,14 @@ namespace Microsoft.DotNet.Interactive
         private readonly HashSet<string> _kernelNameFilter;
         private const string DefaultKernelName = "kql";
 
-        public KqlDiscoverabilityKernel() : base(DefaultKernelName, languageName: "KQL")
+        public KqlDiscoverabilityKernel() : base(DefaultKernelName)
         {
             _kernelNameFilter = new HashSet<string>
             {
                 "MsKqlKernel"
             };
+            KernelInfo.LanguageName = "KQL";
+            KernelInfo.DisplayName = "Kusto Query Language";
         }
 
         Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)

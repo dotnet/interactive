@@ -11,8 +11,8 @@ import { KernelInvocationContext } from "./kernelInvocationContext";
 
 export class ProxyKernel extends Kernel {
 
-    constructor(override readonly name: string, private readonly _sender: connection.IKernelCommandAndEventSender, private readonly _receiver: connection.IKernelCommandAndEventReceiver) {
-        super(name);
+    constructor(override readonly name: string, private readonly _sender: connection.IKernelCommandAndEventSender, private readonly _receiver: connection.IKernelCommandAndEventReceiver, languageName?: string, languageVersion?: string) {
+        super(name, languageName, languageVersion);
         this.kernelType = KernelType.proxy;
     }
 

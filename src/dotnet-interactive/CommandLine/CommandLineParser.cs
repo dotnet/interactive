@@ -286,6 +286,12 @@ public static class CommandLineParser
                     return new HttpPort(portNumber);
                 });
 
+            var kernelHostOption = new Option<Uri>(
+                "--kernel-host",
+                parseArgument: x => x.Tokens.Count == 0 ? KernelHost.CreateHostUriForCurrentProcessId() : KernelHost.CreateHostUri(x.Tokens[0].Value),
+                isDefault: true,
+                description: "Name of the kernel host.");
+
             var workingDirOption = new Option<DirectoryInfo>(
                 "--working-dir",
                 () => new DirectoryInfo(Environment.CurrentDirectory),
@@ -298,6 +304,7 @@ public static class CommandLineParser
                 defaultKernelOption,
                 httpPortRangeOption,
                 httpPortOption,
+                kernelHostOption,
                 workingDirOption
             };
 
@@ -313,8 +320,8 @@ public static class CommandLineParser
                         : new BrowserFrontendEnvironment();
 
                     var kernel = CreateKernel(
-                        options.DefaultKernel, 
-                        frontendEnvironment, 
+                        options.DefaultKernel,
+                        frontendEnvironment,
                         startupOptions,
                         telemetrySender);
 
@@ -333,7 +340,7 @@ public static class CommandLineParser
                     var host = kernel.UseHost(
                         sender,
                         receiver,
-                        KernelHost.CreateHostUriForCurrentProcessId());
+                        startupOptions.KernelHost);
 
                     var isVSCode = context.ParseResult.Directives.Contains("vscode") ||
                                    !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CODESPACES"));
@@ -379,12 +386,11 @@ public static class CommandLineParser
                     }
 
                     return 0;
-                        
                 });
 
             return stdIOCommand;
         }
-            
+
         Command NotebookParser()
         {
             var notebookParserCommand = new Command(
@@ -489,7 +495,7 @@ public static class CommandLineParser
 
         kernel.AddKernelConnector(new ConnectNamedPipeCommand());
         kernel.AddKernelConnector(new ConnectSignalRCommand());
-        kernel.AddKernelConnector(new ConnectStdIoCommand());
+        kernel.AddKernelConnector(new ConnectStdIoCommand(startupOptions.KernelHost));
 
         if (startupOptions.Verbose)
         {

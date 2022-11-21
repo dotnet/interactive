@@ -201,7 +201,7 @@ public static class KernelExtensions
 
     private static SendEditableCode CreateNewSendEditableCodeWithContent(SendEditableCode original)
     {
-        var command = new SendEditableCode(original.Language, original.Code);
+        var command = new SendEditableCode(original.KernelName, original.Code);
         return command;
     }
 

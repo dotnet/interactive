@@ -1,0 +1,6 @@
+data: <IDS|MSG> more: True
+data: 603e263e45519c834b3e93c592d33ecf45320b19a8a791aca22d33dfdda5f3e8 more: True
+data: {"msg_id":"00000000-0000-0000-0000-000000000000","username":"dotnet_kernel","session":"test session","date":"0001-01-01T00:00:00Z","msg_type":"execute_result","version":"5.3"} more: True
+data: {} more: True
+data: {"polyglot_notebook":{"kernelName":"fsharp","language":null}} more: True
+data: {"data":{"text/html":"some result","text/plain":"some result"},"metadata":{},"transient":{"display_id":"none"},"execution_count":12} more: False
