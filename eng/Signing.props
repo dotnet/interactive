@@ -37,6 +37,7 @@
 
     <!-- Microsoft.PowerShell.Security -->
     <FileSignInfo Include="Microsoft.PowerShell.Security.psd1" CertificateName="None" />
+    <FileSignInfo Include="Security.types.ps1xml" CertificateName="None" />
 
     <!-- Microsoft.PowerShell.Utility -->
     <FileSignInfo Include="Microsoft.PowerShell.Utility.psd1" CertificateName="None" />
