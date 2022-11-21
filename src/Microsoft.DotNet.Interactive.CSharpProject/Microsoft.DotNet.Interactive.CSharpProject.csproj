@@ -41,7 +41,7 @@
   <ItemGroup>
     <PackageReference Include="Buildalyzer" Version="4.1.2" />
     <PackageReference Include="Buildalyzer.Workspaces" Version="4.1.2" />
-    <PackageReference Include="Markdig.Signed" Version="0.23.0" />
+    <PackageReference Include="Markdig.Signed" Version="0.30.4" />
     <PackageReference Include="Microsoft.AspNetCore.Html.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
