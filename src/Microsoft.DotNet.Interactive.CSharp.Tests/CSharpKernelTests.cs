@@ -1,60 +1,81 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Microsoft.DotNet.Interactive.CSharp.Tests
+namespace Microsoft.DotNet.Interactive.CSharp.Tests;
+
+public class CSharpKernelTests : LanguageKernelTestBase
 {
-    public class CSharpKernelTests : LanguageKernelTestBase
+    public CSharpKernelTests(ITestOutputHelper output) : base(output)
     {
-        public CSharpKernelTests(ITestOutputHelper output) : base(output)
+    }
+
+    [Fact]
+    public async Task Script_state_is_available_within_middleware_pipeline()
+    {
+        var variableCountBeforeEvaluation = 0;
+        var variableCountAfterEvaluation = 0;
+
+        using var kernel = new CSharpKernel();
+
+        kernel.AddMiddleware(async (command, context, next) =>
         {
-        }
+            var k = context.HandlingKernel as CSharpKernel;
 
-        [Fact]
-        public async Task Script_state_is_available_within_middleware_pipeline()
-        {
-            var variableCountBeforeEvaluation = 0;
-            var variableCountAfterEvaluation = 0;
+            await next(command, context);
 
-            using var kernel = new CSharpKernel();
+            variableCountAfterEvaluation = k.ScriptState.Variables.Length;
+        });
 
-            kernel.AddMiddleware(async (command, context, next) =>
-            {
-                var k = context.HandlingKernel as CSharpKernel;
+        await kernel.SendAsync(new SubmitCode("var x = 1;"));
 
-                await next(command, context);
+        variableCountBeforeEvaluation.Should().Be(0);
+        variableCountAfterEvaluation.Should().Be(1);
+    }
 
-                variableCountAfterEvaluation = k.ScriptState.Variables.Length;
-            });
+    [Fact]
+    public async Task GetValueInfos_only_returns_non_shadowed_values()
+    {
+        using var kernel = new CSharpKernel();
 
-            await kernel.SendAsync(new SubmitCode("var x = 1;"));
+        await kernel.SendAsync(new SubmitCode("var x = 1;"));
+        await kernel.SendAsync(new SubmitCode("var x = \"two\";"));
 
-            variableCountBeforeEvaluation.Should().Be(0);
-            variableCountAfterEvaluation.Should().Be(1);
-        }
+        var (success, valueInfosProduced) = await kernel.TryRequestValueInfosAsync();
 
-        [Fact]
-        public async Task GetValueInfos_only_returns_non_shadowed_values()
-        {
-            using var kernel = new CSharpKernel();
+        success.Should().BeTrue();
 
-            await kernel.SendAsync(new SubmitCode("var x = 1;"));
-            await kernel.SendAsync(new SubmitCode("var x = \"two\";"));
+        valueInfosProduced.ValueInfos
+            .Should()
+            .ContainSingle(v => v.Name == "x");
+    }
 
-            var (success, valueInfosProduced) = await kernel.TryRequestValueInfosAsync();
+    [Fact]
+    public async Task Supports_csharp_11()
+    {
+        using var kernel = new CSharpKernel();
 
-            success.Should().BeTrue();
+        var events = kernel.KernelEvents.ToSubscribedList();
 
-            valueInfosProduced.ValueInfos
-                .Should()
-                .ContainSingle(v => v.Name == "x");
-        }
+        await kernel.SendAsync(new SubmitCode(@"public static int CheckSwitch(int[] values)
+    => values switch
+    {
+        [1, 2, .., 10] => 1,
+        [1, 2] => 2,
+        [1, _] => 3,
+        [1, ..] => 4,
+        [..] => 50
+    };"));
+
+        events.OfType<DiagnosticsProduced>().Should().BeEmpty();
     }
 }
