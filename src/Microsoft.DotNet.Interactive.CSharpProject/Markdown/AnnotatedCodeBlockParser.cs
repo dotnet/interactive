@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown
             Block block)
         {
             var fence = (IFencedBlock) block;
-            var count = Math.Min(fence.OpeningFencedCharCount, fence.ClosingFencedCharCount);
+            var count = fence.OpeningFencedCharCount;
             var matchChar = fence.FencedChar;
             var c = processor.CurrentChar;
 
