@@ -51,9 +51,8 @@ namespace Microsoft.DotNet.Interactive
         private static async Task<string> GetInputAsync(string prompt, bool isPassword, string typeHint = "text")
         {
             var command = new RequestInput(
-                prompt, 
-                isPassword ? "password" : default,
-                inputTypeHint: typeHint);
+                prompt,
+                inputTypeHint: isPassword ? "password" : typeHint);
 
             var results = await Root.SendAsync(command, CancellationToken.None);
 
