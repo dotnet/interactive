@@ -37,6 +37,7 @@ namespace Microsoft.DotNet.Interactive
         /// Gets input from the user.
         /// </summary>
         /// <param name="prompt">The prompt to show.</param>
+        /// <param name="typeHint">The type hint for the input, for example text or password.</param>
         /// <returns>The user input value.</returns>
         public static async Task<string> GetInputAsync(string prompt = "", string typeHint = "text")
         {
