@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Linq;
@@ -72,11 +73,11 @@ public class ConnectMsSqlCommand : ConnectKernelCommand
         context.DisplayAs($"Scaffolding a `DbContext` and initializing an instance of it called `{kernelName}` in the C# kernel.", "text/markdown");
 
         var submission1 = @$"  
-#r ""nuget: Microsoft.EntityFrameworkCore.Design, 6.0.10""
-#r ""nuget: Microsoft.EntityFrameworkCore.SqlServer, 6.0.10""
+#r ""nuget: Microsoft.EntityFrameworkCore.Design, 7.0.0""
+#r ""nuget: Microsoft.EntityFrameworkCore.SqlServer, 7.0.0""
 #r ""nuget: Humanizer.Core, 2.14.1""
 #r ""nuget: Humanizer, 2.14.1""
-#r ""nuget: Microsoft.Identity.Client, 4.35.1""
+#r ""nuget: Microsoft.Identity.Client, 4.48.1""
 
             using System;
 using System.Reflection;
@@ -113,19 +114,11 @@ using Microsoft.EntityFrameworkCore.Metadata;"";
 
 foreach (var file in  new[] {{ model.ContextFile.Code }}.Concat(model.AdditionalFiles.Select(f => f.Code)))
 {{
+    var namespaceToFind = ""namespace {kernelName};"";
+    var headerSize = file.LastIndexOf(namespaceToFind)  + namespaceToFind.Length;
     var fileCode = file
         // remove namespaces, which don't compile in Roslyn scripting
-        .Replace(""namespace {kernelName}"", """")
-
-        // remove the namespaces, which have been hoisted to the top of the code submission
-        .Replace(""using System;"", """")
-        .Replace(""using System.Collections.Generic;"", """")
-        .Replace(""using Microsoft.EntityFrameworkCore;"", """")
-        .Replace(""using Microsoft.EntityFrameworkCore.Metadata;"", """")
-
-        // trim out the wrapping braces
-        .Trim()
-        .Trim( new[] {{ '{{', '}}' }} );
+        .Substring(headerSize).Trim();
 
     code += fileCode;
 }}
