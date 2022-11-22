@@ -6,112 +6,110 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Security;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Events;
 
-namespace Microsoft.DotNet.Interactive.PowerShell
+namespace Microsoft.DotNet.Interactive.PowerShell;
+
+using System.Management.Automation;
+
+internal static class PowerShellExtensions
 {
-    using System.Management.Automation;
+    private static PSInvocationSettings _settings = new() { AddToHistory = true };
 
-    internal static class PowerShellExtensions
+    public static void InvokeAndClearCommands(this PowerShell pwsh)
     {
-        private static PSInvocationSettings _settings = new PSInvocationSettings() { AddToHistory = true };
-
-        public static void InvokeAndClearCommands(this PowerShell pwsh)
+        try
         {
-            try
-            {
-                pwsh.Invoke(input: null, _settings);
-            }
-            finally
-            {
-                pwsh.Streams.ClearStreams();
-                pwsh.Commands.Clear();
-            }
+            pwsh.Invoke(input: null, _settings);
+        }
+        finally
+        {
+            pwsh.Streams.ClearStreams();
+            pwsh.Commands.Clear();
+        }
+    }
+
+    public static async Task InvokeAndClearCommandsAsync(this PowerShell pwsh)
+    {
+        try
+        {
+            await pwsh.InvokeAsync<PSObject>(
+                input: null,
+                settings: _settings,
+                callback: null,
+                state: null).ConfigureAwait(false);
+        }
+        finally
+        {
+            pwsh.Streams.ClearStreams();
+            pwsh.Commands.Clear();
+        }
+    }
+
+    public static void InvokeAndClearCommands(this PowerShell pwsh, IEnumerable input)
+    {
+        try
+        {
+            pwsh.Invoke(input, _settings);
+        }
+        finally
+        {
+            pwsh.Streams.ClearStreams();
+            pwsh.Commands.Clear();
+        }
+    }
+
+    public static Collection<T> InvokeAndClearCommands<T>(this PowerShell pwsh)
+    {
+        try
+        {
+            var result = pwsh.Invoke<T>(input: null, settings: _settings);
+            return result;
+        }
+        finally
+        {
+            pwsh.Streams.ClearStreams();
+            pwsh.Commands.Clear();
+        }
+    }
+
+    public static Collection<T> InvokeAndClearCommands<T>(this PowerShell pwsh, IEnumerable input)
+    {
+        try
+        {
+            var result = pwsh.Invoke<T>(input, _settings);
+            return result;
+        }
+        finally
+        {
+            pwsh.Streams.ClearStreams();
+            pwsh.Commands.Clear();
+        }
+    }
+
+    internal static SecureString GetSecureStringPassword(this PasswordString pwdString)
+    {
+        var secure = new SecureString();
+        foreach (var c in pwdString.GetClearTextPassword())
+        {
+            secure.AppendChar(c);
         }
 
-        public static async Task InvokeAndClearCommandsAsync(this PowerShell pwsh)
+        return secure;
+    }
+
+    internal static object Unwrap(this PSObject psObj)
+    {
+        var obj = psObj.BaseObject;
+        if (obj is PSCustomObject)
         {
-            try
+            var table = new Dictionary<string, object>();
+            foreach (var p in psObj.Properties)
             {
-                await pwsh.InvokeAsync<PSObject>(
-                    input: null,
-                    settings: _settings,
-                    callback: null,
-                    state: null).ConfigureAwait(false);
+                table.Add(p.Name, p.Value);
             }
-            finally
-            {
-                pwsh.Streams.ClearStreams();
-                pwsh.Commands.Clear();
-            }
+            obj = table;
         }
 
-        public static void InvokeAndClearCommands(this PowerShell pwsh, IEnumerable input)
-        {
-            try
-            {
-                pwsh.Invoke(input, _settings);
-            }
-            finally
-            {
-                pwsh.Streams.ClearStreams();
-                pwsh.Commands.Clear();
-            }
-        }
-
-        public static Collection<T> InvokeAndClearCommands<T>(this PowerShell pwsh)
-        {
-            try
-            {
-                var result = pwsh.Invoke<T>(input: null, settings: _settings);
-                return result;
-            }
-            finally
-            {
-                pwsh.Streams.ClearStreams();
-                pwsh.Commands.Clear();
-            }
-        }
-
-        public static Collection<T> InvokeAndClearCommands<T>(this PowerShell pwsh, IEnumerable input)
-        {
-            try
-            {
-                var result = pwsh.Invoke<T>(input, _settings);
-                return result;
-            }
-            finally
-            {
-                pwsh.Streams.ClearStreams();
-                pwsh.Commands.Clear();
-            }
-        }
-
-        internal static SecureString GetSecureStringPassword(this PasswordString pwdString)
-        {
-            var secure = new SecureString();
-            foreach (char c in pwdString.GetClearTextPassword())
-            {
-                secure.AppendChar(c);
-            }
-
-            return secure;
-        }
-
-        internal static object Unwrap(this PSObject psObj)
-        {
-            object obj = psObj.BaseObject;
-            if (obj is PSCustomObject)
-            {
-                Dictionary<string, object> table = new Dictionary<string, object>();
-                foreach (var p in psObj.Properties)
-                {
-                    table.Add(p.Name, p.Value);
-                }
-                obj = table;
-            }
-
-            return obj;
-        }
+        return obj;
     }
 }

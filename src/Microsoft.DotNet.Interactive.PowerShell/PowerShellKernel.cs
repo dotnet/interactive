@@ -109,7 +109,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             var pwsh = PowerShell.Create(runspace);
 
             // Add Modules directory that contains the helper modules
-            string psJupyterModulePath = Path.Join(
+            var psJupyterModulePath = Path.Join(
                Path.GetDirectoryName(typeof(PowerShellKernel).Assembly.Location),
                "Modules");
 
