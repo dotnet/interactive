@@ -18,7 +18,7 @@
  </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="microsoft.playwright" Version="1.22.0" />
+    <PackageReference Include="microsoft.playwright" Version="1.28.0" />
     <PackageReference Include="Pocket.Disposable" Version="1.1.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
