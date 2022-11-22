@@ -181,7 +181,7 @@ public class CommandLineParserTests : IDisposable
     {
         _parser.Invoke("jupyter -h", _console);
 
-        _console.Out.ToString().Should().Contain("default: 1000-3000");
+        _console.Out.ToString().Should().Contain("default: 2048-3000");
     }
 
     [Fact]
