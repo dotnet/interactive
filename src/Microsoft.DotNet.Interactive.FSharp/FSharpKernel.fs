@@ -33,7 +33,11 @@ open FSharp.Compiler.Symbols
 
 type FSharpKernel () as this =
 
-    inherit Kernel("fsharp", "F#", "6.0")
+    inherit Kernel("fsharp")
+
+    do this.KernelInfo.LanguageName <- "F#"
+    do this.KernelInfo.LanguageVersion <- "6.0"
+    do this.KernelInfo.DisplayName <- "F# Script"
 
     static let lockObj = Object();
 

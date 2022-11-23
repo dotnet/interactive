@@ -6,6 +6,7 @@ using System.CommandLine.Invocation;
 using System.CommandLine.IO;
 using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -116,7 +117,7 @@ public class CommandLineParserTests : IDisposable
 
         using (var kernel = new CompositeKernel())
         {
-            kernel.AddKernelConnector(new ConnectStdIoCommand());
+            kernel.AddKernelConnector(new ConnectStdIoCommand(new Uri("kernel://test-kernel")));
 
             await kernel.SendAsync(new SubmitCode($"#!connect stdio --kernel-name proxy --command \"{Dotnet.Path}\" \"{typeof(Program).Assembly.Location}\" stdio --log-path \"{logPath.Directory.FullName}\" --verbose"));
 
@@ -181,7 +182,7 @@ public class CommandLineParserTests : IDisposable
     {
         _parser.Invoke("jupyter -h", _console);
 
-        _console.Out.ToString().Should().Contain("default: 1000-3000");
+        _console.Out.ToString().Should().Contain("default: 2048-3000");
     }
 
     [Fact]
@@ -318,6 +319,34 @@ public class CommandLineParserTests : IDisposable
         await _parser.InvokeAsync($"jupyter {expected}", testConsole);
 
         testConsole.Error.ToString().Should().ContainAll("File does not exist", "not_exist.json");
+    }
+
+    [Fact]
+    public void stdio_command_kernel_host_defaults_to_process_id()
+    {
+        var result = _parser.Parse("stdio");
+
+        var binder = new ModelBinder<StartupOptions>();
+
+        var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
+
+        options.KernelHost
+            .Should()
+            .Be(new Uri($"kernel://pid-{Process.GetCurrentProcess().Id}"));
+    }
+
+    [Fact]
+    public void stdio_command_kernel_name_can_be_specified()
+    {
+        var result = _parser.Parse("stdio --kernel-host some-kernel-name");
+
+        var binder = new ModelBinder<StartupOptions>();
+
+        var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
+
+        options.KernelHost
+            .Should()
+            .Be(new Uri("kernel://some-kernel-name"));
     }
 
     [Fact]

@@ -40,7 +40,8 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
 
         var connector = new StdIoKernelConnector(
             command.ToArray(),
-            _configuration.WorkingDirectory);
+            kernelHostUri: new Uri("kernel://test-kernel"),
+            workingDirectory: _configuration.WorkingDirectory);
 
         RegisterForDisposal(connector);
 
@@ -117,7 +118,7 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
 
     protected override void AddKernelConnector(CompositeKernel compositeKernel)
     {
-        compositeKernel.AddKernelConnector(new ConnectStdIoCommand());
+        compositeKernel.AddKernelConnector(new ConnectStdIoCommand(new Uri("kernel://test-kernel")));
     }
 }
 

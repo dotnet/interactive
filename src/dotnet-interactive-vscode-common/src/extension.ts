@@ -6,6 +6,7 @@ import * as helpService from './helpService';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import * as semanticTokens from './documentSemanticTokenProvider';
 import * as vscode from 'vscode';
 import * as vscodeLike from './interfaces/vscode-like';
 import { ClientMapper } from './clientMapper';
@@ -13,12 +14,13 @@ import { MessageClient } from './messageClient';
 
 import { StdioDotnetInteractiveChannel } from './stdioDotnetInteractiveChannel';
 import { registerLanguageProviders } from './languageProvider';
+import { registerNotbookCellStatusBarItemProvider } from './notebookCellStatusBarItemProvider';
 import { registerAcquisitionCommands, registerKernelCommands, registerFileCommands } from './commands';
 
-import { getNotebookSpecificLanguage, getSimpleLanguage, isDotnetInteractiveLanguage, isJupyterNotebookViewType, languageToCellKind } from './interactiveNotebook';
+import { languageToCellKind } from './interactiveNotebook';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from './interfaces';
 
-import { createOutput, getDotNetVersionOrThrow, getWorkingDirectoryForNotebook, isVersionSufficient, processArguments } from './utilities';
+import { createOutput, debounce, getDotNetVersionOrThrow, getWorkingDirectoryForNotebook, isVersionSufficient, processArguments } from './utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
 
 import * as notebookControllers from '../notebookControllers';
@@ -26,8 +28,7 @@ import * as notebookSerializers from '../notebookSerializers';
 import * as versionSpecificFunctions from '../versionSpecificFunctions';
 import { ErrorOutputCreator } from './interactiveClient';
 
-import { isInsidersBuild } from './vscodeUtilities';
-import { getDotNetMetadata, withDotNetCellMetadata } from './ipynbUtilities';
+import * as vscodeUtilities from './vscodeUtilities';
 import fetch from 'node-fetch';
 import { CompositeKernel } from './dotnet-interactive/compositeKernel';
 import { Logger, LogLevel } from './dotnet-interactive/logger';
@@ -36,8 +37,9 @@ import { NotebookParserServer } from './notebookParserServer';
 import { registerVariableExplorer } from './variableExplorer';
 import { KernelCommandAndEventChannel } from './DotnetInteractiveChannel';
 import { ActiveNotebookTracker } from './activeNotebookTracker';
-
-export const KernelIdForJupyter = 'polyglot-notebook-for-jupyter';
+import { onKernelInfoUpdates } from './dotnet-interactive';
+import * as metadataUtilities from './metadataUtilities';
+import * as constants from './constants';
 
 export class CachedDotNetPathManager {
     private dotNetPath: string = 'dotnet'; // default to global tool if possible
@@ -65,8 +67,8 @@ export const DotNetPathManager = new CachedDotNetPathManager();
 
 export async function activate(context: vscode.ExtensionContext) {
 
-    const dotnetConfig = vscode.workspace.getConfiguration('dotnet-interactive');
-    const polyglotConfig = vscode.workspace.getConfiguration('polyglot-notebook');
+    const dotnetConfig = vscode.workspace.getConfiguration(constants.DotnetConfigurationSectionName);
+    const polyglotConfig = vscode.workspace.getConfiguration(constants.PolyglotConfigurationSectionName);
     const minDotNetSdkVersion = dotnetConfig.get<string>('minimumDotNetSdkVersion') || '7.0';
     const diagnosticsChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('Polyglot Notebook : diagnostics'));
     const loggerChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('Polyglot Notebook : logger'));
@@ -108,9 +110,14 @@ export async function activate(context: vscode.ExtensionContext) {
         await helpServiceInstance.showHelpPageAndThrow(helpService.DotNetVersion);
     }
 
+    // grammars
+    const tokensProvider = new semanticTokens.DocumentSemanticTokensProvider(context.extension.packageJSON);
+    await tokensProvider.init(context);
+    context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider(semanticTokens.selector, tokensProvider, tokensProvider.semanticTokensLegend));
+
     async function kernelChannelCreator(notebookUri: vscodeLike.Uri): Promise<KernelCommandAndEventChannel> {
-        const dotnetConfig = vscode.workspace.getConfiguration('dotnet-interactive');
-        const polyglotConfig = vscode.workspace.getConfiguration('polyglot-notebook');
+        const dotnetConfig = vscode.workspace.getConfiguration(constants.DotnetConfigurationSectionName);
+        const polyglotConfig = vscode.workspace.getConfiguration(constants.PolyglotConfigurationSectionName);
         const launchOptions = await getInteractiveLaunchOptions();
         if (!launchOptions) {
             throw new Error(`Unable to get interactive launch options.  Please see the '${diagnosticsChannel.getName()}' output window for details.`);
@@ -142,7 +149,6 @@ export async function activate(context: vscode.ExtensionContext) {
         });
 
         await channel.waitForReady();
-
         return channel;
     }
 
@@ -184,18 +190,29 @@ export async function activate(context: vscode.ExtensionContext) {
         compositeKernel.registerCommandHandler({
             commandType: contracts.SendEditableCodeType, handle: async commandInvocation => {
                 const addCell = <contracts.SendEditableCode>commandInvocation.commandEnvelope.command;
-                const language = addCell.language;
+                const kernelName = addCell.kernelName;
                 const contents = addCell.code;
+                const kernel = compositeKernel.findKernelByName(kernelName);
                 const notebookDocument = vscode.workspace.notebookDocuments.find(notebook => notebook.uri.toString() === notebookUri.toString());
-                if (notebookDocument) {
+                if (kernel && notebookDocument) {
+                    const language = tokensProvider.dynamicTokenProvider.getLanguageNameFromKernelNameOrAlias(notebookDocument, kernel.kernelInfo.localName);
                     const range = new vscode.NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount);
                     const cellKind = languageToCellKind(language);
-                    const notebookCellLanguage = getNotebookSpecificLanguage(language);
-                    const newCell = new vscode.NotebookCellData(cellKind, contents, notebookCellLanguage);
+                    const cellLanguage = cellKind === vscode.NotebookCellKind.Code ? constants.CellLanguageIdentifier : 'markdown';
+                    const newCell = new vscode.NotebookCellData(cellKind, contents, cellLanguage);
+                    const notebookCellMetadata: metadataUtilities.NotebookCellMetadata = {
+                        kernelName
+                    };
+                    const rawCellMetadata = metadataUtilities.getRawNotebookCellMetadataFromNotebookCellMetadata(notebookCellMetadata);
+                    newCell.metadata = rawCellMetadata;
                     const succeeded = await versionSpecificFunctions.replaceNotebookCells(notebookDocument.uri, range, [newCell]);
                     if (!succeeded) {
                         throw new Error(`Unable to add cell to notebook '${notebookUri.toString()}'.`);
                     }
+
+                    // when new cells are added, the previous cell's kernel name is copied forward, but in this case we want to force it back
+                    const addedCell = notebookDocument.cellAt(notebookDocument.cellCount - 1); // the newly added cell is always the last one
+                    await vscodeUtilities.setCellKernelName(addedCell, kernelName);
                 } else {
                     throw new Error(`Unable to get notebook document for URI '${notebookUri.toString()}'.`);
                 }
@@ -214,7 +231,7 @@ export async function activate(context: vscode.ExtensionContext) {
     registerKernelCommands(context, clientMapper);
     registerVariableExplorer(context, clientMapper);
 
-    const hostVersionSuffix = isInsidersBuild() ? 'Insiders' : 'Stable';
+    const hostVersionSuffix = vscodeUtilities.isInsidersBuild() ? 'Insiders' : 'Stable';
     diagnosticsChannel.appendLine(`Extension started for VS Code ${hostVersionSuffix}.`);
     const languageServiceDelay = polyglotConfig.get<number>('languageServiceDelay') || 500; // fall back to something reasonable
 
@@ -231,16 +248,38 @@ export async function activate(context: vscode.ExtensionContext) {
     // old startup time ~4800ms
     ////////////////////////////////////////////////////////////////////////////////
 
-    const serializerMap = registerWithVsCode(context, clientMapper, parserServer, clientMapperConfig.createErrorOutput, ...preloads);
+    const serializerMap = registerWithVsCode(context, clientMapper, parserServer, tokensProvider, clientMapperConfig.createErrorOutput, ...preloads);
     registerFileCommands(context, parserServer, clientMapper);
 
     context.subscriptions.push(vscode.workspace.onDidRenameFiles(e => handleFileRenames(e, clientMapper)));
     context.subscriptions.push(serializerLineAdapter);
     context.subscriptions.push(new ActiveNotebookTracker(context, clientMapper));
 
+    // rebuild notebook grammar
+    const compositeKernelToNotebookUri: Map<CompositeKernel, vscodeLike.Uri> = new Map();
+    clientMapper.onClientCreate((uri, client) => {
+        compositeKernelToNotebookUri.set(client.kernel, uri);
+    });
+    onKernelInfoUpdates.push((compositeKernel) => {
+        const notebookUri = compositeKernelToNotebookUri.get(compositeKernel);
+        if (notebookUri) {
+            const kernelInfos = compositeKernel.childKernels.map(k => k.kernelInfo);
+            tokensProvider.dynamicTokenProvider.rebuildNotebookGrammar(notebookUri, kernelInfos);
+            debounce('refresh-tokens-after-grammar-update', 500, () => {
+                tokensProvider.refresh();
+            });
+        }
+    });
+
+    // build initial notebook grammar
+    context.subscriptions.push(vscode.workspace.onDidOpenNotebookDocument(async notebook => {
+        const kernelInfos = metadataUtilities.getKernelInfosFromNotebookDocument(notebook);
+        tokensProvider.dynamicTokenProvider.rebuildNotebookGrammar(notebook.uri, kernelInfos);
+    }));
+
     // language registration
-    context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(async e => await updateNotebookCellLanguageInMetadata(e)));
-    context.subscriptions.push(registerLanguageProviders(clientMapper, languageServiceDelay));
+    context.subscriptions.push(await registerLanguageProviders(clientMapper, languageServiceDelay));
+    registerNotbookCellStatusBarItemProvider(context, clientMapper);
 
     vscode.window.registerUriHandler({
         handleUri(uri: vscode.Uri): vscode.ProviderResult<void> {
@@ -313,13 +352,13 @@ function createErrorOutput(message: string, outputId?: string): vscodeLike.Noteb
     return cellOutput;
 }
 
-function registerWithVsCode(context: vscode.ExtensionContext, clientMapper: ClientMapper, parserServer: NotebookParserServer, createErrorOutput: ErrorOutputCreator, ...preloadUris: vscode.Uri[]): Map<string, vscode.NotebookSerializer> {
+function registerWithVsCode(context: vscode.ExtensionContext, clientMapper: ClientMapper, parserServer: NotebookParserServer, tokensProvider: semanticTokens.DocumentSemanticTokensProvider, createErrorOutput: ErrorOutputCreator, ...preloadUris: vscode.Uri[]): Map<string, vscode.NotebookSerializer> {
     const config = {
         clientMapper,
         preloadUris,
         createErrorOutput,
     };
-    context.subscriptions.push(new notebookControllers.DotNetNotebookKernel(config));
+    context.subscriptions.push(new notebookControllers.DotNetNotebookKernel(config, tokensProvider));
     return notebookSerializers.createAndRegisterNotebookSerializers(context, parserServer);
 }
 
@@ -364,10 +403,10 @@ async function openNotebookFromUrl(notebookUrl: string, notebookFormat: string |
         let viewType: string | undefined = undefined;
         switch (notebookFormat) {
             case 'dib':
-                viewType = 'polyglot-notebook';
+                viewType = constants.NotebookViewType;
                 break;
             case 'ipynb':
-                viewType = 'jupyter-notebook';
+                viewType = constants.JupyterViewType;
                 break;
             default:
                 throw new Error(`Unsupported notebook format: ${notebookFormat}`);
@@ -397,27 +436,6 @@ async function waitForSdkPackExtension(): Promise<void> {
     const sdkExtension = vscode.extensions.getExtension<DotnetPackExtensionExports | undefined>("ms-dotnettools.vscode-dotnet-pack");
     if (sdkExtension && !sdkExtension.isActive) {
         await sdkExtension.activate();
-    }
-}
-
-// keep the cell's language in metadata in sync with what VS Code thinks it is
-async function updateNotebookCellLanguageInMetadata(candidateNotebookCellDocument: vscode.TextDocument) {
-    const notebook = vscode.workspace.notebookDocuments.find(notebook => notebook.getCells().some(cell => cell.document === candidateNotebookCellDocument));
-    if (notebook &&
-        isJupyterNotebookViewType(notebook.notebookType) &&
-        isDotnetInteractiveLanguage(candidateNotebookCellDocument.languageId)) {
-        const cell = notebook.getCells().find(c => c.document === candidateNotebookCellDocument);
-        if (cell) {
-            const cellLanguage = cell.kind === vscode.NotebookCellKind.Code
-                ? getSimpleLanguage(candidateNotebookCellDocument.languageId)
-                : 'markdown';
-
-            const dotnetMetadata = getDotNetMetadata(cell.metadata);
-            if (dotnetMetadata.language !== cellLanguage) {
-                const newMetadata = withDotNetCellMetadata(cell.metadata, cellLanguage);
-                const _succeeded = await versionSpecificFunctions.replaceNotebookCellMetadata(notebook.uri, cell.index, newMetadata);
-            }
-        }
     }
 }
 

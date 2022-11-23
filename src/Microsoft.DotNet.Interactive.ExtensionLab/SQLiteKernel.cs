@@ -20,8 +20,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         private readonly string _connectionString;
         private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> _tables;
 
-        public SQLiteKernel(string name, string connectionString) : base(name, "SQLite")
+        public SQLiteKernel(string name, string connectionString) : base(name)
         {
+            KernelInfo.LanguageName = "SQLite";
             _connectionString = connectionString;
         }
 

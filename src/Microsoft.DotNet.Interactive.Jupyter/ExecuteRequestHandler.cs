@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         public async Task Handle(JupyterRequestContext context)
         {
             var executeRequest = GetJupyterRequest(context);
-            string targetKernelName = context.GetLanguage();
+            var targetKernelName = context.GetKernelName();
 
             _executionCount = executeRequest.Silent ? _executionCount : Interlocked.Increment(ref _executionCount);
 

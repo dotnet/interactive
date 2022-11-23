@@ -5,63 +5,44 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { ClientMapper } from './clientMapper';
 import * as contracts from './dotnet-interactive/contracts';
-import { getNotebookSpecificLanguage } from './interactiveNotebook';
-import { VariableGridRow } from './dotnet-interactive/webview/variableGridInterfaces';
+import { VariableGridRow, VariableInfo } from './dotnet-interactive/webview/variableGridInterfaces';
 import * as utilities from './utilities';
 import * as versionSpecificFunctions from '../versionSpecificFunctions';
 import { DisposableSubscription } from './dotnet-interactive/disposables';
 import { isKernelEventEnvelope } from './dotnet-interactive';
-
-// creates a map of, e.g.:
-//   "dotnet-interactive.csharp" => "C#""
-const languageIdToAliasMap = new Map(
-    vscode.extensions.all.map(e => <any[]>e.packageJSON?.contributes?.languages || [])
-        .filter(l => l)
-        .reduce((a, b) => a.concat(b), [])
-        .filter(l => typeof l.id === 'string' && (l.aliases?.length ?? 0) > 0 && typeof l.aliases[0] === 'string')
-        .map(l => <[string, string]>[<string>l.id, <string>l.aliases[0]])
-);
+import * as kernelSelectorUtilities from './kernelSelectorUtilities';
 
 function debounce(callback: () => void) {
     utilities.debounce('variable-explorer', 500, callback);
 }
 
 export function registerVariableExplorer(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
-    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.shareValueWith', async (variableInfo: { kernelName: string, valueName: string } | undefined) => {
-        if (variableInfo && vscode.window.activeNotebookEditor) {
-            const client = await clientMapper.tryGetClient(versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor).uri);
+    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.shareValueWith', async (variableInfo: VariableInfo | undefined) => {
+        const activeNotebookEditor = vscode.window.activeNotebookEditor;
+        if (variableInfo && activeNotebookEditor) {
+            const notebookDocument = versionSpecificFunctions.getNotebookDocumentFromEditor(activeNotebookEditor);
+            const client = await clientMapper.tryGetClient(notebookDocument.uri);
             if (client) {
-                // creates a map of _only_ the available languages in this notebook, e.g.:
-                //   "C#" => "dotnet-interactive.csharp"
-                const availableKernelDisplayNamesToLanguageNames = new Map(client.kernel.childKernels.map(k => {
-                    const notebookLanguage = getNotebookSpecificLanguage(k.name);
-                    let displayLanguage = notebookLanguage;
-                    const displayLanguageCandidate = languageIdToAliasMap.get(notebookLanguage);
-                    if (displayLanguageCandidate) {
-                        displayLanguage = displayLanguageCandidate;
+                const kernelSelectorOptions = kernelSelectorUtilities.getKernelSelectorOptions(client.kernel, notebookDocument, contracts.SendValueType);
+                const kernelDisplayValues = kernelSelectorOptions.map(k => k.displayValue);
+                const selectedKernelDisplayName = await vscode.window.showQuickPick(kernelDisplayValues, { title: `Share value [${variableInfo.valueName}] from [${variableInfo.sourceKernelName}] to ...` });
+                if (selectedKernelDisplayName) {
+                    const targetKernelIndex = kernelDisplayValues.indexOf(selectedKernelDisplayName);
+                    if (targetKernelIndex >= 0) {
+                        const targetKernelSelectorOption = kernelSelectorOptions[targetKernelIndex];
+                        // ends with newline to make adding code easier
+                        const code = `#!share --from ${variableInfo.sourceKernelName} ${variableInfo.valueName}\n`;
+                        const command: contracts.SendEditableCode = {
+                            kernelName: targetKernelSelectorOption.kernelName,
+                            code,
+                        };
+                        const commandEnvelope: contracts.KernelCommandEnvelope = {
+                            commandType: contracts.SendEditableCodeType,
+                            command,
+                        };
+
+                        await client.kernel.rootKernel.send(commandEnvelope);
                     }
-
-                    return <[string, string]>[displayLanguage, k.name];
-                }));
-
-                const kernelDisplayValues = [...availableKernelDisplayNamesToLanguageNames.keys()];
-                const selectedKernelName = await vscode.window.showQuickPick(kernelDisplayValues, { title: `Share value [${variableInfo.valueName}] from [${variableInfo.kernelName}] to ...` });
-                if (selectedKernelName) {
-                    // translate back from display name (e.g., "C# (.NET Interactive)") to language name (e.g., "dotnet-interactive.csharp")
-                    const targetKernelName = availableKernelDisplayNamesToLanguageNames.get(selectedKernelName)!;
-                    // TODO: if not well-known kernel/language, add kernel selector, e.g., `#!sql-AdventureWorks`
-                    // ends with newline to make adding code easier
-                    const code = `#!share --from ${variableInfo.kernelName} ${variableInfo.valueName}\n`;
-                    const command: contracts.SendEditableCode = {
-                        language: targetKernelName,
-                        code,
-                    };
-                    const commandEnvelope: contracts.KernelCommandEnvelope = {
-                        commandType: contracts.SendEditableCodeType,
-                        command,
-                    };
-
-                    await client.kernel.rootKernel.send(commandEnvelope);
                 }
             }
         }
@@ -97,6 +78,9 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
         };
         this.webview.onDidReceiveMessage(message => {
             const x = message;
+            if (message.command === 'shareValueWith') {
+                vscode.commands.executeCommand('polyglot-notebook.shareValueWith', message.variableInfo);
+            }
         });
         // only load this once
         const apiFileUri = this.webview.asWebviewUri(vscode.Uri.file(path.join(this.extensionPath, 'resources', 'variableGrid.js')));
@@ -104,6 +88,7 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
         <html>
             <head>
                 <meta charset="utf-8">
+                <title>Polyglot Notebook: Values</title>
             </head>
             <body>
                 <style>
@@ -135,7 +120,10 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                     button[hover] {
                         background-color: var(--vscode-button-hoverBackground);
                     }
-
+                    button.share {
+                        background-color: transparent;
+                        border: 0px;
+                    }
                     .name-column {
                         width: 20%;
                     }
@@ -166,7 +154,7 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                 </style>
                 <svg style="display: none">
                   <symbol id="share-icon" viewBox="0 0 16 16">
-                    <title>Share to</title>
+                    <title>Share value to...</title>
                     <g id="canvas">
                       <path d="M16,16H0V0H16Z" fill="none" opacity="0" />
                     </g>
@@ -252,21 +240,23 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
 
             this.currentNotebookSubscription = { dispose: () => sub.unsubscribe() };
 
-            const kernelNames = Array.from(client.kernel.childKernels.filter(k => k.kernelInfo.supportedKernelCommands.find(ci => ci.name === contracts.RequestValueInfosType)).map(k => k.name));
+            const kernels = Array.from(client.kernel.childKernels.filter(k => k.kernelInfo.supportedKernelCommands.find(ci => ci.name === contracts.RequestValueInfosType)));
 
-            for (const name of kernelNames) {
+            for (const kernel of kernels) {
                 try {
-                    const valueInfos = await client.requestValueInfos(name);
+                    const valueInfos = await client.requestValueInfos(kernel.name);
                     for (const valueInfo of valueInfos.valueInfos) {
                         try {
-                            const value = await client.requestValue(valueInfo.name, name);
+                            const value = await client.requestValue(valueInfo.name, kernel.name);
                             const valueName = value.name;
                             const valueValue = value.formattedValue.value;
-                            const commandUrl = `command:polyglot-notebook.shareValueWith?${encodeURIComponent(JSON.stringify({ valueName, kernelName: name }))}`;
+                            const displayName = kernelSelectorUtilities.getKernelInfoDisplayValue(kernel.kernelInfo);
+                            const commandUrl = `command:polyglot-notebook.shareValueWith?${encodeURIComponent(JSON.stringify({ valueName, kernelName: kernel.name }))}`;
                             rows.push({
                                 name: valueName,
                                 value: valueValue,
-                                kernel: name,
+                                kernelDisplayName: displayName,
+                                kernelName: kernel.name,
                                 link: commandUrl,
                             });
                         } catch (e) {

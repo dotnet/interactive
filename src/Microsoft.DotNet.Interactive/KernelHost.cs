@@ -10,7 +10,6 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
@@ -75,8 +74,8 @@ namespace Microsoft.DotNet.Interactive
             _eventLoop = new EventLoopScheduler(a => new Thread(a)
             {
                 Name = "KernelHost command dispatcher"
-            }); 
-            
+            });
+
             _kernelEventSubscription = _kernel.KernelEvents.Subscribe(e =>
             {
                 if (e is ReturnValueProduced { Value: DisplayedValue })
@@ -101,11 +100,11 @@ namespace Microsoft.DotNet.Interactive
                 var _ = _defaultSender.SendAsync(e, _cancellationTokenSource.Token);
             });
 
-            _receiver.Subscribe( commandOrEvent =>
+            _receiver.Subscribe(commandOrEvent =>
             {
                 if (commandOrEvent.IsParseError)
                 {
-                    var _= _defaultSender.SendAsync(commandOrEvent.Event, _cancellationTokenSource.Token);
+                    var _ = _defaultSender.SendAsync(commandOrEvent.Event, _cancellationTokenSource.Token);
                 }
                 else if (commandOrEvent.Command is { })
                 {
@@ -156,7 +155,7 @@ namespace Microsoft.DotNet.Interactive
         {
             _eventLoop?.Dispose();
             _kernelEventSubscription?.Dispose();
-            
+
             if (_cancellationTokenSource.Token.CanBeCanceled)
             {
                 _cancellationTokenSource.Cancel();

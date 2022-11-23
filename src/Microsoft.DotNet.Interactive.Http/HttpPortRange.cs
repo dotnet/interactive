@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Interactive.Http
         
         public int End { get;  }
 
-        public static HttpPortRange Default { get; } = new HttpPortRange(1000,3000);
+        public static HttpPortRange Default { get; } = new(2048,3000);
 
         public override string ToString() => $"{Start}-{End}";
     }

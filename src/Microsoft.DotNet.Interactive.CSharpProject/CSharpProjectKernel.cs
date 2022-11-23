@@ -55,8 +55,10 @@ public class CSharpProjectKernel :
         }
     }
 
-    public CSharpProjectKernel(string name = "csharp") : base(name, "C#")
+    public CSharpProjectKernel(string name = "csharp") : base(name)
     {
+        KernelInfo.LanguageName = "C#";
+        KernelInfo.LanguageVersion = "11.0";
     }
 
     async Task IKernelCommandHandler<OpenProject>.HandleAsync(OpenProject command, KernelInvocationContext context)
@@ -297,7 +299,7 @@ public class CSharpProjectKernel :
     {
         var packageBuilder = new PackageBuilder("console");
         packageBuilder.CreateUsingDotnet("console");
-        packageBuilder.TrySetLanguageVersion("8.0");
+        packageBuilder.TrySetLanguageVersion("11.0");
         packageBuilder.AddPackageReference("Newtonsoft.Json", "13.0.1");
         var package = packageBuilder.GetPackage() as Package;
         await package!.CreateWorkspaceForRunAsync();

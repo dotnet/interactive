@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -13,11 +14,8 @@ namespace Microsoft.DotNet.Interactive
         private readonly HashSet<KernelCommandInfo> _supportedKernelCommands = new();
         private readonly HashSet<KernelDirectiveInfo> _supportedDirectives = new();
 
-        public KernelInfo(
-            string localName,
-            string? languageName = null,
-            string? languageVersion = null,
-            string[]? aliases = null)
+        [JsonConstructor]
+        public KernelInfo(string localName, string[]? aliases = null)
         {
             if (string.IsNullOrWhiteSpace(localName))
             {
@@ -30,8 +28,7 @@ namespace Microsoft.DotNet.Interactive
             }
 
             LocalName = localName;
-            LanguageName = languageName;
-            LanguageVersion = languageVersion;
+            DisplayName = localName;
             NameAndAliases = new HashSet<string> { LocalName };
             Uri = new Uri($"kernel://local/{LocalName}");
 
@@ -41,15 +38,35 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
+        [Obsolete("This constructor has been deprecated.  Please use the other constructor and directly set any remaining properties.")]
+        public KernelInfo(
+            string localName,
+            string? languageName,
+            string? languageVersion,
+            string[]? aliases)
+            : this(localName, aliases)
+        {
+            LanguageName = languageName;
+            LanguageVersion = languageVersion;
+        }
+
+        private string CreateDisplayName()
+        {
+            var displayName = $"{LanguageName} {LanguageVersion}".Trim();
+            return displayName;
+        }
+
         public string[] Aliases
         {
             get => NameAndAliases.Where(n => n != LocalName).ToArray();
             init => NameAndAliases.UnionWith(value);
         }
 
-        public string? LanguageName { get; internal set; }
+        public string? LanguageName { get; set; }
 
-        public string? LanguageVersion { get; internal set; }
+        public string? LanguageVersion { get; set; }
+
+        public string DisplayName { get; set; }
 
         public string LocalName { get; }
 

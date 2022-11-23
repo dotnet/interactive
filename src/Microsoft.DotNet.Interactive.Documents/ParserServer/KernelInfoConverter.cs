@@ -16,6 +16,7 @@ internal class KernelInfoConverter : JsonConverter<KernelInfo>
         EnsureStartObject(reader, typeToConvert);
 
         string? name = null;
+        string? languageName = null;
         string[]? aliases = null;
 
         while (reader.Read())
@@ -26,11 +27,12 @@ internal class KernelInfoConverter : JsonConverter<KernelInfo>
                 {
                     case "name":
                         name = reader.ReadString();
-
+                        break;
+                    case "languageName":
+                        languageName = reader.ReadString();
                         break;
                     case "aliases":
                         aliases = reader.ReadArray<string>(options);
-
                         break;
 
                     default:
@@ -44,7 +46,7 @@ internal class KernelInfoConverter : JsonConverter<KernelInfo>
             }
         }
 
-        return new(name!, aliases);
+        return new(name!, languageName, aliases);
     }
 
     public override void Write(Utf8JsonWriter writer, KernelInfo value, JsonSerializerOptions options)
@@ -53,6 +55,12 @@ internal class KernelInfoConverter : JsonConverter<KernelInfo>
 
         writer.WritePropertyName("name");
         writer.WriteStringValue(value.Name);
+
+        if (value.LanguageName is { })
+        {
+            writer.WritePropertyName("languageName");
+            writer.WriteStringValue(value.LanguageName);
+        }
 
         if (value.Aliases.Count > 0)
         {

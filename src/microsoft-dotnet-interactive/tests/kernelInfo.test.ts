@@ -31,6 +31,7 @@ describe("kernelInfo", () => {
                     languageName: undefined,
                     languageVersion: undefined,
                     localName: 'root',
+                    displayName: 'root',
                     supportedDirectives: [],
                     supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
                     uri: 'kernel://local/root'
@@ -39,6 +40,7 @@ describe("kernelInfo", () => {
                     aliases: ['child1Js'],
                     languageName: 'JavaScript',
                     languageVersion: undefined,
+                    displayName: 'child1',
                     localName: 'child1',
                     supportedDirectives: [],
                     supportedKernelCommands:
@@ -53,6 +55,7 @@ describe("kernelInfo", () => {
                     aliases: ['child2Js'],
                     languageName: 'JavaScript',
                     languageVersion: undefined,
+                    displayName: 'child2',
                     localName: 'child2',
                     supportedDirectives: [],
                     supportedKernelCommands:
@@ -106,6 +109,7 @@ describe("kernelInfo", () => {
                             aliases: ['child1Js'],
                             languageName: 'JavaScript',
                             languageVersion: undefined,
+                            displayName: 'child1',
                             localName: 'child1',
                             supportedDirectives: [],
                             supportedKernelCommands:
@@ -171,6 +175,7 @@ describe("kernelInfo", () => {
                                 aliases: [],
                                 languageName: 'customLanguage',
                                 languageVersion: undefined,
+                                displayName: 'child1',
                                 localName: 'child1',
                                 supportedDirectives: [],
                                 supportedKernelCommands:
@@ -217,6 +222,7 @@ describe("kernelInfo", () => {
                             aliases: [],
                             languageName: 'customLanguage',
                             languageVersion: undefined,
+                            displayName: 'child1',
                             localName: 'child1',
                             supportedDirectives: [],
                             supportedKernelCommands: [{ name: 'RequestKernelInfo' }, { name: 'SubmitCode' }],
@@ -292,6 +298,7 @@ describe("kernelInfo", () => {
                             languageName: 'customLanguage',
                             languageVersion: undefined,
                             localName: 'child2',
+                            displayName: 'child2',
                             supportedDirectives: [],
                             supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
                             uri: 'kernel://local/root/child2'

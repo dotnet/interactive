@@ -4,6 +4,12 @@
 export interface VariableGridRow {
     name: string;
     value: string;
-    kernel: string;
+    kernelDisplayName: string;
+    kernelName: string;
     link: string;
+}
+
+export interface VariableInfo {
+    sourceKernelName: string;
+    valueName: string;
 }

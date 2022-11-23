@@ -1,4 +1,9 @@
-﻿export interface KernelEventEnvelope {
+﻿export interface DocumentKernelInfoCollection {
+    defaultKernelName: string;
+    items: DocumentKernelInfo[];
+}
+
+export interface KernelEventEnvelope {
     eventType: KernelEventType;
     event: KernelEvent;
     command?: KernelCommandEnvelope;

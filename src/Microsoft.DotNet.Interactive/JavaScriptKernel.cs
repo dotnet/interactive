@@ -2,11 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
-using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.ValueSharing;
 
 namespace Microsoft.DotNet.Interactive;
@@ -18,10 +16,14 @@ public class JavaScriptKernel :
 {
     private readonly KernelClientBase _client;
     public const string DefaultKernelName = "javascript";
+    private const string LanguageName = "javascript";
+    private const string DisplayName = "JavaScript";
 
     public JavaScriptKernel(KernelClientBase client = null) : base(DefaultKernelName)
     {
         _client = client;
+        KernelInfo.LanguageName = LanguageName;
+        KernelInfo.DisplayName = DisplayName;
     }
 
     Task IKernelCommandHandler<SubmitCode>.HandleAsync(

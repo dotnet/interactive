@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Interactive
 
             RegisterForDisposal(kernel.KernelEvents.Subscribe(PublishEvent));
             RegisterForDisposal(kernel);
-            
+
             if (KernelInvocationContext.Current is { } current)
             {
                 var kernelInfoProduced = new KernelInfoProduced(kernel.KernelInfo, current.Command);
@@ -182,7 +182,7 @@ namespace Microsoft.DotNet.Interactive
                 {
 
                 }
-                else 
+                else
                 {
 
                     targetKernelName = DefaultKernelName;

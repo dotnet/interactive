@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Interactive.Commands;
 public abstract class KernelCommand
 {
     protected KernelCommand(
-        string targetKernelName = null, 
+        string targetKernelName = null,
         KernelCommand parent = null)
     {
         Properties = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
@@ -26,7 +26,7 @@ public abstract class KernelCommand
         }
     }
 
-    [JsonIgnore] 
+    [JsonIgnore]
     public KernelCommandInvocation Handler { get; set; }
 
     [JsonIgnore]
@@ -44,12 +44,12 @@ public abstract class KernelCommand
     public Uri DestinationUri { get; set; }
 
     [JsonIgnore]
-    internal SchedulingScope SchedulingScope { get; set; } 
+    internal SchedulingScope SchedulingScope { get; set; }
 
     [JsonIgnore]
     internal bool? ShouldPublishCompletionEvent { get; set; }
 
-    [JsonIgnore] 
+    [JsonIgnore]
     public ParseResult KernelChooserParseResult { get; internal set; }
 
     [JsonIgnore]

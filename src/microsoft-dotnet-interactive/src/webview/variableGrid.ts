@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { VariableGridRow } from './variableGridInterfaces';
+import { VariableGridRow, VariableInfo } from './variableGridInterfaces';
 
 interface DisplayedVariableGridRow {
     row: VariableGridRow;
@@ -26,7 +26,7 @@ window.addEventListener('DOMContentLoaded', () => {
             row.element.style.display = 'none';
             if (contains(row.row.name, filterElement.value) ||
                 contains(row.row.value, filterElement.value) ||
-                contains(row.row.kernel, filterElement.value)) {
+                contains(row.row.kernelDisplayName, filterElement.value)) {
                 row.element.style.display = '';
             }
         }
@@ -91,12 +91,12 @@ function setDataRows(container: HTMLElement, rows: VariableGridRow[]): Displayed
         dataRow.appendChild(dataValue);
 
         const dataKernel = document.createElement('td');
-        dataKernel.innerText = truncateValue(row.kernel);
+        dataKernel.innerText = truncateValue(row.kernelDisplayName);
         dataRow.appendChild(dataKernel);
 
         const dataShare = document.createElement('td');
         dataShare.classList.add('share-data');
-        dataShare.innerHTML = `<a href="${row.link}"><svg class="share-symbol"><use xlink:href="#share-icon"></use></svg></a>`;
+        dataShare.innerHTML = `<button type="button" onclick="shareValueWith({sourceKernelName:'${row.kernelName}', valueName: '${row.name}'})" name="" aria-label="Share ${row.name} from ${row.kernelDisplayName} kernel to" class="share"><svg class="share-symbol" ><use xlink:href="#share-icon" aria-hidden="true"></use></svg></button>`;
         dataRow.appendChild(dataShare);
 
         displayedRows.push({
@@ -124,6 +124,9 @@ function truncateValue(value: string): string {
 // @ts-ignore
 const vscode = acquireVsCodeApi();
 
-function doTheThing(kernelName: string, valueName: string) {
-    vscode.postMessage({ kernelName, valueName });
-}
+(<any>window).shareValueWith = function (variableInfo: VariableInfo) {
+    vscode.postMessage({
+        command: 'shareValueWith',
+        variableInfo: variableInfo
+    });
+};

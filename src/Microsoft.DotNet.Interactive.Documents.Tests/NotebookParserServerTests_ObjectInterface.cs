@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Documents.ParserServer;
@@ -24,7 +25,7 @@ public class NotebookParserServerTests_ObjectInterface
             rawData: Encoding.UTF8.GetBytes(contents));
 
         var response = NotebookParserServer.HandleRequest(request);
-            
+
         response
             .Should()
             .BeOfType<NotebookParseResponse>()
@@ -37,6 +38,95 @@ public class NotebookParserServerTests_ObjectInterface
             .Contents
             .Should()
             .Be("var x = 1;");
+    }
+
+    [Fact]
+    public void Notebook_parser_server_can_parse_a_dib_file_with_well_known_kernel_metadata()
+    {
+        var dibContents = @"
+#!meta
+{
+  ""kernelInfo"": {
+    ""defaultKernelName"": ""csharp"",
+    ""items"": [
+      {
+        ""name"": ""csharp"",
+        ""languageName"": ""csharp""
+      },
+      {
+        ""name"": ""fsharp"",
+        ""languageName"": ""fsharp""
+      }
+    ]
+  }
+}
+
+#!csharp
+
+var x = 1; // this is C#
+
+#!fsharp
+
+let x = 1 (* this is F# *)
+".Trim();
+        var request = new NotebookParseRequest(
+            "the-id",
+            DocumentSerializationType.Dib,
+            defaultLanguage: "csharp",
+            rawData: Encoding.UTF8.GetBytes(dibContents));
+
+        var response = NotebookParserServer.HandleRequest(request);
+
+        response
+            .Should()
+            .BeOfType<NotebookParseResponse>()
+            .Which
+            .Document
+            .Elements
+            .Select(e => e.KernelName)
+            .Should()
+            .Equal(new[] { "csharp", "fsharp" });
+    }
+
+    [Fact]
+    public void Notebook_parser_server_can_parse_a_dib_file_with_not_well_known_kernel_metadata()
+    {
+        var dibContents = @"
+#!meta
+{
+  ""kernelInfo"": {
+    ""defaultKernelName"": ""snake-language"",
+    ""items"": [
+      {
+        ""name"": ""snake-language"",
+        ""languageName"": ""python""
+      }
+    ]
+  }
+}
+
+#!snake-language
+
+x = 1 # this is Python
+".Trim();
+        var request = new NotebookParseRequest(
+            "the-id",
+            DocumentSerializationType.Dib,
+            defaultLanguage: "csharp",
+            rawData: Encoding.UTF8.GetBytes(dibContents));
+
+        var response = NotebookParserServer.HandleRequest(request);
+
+        response
+            .Should()
+            .BeOfType<NotebookParseResponse>()
+            .Which
+            .Document
+            .Elements
+            .Single()
+            .KernelName
+            .Should()
+            .Be("snake-language");
     }
 
     [Theory]

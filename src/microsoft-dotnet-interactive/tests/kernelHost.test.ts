@@ -40,6 +40,7 @@ describe("kernelHost",
                     kernelInfo:
                     {
                         aliases: [],
+                        displayName: 'vscode',
                         localName: 'vscode',
                         supportedDirectives: [],
                         supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
@@ -56,6 +57,7 @@ describe("kernelHost",
                     {
                         aliases: ['test1', 'test2'],
                         languageName: 'customLanguage',
+                        displayName: 'test',
                         localName: 'test',
                         supportedDirectives: [],
                         supportedKernelCommands: [{ name: 'RequestKernelInfo' }, { name: 'customCommand' }],
