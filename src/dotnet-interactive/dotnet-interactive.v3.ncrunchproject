@@ -1,7 +1,0 @@
-﻿<ProjectConfiguration>
-  <Settings>
-    <AdditionalFilesToIncludeForProject>
-      <Value>ContentFiles\**.*</Value>
-    </AdditionalFilesToIncludeForProject>
-  </Settings>
-</ProjectConfiguration>

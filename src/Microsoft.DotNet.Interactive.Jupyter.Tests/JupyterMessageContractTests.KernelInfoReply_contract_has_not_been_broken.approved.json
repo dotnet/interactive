@@ -1,6 +1,0 @@
-data: <IDS|MSG> more: True
-data: 494b73b6fd5e82a22a11db99d300626e8ca3df9be5f636d0b48321c2de0c57f2 more: True
-data: {"msg_id":"00000000-0000-0000-0000-000000000000","username":"dotnet_kernel","session":"test session","date":"0001-01-01T00:00:00Z","msg_type":"kernel_info_reply","version":"5.3"} more: True
-data: {} more: True
-data: {} more: True
-data: {"protocol_version":"5.3","implementation":".NET","implementation_version":"0.0.3","language_info":{"name":"C#","version":"4.0.30319","mimetype":"text/x-csharp","file_extension":".cs","pygments_lexer":"c#"},"banner":null,"status":"ok","help_links":[]} more: False

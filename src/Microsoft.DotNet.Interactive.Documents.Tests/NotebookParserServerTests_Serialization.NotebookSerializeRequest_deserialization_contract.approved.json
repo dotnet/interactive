@@ -1,1 +1,0 @@
-{"type":"serialize","id":"the-id","serializationType":"dib","defaultLanguage":"csharp","newLine":"\r\n","document":{"elements":[{"language":"csharp","contents":"var x = 1;","outputs":[]},{"language":"fsharp","contents":"let y = 2","outputs":[]}]}}

@@ -1,9 +1,0 @@
-﻿<ProjectConfiguration>
-  <Settings>
-    <CopyReferencedAssembliesToWorkspace>True</CopyReferencedAssembliesToWorkspace>
-    <DefaultTestTimeout>10000</DefaultTestTimeout>
-    <HiddenComponentWarnings>
-      <Value>CopyReferencedAssembliesToWorkspaceIsOn</Value>
-    </HiddenComponentWarnings>
-  </Settings>
-</ProjectConfiguration>
