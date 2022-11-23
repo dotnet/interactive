@@ -368,11 +368,11 @@ Parts: <null>".ReplaceLineEndings());
 
             var formatter = PlainTextFormatter.GetPreferredFormatterFor(tuple.GetType());
 
-            var formatted = tuple.ToDisplayString(formatter);
+            var formatted = tuple.ToDisplayString(formatter).Replace("\r", "");
 
             formatted.Should().Be(@"  - 123
   - Hello
-  - [ 1, 2, 3 ]");
+  - [ 1, 2, 3 ]".Replace("\r", ""));
         }
 
         [Fact]
@@ -382,11 +382,11 @@ Parts: <null>".ReplaceLineEndings());
 
             var formatter = PlainTextFormatter.GetPreferredFormatterFor(tuple.GetType());
 
-            var formatted = tuple.ToDisplayString(formatter);
+            var formatted = tuple.ToDisplayString(formatter).Replace("\r", "");
 
             formatted.Should().Be(@"  - 123
   - Hello
-  - [ 1, 2, 3 ]");
+  - [ 1, 2, 3 ]".Replace("\r", ""));
         }
 
         [Fact]

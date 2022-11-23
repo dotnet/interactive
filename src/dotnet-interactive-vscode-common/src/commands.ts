@@ -6,20 +6,21 @@ import * as path from 'path';
 import { acquireDotnetInteractive } from './acquisition';
 import { InstallInteractiveArgs, InteractiveLaunchOptions } from './interfaces';
 import { ClientMapper } from './clientMapper';
-import { getEol, isInsidersBuild, toNotebookDocument } from './vscodeUtilities';
-import { DotNetPathManager, KernelIdForJupyter } from './extension';
+import { getEol, toNotebookDocument } from './vscodeUtilities';
+import { DotNetPathManager } from './extension';
 import { computeToolInstallArguments, executeSafe, executeSafeAndLog, extensionToDocumentType, getVersionNumber } from './utilities';
 
 import * as notebookControllers from '../notebookControllers';
-import * as ipynbUtilities from './ipynbUtilities';
+import * as metadataUtilities from './metadataUtilities';
 import { ReportChannel } from './interfaces/vscode-like';
-import { jupyterViewType } from './interactiveNotebook';
 import { NotebookParserServer } from './notebookParserServer';
 import * as versionSpecificFunctions from '../versionSpecificFunctions';
 import { PromiseCompletionSource } from './dotnet-interactive/promiseCompletionSource';
 
+import * as constants from './constants';
+
 export function registerAcquisitionCommands(context: vscode.ExtensionContext, diagnosticChannel: ReportChannel) {
-    const dotnetConfig = vscode.workspace.getConfiguration('dotnet-interactive');
+    const dotnetConfig = vscode.workspace.getConfiguration(constants.DotnetConfigurationSectionName);
     const minDotNetInteractiveVersion = dotnetConfig.get<string>('minimumInteractiveToolVersion');
     const interactiveToolSource = dotnetConfig.get<string>('interactiveToolSource');
 
@@ -154,6 +155,7 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
             },
                 (_progress, _token) => restartCompletionSource.promise);
             await vscode.commands.executeCommand('polyglot-notebook.stopCurrentNotebookKernel', notebook);
+            await vscode.commands.executeCommand('polyglot-notebook.resetNotebookKernelCollection', notebook);
             const _client = await clientMapper.getOrAddClient(notebook.uri);
             restartCompletionSource.resolve();
             await vscode.commands.executeCommand('workbench.notebook.layout.webview.reset', notebook.uri);
@@ -253,53 +255,51 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
 
     async function newNotebook(extension: string): Promise<void> {
         const viewType = extension === '.dib' || extension === '.dotnet-interactive'
-            ? 'polyglot-notebook'
-            : jupyterViewType;
+            ? constants.NotebookViewType
+            : constants.JupyterViewType;
 
         // get language
-        const newNotebookCSharp = `C#`;
-        const newNotebookFSharp = `F#`;
-        const newNotebookPowerShell = `PowerShell`;
-        const notebookLanguage = await vscode.window.showQuickPick([newNotebookCSharp, newNotebookFSharp, newNotebookPowerShell], { title: 'Default Language' });
+        const languagesAndKernelNames: { [key: string]: string } = {
+            'C#': 'csharp',
+            'F#': 'fsharp',
+            'PowerShell': 'pwsh',
+        };
+
+        const newLanguageOptions: string[] = [];
+        for (const languageName in languagesAndKernelNames) {
+            newLanguageOptions.push(languageName);
+        }
+
+        const notebookLanguage = await vscode.window.showQuickPick(newLanguageOptions, { title: 'Default Language' });
         if (!notebookLanguage) {
             return;
         }
 
-        const ipynbLanguageName = ipynbUtilities.mapIpynbLanguageName(notebookLanguage);
-        const cellMetadata = {
-            custom: {
-                metadata: {
-                    polyglot_notebook: {
-                        language: ipynbLanguageName
+        const kernelName = languagesAndKernelNames[notebookLanguage];
+        const notebookCellMetadata: metadataUtilities.NotebookCellMetadata = {
+            kernelName
+        };
+        const rawCellMetadata = metadataUtilities.getRawNotebookCellMetadataFromNotebookCellMetadata(notebookCellMetadata);
+        const cell = new vscode.NotebookCellData(vscode.NotebookCellKind.Code, '', constants.CellLanguageIdentifier);
+        cell.metadata = rawCellMetadata;
+        const notebookDocumentMetadata: metadataUtilities.NotebookDocumentMetadata = {
+            kernelInfo: {
+                defaultKernelName: kernelName,
+                items: [
+                    {
+                        name: kernelName,
+                        aliases: [],
+                        languageName: kernelName // it just happens that the kernel names we allow are also the language names
                     }
-                }
+                ]
             }
         };
-        const cell = new vscode.NotebookCellData(vscode.NotebookCellKind.Code, '', `dotnet-interactive.${ipynbLanguageName}`);
-        cell.metadata = cellMetadata;
-        const documentMetadata = {
-            custom: {
-                metadata: {
-                    kernelspec: {
-                        display_name: `.NET (${notebookLanguage})`,
-                        language: notebookLanguage,
-                        name: `.net-${ipynbLanguageName}`
-                    },
-                    language_info: {
-                        name: notebookLanguage
-                    }
-                }
-            }
-        };
-        const content = new vscode.NotebookData([cell]);
-        content.metadata = documentMetadata;
-        const notebook = await vscode.workspace.openNotebookDocument(viewType, content);
 
-        // The document metadata isn't preserved from the previous call.  This is addressed in the following issues:
-        // - https://github.com/microsoft/vscode-jupyter/issues/6187
-        // - https://github.com/microsoft/vscode-jupyter/issues/5622
-        // In the meantime, the metadata can be set again to ensure it's persisted.
-        const _succeeded = await versionSpecificFunctions.replaceNotebookMetadata(notebook.uri, documentMetadata);
+        const createForIpynb = viewType === constants.JupyterViewType;
+        const rawNotebookMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata, createForIpynb);
+        const content = new vscode.NotebookData([cell]);
+        content.metadata = rawNotebookMetadata;
+        const notebook = await vscode.workspace.openNotebookDocument(viewType, content);
         const _editor = await vscode.window.showNotebookDocument(notebook);
     }
 
@@ -326,8 +326,8 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
     async function openNotebook(uri: vscode.Uri): Promise<void> {
         const extension = path.extname(uri.toString());
         const viewType = extension === '.dib' || extension === '.dotnet-interactive'
-            ? 'polyglot-notebook'
-            : jupyterViewType;
+            ? constants.NotebookViewType
+            : constants.JupyterViewType;
         await vscode.commands.executeCommand('vscode.openWith', uri, viewType);
     }
 
@@ -360,7 +360,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
 
 export async function selectDotNetInteractiveKernelForJupyter(): Promise<void> {
     const extension = 'ms-dotnettools.dotnet-interactive-vscode';
-    const id = KernelIdForJupyter;
+    const id = constants.JupyterKernelId;
     await vscode.commands.executeCommand('notebook.selectKernel', { extension, id });
 }
 

@@ -40,6 +40,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         private const string PSModulePathEnvName = "PSModulePath";
 
         internal const string DefaultKernelName = "pwsh";
+        internal const string LanguageName = "PowerShell";
 
         private static readonly CmdletInfo _outDefaultCommand;
         private static readonly PropertyInfo _writeStreamProperty;
@@ -80,8 +81,10 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             _addAccelerator = acceleratorType?.GetMethod("Add", new[] { typeof(string), typeof(Type) });
         }
 
-        public PowerShellKernel() : base(DefaultKernelName, "PowerShell")
+        public PowerShellKernel() : base(DefaultKernelName)
         {
+            KernelInfo.LanguageName = LanguageName;
+            KernelInfo.DisplayName = LanguageName;
             _psHost = new PSKernelHost(this);
             _lazyPwsh = new Lazy<PowerShell>(CreatePowerShell);
             _suppressedValueInfoNames = GetAllValueInfos().Select(v => v.Name).ToHashSet();

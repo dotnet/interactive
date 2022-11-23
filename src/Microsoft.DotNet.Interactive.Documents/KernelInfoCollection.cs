@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Documents;
 [JsonConverter(typeof(KernelInfoCollectionConverter))]
 public class KernelInfoCollection : ICollection<KernelInfo>
 {
-    private readonly List<KernelInfo> _kernelNames = new();
+    private readonly HashSet<KernelInfo> _kernelNames = new();
     private readonly Dictionary<string, KernelInfo> _kernelInfoByNameOrAlias = new();
     private string? _defaultKernelName;
 
@@ -24,7 +24,7 @@ public class KernelInfoCollection : ICollection<KernelInfo>
     public string? DefaultKernelName
     {
         get => _defaultKernelName ?? (_kernelNames.Count == 1
-                                          ? _kernelNames[0].Name
+                                          ? _kernelNames.Single().Name
                                           : null);
         set => _defaultKernelName = value;
     }

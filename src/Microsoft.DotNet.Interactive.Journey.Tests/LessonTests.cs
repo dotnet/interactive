@@ -247,12 +247,12 @@ namespace Microsoft.DotNet.Interactive.Journey.Tests
         [Fact]
         public async Task teacher_can_show_challenge_contents_when_starting_a_Lesson()
         {
-            var capturedSendEditableCode = new List<(string language, string code)>();
+            var capturedSendEditableCode = new List<(string kernelName, string code)>();
             using var kernel = await CreateKernel(LessonMode.StudentMode);
             var vscodeKernel = kernel.FindKernelByName("vscode");
             vscodeKernel.RegisterCommandHandler<SendEditableCode>((command, _) =>
             {
-                capturedSendEditableCode.Add((command.Language, command.Code));
+                capturedSendEditableCode.Add((command.KernelName, command.Code));
                 return Task.CompletedTask;
             });
             using var events = kernel.KernelEvents.ToSubscribedList();
@@ -297,12 +297,12 @@ namespace Microsoft.DotNet.Interactive.Journey.Tests
         [Fact]
         public async Task teacher_can_show_challenge_contents_when_progressing_the_student_to_a_new_challenge()
         {
-            var capturedSendEditableCode = new List<(string language, string code)>();
+            var capturedSendEditableCode = new List<(string kernelName, string code)>();
             using var kernel = await CreateKernel(LessonMode.StudentMode);
             var vscodeKernel = kernel.FindKernelByName("vscode");
             vscodeKernel.RegisterCommandHandler<SendEditableCode>((command, _) =>
             {
-                capturedSendEditableCode.Add((command.Language, command.Code));
+                capturedSendEditableCode.Add((command.KernelName, command.Code));
                 return Task.CompletedTask;
             });
             using var events = kernel.KernelEvents.ToSubscribedList();

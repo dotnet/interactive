@@ -18,6 +18,9 @@
     },
     "vscode": {
      "languageId": "dotnet-interactive.csharp"
+    },
+    "polyglot_notebook": {
+     "kernelName": "csharp"
     }
    },
    "outputs": [
@@ -42,6 +45,9 @@
     },
     "vscode": {
      "languageId": "dotnet-interactive.csharp"
+    },
+    "polyglot_notebook": {
+     "kernelName": "csharp"
     }
    },
    "outputs": [
@@ -66,6 +72,9 @@
     },
     "vscode": {
      "languageId": "dotnet-interactive.csharp"
+    },
+    "polyglot_notebook": {
+     "kernelName": "csharp"
     }
    },
    "outputs": [
@@ -94,6 +103,9 @@
     },
     "vscode": {
      "languageId": "dotnet-interactive.csharp"
+    },
+    "polyglot_notebook": {
+     "kernelName": "csharp"
     }
    },
    "outputs": [
@@ -120,6 +132,9 @@
     },
     "vscode": {
      "languageId": "dotnet-interactive.csharp"
+    },
+    "polyglot_notebook": {
+     "kernelName": "csharp"
     }
    },
    "outputs": [
@@ -150,6 +165,9 @@
     },
     "vscode": {
      "languageId": "dotnet-interactive.csharp"
+    },
+    "polyglot_notebook": {
+     "kernelName": "csharp"
     }
    },
    "outputs": [
@@ -176,6 +194,9 @@
     },
     "vscode": {
      "languageId": "dotnet-interactive.csharp"
+    },
+    "polyglot_notebook": {
+     "kernelName": "csharp"
     }
    },
    "outputs": [
@@ -217,6 +238,9 @@
     },
     "vscode": {
      "languageId": "dotnet-interactive.csharp"
+    },
+    "polyglot_notebook": {
+     "kernelName": "csharp"
     }
    },
    "outputs": [],

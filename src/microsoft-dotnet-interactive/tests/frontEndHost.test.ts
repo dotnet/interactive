@@ -64,6 +64,7 @@ describe("frontEndHost", () => {
                 kernelInfo:
                 {
                     aliases: [],
+                    displayName: 'testKernel',
                     localName: 'testKernel',
                     supportedDirectives: [],
                     supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
@@ -80,6 +81,7 @@ describe("frontEndHost", () => {
                 {
                     aliases: ['js'],
                     languageName: 'JavaScript',
+                    displayName: 'javascript',
                     localName: 'javascript',
                     supportedDirectives: [],
                     supportedKernelCommands:
@@ -111,6 +113,7 @@ describe("frontEndHost", () => {
                     aliases: [],
                     languageName: 'SQL',
                     languageVersion: '10',
+                    displayName: 'SQL',
                     supportedDirectives: [],
                     supportedKernelCommands: [
                         {
@@ -137,6 +140,7 @@ describe("frontEndHost", () => {
             languageVersion: '10',
             localName: 'sql',
             remoteUri: 'kernel://remote/sql',
+            displayName: 'SQL',
             supportedDirectives: [],
             supportedKernelCommands:
                 [{ name: 'RequestKernelInfo' },
@@ -160,6 +164,7 @@ describe("frontEndHost", () => {
                     localName: 'sql',
                     uri: 'kernel://remote/sql',
                     aliases: [],
+                    displayName: 'SQL',
                     supportedDirectives: [],
                     supportedKernelCommands: [
                         {
@@ -178,6 +183,7 @@ describe("frontEndHost", () => {
                     aliases: [],
                     languageName: 'SQL',
                     languageVersion: '10',
+                    displayName: 'SQL',
                     supportedDirectives: [],
                     supportedKernelCommands: [
                         {
@@ -204,6 +210,7 @@ describe("frontEndHost", () => {
             languageVersion: '10',
             localName: 'sql',
             remoteUri: 'kernel://remote/sql',
+            displayName: 'SQL',
             supportedDirectives: [],
             supportedKernelCommands:
                 [{ name: 'RequestKernelInfo' },

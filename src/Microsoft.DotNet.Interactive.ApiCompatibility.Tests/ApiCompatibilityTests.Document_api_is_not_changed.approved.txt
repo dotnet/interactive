@@ -48,8 +48,9 @@ Microsoft.DotNet.Interactive.Documents
     public System.Collections.Generic.List<InteractiveDocumentOutputElement> Outputs { get;}
   public abstract class InteractiveDocumentOutputElement
   public class KernelInfo
-    .ctor(System.String name, System.Collections.Generic.IReadOnlyCollection<System.String> aliases = null)
+    .ctor(System.String name, System.String languageName = null, System.Collections.Generic.IReadOnlyCollection<System.String> aliases = null)
     public System.Collections.Generic.IReadOnlyCollection<System.String> Aliases { get;}
+    public System.String LanguageName { get;}
     public System.String Name { get;}
     public System.String ToString()
   public class KernelInfoCollection, System.Collections.Generic.ICollection<KernelInfo>, System.Collections.Generic.IEnumerable<KernelInfo>, System.Collections.IEnumerable
@@ -77,7 +78,8 @@ Microsoft.DotNet.Interactive.Documents
     public System.String Text { get;}
 Microsoft.DotNet.Interactive.Documents.Jupyter
   public class InputCellMetadata
-    .ctor(System.String language = null)
+    .ctor(System.String kernelName = null, System.String language = null)
+    public System.String KernelName { get;}
     public System.String Language { get;}
   public static class InteractiveDocumentExtensions
     public static Microsoft.DotNet.Interactive.Documents.InteractiveDocument WithJupyterMetadata(System.String language = C#)

@@ -46,12 +46,11 @@ internal class InteractiveDocumentElementConverter : JsonConverter<InteractiveDo
                         element.Metadata ??= new Dictionary<string, object>();
                         element.Metadata.MergeWith(metadata);
 
-                        if (element.Metadata?.TryGetValue("dotnet_interactive", out var dotnet_interactive) == true &&
-                            dotnet_interactive is IDictionary<string, object> dotnet_interactive_dict &&
-                            dotnet_interactive_dict.TryGetValue("language", out var languageStuff) &&
-                            languageStuff is string language)
+                        var kernelName = GetMetadataStringValue(element.Metadata, "polyglot_notebook", "kernelName")
+                                      ?? GetMetadataStringValue(element.Metadata, "dotnet_interactive", "language");
+                        if (kernelName is not null)
                         {
-                            element.KernelName = language;
+                            element.KernelName = kernelName;
                         }
 
                         break;
@@ -108,6 +107,19 @@ internal class InteractiveDocumentElementConverter : JsonConverter<InteractiveDo
         throw new JsonException($"Cannot deserialize {typeToConvert.Name}");
     }
 
+    private static string? GetMetadataStringValue(IDictionary<string, object>? dict, string name1, string name2)
+    {
+        if (dict?.TryGetValue(name1, out var dotnet_interactive) == true &&
+            dotnet_interactive is IDictionary<string, object> dotnet_interactive_dict &&
+            dotnet_interactive_dict.TryGetValue(name2, out var languageStuff) &&
+            languageStuff is string value)
+        {
+            return value;
+        }
+
+        return null;
+    }
+
     public override void Write(Utf8JsonWriter writer, InteractiveDocumentElement element, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
@@ -150,6 +162,10 @@ internal class InteractiveDocumentElementConverter : JsonConverter<InteractiveDo
             element.Metadata.GetOrAdd("dotnet_interactive",
                                       _ => new Dictionary<string, object>())
                 ["language"] = element.KernelName;
+
+            element.Metadata.GetOrAdd("polyglot_notebook",
+                                      _ => new Dictionary<string, object>())
+                ["kernelName"] = element.KernelName;
         }
 
         writer.WritePropertyName("metadata");

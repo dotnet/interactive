@@ -40,7 +40,9 @@ public static class InteractiveDocumentExtensions
                     ["version"] = langVersion
                 });
 
-        var kernelInfos = document.Metadata.GetOrAdd("dotnet_interactive", _ => new KernelInfoCollection());
+        // `polyglot_notebook` is the canonical metadata key name, but we're still writing `dotnet_interactive` for backwards compatibility
+        var kernelInfos = document.Metadata.GetOrAdd("polyglot_notebook", _ => new KernelInfoCollection());
+        document.Metadata["dotnet_interactive"] = kernelInfos;
 
         kernelInfos.DefaultKernelName = kernelName;
         kernelInfos.Add(new(kernelName));

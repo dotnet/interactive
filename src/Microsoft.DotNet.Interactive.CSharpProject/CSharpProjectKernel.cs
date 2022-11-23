@@ -55,8 +55,10 @@ public class CSharpProjectKernel :
         }
     }
 
-    public CSharpProjectKernel(string name = "csharp") : base(name, "C#", languageVersion:"11.0")
+    public CSharpProjectKernel(string name = "csharp") : base(name)
     {
+        KernelInfo.LanguageName = "C#";
+        KernelInfo.LanguageVersion = "11.0";
     }
 
     async Task IKernelCommandHandler<OpenProject>.HandleAsync(OpenProject command, KernelInvocationContext context)

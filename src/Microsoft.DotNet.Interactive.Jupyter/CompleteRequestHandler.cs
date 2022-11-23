@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         public async Task Handle(JupyterRequestContext context)
         {
             var completeRequest = GetJupyterRequest(context);
-            var targetKernelName = context.GetLanguage();
+            var targetKernelName = context.GetKernelName();
 
             var position = SourceUtilities.GetPositionFromCursorOffset(completeRequest.Code, completeRequest.CursorPosition);
             var command = new RequestCompletions(completeRequest.Code, position, targetKernelName);

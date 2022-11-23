@@ -2,6 +2,7 @@
 .vscode-test/**
 out/src/common/tests/**
 src/**
+tools/**
 .gitignore
 mocha.opts
 testConfig.json

@@ -14,8 +14,10 @@ namespace Microsoft.DotNet.Interactive
     {
         public const string DefaultKernelName = "html";
 
-        public HtmlKernel() : base(DefaultKernelName, "HTML")
+        public HtmlKernel() : base(DefaultKernelName)
         {
+            KernelInfo.LanguageName = "HTML";
+            KernelInfo.DisplayName = "HTML";
         }
 
         Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)

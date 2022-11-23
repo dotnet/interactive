@@ -25,13 +25,13 @@ namespace Microsoft.DotNet.Interactive.Documents.ParserServer
 
         public static KernelInfoCollection WellKnownKernelInfos = new()
         {
-            new("csharp", new[] { "c#", "C#", "cs" }),
-            new("fsharp", new[] { "f#", "F#", "fs" }),
-            new("pwsh", new[] { "powershell" }),
-            new("javascript", new[] { "js" }),
-            new("html"),
-            new("sql"),
-            new("kql"),
+            new("csharp", languageName: "C#", aliases: new[] { "c#", "cs" }),
+            new("fsharp", languageName: "F#", aliases: new[] { "f#", "fs" }),
+            new("pwsh", languageName: "PowerShell", aliases: new[] { "powershell" }),
+            new("javascript", languageName: "JavaScript", aliases: new[] { "js" }),
+            new("html", languageName: "HTML"),
+            new("sql", languageName: "SQL"),
+            new("kql", languageName: "KQL"),
             new("value"),
         };
         
