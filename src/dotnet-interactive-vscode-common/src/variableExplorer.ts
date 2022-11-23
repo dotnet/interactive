@@ -5,7 +5,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { ClientMapper } from './clientMapper';
 import * as contracts from './dotnet-interactive/contracts';
-import { VariableGridRow } from './dotnet-interactive/webview/variableGridInterfaces';
+import { VariableGridRow, VariableInfo } from './dotnet-interactive/webview/variableGridInterfaces';
 import * as utilities from './utilities';
 import * as versionSpecificFunctions from '../versionSpecificFunctions';
 import { DisposableSubscription } from './dotnet-interactive/disposables';
@@ -17,7 +17,7 @@ function debounce(callback: () => void) {
 }
 
 export function registerVariableExplorer(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
-    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.shareValueWith', async (variableInfo: { kernelName: string, valueName: string } | undefined) => {
+    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.shareValueWith', async (variableInfo: VariableInfo | undefined) => {
         const activeNotebookEditor = vscode.window.activeNotebookEditor;
         if (variableInfo && activeNotebookEditor) {
             const notebookDocument = versionSpecificFunctions.getNotebookDocumentFromEditor(activeNotebookEditor);
@@ -25,13 +25,13 @@ export function registerVariableExplorer(context: vscode.ExtensionContext, clien
             if (client) {
                 const kernelSelectorOptions = kernelSelectorUtilities.getKernelSelectorOptions(client.kernel, notebookDocument, contracts.SendValueType);
                 const kernelDisplayValues = kernelSelectorOptions.map(k => k.displayValue);
-                const selectedKernelDisplayName = await vscode.window.showQuickPick(kernelDisplayValues, { title: `Share value [${variableInfo.valueName}] from [${variableInfo.kernelName}] to ...` });
+                const selectedKernelDisplayName = await vscode.window.showQuickPick(kernelDisplayValues, { title: `Share value [${variableInfo.valueName}] from [${variableInfo.sourceKernelName}] to ...` });
                 if (selectedKernelDisplayName) {
                     const targetKernelIndex = kernelDisplayValues.indexOf(selectedKernelDisplayName);
                     if (targetKernelIndex >= 0) {
                         const targetKernelSelectorOption = kernelSelectorOptions[targetKernelIndex];
                         // ends with newline to make adding code easier
-                        const code = `#!share --from ${variableInfo.kernelName} ${variableInfo.valueName}\n`;
+                        const code = `#!share --from ${variableInfo.sourceKernelName} ${variableInfo.valueName}\n`;
                         const command: contracts.SendEditableCode = {
                             kernelName: targetKernelSelectorOption.kernelName,
                             code,

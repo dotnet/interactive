@@ -8,3 +8,8 @@ export interface VariableGridRow {
     kernelName: string;
     link: string;
 }
+
+export interface VariableInfo {
+    sourceKernelName: string;
+    valueName: string;
+}
