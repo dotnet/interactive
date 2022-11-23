@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { VariableGridRow } from './variableGridInterfaces';
+import { VariableGridRow, VariableInfo } from './variableGridInterfaces';
 
 interface DisplayedVariableGridRow {
     row: VariableGridRow;
@@ -96,7 +96,7 @@ function setDataRows(container: HTMLElement, rows: VariableGridRow[]): Displayed
 
         const dataShare = document.createElement('td');
         dataShare.classList.add('share-data');
-        dataShare.innerHTML = `<button type="button" onclick="shareValueWith('${row.kernelName}','${row.name}')" name="" aria-label="Share ${row.name} from ${row.kernelDisplayName} kernel to" class="share"><svg class="share-symbol" ><use xlink:href="#share-icon" aria-hidden="true"></use></svg></button>`;
+        dataShare.innerHTML = `<button type="button" onclick="shareValueWith({sourceKernelName:'${row.kernelName}', valueName: '${row.name}'})" name="" aria-label="Share ${row.name} from ${row.kernelDisplayName} kernel to" class="share"><svg class="share-symbol" ><use xlink:href="#share-icon" aria-hidden="true"></use></svg></button>`;
         dataRow.appendChild(dataShare);
 
         displayedRows.push({
@@ -124,12 +124,9 @@ function truncateValue(value: string): string {
 // @ts-ignore
 const vscode = acquireVsCodeApi();
 
-(<any>window).shareValueWith = function (sourceKernelName: string, valueName: string) {
+(<any>window).shareValueWith = function (variableInfo: VariableInfo) {
     vscode.postMessage({
         command: 'shareValueWith',
-        variableInfo: {
-            kernelName: sourceKernelName,
-            valueName: valueName
-        }
+        variableInfo: variableInfo
     });
 };
