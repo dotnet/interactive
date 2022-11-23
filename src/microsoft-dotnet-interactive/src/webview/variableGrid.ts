@@ -26,7 +26,7 @@ window.addEventListener('DOMContentLoaded', () => {
             row.element.style.display = 'none';
             if (contains(row.row.name, filterElement.value) ||
                 contains(row.row.value, filterElement.value) ||
-                contains(row.row.kernel, filterElement.value)) {
+                contains(row.row.kernelDisplayName, filterElement.value)) {
                 row.element.style.display = '';
             }
         }
@@ -91,12 +91,12 @@ function setDataRows(container: HTMLElement, rows: VariableGridRow[]): Displayed
         dataRow.appendChild(dataValue);
 
         const dataKernel = document.createElement('td');
-        dataKernel.innerText = truncateValue(row.kernel);
+        dataKernel.innerText = truncateValue(row.kernelDisplayName);
         dataRow.appendChild(dataKernel);
 
         const dataShare = document.createElement('td');
         dataShare.classList.add('share-data');
-        dataShare.innerHTML = `<a href="${row.link}"><svg class="share-symbol" aria-label"Share ${row.name} from ${row.kernel} kernel to"><use xlink:href="#share-icon"></use></svg></a>`;
+        dataShare.innerHTML = `<button type="button" onclick="shareValueWith('${row.kernelName}','${row.name}')" name="" aria-label="Share ${row.name} from ${row.kernelDisplayName} kernel to" class="share"><svg class="share-symbol" ><use xlink:href="#share-icon" aria-hidden="true"></use></svg></button>`;
         dataRow.appendChild(dataShare);
 
         displayedRows.push({
@@ -124,6 +124,12 @@ function truncateValue(value: string): string {
 // @ts-ignore
 const vscode = acquireVsCodeApi();
 
-function doTheThing(kernelName: string, valueName: string) {
-    vscode.postMessage({ kernelName, valueName });
-}
+(<any>window).shareValueWith = function (sourceKernelName: string, valueName: string) {
+    vscode.postMessage({
+        command: 'shareValueWith',
+        variableInfo: {
+            kernelName: sourceKernelName,
+            valueName: valueName
+        }
+    });
+};

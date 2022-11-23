@@ -78,6 +78,9 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
         };
         this.webview.onDidReceiveMessage(message => {
             const x = message;
+            if (message.command === 'shareValueWith') {
+                vscode.commands.executeCommand('polyglot-notebook.shareValueWith', message.variableInfo);
+            }
         });
         // only load this once
         const apiFileUri = this.webview.asWebviewUri(vscode.Uri.file(path.join(this.extensionPath, 'resources', 'variableGrid.js')));
@@ -117,7 +120,10 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                     button[hover] {
                         background-color: var(--vscode-button-hoverBackground);
                     }
-
+                    button.share {
+                        background-color: transparent;
+                        border: 0px;
+                    }
                     .name-column {
                         width: 20%;
                     }
@@ -249,7 +255,8 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                             rows.push({
                                 name: valueName,
                                 value: valueValue,
-                                kernel: displayName,
+                                kernelDisplayName: displayName,
+                                kernelName: kernel.name,
                                 link: commandUrl,
                             });
                         } catch (e) {
