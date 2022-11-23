@@ -3,7 +3,7 @@
   "id": "command-id",
   "commandType": "SendEditableCode",
   "command": {
-    "language": "language",
+    "kernelName": "someKernelName",
     "code": "code",
     "targetKernelName": "vscode",
     "originUri": null,

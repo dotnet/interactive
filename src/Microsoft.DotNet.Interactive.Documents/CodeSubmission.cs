@@ -28,15 +28,10 @@ namespace Microsoft.DotNet.Interactive.Documents
             var lines = content.SplitIntoLines();
 
             var document = new InteractiveDocument();
-            var currentLanguage = kernelInfo.DefaultKernelName ?? "csharp";
+            var currentKernelName = kernelInfo.DefaultKernelName ?? "csharp";
             var currentElementLines = new List<string>();
 
-            // not a kernel language, but still a valid cell splitter
-            if (!kernelInfo.Contains("markdown"))
-            {
-                kernelInfo = kernelInfo.Clone();
-                kernelInfo.Add(new KernelInfo("markdown", new[] { "md" }));
-            }
+            kernelInfo = WithMarkdownKernel(kernelInfo);
 
             var foundMetadata = false;
 
@@ -50,7 +45,7 @@ namespace Microsoft.DotNet.Interactive.Documents
                     foundMetadata = true;
                     var sb = new StringBuilder();
 
-                    while (!(line = lines[++i]).StartsWith("#!"))
+                    while (i < lines.Length - 1 && !(line = lines[++i]).StartsWith(MagicCommandPrefix))
                     {
                         sb.AppendLine(line);
                     }
@@ -61,21 +56,23 @@ namespace Microsoft.DotNet.Interactive.Documents
 
                     if (InteractiveDocument.TryGetKernelInfoFromMetadata(metadata, out var kernelInfoFromMetadata))
                     {
+                        kernelInfo = new(); // clear the old set
                         kernelInfo.AddRange(kernelInfoFromMetadata);
+                        kernelInfo = WithMarkdownKernel(kernelInfo);
                     }
                 }
 
                 if (line.StartsWith(MagicCommandPrefix))
                 {
-                    var cellLanguage = line.Substring(MagicCommandPrefix.Length);
+                    var cellKernelName = line.Substring(MagicCommandPrefix.Length);
 
-                    if (kernelInfo.TryGetByAlias(cellLanguage, out var name))
+                    if (kernelInfo.TryGetByAlias(cellKernelName, out var name))
                     {
                         // recognized language, finalize the current element
                         AddElement();
 
                         // start a new element
-                        currentLanguage = name.Name;
+                        currentKernelName = name.Name;
                         currentElementLines.Clear();
                     }
                     else
@@ -96,7 +93,7 @@ namespace Microsoft.DotNet.Interactive.Documents
             // ensure there's at least one element available
             if (document.Elements.Count == 0)
             {
-                document.Elements.Add(CreateElement(currentLanguage, Array.Empty<string>()));
+                document.Elements.Add(CreateElement(currentKernelName, Array.Empty<string>()));
             }
 
             if (metadata is not null)
@@ -122,14 +119,26 @@ namespace Microsoft.DotNet.Interactive.Documents
 
                 if (currentElementLines.Count > 0)
                 {
-                    document.Elements.Add(CreateElement(currentLanguage, currentElementLines));
+                    document.Elements.Add(CreateElement(currentKernelName, currentElementLines));
                 }
             }
 
-            InteractiveDocumentElement CreateElement(string elementLanguage, IEnumerable<string> elementLines)
+            InteractiveDocumentElement CreateElement(string kernelName, IEnumerable<string> elementLines)
             {
-                return new(string.Join("\n", elementLines), elementLanguage);
+                return new(string.Join("\n", elementLines), kernelName);
             }
+        }
+
+        private static KernelInfoCollection WithMarkdownKernel(KernelInfoCollection kernelInfo)
+        {
+            // not a kernel language, but still a valid cell splitter
+            if (!kernelInfo.Contains("markdown"))
+            {
+                kernelInfo = kernelInfo.Clone();
+                kernelInfo.Add(new KernelInfo("markdown", languageName: "markdown", aliases: new[] { "md" }));
+            }
+
+            return kernelInfo;
         }
 
         public static InteractiveDocument Read(

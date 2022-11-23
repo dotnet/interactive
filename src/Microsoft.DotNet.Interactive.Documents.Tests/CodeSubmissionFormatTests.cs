@@ -11,6 +11,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Assent;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -434,6 +435,44 @@ var x = 1;
     }
 
     [Fact]
+    public void dib_file_with_only_metadata_section_can_be_loaded()
+    {
+        var content = @"#!meta
+{""theAnswer"":42}";
+        var document = ParseDib(content);
+        document
+            .Metadata
+            .Should()
+            .ContainKey("theAnswer");
+    }
+
+    [Fact]
+    public void kernel_selector_can_immediately_follow_metadata_section()
+    {
+        var content = @"#!meta
+{""theAnswer"":42}
+#!csharp
+var x = 1;";
+        var document = ParseDib(content);
+
+        using var _ = new AssertionScope();
+
+        // validate metadata
+        document
+            .Metadata
+            .Should()
+            .ContainKey("theAnswer");
+
+        // validate content
+        document
+            .Elements
+            .Single()
+            .Contents
+            .Should()
+            .Be("var x = 1;");
+    }
+
+    [Fact]
     public void Metadata_section_is_not_added_as_a_document_element()
     {
         var kernelInfo = DefaultKernelInfos;
@@ -590,7 +629,7 @@ Console.Write(""hello"");
         var inputDoc = CodeSubmission.Parse(expectedContent);
 
         var resultContent = inputDoc.ToCodeSubmissionContent();
-            
+
         return resultContent;
     }
 

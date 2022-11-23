@@ -18,8 +18,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Html.Abstractions" Version="2.2.0" />
     <PackageReference Include="microsoft.csharp" Version="4.7.0" />
-    <PackageReference Include="System.Text.Encodings.Web" Version="6.0.0" />
-    <PackageReference Include="System.Text.Json" Version="6.0.5" />
+    <PackageReference Include="System.Text.Encodings.Web" Version="7.0.0" />
+    <PackageReference Include="System.Text.Json" Version="7.0.0" />
   </ItemGroup>
 
   <ItemGroup>

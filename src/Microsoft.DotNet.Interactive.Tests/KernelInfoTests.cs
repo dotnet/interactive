@@ -144,7 +144,7 @@ public class KernelInfoTests
             using var remoteCompositeKernel = new CompositeKernel("REMOTE")
             {
                 proxiedCsharpKernel,
-                new FakeKernel("fsharp", languageName: "fsharp")
+                new FakeKernel("fsharp", languageName: "fsharp", displayName: "Eff Sharp")
             };
 
             ConnectHost.ConnectInProcessHost(
@@ -177,6 +177,7 @@ public class KernelInfoTests
                 .BeEquivalentTo(new
                 {
                     LanguageName = "fsharp",
+                    DisplayName = "Eff Sharp",
                     RemoteUri = remoteKernelUri
                 }, c => c.ExcludingMissingMembers());
         }

@@ -18,13 +18,15 @@ namespace Microsoft.DotNet.Interactive
         private readonly HashSet<string> _kernelNameFilter;
         public const string DefaultKernelName = "sql";
 
-        public SqlDiscoverabilityKernel() : base(DefaultKernelName, languageName: "SQL")
+        public SqlDiscoverabilityKernel() : base(DefaultKernelName)
         {
             _kernelNameFilter = new HashSet<string>
             {
                 "MsSqlKernel",
                 "SQLiteKernel"
             };
+            KernelInfo.LanguageName = "SQL";
+            KernelInfo.DisplayName = "SQL";
         }
 
         Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)

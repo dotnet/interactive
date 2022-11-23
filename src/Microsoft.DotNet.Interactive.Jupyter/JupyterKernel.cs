@@ -17,8 +17,10 @@ internal partial class JupyterKernel : Kernel
     private readonly IMessageReceiver _receiver;
 
     protected JupyterKernel(string name, Uri uri, IMessageSender sender, IMessageReceiver receiver, string languageName, string languageVersion)
-        : base(name, languageName, languageVersion)
+        : base(name)
     {
+        KernelInfo.LanguageName = languageName;
+        KernelInfo.LanguageVersion = languageVersion;
         _sender = sender ?? throw new ArgumentNullException(nameof(sender));
         _receiver = receiver ?? throw new ArgumentNullException(nameof(receiver));
 
@@ -44,8 +46,8 @@ internal partial class JupyterKernel : Kernel
         var kernelInfo = await RequestKernelInfo(sender, receiver);
 
         return new JupyterKernel(name,
-                                 uri, 
-                                 sender, 
+                                 uri,
+                                 sender,
                                  receiver,
                                  kernelInfo?.LanguageInfo?.Name,
                                  kernelInfo?.LanguageInfo?.Version);

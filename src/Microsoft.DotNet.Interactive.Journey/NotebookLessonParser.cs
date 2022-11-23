@@ -77,14 +77,14 @@ namespace Microsoft.DotNet.Interactive.Journey
                 foreach (var subkernel in kernel)
                 {
                     var info = subkernel.KernelInfo;
-                    kernelInfos.Add(new(info.LocalName, info.Aliases));
+                    kernelInfos.Add(new(info.LocalName, info.LanguageName, info.Aliases));
                 }
 
                 kernelInfos.DefaultKernelName = kernel.DefaultKernelName;
 
                 if (kernelInfos.All(n => n.Name != "markdown"))
                 {
-                    kernelInfos.Add(new Documents.KernelInfo("markdown", new[] { "md" }));
+                    kernelInfos.Add(new Documents.KernelInfo("markdown", "Markdown", new[] { "md" }));
                 }
 
                 return kernelInfos;
@@ -93,10 +93,10 @@ namespace Microsoft.DotNet.Interactive.Journey
             {
                 var names = new KernelInfoCollection
                 {
-                    new("csharp", new[] { "cs", "C#", "c#" }),
-                    new("fsharp", new[] { "fs", "F#", "f#" }),
-                    new("pwsh", new[] { "powershell" }),
-                    new("markdown", new[] { "md" })
+                    new("csharp", "C#", new[] { "cs", "c#" }),
+                    new("fsharp", "F#", new[] { "fs", "f#" }),
+                    new("pwsh", "PowerShell", new[] { "powershell" }),
+                    new("markdown", "Markdown", new[] { "md" })
                 };
                 names.DefaultKernelName = "csharp";
                 return names;

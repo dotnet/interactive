@@ -8,46 +8,10 @@ import { NotebookCellKind, NotebookDocumentBackup } from './interfaces/vscode-li
 import { ClientMapper } from './clientMapper';
 import { Diagnostic } from './dotnet-interactive/contracts';
 import { Uri } from 'vscode';
-
-export const notebookCellLanguages: Array<string> = [
-    'dotnet-interactive.csharp',
-    'dotnet-interactive.fsharp',
-    'dotnet-interactive.html',
-    'dotnet-interactive.javascript',
-    'dotnet-interactive.mermaid',
-    'dotnet-interactive.pwsh',
-    'dotnet-interactive.sql',
-    'dotnet-interactive.kql',
-];
-
-export const defaultNotebookCellLanguage = notebookCellLanguages[0];
-
-const notebookLanguagePrefix = 'dotnet-interactive.';
-
-export function getSimpleLanguage(language: string): string {
-    if (language.startsWith(notebookLanguagePrefix)) {
-        return language.substr(notebookLanguagePrefix.length);
-    }
-
-    return language;
-}
-
-export function getNotebookSpecificLanguage(language?: string): string {
-    if (language && !language.startsWith(notebookLanguagePrefix) && language !== 'markdown') {
-        return notebookLanguagePrefix + language;
-    }
-
-    return language ?? "";
-}
-
-export function isDotnetInteractiveLanguage(language: string): boolean {
-    return language.startsWith(notebookLanguagePrefix);
-}
-
-export const jupyterViewType = 'jupyter-notebook';
+import * as constants from './constants';
 
 export function isJupyterNotebookViewType(viewType: string): boolean {
-    return viewType === jupyterViewType;
+    return viewType === constants.JupyterViewType;
 }
 
 export function languageToCellKind(language?: string): NotebookCellKind {
@@ -82,10 +46,14 @@ export function backupNotebook(rawData: Uint8Array, location: string): Promise<N
     });
 }
 
-export function notebookCellChanged(clientMapper: ClientMapper, documentUri: Uri, documentText: string, language: string, diagnosticDelay: number, callback: (diagnostics: Array<Diagnostic>) => void) {
+export function notebookCellChanged(clientMapper: ClientMapper, documentUri: Uri, documentText: string, kernelName: string, diagnosticDelay: number, callback: (diagnostics: Array<Diagnostic>) => void) {
     debounce(`diagnostics-${documentUri.toString()}`, diagnosticDelay, async () => {
-        const client = await clientMapper.getOrAddClient(documentUri);
-        const diagnostics = await client.getDiagnostics(language, documentText);
-        callback(diagnostics);
+        let diagnostics: Diagnostic[] = [];
+        try {
+            const client = await clientMapper.getOrAddClient(documentUri);
+            diagnostics = await client.getDiagnostics(kernelName, documentText);
+        } finally {
+            callback(diagnostics);
+        }
     });
 }

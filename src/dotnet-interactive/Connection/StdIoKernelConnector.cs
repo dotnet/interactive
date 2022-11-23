@@ -11,7 +11,9 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Utility;
@@ -24,18 +26,20 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
     private KernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventSender? _sender;
     private Process? _process;
-    private Uri? _remoteHostUri;
     private RefCountDisposable? _refCountDisposable = null;
 
-    public StdIoKernelConnector(string[] command, DirectoryInfo? workingDirectory = null)
+    public StdIoKernelConnector(string[] command, Uri kernelHostUri, DirectoryInfo? workingDirectory = null)
     {
         Command = command;
+        KernelHostUri = kernelHostUri;
         WorkingDirectory = workingDirectory ?? new DirectoryInfo(Environment.CurrentDirectory);
     }
 
     public string[] Command { get; }
 
     public DirectoryInfo WorkingDirectory { get; }
+
+    public Uri KernelHostUri { get; }
 
     public async Task<Kernel> CreateKernelAsync(string kernelName)
     {
@@ -44,14 +48,22 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
         if (_receiver is null)
         {
             var command = Command[0];
-            var arguments = string.Join(" ", Command.Skip(1));
+            var arguments = Command.Skip(1).ToArray();
+            if (KernelHostUri is { })
+            {
+                arguments = arguments.Concat(new[]
+                {
+                    "--kernel-host",
+                    KernelHostUri.Authority
+                }).ToArray();
+            }
 
             _process = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = command,
-                    Arguments = arguments,
+                    Arguments = string.Join(" ", arguments),
                     EnvironmentVariables =
                     {
                         ["DOTNET_INTERACTIVE_SKIP_FIRST_TIME_EXPERIENCE"]  = "1",
@@ -85,9 +97,6 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
             await Task.Yield();
 
             _process.Start();
-            _process.BeginOutputReadLine();
-            _process.BeginErrorReadLine();
-            _remoteHostUri = KernelHost.CreateHostUriForProcessId(_process.Id);
 
             _receiver = KernelCommandAndEventReceiver.FromObservable(stdOutObservable);
 
@@ -95,14 +104,18 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
             _receiver.Select(coe => coe.Event)
                                    .OfType<KernelReady>()
                                    .Take(1)
-                                   .Subscribe(e => kernelReadyReceived = true);
+                                   .Subscribe(e =>
+                                   {
+                                       kernelReadyReceived = true;
+                                   });
 
             _sender = KernelCommandAndEventSender.FromTextWriter(
-                _process.StandardInput,
-                _remoteHostUri);
+               _process.StandardInput,
+               KernelHostUri);
 
             _refCountDisposable = new RefCountDisposable(new CompositeDisposable
             {
+                SendQuitCommand,
                 KillRemoteKernelProcess,
                 _receiver.Dispose
             });
@@ -111,9 +124,12 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
                 kernelName,
                 _sender,
                 _receiver,
-                new Uri(_remoteHostUri, kernelName));
+                KernelHostUri);
 
             proxyKernel.RegisterForDisposal(_refCountDisposable);
+
+            _process.BeginOutputReadLine();
+            _process.BeginErrorReadLine();
 
             while (!kernelReadyReceived)
             {
@@ -140,12 +156,20 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
                 kernelName,
                 _sender,
                 _receiver,
-                new Uri(_remoteHostUri!, kernelName));
+                KernelHostUri);
 
             proxyKernel.RegisterForDisposal(_refCountDisposable!.GetDisposable());
         }
 
         return proxyKernel;
+    }
+
+    private void SendQuitCommand()
+    {
+        if (_sender is not null)
+        {
+            var _ = _sender.SendAsync(new Quit(), CancellationToken.None);
+        }
     }
 
     private void KillRemoteKernelProcess()

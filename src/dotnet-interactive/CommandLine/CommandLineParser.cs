@@ -216,7 +216,7 @@ public static class CommandLineParser
                 var frontendEnvironment = new HtmlNotebookFrontendEnvironment();
                 var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions, telemetrySender);
                 cancellationToken.Register(() => kernel.Dispose());
-                
+
                 await new JupyterClientKernelExtension().OnLoadAsync(kernel);
 
                 services.AddKernel(kernel);
@@ -235,7 +235,7 @@ public static class CommandLineParser
                     .AddSingleton<IHostedService, Heartbeat>();
 
                 var result = await jupyter(startupOptions, console, startServer, context);
-                
+
                 return result;
             }
 
@@ -286,6 +286,12 @@ public static class CommandLineParser
                     return new HttpPort(portNumber);
                 });
 
+            var kernelHostOption = new Option<Uri>(
+                "--kernel-host",
+                parseArgument: x => x.Tokens.Count == 0 ? KernelHost.CreateHostUriForCurrentProcessId() : KernelHost.CreateHostUri(x.Tokens[0].Value),
+                isDefault: true,
+                description: "Name of the kernel host.");
+
             var workingDirOption = new Option<DirectoryInfo>(
                 "--working-dir",
                 () => new DirectoryInfo(Environment.CurrentDirectory),
@@ -298,10 +304,11 @@ public static class CommandLineParser
                 defaultKernelOption,
                 httpPortRangeOption,
                 httpPortOption,
+                kernelHostOption,
                 workingDirOption
             };
 
-            stdIOCommand.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext,CancellationToken>(
+            stdIOCommand.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext, CancellationToken>(
                 async (startupOptions, options, console, context, cancellationToken) =>
                 {
                     Console.InputEncoding = Encoding.UTF8;
@@ -313,17 +320,17 @@ public static class CommandLineParser
                         : new BrowserFrontendEnvironment();
 
                     var kernel = CreateKernel(
-                        options.DefaultKernel, 
-                        frontendEnvironment, 
+                        options.DefaultKernel,
+                        frontendEnvironment,
                         startupOptions,
                         telemetrySender);
 
                     services.AddKernel(kernel);
 
                     kernel.UseQuitCommand();
-                    
+
                     cancellationToken.Register(() => kernel.Dispose());
-                    
+
                     var sender = KernelCommandAndEventSender.FromTextWriter(
                         Console.Out,
                         KernelHost.CreateHostUri("stdio"));
@@ -333,7 +340,7 @@ public static class CommandLineParser
                     var host = kernel.UseHost(
                         sender,
                         receiver,
-                        KernelHost.CreateHostUriForCurrentProcessId());
+                        startupOptions.KernelHost);
 
                     var isVSCode = context.ParseResult.Directives.Contains("vscode") ||
                                    !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CODESPACES"));
@@ -343,7 +350,7 @@ public static class CommandLineParser
                         var vscodeSetup = new VSCodeClientKernelExtension();
                         await vscodeSetup.OnLoadAsync(kernel);
                     }
-                       
+
                     if (startupOptions.EnableHttpApi)
                     {
                         var clientSideKernelClient = new SignalRBackchannelKernelClient();
@@ -379,12 +386,11 @@ public static class CommandLineParser
                     }
 
                     return 0;
-                        
                 });
 
             return stdIOCommand;
         }
-            
+
         Command NotebookParser()
         {
             var notebookParserCommand = new Command(
@@ -489,7 +495,7 @@ public static class CommandLineParser
 
         kernel.AddKernelConnector(new ConnectNamedPipeCommand());
         kernel.AddKernelConnector(new ConnectSignalRCommand());
-        kernel.AddKernelConnector(new ConnectStdIoCommand());
+        kernel.AddKernelConnector(new ConnectStdIoCommand(startupOptions.KernelHost));
         kernel.AddKernelConnector(new ConnectJupyterKernelCommand());
 
         if (startupOptions.Verbose)

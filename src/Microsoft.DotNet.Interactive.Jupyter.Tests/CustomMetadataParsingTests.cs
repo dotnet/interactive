@@ -13,11 +13,12 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
     public class CustomMetadataParsingTests
     {
         [Fact]
-        public void Input_cell_metadata_can_be_parsed_with_all_fields()
+        public void Input_cell_metadata_can_be_parsed_from_dotnet_interactive_metadata()
         {
             var rawMetadata = new
             {
-                dotnet_interactive = new InputCellMetadata("fsharp")
+                // the value specified is `language`, but in reality this was the kernel name
+                dotnet_interactive = new InputCellMetadata(language: "fsharp")
             };
             var rawMetadataJson = JsonSerializer.Serialize(rawMetadata);
             var metadata = MetadataExtensions.DeserializeMetadataFromJsonString(rawMetadataJson);
@@ -25,7 +26,23 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                 .ContainKey("dotnet_interactive")
                 .WhoseValue
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata("fsharp"));
+                .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata(language: "fsharp"));
+        }
+
+        [Fact]
+        public void Input_cell_metadata_can_be_parsed_from_polyglot_notebook_metadata()
+        {
+            var rawMetadata = new
+            {
+                polyglot_notebook = new InputCellMetadata(kernelName: "fsharp")
+            };
+            var rawMetadataJson = JsonSerializer.Serialize(rawMetadata);
+            var metadata = MetadataExtensions.DeserializeMetadataFromJsonString(rawMetadataJson);
+            metadata.Should()
+                .ContainKey("polyglot_notebook")
+                .WhoseValue
+                .Should()
+                .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata(kernelName: "fsharp"));
         }
 
         [Fact]
@@ -41,7 +58,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                 .ContainKey("dotnet_interactive")
                 .WhoseValue
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata() );
+                .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata());
         }
 
         [Fact]
@@ -49,7 +66,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         {
             var rawMetadata = new
             {
-                dotnet_interactive_but_not_the_right_shape = new InputCellMetadata("fsharp")
+                dotnet_interactive_but_not_the_right_shape = new InputCellMetadata(language: "fsharp")
             };
             var rawMetadataJson = JsonSerializer.Serialize(rawMetadata);
             var metadata = MetadataExtensions.DeserializeMetadataFromJsonString(rawMetadataJson);

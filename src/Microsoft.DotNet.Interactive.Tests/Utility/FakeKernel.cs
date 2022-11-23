@@ -12,8 +12,10 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
         Kernel,
         IKernelCommandHandler<SubmitCode>
     {
-        public FakeKernel([CallerMemberName] string name = null, string languageName = null) : base(name, languageName ?? name)
+        public FakeKernel([CallerMemberName] string name = null, string languageName = null, string displayName = null) : base(name)
         {
+            KernelInfo.LanguageName = languageName ?? name;
+            KernelInfo.DisplayName = displayName ?? name;
         }
 
         public KernelCommandInvocation Handle { get; set; }

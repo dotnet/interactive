@@ -4,66 +4,12 @@
 import { expect } from 'chai';
 import { DisplayElement, ErrorElement, TextElement } from '../../src/vscode-common/dotnet-interactive/contracts';
 import { isDisplayOutput, isErrorOutput, isTextOutput, reshapeOutputValueForVsCode } from '../../src/vscode-common/interfaces/utilities';
-import { isDotNetNotebookMetadata, isIpynbFile } from '../../src/vscode-common/ipynbUtilities';
 import { createUri, debounce, executeSafe, getVersionNumber, getWorkingDirectoryForNotebook, parse, processArguments, stringify } from '../../src/vscode-common/utilities';
 import { decodeToString } from './utilities';
 
 import * as vscodeLike from '../../src/vscode-common/interfaces/vscode-like';
 
 describe('Miscellaneous tests', () => {
-    describe('.NET notebook detection', () => {
-        it('.NET notebook is detected by kernelspec', () => {
-            const metadata = {
-                custom: {
-                    metadata: {
-                        kernelspec: {
-                            name: '.net-fsharp-dev'
-                        }
-                    }
-                }
-            };
-            expect(isDotNetNotebookMetadata(metadata)).is.true;
-        });
-
-        it('.NET notebook is detected by language info', () => {
-            const metadata = {
-                custom: {
-                    metadata: {
-                        language_info: {
-                            name: 'dotnet-interactive.pwsh'
-                        }
-                    }
-                }
-            };
-            expect(isDotNetNotebookMetadata(metadata)).is.true;
-        });
-
-        it('non-.NET notebook is not detected by kernelspec', () => {
-            const metadata = {
-                custom: {
-                    metadata: {
-                        kernelspec: {
-                            name: 'python'
-                        }
-                    }
-                }
-            };
-            expect(isDotNetNotebookMetadata(metadata)).is.false;
-        });
-
-        it('non-.NET notebook is not detected by language info', () => {
-            const metadata = {
-                custom: {
-                    metadata: {
-                        language_info: {
-                            name: 'python'
-                        }
-                    }
-                }
-            };
-            expect(isDotNetNotebookMetadata(metadata)).is.false;
-        });
-    });
 
     it(`verify command and argument replacement is as expected`, () => {
         let template = {
@@ -266,17 +212,5 @@ describe('Miscellaneous tests', () => {
                 expect(version).to.equal('5.0.101');
             });
         }
-    });
-
-    describe('.ipynb helpers', () => {
-        it('file extension of .ipynb matches', () => {
-            expect(isIpynbFile('notebook.ipynb')).to.be.true;
-            expect(isIpynbFile('NOTEBOOK.IPYNB')).to.be.true;
-        });
-
-        it(`file extension of .dib doesn't match`, () => {
-            expect(isIpynbFile('notebook.dib')).to.be.false;
-            expect(isIpynbFile('notebook.dotnet-interactive')).to.be.false;
-        });
     });
 });

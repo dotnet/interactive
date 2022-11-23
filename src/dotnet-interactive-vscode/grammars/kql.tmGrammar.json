@@ -1,12 +1,6 @@
 {
-  "scopeName": "source.dotnet-interactive.kql",
+  "scopeName": "source.kql",
   "patterns": [
-    {
-      "include": "source.dotnet-interactive.magic-commands"
-    },
-    {
-      "include": "source.dotnet-interactive"
-    },
     {
       "//comment": " Query statements-https://docs.microsoft.com/en-us/azure/kusto/query/statements",
       "match": "\\b(let|set|alias|declare|pattern|restrict|access|to|set)\\b",

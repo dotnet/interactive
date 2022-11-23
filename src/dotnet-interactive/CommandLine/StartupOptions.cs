@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.IO;
 using Microsoft.DotNet.Interactive.Http;
 
@@ -13,12 +14,14 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             bool verbose = false,
             HttpPortRange httpPortRange = null,
             HttpPort httpPort = null,
+            Uri kernelHost = null,
             DirectoryInfo workingDir = null)
         {
             LogPath = logPath;
             Verbose = verbose;
             HttpPortRange = httpPortRange;
             HttpPort = httpPort;
+            KernelHost = kernelHost;
             WorkingDir = workingDir;
         }
 
@@ -29,6 +32,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
         public HttpPort HttpPort { get; internal set; }
 
         public HttpPortRange HttpPortRange { get; internal set; }
+        
+        public Uri KernelHost { get; }
 
         public DirectoryInfo WorkingDir { get; internal set; }
 

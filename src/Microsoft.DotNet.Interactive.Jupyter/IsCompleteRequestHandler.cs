@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         public async Task Handle(JupyterRequestContext context)
         {
             var isCompleteRequest = GetJupyterRequest(context);
-            var targetKernelName = context.GetLanguage();
+            var targetKernelName = context.GetKernelName();
             var command = new SubmitCode(isCompleteRequest.Code, targetKernelName, submissionType: SubmissionType.Diagnose);
 
             await SendAsync(context, command);

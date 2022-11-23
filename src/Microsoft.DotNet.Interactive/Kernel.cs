@@ -25,6 +25,7 @@ using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 using Disposable = System.Reactive.Disposables.Disposable;
 using Microsoft.DotNet.Interactive.Formatting;
 using System.Text.Json;
+using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -47,10 +48,7 @@ namespace Microsoft.DotNet.Interactive
         private int _countOfLanguageServiceCommandsInFlight = 0;
         private readonly KernelInfo _kernelInfo;
 
-        protected Kernel(
-            string name,
-            string languageName = null,
-            string languageVersion = null)
+        protected Kernel(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
             {
@@ -73,7 +71,7 @@ namespace Microsoft.DotNet.Interactive
                         GetType(),
                         GetImplementedCommandHandlerTypesFor));
 
-            _kernelInfo = InitializeKernelInfo(name, languageName, languageVersion);
+            _kernelInfo = InitializeKernelInfo(name);
 
             var counter = _kernelEvents.Subscribe(IncrementSubmissionCount);
 
@@ -94,13 +92,24 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private KernelInfo InitializeKernelInfo(string name, string languageName, string languageVersion)
+        [Obsolete("This constructor has been deprecated.  Please use the other constructor and directly set any remaining properties directly on the " + nameof(KernelInfo) + " property.")]
+        protected Kernel(
+            string name,
+            string languageName,
+            string languageVersion)
+            : this(name)
+        {
+            KernelInfo.LanguageName = languageName;
+            KernelInfo.LanguageVersion = languageVersion;
+        }
+
+        private KernelInfo InitializeKernelInfo(string name)
         {
             var supportedKernelCommands = _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)).ToArray();
 
             var supportedDirectives = Directives.Select(d => new KernelDirectiveInfo(d.Name)).ToArray();
 
-            return new KernelInfo(name, languageName, languageVersion)
+            return new KernelInfo(name, aliases: null)
             {
                 SupportedKernelCommands = supportedKernelCommands,
                 SupportedDirectives = supportedDirectives,
@@ -174,7 +183,7 @@ namespace Microsoft.DotNet.Interactive
                 }
 
                 if (command.DestinationUri is { } &&
-                    handlingKernel.KernelInfo.Uri is { } && 
+                    handlingKernel.KernelInfo.Uri is { } &&
                     command.DestinationUri == handlingKernel.KernelInfo.Uri)
                 {
                     command.SchedulingScope = handlingKernel.SchedulingScope;
@@ -563,9 +572,8 @@ namespace Microsoft.DotNet.Interactive
                             {
                                 return true;
                             }
-                            
+
                             return inner.RoutingSlip.StartsWith(outer.RoutingSlip);
-                          
                         });
                     RegisterForDisposal(scheduler);
                     SetScheduler(scheduler);
@@ -669,7 +677,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 kernelEvent.RoutingSlip.Stamp(KernelInfo.Uri);
             }
-           
+
             _kernelEvents.OnNext(kernelEvent);
         }
 

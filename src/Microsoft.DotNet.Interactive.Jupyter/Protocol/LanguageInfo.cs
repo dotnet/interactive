@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
 
     public class CSharpLanguageInfo : LanguageInfo
     {
-        public CSharpLanguageInfo(string version = "10.0") : base("C#", version, "text/x-csharp", ".cs", pygmentsLexer: "csharp")
+        public CSharpLanguageInfo(string version = "11.0") : base("C#", version, "text/x-csharp", ".cs", pygmentsLexer: "csharp")
         {
         }
     }
@@ -73,7 +73,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
     {
         public FSharpLanguageInfo(string version = "6.0") : base("F#", version, "text/x-fsharp", ".fs", pygmentsLexer: "fsharp")
         {
-           
         }
     }
 
@@ -81,7 +80,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
     {
         public PowerShellLanguageInfo(string version = "7.0") : base("PowerShell", version, "text/x-powershell", ".ps1", pygmentsLexer: "powershell")
         {
-           
         }
     }
 }

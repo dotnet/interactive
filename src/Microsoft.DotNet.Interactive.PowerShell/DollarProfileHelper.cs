@@ -1,7 +1,6 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.IO;
 
 namespace Microsoft.DotNet.Interactive.PowerShell
@@ -26,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         {
             if (!forCurrentUser)
             {
-                string pshome = Path.GetDirectoryName(typeof(PSObject).Assembly.Location);
+                var pshome = Path.GetDirectoryName(typeof(PSObject).Assembly.Location);
                 return Path.Combine(pshome, _profileName);
             }
 
@@ -35,7 +34,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
         public static PSObject GetProfileValue()
         {
-            PSObject dollarProfile = new PSObject(CurrentUserCurrentHost);
+            var dollarProfile = new PSObject(CurrentUserCurrentHost);
             dollarProfile.Properties.Add(new PSNoteProperty("AllUsersCurrentHost", AllUsersCurrentHost));
             dollarProfile.Properties.Add(new PSNoteProperty("CurrentUserCurrentHost", CurrentUserCurrentHost));
             // TODO: Decide on whether or not we want to support running the AllHosts profiles
