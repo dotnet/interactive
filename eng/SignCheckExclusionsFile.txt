@@ -1,6 +1,0 @@
-Microsoft.Management.Infrastructure.dll;Microsoft.dotnet-interactive.*.nupkg;
-Microsoft.PowerShell.Host.psd1;Microsoft.dotnet-interactive.*.nupkg;
-Microsoft.PowerShell.Management.psd1;Microsoft.dotnet-interactive.*.nupkg;
-Microsoft.PowerShell.Security.psd1;Microsoft.dotnet-interactive.*.nupkg;
-Microsoft.PowerShell.Utility.psd1;Microsoft.dotnet-interactive.*.nupkg;
-dotnet-interactive.js

@@ -1,7 +1,0 @@
-#!csharp
-
-var x = 1;
-
-#!csharp
-
-x = 2;

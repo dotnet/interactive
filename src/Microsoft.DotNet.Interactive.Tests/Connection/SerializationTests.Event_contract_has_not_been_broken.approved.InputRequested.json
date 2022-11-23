@@ -1,1 +1,0 @@
-{"event":{"prompt":"prompt"},"eventType":"InputRequested","command":{"token":"the-token","commandType":"SubmitCode","command":{"code":"123","submissionType":"run","targetKernelName":null}}}

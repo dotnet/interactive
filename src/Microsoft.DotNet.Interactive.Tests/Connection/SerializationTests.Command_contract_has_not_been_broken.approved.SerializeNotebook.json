@@ -1,1 +1,0 @@
-{"token":"the-token","commandType":"SerializeNotebook","command":{"fileName":"notebook.ipynb","notebook":{"cells":[{"language":"csharp","contents":"user code","outputs":[{"data":{"text/html":"<b></b>"}},{"text":"text"},{"errorName":"e-name","errorValue":"e-value","stackTrace":["at func1()","at func2()"]}]}]},"newLine":"\r\n","targetKernelName":null}}

@@ -1,6 +1,0 @@
-data: <IDS|MSG> more: True
-data: 575e578a1b0214dfda9311db2f9c4d7cd24eb3e44b97127b72d70a982e924543 more: True
-data: {"msg_id":"00000000-0000-0000-0000-000000000000","username":"dotnet_kernel","session":"test session","date":"0001-01-01T00:00:00Z","msg_type":"execute_result","version":"5.3"} more: True
-data: null more: True
-data: {} more: True
-data: {"execution_count":12,"data":{"text/html":"some result","text/plain":"some result"},"metadata":{},"transient":{"display_id":"none"}} more: False

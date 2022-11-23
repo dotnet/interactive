@@ -1,7 +1,0 @@
-#!csharp
-
-#r "nuget: Microsoft.DotNet.Interactive.Journey, *-*"
-
-#!csharp
-
-#!start-lesson --from-file "showcaseteacher.dib"
