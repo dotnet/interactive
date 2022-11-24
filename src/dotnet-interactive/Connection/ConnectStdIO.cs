@@ -13,8 +13,8 @@ namespace Microsoft.DotNet.Interactive.App.Connection;
 
 public class ConnectStdIoCommand : ConnectKernelCommand
 {
-    private static int KernelHostAuthoritySuffix = 1;
-    private Uri _kernelHostUri;
+    private static int _kernelHostAuthoritySuffix = 1;
+    private readonly Uri _kernelHostUri;
 
     public ConnectStdIoCommand(Uri kernelHostUri) : base("stdio",
         "Connects to a kernel using the stdio protocol")
@@ -28,7 +28,7 @@ public class ConnectStdIoCommand : ConnectKernelCommand
 
     private string CreateKernelHostAuthority()
     {
-        var suffix = Interlocked.Increment(ref KernelHostAuthoritySuffix);
+        var suffix = Interlocked.Increment(ref _kernelHostAuthoritySuffix);
         return $"{_kernelHostUri.Authority}-{suffix}";
     }
 
