@@ -4,24 +4,23 @@
 using System;
 using System.Threading;
 
-namespace Microsoft.DotNet.Interactive.Formatting.Tests
+namespace Microsoft.DotNet.Interactive.Formatting.Tests;
+
+public abstract class FormatterTestBase : IDisposable
 {
-    public abstract class FormatterTestBase : IDisposable
+    private static readonly object _lock = new();
+
+    protected FormatterTestBase()
     {
-        private static readonly object _lock = new();
+        Monitor.Enter(_lock);
 
-        protected FormatterTestBase()
-        {
-            Monitor.Enter(_lock);
+        Formatter.ResetToDefault();
+    }
 
-            Formatter.ResetToDefault();
-        }
+    public virtual void Dispose()
+    {
+        Formatter.ResetToDefault();
 
-        public virtual void Dispose()
-        {
-            Formatter.ResetToDefault();
-
-            Monitor.Exit(_lock);
-        }
+        Monitor.Exit(_lock);
     }
 }

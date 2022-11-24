@@ -2,11 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 
-namespace Microsoft.DotNet.Interactive.Commands
+namespace Microsoft.DotNet.Interactive.Commands;
+
+public enum SubmissionType
 {
-    public enum SubmissionType
-    {
-        Run = 0,
-        Diagnose
-    }
+    Run = 0,
+    Diagnose
 }

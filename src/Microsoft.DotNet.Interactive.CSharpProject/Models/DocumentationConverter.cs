@@ -3,63 +3,62 @@
 
 using Microsoft.CodeAnalysis;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Models
+namespace Microsoft.DotNet.Interactive.CSharpProject.Models;
+
+public static class DocumentationConverter
 {
-    public static class DocumentationConverter
+    /// <summary>
+    /// Converts the xml documentation string into a plain text string.
+    /// </summary>
+    public static FormattedValue GetDocumentation(ISymbol symbol, string lineEnding)
     {
-        /// <summary>
-        /// Converts the xml documentation string into a plain text string.
-        /// </summary>
-        public static FormattedValue GetDocumentation(ISymbol symbol, string lineEnding)
+        string documentation;
+        switch (symbol)
         {
-            string documentation;
-            switch (symbol)
-            {
-                case IParameterSymbol parameter:
-                    documentation = $"**{parameter.Name}**: {GetParameterDocumentation(parameter, lineEnding)}";
-                    break;
-                case ITypeParameterSymbol typeParam:
-                    documentation = $"**{typeParam.Name}**: {GetTypeParameterDocumentation(typeParam, lineEnding)}";
-                    break;
-                case IAliasSymbol alias:
-                    documentation = GetAliasDocumentation(alias, lineEnding);
-                    break;
-                default:
-                    documentation = GetDocumentationComment(symbol, lineEnding).SummaryText;
-                    break;
-            }
-
-            if (string.IsNullOrEmpty(documentation))
-            {
-                return null;
-            }
-
-            return new("text/markdown", documentation);
+            case IParameterSymbol parameter:
+                documentation = $"**{parameter.Name}**: {GetParameterDocumentation(parameter, lineEnding)}";
+                break;
+            case ITypeParameterSymbol typeParam:
+                documentation = $"**{typeParam.Name}**: {GetTypeParameterDocumentation(typeParam, lineEnding)}";
+                break;
+            case IAliasSymbol alias:
+                documentation = GetAliasDocumentation(alias, lineEnding);
+                break;
+            default:
+                documentation = GetDocumentationComment(symbol, lineEnding).SummaryText;
+                break;
         }
 
-        public static DocumentationComment GetDocumentationComment(ISymbol symbol, string lineEnding)
+        if (string.IsNullOrEmpty(documentation))
         {
-            return DocumentationComment.From(symbol.GetDocumentationCommentXml(), lineEnding);
+            return null;
         }
 
-        private static string GetParameterDocumentation(IParameterSymbol parameter, string lineEnding = "\n")
-        {
-            var contaningSymbolDef = parameter.ContainingSymbol.OriginalDefinition;
-            return GetDocumentationComment(contaningSymbolDef, lineEnding)
-                    .GetParameterText(parameter.Name);
-        }
+        return new("text/markdown", documentation);
+    }
 
-        private static string GetTypeParameterDocumentation(ITypeParameterSymbol typeParam, string lineEnding = "\n")
-        {
-            var contaningSymbol = typeParam.ContainingSymbol;
-            return GetDocumentationComment(contaningSymbol, lineEnding)
-                    .GetTypeParameterText(typeParam.Name);
-        }
+    public static DocumentationComment GetDocumentationComment(ISymbol symbol, string lineEnding)
+    {
+        return DocumentationComment.From(symbol.GetDocumentationCommentXml(), lineEnding);
+    }
 
-        private static string GetAliasDocumentation(IAliasSymbol alias, string lineEnding = "\n")
-        {
-            var target = alias.Target;
-            return GetDocumentationComment(target, lineEnding).SummaryText;
-        }
+    private static string GetParameterDocumentation(IParameterSymbol parameter, string lineEnding = "\n")
+    {
+        var contaningSymbolDef = parameter.ContainingSymbol.OriginalDefinition;
+        return GetDocumentationComment(contaningSymbolDef, lineEnding)
+            .GetParameterText(parameter.Name);
+    }
+
+    private static string GetTypeParameterDocumentation(ITypeParameterSymbol typeParam, string lineEnding = "\n")
+    {
+        var contaningSymbol = typeParam.ContainingSymbol;
+        return GetDocumentationComment(contaningSymbol, lineEnding)
+            .GetTypeParameterText(typeParam.Name);
+    }
+
+    private static string GetAliasDocumentation(IAliasSymbol alias, string lineEnding = "\n")
+    {
+        var target = alias.Target;
+        return GetDocumentationComment(target, lineEnding).SummaryText;
     }
 }

@@ -6,13 +6,13 @@ using FluentAssertions;
 using Newtonsoft.Json;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
+namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
+
+public class SignatureHelpItemTests
 {
-    public class SignatureHelpItemTests
-    {
-        [Theory]
-        [InlineData(
-@"{
+    [Theory]
+    [InlineData(
+        @"{
   ""name"": ""Write"",
   ""label"": ""void Console.Write(bool value)"",
   ""documentation"": {
@@ -29,16 +29,15 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
     }
   ]
 }")]
-        public void CanDeserializeFromJson(string source)
-        {
-            var si = JsonConvert.DeserializeObject<SignatureInformation>(source);
-            si.Documentation.Should().NotBeNull();
-            si.Documentation.Value.Should().Be("Writes the text representation of the specified Boolean value to the standard output stream.");
-            si.Documentation.MimeType.Should().Be("text/markdown");
+    public void CanDeserializeFromJson(string source)
+    {
+        var si = JsonConvert.DeserializeObject<SignatureInformation>(source);
+        si.Documentation.Should().NotBeNull();
+        si.Documentation.Value.Should().Be("Writes the text representation of the specified Boolean value to the standard output stream.");
+        si.Documentation.MimeType.Should().Be("text/markdown");
 
-            si.Parameters.Should().NotBeNullOrEmpty();
-            si.Parameters.First().Documentation.Value.Should().Be("**value**: The value to write.");
-            si.Parameters.First().Documentation.MimeType.Should().Be("text/markdown");
-        }
+        si.Parameters.Should().NotBeNullOrEmpty();
+        si.Parameters.First().Documentation.Value.Should().Be("**value**: The value to write.");
+        si.Parameters.First().Documentation.MimeType.Should().Be("text/markdown");
     }
 }

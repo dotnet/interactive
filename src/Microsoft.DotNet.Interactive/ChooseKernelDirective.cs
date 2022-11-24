@@ -9,23 +9,22 @@ using Microsoft.DotNet.Interactive.Utility;
 
 #nullable enable
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+public class ChooseKernelDirective : Command
 {
-    public class ChooseKernelDirective : Command
+    public ChooseKernelDirective(Kernel kernel, string? description = null) :
+        base($"#!{kernel.Name}",
+            description ?? $"Run the code that follows using the {kernel.Name} kernel.")
     {
-        public ChooseKernelDirective(Kernel kernel, string? description = null) :
-            base($"#!{kernel.Name}",
-                 description ?? $"Run the code that follows using the {kernel.Name} kernel.")
-        {
-            Kernel = kernel;
-            Handler = CommandHandler.Create((InvocationContext ctx) => Handle(ctx.GetService<KernelInvocationContext>(), ctx));
-        }
+        Kernel = kernel;
+        Handler = CommandHandler.Create((InvocationContext ctx) => Handle(ctx.GetService<KernelInvocationContext>(), ctx));
+    }
 
-        public Kernel Kernel { get; }
+    public Kernel Kernel { get; }
 
-        protected virtual Task Handle(KernelInvocationContext kernelInvocationContext, InvocationContext commandLineInvocationContext)
-        {
-            return Task.CompletedTask;
-        }
+    protected virtual Task Handle(KernelInvocationContext kernelInvocationContext, InvocationContext commandLineInvocationContext)
+    {
+        return Task.CompletedTask;
     }
 }

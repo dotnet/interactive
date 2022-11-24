@@ -6,22 +6,22 @@ using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
+namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
+
+public class RoslynWorkspaceServerTestsConsoleProjectDiagnosticsTests : RoslynWorkspaceServerTestsCore
 {
-    public class RoslynWorkspaceServerTestsConsoleProjectDiagnosticsTests : RoslynWorkspaceServerTestsCore
-    {
        
 
-        public RoslynWorkspaceServerTestsConsoleProjectDiagnosticsTests(ITestOutputHelper output) : base(output)
-        {
-        }
+    public RoslynWorkspaceServerTestsConsoleProjectDiagnosticsTests(ITestOutputHelper output) : base(output)
+    {
+    }
 
-        [Fact]
-        public async Task Get_diagnostics_with_buffer_with_region()
-        {
-            #region bufferSources
+    [Fact]
+    public async Task Get_diagnostics_with_buffer_with_region()
+    {
+        #region bufferSources
 
-            var program = @"using System;
+        var program = @"using System;
 using System.Linq;
 
 namespace FibonacciTest
@@ -36,32 +36,32 @@ namespace FibonacciTest
     }
 }".EnforceLF();
 
-            var region = @"adddd".EnforceLF();
+        var region = @"adddd".EnforceLF();
 
-            #endregion
+        #endregion
 
-            var (processed, position) = CodeManipulation.ProcessMarkup(region);
+        var (processed, position) = CodeManipulation.ProcessMarkup(region);
 
-            var workspace = new Workspace(workspaceType: "console", buffers: new[]
-            {
-                new Buffer("Program.cs", program),
-                new Buffer(new BufferId( "Program.cs","code"), processed, position)
-            });
-
-            var request = new WorkspaceRequest(workspace, activeBufferId: new BufferId("Program.cs", "code"));
-            var server = GetLanguageService();
-            var result = await server.GetDiagnosticsAsync(request);
-
-            result.Diagnostics.Should().NotBeNullOrEmpty();
-            result.Diagnostics.Should().Contain(diagnostics => diagnostics.Message == "(1,1): error CS0103: The name 'adddd' does not exist in the current context");
-        }
-
-        [Fact]
-        public async Task Get_diagnostics_with_buffer_with_region_in_code_but_not_in_buffer_id()
+        var workspace = new Workspace(workspaceType: "console", buffers: new[]
         {
-            #region bufferSources
+            new Buffer("Program.cs", program),
+            new Buffer(new BufferId( "Program.cs","code"), processed, position)
+        });
 
-            var program = @"using System;
+        var request = new WorkspaceRequest(workspace, activeBufferId: new BufferId("Program.cs", "code"));
+        var server = GetLanguageService();
+        var result = await server.GetDiagnosticsAsync(request);
+
+        result.Diagnostics.Should().NotBeNullOrEmpty();
+        result.Diagnostics.Should().Contain(diagnostics => diagnostics.Message == "(1,1): error CS0103: The name 'adddd' does not exist in the current context");
+    }
+
+    [Fact]
+    public async Task Get_diagnostics_with_buffer_with_region_in_code_but_not_in_buffer_id()
+    {
+        #region bufferSources
+
+        var program = @"using System;
 using System.Linq;
 
 namespace FibonacciTest
@@ -78,29 +78,29 @@ namespace FibonacciTest
     }
 }".EnforceLF();
 
-            #endregion
+        #endregion
 
-            var (processed, position) = CodeManipulation.ProcessMarkup(program);
+        var (processed, position) = CodeManipulation.ProcessMarkup(program);
 
-            var workspace = new Workspace(workspaceType: "console", buffers: new[]
-            {
-                new Buffer("Program.cs", program),
-            });
-
-            var request = new WorkspaceRequest(workspace, activeBufferId: "Program.cs");
-            var server = GetLanguageService();
-            var result = await server.GetDiagnosticsAsync(request);
-
-            result.Diagnostics.Should().NotBeNullOrEmpty();
-            result.Diagnostics.Should().Contain(diagnostics => diagnostics.Message == "Program.cs(13,13): warning CS0168: The variable 'moreError' is declared but never used");
-        }
-
-        [Fact]
-        public async Task Get_diagnostics()
+        var workspace = new Workspace(workspaceType: "console", buffers: new[]
         {
-            #region bufferSources
+            new Buffer("Program.cs", program),
+        });
 
-            var program = @"using System;
+        var request = new WorkspaceRequest(workspace, activeBufferId: "Program.cs");
+        var server = GetLanguageService();
+        var result = await server.GetDiagnosticsAsync(request);
+
+        result.Diagnostics.Should().NotBeNullOrEmpty();
+        result.Diagnostics.Should().Contain(diagnostics => diagnostics.Message == "Program.cs(13,13): warning CS0168: The variable 'moreError' is declared but never used");
+    }
+
+    [Fact]
+    public async Task Get_diagnostics()
+    {
+        #region bufferSources
+
+        var program = @"using System;
 using System.Linq;
 
 namespace FibonacciTest
@@ -117,7 +117,7 @@ namespace FibonacciTest
     }
 }".EnforceLF();
 
-            var generator = @"using System.Collections.Generic;
+        var generator = @"using System.Collections.Generic;
 using System;
 namespace FibonacciTest
 {
@@ -137,24 +137,23 @@ namespace FibonacciTest
     }
 }".EnforceLF();
 
-            #endregion
+        #endregion
 
-            var (processed, position) = CodeManipulation.ProcessMarkup(generator);
+        var (processed, position) = CodeManipulation.ProcessMarkup(generator);
 
-            var workspace = new Workspace(workspaceType: "console", buffers: new[]
-            {
-                new Buffer("Program.cs", program),
-                new Buffer("generators/FibonacciGenerator.cs", processed, position)
-            });
+        var workspace = new Workspace(workspaceType: "console", buffers: new[]
+        {
+            new Buffer("Program.cs", program),
+            new Buffer("generators/FibonacciGenerator.cs", processed, position)
+        });
 
-            var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs");
-            var server = GetLanguageService();
-            var result = await server.GetDiagnosticsAsync(request);
+        var request = new WorkspaceRequest(workspace, activeBufferId: "generators/FibonacciGenerator.cs");
+        var server = GetLanguageService();
+        var result = await server.GetDiagnosticsAsync(request);
 
-            result.Diagnostics.Should().NotBeNullOrEmpty();
-            result.Diagnostics.Should().Contain(diagnostics => diagnostics.Message == "generators/FibonacciGenerator.cs(14,17): error CS0246: The type or namespace name \'adddd\' could not be found (are you missing a using directive or an assembly reference?)");
-        }
+        result.Diagnostics.Should().NotBeNullOrEmpty();
+        result.Diagnostics.Should().Contain(diagnostics => diagnostics.Message == "generators/FibonacciGenerator.cs(14,17): error CS0246: The type or namespace name \'adddd\' could not be found (are you missing a using directive or an assembly reference?)");
+    }
 
       
-    }
 }

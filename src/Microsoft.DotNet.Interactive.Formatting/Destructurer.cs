@@ -6,49 +6,48 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting;
+
+public static class Destructurer
 {
-    public static class Destructurer
+    private static ConcurrentDictionary<Type, IDestructurer> _cache;
+
+    static Destructurer()
     {
-        private static ConcurrentDictionary<Type, IDestructurer> _cache;
+        InitializeCache();
+        Formatter.Clearing += InitializeCache;
+    }
 
-        static Destructurer()
-        {
-            InitializeCache();
-            Formatter.Clearing += InitializeCache;
-        }
-
-        private static void InitializeCache()
-        {
-            _cache = new ConcurrentDictionary<Type, IDestructurer>();
-        }
+    private static void InitializeCache()
+    {
+        _cache = new ConcurrentDictionary<Type, IDestructurer>();
+    }
         
-        public static IDestructurer GetOrCreate(Type type)
+    public static IDestructurer GetOrCreate(Type type)
+    {
+        if (type is null)
         {
-            if (type is null)
+            return NonDestructurer.Instance;
+        }
+
+        return _cache.GetOrAdd(type, t =>
+        {
+            if (t.IsScalar())
             {
                 return NonDestructurer.Instance;
             }
 
-            return _cache.GetOrAdd(type, t =>
+            if (typeof(IEnumerable).IsAssignableFrom(t))
             {
-                if (t.IsScalar())
-                {
-                    return NonDestructurer.Instance;
-                }
+                return NonDestructurer.Instance;
+            }
 
-                if (typeof(IEnumerable).IsAssignableFrom(t))
-                {
-                    return NonDestructurer.Instance;
-                }
+            if (typeof(Type).IsAssignableFrom(t))
+            {
+                return NonDestructurer.Instance;
+            }
 
-                if (typeof(Type).IsAssignableFrom(t))
-                {
-                    return NonDestructurer.Instance;
-                }
-
-                return (IDestructurer) Activator.CreateInstance(typeof(Destructurer<>).MakeGenericType(t));
-            });
-        }
+            return (IDestructurer) Activator.CreateInstance(typeof(Destructurer<>).MakeGenericType(t));
+        });
     }
 }

@@ -4,45 +4,44 @@
 using Markdig;
 using Markdig.Renderers;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown
+namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown;
+
+public class CodeBlockAnnotationExtension : IMarkdownExtension
 {
-    public class CodeBlockAnnotationExtension : IMarkdownExtension
+    private readonly CodeFenceAnnotationsParser _annotationsParser;
+
+    public CodeBlockAnnotationExtension(CodeFenceAnnotationsParser annotationsParser = null)
     {
-        private readonly CodeFenceAnnotationsParser _annotationsParser;
+        _annotationsParser = annotationsParser ?? new CodeFenceAnnotationsParser();
+    }
 
-        public CodeBlockAnnotationExtension(CodeFenceAnnotationsParser annotationsParser = null)
+    public bool InlineControls { get; set; } = true;
+
+    public bool EnablePreviewFeatures { get; set; }
+
+    public void Setup(MarkdownPipelineBuilder pipeline)
+    {
+        if (!pipeline.BlockParsers.Contains<AnnotatedCodeBlockParser>())
         {
-            _annotationsParser = annotationsParser ?? new CodeFenceAnnotationsParser();
+            // It should execute before Markdig's default FencedCodeBlockParser
+            pipeline.BlockParsers.Insert(
+                index: 0,
+                new AnnotatedCodeBlockParser(_annotationsParser));
         }
+    }
 
-        public bool InlineControls { get; set; } = true;
+    public void Setup(MarkdownPipeline pipeline, IMarkdownRenderer renderer)
+    {
+        var htmlRenderer = renderer as HtmlRenderer;
 
-        public bool EnablePreviewFeatures { get; set; }
+        var renderers = htmlRenderer?.ObjectRenderers;
 
-        public void Setup(MarkdownPipelineBuilder pipeline)
+        if (renderers != null && !renderers.Contains<AnnotatedCodeBlockRenderer>())
         {
-            if (!pipeline.BlockParsers.Contains<AnnotatedCodeBlockParser>())
-            {
-                // It should execute before Markdig's default FencedCodeBlockParser
-                pipeline.BlockParsers.Insert(
-                    index: 0,
-                    new AnnotatedCodeBlockParser(_annotationsParser));
-            }
-        }
-
-        public void Setup(MarkdownPipeline pipeline, IMarkdownRenderer renderer)
-        {
-            var htmlRenderer = renderer as HtmlRenderer;
-
-            var renderers = htmlRenderer?.ObjectRenderers;
-
-            if (renderers != null && !renderers.Contains<AnnotatedCodeBlockRenderer>())
-            {
-                var annotatedCodeBlockRenderer = new AnnotatedCodeBlockRenderer();
-                annotatedCodeBlockRenderer.EnablePreviewFeatures = EnablePreviewFeatures;
-                annotatedCodeBlockRenderer.InlineControls = InlineControls;
-                renderers.Insert(0, annotatedCodeBlockRenderer);
-            }
+            var annotatedCodeBlockRenderer = new AnnotatedCodeBlockRenderer();
+            annotatedCodeBlockRenderer.EnablePreviewFeatures = EnablePreviewFeatures;
+            annotatedCodeBlockRenderer.InlineControls = InlineControls;
+            renderers.Insert(0, annotatedCodeBlockRenderer);
         }
     }
 }

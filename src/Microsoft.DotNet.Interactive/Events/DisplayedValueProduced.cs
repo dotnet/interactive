@@ -4,16 +4,15 @@
 using System.Collections.Generic;
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Events
+namespace Microsoft.DotNet.Interactive.Events;
+
+public class DisplayedValueProduced : DisplayEvent
 {
-    public class DisplayedValueProduced : DisplayEvent
+    public DisplayedValueProduced(
+        object value,
+        KernelCommand command,
+        IReadOnlyCollection<FormattedValue> formattedValues = null,
+        string valueId = null) : base(value, command, formattedValues, valueId)
     {
-        public DisplayedValueProduced(
-            object value,
-            KernelCommand command,
-            IReadOnlyCollection<FormattedValue> formattedValues = null,
-            string valueId = null) : base(value, command, formattedValues, valueId)
-        {
-        }
     }
 }

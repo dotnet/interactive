@@ -11,38 +11,37 @@ using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
+namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests;
+
+public class TranscriptTests : IDisposable
 {
-    public class TranscriptTests : IDisposable
+    private readonly CompositeDisposable _disposables = new CompositeDisposable();
+
+    [Fact]
+    public async Task transcript_extension_writes_all_received_commands_to_the_specified_file()
     {
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
-
-        [Fact]
-        public async Task transcript_extension_writes_all_received_commands_to_the_specified_file()
+        var kernel = new CompositeKernel
         {
-            var kernel = new CompositeKernel
-            {
-                new FSharpKernel()
-            };
+            new FSharpKernel()
+        };
 
-            await new RecordTranscriptExtension().OnLoadAsync(kernel);
+        await new RecordTranscriptExtension().OnLoadAsync(kernel);
 
-            var filePath = Path.Combine(
-                Directory.GetCurrentDirectory(),
-                Guid.NewGuid().ToString());
+        var filePath = Path.Combine(
+            Directory.GetCurrentDirectory(),
+            Guid.NewGuid().ToString());
 
-            _disposables.Add(Disposable.Create(() => File.Delete(filePath)));
+        _disposables.Add(Disposable.Create(() => File.Delete(filePath)));
 
-            using var events = kernel.KernelEvents.ToSubscribedList();
+        using var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SubmitCodeAsync($"#!record --output {filePath}");
-            await kernel.SubmitCodeAsync("12345");
+        await kernel.SubmitCodeAsync($"#!record --output {filePath}");
+        await kernel.SubmitCodeAsync("12345");
 
-            var lines = File.ReadAllLines(filePath);
+        var lines = File.ReadAllLines(filePath);
 
-            lines.First().Should().Contain("12345");
-        }
-
-        public void Dispose() => _disposables.Dispose();
+        lines.First().Should().Contain("12345");
     }
+
+    public void Dispose() => _disposables.Dispose();
 }

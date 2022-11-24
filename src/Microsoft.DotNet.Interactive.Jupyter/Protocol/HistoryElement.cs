@@ -3,20 +3,19 @@
 
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
+namespace Microsoft.DotNet.Interactive.Jupyter.Protocol;
+
+public abstract class HistoryElement
 {
-    public abstract class HistoryElement
+    [JsonPropertyName("session")]
+    public int Session { get; }
+
+    [JsonPropertyName("lineNumber")]
+    public int LineNumber { get; }
+
+    protected HistoryElement(int session, int lineNumber)
     {
-        [JsonPropertyName("session")]
-        public int Session { get; }
-
-        [JsonPropertyName("lineNumber")]
-        public int LineNumber { get; }
-
-        protected HistoryElement(int session, int lineNumber)
-        {
-            Session = session;
-            LineNumber = lineNumber;
-        }
+        Session = session;
+        LineNumber = lineNumber;
     }
 }

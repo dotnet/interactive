@@ -5,62 +5,60 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Html;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Tests
+namespace Microsoft.DotNet.Interactive.Tests;
+
+public class DataExplorerTests
 {
-    public class DataExplorerTests
+    [Fact]
+    public void when_there_is_single_DataExplorer_return_it_as_default()
     {
-        [Fact]
-        public void when_there_is_single_DataExplorer_return_it_as_default()
+        DataExplorer<string>.Register<StringDataExplorer>();
+        var dataExplorer = DataExplorer.CreateDefault("hello world");
+        dataExplorer.Should().BeOfType<StringDataExplorer>();
+    }
+
+
+    [Fact]
+    public void can_create_specific_DataExplorer_for_a_data_type()
+    {
+        DataExplorer<string>.Register<StringDataExplorer>();
+        DataExplorer<string>.Register<AdvancedStringDataExplorer>();
+        var dataExplorer = DataExplorer.Create("AdvancedStringDataExplorer", "hello world");
+        dataExplorer.Should().BeOfType<AdvancedStringDataExplorer>();
+    }
+
+    [Fact]
+    public void can_specify_default_DataExplorer_for_a_data_type()
+    {
+        DataExplorer<string>.Register<StringDataExplorer>();
+        DataExplorer<string>.Register<AdvancedStringDataExplorer>();
+        DataExplorer.SetDefault<string, AdvancedStringDataExplorer>();
+        var dataExplorer = DataExplorer.CreateDefault("hello world");
+        dataExplorer.Should().BeOfType<AdvancedStringDataExplorer>();
+    }
+
+
+    private class StringDataExplorer : DataExplorer<string>
+    {
+        public StringDataExplorer(string data) : base(data)
         {
-            DataExplorer<string>.Register<StringDataExplorer>();
-            var dataExplorer = DataExplorer.CreateDefault("hello world");
-            dataExplorer.Should().BeOfType<StringDataExplorer>();
         }
 
-
-        [Fact]
-        public void can_create_specific_DataExplorer_for_a_data_type()
+        protected override IHtmlContent ToHtml()
         {
-            DataExplorer<string>.Register<StringDataExplorer>();
-            DataExplorer<string>.Register<AdvancedStringDataExplorer>();
-            var dataExplorer = DataExplorer.Create("AdvancedStringDataExplorer", "hello world");
-            dataExplorer.Should().BeOfType<AdvancedStringDataExplorer>();
-        }
-
-        [Fact]
-        public void can_specify_default_DataExplorer_for_a_data_type()
-        {
-            DataExplorer<string>.Register<StringDataExplorer>();
-            DataExplorer<string>.Register<AdvancedStringDataExplorer>();
-            DataExplorer.SetDefault<string, AdvancedStringDataExplorer>();
-            var dataExplorer = DataExplorer.CreateDefault("hello world");
-            dataExplorer.Should().BeOfType<AdvancedStringDataExplorer>();
-        }
-
-
-        private class StringDataExplorer : DataExplorer<string>
-        {
-            public StringDataExplorer(string data) : base(data)
-            {
-            }
-
-            protected override IHtmlContent ToHtml()
-            {
-                return new HtmlString(Data);
-            }
-        }
-
-        private class AdvancedStringDataExplorer : DataExplorer<string>
-        {
-            public AdvancedStringDataExplorer(string data) : base(data)
-            {
-            }
-
-            protected override IHtmlContent ToHtml()
-            {
-                return new HtmlString(Data);
-            }
+            return new HtmlString(Data);
         }
     }
 
+    private class AdvancedStringDataExplorer : DataExplorer<string>
+    {
+        public AdvancedStringDataExplorer(string data) : base(data)
+        {
+        }
+
+        protected override IHtmlContent ToHtml()
+        {
+            return new HtmlString(Data);
+        }
+    }
 }

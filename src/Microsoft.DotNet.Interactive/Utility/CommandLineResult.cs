@@ -5,34 +5,33 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Microsoft.DotNet.Interactive.Utility
+namespace Microsoft.DotNet.Interactive.Utility;
+
+public class CommandLineResult
 {
-    public class CommandLineResult
+    public CommandLineResult(
+        int exitCode,
+        IReadOnlyCollection<string> output = null,
+        IReadOnlyCollection<string> error = null)
     {
-        public CommandLineResult(
-            int exitCode,
-            IReadOnlyCollection<string> output = null,
-            IReadOnlyCollection<string> error = null)
+        ExitCode = exitCode;
+        Output = output ?? Array.Empty<string>();
+        Error = error ?? Array.Empty<string>();
+    }
+
+    public int ExitCode { get; }
+
+    public IReadOnlyCollection<string> Output { get; }
+
+    public IReadOnlyCollection<string> Error { get; }
+
+    public void ThrowOnFailure(string message = null)
+    {
+        if (ExitCode != 0)
         {
-            ExitCode = exitCode;
-            Output = output ?? Array.Empty<string>();
-            Error = error ?? Array.Empty<string>();
-        }
-
-        public int ExitCode { get; }
-
-        public IReadOnlyCollection<string> Output { get; }
-
-        public IReadOnlyCollection<string> Error { get; }
-
-        public void ThrowOnFailure(string message = null)
-        {
-            if (ExitCode != 0)
-            {
-                throw new CommandLineInvocationException(
-                    this,
-                    $"{message ?? string.Empty}{Environment.NewLine}{string.Join(Environment.NewLine, Error.Concat(Output))}");
-            }
+            throw new CommandLineInvocationException(
+                this,
+                $"{message ?? string.Empty}{Environment.NewLine}{string.Join(Environment.NewLine, Error.Concat(Output))}");
         }
     }
 }

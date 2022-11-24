@@ -3,33 +3,33 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive.Http
-{
-    public static class JavascriptUtilities
-    {
-        public static string GetCodeForEnsureRequireJs(Uri requireJsUri = null, string onRequirejsLoadedCallBackName = null)
-        {
-            requireJsUri??= new Uri("https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js");
+namespace Microsoft.DotNet.Interactive.Http;
 
-            string GenerateOnload()
-            {
-                return !string.IsNullOrWhiteSpace(onRequirejsLoadedCallBackName) 
-                    ? $@"
+public static class JavascriptUtilities
+{
+    public static string GetCodeForEnsureRequireJs(Uri requireJsUri = null, string onRequirejsLoadedCallBackName = null)
+    {
+        requireJsUri??= new Uri("https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js");
+
+        string GenerateOnload()
+        {
+            return !string.IsNullOrWhiteSpace(onRequirejsLoadedCallBackName) 
+                ? $@"
     require_script.onload = function() {{
         {onRequirejsLoadedCallBackName}();
     }};" 
-                    : string.Empty;
-            }
+                : string.Empty;
+        }
 
-            string GenerateElseBranch()
-            {
-                return !string.IsNullOrWhiteSpace(onRequirejsLoadedCallBackName) 
-                    ? $@"else {{
+        string GenerateElseBranch()
+        {
+            return !string.IsNullOrWhiteSpace(onRequirejsLoadedCallBackName) 
+                ? $@"else {{
     {onRequirejsLoadedCallBackName}();
 }}" 
-                    : string.Empty;
-            }
-            return $@"// ensure `require` is available globally
+                : string.Empty;
+        }
+        return $@"// ensure `require` is available globally
 if ((typeof(require) !==  typeof(Function)) || (typeof(require.config) !== typeof(Function))) {{
     let require_script = document.createElement('script');
     require_script.setAttribute('src', '{requireJsUri.AbsoluteUri}');
@@ -41,6 +41,5 @@ if ((typeof(require) !==  typeof(Function)) || (typeof(require.config) !== typeo
 }}
 {GenerateElseBranch()}
 ";
-        }
     }
 }

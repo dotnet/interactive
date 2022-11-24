@@ -18,574 +18,573 @@ using Xunit;
 using Xunit.Abstractions;
 using static Microsoft.DotNet.Interactive.Tests.Utility.CustomCommandTypes;
 
-namespace Microsoft.DotNet.Interactive.Tests
+namespace Microsoft.DotNet.Interactive.Tests;
+
+public class CompositeKernelTests : IDisposable
 {
-    public class CompositeKernelTests : IDisposable
+    private readonly CompositeDisposable _disposables = new();
+
+    public CompositeKernelTests(ITestOutputHelper output)
     {
-        private readonly CompositeDisposable _disposables = new();
+        _disposables.Add(output.SubscribeToPocketLogger());
+    }
 
-        public CompositeKernelTests(ITestOutputHelper output)
+    public void Dispose()
+    {
+        _disposables.Dispose();
+    }
+
+    [Fact]
+    public async Task Handling_kernel_can_be_specified_using_kernel_name_as_a_directive()
+    {
+        var cSharpKernel = new CSharpKernel();
+        var fSharpKernel = new FSharpKernel();
+        using var kernel = new CompositeKernel
         {
-            _disposables.Add(output.SubscribeToPocketLogger());
-        }
+            cSharpKernel,
+            fSharpKernel,
+        };
+        kernel.DefaultKernelName = fSharpKernel.Name;
 
-        public void Dispose()
-        {
-            _disposables.Dispose();
-        }
+        using var events = kernel.KernelEvents.ToSubscribedList();
 
-        [Fact]
-        public async Task Handling_kernel_can_be_specified_using_kernel_name_as_a_directive()
-        {
-            var cSharpKernel = new CSharpKernel();
-            var fSharpKernel = new FSharpKernel();
-            using var kernel = new CompositeKernel
-            {
-                cSharpKernel,
-                fSharpKernel,
-            };
-            kernel.DefaultKernelName = fSharpKernel.Name;
-
-            using var events = kernel.KernelEvents.ToSubscribedList();
-
-            var csharpCommand = new SubmitCode(@"
+        var csharpCommand = new SubmitCode(@"
 #!csharp
 new [] {1,2,3}");
-            await kernel.SendAsync(csharpCommand);
+        await kernel.SendAsync(csharpCommand);
             
-            var fsharpCommand = new SubmitCode(@"
+        var fsharpCommand = new SubmitCode(@"
 #!fsharp
 [1;2;3]");
 
-            await kernel.SendAsync(fsharpCommand);
+        await kernel.SendAsync(fsharpCommand);
 
-            events.Should()
-                  .ContainSingle<CommandSucceeded>(e => e.Command == csharpCommand);
-            events.Should()
-                  .ContainSingle<CommandSucceeded>(e => e.Command == fsharpCommand);
-        }
+        events.Should()
+            .ContainSingle<CommandSucceeded>(e => e.Command == csharpCommand);
+        events.Should()
+            .ContainSingle<CommandSucceeded>(e => e.Command == fsharpCommand);
+    }
 
-        [Fact]
-        public async Task Handling_kernel_can_be_specified_using_kernel_alias_as_a_directive()
-        {
-            var cSharpKernel = new CSharpKernel();
-            var fSharpKernel = new FSharpKernel();
-            using var kernel = new CompositeKernel();
-            kernel.Add(cSharpKernel, new[] { "C#" });
-            kernel.Add(fSharpKernel, new[] { "F#" });
-            kernel.DefaultKernelName = fSharpKernel.Name;
+    [Fact]
+    public async Task Handling_kernel_can_be_specified_using_kernel_alias_as_a_directive()
+    {
+        var cSharpKernel = new CSharpKernel();
+        var fSharpKernel = new FSharpKernel();
+        using var kernel = new CompositeKernel();
+        kernel.Add(cSharpKernel, new[] { "C#" });
+        kernel.Add(fSharpKernel, new[] { "F#" });
+        kernel.DefaultKernelName = fSharpKernel.Name;
 
-            using var events = kernel.KernelEvents.ToSubscribedList();
+        using var events = kernel.KernelEvents.ToSubscribedList();
 
-            var csharpCommand = new SubmitCode(@"
+        var csharpCommand = new SubmitCode(@"
 #!C#
 new [] {1,2,3}");
-            await kernel.SendAsync(csharpCommand);
+        await kernel.SendAsync(csharpCommand);
             
-            var fsharpCommand = new SubmitCode(@"
+        var fsharpCommand = new SubmitCode(@"
 #!F#
 [1;2;3]");
 
-            await kernel.SendAsync(fsharpCommand);
+        await kernel.SendAsync(fsharpCommand);
 
-            events.Should()
-                  .ContainSingle<CommandSucceeded>(e => e.Command == csharpCommand);
-            events.Should()
-                  .ContainSingle<CommandSucceeded>(e => e.Command == fsharpCommand);
+        events.Should()
+            .ContainSingle<CommandSucceeded>(e => e.Command == csharpCommand);
+        events.Should()
+            .ContainSingle<CommandSucceeded>(e => e.Command == fsharpCommand);
+    }
+
+    [Theory]
+    [InlineData("#!fake1", "fake1")]
+    [InlineData("#!fake1-alias", "fake1")]
+    [InlineData("#!fake2", "fake2")]
+    [InlineData("#!fake2-alias", "fake2")]
+    public async Task Action_directives_are_routed_by_kernel_chooser_directives(
+        string chooseKernelCommand,
+        string expectedInvokedOnKernelName)
+    {
+        var received = new List<string>();
+
+        using var compositeKernel = new CompositeKernel();
+
+        var fakeKernel1 = new FakeKernel("fake1");
+        fakeKernel1.AddDirective(new Command("#!hi")
+        {
+            Handler = CommandHandler.Create(() => { received.Add("fake1"); })
+        });
+
+        var fakeKernel2 = new FakeKernel("fake2");
+        fakeKernel2.AddDirective(new Command("#!hi")
+        {
+            Handler = CommandHandler.Create(() => { received.Add("fake2"); })
+        });
+
+        compositeKernel.Add(fakeKernel1, new[] { "fake1-alias" });
+        compositeKernel.Add(fakeKernel2, new[] { "fake2-alias" });
+
+        var result = await compositeKernel.SubmitCodeAsync($"{chooseKernelCommand}\n#!hi");
+
+        result.KernelEvents.ToSubscribedList().Should().NotContainErrors();
+
+        received
+            .Should()
+            .ContainSingle()
+            .Which
+            .Should()
+            .Be(expectedInvokedOnKernelName);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task when_target_kernel_is_specified_and_not_found_then_command_fails(int kernelCount)
+    {
+        using var kernel = new CompositeKernel();
+        foreach (var kernelName in Enumerable.Range(0, kernelCount).Select(i => $"kernel{i}"))
+        {
+            kernel.Add(new FakeKernel(kernelName));
         }
 
-        [Theory]
-        [InlineData("#!fake1", "fake1")]
-        [InlineData("#!fake1-alias", "fake1")]
-        [InlineData("#!fake2", "fake2")]
-        [InlineData("#!fake2-alias", "fake2")]
-        public async Task Action_directives_are_routed_by_kernel_chooser_directives(
-            string chooseKernelCommand,
-            string expectedInvokedOnKernelName)
+        var results = await kernel.SendAsync(
+            new SubmitCode(
+                @"var x = 123;",
+                "unregistered kernel name"));
+
+        using var events = results.KernelEvents.ToSubscribedList();
+        events.Should()
+            .ContainSingle<CommandFailed>(cf => cf.Exception is NoSuitableKernelException);
+    }
+
+    [Fact]
+    public void cannot_add_duplicated_named_kernels()
+    {
+        using var kernel = new CompositeKernel
         {
-            var received = new List<string>();
+            new CSharpKernel()
+        };
 
-            using var compositeKernel = new CompositeKernel();
+        kernel.Invoking(k => k.Add(new CSharpKernel()))
+            .Should()
+            .Throw<ArgumentException>()
+            .Which
+            .Message
+            .Should()
+            .Be("Alias '#!csharp' is already in use.");
+    }
 
-            var fakeKernel1 = new FakeKernel("fake1");
-            fakeKernel1.AddDirective(new Command("#!hi")
-            {
-                Handler = CommandHandler.Create(() => { received.Add("fake1"); })
-            });
-
-            var fakeKernel2 = new FakeKernel("fake2");
-            fakeKernel2.AddDirective(new Command("#!hi")
-            {
-                Handler = CommandHandler.Create(() => { received.Add("fake2"); })
-            });
-
-            compositeKernel.Add(fakeKernel1, new[] { "fake1-alias" });
-            compositeKernel.Add(fakeKernel2, new[] { "fake2-alias" });
-
-            var result = await compositeKernel.SubmitCodeAsync($"{chooseKernelCommand}\n#!hi");
-
-            result.KernelEvents.ToSubscribedList().Should().NotContainErrors();
-
-            received
-                .Should()
-                .ContainSingle()
-                .Which
-                .Should()
-                .Be(expectedInvokedOnKernelName);
-        }
-
-        [Theory]
-        [InlineData(0)]
-        [InlineData(1)]
-        [InlineData(2)]
-        public async Task when_target_kernel_is_specified_and_not_found_then_command_fails(int kernelCount)
+    [Fact]
+    public async Task can_handle_commands_targeting_composite_kernel_directly()
+    {
+        using var kernel = new CompositeKernel
         {
-            using var kernel = new CompositeKernel();
-            foreach (var kernelName in Enumerable.Range(0, kernelCount).Select(i => $"kernel{i}"))
+            new FakeKernel("fake")
             {
-                    kernel.Add(new FakeKernel(kernelName));
+                Handle = (command, context) => Task.CompletedTask
             }
+        };
 
-            var results = await kernel.SendAsync(
-                new SubmitCode(
-                    @"var x = 123;",
-                    "unregistered kernel name"));
-
-            using var events = results.KernelEvents.ToSubscribedList();
-            events.Should()
-                  .ContainSingle<CommandFailed>(cf => cf.Exception is NoSuitableKernelException);
-        }
-
-        [Fact]
-        public void cannot_add_duplicated_named_kernels()
+        using var events = kernel.KernelEvents.ToSubscribedList();
+        var submitCode = new SubmitCode("//command", kernel.Name)
         {
-            using var kernel = new CompositeKernel
-            {
-                new CSharpKernel()
-            };
+            Handler = (kernelCommand, context) => Task.CompletedTask
+        };
 
-            kernel.Invoking(k => k.Add(new CSharpKernel()))
-                  .Should()
-                  .Throw<ArgumentException>()
-                  .Which
-                  .Message
-                  .Should()
-                  .Be("Alias '#!csharp' is already in use.");
-        }
+        await kernel.SendAsync(submitCode);
 
-        [Fact]
-        public async Task can_handle_commands_targeting_composite_kernel_directly()
+        events.Should()
+            .ContainSingle<CommandSucceeded>()
+            .Which
+            .Command
+            .Should()
+            .Be(submitCode);
+    }
+
+    [Fact]
+    public async Task commands_targeting_compositeKernel_are_not_routed_to_childKernels()
+    {
+        var receivedOnFakeKernel = new List<KernelCommand>();
+        using var kernel = new CompositeKernel
         {
-            using var kernel = new CompositeKernel
+            new FakeKernel("fake")
             {
-                new FakeKernel("fake")
+                Handle = (kernelCommand, context) =>
                 {
-                    Handle = (command, context) => Task.CompletedTask
+                    receivedOnFakeKernel.Add(kernelCommand);
+                    return Task.CompletedTask;
                 }
-            };
+            }
+        };
 
-            using var events = kernel.KernelEvents.ToSubscribedList();
-            var submitCode = new SubmitCode("//command", kernel.Name)
-            {
-                Handler = (kernelCommand, context) => Task.CompletedTask
-            };
+        var submitCode = new SubmitCode("//command", kernel.Name);
 
-            await kernel.SendAsync(submitCode);
+        await kernel.SendAsync(submitCode);
+        receivedOnFakeKernel.Should()
+            .BeEmpty();
+    }
 
-            events.Should()
-                .ContainSingle<CommandSucceeded>()
-                .Which
-                .Command
-                .Should()
-                .Be(submitCode);
-        }
+    [Fact]
+    public async Task Handling_kernel_can_be_specified_by_setting_the_kernel_name_in_the_command()
+    {
+        var receivedOnFakeKernel = new List<KernelCommand>();
 
-        [Fact]
-        public async Task commands_targeting_compositeKernel_are_not_routed_to_childKernels()
+        using var kernel = new CompositeKernel
         {
-            var receivedOnFakeKernel = new List<KernelCommand>();
-            using var kernel = new CompositeKernel
+            new CSharpKernel(),
+            new FakeKernel("fake")
             {
-                new FakeKernel("fake")
+                Handle = (kernelCommand, context) =>
                 {
-                    Handle = (kernelCommand, context) =>
-                    {
-                        receivedOnFakeKernel.Add(kernelCommand);
-                        return Task.CompletedTask;
-                    }
+                    receivedOnFakeKernel.Add(kernelCommand);
+                    return Task.CompletedTask;
                 }
-            };
+            }
+        };
 
-            var submitCode = new SubmitCode("//command", kernel.Name);
+        await kernel.SendAsync(
+            new SubmitCode(
+                @"var x = 123;",
+                "csharp"));
+        await kernel.SendAsync(
+            new SubmitCode(
+                @"hello!",
+                "fake"));
+        await kernel.SendAsync(
+            new SubmitCode(
+                @"x",
+                "csharp"));
 
-            await kernel.SendAsync(submitCode);
-            receivedOnFakeKernel.Should()
-                .BeEmpty();
-        }
+        receivedOnFakeKernel
+            .Should()
+            .ContainSingle(c => c is SubmitCode)
+            .Which
+            .As<SubmitCode>()
+            .Code
+            .Should()
+            .Be("hello!");
+    }
 
-        [Fact]
-        public async Task Handling_kernel_can_be_specified_by_setting_the_kernel_name_in_the_command()
+    [Fact]
+    public async Task Handling_kernel_can_be_specified_as_a_default()
+    {
+        var receivedOnFakeKernel = new List<KernelCommand>();
+
+        using var kernel = new CompositeKernel
         {
-            var receivedOnFakeKernel = new List<KernelCommand>();
-
-            using var kernel = new CompositeKernel
-            {
-                new CSharpKernel(),
-                new FakeKernel("fake")
-                {
-                    Handle = (kernelCommand, context) =>
-                    {
-                        receivedOnFakeKernel.Add(kernelCommand);
-                        return Task.CompletedTask;
-                    }
-                }
-            };
-
-            await kernel.SendAsync(
-                new SubmitCode(
-                    @"var x = 123;",
-                    "csharp"));
-            await kernel.SendAsync(
-                new SubmitCode(
-                    @"hello!",
-                    "fake"));
-            await kernel.SendAsync(
-                new SubmitCode(
-                    @"x",
-                    "csharp"));
-
-            receivedOnFakeKernel
-                .Should()
-                .ContainSingle(c => c is SubmitCode)
-                .Which
-                .As<SubmitCode>()
-                .Code
-                .Should()
-                .Be("hello!");
-        }
-
-        [Fact]
-        public async Task Handling_kernel_can_be_specified_as_a_default()
-        {
-            var receivedOnFakeKernel = new List<KernelCommand>();
-
-            using var kernel = new CompositeKernel
-            {
-                new CSharpKernel(),
-                new FakeKernel("fake")
-                {
-                    Handle = (command, context) =>
-                    {
-                        receivedOnFakeKernel.Add(command);
-                        return Task.CompletedTask;
-                    }
-                }
-            };
-
-            kernel.DefaultKernelName = "fake";
-
-            await kernel.SendAsync(
-                new SubmitCode(
-                    @"hello!"));
-
-            receivedOnFakeKernel
-                .Should()
-                .ContainSingle(c => c is SubmitCode)
-                .Which
-                .As<SubmitCode>()
-                .Code
-                .Should()
-                .Be("hello!");
-        }
-
-        [Fact]
-        public async Task Handling_kernel_can_be_specified_as_a_default_via_an_alias()
-        {
-            var receivedOnFakeKernel = new List<KernelCommand>();
-
-            var fakeKernel = new FakeKernel("fake")
+            new CSharpKernel(),
+            new FakeKernel("fake")
             {
                 Handle = (command, context) =>
                 {
                     receivedOnFakeKernel.Add(command);
                     return Task.CompletedTask;
                 }
-            };
+            }
+        };
 
-            using var kernel = new CompositeKernel
-            {
-                new CSharpKernel()
-            };
+        kernel.DefaultKernelName = "fake";
 
-            kernel.Add(fakeKernel, new[] { "totally-fake" });
+        await kernel.SendAsync(
+            new SubmitCode(
+                @"hello!"));
 
-            kernel.DefaultKernelName = "totally-fake";
+        receivedOnFakeKernel
+            .Should()
+            .ContainSingle(c => c is SubmitCode)
+            .Which
+            .As<SubmitCode>()
+            .Code
+            .Should()
+            .Be("hello!");
+    }
 
-            await kernel.SendAsync(
-                new SubmitCode(
-                    @"hello!"));
+    [Fact]
+    public async Task Handling_kernel_can_be_specified_as_a_default_via_an_alias()
+    {
+        var receivedOnFakeKernel = new List<KernelCommand>();
 
-            receivedOnFakeKernel
-                .Should()
-                .ContainSingle(c => c is SubmitCode)
-                .Which
-                .As<SubmitCode>()
-                .Code
-                .Should()
-                .Be("hello!");
-        }
-
-        [Fact]
-        public async Task When_no_default_kernel_is_specified_then_kernel_directives_can_be_used()
+        var fakeKernel = new FakeKernel("fake")
         {
-            using var kernel = new CompositeKernel
+            Handle = (command, context) =>
             {
-                new CSharpKernel(),
-                new FSharpKernel()
-            };
+                receivedOnFakeKernel.Add(command);
+                return Task.CompletedTask;
+            }
+        };
 
-            using var events = kernel.KernelEvents.ToSubscribedList();
+        using var kernel = new CompositeKernel
+        {
+            new CSharpKernel()
+        };
 
-            await kernel.SubmitCodeAsync(@"
+        kernel.Add(fakeKernel, new[] { "totally-fake" });
+
+        kernel.DefaultKernelName = "totally-fake";
+
+        await kernel.SendAsync(
+            new SubmitCode(
+                @"hello!"));
+
+        receivedOnFakeKernel
+            .Should()
+            .ContainSingle(c => c is SubmitCode)
+            .Which
+            .As<SubmitCode>()
+            .Code
+            .Should()
+            .Be("hello!");
+    }
+
+    [Fact]
+    public async Task When_no_default_kernel_is_specified_then_kernel_directives_can_be_used()
+    {
+        using var kernel = new CompositeKernel
+        {
+            new CSharpKernel(),
+            new FSharpKernel()
+        };
+
+        using var events = kernel.KernelEvents.ToSubscribedList();
+
+        await kernel.SubmitCodeAsync(@"
 #!csharp 
 new [] {1,2,3}");
                 
-            events.Should().NotContainErrors();
-        }
+        events.Should().NotContainErrors();
+    }
 
-        [Fact]
-        public void When_only_one_subkernel_is_present_then_default_kernel_name_returns_its_name()
+    [Fact]
+    public void When_only_one_subkernel_is_present_then_default_kernel_name_returns_its_name()
+    {
+        using var kernel = new CompositeKernel
         {
-            using var kernel = new CompositeKernel
-            {
-                new CSharpKernel()
-            };
+            new CSharpKernel()
+        };
 
-            kernel.DefaultKernelName.Should().Be("csharp");
-        }
+        kernel.DefaultKernelName.Should().Be("csharp");
+    }
 
-        [Fact]
-        public async Task Events_published_by_child_kernel_are_visible_in_parent_kernel()
+    [Fact]
+    public async Task Events_published_by_child_kernel_are_visible_in_parent_kernel()
+    {
+        var subKernel = new CSharpKernel();
+
+        using var compositeKernel = new CompositeKernel
         {
-            var subKernel = new CSharpKernel();
+            subKernel
+        };
 
-            using var compositeKernel = new CompositeKernel
-            {
-                subKernel
-            };
+        var events = compositeKernel.KernelEvents.ToSubscribedList();
 
-            var events = compositeKernel.KernelEvents.ToSubscribedList();
+        await subKernel.SendAsync(new SubmitCode("var x = 1;"));
 
-            await subKernel.SendAsync(new SubmitCode("var x = 1;"));
+        events
+            .Select(e => e.GetType())
+            .Should()
+            .ContainInOrder(
+                typeof(CodeSubmissionReceived),
+                typeof(CompleteCodeSubmissionReceived),
+                typeof(CommandSucceeded));
+    }
 
-            events
-                .Select(e => e.GetType())
-                .Should()
-                .ContainInOrder(
-                    typeof(CodeSubmissionReceived),
-                    typeof(CompleteCodeSubmissionReceived),
-                    typeof(CommandSucceeded));
-        }
+    [Fact]
+    public async Task Deferred_commands_on_composite_kernel_are_execute_on_first_submission()
+    {
+        var deferredCommandExecuted = false;
+        var subKernel = new CSharpKernel();
 
-        [Fact]
-        public async Task Deferred_commands_on_composite_kernel_are_execute_on_first_submission()
+        using var compositeKernel = new CompositeKernel
         {
-            var deferredCommandExecuted = false;
-            var subKernel = new CSharpKernel();
+            subKernel
+        };
 
-            using var compositeKernel = new CompositeKernel
+        compositeKernel.DefaultKernelName = subKernel.Name;
+
+        var deferred = new SubmitCode("placeholder")
+        {
+            Handler = (command, context) =>
             {
-                subKernel
-            };
-
-            compositeKernel.DefaultKernelName = subKernel.Name;
-
-            var deferred = new SubmitCode("placeholder")
-            {
-                Handler = (command, context) =>
-                {
-                    deferredCommandExecuted = true;
-                    return Task.CompletedTask;
-                }
-            };
+                deferredCommandExecuted = true;
+                return Task.CompletedTask;
+            }
+        };
             
-            compositeKernel.DeferCommand(deferred);
+        compositeKernel.DeferCommand(deferred);
 
-            var events = compositeKernel.KernelEvents.ToSubscribedList();
+        var events = compositeKernel.KernelEvents.ToSubscribedList();
 
-            await compositeKernel.SendAsync(new SubmitCode("var x = 1;", targetKernelName: subKernel.Name));
+        await compositeKernel.SendAsync(new SubmitCode("var x = 1;", targetKernelName: subKernel.Name));
 
-            deferredCommandExecuted.Should().Be(true);
+        deferredCommandExecuted.Should().Be(true);
 
-            events
-                .Select(e => e.GetType())
-                .Should()
-                .ContainInOrder(
-                    typeof(CodeSubmissionReceived),
-                    typeof(CompleteCodeSubmissionReceived),
-                    typeof(CommandSucceeded));
-        }
+        events
+            .Select(e => e.GetType())
+            .Should()
+            .ContainInOrder(
+                typeof(CodeSubmissionReceived),
+                typeof(CompleteCodeSubmissionReceived),
+                typeof(CommandSucceeded));
+    }
         
 
-        [Fact]
-        public async Task Deferred_commands_on_composite_kernel_can_use_directives()
+    [Fact]
+    public async Task Deferred_commands_on_composite_kernel_can_use_directives()
+    {
+        var deferredCommandExecuted = false;
+        var subKernel = new CSharpKernel();
+
+        using var compositeKernel = new CompositeKernel
         {
-            var deferredCommandExecuted = false;
-            var subKernel = new CSharpKernel();
-
-            using var compositeKernel = new CompositeKernel
-            {
-                subKernel
-            };
-            var customDirective = new Command("#!customDirective")
-            {
-                Handler = CommandHandler.Create(() => deferredCommandExecuted = true)
-
-            };
-            compositeKernel.AddDirective(customDirective);
-
-            compositeKernel.DefaultKernelName = subKernel.Name;
-
-            var deferred = new SubmitCode("#!customDirective");
-
-            compositeKernel.DeferCommand(deferred);
-
-            var events = compositeKernel.KernelEvents.ToSubscribedList();
-
-            await compositeKernel.SendAsync(new SubmitCode("var x = 1;", targetKernelName: subKernel.Name));
-
-            deferredCommandExecuted.Should().Be(true);
-
-            events
-                .Select(e => e.GetType())
-                .Should()
-                .ContainInOrder(
-                    typeof(CodeSubmissionReceived),
-                    typeof(CompleteCodeSubmissionReceived),
-                    typeof(CommandSucceeded));
-        }
-
-        [Fact]
-        public void Child_kernels_are_disposed_when_CompositeKernel_is_disposed()
+            subKernel
+        };
+        var customDirective = new Command("#!customDirective")
         {
-            var csharpKernelWasDisposed = false;
-            var fsharpKernelWasDisposed = false;
+            Handler = CommandHandler.Create(() => deferredCommandExecuted = true)
 
-            var csharpKernel = new CSharpKernel();
-            csharpKernel.RegisterForDisposal(() => csharpKernelWasDisposed = true);
+        };
+        compositeKernel.AddDirective(customDirective);
 
-            var fsharpKernel = new FSharpKernel();
-            fsharpKernel.RegisterForDisposal(() => fsharpKernelWasDisposed = true);
+        compositeKernel.DefaultKernelName = subKernel.Name;
 
-            var compositeKernel = new CompositeKernel
-            {
-                csharpKernel,
-                fsharpKernel
-            };
-            compositeKernel.Dispose();
+        var deferred = new SubmitCode("#!customDirective");
 
-            csharpKernelWasDisposed.Should().BeTrue();
-            fsharpKernelWasDisposed.Should().BeTrue();
-        }
+        compositeKernel.DeferCommand(deferred);
 
-        [Fact]
-        public void When_frontend_environment_is_set_then_it_is_also_assigned_to_child_kernels()
+        var events = compositeKernel.KernelEvents.ToSubscribedList();
+
+        await compositeKernel.SendAsync(new SubmitCode("var x = 1;", targetKernelName: subKernel.Name));
+
+        deferredCommandExecuted.Should().Be(true);
+
+        events
+            .Select(e => e.GetType())
+            .Should()
+            .ContainInOrder(
+                typeof(CodeSubmissionReceived),
+                typeof(CompleteCodeSubmissionReceived),
+                typeof(CommandSucceeded));
+    }
+
+    [Fact]
+    public void Child_kernels_are_disposed_when_CompositeKernel_is_disposed()
+    {
+        var csharpKernelWasDisposed = false;
+        var fsharpKernelWasDisposed = false;
+
+        var csharpKernel = new CSharpKernel();
+        csharpKernel.RegisterForDisposal(() => csharpKernelWasDisposed = true);
+
+        var fsharpKernel = new FSharpKernel();
+        fsharpKernel.RegisterForDisposal(() => fsharpKernelWasDisposed = true);
+
+        var compositeKernel = new CompositeKernel
         {
-            using var compositeKernel = new CompositeKernel
-            {
-                new CSharpKernel()
-            };
+            csharpKernel,
+            fsharpKernel
+        };
+        compositeKernel.Dispose();
 
-            compositeKernel.FrontendEnvironment = new AutomationEnvironment();
+        csharpKernelWasDisposed.Should().BeTrue();
+        fsharpKernelWasDisposed.Should().BeTrue();
+    }
 
-            compositeKernel
-                .ChildKernels
-                .OfType<Kernel>()
-                .Single()
-                .FrontendEnvironment
-                .Should()
-                .BeSameAs(compositeKernel.FrontendEnvironment);
-        }
+    [Fact]
+    public void When_frontend_environment_is_set_then_it_is_also_assigned_to_child_kernels()
+    {
+        using var compositeKernel = new CompositeKernel
+        {
+            new CSharpKernel()
+        };
+
+        compositeKernel.FrontendEnvironment = new AutomationEnvironment();
+
+        compositeKernel
+            .ChildKernels
+            .OfType<Kernel>()
+            .Single()
+            .FrontendEnvironment
+            .Should()
+            .BeSameAs(compositeKernel.FrontendEnvironment);
+    }
         
-        [Fact]
-        public void When_child_kernel_is_added_then_its_frontend_environment_is_obtained_from_the_parent()
-        {
-            using var compositeKernel = new CompositeKernel();
+    [Fact]
+    public void When_child_kernel_is_added_then_its_frontend_environment_is_obtained_from_the_parent()
+    {
+        using var compositeKernel = new CompositeKernel();
 
-            compositeKernel.FrontendEnvironment = new AutomationEnvironment();
+        compositeKernel.FrontendEnvironment = new AutomationEnvironment();
 
-            compositeKernel.Add(new CSharpKernel());
+        compositeKernel.Add(new CSharpKernel());
 
-            compositeKernel
-                .ChildKernels
-                .OfType<Kernel>()
-                .Single()
-                .FrontendEnvironment
-                .Should()
-                .BeSameAs(compositeKernel.FrontendEnvironment);
-        }
+        compositeKernel
+            .ChildKernels
+            .OfType<Kernel>()
+            .Single()
+            .FrontendEnvironment
+            .Should()
+            .BeSameAs(compositeKernel.FrontendEnvironment);
+    }
 
-        [Fact]
-        public async Task When_command_handler_registered_and_command_sent_then_handler_is_executed()
-        {
-            using var compositeKernel = new CompositeKernel();
+    [Fact]
+    public async Task When_command_handler_registered_and_command_sent_then_handler_is_executed()
+    {
+        using var compositeKernel = new CompositeKernel();
 
-            FirstSubmission.MyCommand commandPassedToHandler = null;
-            KernelInvocationContext contextPassedToHandler = null;
+        FirstSubmission.MyCommand commandPassedToHandler = null;
+        KernelInvocationContext contextPassedToHandler = null;
 
-            compositeKernel.RegisterCommandHandler<FirstSubmission.MyCommand>(
-                (command, context) =>
-                {
-                    commandPassedToHandler = command;
-                    contextPassedToHandler = context;
-                    return Task.CompletedTask;
-                });
+        compositeKernel.RegisterCommandHandler<FirstSubmission.MyCommand>(
+            (command, context) =>
+            {
+                commandPassedToHandler = command;
+                contextPassedToHandler = context;
+                return Task.CompletedTask;
+            });
 
-            var commandSentToKernel = new FirstSubmission.MyCommand("xyzzy");
-            await compositeKernel.SendAsync(commandSentToKernel);
+        var commandSentToKernel = new FirstSubmission.MyCommand("xyzzy");
+        await compositeKernel.SendAsync(commandSentToKernel);
 
-            commandPassedToHandler
-                .Should()
-                .BeSameAs(commandSentToKernel);
-            contextPassedToHandler
-                .Should()
-                .NotBeNull();
-        }
+        commandPassedToHandler
+            .Should()
+            .BeSameAs(commandSentToKernel);
+        contextPassedToHandler
+            .Should()
+            .NotBeNull();
+    }
 
-        [Fact] 
-        public async Task When_command_handler_registered_in_child_kernel_and_command_sent_to_parent_then_handler_is_executed()
-        {
-            using var compositeKernel = new CompositeKernel();
-            var childKernel = new FakeKernel();
-            compositeKernel.Add(childKernel);
+    [Fact] 
+    public async Task When_command_handler_registered_in_child_kernel_and_command_sent_to_parent_then_handler_is_executed()
+    {
+        using var compositeKernel = new CompositeKernel();
+        var childKernel = new FakeKernel();
+        compositeKernel.Add(childKernel);
 
-            FirstSubmission.MyCommand commandPassedToHandler = null;
+        FirstSubmission.MyCommand commandPassedToHandler = null;
 
-            childKernel.RegisterCommandHandler<FirstSubmission.MyCommand>(
-                (command, context) =>
-                {
-                    commandPassedToHandler = command;
-                    return Task.CompletedTask;
-                });
+        childKernel.RegisterCommandHandler<FirstSubmission.MyCommand>(
+            (command, context) =>
+            {
+                commandPassedToHandler = command;
+                return Task.CompletedTask;
+            });
 
-            childKernel.KernelInfo.SupportedKernelCommands.Should().Contain(new KernelCommandInfo(nameof(FirstSubmission.MyCommand)));
+        childKernel.KernelInfo.SupportedKernelCommands.Should().Contain(new KernelCommandInfo(nameof(FirstSubmission.MyCommand)));
 
-            var commandSentToCompositeKernel = new FirstSubmission.MyCommand("test");
-            var result = await compositeKernel.SendAsync(commandSentToCompositeKernel);
-            result.KernelEvents.ToSubscribedList().Should().NotContainErrors();
+        var commandSentToCompositeKernel = new FirstSubmission.MyCommand("test");
+        var result = await compositeKernel.SendAsync(commandSentToCompositeKernel);
+        result.KernelEvents.ToSubscribedList().Should().NotContainErrors();
 
-            commandPassedToHandler
-                .Should()
-                .BeSameAs(commandSentToCompositeKernel);
-        }
+        commandPassedToHandler
+            .Should()
+            .BeSameAs(commandSentToCompositeKernel);
+    }
 
-        [Fact]
-        public void Cannot_add_CompositeKernel_as_child()
-        {
-            using var compositeKernel = new CompositeKernel();
-            var childKernel = new CompositeKernel();
-            var action = new Action( () => compositeKernel.Add(childKernel));
-            action.Should().Throw<ArgumentException>();
-        }
+    [Fact]
+    public void Cannot_add_CompositeKernel_as_child()
+    {
+        using var compositeKernel = new CompositeKernel();
+        var childKernel = new CompositeKernel();
+        var action = new Action( () => compositeKernel.Add(childKernel));
+        action.Should().Throw<ArgumentException>();
     }
 }

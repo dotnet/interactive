@@ -3,15 +3,14 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown
-{
-    internal sealed class FailedCodeBlockContentFetchResult : CodeBlockContentFetchResult
-    {
-        public FailedCodeBlockContentFetchResult(IList<string> errorMessages)
-        {
-            ErrorMessages = errorMessages;
-        }
+namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown;
 
-        public IList<string> ErrorMessages { get; }
+internal sealed class FailedCodeBlockContentFetchResult : CodeBlockContentFetchResult
+{
+    public FailedCodeBlockContentFetchResult(IList<string> errorMessages)
+    {
+        ErrorMessages = errorMessages;
     }
+
+    public IList<string> ErrorMessages { get; }
 }

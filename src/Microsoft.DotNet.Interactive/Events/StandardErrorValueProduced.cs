@@ -4,15 +4,14 @@
 using System.Collections.Generic;
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Events
+namespace Microsoft.DotNet.Interactive.Events;
+
+public class StandardErrorValueProduced : DisplayEvent
 {
-    public class StandardErrorValueProduced : DisplayEvent
+    public StandardErrorValueProduced(
+        KernelCommand command,
+        IReadOnlyCollection<FormattedValue> formattedValues = null,
+        string valueId = null) : base(null, command, formattedValues, valueId)
     {
-        public StandardErrorValueProduced(
-            KernelCommand command,
-            IReadOnlyCollection<FormattedValue> formattedValues = null,
-            string valueId = null) : base(null, command, formattedValues, valueId)
-        {
-        }
     }
 }

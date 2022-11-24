@@ -4,13 +4,12 @@
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+internal interface IKernelExtensionLoader 
 {
-    internal interface IKernelExtensionLoader 
-    {
-        Task LoadFromDirectoryAsync(
-            DirectoryInfo directory,
-            Kernel kernel,
-            KernelInvocationContext context);
-    }
+    Task LoadFromDirectoryAsync(
+        DirectoryInfo directory,
+        Kernel kernel,
+        KernelInvocationContext context);
 }

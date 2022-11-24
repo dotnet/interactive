@@ -4,10 +4,9 @@
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive
-{
-    public delegate Task KernelCommandPipelineMiddleware(
-        KernelCommand command,
-        KernelInvocationContext context,
-        KernelPipelineContinuation next);
-}
+namespace Microsoft.DotNet.Interactive;
+
+public delegate Task KernelCommandPipelineMiddleware(
+    KernelCommand command,
+    KernelInvocationContext context,
+    KernelPipelineContinuation next);

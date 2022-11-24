@@ -6,22 +6,21 @@ using System.Collections.Generic;
 using Microsoft.DotNet.Interactive.Events;
 using Newtonsoft.Json;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject
+namespace Microsoft.DotNet.Interactive.CSharpProject;
+
+public class CompletionResult
 {
-    public class CompletionResult
+    public CompletionItem[] Items { get; }
+
+    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+    public string RequestId { get; }
+
+    public IEnumerable<SerializableDiagnostic> Diagnostics { get; }
+
+    public CompletionResult(CompletionItem[] items = null, IEnumerable<SerializableDiagnostic> diagnostics = null, string requestId = null)
     {
-        public CompletionItem[] Items { get; }
-
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string RequestId { get; }
-
-        public IEnumerable<SerializableDiagnostic> Diagnostics { get; }
-
-        public CompletionResult(CompletionItem[] items = null, IEnumerable<SerializableDiagnostic> diagnostics = null, string requestId = null)
-        {
-            Items = items ?? Array.Empty<CompletionItem>();
-            Diagnostics = diagnostics;
-            RequestId = requestId;
-        }
+        Items = items ?? Array.Empty<CompletionItem>();
+        Diagnostics = diagnostics;
+        RequestId = requestId;
     }
 }

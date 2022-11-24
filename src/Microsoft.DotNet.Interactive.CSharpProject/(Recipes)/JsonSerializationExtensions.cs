@@ -3,14 +3,13 @@
 
 using Newtonsoft.Json;
 
-namespace Recipes
-{
-    internal static class JsonSerializationExtensions
-    {
-        public static string ToJson(this object source) =>
-            JsonConvert.SerializeObject(source);
+namespace Recipes;
 
-        public static T FromJsonTo<T>(this string json) =>
-            JsonConvert.DeserializeObject<T>(json);
-    }
+internal static class JsonSerializationExtensions
+{
+    public static string ToJson(this object source) =>
+        JsonConvert.SerializeObject(source);
+
+    public static T FromJsonTo<T>(this string json) =>
+        JsonConvert.DeserializeObject<T>(json);
 }

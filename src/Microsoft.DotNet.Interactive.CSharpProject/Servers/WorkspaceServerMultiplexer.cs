@@ -5,42 +5,41 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Servers
+namespace Microsoft.DotNet.Interactive.CSharpProject.Servers;
+
+public class WorkspaceServerMultiplexer : IWorkspaceServer
 {
-    public class WorkspaceServerMultiplexer : IWorkspaceServer
+    private IPackageFinder _packageFinder;
+    private readonly IWorkspaceServer _roslynWorkspaceServer;
+
+    public WorkspaceServerMultiplexer(IPackageFinder packageFinder)
     {
-        private IPackageFinder _packageFinder;
-        private readonly IWorkspaceServer _roslynWorkspaceServer;
+        _packageFinder = packageFinder;
+        _roslynWorkspaceServer = new RoslynWorkspaceServer(packageFinder);
+    }
 
-        public WorkspaceServerMultiplexer(IPackageFinder packageFinder)
-        {
-            _packageFinder = packageFinder;
-            _roslynWorkspaceServer = new RoslynWorkspaceServer(packageFinder);
-        }
+    public Task<CompileResult> CompileAsync(WorkspaceRequest request)
+    {
+        return _roslynWorkspaceServer.CompileAsync(request);
+    }
 
-        public Task<CompileResult> CompileAsync(WorkspaceRequest request)
-        {
-            return _roslynWorkspaceServer.CompileAsync(request);
-        }
+    public Task<CompletionResult> GetCompletionsAsync(WorkspaceRequest request)
+    {
+        return _roslynWorkspaceServer.GetCompletionsAsync(request);
+    }
 
-        public Task<CompletionResult> GetCompletionsAsync(WorkspaceRequest request)
-        {
-            return _roslynWorkspaceServer.GetCompletionsAsync(request);
-        }
+    public Task<DiagnosticResult> GetDiagnosticsAsync(WorkspaceRequest request)
+    {
+        return _roslynWorkspaceServer.GetDiagnosticsAsync(request);
+    }
 
-        public Task<DiagnosticResult> GetDiagnosticsAsync(WorkspaceRequest request)
-        {
-            return _roslynWorkspaceServer.GetDiagnosticsAsync(request);
-        }
+    public Task<SignatureHelpResult> GetSignatureHelpAsync(WorkspaceRequest request)
+    {
+        return _roslynWorkspaceServer.GetSignatureHelpAsync(request);
+    }
 
-        public Task<SignatureHelpResult> GetSignatureHelpAsync(WorkspaceRequest request)
-        {
-            return _roslynWorkspaceServer.GetSignatureHelpAsync(request);
-        }
-
-        public Task<RunResult> RunAsync(WorkspaceRequest request)
-        {
-            return _roslynWorkspaceServer.RunAsync(request);
-        }
+    public Task<RunResult> RunAsync(WorkspaceRequest request)
+    {
+        return _roslynWorkspaceServer.RunAsync(request);
     }
 }

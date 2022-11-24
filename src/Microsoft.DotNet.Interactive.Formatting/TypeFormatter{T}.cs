@@ -3,24 +3,23 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting;
+
+public abstract class TypeFormatter<T> : ITypeFormatter<T>
 {
-    public abstract class TypeFormatter<T> : ITypeFormatter<T>
+    protected TypeFormatter(Type type = null)
     {
-        protected TypeFormatter(Type type = null)
-        {
-            Type = type ?? typeof(T);
-        }
+        Type = type ?? typeof(T);
+    }
 
-        public abstract bool Format(T value, FormatContext context);
+    public abstract bool Format(T value, FormatContext context);
 
-        public Type Type { get; }
+    public Type Type { get; }
 
-        public abstract string MimeType { get; }
+    public abstract string MimeType { get; }
 
-        bool ITypeFormatter.Format(object instance, FormatContext context)
-        {
-            return Format((T) instance, context);
-        }
+    bool ITypeFormatter.Format(object instance, FormatContext context)
+    {
+        return Format((T) instance, context);
     }
 }

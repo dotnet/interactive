@@ -6,28 +6,27 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Tests.Connection
+namespace Microsoft.DotNet.Interactive.Tests.Connection;
+
+public class KernelCommandEnvelopeTests
 {
-    public class KernelCommandEnvelopeTests
+    [Fact]
+    public void Create_creates_envelope_of_the_correct_type()
     {
-        [Fact]
-        public void Create_creates_envelope_of_the_correct_type()
-        {
-            KernelCommand command = new SubmitCode("display(123)");
+        KernelCommand command = new SubmitCode("display(123)");
 
-            var envelope = KernelCommandEnvelope.Create(command);
+        var envelope = KernelCommandEnvelope.Create(command);
 
-            envelope.Should().BeOfType<KernelCommandEnvelope<SubmitCode>>();
-        }
+        envelope.Should().BeOfType<KernelCommandEnvelope<SubmitCode>>();
+    }
         
-        [Fact]
-        public void Create_creates_envelope_with_reference_to_original_command()
-        {
-            KernelCommand command = new SubmitCode("display(123)");
+    [Fact]
+    public void Create_creates_envelope_with_reference_to_original_command()
+    {
+        KernelCommand command = new SubmitCode("display(123)");
 
-            var envelope = KernelCommandEnvelope.Create(command);
+        var envelope = KernelCommandEnvelope.Create(command);
 
-            envelope.Command.Should().BeSameAs(command);
-        }
+        envelope.Command.Should().BeSameAs(command);
     }
 }

@@ -10,171 +10,169 @@ using Microsoft.CodeAnalysis.Text;
 using InvalidOperationException = System.InvalidOperationException;
 using Path = System.IO.Path;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject
+namespace Microsoft.DotNet.Interactive.CSharpProject;
+
+internal static class SourceTextExtensions
 {
+    private const string FSharpRegionStart = "//#region";
+    private const string FSharpRegionEnd = "//#endregion";
 
-    internal static class SourceTextExtensions
+    public static IEnumerable<(BufferId bufferId, TextSpan span, TextSpan outerSpan)> ExtractRegions(this SourceText code, string fileName)
     {
-        private const string FSharpRegionStart = "//#region";
-        private const string FSharpRegionEnd = "//#endregion";
-
-        public static IEnumerable<(BufferId bufferId, TextSpan span, TextSpan outerSpan)> ExtractRegions(this SourceText code, string fileName)
+        var extension = Path.GetExtension(fileName);
+        switch (extension)
         {
-            var extension = Path.GetExtension(fileName);
-            switch (extension)
-            {
-                case ".cs":
-                case ".csx":
-                    return ExtractRegionsCSharp(code, fileName);
-                case ".fs":
-                case ".fsx":
-                    return ExtractRegionsFSharp(code, fileName);
-                default:
-                    throw new InvalidOperationException($"Unsupported file extension '{extension}'");
-            }
+            case ".cs":
+            case ".csx":
+                return ExtractRegionsCSharp(code, fileName);
+            case ".fs":
+            case ".fsx":
+                return ExtractRegionsFSharp(code, fileName);
+            default:
+                throw new InvalidOperationException($"Unsupported file extension '{extension}'");
         }
+    }
 
-        private static IEnumerable<(BufferId bufferId, TextSpan span, TextSpan outerSpan)> ExtractRegionsCSharp(SourceText code, string fileName)
+    private static IEnumerable<(BufferId bufferId, TextSpan span, TextSpan outerSpan)> ExtractRegionsCSharp(SourceText code, string fileName)
+    {
+        IEnumerable<(SyntaxTrivia startRegion, SyntaxTrivia endRegion, BufferId bufferId)> FindRegions(SyntaxNode syntaxNode)
         {
-            IEnumerable<(SyntaxTrivia startRegion, SyntaxTrivia endRegion, BufferId bufferId)> FindRegions(SyntaxNode syntaxNode)
+            var nodesWithRegionDirectives =
+                from node in syntaxNode.DescendantNodesAndTokens()
+                where node.HasLeadingTrivia
+                from leadingTrivia in node.GetLeadingTrivia()
+                where leadingTrivia.IsKind(SyntaxKind.RegionDirectiveTrivia) ||
+                      leadingTrivia.IsKind(SyntaxKind.EndRegionDirectiveTrivia)
+                select node;
+
+            var stack = new Stack<SyntaxTrivia>();
+            var processedSpans = new HashSet<TextSpan>();
+
+            foreach (var nodeWithRegionDirective in nodesWithRegionDirectives)
             {
-                var nodesWithRegionDirectives =
-                    from node in syntaxNode.DescendantNodesAndTokens()
-                    where node.HasLeadingTrivia
-                    from leadingTrivia in node.GetLeadingTrivia()
-                    where leadingTrivia.IsKind(SyntaxKind.RegionDirectiveTrivia) ||
-                          leadingTrivia.IsKind(SyntaxKind.EndRegionDirectiveTrivia)
-                    select node;
+                var triviaList = nodeWithRegionDirective.GetLeadingTrivia();
 
-                var stack = new Stack<SyntaxTrivia>();
-                var processedSpans = new HashSet<TextSpan>();
-
-                foreach (var nodeWithRegionDirective in nodesWithRegionDirectives)
+                foreach (var currentTrivia in triviaList)
                 {
-                    var triviaList = nodeWithRegionDirective.GetLeadingTrivia();
-
-                    foreach (var currentTrivia in triviaList)
+                    if (processedSpans.Add(currentTrivia.FullSpan))
                     {
-                        if (processedSpans.Add(currentTrivia.FullSpan))
+                        if (currentTrivia.IsKind(SyntaxKind.RegionDirectiveTrivia))
                         {
-                            if (currentTrivia.IsKind(SyntaxKind.RegionDirectiveTrivia))
-                            {
-                                stack.Push(currentTrivia);
-                            }
-                            else if (currentTrivia.IsKind(SyntaxKind.EndRegionDirectiveTrivia) && stack.Count > 0)
-                            {
-                                var start = stack.Pop();
-                                var regionName = start.ToFullString().Replace("#region", string.Empty).Trim();
-                                yield return (start, currentTrivia, new BufferId(fileName, regionName));
-                            }
+                            stack.Push(currentTrivia);
+                        }
+                        else if (currentTrivia.IsKind(SyntaxKind.EndRegionDirectiveTrivia) && stack.Count > 0)
+                        {
+                            var start = stack.Pop();
+                            var regionName = start.ToFullString().Replace("#region", string.Empty).Trim();
+                            yield return (start, currentTrivia, new BufferId(fileName, regionName));
                         }
                     }
                 }
             }
+        }
 
-            var sourceCodeText = code.ToString();
-            var root = CSharpSyntaxTree.ParseText(sourceCodeText).GetRoot();
+        var sourceCodeText = code.ToString();
+        var root = CSharpSyntaxTree.ParseText(sourceCodeText).GetRoot();
 
-            foreach (var (startRegion, endRegion, label) in FindRegions(root))
+        foreach (var (startRegion, endRegion, label) in FindRegions(root))
+        {
+            var innerStart = startRegion.GetLocation().SourceSpan.End;
+
+            var innerLength = endRegion.GetLocation().SourceSpan.Start -
+                              startRegion.GetLocation().SourceSpan.End;
+
+            var innerLoc = new TextSpan(innerStart, innerLength);
+
+            var outerStart = startRegion.GetLocation().SourceSpan.Start;
+            var outerLength = endRegion.GetLocation().SourceSpan.End -
+                              startRegion.GetLocation().SourceSpan.Start;
+            var outerLoc = new TextSpan(outerStart, outerLength);
+
+            yield return (label, innerLoc, outerLoc);
+        }
+    }
+
+    private static IEnumerable<(BufferId bufferId, TextSpan span, TextSpan outerSpan)> ExtractRegionsFSharp(SourceText code, string fileName)
+    {
+        var extractedRegions = new List<(BufferId, TextSpan, TextSpan)>();
+        var text = code.ToString();
+        int regionTagStartIndex = text.IndexOf(FSharpRegionStart);
+        while (regionTagStartIndex >= 0)
+        {
+            var regionLabelStartIndex = regionTagStartIndex + FSharpRegionStart.Length;
+            var regionLabelEndIndex = text.IndexOf('\n', regionTagStartIndex);
+            var regionLabel = text.Substring(regionLabelStartIndex, regionLabelEndIndex - regionLabelStartIndex).Trim();
+            var regionTagEndIndex = text.IndexOf(FSharpRegionEnd, regionTagStartIndex);
+            if (regionTagEndIndex >= 0)
             {
-                var innerStart = startRegion.GetLocation().SourceSpan.End;
+                var regionEndTagLastIndex = regionTagEndIndex + FSharpRegionEnd.Length;
 
-                var innerLength = endRegion.GetLocation().SourceSpan.Start -
-                             startRegion.GetLocation().SourceSpan.End;
+                var contentStart = regionLabelEndIndex + 1; // swallow newline
 
-                var innerLoc = new TextSpan(innerStart, innerLength);
+                var newlineBeforeEndRegionTag = text.LastIndexOf('\n', regionTagEndIndex);
+                var endRegionIndentOffset = regionTagEndIndex - newlineBeforeEndRegionTag;
+                var contentEnd = regionTagEndIndex - endRegionIndentOffset;
 
-                var outerStart = startRegion.GetLocation().SourceSpan.Start;
-                var outerLength = endRegion.GetLocation().SourceSpan.End -
-                                  startRegion.GetLocation().SourceSpan.Start;
-                var outerLoc = new TextSpan(outerStart, outerLength);
+                var contentSpan = new TextSpan(contentStart, contentEnd - contentStart);
+                var regionSpan = new TextSpan(regionTagStartIndex, regionEndTagLastIndex - regionTagStartIndex);
+                extractedRegions.Add((new BufferId(fileName, regionLabel), contentSpan, regionSpan));
 
-                yield return (label, innerLoc, outerLoc);
+                regionTagStartIndex = text.IndexOf(FSharpRegionStart, regionTagEndIndex);
+            }
+            else
+            {
+                break;
             }
         }
 
-        private static IEnumerable<(BufferId bufferId, TextSpan span, TextSpan outerSpan)> ExtractRegionsFSharp(SourceText code, string fileName)
+        return extractedRegions;
+    }
+
+    public static IEnumerable<Buffer> ExtractBuffers(this SourceText code, string fileName)
+    {
+        var extractedBuffers = new List<Buffer>();
+        foreach ((var bufferId, var contentSpan, var regionSpan) in ExtractRegions(code, fileName))
         {
-            var extractedRegions = new List<(BufferId, TextSpan, TextSpan)>();
-            var text = code.ToString();
-            int regionTagStartIndex = text.IndexOf(FSharpRegionStart);
-            while (regionTagStartIndex >= 0)
-            {
-                var regionLabelStartIndex = regionTagStartIndex + FSharpRegionStart.Length;
-                var regionLabelEndIndex = text.IndexOf('\n', regionTagStartIndex);
-                var regionLabel = text.Substring(regionLabelStartIndex, regionLabelEndIndex - regionLabelStartIndex).Trim();
-                var regionTagEndIndex = text.IndexOf(FSharpRegionEnd, regionTagStartIndex);
-                if (regionTagEndIndex >= 0)
-                {
-                    var regionEndTagLastIndex = regionTagEndIndex + FSharpRegionEnd.Length;
-
-                    var contentStart = regionLabelEndIndex + 1; // swallow newline
-
-                    var newlineBeforeEndRegionTag = text.LastIndexOf('\n', regionTagEndIndex);
-                    var endRegionIndentOffset = regionTagEndIndex - newlineBeforeEndRegionTag;
-                    var contentEnd = regionTagEndIndex - endRegionIndentOffset;
-
-                    var contentSpan = new TextSpan(contentStart, contentEnd - contentStart);
-                    var regionSpan = new TextSpan(regionTagStartIndex, regionEndTagLastIndex - regionTagStartIndex);
-                    extractedRegions.Add((new BufferId(fileName, regionLabel), contentSpan, regionSpan));
-
-                    regionTagStartIndex = text.IndexOf(FSharpRegionStart, regionTagEndIndex);
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            return extractedRegions;
+            var content = code.ToString(contentSpan);
+            content = content.FormatSourceCode(fileName);
+            extractedBuffers.Add(new Buffer(bufferId, content));
         }
 
-        public static IEnumerable<Buffer> ExtractBuffers(this SourceText code, string fileName)
-        {
-            var extractedBuffers = new List<Buffer>();
-            foreach ((var bufferId, var contentSpan, var regionSpan) in ExtractRegions(code, fileName))
-            {
-                var content = code.ToString(contentSpan);
-                content = content.FormatSourceCode(fileName);
-                extractedBuffers.Add(new Buffer(bufferId, content));
-            }
+        return extractedBuffers;
+    }
 
-            return extractedBuffers;
-        }
-
-        public static string FormatSourceCode(this string sourceCode, string fileName)
+    public static string FormatSourceCode(this string sourceCode, string fileName)
+    {
+        var extension = Path.GetExtension(fileName);
+        switch (extension)
         {
-            var extension = Path.GetExtension(fileName);
-            switch (extension)
-            {
-                case ".cs":
-                case ".csx":
-                    return FormatSourceCodeCSharp(sourceCode);
-                case ".fs":
-                case ".fsx":
-                    return FormatSourceCodeFSharp(sourceCode);
-                default:
-                    throw new InvalidOperationException($"Unsupported file extension '{extension}'");
-            }
+            case ".cs":
+            case ".csx":
+                return FormatSourceCodeCSharp(sourceCode);
+            case ".fs":
+            case ".fsx":
+                return FormatSourceCodeFSharp(sourceCode);
+            default:
+                throw new InvalidOperationException($"Unsupported file extension '{extension}'");
         }
+    }
 
-        private static string FormatSourceCodeCSharp(string sourceCode)
-        {
-            var tree = CSharpSyntaxTree.ParseText(sourceCode.Trim(), new CSharpParseOptions(kind: SourceCodeKind.Script));
-            var cw = new AdhocWorkspace();
-            var formattedCode = Formatter.Format(tree.GetRoot(), cw);
-            return formattedCode.ToFullString();
-        }
+    private static string FormatSourceCodeCSharp(string sourceCode)
+    {
+        var tree = CSharpSyntaxTree.ParseText(sourceCode.Trim(), new CSharpParseOptions(kind: SourceCodeKind.Script));
+        var cw = new AdhocWorkspace();
+        var formattedCode = Formatter.Format(tree.GetRoot(), cw);
+        return formattedCode.ToFullString();
+    }
 
-        private static string FormatSourceCodeFSharp(string sourceCode)
-        {
-            // dedent lines the number of spaces before the first non-space character
-            var dedentedCode = sourceCode.TrimStart(' ');
-            var dedentLevel = sourceCode.Length - dedentedCode.Length;
-            var lines = sourceCode.Split('\n');
-            var dedentedLines = lines.Select(l => l.Length > dedentLevel ? l.Substring(dedentLevel) : string.Empty);
-            var formattedCode = string.Join("\n", dedentedLines);
-            return formattedCode;
-        }
+    private static string FormatSourceCodeFSharp(string sourceCode)
+    {
+        // dedent lines the number of spaces before the first non-space character
+        var dedentedCode = sourceCode.TrimStart(' ');
+        var dedentLevel = sourceCode.Length - dedentedCode.Length;
+        var lines = sourceCode.Split('\n');
+        var dedentedLines = lines.Select(l => l.Length > dedentLevel ? l.Substring(dedentLevel) : string.Empty);
+        var formattedCode = string.Join("\n", dedentedLines);
+        return formattedCode;
     }
 }

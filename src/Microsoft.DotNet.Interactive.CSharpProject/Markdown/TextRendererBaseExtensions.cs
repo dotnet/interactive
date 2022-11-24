@@ -3,19 +3,18 @@
 
 using Markdig.Renderers;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown
-{
-    internal static class TextRendererBaseExtensions
-    {
-        public static T WriteLineIf<T>(this T textRendererBase, bool @if, string value)
-            where T : HtmlRenderer
-        {
-            if (@if)
-            {
-                textRendererBase.WriteLine(value);
-            }
+namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown;
 
-            return textRendererBase;
+internal static class TextRendererBaseExtensions
+{
+    public static T WriteLineIf<T>(this T textRendererBase, bool @if, string value)
+        where T : HtmlRenderer
+    {
+        if (@if)
+        {
+            textRendererBase.WriteLine(value);
         }
+
+        return textRendererBase;
     }
 }

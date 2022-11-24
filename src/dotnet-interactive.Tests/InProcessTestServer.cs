@@ -12,52 +12,51 @@ using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Microsoft.DotNet.Interactive.App.Tests
+namespace Microsoft.DotNet.Interactive.App.Tests;
+
+internal class InProcessTestServer : IDisposable
 {
-    internal class InProcessTestServer : IDisposable
+    private Lazy<TestServer> _host;
+    private readonly ServiceCollection _serviceCollection = new ServiceCollection();
+
+    public static async Task<InProcessTestServer> StartServer(string args, Action<IServiceCollection> servicesSetup = null)
     {
-        private Lazy<TestServer> _host;
-        private readonly ServiceCollection _serviceCollection = new ServiceCollection();
+        var server = new InProcessTestServer();
 
-        public static async Task<InProcessTestServer> StartServer(string args, Action<IServiceCollection> servicesSetup = null)
-        {
-            var server = new InProcessTestServer();
+        var completionSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var parser = CommandLineParser.Create(
+            server._serviceCollection,
+            (startupOptions, invocationContext) =>
+            {
+                servicesSetup?.Invoke(server._serviceCollection);
+                var builder = Program.ConstructWebHostBuilder(
+                    startupOptions,
+                    server._serviceCollection);
 
-            var completionSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var parser = CommandLineParser.Create(
-                server._serviceCollection,
-                (startupOptions, invocationContext) =>
-                {
-                    servicesSetup?.Invoke(server._serviceCollection);
-                    var builder = Program.ConstructWebHostBuilder(
-                        startupOptions,
-                        server._serviceCollection);
+                server._host = new Lazy<TestServer>(() => new TestServer(builder));
+                completionSource.SetResult(true);
+            });
 
-                    server._host = new Lazy<TestServer>(() => new TestServer(builder));
-                    completionSource.SetResult(true);
-                });
+        await parser.InvokeAsync(args, new TestConsole());
+        await completionSource.Task;
+        return server;
+    }
 
-            await parser.InvokeAsync(args, new TestConsole());
-            await completionSource.Task;
-            return server;
-        }
+    private InProcessTestServer()
+    {
+    }
+    public FrontendEnvironment FrontendEnvironment => _host.Value.Services.GetRequiredService<Kernel>().FrontendEnvironment;
 
-        private InProcessTestServer()
-        {
-        }
-        public FrontendEnvironment FrontendEnvironment => _host.Value.Services.GetRequiredService<Kernel>().FrontendEnvironment;
+    public HttpClient HttpClient => _host.Value.CreateClient();
 
-        public HttpClient HttpClient => _host.Value.CreateClient();
+    public Kernel Kernel => _host.Value.Services.GetService<Kernel>();
 
-        public Kernel Kernel => _host.Value.Services.GetService<Kernel>();
-
-        public void Dispose()
-        {
-            KernelCommandEnvelope.RegisterDefaults();
-            KernelEventEnvelope.RegisterDefaults();
-            Kernel?.Dispose();
-            _host.Value.Dispose();
-            _host = null;
-        }
+    public void Dispose()
+    {
+        KernelCommandEnvelope.RegisterDefaults();
+        KernelEventEnvelope.RegisterDefaults();
+        Kernel?.Dispose();
+        _host.Value.Dispose();
+        _host = null;
     }
 }

@@ -3,13 +3,12 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive.Http
+namespace Microsoft.DotNet.Interactive.Http;
+
+public class StaticContentSourceNotFoundException : Exception
 {
-    public class StaticContentSourceNotFoundException : Exception
+    public StaticContentSourceNotFoundException(string name):base($"Cannot find static content source {name}")
     {
-        public StaticContentSourceNotFoundException(string name):base($"Cannot find static content source {name}")
-        {
             
-        }
     }
 }

@@ -5,14 +5,14 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Tests.Instrumentation
+namespace Microsoft.DotNet.Interactive.CSharpProject.Tests.Instrumentation;
+
+public class CodeRewritingTests
 {
-    public class CodeRewritingTests
+    [Fact]
+    public async Task Rewritten_program_with_1_statements_has_1_calls_to_EmitProgramState()
     {
-        [Fact]
-        public async Task Rewritten_program_with_1_statements_has_1_calls_to_EmitProgramState()
-        {
-            var rewrittenCode = await RewriteCodeWithInstrumentation(@"
+        var rewrittenCode = await RewriteCodeWithInstrumentation(@"
 using System;
 
 namespace ConsoleApp2
@@ -26,9 +26,9 @@ namespace ConsoleApp2
     }
 }");
 
-            var emitterTypeName = typeof(InstrumentationEmitter).FullName;
+        var emitterTypeName = typeof(InstrumentationEmitter).FullName;
 
-            string expected = $@"
+        string expected = $@"
 using System;
 
 namespace ConsoleApp2
@@ -43,13 +43,13 @@ namespace ConsoleApp2
     }}
 }}".EnforceLF();
 
-            rewrittenCode.ShouldMatchLineByLine(expected);
-        }
+        rewrittenCode.ShouldMatchLineByLine(expected);
+    }
 
-        [Fact]
-        public async Task Rewritten_program_with_2_statements_has_2_calls_to_EmitProgramState()
-        {
-            string actual = await RewriteCodeWithInstrumentation(@"
+    [Fact]
+    public async Task Rewritten_program_with_2_statements_has_2_calls_to_EmitProgramState()
+    {
+        string actual = await RewriteCodeWithInstrumentation(@"
 using System;
 
 namespace ConsoleApp2
@@ -64,9 +64,9 @@ namespace ConsoleApp2
     }
 }");
 
-            var emitterTypeName = typeof(InstrumentationEmitter).FullName;
+        var emitterTypeName = typeof(InstrumentationEmitter).FullName;
 
-            string expected = $@"
+        string expected = $@"
 using System;
 
 namespace ConsoleApp2
@@ -83,19 +83,18 @@ namespace ConsoleApp2
         }}
     }}
 }}".EnforceLF();
-            actual.ShouldMatchLineByLine(expected);
-        }
+        actual.ShouldMatchLineByLine(expected);
+    }
 
-        private async Task<string> RewriteCodeWithInstrumentation(string text)
-        {
-            var document = Sources.GetDocument(text, true);
-            var visitor = new InstrumentationSyntaxVisitor(document, await document.GetSemanticModelAsync());
-            var rewritten = new InstrumentationSyntaxRewriter(
-                visitor.Augmentations.Data.Keys,
-                 visitor.VariableLocations ,
-                 visitor.Augmentations 
-                );
-            return rewritten.ApplyToTree(document.GetSyntaxTreeAsync().Result).GetText().ToString().EnforceLF();
-        }
+    private async Task<string> RewriteCodeWithInstrumentation(string text)
+    {
+        var document = Sources.GetDocument(text, true);
+        var visitor = new InstrumentationSyntaxVisitor(document, await document.GetSemanticModelAsync());
+        var rewritten = new InstrumentationSyntaxRewriter(
+            visitor.Augmentations.Data.Keys,
+            visitor.VariableLocations ,
+            visitor.Augmentations 
+        );
+        return rewritten.ApplyToTree(document.GetSyntaxTreeAsync().Result).GetText().ToString().EnforceLF();
     }
 }

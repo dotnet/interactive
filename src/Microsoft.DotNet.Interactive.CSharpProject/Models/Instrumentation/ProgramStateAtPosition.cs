@@ -6,24 +6,22 @@ using System.Linq;
 using Newtonsoft.Json;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Models.Instrumentation
+namespace Microsoft.DotNet.Interactive.CSharpProject.Models.Instrumentation;
+
+public class ProgramStateAtPositionArray : IRunResultFeature
 {
-    public class ProgramStateAtPositionArray : IRunResultFeature
+    [JsonProperty("instrumentation")]
+    public IReadOnlyCollection<ProgramStateAtPosition> ProgramStates { get; set; }
+
+    public string Name => nameof(ProgramStateAtPositionArray);
+
+    public ProgramStateAtPositionArray(IReadOnlyCollection<string> programStates)
     {
-        [JsonProperty("instrumentation")]
-        public IReadOnlyCollection<ProgramStateAtPosition> ProgramStates { get; set; }
+        ProgramStates = programStates.Select(JsonConvert.DeserializeObject<ProgramStateAtPosition>).ToArray();
+    }
 
-        public string Name => nameof(ProgramStateAtPositionArray);
-
-        public ProgramStateAtPositionArray(IReadOnlyCollection<string> programStates)
-        {
-            ProgramStates = programStates.Select(JsonConvert.DeserializeObject<ProgramStateAtPosition>).ToArray();
-        }
-
-        public void Apply(FeatureContainer result)
-        {
-            result.AddProperty("instrumentation", ProgramStates);
-        }
+    public void Apply(FeatureContainer result)
+    {
+        result.AddProperty("instrumentation", ProgramStates);
     }
 }
-

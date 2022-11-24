@@ -5,20 +5,19 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject
+namespace Microsoft.DotNet.Interactive.CSharpProject;
+
+public class DiagnosticResult
 {
-    public class DiagnosticResult
-    {
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string RequestId { get; }
+    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+    public string RequestId { get; }
 
         
-        public IReadOnlyCollection<SerializableDiagnostic> Diagnostics { get; set; }
+    public IReadOnlyCollection<SerializableDiagnostic> Diagnostics { get; set; }
 
-        public DiagnosticResult(IReadOnlyCollection<SerializableDiagnostic> diagnostics = null, string requestId = null)
-        {
-            Diagnostics = diagnostics ?? Array.Empty<SerializableDiagnostic>();
-            RequestId = requestId;
-        }
+    public DiagnosticResult(IReadOnlyCollection<SerializableDiagnostic> diagnostics = null, string requestId = null)
+    {
+        Diagnostics = diagnostics ?? Array.Empty<SerializableDiagnostic>();
+        RequestId = requestId;
     }
 }

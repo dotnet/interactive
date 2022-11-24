@@ -10,47 +10,47 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Formatting.Tests
+namespace Microsoft.DotNet.Interactive.Formatting.Tests;
+
+public class TabularDataResourceTests
 {
-    public class TabularDataResourceTests
+    [Fact]
+    public void can_create_from_JsonDocument()
     {
-        [Fact]
-        public void can_create_from_JsonDocument()
-        {
-            var doc = JsonDocument.Parse(@"[
+        var doc = JsonDocument.Parse(@"[
 { ""name"": ""mitch"", ""age"": 42, ""salary"":10.0, ""active"":true }
 ]");
-            var expected = new TabularDataResource(
-                new TableSchema
+        var expected = new TabularDataResource(
+            new TableSchema
+            {
+                Fields = new TableDataFieldDescriptors
                 {
-                    Fields = new TableDataFieldDescriptors
-                    {
-                        new("name", TableSchemaFieldType.String),
-                        new("age", TableSchemaFieldType.Number),
-                        new("salary", TableSchemaFieldType.Number),
-                        new("active", TableSchemaFieldType.Boolean),
-                    }
-                },
-                new[]
+                    new("name", TableSchemaFieldType.String),
+                    new("age", TableSchemaFieldType.Number),
+                    new("salary", TableSchemaFieldType.Number),
+                    new("active", TableSchemaFieldType.Boolean),
+                }
+            },
+            new[]
+            {
+                new Dictionary<string, object>
                 {
-                    new Dictionary<string, object>
-                    {
-                        ["name"] = "mitch",
-                        ["age"] = 42,
-                        ["salary"] = 10.0,
-                        ["active"] = true,
-                    }
-                });
+                    ["name"] = "mitch",
+                    ["age"] = 42,
+                    ["salary"] = 10.0,
+                    ["active"] = true,
+                }
+            });
 
-            var actual = doc.ToTabularDataResource();
+        var actual = doc.ToTabularDataResource();
 
-            actual.Should().BeEquivalentTo(expected);
-        }
+        actual.Should().BeEquivalentTo(expected);
+    }
 
-        [Fact]
-        public void schema_is_inferred_correctly_when_leading_data_item_has_null_field()
-        {
-            var tabularDataResource = JsonDocument.Parse(@"
+    [Fact]
+    public void schema_is_inferred_correctly_when_leading_data_item_has_null_field()
+    {
+        var tabularDataResource = JsonDocument.Parse(@"
 [
   {
       ""name"": ""Granny Smith apple"", 
@@ -64,20 +64,19 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
   }
 ]").ToTabularDataResource();
 
-            tabularDataResource
-                .Schema
-                .Fields["name"]
-                .Type.Should().Be(TableSchemaFieldType.String);
+        tabularDataResource
+            .Schema
+            .Fields["name"]
+            .Type.Should().Be(TableSchemaFieldType.String);
 
-            tabularDataResource
-                .Schema
-                .Fields["deliciousness"]
-                .Type.Should().Be(TableSchemaFieldType.Number);
+        tabularDataResource
+            .Schema
+            .Fields["deliciousness"]
+            .Type.Should().Be(TableSchemaFieldType.Number);
 
-            tabularDataResource
-                .Schema
-                .Fields["color"]
-                .Type.Should().Be(TableSchemaFieldType.String);
-        }
+        tabularDataResource
+            .Schema
+            .Fields["color"]
+            .Type.Should().Be(TableSchemaFieldType.String);
     }
 }

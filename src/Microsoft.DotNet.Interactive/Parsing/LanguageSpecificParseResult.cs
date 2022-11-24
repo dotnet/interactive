@@ -3,23 +3,22 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive.Parsing
-{
-    public class LanguageSpecificParseResult
-    {
-        public static LanguageSpecificParseResult None { get; } = new NoLanguageSpecificParseResult();
+namespace Microsoft.DotNet.Interactive.Parsing;
 
-        public virtual IEnumerable<Diagnostic> GetDiagnostics()
+public class LanguageSpecificParseResult
+{
+    public static LanguageSpecificParseResult None { get; } = new NoLanguageSpecificParseResult();
+
+    public virtual IEnumerable<Diagnostic> GetDiagnostics()
+    {
+        yield break;
+    }
+
+    private class NoLanguageSpecificParseResult : LanguageSpecificParseResult
+    {
+        public override IEnumerable<Diagnostic> GetDiagnostics()
         {
             yield break;
-        }
-
-        private class NoLanguageSpecificParseResult : LanguageSpecificParseResult
-        {
-            public override IEnumerable<Diagnostic> GetDiagnostics()
-            {
-                yield break;
-            }
         }
     }
 }

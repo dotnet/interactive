@@ -8,65 +8,64 @@ using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Html;
 using Pocket;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting;
+
+public class FormatContext : IDisposable
 {
-    public class FormatContext : IDisposable
+    private Dictionary<string, Action<FormatContext>> _requiredContent;
+
+    public FormatContext(TextWriter writer)
     {
-        private Dictionary<string, Action<FormatContext>> _requiredContent;
-
-        public FormatContext(TextWriter writer)
-        {
-            Writer = writer;
-        }
+        Writer = writer;
+    }
         
-        public int Depth { get; private set; }
+    public int Depth { get; private set; }
 
-        internal int Indent { get; set; }
+    internal int Indent { get; set; }
 
-        internal int TableDepth { get; private set; }
+    internal int TableDepth { get; private set; }
 
-        public TextWriter Writer { get; }
+    public TextWriter Writer { get; }
 
-        internal void RequireOnComplete(string id, IHtmlContent content)
+    internal void RequireOnComplete(string id, IHtmlContent content)
+    {
+        if (_requiredContent is null)
         {
-            if (_requiredContent is null)
-            {
-                _requiredContent = new();
-            }
-
-            if (!_requiredContent.ContainsKey(id))
-            {
-                _requiredContent.Add(id, WriteContent);
-            }
-
-            void WriteContent(FormatContext context) => content.WriteTo(context.Writer, HtmlEncoder.Default);
+            _requiredContent = new();
         }
 
-        internal IDisposable IncrementDepth()
+        if (!_requiredContent.ContainsKey(id))
         {
-            Depth++;
-            return Disposable.Create(() => Depth--);
+            _requiredContent.Add(id, WriteContent);
         }
 
-        internal IDisposable IncrementTableDepth()
-        {
-            TableDepth++;
-            return Disposable.Create(() => TableDepth--);
-        }
+        void WriteContent(FormatContext context) => content.WriteTo(context.Writer, HtmlEncoder.Default);
+    }
 
-        internal bool IsStartingObjectWithinSequence { get; set; }
+    internal IDisposable IncrementDepth()
+    {
+        Depth++;
+        return Disposable.Create(() => Depth--);
+    }
 
-        public void Dispose()
+    internal IDisposable IncrementTableDepth()
+    {
+        TableDepth++;
+        return Disposable.Create(() => TableDepth--);
+    }
+
+    internal bool IsStartingObjectWithinSequence { get; set; }
+
+    public void Dispose()
+    {
+        if (_requiredContent is not null)
         {
-            if (_requiredContent is not null)
+            foreach (var require in _requiredContent.Values)
             {
-                foreach (var require in _requiredContent.Values)
-                {
-                    require(this);
-                }
-
-                _requiredContent = null;
+                require(this);
             }
+
+            _requiredContent = null;
         }
     }
 }

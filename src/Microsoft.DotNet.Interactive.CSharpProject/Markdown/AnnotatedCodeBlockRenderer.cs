@@ -6,53 +6,52 @@ using Markdig.Renderers;
 using Markdig.Renderers.Html;
 using Markdig.Syntax;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown
+namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown;
+
+public class AnnotatedCodeBlockRenderer : CodeBlockRenderer
 {
-    public class AnnotatedCodeBlockRenderer : CodeBlockRenderer
+    public AnnotatedCodeBlockRenderer()
     {
-        public AnnotatedCodeBlockRenderer()
-        {
-            OutputAttributesOnPre = false;
-        }
+        OutputAttributesOnPre = false;
+    }
 
-        protected override void Write(
-            HtmlRenderer renderer,
-            CodeBlock codeBlock)
+    protected override void Write(
+        HtmlRenderer renderer,
+        CodeBlock codeBlock)
+    {
+        if (codeBlock is AnnotatedCodeBlock block)
         {
-            if (codeBlock is AnnotatedCodeBlock block)
+            block.EnsureInitialized();
+
+            if (block.Diagnostics.Any())
             {
-                block.EnsureInitialized();
 
-                if (block.Diagnostics.Any())
+                renderer.WriteLine(@"<div class=""notification is-danger"">");
+                renderer.WriteLine(SvgResources.ErrorSvg);
+
+                foreach (var diagnostic in block.Diagnostics)
                 {
-
-                    renderer.WriteLine(@"<div class=""notification is-danger"">");
-                    renderer.WriteLine(SvgResources.ErrorSvg);
-
-                    foreach (var diagnostic in block.Diagnostics)
-                    {
-                        renderer.WriteEscape("\t" + diagnostic);
-                        renderer.WriteLine();
-                    }
-
-                    renderer.WriteLine(@"</div>");
+                    renderer.WriteEscape("\t" + diagnostic);
+                    renderer.WriteLine();
                 }
-                else
-                {
-                    block.RenderTo(
-                        renderer,
-                        InlineControls,
-                        EnablePreviewFeatures);
-                }
+
+                renderer.WriteLine(@"</div>");
             }
             else
             {
-                base.Write(renderer, codeBlock);
+                block.RenderTo(
+                    renderer,
+                    InlineControls,
+                    EnablePreviewFeatures);
             }
         }
-
-        public bool EnablePreviewFeatures { get; set; }
-
-        public bool InlineControls { get; set; } = true;
+        else
+        {
+            base.Write(renderer, codeBlock);
+        }
     }
+
+    public bool EnablePreviewFeatures { get; set; }
+
+    public bool InlineControls { get; set; } = true;
 }

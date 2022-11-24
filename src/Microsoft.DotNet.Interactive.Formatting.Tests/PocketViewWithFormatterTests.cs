@@ -8,46 +8,45 @@ using Xunit;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 
-namespace Microsoft.DotNet.Interactive.Formatting.Tests
+namespace Microsoft.DotNet.Interactive.Formatting.Tests;
+
+public class PocketViewWithFormatterTests : FormatterTestBase
 {
-    public class PocketViewWithFormatterTests : FormatterTestBase
+    [Theory]
+    [InlineData("text/html")]
+    [InlineData("text/plain")]
+    public void Formatter_does_not_expand_properties_of_PocketView(string mimeType)
     {
-        [Theory]
-        [InlineData("text/html")]
-        [InlineData("text/plain")]
-        public void Formatter_does_not_expand_properties_of_PocketView(string mimeType)
-        {
-            PocketView view = b(123);
+        PocketView view = b(123);
 
-            view.ToDisplayString(mimeType)
-                .RemoveStyleElement()
-                .Should()
-                .Be($"<b>{PlainTextBegin}123{PlainTextEnd}</b>");
-        }
+        view.ToDisplayString(mimeType)
+            .RemoveStyleElement()
+            .Should()
+            .Be($"<b>{PlainTextBegin}123{PlainTextEnd}</b>");
+    }
 
-        [Fact]
-        public void Embedded_objects_are_formatted_using_custom_html_formatter_and_encoded()
-        {
-            var date = DateTime.Parse("1/1/2019 12:30pm");
+    [Fact]
+    public void Embedded_objects_are_formatted_using_custom_html_formatter_and_encoded()
+    {
+        var date = DateTime.Parse("1/1/2019 12:30pm");
 
-            Formatter.Register<DateTime>(_ => "&lt;hello&gt;", mimeType: HtmlFormatter.MimeType);
+        Formatter.Register<DateTime>(_ => "&lt;hello&gt;", mimeType: HtmlFormatter.MimeType);
 
-            string output = div(date).ToString();
+        string output = div(date).ToString();
 
-            output.Should().Be("<div>&lt;hello&gt;</div>");
-        }
+        output.Should().Be("<div>&lt;hello&gt;</div>");
+    }
 
-        [Fact]
-        public void Embedded_objects_are_not_formatted_using_custom_plaintext_formatter_when_formating_as_html()
-        {
-            var date = DateTime.Parse("1/1/2019 12:30pm");
+    [Fact]
+    public void Embedded_objects_are_not_formatted_using_custom_plaintext_formatter_when_formating_as_html()
+    {
+        var date = DateTime.Parse("1/1/2019 12:30pm");
 
-            // This formatter is not used because there is a default HTML formatter available.
-            Formatter.Register<DateTime>(_ => "no no no", mimeType: PlainTextFormatter.MimeType);
+        // This formatter is not used because there is a default HTML formatter available.
+        Formatter.Register<DateTime>(_ => "no no no", mimeType: PlainTextFormatter.MimeType);
 
-            string output = div(date).ToString();
+        string output = div(date).ToString();
 
-            output.Should().Be($"<div><span>{date:u}</span></div>");
-        }
+        output.Should().Be($"<div><span>{date:u}</span></div>");
     }
 }

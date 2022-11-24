@@ -10,108 +10,107 @@ using Microsoft.DotNet.Interactive.CSharpProject.Models;
 using Microsoft.DotNet.Interactive.Events;
 using RoslynCompletionItem = Microsoft.CodeAnalysis.Completion.CompletionItem;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.LanguageServices
+namespace Microsoft.DotNet.Interactive.CSharpProject.LanguageServices;
+
+public static class CompletionExtensions
 {
-    public static class CompletionExtensions
+    private static readonly string SymbolCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.SymbolCompletionProvider";
+    private static readonly string Provider = nameof(Provider);
+    private static readonly string SymbolName = nameof(SymbolName);
+    private static readonly string Symbols = nameof(Symbols);
+    private static readonly string GetSymbolsAsync = nameof(GetSymbolsAsync);
+    private static readonly PropertyInfo providerNameAccessor = typeof(RoslynCompletionItem).GetProperty("ProviderName", BindingFlags.NonPublic | BindingFlags.Instance);
+
+    private static readonly ImmutableArray<string> KindTags = ImmutableArray.Create(
+        WellKnownTags.Class,
+        WellKnownTags.Constant,
+        WellKnownTags.Delegate,
+        WellKnownTags.Enum,
+        WellKnownTags.EnumMember,
+        WellKnownTags.Event,
+        WellKnownTags.ExtensionMethod,
+        WellKnownTags.Field,
+        WellKnownTags.Interface,
+        WellKnownTags.Intrinsic,
+        WellKnownTags.Keyword,
+        WellKnownTags.Label,
+        WellKnownTags.Local,
+        WellKnownTags.Method,
+        WellKnownTags.Module,
+        WellKnownTags.Namespace,
+        WellKnownTags.Operator,
+        WellKnownTags.Parameter,
+        WellKnownTags.Property,
+        WellKnownTags.RangeVariable,
+        WellKnownTags.Reference,
+        WellKnownTags.Structure,
+        WellKnownTags.TypeParameter);
+
+    public static string GetKind(this RoslynCompletionItem completionItem)
     {
-        private static readonly string SymbolCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.SymbolCompletionProvider";
-        private static readonly string Provider = nameof(Provider);
-        private static readonly string SymbolName = nameof(SymbolName);
-        private static readonly string Symbols = nameof(Symbols);
-        private static readonly string GetSymbolsAsync = nameof(GetSymbolsAsync);
-        private static readonly PropertyInfo providerNameAccessor = typeof(RoslynCompletionItem).GetProperty("ProviderName", BindingFlags.NonPublic | BindingFlags.Instance);
-
-        private static readonly ImmutableArray<string> KindTags = ImmutableArray.Create(
-            WellKnownTags.Class,
-            WellKnownTags.Constant,
-            WellKnownTags.Delegate,
-            WellKnownTags.Enum,
-            WellKnownTags.EnumMember,
-            WellKnownTags.Event,
-            WellKnownTags.ExtensionMethod,
-            WellKnownTags.Field,
-            WellKnownTags.Interface,
-            WellKnownTags.Intrinsic,
-            WellKnownTags.Keyword,
-            WellKnownTags.Label,
-            WellKnownTags.Local,
-            WellKnownTags.Method,
-            WellKnownTags.Module,
-            WellKnownTags.Namespace,
-            WellKnownTags.Operator,
-            WellKnownTags.Parameter,
-            WellKnownTags.Property,
-            WellKnownTags.RangeVariable,
-            WellKnownTags.Reference,
-            WellKnownTags.Structure,
-            WellKnownTags.TypeParameter);
-
-        public static string GetKind(this RoslynCompletionItem completionItem)
+        foreach (var tag in KindTags)
         {
-            foreach (var tag in KindTags)
+            if (completionItem.Tags.Contains(tag))
             {
-                if (completionItem.Tags.Contains(tag))
-                {
-                    return tag;
-                }
+                return tag;
             }
-
-            return null;
         }
 
-        public static CompletionItem ToModel(
-            this RoslynCompletionItem item, 
-            Dictionary<(string, int), ISymbol> recommendedSymbols,
-            Document document)
-        {
-            var documentation =  GetDocumentation(item, recommendedSymbols, document);
+        return null;
+    }
 
-            return new CompletionItem(
-                displayText: item.DisplayText,
-                kind: item.GetKind(),
-                filterText: item.FilterText,
-                sortText: item.SortText,
-                insertText: item.FilterText,
-                documentation: documentation?.Value);
-        }
+    public static CompletionItem ToModel(
+        this RoslynCompletionItem item, 
+        Dictionary<(string, int), ISymbol> recommendedSymbols,
+        Document document)
+    {
+        var documentation =  GetDocumentation(item, recommendedSymbols, document);
 
-        public static FormattedValue GetDocumentation(
-            this RoslynCompletionItem item,
-            Dictionary<(string, int), ISymbol> recommendedSymbols,
-            Document document)
-        {
-            var symbol = GetCompletionSymbolAsync(item, recommendedSymbols, document);
+        return new CompletionItem(
+            displayText: item.DisplayText,
+            kind: item.GetKind(),
+            filterText: item.FilterText,
+            sortText: item.SortText,
+            insertText: item.FilterText,
+            documentation: documentation?.Value);
+    }
+
+    public static FormattedValue GetDocumentation(
+        this RoslynCompletionItem item,
+        Dictionary<(string, int), ISymbol> recommendedSymbols,
+        Document document)
+    {
+        var symbol = GetCompletionSymbolAsync(item, recommendedSymbols, document);
             
-            if (symbol is { })
-            {
-                return DocumentationConverter.GetDocumentation(symbol, "\n");
-            }
-
-            return null;
-        }
-
-        public static  ISymbol GetCompletionSymbolAsync(
-            RoslynCompletionItem completionItem, 
-            Dictionary<(string, int), ISymbol> recommendedSymbols,
-            Document document)
+        if (symbol is { })
         {
-            var provider = GetProviderName(completionItem);
-            if (provider == SymbolCompletionProvider)
-            {
-                var properties = completionItem.Properties;
-                if (recommendedSymbols.TryGetValue((properties[SymbolName], int.Parse(properties[nameof(SymbolKind)])), out var symbol))
-                {
-                    // We were able to match this SymbolCompletionProvider item with a recommended symbol
-                    return symbol;
-                }
-            }
-
-            return null;
+            return DocumentationConverter.GetDocumentation(symbol, "\n");
         }
 
-        private static string GetProviderName(RoslynCompletionItem item)
+        return null;
+    }
+
+    public static  ISymbol GetCompletionSymbolAsync(
+        RoslynCompletionItem completionItem, 
+        Dictionary<(string, int), ISymbol> recommendedSymbols,
+        Document document)
+    {
+        var provider = GetProviderName(completionItem);
+        if (provider == SymbolCompletionProvider)
         {
-            return (string)providerNameAccessor.GetValue(item);
+            var properties = completionItem.Properties;
+            if (recommendedSymbols.TryGetValue((properties[SymbolName], int.Parse(properties[nameof(SymbolKind)])), out var symbol))
+            {
+                // We were able to match this SymbolCompletionProvider item with a recommended symbol
+                return symbol;
+            }
         }
+
+        return null;
+    }
+
+    private static string GetProviderName(RoslynCompletionItem item)
+    {
+        return (string)providerNameAccessor.GetValue(item);
     }
 }

@@ -1,8 +1,7 @@
-﻿namespace Microsoft.DotNet.Interactive.Events
+﻿namespace Microsoft.DotNet.Interactive.Events;
+
+public enum InsertTextFormat
 {
-    public enum InsertTextFormat
-    {
-        PlainText = 1,
-        Snippet = 2,
-    }
+    PlainText = 1,
+    Snippet = 2,
 }

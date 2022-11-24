@@ -3,73 +3,72 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+public class LinePosition : IEquatable<LinePosition>
 {
-    public class LinePosition : IEquatable<LinePosition>
+    public int Line { get; }
+    public int Character { get; }
+
+    public LinePosition(int line, int character)
     {
-        public int Line { get; }
-        public int Character { get; }
+        Line = line;
+        Character = character;
+    }
 
-        public LinePosition(int line, int character)
+    public CodeAnalysis.Text.LinePosition ToCodeAnalysisLinePosition()
+    {
+        return new CodeAnalysis.Text.LinePosition(Line, Character);
+    }
+
+    public LinePosition SubtractLineOffset(LinePosition offset)
+    {
+        return new LinePosition(Line - offset.Line, Character);
+    }
+
+    public override bool Equals(object obj)
+    {
+        return Equals(obj as LinePosition);
+    }
+
+    public bool Equals(LinePosition other)
+    {
+        return other is { } && this == other;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Line, Character);
+    }
+
+    public override string ToString()
+    {
+        return $"{nameof(LinePosition)}: {{{Line}, {Character}}})";
+    }
+
+    public static bool operator ==(LinePosition a, LinePosition b)
+    {
+        if (a is null && b is null)
         {
-            Line = line;
-            Character = character;
+            return true;
         }
 
-        public CodeAnalysis.Text.LinePosition ToCodeAnalysisLinePosition()
+        if (a is null || b is null)
         {
-            return new CodeAnalysis.Text.LinePosition(Line, Character);
+            return false;
         }
 
-        public LinePosition SubtractLineOffset(LinePosition offset)
-        {
-            return new LinePosition(Line - offset.Line, Character);
-        }
+        return a.Line == b.Line
+               && a.Character == b.Character;
+    }
 
-        public override bool Equals(object obj)
-        {
-            return Equals(obj as LinePosition);
-        }
+    public static bool operator !=(LinePosition a, LinePosition b)
+    {
+        return !(a == b);
+    }
 
-        public bool Equals(LinePosition other)
-        {
-            return other is { } && this == other;
-        }
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Line, Character);
-        }
-
-        public override string ToString()
-        {
-            return $"{nameof(LinePosition)}: {{{Line}, {Character}}})";
-        }
-
-        public static bool operator ==(LinePosition a, LinePosition b)
-        {
-            if (a is null && b is null)
-            {
-                return true;
-            }
-
-            if (a is null || b is null)
-            {
-                return false;
-            }
-
-            return a.Line == b.Line
-                && a.Character == b.Character;
-        }
-
-        public static bool operator !=(LinePosition a, LinePosition b)
-        {
-            return !(a == b);
-        }
-
-        public static LinePosition FromCodeAnalysisLinePosition(CodeAnalysis.Text.LinePosition linePosition)
-        {
-            return new LinePosition(linePosition.Line, linePosition.Character);
-        }
+    public static LinePosition FromCodeAnalysisLinePosition(CodeAnalysis.Text.LinePosition linePosition)
+    {
+        return new LinePosition(linePosition.Line, linePosition.Character);
     }
 }

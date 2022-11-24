@@ -4,40 +4,39 @@
 using System;
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
+namespace Microsoft.DotNet.Interactive.Jupyter.Protocol;
+
+[JupyterMessageType(JupyterMessageContentTypes.Stream)]
+public class Stream : PubSubMessage
 {
-    [JupyterMessageType(JupyterMessageContentTypes.Stream)]
-    public class Stream : PubSubMessage
+    [JsonIgnore]
+    public static string StandardError { get; } = "stderr";
+
+    [JsonIgnore]
+    public static string StandardOutput { get; } = "stdout";
+
+    [JsonPropertyName("name")]
+    public string Name { get; }
+    [JsonPropertyName("text")]
+    public string Text { get; }
+
+    public Stream(string name, string text)
     {
-        [JsonIgnore]
-        public static string StandardError { get; } = "stderr";
-
-        [JsonIgnore]
-        public static string StandardOutput { get; } = "stdout";
-
-        [JsonPropertyName("name")]
-        public string Name { get; }
-        [JsonPropertyName("text")]
-        public string Text { get; }
-
-        public Stream(string name, string text)
+        if (string.IsNullOrWhiteSpace(name))
         {
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
-            }
-            Name = name;
-            Text = text;
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
         }
+        Name = name;
+        Text = text;
+    }
 
-        public static Stream StdErr(string text)
-        {
-            return new Stream(StandardError, text);
-        }
+    public static Stream StdErr(string text)
+    {
+        return new Stream(StandardError, text);
+    }
 
-        public static Stream StdOut(string text)
-        {
-            return new Stream(StandardOutput, text);
-        }
+    public static Stream StdOut(string text)
+    {
+        return new Stream(StandardOutput, text);
     }
 }

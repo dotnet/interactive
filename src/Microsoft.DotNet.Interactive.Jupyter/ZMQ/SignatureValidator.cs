@@ -8,46 +8,45 @@ using System.Text;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using Recipes;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
+namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ;
+
+public class SignatureValidator
 {
-    public class SignatureValidator
+    private readonly HMAC _signatureGenerator;
+    private readonly Encoding _encoder;
+
+    public SignatureValidator(string key, string algorithm)
     {
-        private readonly HMAC _signatureGenerator;
-        private readonly Encoding _encoder;
+        _encoder = new UTF8Encoding();
+        _signatureGenerator = (HMAC)CryptoConfig.CreateFromName(algorithm);
+        _signatureGenerator.Key = _encoder.GetBytes(key);
+    }
 
-        public SignatureValidator(string key, string algorithm)
+    public string CreateSignature(Message message)
+    {
+        var messages = GetMessagesToAddForDigest(message);
+
+        // For all items update the signature
+        foreach (var item in messages)
         {
-            _encoder = new UTF8Encoding();
-            _signatureGenerator = (HMAC)CryptoConfig.CreateFromName(algorithm);
-            _signatureGenerator.Key = _encoder.GetBytes(key);
+            var sourceBytes = _encoder.GetBytes(item);
+            _signatureGenerator.TransformBlock(sourceBytes, 0, sourceBytes.Length, null, 0);
         }
 
-        public string CreateSignature(Message message)
-        {
-            var messages = GetMessagesToAddForDigest(message);
+        _signatureGenerator.TransformFinalBlock(new byte[0], 0, 0);
 
-            // For all items update the signature
-            foreach (var item in messages)
-            {
-                var sourceBytes = _encoder.GetBytes(item);
-                _signatureGenerator.TransformBlock(sourceBytes, 0, sourceBytes.Length, null, 0);
-            }
+        // Calculate the digest and remove -
+        return BitConverter.ToString(_signatureGenerator.Hash).Replace("-", "").ToLower();
+    }
 
-            _signatureGenerator.TransformFinalBlock(new byte[0], 0, 0);
-
-            // Calculate the digest and remove -
-            return BitConverter.ToString(_signatureGenerator.Hash).Replace("-", "").ToLower();
-        }
-
-        /*
-         * The signature should match exactly the packed contents that are sent 
-         */
-        private static IEnumerable<string> GetMessagesToAddForDigest(Message message)
-        {
-            yield return message.Header.ToJson();
-            yield return (message.ParentHeader ?? new object()).ToJson();
-            yield return (message.MetaData ?? new object()).ToJson();
-            yield return message.Content.ToJson();
-        }
+    /*
+     * The signature should match exactly the packed contents that are sent 
+     */
+    private static IEnumerable<string> GetMessagesToAddForDigest(Message message)
+    {
+        yield return message.Header.ToJson();
+        yield return (message.ParentHeader ?? new object()).ToJson();
+        yield return (message.MetaData ?? new object()).ToJson();
+        yield return message.Content.ToJson();
     }
 }

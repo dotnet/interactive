@@ -2,12 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
+namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
+
+public static class SourceCodeProvider
 {
-    public static class SourceCodeProvider
-    {
-        public static string ConsoleProgramCollidingRegions =>
-            @"using System;
+    public static string ConsoleProgramCollidingRegions =>
+        @"using System;
 
 namespace ConsoleProgramSingleRegion
 {
@@ -26,8 +26,8 @@ namespace ConsoleProgramSingleRegion
     }
 }".EnforceLF();
 
-        public static string ConsoleProgramMultipleRegions =>
-            @"using System;
+    public static string ConsoleProgramMultipleRegions =>
+        @"using System;
 
 namespace ConsoleProgramSingleRegion
 {
@@ -48,8 +48,8 @@ namespace ConsoleProgramSingleRegion
     }
 }".EnforceLF();
 
-        public static string ConsoleProgramSingleRegion =>
-            @"using System;
+    public static string ConsoleProgramSingleRegion =>
+        @"using System;
 
 namespace ConsoleProgramSingleRegion
 {
@@ -64,7 +64,7 @@ namespace ConsoleProgramSingleRegion
     }
 }".EnforceLF();
 
-        public static string ConsoleProgramNoRegion => @"using System;
+    public static string ConsoleProgramNoRegion => @"using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -79,7 +79,7 @@ namespace ConsoleProgramSingleRegion
     }
 }".EnforceLF();
 
-        public static string CodeWithNoRegions => @"
+    public static string CodeWithNoRegions => @"
 using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -103,7 +103,7 @@ namespace jsonDotNetExperiment
     }
 }";
       
-        public static string CodeWithTwoRegions => @"
+    public static string CodeWithTwoRegions => @"
 using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -131,7 +131,7 @@ namespace jsonDotNetExperiment
     }
 }";
       
-        public static string GistWithRegion => @"using System;
+    public static string GistWithRegion => @"using System;
 using NodaTime;
 
 namespace TryNodaTime
@@ -170,8 +170,8 @@ namespace TryNodaTime
     }
 }";
 
-        public static string ConsoleProgramSingleRegionExtraUsing =>
-            @"using System;
+    public static string ConsoleProgramSingleRegionExtraUsing =>
+        @"using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -187,5 +187,4 @@ namespace ConsoleProgramSingleRegion
         }
     }
 }".EnforceLF();
-    }
 }

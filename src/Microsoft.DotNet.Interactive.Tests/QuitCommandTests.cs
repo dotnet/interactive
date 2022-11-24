@@ -11,56 +11,55 @@ using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Microsoft.DotNet.Interactive.Tests
+namespace Microsoft.DotNet.Interactive.Tests;
+
+public class QuitCommandTests : LanguageKernelTestBase
 {
-    public class QuitCommandTests : LanguageKernelTestBase
+    public QuitCommandTests(ITestOutputHelper output) : base(output)
     {
-        public QuitCommandTests(ITestOutputHelper output) : base(output)
+    }
+
+    [Fact]
+    public async Task quit_command_fails_when_not_configured()
+    {
+        var kernel = CreateKernel();
+
+        var quit = new Quit();
+
+        await kernel.SendAsync(quit);
+
+        using var _ = new AssertionScope();
+
+        KernelEvents
+            .Should().ContainSingle<CommandFailed>()
+            .Which
+            .Command
+            .Should()
+            .Be(quit);
+
+        KernelEvents
+            .Should().ContainSingle<CommandFailed>()
+            .Which
+            .Exception
+            .Should()
+            .BeOfType<InvalidOperationException>();
+    }
+
+    [Fact]
+    public async Task Quit_command_bypasses_work_in_progress()
+    {
+        var quitRan = false;
+
+        var kernel = CreateKernel().UseQuitCommand(() =>
         {
-        }
+            quitRan = true;
+            return Task.CompletedTask;
+        });
 
-        [Fact]
-        public async Task quit_command_fails_when_not_configured()
-        {
-            var kernel = CreateKernel();
+        var workInProgress = kernel.SendAsync(new CancelCommandTests.CancellableCommand());
 
-            var quit = new Quit();
+        await kernel.SendAsync(new Quit());
 
-            await kernel.SendAsync(quit);
-
-            using var _ = new AssertionScope();
-
-            KernelEvents
-                .Should().ContainSingle<CommandFailed>()
-                .Which
-                .Command
-                .Should()
-                .Be(quit);
-
-            KernelEvents
-                .Should().ContainSingle<CommandFailed>()
-                .Which
-                .Exception
-                .Should()
-                .BeOfType<InvalidOperationException>();
-        }
-
-        [Fact]
-        public async Task Quit_command_bypasses_work_in_progress()
-        {
-            var quitRan = false;
-
-            var kernel = CreateKernel().UseQuitCommand(() =>
-            {
-                quitRan = true;
-                return Task.CompletedTask;
-            });
-
-            var workInProgress = kernel.SendAsync(new CancelCommandTests.CancellableCommand());
-
-            await kernel.SendAsync(new Quit());
-
-            quitRan.Should().BeTrue();
-        }
+        quitRan.Should().BeTrue();
     }
 }

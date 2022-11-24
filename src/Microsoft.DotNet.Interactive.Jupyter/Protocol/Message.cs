@@ -9,106 +9,105 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
+namespace Microsoft.DotNet.Interactive.Jupyter.Protocol;
+
+public abstract class Message
 {
-    public abstract class Message
+    private static readonly IReadOnlyDictionary<string, Type> _messageTypeToClrType;
+    private static readonly IReadOnlyDictionary<Type, string> _clrTypeToMessageType;
+
+    private string _messageType;
+
+    static Message()
     {
-        private static readonly IReadOnlyDictionary<string, Type> _messageTypeToClrType;
-        private static readonly IReadOnlyDictionary<Type, string> _clrTypeToMessageType;
+        var messageImplementations = typeof(Message).Assembly.GetExportedTypes().Where(t =>
+            t.IsAbstract == false && typeof(Message).IsAssignableFrom(t)).ToList();
 
-        private string _messageType;
-
-        static Message()
+        var messageTypeToClrType = new Dictionary<string, Type>();
+        var clrTypeToMessageType = new Dictionary<Type, string>();
+        foreach (var messageImplementation in messageImplementations)
         {
-            var messageImplementations = typeof(Message).Assembly.GetExportedTypes().Where(t =>
-                t.IsAbstract == false && typeof(Message).IsAssignableFrom(t)).ToList();
-
-            var messageTypeToClrType = new Dictionary<string, Type>();
-            var clrTypeToMessageType = new Dictionary<Type, string>();
-            foreach (var messageImplementation in messageImplementations)
+            var messageType = messageImplementation.GetCustomAttribute<JupyterMessageTypeAttribute>(true);
+            if (messageType is not null)
             {
-                var messageType = messageImplementation.GetCustomAttribute<JupyterMessageTypeAttribute>(true);
-                if (messageType is not null)
-                {
-                    messageTypeToClrType[messageType.Type] = messageImplementation;
-                    clrTypeToMessageType[messageImplementation] = messageType.Type;
-                }
+                messageTypeToClrType[messageType.Type] = messageImplementation;
+                clrTypeToMessageType[messageImplementation] = messageType.Type;
             }
-
-            _messageTypeToClrType = messageTypeToClrType;
-            _clrTypeToMessageType = clrTypeToMessageType;
         }
 
-        [JsonIgnore]
-        public string MessageType => _messageType ?? (_messageType  = _clrTypeToMessageType[GetType()]);
+        _messageTypeToClrType = messageTypeToClrType;
+        _clrTypeToMessageType = clrTypeToMessageType;
+    }
 
-        public static Message FromJsonString(string jsonString, string messageType)
+    [JsonIgnore]
+    public string MessageType => _messageType ?? (_messageType  = _clrTypeToMessageType[GetType()]);
+
+    public static Message FromJsonString(string jsonString, string messageType)
+    {
+        if (string.IsNullOrWhiteSpace(jsonString))
         {
-            if (string.IsNullOrWhiteSpace(jsonString))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(jsonString));
-            }
-
-            if (string.IsNullOrWhiteSpace(messageType))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(messageType));
-            }
-
-            if (!_messageTypeToClrType.ContainsKey(messageType))
-            {
-                throw new ArgumentOutOfRangeException(nameof(jsonString), $"Message type {messageType} is not supported.");
-            }
-
-            return TryFromJsonString(jsonString,messageType);
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(jsonString));
         }
 
-        public static Message TryFromJsonString(string jsonString, string messageType)
+        if (string.IsNullOrWhiteSpace(messageType))
         {
-            if (string.IsNullOrWhiteSpace(jsonString))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(jsonString));
-            }
-
-            if (string.IsNullOrWhiteSpace(messageType))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(messageType));
-            }
-
-            if (_messageTypeToClrType.TryGetValue(messageType, out var supportedType))
-            {
-                return JsonSerializer.Deserialize(jsonString, supportedType) as Message;
-            }
-
-            return Empty;
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(messageType));
         }
 
-
-        public static Message Empty { get; } = new EmptyMessage();
-
-        public static string GetMessageType(Message source)
+        if (!_messageTypeToClrType.ContainsKey(messageType))
         {
-            if (source is null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
-
-            return GetMessageType(source.GetType());
+            throw new ArgumentOutOfRangeException(nameof(jsonString), $"Message type {messageType} is not supported.");
         }
 
-        public static string GetMessageType(Type type)
-        {
-            if (type is null)
-            {
-                throw new ArgumentNullException(nameof(type));
-            }
-            var attribute = type.GetCustomAttribute<JupyterMessageTypeAttribute>() ?? throw new InvalidOperationException($"{type.Name} is not annotated with JupyterMessageTypeAttribute");
+        return TryFromJsonString(jsonString,messageType);
+    }
 
-            return attribute.Type;
+    public static Message TryFromJsonString(string jsonString, string messageType)
+    {
+        if (string.IsNullOrWhiteSpace(jsonString))
+        {
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(jsonString));
         }
 
-        private class EmptyMessage : Message
+        if (string.IsNullOrWhiteSpace(messageType))
         {
-
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(messageType));
         }
+
+        if (_messageTypeToClrType.TryGetValue(messageType, out var supportedType))
+        {
+            return JsonSerializer.Deserialize(jsonString, supportedType) as Message;
+        }
+
+        return Empty;
+    }
+
+
+    public static Message Empty { get; } = new EmptyMessage();
+
+    public static string GetMessageType(Message source)
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        return GetMessageType(source.GetType());
+    }
+
+    public static string GetMessageType(Type type)
+    {
+        if (type is null)
+        {
+            throw new ArgumentNullException(nameof(type));
+        }
+        var attribute = type.GetCustomAttribute<JupyterMessageTypeAttribute>() ?? throw new InvalidOperationException($"{type.Name} is not annotated with JupyterMessageTypeAttribute");
+
+        return attribute.Type;
+    }
+
+    private class EmptyMessage : Message
+    {
+
     }
 }

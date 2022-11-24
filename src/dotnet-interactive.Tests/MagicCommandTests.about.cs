@@ -9,39 +9,38 @@ using Xunit;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
 
-namespace Microsoft.DotNet.Interactive.App.Tests
+namespace Microsoft.DotNet.Interactive.App.Tests;
+
+public class MagicCommandTests
 {
-    public class MagicCommandTests
+    [Collection("Do not parallelize")]
+    public class About
     {
-        [Collection("Do not parallelize")]
-        public class About
+        [Fact]
+        public async Task it_shows_the_product_name_and_version_information()
         {
-            [Fact]
-            public async Task it_shows_the_product_name_and_version_information()
-            {
-                using var kernel = new CompositeKernel()
-                    .UseAboutMagicCommand();
+            using var kernel = new CompositeKernel()
+                .UseAboutMagicCommand();
 
-                using var events = kernel.KernelEvents.ToSubscribedList();
+            using var events = kernel.KernelEvents.ToSubscribedList();
 
-                await kernel.SubmitCodeAsync("#!about");
+            await kernel.SubmitCodeAsync("#!about");
 
-                events.Should()
-                      .ContainSingle<DisplayedValueProduced>()
-                      .Which
-                      .FormattedValues
-                      .Should()
-                      .ContainSingle(v => v.MimeType == "text/html")
-                      .Which
-                      .Value
-                      .As<string>()
-                      .Should()
-                      .ContainAll(
-                          ".NET Interactive",
-                          "Version",
-                          "Library version",
-                          "https://github.com/dotnet/interactive");
-            }
+            events.Should()
+                .ContainSingle<DisplayedValueProduced>()
+                .Which
+                .FormattedValues
+                .Should()
+                .ContainSingle(v => v.MimeType == "text/html")
+                .Which
+                .Value
+                .As<string>()
+                .Should()
+                .ContainAll(
+                    ".NET Interactive",
+                    "Version",
+                    "Library version",
+                    "https://github.com/dotnet/interactive");
         }
     }
 }

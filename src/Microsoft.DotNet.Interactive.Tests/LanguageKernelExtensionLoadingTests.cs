@@ -11,122 +11,121 @@ using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Microsoft.DotNet.Interactive.Tests
+namespace Microsoft.DotNet.Interactive.Tests;
+
+public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
 {
-    public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
+
+    public LanguageKernelExtensionLoadingTests(ITestOutputHelper output) : base(output)
+    {
+    }
+
+    [Theory]
+    [InlineData(Language.CSharp)]
+    [InlineData(Language.FSharp)]
+    public async Task It_loads_extensions_in_specified_directory_via_a_command(Language language)
+    {
+        var projectDir = DirectoryUtility.CreateDirectory();
+
+        var dllDir = projectDir.CreateSubdirectory("extension");
+
+        var code = language switch
+        {
+            Language.CSharp => $@"await kernel.SendAsync(new SubmitCode(""display(\""{language} extension installed\"");""));",
+            Language.FSharp => $@"await kernel.SendAsync(new SubmitCode(""display(\""{language} extension installed\"");""));",
+            _ => throw new NotSupportedException("This test does not support the specified language.")
+        };
+
+        await KernelExtensionTestHelper.CreateExtensionAssembly(
+            projectDir,
+            code,
+            dllDir);
+
+        var kernel = CreateKernel(language);
+
+        using var context = KernelInvocationContext.Establish(new SubmitCode(""));
+
+        using var events = context.KernelEvents.ToSubscribedList();
+
+        await kernel.LoadExtensionsFromDirectoryAsync(
+            dllDir,
+            context);
+
+        events.Should()
+            .NotContain(e => e is CommandFailed)
+            .And
+            .ContainSingle<DisplayedValueProduced>(v => v.FormattedValues.Single().Value == $"{language} extension installed");
+    }
+
+    [Theory]
+    [InlineData(Language.CSharp)]
+    [InlineData(Language.FSharp)]
+    public async Task It_throws_when_extension_throws_during_load(Language language)
+    {
+        var projectDir = DirectoryUtility.CreateDirectory();
+
+        var dllDir = projectDir.CreateSubdirectory("extension");
+
+        await KernelExtensionTestHelper.CreateExtensionAssembly(
+            projectDir,
+            "throw new Exception();",
+            dllDir);
+
+        var kernel = CreateKernel(language);
+        using var context = KernelInvocationContext.Establish(new SubmitCode(""));
+
+        using var events = context.KernelEvents.ToSubscribedList();
+
+        await kernel.LoadExtensionsFromDirectoryAsync(
+            dllDir,
+            context);
+
+        events.Should()
+            .ContainSingle<CommandFailed>(cf => cf.Exception is KernelExtensionLoadException);
+    }
+
+    [Theory]
+    [InlineData(Language.CSharp)]
+    [InlineData(Language.FSharp)]
+    public async Task It_loads_extensions_found_in_nuget_packages(Language language)
     {
 
-        public LanguageKernelExtensionLoadingTests(ITestOutputHelper output) : base(output)
-        {
-        }
+        var extensionPackage = await KernelExtensionTestHelper.GetSimpleExtensionAsync();
 
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        public async Task It_loads_extensions_in_specified_directory_via_a_command(Language language)
-        {
-            var projectDir = DirectoryUtility.CreateDirectory();
+        var kernel = CreateKernel(language);
 
-            var dllDir = projectDir.CreateSubdirectory("extension");
-
-            var code = language switch
-            {
-                Language.CSharp => $@"await kernel.SendAsync(new SubmitCode(""display(\""{language} extension installed\"");""));",
-                Language.FSharp => $@"await kernel.SendAsync(new SubmitCode(""display(\""{language} extension installed\"");""));",
-                _ => throw new NotSupportedException("This test does not support the specified language.")
-            };
-
-            await KernelExtensionTestHelper.CreateExtensionAssembly(
-                projectDir,
-                code,
-                dllDir);
-
-            var kernel = CreateKernel(language);
-
-            using var context = KernelInvocationContext.Establish(new SubmitCode(""));
-
-            using var events = context.KernelEvents.ToSubscribedList();
-
-            await kernel.LoadExtensionsFromDirectoryAsync(
-                dllDir,
-                context);
-
-            events.Should()
-                  .NotContain(e => e is CommandFailed)
-                  .And
-                  .ContainSingle<DisplayedValueProduced>(v => v.FormattedValues.Single().Value == $"{language} extension installed");
-        }
-
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        public async Task It_throws_when_extension_throws_during_load(Language language)
-        {
-            var projectDir = DirectoryUtility.CreateDirectory();
-
-            var dllDir = projectDir.CreateSubdirectory("extension");
-
-            await KernelExtensionTestHelper.CreateExtensionAssembly(
-                projectDir,
-                "throw new Exception();",
-                dllDir);
-
-            var kernel = CreateKernel(language);
-            using var context = KernelInvocationContext.Establish(new SubmitCode(""));
-
-            using var events = context.KernelEvents.ToSubscribedList();
-
-            await kernel.LoadExtensionsFromDirectoryAsync(
-                dllDir,
-                context);
-
-            events.Should()
-                  .ContainSingle<CommandFailed>(cf => cf.Exception is KernelExtensionLoadException);
-        }
-
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        public async Task It_loads_extensions_found_in_nuget_packages(Language language)
-        {
-
-            var extensionPackage = await KernelExtensionTestHelper.GetSimpleExtensionAsync();
-
-            var kernel = CreateKernel(language);
-
-            await kernel.SubmitCodeAsync($@"
+        await kernel.SubmitCodeAsync($@"
 #i ""nuget:{extensionPackage.PackageLocation}""
 #r ""nuget:{extensionPackage.Name},{extensionPackage.Version}""");
 
-            KernelEvents.Should()
-                        .ContainSingle<ReturnValueProduced>()
-                        .Which
-                        .Value
-                        .As<string>()
-                        .Should()
-                        .Contain("SimpleExtension");
-        }
+        KernelEvents.Should()
+            .ContainSingle<ReturnValueProduced>()
+            .Which
+            .Value
+            .As<string>()
+            .Should()
+            .Contain("SimpleExtension");
+    }
 
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        public async Task it_loads_script_extension_found_in_nuget_package(Language defaultLanguage)
-        {
-            var extensionPackage = await KernelExtensionTestHelper.GetScriptExtensionPackageAsync();
+    [Theory]
+    [InlineData(Language.CSharp)]
+    [InlineData(Language.FSharp)]
+    public async Task it_loads_script_extension_found_in_nuget_package(Language defaultLanguage)
+    {
+        var extensionPackage = await KernelExtensionTestHelper.GetScriptExtensionPackageAsync();
 
-            var kernel = CreateCompositeKernel(defaultLanguage);
+        var kernel = CreateCompositeKernel(defaultLanguage);
 
-            await kernel.SubmitCodeAsync($@"
+        await kernel.SubmitCodeAsync($@"
 #i ""nuget:{extensionPackage.PackageLocation}""
 #r ""nuget:{extensionPackage.Name},{extensionPackage.Version}""");
 
-            KernelEvents.Should()
-                        .ContainSingle<ReturnValueProduced>()
-                        .Which
-                        .Value
-                        .As<string>()
-                        .Should()
-                        .Contain("ScriptExtension");
-        }
+        KernelEvents.Should()
+            .ContainSingle<ReturnValueProduced>()
+            .Which
+            .Value
+            .As<string>()
+            .Should()
+            .Contain("ScriptExtension");
     }
 }

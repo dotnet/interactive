@@ -5,33 +5,32 @@ using System;
 
 using Microsoft.DotNet.Interactive.Parsing;
 
-namespace Microsoft.DotNet.Interactive.Commands
+namespace Microsoft.DotNet.Interactive.Commands;
+
+public class RequestDiagnostics : KernelCommand
 {
-    public class RequestDiagnostics : KernelCommand
+    public RequestDiagnostics(
+        string code,
+        string targetKernelName = null) : base(targetKernelName)
     {
-        public RequestDiagnostics(
-            string code,
-            string targetKernelName = null) : base(targetKernelName)
-        {
-            Code = code ?? throw new ArgumentNullException(nameof(code));
-        }
-
-        internal RequestDiagnostics(
-            LanguageNode languageNode,
-            KernelCommand parent = null)
-            : base(languageNode.KernelName, parent)
-        {
-            Code = languageNode.Text;
-            LanguageNode = languageNode;
-
-            if (languageNode is ActionDirectiveNode actionDirectiveNode)
-            {
-                TargetKernelName = actionDirectiveNode.ParentKernelName;
-            }
-        }
-
-        public string Code { get; }
-
-        internal LanguageNode LanguageNode { get; }
+        Code = code ?? throw new ArgumentNullException(nameof(code));
     }
+
+    internal RequestDiagnostics(
+        LanguageNode languageNode,
+        KernelCommand parent = null)
+        : base(languageNode.KernelName, parent)
+    {
+        Code = languageNode.Text;
+        LanguageNode = languageNode;
+
+        if (languageNode is ActionDirectiveNode actionDirectiveNode)
+        {
+            TargetKernelName = actionDirectiveNode.ParentKernelName;
+        }
+    }
+
+    public string Code { get; }
+
+    internal LanguageNode LanguageNode { get; }
 }

@@ -4,25 +4,24 @@
 
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
+namespace Microsoft.DotNet.Interactive.Jupyter.Protocol;
+
+[JupyterMessageType(JupyterMessageContentTypes.InspectRequest)]
+public class InspectRequest : RequestMessage
 {
-    [JupyterMessageType(JupyterMessageContentTypes.InspectRequest)]
-    public class InspectRequest : RequestMessage
+    [JsonPropertyName("code")]
+    public string Code { get; }
+
+    [JsonPropertyName("cursor_pos")]
+    public int CursorPos { get; }
+
+    [JsonPropertyName("detail_level")]
+    public int DetailLevel { get; }
+
+    public InspectRequest(string code, int cursorPos, int detailLevel)
     {
-        [JsonPropertyName("code")]
-        public string Code { get; }
-
-        [JsonPropertyName("cursor_pos")]
-        public int CursorPos { get; }
-
-        [JsonPropertyName("detail_level")]
-        public int DetailLevel { get; }
-
-        public InspectRequest(string code, int cursorPos, int detailLevel)
-        {
-            Code = code;
-            CursorPos = cursorPos;
-            DetailLevel = detailLevel;
-        }
+        Code = code;
+        CursorPos = cursorPos;
+        DetailLevel = detailLevel;
     }
 }

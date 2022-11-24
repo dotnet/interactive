@@ -15,217 +15,215 @@ using Microsoft.DotNet.Interactive.Utility;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Microsoft.DotNet.Interactive.Tests
-{
+namespace Microsoft.DotNet.Interactive.Tests;
 #pragma warning disable xUnit1000
-    internal class CancelCommandTests : LanguageKernelTestBase
+internal class CancelCommandTests : LanguageKernelTestBase
+{
+    public CancelCommandTests(ITestOutputHelper output) : base(output)
     {
-        public CancelCommandTests(ITestOutputHelper output) : base(output)
-        {
-        }
+    }
 
-        [Fact]
-        public async Task cancel_issues_CommandSucceeded()
+    [Fact]
+    public async Task cancel_issues_CommandSucceeded()
+    {
+        using var kernel = CreateKernel()
+            .LogCommandsToPocketLogger()
+            .LogEventsToPocketLogger();
+
+        var cancelCommand = new Cancel();
+
+        var commandToCancel = new SubmitCode(@"
+using Microsoft.DotNet.Interactive;
+
+while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested){ await Task.Delay(10); }", targetKernelName: "csharp");
+
+        var _ = kernel.SendAsync(commandToCancel);
+        await kernel.SendAsync(cancelCommand);
+
+        KernelEvents
+            .Should()
+            .ContainSingle<CommandSucceeded>(c => c.Command == cancelCommand);
+    }
+
+    [Fact]
+    public async Task new_commands_issued_after_cancel_are_executed()
+    {
+        // todo: this test is flaky and timeouts in CI
+        while (true)
         {
             using var kernel = CreateKernel()
                 .LogCommandsToPocketLogger()
                 .LogEventsToPocketLogger();
 
+            // make sure the deferred commands are flushed
+            await kernel.SubmitCodeAsync(" ");
+
+            var commandToCancel = new SubmitCode(@"
+using Microsoft.DotNet.Interactive;
+await Task.Delay(10);
+while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested){ await Task.Delay(10); }",
+                targetKernelName: "csharp");
+            var followingCommand = new SubmitCode("1");
+            try
+            {
+                var _ = kernel.SendAsync(commandToCancel);
+                await kernel.SendAsync(new Cancel()).Timeout(10.Seconds());
+
+                var result = await kernel.SendAsync(followingCommand).Timeout(10.Seconds());
+
+                result.KernelEvents
+                    .ToSubscribedList()
+                    .Should()
+                    .ContainSingle<CommandSucceeded>();
+                break;
+            }
+            catch (TimeoutException)
+            {
+            }
+        }
+    }
+
+    [Fact]
+    public async Task cancel_succeeds_when_there_is_command_in_progress_to_cancel()
+    {
+        using var kernel = CreateKernel();
+
+        var cancelCommand = new Cancel();
+
+        var results = await kernel.SendAsync(cancelCommand);
+
+        results.KernelEvents.ToSubscribedList()
+            .Should()
+            .ContainSingle<CommandSucceeded>(c => c.Command == cancelCommand);
+    }
+
+    [FactSkipWindows]
+    public async Task when_cancelling_command_it_reports_what_command_was_cancelled()
+    {
+        // todo: this test is flaky and timeouts in CI
+        while (true)
+        {
+            using var kernel = CreateKernel();
+
             var cancelCommand = new Cancel();
 
             var commandToCancel = new SubmitCode(@"
 using Microsoft.DotNet.Interactive;
+var cancellationToken = KernelInvocationContext.Current.CancellationToken;
+while(!cancellationToken.IsCancellationRequested){ 
+    await Task.Delay(10); 
+}", targetKernelName: "csharp");
 
-while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested){ await Task.Delay(10); }", targetKernelName: "csharp");
+            var resultForCommandToCancel = kernel.SendAsync(commandToCancel);
 
-            var _ = kernel.SendAsync(commandToCancel);
-            await kernel.SendAsync(cancelCommand);
+            var result = await kernel.SendAsync(cancelCommand);
 
-            KernelEvents
-                .Should()
-                .ContainSingle<CommandSucceeded>(c => c.Command == cancelCommand);
-        }
+            var cancellationEvents = result.KernelEvents.ToSubscribedList();
 
-        [Fact]
-        public async Task new_commands_issued_after_cancel_are_executed()
-        {
-            // todo: this test is flaky and timeouts in CI
-            while (true)
+            try
             {
-                using var kernel = CreateKernel()
-                    .LogCommandsToPocketLogger()
-                    .LogEventsToPocketLogger();
-
-                // make sure the deferred commands are flushed
-                await kernel.SubmitCodeAsync(" ");
-
-                var commandToCancel = new SubmitCode(@"
-using Microsoft.DotNet.Interactive;
-await Task.Delay(10);
-while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested){ await Task.Delay(10); }",
-                                                     targetKernelName: "csharp");
-                var followingCommand = new SubmitCode("1");
-                try
-                {
-                    var _ = kernel.SendAsync(commandToCancel);
-                    await kernel.SendAsync(new Cancel()).Timeout(10.Seconds());
-
-                    var result = await kernel.SendAsync(followingCommand).Timeout(10.Seconds());
-
-                    result.KernelEvents
-                          .ToSubscribedList()
-                          .Should()
-                          .ContainSingle<CommandSucceeded>();
-                    break;
-                }
-                catch (TimeoutException)
-                {
-                }
+                await resultForCommandToCancel.Timeout(10.Seconds());
+                cancellationEvents.Should()
+                    .ContainSingle<CommandCancelled>()
+                    .Which
+                    .CancelledCommand
+                    .Should()
+                    .Be(commandToCancel);
+                break;
+            }
+            catch (TimeoutException)
+            {
             }
         }
+    }
 
-        [Fact]
-        public async Task cancel_succeeds_when_there_is_command_in_progress_to_cancel()
+    [Fact]
+    public async Task can_cancel_user_loop_using_CancellationToken()
+    {
+        // todo: this test is flaky and timeouts in CI
+        while (true)
         {
             using var kernel = CreateKernel();
-
+                
             var cancelCommand = new Cancel();
 
-            var results = await kernel.SendAsync(cancelCommand);
-
-            results.KernelEvents.ToSubscribedList()
-                .Should()
-                .ContainSingle<CommandSucceeded>(c => c.Command == cancelCommand);
-        }
-
-        [FactSkipWindows]
-        public async Task when_cancelling_command_it_reports_what_command_was_cancelled()
-        {
-            // todo: this test is flaky and timeouts in CI
-            while (true)
-            {
-                using var kernel = CreateKernel();
-
-                var cancelCommand = new Cancel();
-
-                var commandToCancel = new SubmitCode(@"
+            var commandToCancel = new SubmitCode(@"
 using Microsoft.DotNet.Interactive;
 var cancellationToken = KernelInvocationContext.Current.CancellationToken;
 while(!cancellationToken.IsCancellationRequested){ 
     await Task.Delay(10); 
 }", targetKernelName: "csharp");
-
+            try
+            {
                 var resultForCommandToCancel = kernel.SendAsync(commandToCancel);
 
-                var result = await kernel.SendAsync(cancelCommand);
+                await Task.Delay(200);
 
-                var cancellationEvents = result.KernelEvents.ToSubscribedList();
+                await kernel.SendAsync(cancelCommand).Timeout(10.Seconds());
 
-                try
-                {
-                    await resultForCommandToCancel.Timeout(10.Seconds());
-                    cancellationEvents.Should()
-                        .ContainSingle<CommandCancelled>()
-                        .Which
-                        .CancelledCommand
-                        .Should()
-                        .Be(commandToCancel);
-                    break;
-                }
-                catch (TimeoutException)
-                {
-                }
+                var result = await resultForCommandToCancel.Timeout(10.Seconds());
+
+                var submitCodeEvents = result.KernelEvents.ToSubscribedList();
+
+                submitCodeEvents
+                    .Should()
+                    .ContainSingle<CommandFailed>()
+                    .Which
+                    .Command
+                    .Should()
+                    .Be(commandToCancel);
+                break;
+            }
+            catch (TimeoutException)
+            {
             }
         }
+    }
 
-        [Fact]
-        public async Task can_cancel_user_loop_using_CancellationToken()
+    [Fact]
+    public void user_code_can_react_to_cancel_command_using_KernelInvocationContext_cancellation_token()
+    {
+        using var kernel = CreateKernel();
+        var commandInProgress = new CancellableCommand();
+        var cancelSent = commandInProgress.Invoked.ContinueWith(async task =>
         {
-            // todo: this test is flaky and timeouts in CI
-            while (true)
-            {
-                using var kernel = CreateKernel();
-                
-                var cancelCommand = new Cancel();
+            // once the cancellable command is running, send a Cancel 
+            await kernel.SendAsync(new Cancel());
+        });
 
-                var commandToCancel = new SubmitCode(@"
-using Microsoft.DotNet.Interactive;
-var cancellationToken = KernelInvocationContext.Current.CancellationToken;
-while(!cancellationToken.IsCancellationRequested){ 
-    await Task.Delay(10); 
-}", targetKernelName: "csharp");
-                try
-                {
-                    var resultForCommandToCancel = kernel.SendAsync(commandToCancel);
+        var _ = kernel.SendAsync(commandInProgress);
 
-                    await Task.Delay(200);
+        Task.WhenAll(cancelSent, commandInProgress.Cancelled)
+            .Wait(TimeSpan.FromSeconds(5));
+    }
 
-                    await kernel.SendAsync(cancelCommand).Timeout(10.Seconds());
+    public class CancellableCommand : KernelCommand
+    {
+        private readonly TaskCompletionSource _invoked = new();
+        private readonly TaskCompletionSource _cancelled = new();
 
-                    var result = await resultForCommandToCancel.Timeout(10.Seconds());
-
-                    var submitCodeEvents = result.KernelEvents.ToSubscribedList();
-
-                    submitCodeEvents
-                        .Should()
-                        .ContainSingle<CommandFailed>()
-                        .Which
-                        .Command
-                        .Should()
-                        .Be(commandToCancel);
-                    break;
-                }
-                catch (TimeoutException)
-                {
-                }
-            }
+        public CancellableCommand(
+            string targetKernelName = null,
+            KernelCommand parent = null) : base(targetKernelName, parent)
+        {
+            // prevent NoSuitableKernelException by setting the handler
+            Handler = (command, context) => Task.CompletedTask;
         }
 
-        [Fact]
-        public void user_code_can_react_to_cancel_command_using_KernelInvocationContext_cancellation_token()
+        public override async Task InvokeAsync(KernelInvocationContext context)
         {
-            using var kernel = CreateKernel();
-            var commandInProgress = new CancellableCommand();
-            var cancelSent = commandInProgress.Invoked.ContinueWith(async task =>
+            _invoked.SetResult();
+
+            context.CancellationToken.Register(() =>
             {
-                // once the cancellable command is running, send a Cancel 
-                await kernel.SendAsync(new Cancel());
+                _cancelled.SetResult();
             });
 
-            var _ = kernel.SendAsync(commandInProgress);
-
-            Task.WhenAll(cancelSent, commandInProgress.Cancelled)
-                .Wait(TimeSpan.FromSeconds(5));
+            await _cancelled.Task;
         }
 
-        public class CancellableCommand : KernelCommand
-        {
-            private readonly TaskCompletionSource _invoked = new();
-            private readonly TaskCompletionSource _cancelled = new();
+        public Task Invoked => _invoked.Task;
 
-            public CancellableCommand(
-                string targetKernelName = null,
-                KernelCommand parent = null) : base(targetKernelName, parent)
-            {
-                // prevent NoSuitableKernelException by setting the handler
-                Handler = (command, context) => Task.CompletedTask;
-            }
-
-            public override async Task InvokeAsync(KernelInvocationContext context)
-            {
-                _invoked.SetResult();
-
-                context.CancellationToken.Register(() =>
-                {
-                    _cancelled.SetResult();
-                });
-
-                await _cancelled.Task;
-            }
-
-            public Task Invoked => _invoked.Task;
-
-            public Task Cancelled => _cancelled.Task;
-        }
+        public Task Cancelled => _cancelled.Task;
     }
 }

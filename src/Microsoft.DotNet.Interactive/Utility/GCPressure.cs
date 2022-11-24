@@ -3,21 +3,20 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive.Utility
+namespace Microsoft.DotNet.Interactive.Utility;
+
+public class GCPressure : IDisposable
 {
-    public class GCPressure : IDisposable
+    private readonly long _bytesAllocated;
+
+    public GCPressure(long bytesAllocated)
     {
-        private readonly long _bytesAllocated;
+        _bytesAllocated = bytesAllocated;
+        GC.AddMemoryPressure(_bytesAllocated);
+    }
 
-        public GCPressure(long bytesAllocated)
-        {
-            _bytesAllocated = bytesAllocated;
-            GC.AddMemoryPressure(_bytesAllocated);
-        }
-
-        public void Dispose()
-        {
-            GC.RemoveMemoryPressure(_bytesAllocated);
-        }
+    public void Dispose()
+    {
+        GC.RemoveMemoryPressure(_bytesAllocated);
     }
 }

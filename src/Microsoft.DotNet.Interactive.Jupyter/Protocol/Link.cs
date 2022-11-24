@@ -3,13 +3,12 @@
 
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
+namespace Microsoft.DotNet.Interactive.Jupyter.Protocol;
+
+public class Link
 {
-    public class Link
-    {
-        [JsonPropertyName("text")]
-        public string Text { get; set; }
-        [JsonPropertyName("url")]
-        public string Url { get; set; }
-    }
+    [JsonPropertyName("text")]
+    public string Text { get; set; }
+    [JsonPropertyName("url")]
+    public string Url { get; set; }
 }

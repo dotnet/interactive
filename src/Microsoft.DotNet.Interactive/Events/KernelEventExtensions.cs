@@ -3,13 +3,12 @@
 
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Events
+namespace Microsoft.DotNet.Interactive.Events;
+
+public abstract class DiagnosticEvent : KernelEvent
 {
-    public abstract class DiagnosticEvent : KernelEvent
+    protected DiagnosticEvent(
+        KernelCommand command) : base(command)
     {
-        protected DiagnosticEvent(
-            KernelCommand command) : base(command)
-        {
-        }
     }
 }

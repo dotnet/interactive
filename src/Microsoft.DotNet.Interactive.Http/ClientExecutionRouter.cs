@@ -9,45 +9,44 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.DotNet.Interactive.Http.Utility;
 
-namespace Microsoft.DotNet.Interactive.Http
+namespace Microsoft.DotNet.Interactive.Http;
+
+internal class ClientExecutionRouter : IRouter
 {
-    internal class ClientExecutionRouter : IRouter
+    private readonly HtmlNotebookFrontendEnvironment _frontendEnvironment;
+
+    public ClientExecutionRouter(HtmlNotebookFrontendEnvironment frontendEnvironment)
     {
-        private readonly HtmlNotebookFrontendEnvironment _frontendEnvironment;
+        _frontendEnvironment = frontendEnvironment ?? throw new ArgumentNullException(nameof(frontendEnvironment));
+    }
 
-        public ClientExecutionRouter(HtmlNotebookFrontendEnvironment frontendEnvironment)
-        {
-            _frontendEnvironment = frontendEnvironment ?? throw new ArgumentNullException(nameof(frontendEnvironment));
-        }
+    public VirtualPathData GetVirtualPath(VirtualPathContext context)
+    {
+        return null;
+    }
 
-        public VirtualPathData GetVirtualPath(VirtualPathContext context)
+    public async Task RouteAsync(RouteContext context)
+    {
+        if (context.HttpContext.Request.Method == HttpMethods.Post)
         {
-            return null;
-        }
-
-        public async Task RouteAsync(RouteContext context)
-        {
-            if (context.HttpContext.Request.Method == HttpMethods.Post)
+            var segments =
+                context.HttpContext
+                    .Request
+                    .Path
+                    .Value
+                    .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            if (segments.Length == 1 && segments[0] == "markExecutionComplete")
             {
-                var segments =
-                    context.HttpContext
-                       .Request
-                       .Path
-                       .Value
-                       .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-                if (segments.Length == 1 && segments[0] == "markExecutionComplete")
+                using var reader = new StreamReader(context.HttpContext.Request.Body);
+                var requestText = await reader.ReadToEndAsync();
+                var requestObject = JsonDocument.Parse(requestText).RootElement;
+                var commandToken = requestObject.GetPropertyFromPath("commandToken")?.GetString();
+                _frontendEnvironment.MarkExecutionComplete(commandToken);
+                context.Handler = async httpContext =>
                 {
-                    using var reader = new StreamReader(context.HttpContext.Request.Body);
-                    var requestText = await reader.ReadToEndAsync();
-                    var requestObject = JsonDocument.Parse(requestText).RootElement;
-                    var commandToken = requestObject.GetPropertyFromPath("commandToken")?.GetString();
-                    _frontendEnvironment.MarkExecutionComplete(commandToken);
-                    context.Handler = async httpContext =>
-                    {
-                        httpContext.Response.StatusCode = 200;
-                        await httpContext.Response.CompleteAsync();
-                    };
-                }
+                    httpContext.Response.StatusCode = 200;
+                    await httpContext.Response.CompleteAsync();
+                };
             }
         }
     }

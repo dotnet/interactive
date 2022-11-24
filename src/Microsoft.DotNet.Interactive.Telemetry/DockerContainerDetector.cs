@@ -6,48 +6,47 @@ using System.IO;
 using System.Security;
 using Microsoft.Win32;
 
-namespace Microsoft.DotNet.Interactive.Telemetry
+namespace Microsoft.DotNet.Interactive.Telemetry;
+
+internal class DockerContainerDetectorForTelemetry : IDockerContainerDetector
 {
-    internal class DockerContainerDetectorForTelemetry : IDockerContainerDetector
+    public IsDockerContainerResult IsDockerContainer()
     {
-        public IsDockerContainerResult IsDockerContainer()
+        if (OperatingSystem.IsWindows())
         {
-            if (OperatingSystem.IsWindows())
+            try
             {
-                try
+                using (RegistryKey subkey
+                       = Registry.LocalMachine.OpenSubKey("System\\CurrentControlSet\\Control"))
                 {
-                    using (RegistryKey subkey
-                        = Registry.LocalMachine.OpenSubKey("System\\CurrentControlSet\\Control"))
-                    {
-                        return subkey?.GetValue("ContainerType") is not null
-                            ? IsDockerContainerResult.True
-                            : IsDockerContainerResult.False;
-                    }
-                }
-                catch (SecurityException)
-                {
-                    return IsDockerContainerResult.Unknown;
+                    return subkey?.GetValue("ContainerType") is not null
+                        ? IsDockerContainerResult.True
+                        : IsDockerContainerResult.False;
                 }
             }
-
-            if (OperatingSystem.IsLinux())
+            catch (SecurityException)
             {
-                return ReadProcToDetectDockerInLinux()
-                    ? IsDockerContainerResult.True
-                    : IsDockerContainerResult.False;
+                return IsDockerContainerResult.Unknown;
             }
-
-            if (OperatingSystem.IsMacOS())
-            {
-                return IsDockerContainerResult.False;
-            }
-
-            return IsDockerContainerResult.Unknown;
         }
 
-        private static bool ReadProcToDetectDockerInLinux()
+        if (OperatingSystem.IsLinux())
         {
-            return TelemetrySender.IsRunningInDockerContainer || File.ReadAllText("/proc/1/cgroup").Contains("/docker/");
+            return ReadProcToDetectDockerInLinux()
+                ? IsDockerContainerResult.True
+                : IsDockerContainerResult.False;
         }
+
+        if (OperatingSystem.IsMacOS())
+        {
+            return IsDockerContainerResult.False;
+        }
+
+        return IsDockerContainerResult.Unknown;
+    }
+
+    private static bool ReadProcToDetectDockerInLinux()
+    {
+        return TelemetrySender.IsRunningInDockerContainer || File.ReadAllText("/proc/1/cgroup").Contains("/docker/");
     }
 }

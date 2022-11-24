@@ -3,12 +3,11 @@
 
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 
-namespace Microsoft.DotNet.Interactive.Jupyter
+namespace Microsoft.DotNet.Interactive.Jupyter;
+
+public interface IJupyterMessageSender     
 {
-    public interface IJupyterMessageSender     
-    {
-        void Send(PubSubMessage message);
-        void Send(ReplyMessage message);
-        string Send(InputRequest message);
-    }
+    void Send(PubSubMessage message);
+    void Send(ReplyMessage message);
+    string Send(InputRequest message);
 }

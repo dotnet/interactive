@@ -3,19 +3,18 @@
 
 using System.CommandLine;
 
-namespace Microsoft.DotNet.Interactive.Kql
+namespace Microsoft.DotNet.Interactive.Kql;
+
+public class ChooseMsKqlKernelDirective : ChooseKernelDirective
 {
-    public class ChooseMsKqlKernelDirective : ChooseKernelDirective
+    public ChooseMsKqlKernelDirective(Kernel kernel) : base(kernel, $"Run a Kusto query using the \"{kernel.Name}\" connection.")
     {
-        public ChooseMsKqlKernelDirective(Kernel kernel) : base(kernel, $"Run a Kusto query using the \"{kernel.Name}\" connection.")
-        {
-            Add(NameOption);
-        }
-
-        public Option<string> NameOption { get; } = new(
-            "--name",
-            description: "Specify the value name to store the results.",
-            getDefaultValue: () => "lastResults");
-
+        Add(NameOption);
     }
+
+    public Option<string> NameOption { get; } = new(
+        "--name",
+        description: "Specify the value name to store the results.",
+        getDefaultValue: () => "lastResults");
+
 }

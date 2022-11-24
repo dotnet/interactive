@@ -3,12 +3,11 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive.Telemetry
+namespace Microsoft.DotNet.Interactive.Telemetry;
+
+public interface IUserLevelCacheWriter
 {
-    public interface IUserLevelCacheWriter
-    {
-        string RunWithCache(
-            string cacheKey, 
-            Func<string> getValueToCache);
-    }
+    string RunWithCache(
+        string cacheKey, 
+        Func<string> getValueToCache);
 }

@@ -6,46 +6,45 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject
+namespace Microsoft.DotNet.Interactive.CSharpProject;
+
+public static class FileExtensions
 {
-    public static class FileExtensions
+    public static SourceFile ToSourceFile(this ProjectFileContent file)
     {
-        public static SourceFile ToSourceFile(this ProjectFileContent file)
-        {
-            return SourceFile.Create(file.Text, file.Name);
-        }
+        return SourceFile.Create(file.Text, file.Name);
+    }
 
-        public static IEnumerable<Viewport> ExtractViewPorts(this ProjectFileContent file)
-        {
-            return file.ToSourceFile().ExtractViewPorts();
-        }
+    public static IEnumerable<Viewport> ExtractViewPorts(this ProjectFileContent file)
+    {
+        return file.ToSourceFile().ExtractViewPorts();
+    }
 
-        public static IEnumerable<Viewport> ExtractViewPorts(this SourceFile sourceFile)
-        {
-            var code = sourceFile.Text;
-            var fileName = sourceFile.Name;
-            var regions = code.ExtractRegions(fileName);
+    public static IEnumerable<Viewport> ExtractViewPorts(this SourceFile sourceFile)
+    {
+        var code = sourceFile.Text;
+        var fileName = sourceFile.Name;
+        var regions = code.ExtractRegions(fileName);
 
-            var seenBuffers = new HashSet<string>();
-            foreach (var region in regions)
+        var seenBuffers = new HashSet<string>();
+        foreach (var region in regions)
+        {
+            if (!seenBuffers.Add(region.bufferId.ToString()))
             {
-                if (!seenBuffers.Add(region.bufferId.ToString()))
-                {
-                    throw new InvalidOperationException("viewport identifiers must be unique");
-                }
-
-                yield return new Viewport(sourceFile, region.span, region.outerSpan, region.bufferId);
+                throw new InvalidOperationException("viewport identifiers must be unique");
             }
-        }
 
-        public static IEnumerable<Viewport> ExtractViewports(this IEnumerable<ProjectFileContent> files)
-        {
-            return files.Select(f => f.ToSourceFile()).ExtractViewports();
+            yield return new Viewport(sourceFile, region.span, region.outerSpan, region.bufferId);
         }
+    }
 
-        public static IEnumerable<Viewport> ExtractViewports(this IEnumerable<SourceFile> sourceFiles)
-        {
-            return sourceFiles.SelectMany(f => f.ExtractViewPorts());
-        }
+    public static IEnumerable<Viewport> ExtractViewports(this IEnumerable<ProjectFileContent> files)
+    {
+        return files.Select(f => f.ToSourceFile()).ExtractViewports();
+    }
+
+    public static IEnumerable<Viewport> ExtractViewports(this IEnumerable<SourceFile> sourceFiles)
+    {
+        return sourceFiles.SelectMany(f => f.ExtractViewPorts());
     }
 }

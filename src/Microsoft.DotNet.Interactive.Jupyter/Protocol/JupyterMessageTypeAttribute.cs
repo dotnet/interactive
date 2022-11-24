@@ -3,16 +3,15 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
-{
-    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-    sealed class JupyterMessageTypeAttribute : Attribute
-    {
-        public string Type { get; }
+namespace Microsoft.DotNet.Interactive.Jupyter.Protocol;
 
-        public JupyterMessageTypeAttribute(string messageType)
-        {
-            Type = messageType;
-        }
+[AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+sealed class JupyterMessageTypeAttribute : Attribute
+{
+    public string Type { get; }
+
+    public JupyterMessageTypeAttribute(string messageType)
+    {
+        Type = messageType;
     }
 }

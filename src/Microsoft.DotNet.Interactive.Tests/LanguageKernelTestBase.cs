@@ -21,172 +21,171 @@ using Xunit.Abstractions;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
 
-namespace Microsoft.DotNet.Interactive.Tests
+namespace Microsoft.DotNet.Interactive.Tests;
+
+[LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
+public abstract class LanguageKernelTestBase : IDisposable
 {
-    [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
-    public abstract class LanguageKernelTestBase : IDisposable
+    private readonly CompositeDisposable _disposables = new();
+
+    static LanguageKernelTestBase()
     {
-        private readonly CompositeDisposable _disposables = new();
-
-        static LanguageKernelTestBase()
+        TaskScheduler.UnobservedTaskException += (sender, args) =>
         {
-            TaskScheduler.UnobservedTaskException += (sender, args) =>
+            Log.Error($"{nameof(TaskScheduler.UnobservedTaskException)}", args.Exception);
+            args.SetObserved();
+        };
+    }
+
+    protected LanguageKernelTestBase(ITestOutputHelper output)
+    {
+        DisposeAfterTest(output.SubscribeToPocketLogger());
+    }
+
+    public void Dispose()
+    {
+        try
+        {
+            _disposables?.Dispose();
+        }
+        catch (Exception ex) 
+        {
+            Log.Error(ex);
+        }
+    }
+
+    protected CompositeKernel CreateCompositeKernel(Language defaultKernelLanguage = Language.CSharp,
+        bool openTestingNamespaces = false)
+    {
+        return CreateCompositeKernel(
+            new[]
             {
-                Log.Error($"{nameof(TaskScheduler.UnobservedTaskException)}", args.Exception);
-                args.SetObserved();
-            };
+                CreateFSharpKernelAndAliases(openTestingNamespaces),
+                CreateCSharpKernelAndAliases(),
+                CreatePowerShellKernelAndAliases(),
+            },
+            defaultKernelLanguage);
+    }
+
+    protected CompositeKernel CreateKernel(Language defaultLanguage = Language.CSharp,
+        bool openTestingNamespaces = false)
+    {
+        var languageKernel = defaultLanguage switch
+        {
+            Language.FSharp => CreateFSharpKernelAndAliases(openTestingNamespaces),
+            Language.CSharp => CreateCSharpKernelAndAliases(),
+            Language.PowerShell => CreatePowerShellKernelAndAliases(),
+            _ => throw new InvalidOperationException($"Unknown language specified: {defaultLanguage}")
+        };
+
+        return CreateCompositeKernel(new[] { languageKernel }, defaultLanguage);
+    }
+
+    private CompositeKernel CreateCompositeKernel(IEnumerable<(Kernel, IEnumerable<string>)> subkernelsAndAliases, Language defaultKernelLanguage)
+    {
+        var kernel = new CompositeKernel().UseDefaultMagicCommands();
+        foreach (var (subkernel, aliases) in subkernelsAndAliases)
+        {
+            kernel.Add(subkernel.LogEventsToPocketLogger(), aliases.ToImmutableArray());
         }
 
-        protected LanguageKernelTestBase(ITestOutputHelper output)
-        {
-            DisposeAfterTest(output.SubscribeToPocketLogger());
-        }
+        kernel.DefaultKernelName = defaultKernelLanguage.LanguageName();
 
-        public void Dispose()
-        {
-            try
-            {
-                _disposables?.Dispose();
-            }
-            catch (Exception ex) 
-            {
-                Log.Error(ex);
-            }
-        }
+        KernelEvents = kernel.KernelEvents.ToSubscribedList();
 
-        protected CompositeKernel CreateCompositeKernel(Language defaultKernelLanguage = Language.CSharp,
-            bool openTestingNamespaces = false)
-        {
-            return CreateCompositeKernel(
-                new[]
-                {
-                    CreateFSharpKernelAndAliases(openTestingNamespaces),
-                    CreateCSharpKernelAndAliases(),
-                    CreatePowerShellKernelAndAliases(),
-                },
-                defaultKernelLanguage);
-        }
+        DisposeAfterTest(KernelEvents);
+        DisposeAfterTest(kernel);
 
-        protected CompositeKernel CreateKernel(Language defaultLanguage = Language.CSharp,
-            bool openTestingNamespaces = false)
-        {
-            var languageKernel = defaultLanguage switch
-            {
-                Language.FSharp => CreateFSharpKernelAndAliases(openTestingNamespaces),
-                Language.CSharp => CreateCSharpKernelAndAliases(),
-                Language.PowerShell => CreatePowerShellKernelAndAliases(),
-                _ => throw new InvalidOperationException($"Unknown language specified: {defaultLanguage}")
-            };
+        return kernel;
+    }
 
-            return CreateCompositeKernel(new[] { languageKernel }, defaultLanguage);
-        }
+    private Kernel UseExtraNamespacesForFSharpTesting(Kernel kernel)
+    {
+        var code =
+            "open " + typeof(Task).Namespace + Environment.NewLine +
+            "open " + typeof(System.Linq.Enumerable).Namespace + Environment.NewLine +
+            "open " + typeof(AspNetCore.Html.IHtmlContent).Namespace + Environment.NewLine +
+            "open " + typeof(FSharp.FSharpKernelHelpers.Html).FullName + Environment.NewLine;
 
-        private CompositeKernel CreateCompositeKernel(IEnumerable<(Kernel, IEnumerable<string>)> subkernelsAndAliases, Language defaultKernelLanguage)
-        {
-            var kernel = new CompositeKernel().UseDefaultMagicCommands();
-            foreach (var (subkernel, aliases) in subkernelsAndAliases)
-            {
-                kernel.Add(subkernel.LogEventsToPocketLogger(), aliases.ToImmutableArray());
-            }
+        kernel.DeferCommand(new SubmitCode(code));
+        return kernel;
+    }
 
-            kernel.DefaultKernelName = defaultKernelLanguage.LanguageName();
-
-            KernelEvents = kernel.KernelEvents.ToSubscribedList();
-
-            DisposeAfterTest(KernelEvents);
-            DisposeAfterTest(kernel);
-
-            return kernel;
-        }
-
-        private Kernel UseExtraNamespacesForFSharpTesting(Kernel kernel)
-        {
-            var code =
-                 "open " + typeof(Task).Namespace + Environment.NewLine +
-                 "open " + typeof(System.Linq.Enumerable).Namespace + Environment.NewLine +
-                 "open " + typeof(AspNetCore.Html.IHtmlContent).Namespace + Environment.NewLine +
-                 "open " + typeof(FSharp.FSharpKernelHelpers.Html).FullName + Environment.NewLine;
-
-            kernel.DeferCommand(new SubmitCode(code));
-            return kernel;
-        }
-
-        private (Kernel, IEnumerable<string>) CreateFSharpKernelAndAliases(bool openTestingNamespaces)
-        {
-            Kernel kernel =
-                new FSharpKernel()
+    private (Kernel, IEnumerable<string>) CreateFSharpKernelAndAliases(bool openTestingNamespaces)
+    {
+        Kernel kernel =
+            new FSharpKernel()
                 .UseDefaultFormatting()
                 .UseNugetDirective()
                 .UseKernelHelpers()
                 .UseValueSharing()
                 .UseWho();
 
-            if (openTestingNamespaces)
+        if (openTestingNamespaces)
+        {
+            kernel = UseExtraNamespacesForFSharpTesting(kernel);
+        }
+
+        return (kernel, new[]
+        {
+            "f#",
+            "F#"
+        });
+    }
+
+    private (Kernel, IEnumerable<string>) CreateCSharpKernelAndAliases()
+    {
+        return (CreateCSharpKernel(),
+            new[]
             {
-                kernel = UseExtraNamespacesForFSharpTesting(kernel);
-            }
+                "c#",
+                "C#"
+            });
+    }
 
-            return (kernel, new[]
-                {
-                    "f#",
-                    "F#"
-                });
-        }
+    protected virtual CSharpKernel CreateCSharpKernel()
+    {
+        return new CSharpKernel()
+            .UseNugetDirective()
+            .UseKernelHelpers()
+            .UseValueSharing()
+            .UseWho();
+    }
 
-        private (Kernel, IEnumerable<string>) CreateCSharpKernelAndAliases()
-        {
-            return (CreateCSharpKernel(),
-                new[]
-                {
-                    "c#",
-                    "C#"
-                });
-        }
-
-        protected virtual CSharpKernel CreateCSharpKernel()
-        {
-            return new CSharpKernel()
-                   .UseNugetDirective()
-                   .UseKernelHelpers()
-                   .UseValueSharing()
-                   .UseWho();
-        }
-
-        private (Kernel, IEnumerable<string>) CreatePowerShellKernelAndAliases()
-        {
-            return (new PowerShellKernel()
+    private (Kernel, IEnumerable<string>) CreatePowerShellKernelAndAliases()
+    {
+        return (new PowerShellKernel()
                 .UseValueSharing(),
-                new[]
-                {
-                    "powershell"
-                });
-        }
-
-        public async Task SubmitCode(Kernel kernel, string[] submissions, SubmissionType submissionType = SubmissionType.Run)
-        {
-            foreach (var submission in submissions)
+            new[]
             {
-                var cmd = new SubmitCode(submission, submissionType: submissionType);
-                await kernel.SendAsync(cmd);
-            }
-        }
+                "powershell"
+            });
+    }
 
-        public async Task<KernelCommandResult> SubmitCode(Kernel kernel, string submission, SubmissionType submissionType = SubmissionType.Run)
+    public async Task SubmitCode(Kernel kernel, string[] submissions, SubmissionType submissionType = SubmissionType.Run)
+    {
+        foreach (var submission in submissions)
         {
-            var command = new SubmitCode(submission, submissionType: submissionType);
-            return await kernel.SendAsync(command);
+            var cmd = new SubmitCode(submission, submissionType: submissionType);
+            await kernel.SendAsync(cmd);
         }
+    }
 
-        protected SubscribedList<KernelEvent> KernelEvents { get; private set; }
+    public async Task<KernelCommandResult> SubmitCode(Kernel kernel, string submission, SubmissionType submissionType = SubmissionType.Run)
+    {
+        var command = new SubmitCode(submission, submissionType: submissionType);
+        return await kernel.SendAsync(command);
+    }
 
-        protected void DisposeAfterTest(IDisposable disposable)
-        {
-            _disposables.Add(disposable);
-        }
+    protected SubscribedList<KernelEvent> KernelEvents { get; private set; }
 
-        protected void DisposeAfterTest(Action action)
-        {
-            _disposables.Add(action);
-        }
+    protected void DisposeAfterTest(IDisposable disposable)
+    {
+        _disposables.Add(disposable);
+    }
+
+    protected void DisposeAfterTest(Action action)
+    {
+        _disposables.Add(action);
     }
 }

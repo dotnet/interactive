@@ -4,21 +4,20 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.Journey
-{
-    public class Rule
-    {
-        public string Name { get; }
-        private readonly Func<RuleContext, Task> evaluateRuleContextHandler;
+namespace Microsoft.DotNet.Interactive.Journey;
 
-        public Rule(Func<RuleContext, Task> ruleConstraints, string name = null)
-        {
-            Name = name;
-            evaluateRuleContextHandler = ruleConstraints;
-        }
-        internal async Task Evaluate(RuleContext context)
-        {
-            await evaluateRuleContextHandler.Invoke(context);
-        }
+public class Rule
+{
+    public string Name { get; }
+    private readonly Func<RuleContext, Task> evaluateRuleContextHandler;
+
+    public Rule(Func<RuleContext, Task> ruleConstraints, string name = null)
+    {
+        Name = name;
+        evaluateRuleContextHandler = ruleConstraints;
+    }
+    internal async Task Evaluate(RuleContext context)
+    {
+        await evaluateRuleContextHandler.Invoke(context);
     }
 }

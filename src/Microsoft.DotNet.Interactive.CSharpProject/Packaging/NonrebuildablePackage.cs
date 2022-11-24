@@ -4,16 +4,15 @@
 using System.IO;
 using System.Reactive.Concurrency;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
+namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
+
+public class NonrebuildablePackage : Package
 {
-    public class NonrebuildablePackage : Package
+
+    public NonrebuildablePackage(string name = null, IPackageInitializer initializer = null, DirectoryInfo directory = null, IScheduler buildThrottleScheduler = null) 
+        : base(name, initializer, directory, buildThrottleScheduler)
     {
 
-        public NonrebuildablePackage(string name = null, IPackageInitializer initializer = null, DirectoryInfo directory = null, IScheduler buildThrottleScheduler = null) 
-            : base(name, initializer, directory, buildThrottleScheduler)
-        {
-
-        }
-        
     }
+        
 }

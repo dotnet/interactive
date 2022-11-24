@@ -3,20 +3,19 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown
+namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown;
+
+public abstract class CodeFenceOptionsParseResult
 {
-    public abstract class CodeFenceOptionsParseResult
+    internal CodeFenceOptionsParseResult()
     {
-        internal CodeFenceOptionsParseResult()
-        {
-        }
-
-        public static CodeFenceOptionsParseResult Failed(IList<string> errorMessages) => new FailedCodeFenceOptionParseResult(errorMessages);
-
-        public static CodeFenceOptionsParseResult Failed(string errorMessage) => new FailedCodeFenceOptionParseResult(new[] { errorMessage });
-
-        public static CodeFenceOptionsParseResult None { get; } = new NoCodeFenceOptions();
-
-        public static CodeFenceOptionsParseResult Succeeded(CodeFenceAnnotations annotations) => new SuccessfulCodeFenceOptionParseResult(annotations);
     }
+
+    public static CodeFenceOptionsParseResult Failed(IList<string> errorMessages) => new FailedCodeFenceOptionParseResult(errorMessages);
+
+    public static CodeFenceOptionsParseResult Failed(string errorMessage) => new FailedCodeFenceOptionParseResult(new[] { errorMessage });
+
+    public static CodeFenceOptionsParseResult None { get; } = new NoCodeFenceOptions();
+
+    public static CodeFenceOptionsParseResult Succeeded(CodeFenceAnnotations annotations) => new SuccessfulCodeFenceOptionParseResult(annotations);
 }

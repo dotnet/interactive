@@ -5,27 +5,26 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Events;
 
-namespace Microsoft.DotNet.Interactive.Commands
+namespace Microsoft.DotNet.Interactive.Commands;
+
+public class DisplayError : KernelCommand
 {
-    public class DisplayError : KernelCommand
+    public DisplayError(string message)
     {
-        public DisplayError(string message)
+        if (string.IsNullOrWhiteSpace(message))
         {
-            if (string.IsNullOrWhiteSpace(message))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(message));
-            }
-
-            Message = message;
-
-            Handler = (_, context) =>
-            {
-                context.Publish(new ErrorProduced(Message, context.Command));
-
-                return Task.CompletedTask;
-            };
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(message));
         }
 
-        public string Message { get; }
+        Message = message;
+
+        Handler = (_, context) =>
+        {
+            context.Publish(new ErrorProduced(Message, context.Command));
+
+            return Task.CompletedTask;
+        };
     }
+
+    public string Message { get; }
 }

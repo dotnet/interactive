@@ -7,76 +7,75 @@ using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Utility;
 
-namespace Microsoft.DotNet.Interactive.App
+namespace Microsoft.DotNet.Interactive.App;
+
+public class JupyterKernelSpecModule : IJupyterKernelSpecModule
 {
-    public class JupyterKernelSpecModule : IJupyterKernelSpecModule
+    private async Task<CommandLineResult> ExecuteCommand(string command, string args = "")
     {
-        private async Task<CommandLineResult> ExecuteCommand(string command, string args = "")
+        return await Utility.CommandLine.Execute("jupyter", $"kernelspec {command} {args}");
+    }
+
+    public Task<CommandLineResult> InstallKernel(DirectoryInfo sourceDirectory)
+    {
+        return ExecuteCommand($@"install ""{sourceDirectory.FullName}""", "--user");
+    }
+
+    public DirectoryInfo GetDefaultKernelSpecDirectory()
+    {
+
+        var directory = GetDefaultAnacondaKernelSpecDirectory();
+        if (!directory.Exists)
         {
-            return await Utility.CommandLine.Execute("jupyter", $"kernelspec {command} {args}");
+            directory = GetDefaultJupyterKernelSpecDirectory();
         }
 
-        public Task<CommandLineResult> InstallKernel(DirectoryInfo sourceDirectory)
+        return directory;
+    }
+
+    private static DirectoryInfo GetDefaultAnacondaKernelSpecDirectory()
+    {
+        DirectoryInfo directory;
+        switch (Environment.OSVersion.Platform)
         {
-            return ExecuteCommand($@"install ""{sourceDirectory.FullName}""", "--user");
+            case PlatformID.Win32S:
+            case PlatformID.Win32Windows:
+            case PlatformID.Win32NT:
+                directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Continuum", "anaconda3", "share", "jupyter", "kernels"));
+                break;
+            case PlatformID.Unix:
+                directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "anaconda3", "share", "jupyter", "kernels"));
+                break;
+            case PlatformID.MacOSX:
+                directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "opt", "anaconda3", "share", "jupyter", "kernels"));
+                break;
+            default:
+                throw new PlatformNotSupportedException();
         }
 
-        public DirectoryInfo GetDefaultKernelSpecDirectory()
+        return directory;
+    }
+
+    private static DirectoryInfo GetDefaultJupyterKernelSpecDirectory()
+    {
+        DirectoryInfo directory;
+        switch (Environment.OSVersion.Platform)
         {
-
-            var directory = GetDefaultAnacondaKernelSpecDirectory();
-            if (!directory.Exists)
-            {
-                directory = GetDefaultJupyterKernelSpecDirectory();
-            }
-
-            return directory;
+            case PlatformID.Win32S:
+            case PlatformID.Win32Windows:
+            case PlatformID.Win32NT:
+                directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "jupyter", "kernels"));
+                break;
+            case PlatformID.Unix:
+                directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share", "jupyter", "kernels"));
+                break;
+            case PlatformID.MacOSX:
+                directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Jupyter", "kernels"));
+                break;
+            default:
+                throw new PlatformNotSupportedException();
         }
 
-        private static DirectoryInfo GetDefaultAnacondaKernelSpecDirectory()
-        {
-            DirectoryInfo directory;
-            switch (Environment.OSVersion.Platform)
-            {
-                case PlatformID.Win32S:
-                case PlatformID.Win32Windows:
-                case PlatformID.Win32NT:
-                    directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Continuum", "anaconda3", "share", "jupyter", "kernels"));
-                    break;
-                case PlatformID.Unix:
-                    directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "anaconda3", "share", "jupyter", "kernels"));
-                    break;
-                case PlatformID.MacOSX:
-                    directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "opt", "anaconda3", "share", "jupyter", "kernels"));
-                    break;
-                default:
-                    throw new PlatformNotSupportedException();
-            }
-
-            return directory;
-        }
-
-        private static DirectoryInfo GetDefaultJupyterKernelSpecDirectory()
-        {
-            DirectoryInfo directory;
-            switch (Environment.OSVersion.Platform)
-            {
-                case PlatformID.Win32S:
-                case PlatformID.Win32Windows:
-                case PlatformID.Win32NT:
-                    directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "jupyter", "kernels"));
-                    break;
-                case PlatformID.Unix:
-                    directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share", "jupyter", "kernels"));
-                    break;
-                case PlatformID.MacOSX:
-                    directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Jupyter", "kernels"));
-                    break;
-                default:
-                    throw new PlatformNotSupportedException();
-            }
-
-            return directory;
-        }
+        return directory;
     }
 }

@@ -3,22 +3,21 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Formatting
+namespace Microsoft.DotNet.Interactive.Jupyter.Formatting;
+
+public class LaTeXString
 {
-    public class LaTeXString
+    private readonly string _latexCode;
+
+    public LaTeXString(string latexCode)
     {
-        private readonly string _latexCode;
+        _latexCode = latexCode ?? throw new ArgumentNullException(nameof(latexCode));
+    }
 
-        public LaTeXString(string latexCode)
-        {
-            _latexCode = latexCode ?? throw new ArgumentNullException(nameof(latexCode));
-        }
+    public static implicit operator LaTeXString(string source) => new LaTeXString(source);
 
-        public static implicit operator LaTeXString(string source) => new LaTeXString(source);
-
-        public override string ToString()
-        {
-            return _latexCode;
-        }
+    public override string ToString()
+    {
+        return _latexCode;
     }
 }

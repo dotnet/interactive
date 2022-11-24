@@ -9,63 +9,62 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Utility;
 
-namespace Microsoft.DotNet.Interactive.Jupyter
+namespace Microsoft.DotNet.Interactive.Jupyter;
+
+public class CompleteRequestHandler : RequestHandlerBase<CompleteRequest>
 {
-    public class CompleteRequestHandler : RequestHandlerBase<CompleteRequest>
+    public CompleteRequestHandler(Kernel kernel,  IScheduler scheduler = null)
+        : base(kernel, scheduler ?? CurrentThreadScheduler.Instance)
     {
-        public CompleteRequestHandler(Kernel kernel,  IScheduler scheduler = null)
-            : base(kernel, scheduler ?? CurrentThreadScheduler.Instance)
+    }
+
+    public async Task Handle(JupyterRequestContext context)
+    {
+        var completeRequest = GetJupyterRequest(context);
+        var targetKernelName = context.GetKernelName();
+
+        var position = SourceUtilities.GetPositionFromCursorOffset(completeRequest.Code, completeRequest.CursorPosition);
+        var command = new RequestCompletions(completeRequest.Code, position, targetKernelName);
+
+        await SendAsync(context, command);
+    }
+
+    protected override void OnKernelEventReceived(
+        KernelEvent @event, 
+        JupyterRequestContext context)
+    {
+        switch (@event)
         {
+            case CompletionsProduced completionRequestCompleted:
+                OnCompletionRequestCompleted(
+                    completionRequestCompleted, 
+                    context.JupyterMessageSender);
+                break;
         }
+    }
 
-        public async Task Handle(JupyterRequestContext context)
+    private static void OnCompletionRequestCompleted(CompletionsProduced completionsProduced, IJupyterMessageSender jupyterMessageSender)
+    {
+        var startPosition = 0; 
+        var endPosition = 0;
+
+        if (completionsProduced.Command is RequestCompletions command)
         {
-            var completeRequest = GetJupyterRequest(context);
-            var targetKernelName = context.GetKernelName();
-
-            var position = SourceUtilities.GetPositionFromCursorOffset(completeRequest.Code, completeRequest.CursorPosition);
-            var command = new RequestCompletions(completeRequest.Code, position, targetKernelName);
-
-            await SendAsync(context, command);
-        }
-
-        protected override void OnKernelEventReceived(
-            KernelEvent @event, 
-            JupyterRequestContext context)
-        {
-            switch (@event)
+            if (completionsProduced.LinePositionSpan is not null)
             {
-                case CompletionsProduced completionRequestCompleted:
-                    OnCompletionRequestCompleted(
-                        completionRequestCompleted, 
-                        context.JupyterMessageSender);
-                    break;
+                startPosition = SourceUtilities.GetCursorOffsetFromPosition(command.Code, completionsProduced.LinePositionSpan.Start);
+                endPosition = SourceUtilities.GetCursorOffsetFromPosition(command.Code, completionsProduced.LinePositionSpan.End);
+            }
+            else
+            {
+                var cursorOffset = SourceUtilities.GetCursorOffsetFromPosition(command.Code, command.LinePosition);
+                startPosition = SourceUtilities.ComputeReplacementStartPosition(command.Code, cursorOffset);
+                endPosition = cursorOffset;
             }
         }
 
-        private static void OnCompletionRequestCompleted(CompletionsProduced completionsProduced, IJupyterMessageSender jupyterMessageSender)
-        {
-            var startPosition = 0; 
-            var endPosition = 0;
+        var reply = new CompleteReply(startPosition, endPosition, matches: completionsProduced.Completions.Select(e => e.InsertText ?? e.DisplayText).ToList());
 
-            if (completionsProduced.Command is RequestCompletions command)
-            {
-                if (completionsProduced.LinePositionSpan is not null)
-                {
-                    startPosition = SourceUtilities.GetCursorOffsetFromPosition(command.Code, completionsProduced.LinePositionSpan.Start);
-                    endPosition = SourceUtilities.GetCursorOffsetFromPosition(command.Code, completionsProduced.LinePositionSpan.End);
-                }
-                else
-                {
-                    var cursorOffset = SourceUtilities.GetCursorOffsetFromPosition(command.Code, command.LinePosition);
-                    startPosition = SourceUtilities.ComputeReplacementStartPosition(command.Code, cursorOffset);
-                    endPosition = cursorOffset;
-                }
-            }
-
-            var reply = new CompleteReply(startPosition, endPosition, matches: completionsProduced.Completions.Select(e => e.InsertText ?? e.DisplayText).ToList());
-
-            jupyterMessageSender.Send(reply);
-        }
+        jupyterMessageSender.Send(reply);
     }
 }

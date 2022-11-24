@@ -7,32 +7,31 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Connection;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Tests.Connection
+namespace Microsoft.DotNet.Interactive.Tests.Connection;
+
+public class KernelEventEnvelopeTests
 {
-    public class KernelEventEnvelopeTests
+    [Fact]
+    public void Create_creates_envelope_of_the_correct_type()
     {
-        [Fact]
-        public void Create_creates_envelope_of_the_correct_type()
-        {
-            KernelEvent @event = new DisplayedValueProduced(
-                123,
-                new SubmitCode("display(123)"));
+        KernelEvent @event = new DisplayedValueProduced(
+            123,
+            new SubmitCode("display(123)"));
 
-            var envelope = KernelEventEnvelope.Create(@event);
+        var envelope = KernelEventEnvelope.Create(@event);
 
-            envelope.Should().BeOfType<KernelEventEnvelope<DisplayedValueProduced>>();
-        }
+        envelope.Should().BeOfType<KernelEventEnvelope<DisplayedValueProduced>>();
+    }
         
-        [Fact]
-        public void Create_creates_envelope_with_reference_to_original_event()
-        {
-            KernelEvent @event = new DisplayedValueProduced(
-                123,
-                new SubmitCode("display(123)"));
+    [Fact]
+    public void Create_creates_envelope_with_reference_to_original_event()
+    {
+        KernelEvent @event = new DisplayedValueProduced(
+            123,
+            new SubmitCode("display(123)"));
 
-            var envelope = KernelEventEnvelope.Create(@event);
+        var envelope = KernelEventEnvelope.Create(@event);
 
-            envelope.Event.Should().BeSameAs(@event);
-        }
+        envelope.Event.Should().BeSameAs(@event);
     }
 }

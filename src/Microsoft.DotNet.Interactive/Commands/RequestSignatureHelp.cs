@@ -3,31 +3,30 @@
 
 using Microsoft.DotNet.Interactive.Parsing;
 
-namespace Microsoft.DotNet.Interactive.Commands
+namespace Microsoft.DotNet.Interactive.Commands;
+
+public class RequestSignatureHelp : LanguageServiceCommand
 {
-    public class RequestSignatureHelp : LanguageServiceCommand
+    public RequestSignatureHelp(
+        string code,
+        LinePosition linePosition,
+        string targetKernelName = null)
+        : base(code, linePosition, targetKernelName)
     {
-        public RequestSignatureHelp(
-            string code,
-            LinePosition linePosition,
-            string targetKernelName = null)
-            : base(code, linePosition, targetKernelName)
-        {
-        }
+    }
 
-        internal RequestSignatureHelp(
-            LanguageNode languageNode,
-            LinePosition linePosition,
-            KernelCommand parent = null)
-            : base(languageNode, linePosition, parent)
-        {
-        }
+    internal RequestSignatureHelp(
+        LanguageNode languageNode,
+        LinePosition linePosition,
+        KernelCommand parent = null)
+        : base(languageNode, linePosition, parent)
+    {
+    }
 
-        internal override LanguageServiceCommand With(
-            LanguageNode languageNode,
-            LinePosition position)
-        {
-            return new RequestSignatureHelp(languageNode, position, Parent);
-        }
+    internal override LanguageServiceCommand With(
+        LanguageNode languageNode,
+        LinePosition position)
+    {
+        return new RequestSignatureHelp(languageNode, position, Parent);
     }
 }

@@ -4,23 +4,22 @@
 
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
+namespace Microsoft.DotNet.Interactive.Jupyter.Protocol;
+
+[JupyterMessageType(JupyterMessageContentTypes.ExecuteReply)]
+public class ExecuteReply : ReplyMessage
 {
-    [JupyterMessageType(JupyterMessageContentTypes.ExecuteReply)]
-    public class ExecuteReply : ReplyMessage
+    [JsonPropertyName("status")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string Status { get; }
+
+    [JsonPropertyName("execution_count")]
+    public int ExecutionCount { get; }
+
+    public ExecuteReply(string status = null, int executionCount = 0)
     {
-        [JsonPropertyName("status")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string Status { get; }
-
-        [JsonPropertyName("execution_count")]
-        public int ExecutionCount { get; }
-
-        public ExecuteReply(string status = null, int executionCount = 0)
-        {
-            Status = status;
-            ExecutionCount = executionCount;
-        }
-
+        Status = status;
+        ExecutionCount = executionCount;
     }
+
 }

@@ -6,53 +6,52 @@ using System.Collections.Generic;
 using System.Text.Json;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting;
+
+public static class JsonExtensions
 {
-    public static class JsonExtensions
+    public static TabularDataResource ToTabularDataResource(this JsonDocument document)
     {
-        public static TabularDataResource ToTabularDataResource(this JsonDocument document)
+        return document.RootElement.ToTabularDataResource();
+    }
+
+    public static TabularDataResource ToTabularDataResource(this JsonElement jsonElement)
+    {
+        if (jsonElement.ValueKind != JsonValueKind.Array)
         {
-            return document.RootElement.ToTabularDataResource();
+            throw new InvalidOperationException("input must be a valid array of object");
         }
 
-        public static TabularDataResource ToTabularDataResource(this JsonElement jsonElement)
+        var dictionaries = new List<Dictionary<string, object>>();
+
+        foreach (var element in jsonElement.EnumerateArray())
         {
-            if (jsonElement.ValueKind != JsonValueKind.Array)
+            if (element.ValueKind == JsonValueKind.Object)
             {
-                throw new InvalidOperationException("input must be a valid array of object");
-            }
+                var dict = new Dictionary<string, object>();
 
-            var dictionaries = new List<Dictionary<string, object>>();
-
-            foreach (var element in jsonElement.EnumerateArray())
-            {
-                if (element.ValueKind == JsonValueKind.Object)
+                foreach (var property in element.EnumerateObject())
                 {
-                    var dict = new Dictionary<string, object>();
-
-                    foreach (var property in element.EnumerateObject())
-                    {
-                        dict.Add(
-                            property.Name,
-                            property.Value.ValueKind switch
-                            {
-                                JsonValueKind.String => property.Value.GetString(),
-                                JsonValueKind.Number => property.Value.GetSingle(),
-                                JsonValueKind.True => true,
-                                JsonValueKind.False => false,
-                                JsonValueKind.Null => null,
-                                JsonValueKind.Undefined => property.Value,
-                                JsonValueKind.Object => property.Value,
-                                JsonValueKind.Array => property.Value,
-                                _ => throw new ArgumentOutOfRangeException()
-                            });
-                    }
-
-                    dictionaries.Add(dict);
+                    dict.Add(
+                        property.Name,
+                        property.Value.ValueKind switch
+                        {
+                            JsonValueKind.String => property.Value.GetString(),
+                            JsonValueKind.Number => property.Value.GetSingle(),
+                            JsonValueKind.True => true,
+                            JsonValueKind.False => false,
+                            JsonValueKind.Null => null,
+                            JsonValueKind.Undefined => property.Value,
+                            JsonValueKind.Object => property.Value,
+                            JsonValueKind.Array => property.Value,
+                            _ => throw new ArgumentOutOfRangeException()
+                        });
                 }
-            }
 
-            return dictionaries.ToTabularDataResource();
+                dictionaries.Add(dict);
+            }
         }
+
+        return dictionaries.ToTabularDataResource();
     }
 }

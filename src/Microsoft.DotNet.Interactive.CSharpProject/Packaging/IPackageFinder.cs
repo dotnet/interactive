@@ -3,10 +3,9 @@
 
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
+namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
+
+public interface IPackageFinder
 {
-    public interface IPackageFinder
-    {
-        Task<T> Find<T>(PackageDescriptor descriptor) where T : class, IPackage;
-    }
+    Task<T> Find<T>(PackageDescriptor descriptor) where T : class, IPackage;
 }

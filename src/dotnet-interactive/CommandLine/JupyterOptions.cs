@@ -3,18 +3,17 @@
 
 using System.IO;
 
-namespace Microsoft.DotNet.Interactive.App.CommandLine
+namespace Microsoft.DotNet.Interactive.App.CommandLine;
+
+public class JupyterOptions
 {
-    public class JupyterOptions
+    public JupyterOptions(FileInfo connectionFile, string defaultKernel)
     {
-        public JupyterOptions(FileInfo connectionFile, string defaultKernel)
-        {
-            ConnectionFile = connectionFile;
-            DefaultKernel = defaultKernel;
-        }
-
-        public FileInfo ConnectionFile { get; }
-
-        public string DefaultKernel { get; }
+        ConnectionFile = connectionFile;
+        DefaultKernel = defaultKernel;
     }
+
+    public FileInfo ConnectionFile { get; }
+
+    public string DefaultKernel { get; }
 }

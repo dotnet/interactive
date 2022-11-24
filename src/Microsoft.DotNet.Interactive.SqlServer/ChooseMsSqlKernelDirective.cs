@@ -3,19 +3,18 @@
 
 using System.CommandLine;
 
-namespace Microsoft.DotNet.Interactive.SqlServer
+namespace Microsoft.DotNet.Interactive.SqlServer;
+
+public class ChooseMsSqlKernelDirective : ChooseKernelDirective
 {
-    public class ChooseMsSqlKernelDirective : ChooseKernelDirective
+    public ChooseMsSqlKernelDirective(Kernel kernel) : base(kernel, $"Run a T-SQL query using the \"{kernel.Name}\" connection.")
     {
-        public ChooseMsSqlKernelDirective(Kernel kernel) : base(kernel, $"Run a T-SQL query using the \"{kernel.Name}\" connection.")
-        {
-            Add(NameOption);
-        }
-
-        public Option<string> NameOption { get; } = new(
-            "--name",
-            description: "Specify the value name to store the results.",
-            getDefaultValue: () => "lastResults");
-
+        Add(NameOption);
     }
+
+    public Option<string> NameOption { get; } = new(
+        "--name",
+        description: "Specify the value name to store the results.",
+        getDefaultValue: () => "lastResults");
+
 }

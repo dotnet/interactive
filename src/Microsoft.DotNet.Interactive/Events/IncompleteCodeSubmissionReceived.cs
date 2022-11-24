@@ -3,12 +3,11 @@
 
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Events
+namespace Microsoft.DotNet.Interactive.Events;
+
+public class IncompleteCodeSubmissionReceived : KernelEvent
 {
-    public class IncompleteCodeSubmissionReceived : KernelEvent
+    public IncompleteCodeSubmissionReceived(SubmitCode submitCode) : base(submitCode)
     {
-        public IncompleteCodeSubmissionReceived(SubmitCode submitCode) : base(submitCode)
-        {
-        }
     }
 }

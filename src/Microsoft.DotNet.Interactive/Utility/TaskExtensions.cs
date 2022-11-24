@@ -4,11 +4,10 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.Utility
+namespace Microsoft.DotNet.Interactive.Utility;
+
+internal static class TaskExtensions
 {
-    internal static class TaskExtensions
-    {
-        internal static void WaitAndUnwrapException(this Task task) =>
-            task?.GetAwaiter().GetResult();
-    }
+    internal static void WaitAndUnwrapException(this Task task) =>
+        task?.GetAwaiter().GetResult();
 }

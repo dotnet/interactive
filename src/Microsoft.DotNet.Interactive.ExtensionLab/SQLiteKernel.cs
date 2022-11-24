@@ -11,85 +11,84 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Enumerable = System.Linq.Enumerable;
 
-namespace Microsoft.DotNet.Interactive.ExtensionLab
+namespace Microsoft.DotNet.Interactive.ExtensionLab;
+
+public class SQLiteKernel :
+    Kernel,
+    IKernelCommandHandler<SubmitCode>
 {
-    public class SQLiteKernel :
-        Kernel,
-        IKernelCommandHandler<SubmitCode>
+    private readonly string _connectionString;
+    private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> _tables;
+
+    public SQLiteKernel(string name, string connectionString) : base(name)
     {
-        private readonly string _connectionString;
-        private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> _tables;
+        KernelInfo.LanguageName = "SQLite";
+        _connectionString = connectionString;
+    }
 
-        public SQLiteKernel(string name, string connectionString) : base(name)
+    private DbConnection OpenConnection()
+    {
+        return new SqliteConnection(_connectionString);
+    }
+
+    public virtual async Task HandleAsync(
+        SubmitCode submitCode,
+        KernelInvocationContext context)
+    {
+        await using var connection = OpenConnection();
+        if (connection.State != ConnectionState.Open)
         {
-            KernelInfo.LanguageName = "SQLite";
-            _connectionString = connectionString;
+            await connection.OpenAsync();
         }
 
-        private DbConnection OpenConnection()
+        await using var dbCommand = connection.CreateCommand();
+
+        dbCommand.CommandText = submitCode.Code;
+
+        _tables = Execute(dbCommand);
+
+        foreach (var table in _tables)
         {
-            return new SqliteConnection(_connectionString);
+            var tabularDataResource = table.ToTabularDataResource();
+
+            var explorer = DataExplorer.CreateDefault(tabularDataResource);
+            context.Display(explorer);
         }
-
-        public virtual async Task HandleAsync(
-            SubmitCode submitCode,
-            KernelInvocationContext context)
-        {
-            await using var connection = OpenConnection();
-            if (connection.State != ConnectionState.Open)
-            {
-                await connection.OpenAsync();
-            }
-
-            await using var dbCommand = connection.CreateCommand();
-
-            dbCommand.CommandText = submitCode.Code;
-
-            _tables = Execute(dbCommand);
-
-            foreach (var table in _tables)
-            {
-                var tabularDataResource = table.ToTabularDataResource();
-
-                var explorer = DataExplorer.CreateDefault(tabularDataResource);
-                context.Display(explorer);
-            }
-        }
+    }
 
       
         
-        private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> Execute(IDbCommand command)
+    private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> Execute(IDbCommand command)
+    {
+        using var reader = command.ExecuteReader();
+
+        do
         {
-            using var reader = command.ExecuteReader();
+            var values = new object[reader.FieldCount];
+            var names = Enumerable.Range(0, reader.FieldCount).Select(reader.GetName).ToArray();
 
-            do
+            SqlKernelUtils.AliasDuplicateColumnNames(names);
+
+            // holds the result of a single statement within the query
+            var table = new List<(string, object)[]>();
+
+            while (reader.Read())
             {
-                var values = new object[reader.FieldCount];
-                var names = Enumerable.Range(0, reader.FieldCount).Select(reader.GetName).ToArray();
-
-                SqlKernelUtils.AliasDuplicateColumnNames(names);
-
-                // holds the result of a single statement within the query
-                var table = new List<(string, object)[]>();
-
-                while (reader.Read())
+                reader.GetValues(values);
+                var row = new (string, object)[values.Length];
+                for (var i = 0; i < values.Length; i++)
                 {
-                    reader.GetValues(values);
-                    var row = new (string, object)[values.Length];
-                    for (var i = 0; i < values.Length; i++)
-                    {
-                        row[i] = (names[i], values[i]);
-                    }
-
-                    table.Add(row);
+                    row[i] = (names[i], values[i]);
                 }
 
-                yield return table;
-            } while (reader.NextResult());
-        }
-    }
+                table.Add(row);
+            }
 
-    public class SqlRow : Dictionary<string, object>
-    {
+            yield return table;
+        } while (reader.NextResult());
     }
+}
+
+public class SqlRow : Dictionary<string, object>
+{
 }

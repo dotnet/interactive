@@ -4,22 +4,21 @@
 using System;
 using System.Text.Json;
 
-namespace Microsoft.DotNet.Interactive.Formatting.TabularData
-{
-    public class TableSchemaFieldTypeConverter : JsonConverter<TableSchemaFieldType>
-    {
-        public override TableSchemaFieldType Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
-            var tableSchemaFieldType = Enum.TryParse<TableSchemaFieldType>(reader.GetString(), true, out var fieldType) 
-                ? fieldType 
-                : TableSchemaFieldType.Null;
-            reader.Read();
-            return tableSchemaFieldType;
-        }
+namespace Microsoft.DotNet.Interactive.Formatting.TabularData;
 
-        public override void Write(Utf8JsonWriter writer, TableSchemaFieldType value, JsonSerializerOptions options)
-        {
-            writer.WriteStringValue(value.ToString().ToLowerInvariant());
-        }
+public class TableSchemaFieldTypeConverter : JsonConverter<TableSchemaFieldType>
+{
+    public override TableSchemaFieldType Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        var tableSchemaFieldType = Enum.TryParse<TableSchemaFieldType>(reader.GetString(), true, out var fieldType) 
+            ? fieldType 
+            : TableSchemaFieldType.Null;
+        reader.Read();
+        return tableSchemaFieldType;
+    }
+
+    public override void Write(Utf8JsonWriter writer, TableSchemaFieldType value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value.ToString().ToLowerInvariant());
     }
 }

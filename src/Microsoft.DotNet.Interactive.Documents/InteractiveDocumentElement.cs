@@ -4,42 +4,41 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Documents
+namespace Microsoft.DotNet.Interactive.Documents;
+
+public class InteractiveDocumentElement
 {
-    public class InteractiveDocumentElement
+    [JsonConstructor]
+    public InteractiveDocumentElement()
     {
-        [JsonConstructor]
-        public InteractiveDocumentElement()
-        {
-            Contents = "";
-        }
-
-        public InteractiveDocumentElement(
-            string? contents = null,
-            string? kernelName = null,
-            IEnumerable<InteractiveDocumentOutputElement>? outputs = null)
-        {
-            Contents = contents ?? "";
-            KernelName = kernelName;
-            Outputs = outputs is { }
-                          ? new(outputs)
-                          : new();
-        }
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string? Id { get; set; }
-
-        public string? KernelName { get; set; }
-
-        public string Contents { get; set; }
-
-        public List<InteractiveDocumentOutputElement> Outputs { get; } = new();
-
-        public int ExecutionOrder { get; set; }
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public IDictionary<string, object>? Metadata { get; set; }
-
-        internal string? InferredTargetKernelName { get; set; }
+        Contents = "";
     }
+
+    public InteractiveDocumentElement(
+        string? contents = null,
+        string? kernelName = null,
+        IEnumerable<InteractiveDocumentOutputElement>? outputs = null)
+    {
+        Contents = contents ?? "";
+        KernelName = kernelName;
+        Outputs = outputs is { }
+            ? new(outputs)
+            : new();
+    }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Id { get; set; }
+
+    public string? KernelName { get; set; }
+
+    public string Contents { get; set; }
+
+    public List<InteractiveDocumentOutputElement> Outputs { get; } = new();
+
+    public int ExecutionOrder { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IDictionary<string, object>? Metadata { get; set; }
+
+    internal string? InferredTargetKernelName { get; set; }
 }

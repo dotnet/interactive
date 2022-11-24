@@ -3,41 +3,40 @@
 
 using System.Diagnostics;
 
-namespace Microsoft.DotNet.Interactive.Telemetry
+namespace Microsoft.DotNet.Interactive.Telemetry;
+
+internal static class ProcessStartInfoExtensions
 {
-    internal static class ProcessStartInfoExtensions
+    public static int ExecuteAndCaptureOutput(this ProcessStartInfo startInfo, out string stdOut, out string stdErr)
     {
-        public static int ExecuteAndCaptureOutput(this ProcessStartInfo startInfo, out string stdOut, out string stdErr)
+        var outStream = new StreamForwarder().Capture();
+        var errStream = new StreamForwarder().Capture();
+
+        startInfo.RedirectStandardOutput = true;
+        startInfo.RedirectStandardError = true;
+
+        using var process = new Process
         {
-            var outStream = new StreamForwarder().Capture();
-            var errStream = new StreamForwarder().Capture();
+            StartInfo = startInfo
+        };
 
-            startInfo.RedirectStandardOutput = true;
-            startInfo.RedirectStandardError = true;
+        process.EnableRaisingEvents = true;
 
-            using var process = new Process
-            {
-                StartInfo = startInfo
-            };
+        process.Start();
 
-            process.EnableRaisingEvents = true;
+        var taskOut = outStream.BeginRead(process.StandardOutput);
+        var taskErr = errStream.BeginRead(process.StandardError);
 
-            process.Start();
+        process.WaitForExit();
 
-            var taskOut = outStream.BeginRead(process.StandardOutput);
-            var taskErr = errStream.BeginRead(process.StandardError);
+        var timeoutMs = 20000;
 
-            process.WaitForExit();
+        taskOut.Wait(timeoutMs);
+        taskErr.Wait(timeoutMs);
 
-            var timeoutMs = 20000;
+        stdOut = outStream.CapturedOutput;
+        stdErr = errStream.CapturedOutput;
 
-            taskOut.Wait(timeoutMs);
-            taskErr.Wait(timeoutMs);
-
-            stdOut = outStream.CapturedOutput;
-            stdErr = errStream.CapturedOutput;
-
-            return process.ExitCode;
-        }
+        return process.ExitCode;
     }
 }

@@ -4,24 +4,23 @@
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation
+namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation;
+
+public class AugmentationMap 
 {
-    public class AugmentationMap 
+    public Dictionary<SyntaxNode, Augmentation> Data { get; }
+
+    public AugmentationMap(Dictionary<SyntaxNode, Augmentation> data = null)
     {
-        public Dictionary<SyntaxNode, Augmentation> Data { get; }
+        Data = data ?? new Dictionary<SyntaxNode, Augmentation>();
+    }
 
-        public AugmentationMap(Dictionary<SyntaxNode, Augmentation> data = null)
+    public AugmentationMap(params Augmentation[] augmentations)
+    {
+        Data = new Dictionary<SyntaxNode, Augmentation>();
+        foreach (var augmentation in augmentations)
         {
-            Data = data ?? new Dictionary<SyntaxNode, Augmentation>();
-        }
-
-        public AugmentationMap(params Augmentation[] augmentations)
-        {
-            Data = new Dictionary<SyntaxNode, Augmentation>();
-            foreach (var augmentation in augmentations)
-            {
-                Data[augmentation.AssociatedStatement] = augmentation;
-            }
+            Data[augmentation.AssociatedStatement] = augmentation;
         }
     }
 }

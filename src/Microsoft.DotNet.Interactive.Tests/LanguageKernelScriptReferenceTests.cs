@@ -11,90 +11,88 @@ using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Microsoft.DotNet.Interactive.Tests
-{
+namespace Microsoft.DotNet.Interactive.Tests;
 #pragma warning disable 8509
-    public class LanguageKernelScriptReferenceTests : LanguageKernelTestBase
+public class LanguageKernelScriptReferenceTests : LanguageKernelTestBase
+{
+    public LanguageKernelScriptReferenceTests(ITestOutputHelper output) : base(output)
     {
-        public LanguageKernelScriptReferenceTests(ITestOutputHelper output) : base(output)
+    }
+
+    [Theory]
+    [InlineData(Language.CSharp)]
+    [InlineData(Language.FSharp)]
+    public async Task it_can_load_script_files_using_load_directive_with_relative_path(Language language)
+    {
+        var kernel = CreateKernel(language);
+
+        var code = language switch
         {
-        }
+            Language.CSharp => "#load \"RelativeLoadingSample.csx\"",
+            Language.FSharp => "#load \"RelativeLoadingSample.fsx\""
+        };
 
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        public async Task it_can_load_script_files_using_load_directive_with_relative_path(Language language)
+        var command = new SubmitCode(code);
+        await kernel.SendAsync(command);
+
+        KernelEvents.Should().NotContainErrors();
+
+        KernelEvents.Should()
+            .ContainSingle<DisplayedValueProduced>(e => e.FormattedValues.Any(v => v.Value.Contains("hello!")));
+    }
+
+    [Theory]
+    [InlineData(Language.CSharp)]
+    // [InlineData(Language.FSharp)] Not supported in F#
+    public async Task it_can_load_script_files_using_load_directive_with_relative_path_after_user_code_changes_current_directory(Language language)
+    {
+        var currentDirectory = Directory.GetCurrentDirectory();
+        DisposeAfterTest(() => Directory.SetCurrentDirectory(currentDirectory));
+
+        var kernel = CreateKernel(language);
+
+        //Even when a user changes the current directory, loading from a relative path is not affected.
+        await kernel.SendAsync(new SubmitCode("System.IO.Directory.SetCurrentDirectory(\"..\")"));
+
+        var code = language switch
         {
-            var kernel = CreateKernel(language);
+            Language.CSharp => $"#load \"{Path.Combine(currentDirectory, "RelativeLoadingSample.csx")}\"",
+            Language.FSharp => $"#load \"{Path.Combine(currentDirectory, "RelativeLoadingSample.fsx")}\""
+        };
 
-            var code = language switch
-            {
-                Language.CSharp => "#load \"RelativeLoadingSample.csx\"",
-                Language.FSharp => "#load \"RelativeLoadingSample.fsx\""
-            };
+        var command = new SubmitCode(code);
+        await kernel.SendAsync(command);
 
-            var command = new SubmitCode(code);
-            await kernel.SendAsync(command);
+        KernelEvents.Should().NotContainErrors();
 
-            KernelEvents.Should().NotContainErrors();
+        KernelEvents.Should()
+            .ContainSingle<DisplayedValueProduced>(e => e.FormattedValues.Any(v => v.Value.Contains("hello!")));
+    }
 
-            KernelEvents.Should()
-                        .ContainSingle<DisplayedValueProduced>(e => e.FormattedValues.Any(v => v.Value.Contains("hello!")));
-        }
+    [Theory]
+    [InlineData(Language.CSharp)]
+    //Not implemented: [InlineData(Language.FSharp)]
+    public async Task it_can_load_script_files_using_load_directive_with_relative_path_after_command_changeWorkingDirectory(Language language)
+    {
+        var currentDirectory = Directory.GetCurrentDirectory();
+        DisposeAfterTest(() => Directory.SetCurrentDirectory(currentDirectory));
 
-        [Theory]
-        [InlineData(Language.CSharp)]
-        // [InlineData(Language.FSharp)] Not supported in F#
-        public async Task it_can_load_script_files_using_load_directive_with_relative_path_after_user_code_changes_current_directory(Language language)
+        var kernel = CreateKernel(language);
+        var absolutePathOneLevelHigher = Directory.GetParent(currentDirectory).FullName;
+        await kernel.SendAsync(new ChangeWorkingDirectory(absolutePathOneLevelHigher));
+
+        var relativePath = Path.GetRelativePath(absolutePathOneLevelHigher, currentDirectory);
+
+        var code = language switch
         {
-            var currentDirectory = Directory.GetCurrentDirectory();
-            DisposeAfterTest(() => Directory.SetCurrentDirectory(currentDirectory));
+            Language.CSharp => $"#load \"{Path.Combine(relativePath, "RelativeLoadingSample.csx")}\"",
+            Language.FSharp => $"#load \"{Path.Combine(relativePath, "RelativeLoadingSample.fsx")}\""
+        };
 
-            var kernel = CreateKernel(language);
+        var command = new SubmitCode(code);
+        await kernel.SendAsync(command);
 
-            //Even when a user changes the current directory, loading from a relative path is not affected.
-            await kernel.SendAsync(new SubmitCode("System.IO.Directory.SetCurrentDirectory(\"..\")"));
-
-            var code = language switch
-            {
-                Language.CSharp => $"#load \"{Path.Combine(currentDirectory, "RelativeLoadingSample.csx")}\"",
-                Language.FSharp => $"#load \"{Path.Combine(currentDirectory, "RelativeLoadingSample.fsx")}\""
-            };
-
-            var command = new SubmitCode(code);
-            await kernel.SendAsync(command);
-
-            KernelEvents.Should().NotContainErrors();
-
-            KernelEvents.Should()
-                        .ContainSingle<DisplayedValueProduced>(e => e.FormattedValues.Any(v => v.Value.Contains("hello!")));
-        }
-
-        [Theory]
-        [InlineData(Language.CSharp)]
-        //Not implemented: [InlineData(Language.FSharp)]
-        public async Task it_can_load_script_files_using_load_directive_with_relative_path_after_command_changeWorkingDirectory(Language language)
-        {
-            var currentDirectory = Directory.GetCurrentDirectory();
-            DisposeAfterTest(() => Directory.SetCurrentDirectory(currentDirectory));
-
-            var kernel = CreateKernel(language);
-            var absolutePathOneLevelHigher = Directory.GetParent(currentDirectory).FullName;
-            await kernel.SendAsync(new ChangeWorkingDirectory(absolutePathOneLevelHigher));
-
-            var relativePath = Path.GetRelativePath(absolutePathOneLevelHigher, currentDirectory);
-
-            var code = language switch
-            {
-                Language.CSharp => $"#load \"{Path.Combine(relativePath, "RelativeLoadingSample.csx")}\"",
-                Language.FSharp => $"#load \"{Path.Combine(relativePath, "RelativeLoadingSample.fsx")}\""
-            };
-
-            var command = new SubmitCode(code);
-            await kernel.SendAsync(command);
-
-            KernelEvents.Should()
-                        .ContainSingle<DisplayedValueProduced>(e => e.FormattedValues.Any(v => v.Value.Contains("hello!")));
-        }
+        KernelEvents.Should()
+            .ContainSingle<DisplayedValueProduced>(e => e.FormattedValues.Any(v => v.Value.Contains("hello!")));
     }
 }

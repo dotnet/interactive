@@ -3,19 +3,18 @@
 
 using System.Text.Json;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting;
+
+internal class DefaultJsonFormatterSet
 {
-    internal class DefaultJsonFormatterSet
+    internal static readonly ITypeFormatter[] DefaultFormatters =
     {
-        internal static readonly ITypeFormatter[] DefaultFormatters =
-            {
-                new JsonFormatter<string>((s, context) =>
-                {
-                    var data = JsonSerializer.Serialize(s, JsonFormatter.SerializerOptions);
-                    context.Writer.Write(data);
-                    return true;
-                }),
-                new JsonFormatter<object>()
-            };
-    }
+        new JsonFormatter<string>((s, context) =>
+        {
+            var data = JsonSerializer.Serialize(s, JsonFormatter.SerializerOptions);
+            context.Writer.Write(data);
+            return true;
+        }),
+        new JsonFormatter<object>()
+    };
 }

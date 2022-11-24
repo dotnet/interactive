@@ -4,20 +4,19 @@
 using System;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject
+namespace Microsoft.DotNet.Interactive.CSharpProject;
+
+public class SourceFile
 {
-    public class SourceFile
+    public SourceText Text { get; }
+
+    public string Name { get; }
+
+    private SourceFile(SourceText text, string name)
     {
-        public SourceText Text { get; }
-
-        public string Name { get; }
-
-        private SourceFile(SourceText text, string name)
-        {
-            Text = text ?? throw new ArgumentNullException(nameof(text));
-            Name = name;
-        }
-
-        public static SourceFile Create(string text, string name) => new(SourceText.From(text ?? string.Empty), name: name);
+        Text = text ?? throw new ArgumentNullException(nameof(text));
+        Name = name;
     }
+
+    public static SourceFile Create(string text, string name) => new(SourceText.From(text ?? string.Empty), name: name);
 }

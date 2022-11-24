@@ -3,45 +3,44 @@
 
 using Microsoft.CodeAnalysis;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+public class Diagnostic
 {
-    public class Diagnostic
+    public Diagnostic(LinePositionSpan linePositionSpan, DiagnosticSeverity severity, string code, string message)
     {
-        public Diagnostic(LinePositionSpan linePositionSpan, DiagnosticSeverity severity, string code, string message)
-        {
-            LinePositionSpan = linePositionSpan;
-            Severity = severity;
-            Code = code;
-            Message = message;
-        }
+        LinePositionSpan = linePositionSpan;
+        Severity = severity;
+        Code = code;
+        Message = message;
+    }
 
-        public LinePositionSpan LinePositionSpan { get; }
-        public DiagnosticSeverity Severity { get; }
-        public string Code { get; }
-        public string Message { get; }
+    public LinePositionSpan LinePositionSpan { get; }
+    public DiagnosticSeverity Severity { get; }
+    public string Code { get; }
+    public string Message { get; }
 
-        public Diagnostic WithLinePositionSpan(LinePositionSpan linePositionSpan)
-        {
-            return new Diagnostic(
-                linePositionSpan,
-                Severity,
-                Code,
-                Message);
-        }
+    public Diagnostic WithLinePositionSpan(LinePositionSpan linePositionSpan)
+    {
+        return new Diagnostic(
+            linePositionSpan,
+            Severity,
+            Code,
+            Message);
+    }
 
-        public override string ToString()
-        {
-            return $"{Code}: {LinePositionSpan} {Message}";
-        }
+    public override string ToString()
+    {
+        return $"{Code}: {LinePositionSpan} {Message}";
+    }
 
-        public static Diagnostic FromCodeAnalysisDiagnostic(CodeAnalysis.Diagnostic diagnostic)
-        {
-            var fileLocation = diagnostic.Location.GetLineSpan();
-            return new Diagnostic(
-                new LinePositionSpan(LinePosition.FromCodeAnalysisLinePosition(fileLocation.StartLinePosition), LinePosition.FromCodeAnalysisLinePosition(fileLocation.EndLinePosition)),
-                diagnostic.Severity,
-                diagnostic.Id,
-                diagnostic.GetMessage());
-        }
+    public static Diagnostic FromCodeAnalysisDiagnostic(CodeAnalysis.Diagnostic diagnostic)
+    {
+        var fileLocation = diagnostic.Location.GetLineSpan();
+        return new Diagnostic(
+            new LinePositionSpan(LinePosition.FromCodeAnalysisLinePosition(fileLocation.StartLinePosition), LinePosition.FromCodeAnalysisLinePosition(fileLocation.EndLinePosition)),
+            diagnostic.Severity,
+            diagnostic.Id,
+            diagnostic.GetMessage());
     }
 }

@@ -9,45 +9,44 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using File = System.IO.File;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Tests.Instrumentation
+namespace Microsoft.DotNet.Interactive.CSharpProject.Tests.Instrumentation;
+
+internal class Sources
 {
-
-    internal class Sources
+    internal static Document GetDocument(string source, bool forceLineEndings = false)
     {
-        internal static Document GetDocument(string source, bool forceLineEndings = false)
-        {
-            if (forceLineEndings) source = source.Replace("\r\n", "\n");
-            var syntaxTree = CSharpSyntaxTree.ParseText(source);
+        if (forceLineEndings) source = source.Replace("\r\n", "\n");
+        var syntaxTree = CSharpSyntaxTree.ParseText(source);
 
-            var workspace = new AdhocWorkspace();
-            var solution = workspace.CurrentSolution;
-            var project = solution.AddProject("testProject", "test.dll", LanguageNames.CSharp);
-            var document = project.AddDocument("document.cs", syntaxTree.GetRoot());
+        var workspace = new AdhocWorkspace();
+        var solution = workspace.CurrentSolution;
+        var project = solution.AddProject("testProject", "test.dll", LanguageNames.CSharp);
+        var document = project.AddDocument("document.cs", syntaxTree.GetRoot());
 
-            MetadataReference mscorlib = MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location);
-            MetadataReference console = MetadataReference.CreateFromFile(typeof(Console).GetTypeInfo().Assembly.Location);
-            MetadataReference runtime = MetadataReference.CreateFromFile(typeof(FileAttributes).GetTypeInfo().Assembly.Location);
-            MetadataReference linq = MetadataReference.CreateFromFile(typeof(Enumerable).GetTypeInfo().Assembly.Location);
-            MetadataReference io = MetadataReference.CreateFromFile(typeof(File).GetTypeInfo().Assembly.Location);
+        MetadataReference mscorlib = MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location);
+        MetadataReference console = MetadataReference.CreateFromFile(typeof(Console).GetTypeInfo().Assembly.Location);
+        MetadataReference runtime = MetadataReference.CreateFromFile(typeof(FileAttributes).GetTypeInfo().Assembly.Location);
+        MetadataReference linq = MetadataReference.CreateFromFile(typeof(Enumerable).GetTypeInfo().Assembly.Location);
+        MetadataReference io = MetadataReference.CreateFromFile(typeof(File).GetTypeInfo().Assembly.Location);
 
-            var projectWithReferences = document.Project.WithMetadataReferences(
-                new[]
-                {
-                    mscorlib,
-                    console,
-                    runtime,
-                    linq,
-                    io
-                });
+        var projectWithReferences = document.Project.WithMetadataReferences(
+            new[]
+            {
+                mscorlib,
+                console,
+                runtime,
+                linq,
+                io
+            });
 
-            //var compilation = CSharpCompilation.Create("Program", new[] { syntaxTree }, new[] { mscorlib, console, runtime, linq, io });
-            //compilation.
+        //var compilation = CSharpCompilation.Create("Program", new[] { syntaxTree }, new[] { mscorlib, console, runtime, linq, io });
+        //compilation.
 
-            // Todo return a document instead of a compilation
-            return projectWithReferences.GetDocument(document.Id);
-        }
+        // Todo return a document instead of a compilation
+        return projectWithReferences.GetDocument(document.Id);
+    }
 
-        internal static readonly string empty = @"
+    internal static readonly string empty = @"
 using System;
 namespace RoslynRecorder
 {
@@ -59,7 +58,7 @@ namespace RoslynRecorder
     }
 }".EnforceLF();
 
-        internal static readonly string simple = @"
+    internal static readonly string simple = @"
 using System;
 namespace RoslynRecorder
 {
@@ -72,7 +71,7 @@ namespace RoslynRecorder
     }
 }".EnforceLF();
 
-        internal static readonly string withMultipleRegion = @"
+    internal static readonly string withMultipleRegion = @"
  using System;
 namespace RoslynRecorder
 {
@@ -90,7 +89,7 @@ namespace RoslynRecorder
 }   
 ".EnforceLF();
 
-        internal static readonly string withLocalsAndParams = @"
+    internal static readonly string withLocalsAndParams = @"
 using System;
 namespace RoslynRecorder
 {
@@ -103,7 +102,7 @@ namespace RoslynRecorder
         }
     }
 }".EnforceLF();
-        internal static readonly string withLocalParamsAndRegion = @"
+    internal static readonly string withLocalParamsAndRegion = @"
 using System;
 namespace RoslynRecorder
 {
@@ -119,7 +118,7 @@ namespace RoslynRecorder
     }
 }".EnforceLF();
 
-        internal static readonly string withNonAssignedLocals = @"
+    internal static readonly string withNonAssignedLocals = @"
 using System;
 namespace RoslynRecorder
 {
@@ -136,7 +135,7 @@ namespace RoslynRecorder
     }
 }".EnforceLF();
 
-        internal static readonly string withStaticAndNonStaticField = @"
+    internal static readonly string withStaticAndNonStaticField = @"
 using System;
 namespace RoslynRecorder
 {
@@ -157,7 +156,7 @@ namespace RoslynRecorder
     }
 }".EnforceLF();
 
-        internal static readonly string withMultipleMethodsAndComplexLayout = @"
+    internal static readonly string withMultipleMethodsAndComplexLayout = @"
 using System;
 namespace RoslynRecorder
 {
@@ -191,7 +190,7 @@ namespace RoslynRecorder
     }
 }".EnforceLF();
 
-        internal static readonly string withDynamic = @"
+    internal static readonly string withDynamic = @"
 using System;
 namespace RoslynRecorder
 {
@@ -205,6 +204,4 @@ namespace RoslynRecorder
     }
 }".EnforceLF();
 
-    }
 }
-

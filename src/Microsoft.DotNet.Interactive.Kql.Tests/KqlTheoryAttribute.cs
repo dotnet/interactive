@@ -3,23 +3,22 @@
 
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Kql.Tests
+namespace Microsoft.DotNet.Interactive.Kql.Tests;
+
+public sealed class KqlTheoryAttribute : TheoryAttribute
 {
-    public sealed class KqlTheoryAttribute : TheoryAttribute
+    private static readonly string _skipReason;
+
+    static KqlTheoryAttribute()
     {
-        private static readonly string _skipReason;
+        _skipReason = KqlFactAttribute.TestConnectionAndReturnSkipReason();
+    }
 
-        static KqlTheoryAttribute()
+    public KqlTheoryAttribute()
+    {
+        if (_skipReason is not null)
         {
-            _skipReason = KqlFactAttribute.TestConnectionAndReturnSkipReason();
-        }
-
-        public KqlTheoryAttribute()
-        {
-            if (_skipReason is not null)
-            {
-                Skip = _skipReason;
-            }
+            Skip = _skipReason;
         }
     }
 }

@@ -6,16 +6,15 @@ using Microsoft.CodeAnalysis.Text;
 
 #nullable enable
 
-namespace Microsoft.DotNet.Interactive.Parsing
+namespace Microsoft.DotNet.Interactive.Parsing;
+
+[DebuggerStepThrough]
+public class TriviaToken : SyntaxToken
 {
-    [DebuggerStepThrough]
-    public class TriviaToken : SyntaxToken
+    internal TriviaToken(
+        SourceText text, 
+        TextSpan span,
+        PolyglotSyntaxTree? syntaxTree) : base(text, span, syntaxTree)
     {
-        internal TriviaToken(
-            SourceText text, 
-            TextSpan span,
-            PolyglotSyntaxTree? syntaxTree) : base(text, span, syntaxTree)
-        {
-        }
     }
 }

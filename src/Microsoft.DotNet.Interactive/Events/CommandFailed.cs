@@ -5,40 +5,39 @@ using System;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Events
+namespace Microsoft.DotNet.Interactive.Events;
+
+public sealed class CommandFailed : KernelCommandCompletionEvent
 {
-    public sealed class CommandFailed : KernelCommandCompletionEvent
+    public CommandFailed(
+        Exception exception,
+        KernelCommand command,
+        string message = null,
+        int? executionOrder = default) : base(command, executionOrder)
     {
-        public CommandFailed(
-            Exception exception,
-            KernelCommand command,
-            string message = null,
-            int? executionOrder = default) : base(command, executionOrder)
+        if (command is null)
         {
-            if (command is null)
-            {
-                throw new ArgumentNullException(nameof(command));
-            }
-
-            Exception = exception;
-
-            Message = string.IsNullOrWhiteSpace(message) 
-                          ? exception?.ToString() ?? $"Command failed: {Command}"
-                          : message;
+            throw new ArgumentNullException(nameof(command));
         }
 
-        public CommandFailed(
-            string message,
-            KernelCommand command,
-            int? executionOrder = default) : this(null, command, message, executionOrder)
-        {
-        }
+        Exception = exception;
 
-        [JsonIgnore]
-        public Exception Exception { get; }
-
-        public string Message { get; set; }
-
-        public override string ToString() => $"{base.ToString()}: {Message}";
+        Message = string.IsNullOrWhiteSpace(message) 
+            ? exception?.ToString() ?? $"Command failed: {Command}"
+            : message;
     }
+
+    public CommandFailed(
+        string message,
+        KernelCommand command,
+        int? executionOrder = default) : this(null, command, message, executionOrder)
+    {
+    }
+
+    [JsonIgnore]
+    public Exception Exception { get; }
+
+    public string Message { get; set; }
+
+    public override string ToString() => $"{base.ToString()}: {Message}";
 }

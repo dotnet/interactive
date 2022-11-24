@@ -4,10 +4,9 @@
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
+namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
+
+public interface IPackageInitializer
 {
-    public interface IPackageInitializer
-    {
-        Task InitializeAsync(DirectoryInfo directory);
-    }
+    Task InitializeAsync(DirectoryInfo directory);
 }

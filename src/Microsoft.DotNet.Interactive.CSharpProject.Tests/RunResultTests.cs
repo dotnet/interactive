@@ -8,131 +8,130 @@ using Pocket;
 using Recipes;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
+namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
+
+public class RunResultTests
 {
-    public class RunResultTests
+    [Fact]
+    public void Disposable_RunResult_features_are_disposed_when_RunResult_is_disposed()
     {
-        [Fact]
-        public void Disposable_RunResult_features_are_disposed_when_RunResult_is_disposed()
+        var wasDisposed = false;
+
+        var result = new RunResult(true);
+
+        result.AddFeature(new DisposableFeature(  Disposable.Create(() => wasDisposed = true)));
+
+        result.Dispose();
+
+        wasDisposed.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Features_can_add_object_properties_to_serialized_RunResult_by_implementing_IAugmentRunResult()
+    {
+        var result = new RunResult(true);
+
+        result.AddFeature(new TestFeature<TestClass>("object", new TestClass("a", 1)));
+
+        var json = result.ToJson();
+
+        var obj = json.FromJsonTo<JObject>().Property("object").Value.ToObject<TestClass>();
+
+        obj.StringProperty.Should().Be("a");
+        obj.IntProperty.Should().Be(1);
+    }
+
+    [Fact]
+    public void Features_can_add_string_properties_to_serialized_RunResult_by_implementing_IAugmentRunResult()
+    {
+        var result = new RunResult(true);
+
+        result.AddFeature(new TestFeature<string>("string", "here i am!"));
+
+        var json = result.ToJson().FromJsonTo<dynamic>();
+
+        var scalar = (string) json.@string;
+
+        scalar.Should().Be("here i am!");
+    }
+
+    [Fact]
+    public void Features_can_add_int_properties_to_serialized_RunResult_by_implementing_IAugmentRunResult()
+    {
+        var result = new RunResult(true);
+
+        result.AddFeature(new TestFeature<int>("int", 123));
+
+        var json = result.ToJson().FromJsonTo<dynamic>();
+
+        var scalar = (int) json.@int;
+
+        scalar.Should().Be(123);
+    }
+
+    [Fact]
+    public void Features_can_add_array_properties_to_serialized_RunResult_by_implementing_IAugmentRunResult()
+    {
+        var result = new RunResult(true);
+
+        result.AddFeature(new TestFeature<string[]>("array", new[] { "one", "two", "three" }));
+
+        var json = result.ToJson().FromJsonTo<JObject>();
+
+        var array = json.Property("array").Value.ToObject<string[]>();
+
+        array.Should().Equal("one", "two", "three");
+    }
+
+    public class TestClass
+    {
+        public TestClass(string stringProperty, int intProperty)
         {
-            var wasDisposed = false;
-
-            var result = new RunResult(true);
-
-            result.AddFeature(new DisposableFeature(  Disposable.Create(() => wasDisposed = true)));
-
-            result.Dispose();
-
-            wasDisposed.Should().BeTrue();
+            StringProperty = stringProperty;
+            IntProperty = intProperty;
         }
 
-        [Fact]
-        public void Features_can_add_object_properties_to_serialized_RunResult_by_implementing_IAugmentRunResult()
+        public string StringProperty { get; }
+        public int IntProperty { get; }
+    }
+
+    private class TestFeature<T> : IRunResultFeature
+    {
+        private readonly string name;
+        private readonly T value;
+
+        public TestFeature(string name, T value)
         {
-            var result = new RunResult(true);
-
-            result.AddFeature(new TestFeature<TestClass>("object", new TestClass("a", 1)));
-
-            var json = result.ToJson();
-
-            var obj = json.FromJsonTo<JObject>().Property("object").Value.ToObject<TestClass>();
-
-            obj.StringProperty.Should().Be("a");
-            obj.IntProperty.Should().Be(1);
+            this.name = name;
+            this.value = value;
         }
 
-        [Fact]
-        public void Features_can_add_string_properties_to_serialized_RunResult_by_implementing_IAugmentRunResult()
+        public string Name => value.GetType().Name;
+
+        public void Apply(FeatureContainer result)
         {
-            var result = new RunResult(true);
+            result.AddProperty(name, value);
+        }
+    }
 
-            result.AddFeature(new TestFeature<string>("string", "here i am!"));
+    public class DisposableFeature : IRunResultFeature, IDisposable
+    {
+        private readonly IDisposable disposable;
 
-            var json = result.ToJson().FromJsonTo<dynamic>();
+        public string Name => nameof(DisposableFeature);
 
-            var scalar = (string) json.@string;
-
-            scalar.Should().Be("here i am!");
+        public DisposableFeature(IDisposable disposable)
+        {
+            this.disposable = disposable;
         }
 
-        [Fact]
-        public void Features_can_add_int_properties_to_serialized_RunResult_by_implementing_IAugmentRunResult()
+        public void Dispose()
         {
-            var result = new RunResult(true);
-
-            result.AddFeature(new TestFeature<int>("int", 123));
-
-            var json = result.ToJson().FromJsonTo<dynamic>();
-
-            var scalar = (int) json.@int;
-
-            scalar.Should().Be(123);
+            disposable?.Dispose();
         }
 
-        [Fact]
-        public void Features_can_add_array_properties_to_serialized_RunResult_by_implementing_IAugmentRunResult()
+        public void Apply(FeatureContainer result)
         {
-            var result = new RunResult(true);
-
-            result.AddFeature(new TestFeature<string[]>("array", new[] { "one", "two", "three" }));
-
-            var json = result.ToJson().FromJsonTo<JObject>();
-
-            var array = json.Property("array").Value.ToObject<string[]>();
-
-            array.Should().Equal("one", "two", "three");
-        }
-
-        public class TestClass
-        {
-            public TestClass(string stringProperty, int intProperty)
-            {
-                StringProperty = stringProperty;
-                IntProperty = intProperty;
-            }
-
-            public string StringProperty { get; }
-            public int IntProperty { get; }
-        }
-
-        private class TestFeature<T> : IRunResultFeature
-        {
-            private readonly string name;
-            private readonly T value;
-
-            public TestFeature(string name, T value)
-            {
-                this.name = name;
-                this.value = value;
-            }
-
-            public string Name => value.GetType().Name;
-
-            public void Apply(FeatureContainer result)
-            {
-                result.AddProperty(name, value);
-            }
-        }
-
-        public class DisposableFeature : IRunResultFeature, IDisposable
-        {
-            private readonly IDisposable disposable;
-
-            public string Name => nameof(DisposableFeature);
-
-            public DisposableFeature(IDisposable disposable)
-            {
-                this.disposable = disposable;
-            }
-
-            public void Dispose()
-            {
-                disposable?.Dispose();
-            }
-
-            public void Apply(FeatureContainer result)
-            {
-            }
         }
     }
 }

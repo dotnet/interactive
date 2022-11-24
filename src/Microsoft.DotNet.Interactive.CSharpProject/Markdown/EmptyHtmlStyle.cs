@@ -3,13 +3,12 @@
 
 using Microsoft.AspNetCore.Html;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown
+namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown;
+
+internal class EmptyHtmlStyle : HtmlStyleAttribute
 {
-    internal class EmptyHtmlStyle : HtmlStyleAttribute
+    protected override IHtmlContent StyleAttributeString()
     {
-        protected override IHtmlContent StyleAttributeString()
-        {
-            return HtmlString.Empty;
-        }
+        return HtmlString.Empty;
     }
 }

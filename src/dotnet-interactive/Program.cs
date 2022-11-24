@@ -19,129 +19,128 @@ using Serilog.Sinks.RollingFileAlternate;
 using SerilogLoggerConfiguration = Serilog.LoggerConfiguration;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.App.Program>;
 
-namespace Microsoft.DotNet.Interactive.App
-{
-    public class Program
-    {
-        private static readonly ServiceCollection _serviceCollection = new();
+namespace Microsoft.DotNet.Interactive.App;
 
-        public static async Task<int> Main(string[] args)
+public class Program
+{
+    private static readonly ServiceCollection _serviceCollection = new();
+
+    public static async Task<int> Main(string[] args)
+    {
+        Console.OutputEncoding = Encoding.UTF8;
+        return await CommandLineParser.Create(_serviceCollection).InvokeAsync(args);
+    }
+
+    private static readonly Assembly[] _assembliesEmittingPocketLoggerLogs =
+    {
+        typeof(Startup).Assembly, // dotnet-interactive.dll
+        typeof(Kernel).Assembly, // Microsoft.DotNet.Interactive.dll
+        typeof(Shell).Assembly, // Microsoft.DotNet.Interactive.Jupyter.dll
+    };
+
+    internal static IDisposable StartToolLogging(StartupOptions options)
+    {
+        var disposables = new CompositeDisposable();
+
+        if (options.LogPath is not null)
         {
-            Console.OutputEncoding = Encoding.UTF8;
-            return await CommandLineParser.Create(_serviceCollection).InvokeAsync(args);
+            var log = new SerilogLoggerConfiguration()
+                .WriteTo
+                .RollingFileAlternate(options.LogPath.FullName, outputTemplate: "{Message}{NewLine}")
+                .CreateLogger();
+
+            var subscription = LogEvents.Subscribe(
+                e => log.Information(e.ToLogString()),
+                _assembliesEmittingPocketLoggerLogs);
+
+            disposables.Add(subscription);
+            disposables.Add(log);
         }
 
-        private static readonly Assembly[] _assembliesEmittingPocketLoggerLogs =
+        TaskScheduler.UnobservedTaskException += (sender, args) =>
         {
-            typeof(Startup).Assembly, // dotnet-interactive.dll
-            typeof(Kernel).Assembly, // Microsoft.DotNet.Interactive.dll
-            typeof(Shell).Assembly, // Microsoft.DotNet.Interactive.Jupyter.dll
+            Log.Warning($"{nameof(TaskScheduler.UnobservedTaskException)}", args.Exception);
+            args.SetObserved();
         };
 
-        internal static IDisposable StartToolLogging(StartupOptions options)
+        return disposables;
+    }
+
+    public static IWebHostBuilder ConstructWebHostBuilder(
+        StartupOptions options, 
+        IServiceCollection serviceCollection)
+    {
+        using var _ = Log.OnEnterAndExit();
+
+        // TODO: (ConstructWebHostBuilder) dispose me
+        var disposables = new CompositeDisposable
         {
-            var disposables = new CompositeDisposable();
-
-            if (options.LogPath is not null)
-            {
-                var log = new SerilogLoggerConfiguration()
-                          .WriteTo
-                          .RollingFileAlternate(options.LogPath.FullName, outputTemplate: "{Message}{NewLine}")
-                          .CreateLogger();
-
-                var subscription = LogEvents.Subscribe(
-                    e => log.Information(e.ToLogString()),
-                    _assembliesEmittingPocketLoggerLogs);
-
-                disposables.Add(subscription);
-                disposables.Add(log);
-            }
-
-            TaskScheduler.UnobservedTaskException += (sender, args) =>
-            {
-                Log.Warning($"{nameof(TaskScheduler.UnobservedTaskException)}", args.Exception);
-                args.SetObserved();
-            };
-
-            return disposables;
-        }
-
-        public static IWebHostBuilder ConstructWebHostBuilder(
-            StartupOptions options, 
-            IServiceCollection serviceCollection)
-        {
-            using var _ = Log.OnEnterAndExit();
-
-            // TODO: (ConstructWebHostBuilder) dispose me
-            var disposables = new CompositeDisposable
-            {
-                StartToolLogging(options)
-            };
+            StartToolLogging(options)
+        };
             
-            HttpProbingSettings probingSettings = null;
+        HttpProbingSettings probingSettings = null;
 
-            if (options.EnableHttpApi)
-            {
-                var httpPort = GetFreePort(options);
-                options.HttpPort = httpPort;
-                probingSettings = HttpProbingSettings.Create(httpPort.PortNumber);
-            }
-
-            var webHost = new WebHostBuilder()
-                          .UseKestrel()
-                          .UseDotNetInteractiveHttpApi(options.EnableHttpApi, options.HttpPort, probingSettings, serviceCollection)
-                          .UseStartup<Startup>();
-
-            if (options.EnableHttpApi && probingSettings is not null)
-            {
-                webHost = webHost.UseUrls(probingSettings.AddressList.Select(a => a.AbsoluteUri).ToArray());
-            }
-
-            return webHost;
-
-            static HttpPort GetFreePort(StartupOptions startupOptions)
-            {
-                using var __ = Log.OnEnterAndExit(nameof(GetFreePort));
-                if (startupOptions.HttpPort is not null && !startupOptions.HttpPort.IsAuto)
-                {
-                    return startupOptions.HttpPort;
-                }
-
-                var currentPort = 0;
-                var endPort = 0;
-
-                if (startupOptions.HttpPortRange is not null)
-                {
-                    currentPort = startupOptions.HttpPortRange.Start;
-                    endPort = startupOptions.HttpPortRange.End;
-                }
-
-                for (; currentPort <= endPort; currentPort++)
-                {
-                    try
-                    {
-                        var l = new TcpListener(IPAddress.Loopback, currentPort);
-                        l.Start();
-                        var port = ((IPEndPoint)l.LocalEndpoint).Port;
-                        l.Stop();
-                        return new HttpPort(port);
-                    }
-                    catch (SocketException)
-                    {
-
-                    }
-                }
-
-                throw new InvalidOperationException("Cannot find a port");
-            }
-        }
-
-        public static IWebHost ConstructWebHost(StartupOptions options)
+        if (options.EnableHttpApi)
         {
-            var webHost = ConstructWebHostBuilder(options,_serviceCollection)
-                          .Build();
-           
-            return webHost;
+            var httpPort = GetFreePort(options);
+            options.HttpPort = httpPort;
+            probingSettings = HttpProbingSettings.Create(httpPort.PortNumber);
         }
+
+        var webHost = new WebHostBuilder()
+            .UseKestrel()
+            .UseDotNetInteractiveHttpApi(options.EnableHttpApi, options.HttpPort, probingSettings, serviceCollection)
+            .UseStartup<Startup>();
+
+        if (options.EnableHttpApi && probingSettings is not null)
+        {
+            webHost = webHost.UseUrls(probingSettings.AddressList.Select(a => a.AbsoluteUri).ToArray());
+        }
+
+        return webHost;
+
+        static HttpPort GetFreePort(StartupOptions startupOptions)
+        {
+            using var __ = Log.OnEnterAndExit(nameof(GetFreePort));
+            if (startupOptions.HttpPort is not null && !startupOptions.HttpPort.IsAuto)
+            {
+                return startupOptions.HttpPort;
+            }
+
+            var currentPort = 0;
+            var endPort = 0;
+
+            if (startupOptions.HttpPortRange is not null)
+            {
+                currentPort = startupOptions.HttpPortRange.Start;
+                endPort = startupOptions.HttpPortRange.End;
+            }
+
+            for (; currentPort <= endPort; currentPort++)
+            {
+                try
+                {
+                    var l = new TcpListener(IPAddress.Loopback, currentPort);
+                    l.Start();
+                    var port = ((IPEndPoint)l.LocalEndpoint).Port;
+                    l.Stop();
+                    return new HttpPort(port);
+                }
+                catch (SocketException)
+                {
+
+                }
+            }
+
+            throw new InvalidOperationException("Cannot find a port");
+        }
+    }
+
+    public static IWebHost ConstructWebHost(StartupOptions options)
+    {
+        var webHost = ConstructWebHostBuilder(options,_serviceCollection)
+            .Build();
+           
+        return webHost;
     }
 }
