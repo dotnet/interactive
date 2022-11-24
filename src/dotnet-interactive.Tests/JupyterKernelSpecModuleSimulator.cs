@@ -8,42 +8,41 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Utility;
 
-namespace Microsoft.DotNet.Interactive.App.Tests
+namespace Microsoft.DotNet.Interactive.App.Tests;
+
+internal class JupyterKernelSpecModuleSimulator : IJupyterKernelSpecModule
 {
-    internal class JupyterKernelSpecModuleSimulator : IJupyterKernelSpecModule
+    private readonly bool _success;
+    private readonly DirectoryInfo _defaultKernelSpecDirectory;
+    private readonly Exception _withException;
+
+    public JupyterKernelSpecModuleSimulator(bool success, DirectoryInfo defaultKernelSpecDirectory= null, Exception withException = null)
     {
-        private readonly bool _success;
-        private readonly DirectoryInfo _defaultKernelSpecDirectory;
-        private readonly Exception _withException;
+        _success = success;
+        _defaultKernelSpecDirectory = defaultKernelSpecDirectory;
+        _withException = withException;
+    }
 
-        public JupyterKernelSpecModuleSimulator(bool success, DirectoryInfo defaultKernelSpecDirectory= null, Exception withException = null)
+    public List<string> InstalledKernelSpecs { get; } = new List<string>();
+
+    public Task<CommandLineResult> InstallKernel(DirectoryInfo sourceDirectory)
+    {
+        foreach (var kernelSpec in sourceDirectory.GetFiles("kernel.json"))
         {
-            _success = success;
-            _defaultKernelSpecDirectory = defaultKernelSpecDirectory;
-            _withException = withException;
+            InstalledKernelSpecs.Add(File.ReadAllText(kernelSpec.FullName));
         }
 
-        public List<string> InstalledKernelSpecs { get; } = new List<string>();
-
-        public Task<CommandLineResult> InstallKernel(DirectoryInfo sourceDirectory)
+        if (!_success && _withException is not null)
         {
-            foreach (var kernelSpec in sourceDirectory.GetFiles("kernel.json"))
-            {
-                InstalledKernelSpecs.Add(File.ReadAllText(kernelSpec.FullName));
-            }
-
-            if (!_success && _withException is not null)
-            {
-                throw _withException;
-            }
-            return Task.FromResult(new CommandLineResult(_success ? 0 : 1));
+            throw _withException;
         }
+        return Task.FromResult(new CommandLineResult(_success ? 0 : 1));
+    }
 
-        public DirectoryInfo GetDefaultKernelSpecDirectory()
-        {
-            return _success
-                ? _defaultKernelSpecDirectory ?? new JupyterKernelSpecModule().GetDefaultKernelSpecDirectory()
-                : _defaultKernelSpecDirectory?? new DirectoryInfo(Path.Combine(Path.GetTempPath(), Path.GetTempFileName()));
-        }
+    public DirectoryInfo GetDefaultKernelSpecDirectory()
+    {
+        return _success
+            ? _defaultKernelSpecDirectory ?? new JupyterKernelSpecModule().GetDefaultKernelSpecDirectory()
+            : _defaultKernelSpecDirectory?? new DirectoryInfo(Path.Combine(Path.GetTempPath(), Path.GetTempFileName()));
     }
 }

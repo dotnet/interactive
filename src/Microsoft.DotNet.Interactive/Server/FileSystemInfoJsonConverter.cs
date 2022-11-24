@@ -5,37 +5,36 @@ using System;
 using System.IO;
 using System.Text.Json;
 
-namespace Microsoft.DotNet.Interactive.Connection
+namespace Microsoft.DotNet.Interactive.Connection;
+
+public class FileSystemInfoJsonConverter : JsonConverter<FileSystemInfo>
 {
-    public class FileSystemInfoJsonConverter : JsonConverter<FileSystemInfo>
+    public override FileSystemInfo Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        public override FileSystemInfo Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        if(reader.TokenType == JsonTokenType.String)
         {
-            if(reader.TokenType == JsonTokenType.String)
+            var path = reader.GetString();
+            if (string.IsNullOrWhiteSpace(path))
             {
-                var path = reader.GetString();
-                if (string.IsNullOrWhiteSpace(path))
-                {
-                    return null;
-                }
-
-                if (typeToConvert == typeof(FileInfo))
-                {
-                    return new FileInfo(path);
-                }
-
-                if (typeToConvert == typeof(DirectoryInfo))
-                {
-                    return new DirectoryInfo(path);
-                }
+                return null;
             }
 
-            return null;
+            if (typeToConvert == typeof(FileInfo))
+            {
+                return new FileInfo(path);
+            }
+
+            if (typeToConvert == typeof(DirectoryInfo))
+            {
+                return new DirectoryInfo(path);
+            }
         }
 
-        public override void Write(Utf8JsonWriter writer, FileSystemInfo value, JsonSerializerOptions options)
-        {
-            writer.WriteStringValue(value.FullName);
-        }
+        return null;
+    }
+
+    public override void Write(Utf8JsonWriter writer, FileSystemInfo value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value.FullName);
     }
 }

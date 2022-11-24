@@ -8,100 +8,98 @@ using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Formatting;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+// Data bag containing the data to be displayed when reporting nuget resolve progress 
+
+[TypeFormatterSource(typeof(InstallPackagesMessageFormatterSource))]
+public class InstallPackagesMessage
 {
-    // Data bag containing the data to be displayed when reporting nuget resolve progress 
+    public IReadOnlyList<string> RestoreSources { get; set; }
+    public IReadOnlyList<string> InstallingPackages { get; set; }
+    public IReadOnlyList<string> InstalledPackages { get; set; }
+    public int Progress { get; set; }
 
-    [TypeFormatterSource(typeof(InstallPackagesMessageFormatterSource))]
-    public class InstallPackagesMessage
+    public InstallPackagesMessage(
+        IReadOnlyList<string> restoreSources,
+        IReadOnlyList<string> installingPackages,
+        IReadOnlyList<string> installedPackages,
+        int progress)
     {
-        public IReadOnlyList<string> RestoreSources { get; set; }
-        public IReadOnlyList<string> InstallingPackages { get; set; }
-        public IReadOnlyList<string> InstalledPackages { get; set; }
-        public int Progress { get; set; }
+        RestoreSources = restoreSources;
+        InstallingPackages = installingPackages;
+        InstalledPackages = installedPackages;
+        Progress = progress;
+    }
 
-        public InstallPackagesMessage(
-                IReadOnlyList<string> restoreSources,
-                IReadOnlyList<string> installingPackages,
-                IReadOnlyList<string> installedPackages,
-                int progress)
+    private IHtmlContent InstallMessage(string message, IReadOnlyList<string> items, string progress = null)
+    {
+        if (items.Any())
         {
-            RestoreSources = restoreSources;
-            InstallingPackages = installingPackages;
-            InstalledPackages = installedPackages;
-            Progress = progress;
+            return div(
+                strong(message),
+                ul(items.Select(s => li(span(s + progress)))));
+        }
+        else
+        {
+            return div();
+        }
+    }
+
+    public string FormatAsHtml()
+    {
+        var items = new List<IHtmlContent>
+        {
+            InstallMessage("Restore sources", RestoreSources),
+            InstallMessage("Installing Packages", InstallingPackages, new string('.', Progress)),
+            InstallMessage("Installed Packages", InstalledPackages)
+        };
+        return div(items).ToString();
+    }
+
+    public IEnumerable<string> FormatAsPlainTextLines()
+    {
+        if (RestoreSources.Count > 0)
+        {
+            yield return "Restore sources";
+            foreach (var source in RestoreSources)
+            {
+                yield return $" - {source}";
+            }
         }
 
-        private IHtmlContent InstallMessage(string message, IReadOnlyList<string> items, string progress = null)
+        if (InstallingPackages.Count > 0)
         {
-            if (items.Any())
+            yield return "Installing Packages";
+            foreach (var installing in InstallingPackages)
             {
-                return div(
-                    strong(message),
-                    ul(items.Select(s => li(span(s + progress)))));
-            }
-            else
-            {
-                return div();
+                yield return $" - {installing}   " + new string('.', Progress);
             }
         }
 
-        public string FormatAsHtml()
+        if (InstalledPackages.Count > 0)
         {
-            var items = new List<IHtmlContent>
+            yield return "Installed Packages";
+            foreach (var installed in InstalledPackages)
             {
-                InstallMessage("Restore sources", RestoreSources),
-                InstallMessage("Installing Packages", InstallingPackages, new string('.', Progress)),
-                InstallMessage("Installed Packages", InstalledPackages)
+                yield return $" - {installed}";
+            }
+        }
+    }
+
+    public string FormatAsPlainText()
+    {
+        return string.Join(Environment.NewLine, FormatAsPlainTextLines());
+    }
+
+    private class InstallPackagesMessageFormatterSource : ITypeFormatterSource
+    {
+        public IEnumerable<ITypeFormatter> CreateTypeFormatters()
+        {
+            return new ITypeFormatter[]
+            {
+                new PlainTextFormatter<InstallPackagesMessage>((m, ctxt) => ctxt.Writer.Write(m.FormatAsPlainText())),
+                new HtmlFormatter<InstallPackagesMessage>((m, ctxt) => ctxt.Writer.Write(m.FormatAsHtml()))
             };
-            return div(items).ToString();
-        }
-
-        public IEnumerable<string> FormatAsPlainTextLines()
-        {
-            if (RestoreSources.Count > 0)
-            {
-                yield return "Restore sources";
-                foreach (var source in RestoreSources)
-                {
-                    yield return $" - {source}";
-                }
-            }
-
-            if (InstallingPackages.Count > 0)
-            {
-                yield return "Installing Packages";
-                foreach (var installing in InstallingPackages)
-                {
-                    yield return $" - {installing}   " + new string('.', Progress);
-                }
-            }
-
-            if (InstalledPackages.Count > 0)
-            {
-                yield return "Installed Packages";
-                foreach (var installed in InstalledPackages)
-                {
-                    yield return $" - {installed}";
-                }
-            }
-        }
-
-        public string FormatAsPlainText()
-        {
-            return string.Join(Environment.NewLine, FormatAsPlainTextLines());
-        }
-
-        private class InstallPackagesMessageFormatterSource : ITypeFormatterSource
-        {
-            public IEnumerable<ITypeFormatter> CreateTypeFormatters()
-            {
-                return new ITypeFormatter[]
-                {
-                    new PlainTextFormatter<InstallPackagesMessage>((m, ctxt) => ctxt.Writer.Write(m.FormatAsPlainText())),
-                    new HtmlFormatter<InstallPackagesMessage>((m, ctxt) => ctxt.Writer.Write(m.FormatAsHtml()))
-                };
-            }
         }
     }
 }

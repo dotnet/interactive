@@ -4,21 +4,20 @@
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.CSharp;
 
-namespace Microsoft.DotNet.Interactive.AspNetCore
-{
-    public class AspNetCoreKernelExtension : IKernelExtension
-    {
-        public Task OnLoadAsync(Kernel kernel)
-        {
-            kernel.VisitSubkernelsAndSelf(kernel =>
-            {
-                if (kernel is CSharpKernel cSharpKernel)
-                {
-                    cSharpKernel.UseAspNetCore();
-                }
-            });
+namespace Microsoft.DotNet.Interactive.AspNetCore;
 
-            return Task.CompletedTask;
-        }
+public class AspNetCoreKernelExtension : IKernelExtension
+{
+    public Task OnLoadAsync(Kernel kernel)
+    {
+        kernel.VisitSubkernelsAndSelf(kernel =>
+        {
+            if (kernel is CSharpKernel cSharpKernel)
+            {
+                cSharpKernel.UseAspNetCore();
+            }
+        });
+
+        return Task.CompletedTask;
     }
 }

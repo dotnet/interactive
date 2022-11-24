@@ -5,31 +5,30 @@ using System;
 using System.Collections.Generic;
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Events
+namespace Microsoft.DotNet.Interactive.Events;
+
+public class HoverTextProduced : KernelEvent
 {
-    public class HoverTextProduced : KernelEvent
+    private readonly LinePositionSpan _linePositionSpan;
+
+    public HoverTextProduced(RequestHoverText command, IReadOnlyCollection<FormattedValue> content, LinePositionSpan linePositionSpan = null)
+        : base(command)
     {
-        private readonly LinePositionSpan _linePositionSpan;
-
-        public HoverTextProduced(RequestHoverText command, IReadOnlyCollection<FormattedValue> content, LinePositionSpan linePositionSpan = null)
-            : base(command)
+        if (content is null)
         {
-            if (content is null)
-            {
-                throw new ArgumentNullException(nameof(content));
-            }
-
-            if (content.Count == 0)
-            {
-                throw new ArgumentException("At least one content required.", nameof(content));
-            }
-
-            Content = content;
-            _linePositionSpan = linePositionSpan;
+            throw new ArgumentNullException(nameof(content));
         }
 
-        public IReadOnlyCollection<FormattedValue> Content { get; }
+        if (content.Count == 0)
+        {
+            throw new ArgumentException("At least one content required.", nameof(content));
+        }
 
-        public LinePositionSpan LinePositionSpan => this.CalculateLineOffsetFromParentCommand(_linePositionSpan);
+        Content = content;
+        _linePositionSpan = linePositionSpan;
     }
+
+    public IReadOnlyCollection<FormattedValue> Content { get; }
+
+    public LinePositionSpan LinePositionSpan => this.CalculateLineOffsetFromParentCommand(_linePositionSpan);
 }

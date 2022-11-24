@@ -8,26 +8,25 @@ using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.CSharpProject.Transformations;
 using Workspace = Microsoft.DotNet.Interactive.CSharpProject.Workspace;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject
-{
-    internal static class DiagnosticsExtractor
-    {
-        public static async Task<IReadOnlyCollection<SerializableDiagnostic>> ExtractSerializableDiagnosticsFromDocument(
-            BufferId bufferId,
-            Document selectedDocument,
-            Workspace workspace)
-        {
-            var semanticModel = await selectedDocument.GetSemanticModelAsync();
-            return ExtractSerializableDiagnosticsFromSemanticModel(bufferId, semanticModel, workspace);
-        }
+namespace Microsoft.DotNet.Interactive.CSharpProject;
 
-        public static IReadOnlyCollection<SerializableDiagnostic> ExtractSerializableDiagnosticsFromSemanticModel(
-            BufferId bufferId,
-            SemanticModel semanticModel,
-            Workspace workspace)
-        {
-            var diagnostics = workspace.MapDiagnostics(bufferId, semanticModel.GetDiagnostics().ToArray());
-            return diagnostics.DiagnosticsInActiveBuffer;
-        }
+internal static class DiagnosticsExtractor
+{
+    public static async Task<IReadOnlyCollection<SerializableDiagnostic>> ExtractSerializableDiagnosticsFromDocument(
+        BufferId bufferId,
+        Document selectedDocument,
+        Workspace workspace)
+    {
+        var semanticModel = await selectedDocument.GetSemanticModelAsync();
+        return ExtractSerializableDiagnosticsFromSemanticModel(bufferId, semanticModel, workspace);
+    }
+
+    public static IReadOnlyCollection<SerializableDiagnostic> ExtractSerializableDiagnosticsFromSemanticModel(
+        BufferId bufferId,
+        SemanticModel semanticModel,
+        Workspace workspace)
+    {
+        var diagnostics = workspace.MapDiagnostics(bufferId, semanticModel.GetDiagnostics().ToArray());
+        return diagnostics.DiagnosticsInActiveBuffer;
     }
 }

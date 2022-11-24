@@ -4,18 +4,17 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
-{
-    [JupyterMessageType(JupyterMessageContentTypes.CommInfoReply)]
-    public class CommInfoReply : ReplyMessage
-    {
-        [JsonPropertyName("comms")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public IReadOnlyDictionary<string, CommTarget> Comms { get; }
+namespace Microsoft.DotNet.Interactive.Jupyter.Protocol;
 
-        public CommInfoReply(IReadOnlyDictionary<string, CommTarget> comms)
-        {
-            Comms = comms;
-        }
+[JupyterMessageType(JupyterMessageContentTypes.CommInfoReply)]
+public class CommInfoReply : ReplyMessage
+{
+    [JsonPropertyName("comms")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyDictionary<string, CommTarget> Comms { get; }
+
+    public CommInfoReply(IReadOnlyDictionary<string, CommTarget> comms)
+    {
+        Comms = comms;
     }
 }

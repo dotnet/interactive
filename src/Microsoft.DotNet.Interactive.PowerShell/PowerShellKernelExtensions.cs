@@ -4,26 +4,25 @@
 using System.IO;
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.PowerShell
+namespace Microsoft.DotNet.Interactive.PowerShell;
+
+public static class PowerShellKernelExtensions
 {
-    public static class PowerShellKernelExtensions
+    public static PowerShellKernel UseProfiles(
+        this PowerShellKernel kernel)
     {
-        public static PowerShellKernel UseProfiles(
-            this PowerShellKernel kernel)
+        if (File.Exists(DollarProfileHelper.AllUsersCurrentHost))
         {
-            if (File.Exists(DollarProfileHelper.AllUsersCurrentHost))
-            {
-                var command = new SubmitCode(". $PROFILE.AllUsersCurrentHost");
-                kernel.DeferCommand(command);
-            }
-
-            if (File.Exists(DollarProfileHelper.CurrentUserCurrentHost))
-            {
-                var command = new SubmitCode(". $PROFILE");
-                kernel.DeferCommand(command);
-            }
-
-            return kernel;
+            var command = new SubmitCode(". $PROFILE.AllUsersCurrentHost");
+            kernel.DeferCommand(command);
         }
+
+        if (File.Exists(DollarProfileHelper.CurrentUserCurrentHost))
+        {
+            var command = new SubmitCode(". $PROFILE");
+            kernel.DeferCommand(command);
+        }
+
+        return kernel;
     }
 }

@@ -3,17 +3,16 @@
 
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
-{
-    [JupyterMessageType(JupyterMessageContentTypes.ClearOutput)]
-    public class ClearOutput : PubSubMessage
-    {
-        [JsonPropertyName("wait ")]
-        public bool Wait { get; }
+namespace Microsoft.DotNet.Interactive.Jupyter.Protocol;
 
-        public ClearOutput(bool wait = false)
-        {
-            Wait = wait;
-        }
+[JupyterMessageType(JupyterMessageContentTypes.ClearOutput)]
+public class ClearOutput : PubSubMessage
+{
+    [JsonPropertyName("wait ")]
+    public bool Wait { get; }
+
+    public ClearOutput(bool wait = false)
+    {
+        Wait = wait;
     }
 }

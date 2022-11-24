@@ -3,43 +3,42 @@
 
 using System.IO;
 
-namespace Microsoft.DotNet.Interactive.PowerShell
+namespace Microsoft.DotNet.Interactive.PowerShell;
+
+using System.Management.Automation;
+using System.Reflection;
+
+internal static class DollarProfileHelper
 {
-    using System.Management.Automation;
-    using System.Reflection;
+    private const string _profileName = "Microsoft.dotnet-interactive_profile.ps1";
 
-    internal static class DollarProfileHelper
+    // This is the easiest way to get the config directory (where the PROFILE lives), unfortunately.
+    private static readonly string _configPath = typeof(Platform).GetField(
+            "ConfigDirectory",
+            BindingFlags.Static | BindingFlags.NonPublic)
+        .GetValue(null) as string;
+
+    internal static string AllUsersCurrentHost { get; } = GetFullProfileFilePath(forCurrentUser: false);
+    internal static string CurrentUserCurrentHost { get; } = GetFullProfileFilePath(forCurrentUser: true);
+
+    private static string GetFullProfileFilePath(bool forCurrentUser)
     {
-        private const string _profileName = "Microsoft.dotnet-interactive_profile.ps1";
-
-        // This is the easiest way to get the config directory (where the PROFILE lives), unfortunately.
-        private static readonly string _configPath = typeof(Platform).GetField(
-                "ConfigDirectory",
-                BindingFlags.Static | BindingFlags.NonPublic)
-            .GetValue(null) as string;
-
-        internal static string AllUsersCurrentHost { get; } = GetFullProfileFilePath(forCurrentUser: false);
-        internal static string CurrentUserCurrentHost { get; } = GetFullProfileFilePath(forCurrentUser: true);
-
-        private static string GetFullProfileFilePath(bool forCurrentUser)
+        if (!forCurrentUser)
         {
-            if (!forCurrentUser)
-            {
-                var pshome = Path.GetDirectoryName(typeof(PSObject).Assembly.Location);
-                return Path.Combine(pshome, _profileName);
-            }
-
-            return Path.Combine(_configPath, _profileName);
+            var pshome = Path.GetDirectoryName(typeof(PSObject).Assembly.Location);
+            return Path.Combine(pshome, _profileName);
         }
 
-        public static PSObject GetProfileValue()
-        {
-            var dollarProfile = new PSObject(CurrentUserCurrentHost);
-            dollarProfile.Properties.Add(new PSNoteProperty("AllUsersCurrentHost", AllUsersCurrentHost));
-            dollarProfile.Properties.Add(new PSNoteProperty("CurrentUserCurrentHost", CurrentUserCurrentHost));
-            // TODO: Decide on whether or not we want to support running the AllHosts profiles
+        return Path.Combine(_configPath, _profileName);
+    }
 
-            return dollarProfile;
-        }
+    public static PSObject GetProfileValue()
+    {
+        var dollarProfile = new PSObject(CurrentUserCurrentHost);
+        dollarProfile.Properties.Add(new PSNoteProperty("AllUsersCurrentHost", AllUsersCurrentHost));
+        dollarProfile.Properties.Add(new PSNoteProperty("CurrentUserCurrentHost", CurrentUserCurrentHost));
+        // TODO: Decide on whether or not we want to support running the AllHosts profiles
+
+        return dollarProfile;
     }
 }

@@ -9,114 +9,113 @@ using Microsoft.DotNet.Interactive.CSharpProject.Markdown;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
+namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
+
+public class RenderingTests
 {
-    public class RenderingTests
+    private readonly ITestOutputHelper _output;
+
+    public RenderingTests(ITestOutputHelper output)
     {
-        private readonly ITestOutputHelper _output;
+        _output = output;
+    }
 
-        public RenderingTests(ITestOutputHelper output)
-        {
-            _output = output;
-        }
+    [Fact]
+    public void Markdown_snippets_can_be_transformed_into_editor_HTML()
+    {
+        var packageName = "Microsoft.DotNet.Interactive.Markdown";
+        var packageVersion = "1.2.3";
 
-        [Fact]
-        public void Markdown_snippets_can_be_transformed_into_editor_HTML()
-        {
-            var packageName = "Microsoft.DotNet.Interactive.Markdown";
-            var packageVersion = "1.2.3";
+        var pipeline = new MarkdownPipelineBuilder()
+            .UseCodeBlockAnnotations()
+            .Build();
 
-            var pipeline = new MarkdownPipelineBuilder()
-                           .UseCodeBlockAnnotations()
-                           .Build();
-
-            var markdown = @"
+        var markdown = @"
 
 ```cs --editable:true
 Console.WriteLine(""Hello world!"");
 ```
 ";
 
-            var writer = new StringWriter();
+        var writer = new StringWriter();
 
-            var context = new MarkdownParserContext();
+        var context = new MarkdownParserContext();
 
-            context.AddDefaultCodeBlockAnnotations(defaults =>
-            {
-                defaults.Package = packageName;
-                defaults.PackageVersion = packageVersion;
-            });
-
-           Markdig.Markdown.ToHtml(
-                markdown,
-                writer,
-                pipeline,
-                context);
-
-            var html = writer.ToString();
-
-            _output.WriteLine(html);
-
-            var htmlDocument = new HtmlDocument();
-            htmlDocument.LoadHtml(html);
-
-            var codeNode = htmlDocument.DocumentNode
-                                       .SelectSingleNode("//pre/code");
-
-            codeNode.Attributes["data-trydotnet-package"]
-                    .Value
-                    .Should()
-                    .Be(packageName);
-            codeNode.Attributes["data-trydotnet-package"]
-                    .Value
-                    .Should()
-                    .Be(packageName);
-            codeNode.Attributes["data-trydotnet-package-version"]
-                    .Value
-                    .Should()
-                    .Be(packageVersion);
-        }
-
-        [Fact]
-        public void Adds_file_name_attribute()
+        context.AddDefaultCodeBlockAnnotations(defaults =>
         {
-            var fileName = "Program.cs";
+            defaults.Package = packageName;
+            defaults.PackageVersion = packageVersion;
+        });
 
-            var pipeline = new MarkdownPipelineBuilder()
-                           .UseCodeBlockAnnotations()
-                           .Build();
+        Markdig.Markdown.ToHtml(
+            markdown,
+            writer,
+            pipeline,
+            context);
 
-            var markdown = $@"
+        var html = writer.ToString();
+
+        _output.WriteLine(html);
+
+        var htmlDocument = new HtmlDocument();
+        htmlDocument.LoadHtml(html);
+
+        var codeNode = htmlDocument.DocumentNode
+            .SelectSingleNode("//pre/code");
+
+        codeNode.Attributes["data-trydotnet-package"]
+            .Value
+            .Should()
+            .Be(packageName);
+        codeNode.Attributes["data-trydotnet-package"]
+            .Value
+            .Should()
+            .Be(packageName);
+        codeNode.Attributes["data-trydotnet-package-version"]
+            .Value
+            .Should()
+            .Be(packageVersion);
+    }
+
+    [Fact]
+    public void Adds_file_name_attribute()
+    {
+        var fileName = "Program.cs";
+
+        var pipeline = new MarkdownPipelineBuilder()
+            .UseCodeBlockAnnotations()
+            .Build();
+
+        var markdown = $@"
 
 ```cs --destination-file {fileName}
 Console.WriteLine(""Hello world!"");
 ```
 ";
 
-            var writer = new StringWriter();
+        var writer = new StringWriter();
 
-            var context = new MarkdownParserContext();
+        var context = new MarkdownParserContext();
 
-            Markdig.Markdown.ToHtml(
-                 markdown,
-                 writer,
-                 pipeline,
-                 context);
+        Markdig.Markdown.ToHtml(
+            markdown,
+            writer,
+            pipeline,
+            context);
 
-            var html = writer.ToString();
+        var html = writer.ToString();
 
-            _output.WriteLine(html);
+        _output.WriteLine(html);
 
-            var htmlDocument = new HtmlDocument();
-            htmlDocument.LoadHtml(html);
+        var htmlDocument = new HtmlDocument();
+        htmlDocument.LoadHtml(html);
 
-            var codeNode = htmlDocument.DocumentNode
-                                       .SelectSingleNode("//pre/code");
+        var codeNode = htmlDocument.DocumentNode
+            .SelectSingleNode("//pre/code");
 
-            codeNode.Attributes["data-trydotnet-file-name"]
-                    .Value
-                    .Should()
-                    .Be(fileName);
-        }
+        codeNode.Attributes["data-trydotnet-file-name"]
+            .Value
+            .Should()
+            .Be(fileName);
     }
 }

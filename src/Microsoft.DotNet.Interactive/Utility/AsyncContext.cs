@@ -3,29 +3,28 @@
 
 using System.Threading;
 
-namespace Microsoft.DotNet.Interactive.Utility
+namespace Microsoft.DotNet.Interactive.Utility;
+
+public static class AsyncContext
 {
-    public static class AsyncContext
+    private static int _seed = 0;
+
+    private static readonly AsyncLocal<int?> _id = new();
+
+    public static int? Id => _id.Value;
+
+    public static bool TryEstablish(out int id)
     {
-        private static int _seed = 0;
-
-        private static readonly AsyncLocal<int?> _id = new();
-
-        public static int? Id => _id.Value;
-
-        public static bool TryEstablish(out int id)
+        if (_id.Value is { } value)
         {
-            if (_id.Value is { } value)
-            {
-                id = _id.Value.Value;
-                return false;
-            }
-            else
-            {
-                _id.Value = Interlocked.Increment(ref _seed);
-                id = _id.Value.Value;
-                return true;
-            }
+            id = _id.Value.Value;
+            return false;
+        }
+        else
+        {
+            _id.Value = Interlocked.Increment(ref _seed);
+            id = _id.Value.Value;
+            return true;
         }
     }
 }

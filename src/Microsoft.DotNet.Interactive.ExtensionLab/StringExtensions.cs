@@ -3,18 +3,17 @@
 
 using System.IO;
 
-namespace System
+namespace System;
+
+public static class StringExtensions
 {
-    public static class StringExtensions
+    public static Stream ToStream(this string text)
     {
-        public static Stream ToStream(this string text)
-        {
-            var stream = new MemoryStream();
-            var writer = new StreamWriter(stream);
-            writer.Write(text);
-            writer.Flush();
-            stream.Position = 0;
-            return stream;
-        }
+        var stream = new MemoryStream();
+        var writer = new StreamWriter(stream);
+        writer.Write(text);
+        writer.Flush();
+        stream.Position = 0;
+        return stream;
     }
 }

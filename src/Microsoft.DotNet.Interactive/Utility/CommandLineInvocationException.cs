@@ -3,13 +3,12 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive.Utility
+namespace Microsoft.DotNet.Interactive.Utility;
+
+public class CommandLineInvocationException : Exception
 {
-    public class CommandLineInvocationException : Exception
+    public CommandLineInvocationException(CommandLineResult result, string message = null) : base(
+        $"{message}{Environment.NewLine}Exit code {result.ExitCode}: {string.Join("\n", result.Error)}".Trim())
     {
-        public CommandLineInvocationException(CommandLineResult result, string message = null) : base(
-            $"{message}{Environment.NewLine}Exit code {result.ExitCode}: {string.Join("\n", result.Error)}".Trim())
-        {
-        }
     }
 }

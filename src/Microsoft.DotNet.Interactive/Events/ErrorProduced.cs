@@ -4,18 +4,17 @@
 using System.Collections.Generic;
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Events
-{
-    public class ErrorProduced : DisplayEvent
-    {
-        public ErrorProduced(
-            string message,
-            KernelCommand command,
-            IReadOnlyCollection<FormattedValue> formattedValues = null) : base(message, command, formattedValues)
-        {
-            Message = message;
-        }
+namespace Microsoft.DotNet.Interactive.Events;
 
-        public string Message { get; }
+public class ErrorProduced : DisplayEvent
+{
+    public ErrorProduced(
+        string message,
+        KernelCommand command,
+        IReadOnlyCollection<FormattedValue> formattedValues = null) : base(message, command, formattedValues)
+    {
+        Message = message;
     }
+
+    public string Message { get; }
 }

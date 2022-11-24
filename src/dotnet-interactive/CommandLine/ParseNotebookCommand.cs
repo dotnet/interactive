@@ -4,13 +4,12 @@
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Documents.ParserServer;
 
-namespace Microsoft.DotNet.Interactive.App.CommandLine
+namespace Microsoft.DotNet.Interactive.App.CommandLine;
+
+internal static class ParseNotebookCommand
 {
-    internal static class ParseNotebookCommand
+    public static Task Do(NotebookParserServer parserServer)
     {
-        public static Task Do(NotebookParserServer parserServer)
-        {
-            return parserServer.RunAsync();
-        }
+        return parserServer.RunAsync();
     }
 }

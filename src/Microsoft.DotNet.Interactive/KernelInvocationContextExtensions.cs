@@ -10,119 +10,118 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+public static class KernelInvocationContextExtensions
 {
-    public static class KernelInvocationContextExtensions
+    public static DisplayedValue Display(
+        this KernelInvocationContext context,
+        object value,
+        params string[] mimeTypes)
     {
-        public static DisplayedValue Display(
-            this KernelInvocationContext context,
-            object value,
-            params string[] mimeTypes)
+        var displayId = Guid.NewGuid().ToString();
+
+        var formattedValues = FormattedValue.FromObject(value, mimeTypes);
+
+        context.Publish(
+            new DisplayedValueProduced(
+                value,
+                context?.Command,
+                formattedValues,
+                displayId));
+
+        var displayedValue = new DisplayedValue(displayId, formattedValues.Select(fv => fv.MimeType).ToArray(), context);
+
+        return displayedValue;
+    }
+
+    public static DisplayedValue DisplayAs(
+        this KernelInvocationContext context,
+        string value,
+        string mimeType, params string[]additionalMimeTypes)
+    {
+        if (string.IsNullOrWhiteSpace(mimeType))
         {
-            var displayId = Guid.NewGuid().ToString();
-
-            var formattedValues = FormattedValue.FromObject(value, mimeTypes);
-
-            context.Publish(
-                new DisplayedValueProduced(
-                    value,
-                    context?.Command,
-                    formattedValues,
-                    displayId));
-
-            var displayedValue = new DisplayedValue(displayId, formattedValues.Select(fv => fv.MimeType).ToArray(), context);
-
-            return displayedValue;
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(mimeType));
         }
 
-        public static DisplayedValue DisplayAs(
-            this KernelInvocationContext context,
-            string value,
-            string mimeType, params string[]additionalMimeTypes)
+        var displayId = Guid.NewGuid().ToString();
+
+        var mimeTypes = new HashSet<string>(additionalMimeTypes ?? Array.Empty<string>())
         {
-            if (string.IsNullOrWhiteSpace(mimeType))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(mimeType));
-            }
+            mimeType
+        };
 
-            var displayId = Guid.NewGuid().ToString();
+        var formattedValues = mimeTypes.Select(mime =>  new FormattedValue(
+            mime,
+            value));
 
-            var mimeTypes = new HashSet<string>(additionalMimeTypes ?? Array.Empty<string>())
-            {
-                mimeType
-            };
+        context.Publish(
+            new DisplayedValueProduced(
+                value,
+                context?.Command,
+                formattedValues.ToArray(),
+                displayId));
 
-            var formattedValues = mimeTypes.Select(mime =>  new FormattedValue(
-                mime,
-                value));
+        var displayedValue = new DisplayedValue(displayId, mimeType, context);
 
-            context.Publish(
-                new DisplayedValueProduced(
-                    value,
-                    context?.Command,
-                    formattedValues.ToArray(),
-                    displayId));
+        return displayedValue;
+    }
 
-            var displayedValue = new DisplayedValue(displayId, mimeType, context);
-
-            return displayedValue;
-        }
-
-        public static void DisplayStandardOut(
-            this KernelInvocationContext context,
-            string output,
-            KernelCommand command = null)
+    public static void DisplayStandardOut(
+        this KernelInvocationContext context,
+        string output,
+        KernelCommand command = null)
+    {
+        var formattedValues = new List<FormattedValue>
         {
-            var formattedValues = new List<FormattedValue>
-            {
-                new(PlainTextFormatter.MimeType, output)
-            };
+            new(PlainTextFormatter.MimeType, output)
+        };
 
-            context.Publish(
-                new StandardOutputValueProduced(
-                    command ?? context.Command,
-                    formattedValues));
-        }
+        context.Publish(
+            new StandardOutputValueProduced(
+                command ?? context.Command,
+                formattedValues));
+    }
 
-        public static void DisplayStandardError(
-            this KernelInvocationContext context,
-            string error,
-            KernelCommand command = null)
+    public static void DisplayStandardError(
+        this KernelInvocationContext context,
+        string error,
+        KernelCommand command = null)
+    {
+        var formattedValues = new List<FormattedValue>
         {
-            var formattedValues = new List<FormattedValue>
-            {
-                new(PlainTextFormatter.MimeType, error)
-            };
+            new(PlainTextFormatter.MimeType, error)
+        };
 
-            context.Publish(
-                new StandardErrorValueProduced(
-                    command ?? context.Command,
-                    formattedValues));
-        }
+        context.Publish(
+            new StandardErrorValueProduced(
+                command ?? context.Command,
+                formattedValues));
+    }
 
-        public static void PublishValueProduced(
-            this KernelInvocationContext context, 
-            RequestValue requestValue, 
-            object value)
-        {
-            var valueType = value?.GetType();
+    public static void PublishValueProduced(
+        this KernelInvocationContext context, 
+        RequestValue requestValue, 
+        object value)
+    {
+        var valueType = value?.GetType();
 
-            var requestedMimeType = requestValue.MimeType;
+        var requestedMimeType = requestValue.MimeType;
 
-            var formatter = Formatter.GetPreferredFormatterFor(valueType, requestedMimeType);
+        var formatter = Formatter.GetPreferredFormatterFor(valueType, requestedMimeType);
 
-            using var writer = new StringWriter(CultureInfo.InvariantCulture);
-            formatter.Format(value, writer);
+        using var writer = new StringWriter(CultureInfo.InvariantCulture);
+        formatter.Format(value, writer);
 
-            var formatted = new FormattedValue(
-                requestedMimeType, 
-                writer.ToString());
+        var formatted = new FormattedValue(
+            requestedMimeType, 
+            writer.ToString());
 
-            context.Publish(new ValueProduced(
-                                value,
-                                requestValue.Name,
-                                formatted, 
-                                requestValue));
-        }
+        context.Publish(new ValueProduced(
+            value,
+            requestValue.Name,
+            formatted, 
+            requestValue));
     }
 }

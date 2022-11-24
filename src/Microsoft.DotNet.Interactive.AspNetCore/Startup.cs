@@ -5,42 +5,41 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Microsoft.DotNet.Interactive.AspNetCore
+namespace Microsoft.DotNet.Interactive.AspNetCore;
+
+internal class Startup
 {
-    internal class Startup
+    public IApplicationBuilder App { get; private set; }
+    public IEndpointRouteBuilder Endpoints { get; private set; }
+
+    public void ConfigureServices(IServiceCollection services)
     {
-        public IApplicationBuilder App { get; private set; }
-        public IEndpointRouteBuilder Endpoints { get; private set; }
-
-        public void ConfigureServices(IServiceCollection services)
+        services.AddCors(options =>
         {
-            services.AddCors(options =>
-            {
-                options.AddPolicy("AllowAll",
-                    builder =>
-                    {
-                        builder
-                            .AllowAnyMethod()
-                            .AllowAnyHeader()
-                            .AllowCredentials()
-                            .SetIsOriginAllowed(_ => true);
-                    });
-            });
-        }
+            options.AddPolicy("AllowAll",
+                builder =>
+                {
+                    builder
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials()
+                        .SetIsOriginAllowed(_ => true);
+                });
+        });
+    }
 
-        public void Configure(IApplicationBuilder app)
+    public void Configure(IApplicationBuilder app)
+    {
+        App = app.New();
+        App.UseRouting();
+        App.UseCors("AllowAll");
+        App.UseEndpoints(endpoints =>
         {
-            App = app.New();
-            App.UseRouting();
-            App.UseCors("AllowAll");
-            App.UseEndpoints(endpoints =>
-            {
-                Endpoints = endpoints;
-            });
+            Endpoints = endpoints;
+        });
 
-            app.Use(next =>
-                httpContext =>
-                   App.Build()(httpContext));
-        }
+        app.Use(next =>
+            httpContext =>
+                App.Build()(httpContext));
     }
 }

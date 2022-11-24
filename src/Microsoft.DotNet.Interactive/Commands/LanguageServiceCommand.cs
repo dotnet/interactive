@@ -3,41 +3,40 @@
 
 using Microsoft.DotNet.Interactive.Parsing;
 
-namespace Microsoft.DotNet.Interactive.Commands
+namespace Microsoft.DotNet.Interactive.Commands;
+
+public abstract class LanguageServiceCommand : KernelCommand
 {
-    public abstract class LanguageServiceCommand : KernelCommand
+    protected LanguageServiceCommand(
+        string code,
+        LinePosition linePosition,
+        string targetKernelName = null,
+        KernelCommand parent = null)
+        : base(targetKernelName, parent)
     {
-        protected LanguageServiceCommand(
-            string code,
-            LinePosition linePosition,
-            string targetKernelName = null,
-            KernelCommand parent = null)
-            : base(targetKernelName, parent)
-        {
-            Code = code;
-            LinePosition = linePosition;
-        }
-        
-        protected LanguageServiceCommand(
-            LanguageNode languageNode,
-            LinePosition linePosition,
-            KernelCommand parent = null)
-            : base(languageNode.KernelName, parent)
-        {
-            Code = languageNode.Text;
-            LanguageNode = languageNode;
-            LinePosition = linePosition;
-            SchedulingScope = languageNode.CommandScope;
-        }
-
-        public string Code { get; protected set; }
-
-        public LinePosition LinePosition { get; protected set; }
-
-        internal abstract LanguageServiceCommand With(
-            LanguageNode languageNode,
-            LinePosition position);
-
-        internal LanguageNode LanguageNode { get; }
+        Code = code;
+        LinePosition = linePosition;
     }
+        
+    protected LanguageServiceCommand(
+        LanguageNode languageNode,
+        LinePosition linePosition,
+        KernelCommand parent = null)
+        : base(languageNode.KernelName, parent)
+    {
+        Code = languageNode.Text;
+        LanguageNode = languageNode;
+        LinePosition = linePosition;
+        SchedulingScope = languageNode.CommandScope;
+    }
+
+    public string Code { get; protected set; }
+
+    public LinePosition LinePosition { get; protected set; }
+
+    internal abstract LanguageServiceCommand With(
+        LanguageNode languageNode,
+        LinePosition position);
+
+    internal LanguageNode LanguageNode { get; }
 }

@@ -6,29 +6,28 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Events;
 
-namespace Microsoft.DotNet.Interactive.Commands
+namespace Microsoft.DotNet.Interactive.Commands;
+
+public class ChangeWorkingDirectory : KernelCommand
 {
-    public class ChangeWorkingDirectory : KernelCommand
+    public string WorkingDirectory { get; }
+
+    public ChangeWorkingDirectory(string workingDirectory)
     {
-        public string WorkingDirectory { get; }
+        WorkingDirectory = workingDirectory;
+    }
 
-        public ChangeWorkingDirectory(string workingDirectory)
+    public override Task InvokeAsync(KernelInvocationContext context)
+    {
+        var currentWorkingDir = Directory.GetCurrentDirectory();
+
+        if (!currentWorkingDir.Equals(WorkingDirectory, StringComparison.Ordinal))
         {
-            WorkingDirectory = workingDirectory;
+            Directory.SetCurrentDirectory(WorkingDirectory);
+
+            context.Publish(new WorkingDirectoryChanged(WorkingDirectory, this));
         }
 
-        public override Task InvokeAsync(KernelInvocationContext context)
-        {
-            var currentWorkingDir = Directory.GetCurrentDirectory();
-
-            if (!currentWorkingDir.Equals(WorkingDirectory, StringComparison.Ordinal))
-            {
-                Directory.SetCurrentDirectory(WorkingDirectory);
-
-                context.Publish(new WorkingDirectoryChanged(WorkingDirectory, this));
-            }
-
-            return Handler(this, context);
-        }
+        return Handler(this, context);
     }
 }

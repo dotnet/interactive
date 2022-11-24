@@ -3,10 +3,9 @@
 
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
+namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
+
+public interface IPackageDiscoveryStrategy
 {
-    public interface IPackageDiscoveryStrategy
-    {
-        Task<PackageBuilder> LocatePackageAsync(PackageDescriptor packageInfo);
-    }
+    Task<PackageBuilder> LocatePackageAsync(PackageDescriptor packageInfo);
 }

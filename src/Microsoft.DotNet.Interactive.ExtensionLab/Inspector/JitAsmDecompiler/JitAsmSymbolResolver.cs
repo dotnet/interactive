@@ -27,39 +27,38 @@ using Iced.Intel;
 
 using Microsoft.Diagnostics.Runtime;
 
-namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.JitAsmDecompiler
+namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.JitAsmDecompiler;
+
+internal sealed class JitAsmSymbolResolver : ISymbolResolver
 {
-    internal sealed class JitAsmSymbolResolver : ISymbolResolver
+    private readonly ClrRuntime _runtime;
+    private readonly ulong _currentMethodAddress;
+    private readonly uint _currentMethodLength;
+
+    public JitAsmSymbolResolver(ClrRuntime runtime, ulong currentMethodAddress, uint currentMethodLength)
     {
-        private readonly ClrRuntime _runtime;
-        private readonly ulong _currentMethodAddress;
-        private readonly uint _currentMethodLength;
+        _runtime = runtime;
+        _currentMethodAddress = currentMethodAddress;
+        _currentMethodLength = currentMethodLength;
+    }
 
-        public JitAsmSymbolResolver(ClrRuntime runtime, ulong currentMethodAddress, uint currentMethodLength)
+    public bool TryGetSymbol(in Instruction instruction, int operand, int instructionOperand, ulong address, int addressSize, out SymbolResult symbol)
+    {
+        if (address >= _currentMethodAddress && address < _currentMethodAddress + _currentMethodLength)
         {
-            _runtime = runtime;
-            _currentMethodAddress = currentMethodAddress;
-            _currentMethodLength = currentMethodLength;
-        }
-
-        public bool TryGetSymbol(in Instruction instruction, int operand, int instructionOperand, ulong address, int addressSize, out SymbolResult symbol)
-        {
-            if (address >= _currentMethodAddress && address < _currentMethodAddress + _currentMethodLength)
-            {
-                // relative offset reference
-                symbol = new SymbolResult(address, "L" + (address - _currentMethodAddress).ToString("x4"));
-                return true;
-            }
-
-            var method = _runtime.GetMethodByInstructionPointer(address);
-            if (method is null)
-            {
-                symbol = default;
-                return false;
-            }
-
-            symbol = new SymbolResult(address, method.Signature);
+            // relative offset reference
+            symbol = new SymbolResult(address, "L" + (address - _currentMethodAddress).ToString("x4"));
             return true;
         }
+
+        var method = _runtime.GetMethodByInstructionPointer(address);
+        if (method is null)
+        {
+            symbol = default;
+            return false;
+        }
+
+        symbol = new SymbolResult(address, method.Signature);
+        return true;
     }
 }

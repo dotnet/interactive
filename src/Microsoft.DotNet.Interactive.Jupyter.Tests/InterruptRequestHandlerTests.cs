@@ -10,28 +10,27 @@ using Xunit;
 using Xunit.Abstractions;
 using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Tests
+namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
+
+public class InterruptRequestHandlerTests : JupyterRequestHandlerTestBase
 {
-    public class InterruptRequestHandlerTests : JupyterRequestHandlerTestBase
+    public InterruptRequestHandlerTests(ITestOutputHelper output) : base(output)
     {
-        public InterruptRequestHandlerTests(ITestOutputHelper output) : base(output)
-        {
-        }
+    }
 
-        [Fact]
-        public async Task sends_InterruptReply()
-        {
-            var scheduler = CreateScheduler();
-            var request = ZeroMQMessage.Create(new InterruptRequest(), null);
-            var context = new JupyterRequestContext(JupyterMessageSender, request);
+    [Fact]
+    public async Task sends_InterruptReply()
+    {
+        var scheduler = CreateScheduler();
+        var request = ZeroMQMessage.Create(new InterruptRequest(), null);
+        var context = new JupyterRequestContext(JupyterMessageSender, request);
 
-            await scheduler.Schedule(context);
+        await scheduler.Schedule(context);
 
-            await context.Done().Timeout(5.Seconds());
+        await context.Done().Timeout(5.Seconds());
 
-            JupyterMessageSender.ReplyMessages
-                .Should()
-                .ContainSingle(r => r is InterruptReply);
-        }
+        JupyterMessageSender.ReplyMessages
+            .Should()
+            .ContainSingle(r => r is InterruptReply);
     }
 }

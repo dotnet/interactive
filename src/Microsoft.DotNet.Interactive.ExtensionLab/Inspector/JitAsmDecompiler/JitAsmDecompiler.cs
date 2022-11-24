@@ -35,275 +35,274 @@ using Iced.Intel;
 
 using Microsoft.Diagnostics.Runtime;
 
-namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.JitAsmDecompiler
+namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.JitAsmDecompiler;
+
+internal sealed class JitAsmDecompiler
 {
-    internal sealed class JitAsmDecompiler
+    private static readonly FormatterOptions FormatterOptions = new FormatterOptions
     {
-        private static readonly FormatterOptions FormatterOptions = new FormatterOptions
+        HexPrefix = "0x",
+        HexSuffix = null,
+        UppercaseHex = false,
+        SpaceAfterOperandSeparator = true
+    };
+
+    private readonly Pool<ClrRuntime> _runtimePool;
+
+    public static string Decompile(Stream dll)
+    {
+        if (dll is null)
+            throw new ArgumentNullException(nameof(dll));
+
+        dll.Seek(0, SeekOrigin.Begin);
+
+        var jitDecompilation = new StringWriter();
+        var jitDecompiler = new JitAsmDecompiler(Defaults.DefaultRuntimePool);
+        jitDecompiler.Decompile(dll, jitDecompilation);
+
+        return jitDecompilation.ToString();
+    }
+
+    private JitAsmDecompiler(Pool<ClrRuntime> runtimePool)
+    {
+        _runtimePool = runtimePool;
+    }
+
+    private void Decompile(Stream dll, TextWriter codeWriter)
+    {
+        using (var loadContext = new CustomAssemblyLoadContext(shouldShareAssembly: _ => true))
         {
-            HexPrefix = "0x",
-            HexSuffix = null,
-            UppercaseHex = false,
-            SpaceAfterOperandSeparator = true
-        };
+            var assembly = loadContext.LoadFromStream(dll);
+            ValidateStaticConstructors(assembly);
 
-        private readonly Pool<ClrRuntime> _runtimePool;
+            using var runtimeLease = _runtimePool.GetOrCreate();
+            var runtime = runtimeLease.Object;
+            runtime.FlushCachedData();
 
-        public static string Decompile(Stream dll)
-        {
-            if (dll is null)
-                throw new ArgumentNullException(nameof(dll));
+            var context = new JitWriteContext(codeWriter, runtime);
 
-            dll.Seek(0, SeekOrigin.Begin);
-
-            var jitDecompilation = new StringWriter();
-            var jitDecompiler = new JitAsmDecompiler(Defaults.DefaultRuntimePool);
-            jitDecompiler.Decompile(dll, jitDecompilation);
-
-            return jitDecompilation.ToString();
-        }
-
-        private JitAsmDecompiler(Pool<ClrRuntime> runtimePool)
-        {
-            _runtimePool = runtimePool;
-        }
-
-        private void Decompile(Stream dll, TextWriter codeWriter)
-        {
-            using (var loadContext = new CustomAssemblyLoadContext(shouldShareAssembly: _ => true))
-            {
-                var assembly = loadContext.LoadFromStream(dll);
-                ValidateStaticConstructors(assembly);
-
-                using var runtimeLease = _runtimePool.GetOrCreate();
-                var runtime = runtimeLease.Object;
-                runtime.FlushCachedData();
-
-                var context = new JitWriteContext(codeWriter, runtime);
-
-                WriteJitInfo(runtime.ClrInfo, codeWriter);
-                foreach (var type in assembly.DefinedTypes)
-                {
-                    if (type.IsNested)
-                        continue; // it's easier to handle nested generic types recursively, so we suppress all nested for consistency
-                    DisassembleAndWriteMembers(context, type);
-                }
-            }
-        }
-
-        private void ValidateStaticConstructors(Assembly assembly)
-        {
+            WriteJitInfo(runtime.ClrInfo, codeWriter);
             foreach (var type in assembly.DefinedTypes)
             {
-                foreach (var constructor in type.DeclaredConstructors)
-                {
-                    if (constructor.IsStatic)
-                        throw new NotSupportedException($"Type {type} has a static constructor, which is not supported by SharpLab JIT decompiler.");
-                }
+                if (type.IsNested)
+                    continue; // it's easier to handle nested generic types recursively, so we suppress all nested for consistency
+                DisassembleAndWriteMembers(context, type);
             }
         }
+    }
 
-        private void WriteJitInfo(ClrInfo clr, TextWriter writer)
+    private void ValidateStaticConstructors(Assembly assembly)
+    {
+        foreach (var type in assembly.DefinedTypes)
         {
-            writer.WriteLine(
-                "; {0:G} CLR {1} on {2}",
-                clr.Flavor, clr.Version, clr.DebuggingLibraries.First().TargetArchitecture.ToString("G").ToLowerInvariant()
-            );
-        }
-
-        private void DisassembleAndWriteMembers(JitWriteContext context, TypeInfo type, ImmutableArray<Type>? genericArgumentTypes = null)
-        {
-            if (type.IsGenericTypeDefinition)
-            {
-                if (TryDisassembleAndWriteMembersOfGeneric(context, type, genericArgumentTypes))
-                    return;
-            }
-
             foreach (var constructor in type.DeclaredConstructors)
             {
-                DisassembleAndWriteMethod(context, constructor);
-            }
-
-            foreach (var method in type.DeclaredMethods)
-            {
-                if (method.IsAbstract)
-                    continue;
-                DisassembleAndWriteMethod(context, method);
-            }
-
-            foreach (var nested in type.DeclaredNestedTypes)
-            {
-                DisassembleAndWriteMembers(context, nested, genericArgumentTypes);
+                if (constructor.IsStatic)
+                    throw new NotSupportedException($"Type {type} has a static constructor, which is not supported by SharpLab JIT decompiler.");
             }
         }
+    }
 
-        private bool TryDisassembleAndWriteMembersOfGeneric(JitWriteContext context, TypeInfo type, ImmutableArray<Type>? parentArgumentTypes = null)
+    private void WriteJitInfo(ClrInfo clr, TextWriter writer)
+    {
+        writer.WriteLine(
+            "; {0:G} CLR {1} on {2}",
+            clr.Flavor, clr.Version, clr.DebuggingLibraries.First().TargetArchitecture.ToString("G").ToLowerInvariant()
+        );
+    }
+
+    private void DisassembleAndWriteMembers(JitWriteContext context, TypeInfo type, ImmutableArray<Type>? genericArgumentTypes = null)
+    {
+        if (type.IsGenericTypeDefinition)
         {
-            if (parentArgumentTypes is not null)
-            {
-                var genericInstance = type.MakeGenericType(parentArgumentTypes.Value.ToArray());
-                DisassembleAndWriteMembers(context, genericInstance.GetTypeInfo(), parentArgumentTypes);
-                return true;
-            }
-
-            return false;
+            if (TryDisassembleAndWriteMembersOfGeneric(context, type, genericArgumentTypes))
+                return;
         }
 
-        private void DisassembleAndWriteMethod(JitWriteContext context, MethodBase method)
+        foreach (var constructor in type.DeclaredConstructors)
         {
-            if ((method.MethodImplementationFlags & MethodImplAttributes.Runtime) == MethodImplAttributes.Runtime)
-            {
-                WriteSignatureFromReflection(context, method);
-                context.Writer.WriteLine("    ; Cannot produce JIT assembly for runtime-implemented method.");
-                return;
-            }
-
-            if (method.DeclaringType?.IsGenericTypeDefinition ?? false)
-            {
-                WriteIgnoredOpenGeneric(context, method);
-                return;
-            }
-
-            if (method.IsGenericMethodDefinition)
-            {
-                DisassembleAndWriteGenericMethod(context, (MethodInfo)method);
-                return;
-            }
-
-            DisassembleAndWriteSimpleMethod(context, method);
+            DisassembleAndWriteMethod(context, constructor);
         }
 
-        private void DisassembleAndWriteGenericMethod(JitWriteContext context, MethodInfo method) => WriteIgnoredOpenGeneric(context, method);
-
-        private void DisassembleAndWriteSimpleMethod(JitWriteContext context, MethodBase method)
+        foreach (var method in type.DeclaredMethods)
         {
-            var handle = method.MethodHandle;
-            RuntimeHelpers.PrepareMethod(handle);
-
-            var clrMethod = context.Runtime.GetMethodByHandle((ulong)handle.Value.ToInt64());
-            var regions = FindNonEmptyHotColdInfo(clrMethod);
-
-            if (clrMethod is null || regions is null)
-            {
-                context.Runtime.FlushCachedData();
-                clrMethod = context.Runtime.GetMethodByHandle((ulong)handle.Value.ToInt64());
-                regions = FindNonEmptyHotColdInfo(clrMethod);
-            }
-
-            if (clrMethod is null || regions is null)
-            {
-                var address = (ulong)handle.GetFunctionPointer().ToInt64();
-                clrMethod = context.Runtime.GetMethodByInstructionPointer(address);
-                regions = FindNonEmptyHotColdInfo(clrMethod);
-            }
-
-            var writer = context.Writer;
-            if (clrMethod is not null)
-            {
-                writer.WriteLine();
-                writer.WriteLine(clrMethod.Signature);
-            }
-            else
-            {
-                WriteSignatureFromReflection(context, method);
-            }
-
-            if (regions is null)
-            {
-                if (method.IsGenericMethod || (method.DeclaringType?.IsGenericType ?? false))
-                {
-                    writer.WriteLine("    ; Failed to find HotColdInfo for generic method (reference types?).");
-                    return;
-                }
-                writer.WriteLine("    ; Failed to find HotColdRegions.");
-                return;
-            }
-
-            var methodAddress = regions.Value.HotStart;
-            var methodLength = regions.Value.HotSize;
-
-            var reader = new MemoryCodeReader(new IntPtr(unchecked((long)methodAddress)), methodLength);
-            var decoder = Decoder.Create(MapArchitectureToBitness(context.Runtime.DataTarget.DataReader.Architecture), reader);
-
-            var instructions = new InstructionList();
-            decoder.IP = methodAddress;
-            while (decoder.IP < (methodAddress + methodLength))
-            {
-                decoder.Decode(out instructions.AllocUninitializedElement());
-            }
-
-            var resolver = new JitAsmSymbolResolver(context.Runtime, methodAddress, methodLength);
-            var formatter = new IntelFormatter(FormatterOptions, resolver);
-            var output = new StringOutput();
-            foreach (ref var instruction in instructions)
-            {
-                formatter.Format(instruction, output);
-
-                writer.Write("    L");
-                writer.Write((instruction.IP - methodAddress).ToString("x4"));
-                writer.Write(": ");
-                writer.WriteLine(output.ToStringAndReset());
-            }
+            if (method.IsAbstract)
+                continue;
+            DisassembleAndWriteMethod(context, method);
         }
 
-        private void WriteIgnoredOpenGeneric(JitWriteContext context, MethodBase method)
+        foreach (var nested in type.DeclaredNestedTypes)
+        {
+            DisassembleAndWriteMembers(context, nested, genericArgumentTypes);
+        }
+    }
+
+    private bool TryDisassembleAndWriteMembersOfGeneric(JitWriteContext context, TypeInfo type, ImmutableArray<Type>? parentArgumentTypes = null)
+    {
+        if (parentArgumentTypes is not null)
+        {
+            var genericInstance = type.MakeGenericType(parentArgumentTypes.Value.ToArray());
+            DisassembleAndWriteMembers(context, genericInstance.GetTypeInfo(), parentArgumentTypes);
+            return true;
+        }
+
+        return false;
+    }
+
+    private void DisassembleAndWriteMethod(JitWriteContext context, MethodBase method)
+    {
+        if ((method.MethodImplementationFlags & MethodImplAttributes.Runtime) == MethodImplAttributes.Runtime)
         {
             WriteSignatureFromReflection(context, method);
-            var writer = context.Writer;
-            writer.WriteLine("    ; Open generics cannot be JIT-compiled.");
+            context.Writer.WriteLine("    ; Cannot produce JIT assembly for runtime-implemented method.");
+            return;
         }
 
-        private static void WriteSignatureFromReflection(JitWriteContext context, MethodBase method)
+        if (method.DeclaringType?.IsGenericTypeDefinition ?? false)
         {
-            context.Writer.WriteLine();
-
-            var md = (ulong)method.MethodHandle.Value.ToInt64();
-            var signature = context.Runtime.DacLibrary.SOSDacInterface.GetMethodDescName(md);
-
-            context.Writer.WriteLine(signature ?? "Unknown Method");
+            WriteIgnoredOpenGeneric(context, method);
+            return;
         }
 
-        private HotColdRegions? FindNonEmptyHotColdInfo(ClrMethod method)
+        if (method.IsGenericMethodDefinition)
         {
-            if (method is null)
-                return null;
+            DisassembleAndWriteGenericMethod(context, (MethodInfo)method);
+            return;
+        }
 
-            // I can't really explain this, but it seems that some methods
-            // are present multiple times in the same type -- one compiled
-            // and one not compiled. A bug in clrmd?
-            if (method.HotColdInfo.HotSize > 0)
-                return method.HotColdInfo;
+        DisassembleAndWriteSimpleMethod(context, method);
+    }
 
-            if (method.Type is null)
-                return null;
+    private void DisassembleAndWriteGenericMethod(JitWriteContext context, MethodInfo method) => WriteIgnoredOpenGeneric(context, method);
 
-            var methodSignature = method.Signature;
-            foreach (var other in method.Type.Methods)
+    private void DisassembleAndWriteSimpleMethod(JitWriteContext context, MethodBase method)
+    {
+        var handle = method.MethodHandle;
+        RuntimeHelpers.PrepareMethod(handle);
+
+        var clrMethod = context.Runtime.GetMethodByHandle((ulong)handle.Value.ToInt64());
+        var regions = FindNonEmptyHotColdInfo(clrMethod);
+
+        if (clrMethod is null || regions is null)
+        {
+            context.Runtime.FlushCachedData();
+            clrMethod = context.Runtime.GetMethodByHandle((ulong)handle.Value.ToInt64());
+            regions = FindNonEmptyHotColdInfo(clrMethod);
+        }
+
+        if (clrMethod is null || regions is null)
+        {
+            var address = (ulong)handle.GetFunctionPointer().ToInt64();
+            clrMethod = context.Runtime.GetMethodByInstructionPointer(address);
+            regions = FindNonEmptyHotColdInfo(clrMethod);
+        }
+
+        var writer = context.Writer;
+        if (clrMethod is not null)
+        {
+            writer.WriteLine();
+            writer.WriteLine(clrMethod.Signature);
+        }
+        else
+        {
+            WriteSignatureFromReflection(context, method);
+        }
+
+        if (regions is null)
+        {
+            if (method.IsGenericMethod || (method.DeclaringType?.IsGenericType ?? false))
             {
-                if (other.MetadataToken == method.MetadataToken && other.Signature == methodSignature && other.HotColdInfo.HotSize > 0)
-                    return other.HotColdInfo;
+                writer.WriteLine("    ; Failed to find HotColdInfo for generic method (reference types?).");
+                return;
             }
+            writer.WriteLine("    ; Failed to find HotColdRegions.");
+            return;
+        }
 
+        var methodAddress = regions.Value.HotStart;
+        var methodLength = regions.Value.HotSize;
+
+        var reader = new MemoryCodeReader(new IntPtr(unchecked((long)methodAddress)), methodLength);
+        var decoder = Decoder.Create(MapArchitectureToBitness(context.Runtime.DataTarget.DataReader.Architecture), reader);
+
+        var instructions = new InstructionList();
+        decoder.IP = methodAddress;
+        while (decoder.IP < (methodAddress + methodLength))
+        {
+            decoder.Decode(out instructions.AllocUninitializedElement());
+        }
+
+        var resolver = new JitAsmSymbolResolver(context.Runtime, methodAddress, methodLength);
+        var formatter = new IntelFormatter(FormatterOptions, resolver);
+        var output = new StringOutput();
+        foreach (ref var instruction in instructions)
+        {
+            formatter.Format(instruction, output);
+
+            writer.Write("    L");
+            writer.Write((instruction.IP - methodAddress).ToString("x4"));
+            writer.Write(": ");
+            writer.WriteLine(output.ToStringAndReset());
+        }
+    }
+
+    private void WriteIgnoredOpenGeneric(JitWriteContext context, MethodBase method)
+    {
+        WriteSignatureFromReflection(context, method);
+        var writer = context.Writer;
+        writer.WriteLine("    ; Open generics cannot be JIT-compiled.");
+    }
+
+    private static void WriteSignatureFromReflection(JitWriteContext context, MethodBase method)
+    {
+        context.Writer.WriteLine();
+
+        var md = (ulong)method.MethodHandle.Value.ToInt64();
+        var signature = context.Runtime.DacLibrary.SOSDacInterface.GetMethodDescName(md);
+
+        context.Writer.WriteLine(signature ?? "Unknown Method");
+    }
+
+    private HotColdRegions? FindNonEmptyHotColdInfo(ClrMethod method)
+    {
+        if (method is null)
             return null;
+
+        // I can't really explain this, but it seems that some methods
+        // are present multiple times in the same type -- one compiled
+        // and one not compiled. A bug in clrmd?
+        if (method.HotColdInfo.HotSize > 0)
+            return method.HotColdInfo;
+
+        if (method.Type is null)
+            return null;
+
+        var methodSignature = method.Signature;
+        foreach (var other in method.Type.Methods)
+        {
+            if (other.MetadataToken == method.MetadataToken && other.Signature == methodSignature && other.HotColdInfo.HotSize > 0)
+                return other.HotColdInfo;
         }
 
-        private int MapArchitectureToBitness(Architecture architecture) => architecture switch
-        {
-            Architecture.X64 => 64,
-            Architecture.X86 => 32,
-            _ => throw new Exception($"Unsupported architecture {architecture}.")
-        };
+        return null;
+    }
 
-        private class JitWriteContext
-        {
-            public JitWriteContext(TextWriter writer, ClrRuntime runtime)
-            {
-                Writer = writer;
-                Runtime = runtime;
-            }
+    private int MapArchitectureToBitness(Architecture architecture) => architecture switch
+    {
+        Architecture.X64 => 64,
+        Architecture.X86 => 32,
+        _ => throw new Exception($"Unsupported architecture {architecture}.")
+    };
 
-            public TextWriter Writer { get; }
-            public ClrRuntime Runtime { get; }
+    private class JitWriteContext
+    {
+        public JitWriteContext(TextWriter writer, ClrRuntime runtime)
+        {
+            Writer = writer;
+            Runtime = runtime;
         }
+
+        public TextWriter Writer { get; }
+        public ClrRuntime Runtime { get; }
     }
 }

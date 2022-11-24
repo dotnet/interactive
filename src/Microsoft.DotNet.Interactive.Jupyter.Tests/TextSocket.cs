@@ -6,22 +6,21 @@ using System.Text;
 
 using NetMQ;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Tests
+namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
+
+internal class TextSocket : IOutgoingSocket
 {
-    internal class TextSocket : IOutgoingSocket
+    readonly StringBuilder _buffer = new StringBuilder();
+
+    public bool TrySend(ref Msg msg, TimeSpan timeout, bool more)
     {
-        readonly StringBuilder _buffer = new StringBuilder();
+        var decoded = SendReceiveConstants.DefaultEncoding.GetString(msg);
+        _buffer.AppendLine($"data: {decoded} more: {more}");
+        return true;
+    }
 
-        public bool TrySend(ref Msg msg, TimeSpan timeout, bool more)
-        {
-            var decoded = SendReceiveConstants.DefaultEncoding.GetString(msg);
-            _buffer.AppendLine($"data: {decoded} more: {more}");
-            return true;
-        }
-
-        public string GetEncodedMessage()
-        {
-            return _buffer.ToString();
-        }
+    public string GetEncodedMessage()
+    {
+        return _buffer.ToString();
     }
 }

@@ -4,25 +4,24 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive.Formatting.TabularData
+namespace Microsoft.DotNet.Interactive.Formatting.TabularData;
+
+public class TableDataFieldDescriptors : IReadOnlyCollection<TableSchemaFieldDescriptor>
 {
-    public class TableDataFieldDescriptors : IReadOnlyCollection<TableSchemaFieldDescriptor>
+    private readonly Dictionary<string, TableSchemaFieldDescriptor> _descriptors = new();
+
+    public TableSchemaFieldDescriptor this[string name] => _descriptors[name];
+
+    public bool Contains(string name) => _descriptors.ContainsKey(name);
+
+    public void Add(TableSchemaFieldDescriptor descriptor)
     {
-        private readonly Dictionary<string, TableSchemaFieldDescriptor> _descriptors = new();
-
-        public TableSchemaFieldDescriptor this[string name] => _descriptors[name];
-
-        public bool Contains(string name) => _descriptors.ContainsKey(name);
-
-        public void Add(TableSchemaFieldDescriptor descriptor)
-        {
-            _descriptors.Add(descriptor.Name, descriptor);
-        }
-
-        public IEnumerator<TableSchemaFieldDescriptor> GetEnumerator() => _descriptors.Values.GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-        public int Count => _descriptors.Count;
+        _descriptors.Add(descriptor.Name, descriptor);
     }
+
+    public IEnumerator<TableSchemaFieldDescriptor> GetEnumerator() => _descriptors.Values.GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    public int Count => _descriptors.Count;
 }

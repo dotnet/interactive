@@ -4,16 +4,15 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive
-{
-    public delegate Task<TResult> KernelSchedulerDelegate<in T, TResult>(T value);
+namespace Microsoft.DotNet.Interactive;
 
-    public interface IKernelScheduler<T, TResult>
-    {
-        Task<TResult> RunAsync(
-            T value,
-            KernelSchedulerDelegate<T, TResult> onExecuteAsync,
-            string scope = "default",
-            CancellationToken cancellationToken = default);
-    }
+public delegate Task<TResult> KernelSchedulerDelegate<in T, TResult>(T value);
+
+public interface IKernelScheduler<T, TResult>
+{
+    Task<TResult> RunAsync(
+        T value,
+        KernelSchedulerDelegate<T, TResult> onExecuteAsync,
+        string scope = "default",
+        CancellationToken cancellationToken = default);
 }

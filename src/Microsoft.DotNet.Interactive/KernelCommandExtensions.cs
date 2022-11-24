@@ -7,154 +7,153 @@ using System.Text;
 using Microsoft.DotNet.Interactive.Commands;
 
 #nullable enable
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+public static class KernelCommandExtensions
 {
-    public static class KernelCommandExtensions
+    internal const string TokenKey = "token";
+    internal const string IdKey = "id";
+    internal const string PublishInternalEventsKey = "publish-internal-events";
+
+    public static void PublishInternalEvents(
+        this KernelCommand command)
     {
-        internal const string TokenKey = "token";
-        internal const string IdKey = "id";
-        internal const string PublishInternalEventsKey = "publish-internal-events";
+        command.Properties[PublishInternalEventsKey] = true;
+    }
 
-        public static void PublishInternalEvents(
-            this KernelCommand command)
+    public static void SetToken(
+        this KernelCommand command,
+        string token)
+    {
+        if (!command.Properties.TryGetValue(TokenKey, out var existing))
         {
-            command.Properties[PublishInternalEventsKey] = true;
+            command.Properties.Add(TokenKey, new TokenSequence(token));
+        }
+        else if (existing is not TokenSequence sequence || sequence.Current != token)
+        {
+            throw new InvalidOperationException("Command token cannot be changed.");
+        }
+    }
+
+    public static string GetOrCreateToken(this KernelCommand command)
+    {
+        if (command is null)
+        {
+            throw new ArgumentNullException(nameof(command));
         }
 
-        public static void SetToken(
-            this KernelCommand command,
-            string token)
+        if (command.Properties.TryGetValue(TokenKey, out var value) &&
+            value is TokenSequence tokenSequence)
         {
-            if (!command.Properties.TryGetValue(TokenKey, out var existing))
-            {
-                command.Properties.Add(TokenKey, new TokenSequence(token));
-            }
-            else if (existing is not TokenSequence sequence || sequence.Current != token)
-            {
-                throw new InvalidOperationException("Command token cannot be changed.");
-            }
+            return tokenSequence.Current;
         }
 
-        public static string GetOrCreateToken(this KernelCommand command)
+        if (command.Parent is { } parent)
         {
-            if (command is null)
-            {
-                throw new ArgumentNullException(nameof(command));
-            }
-
-            if (command.Properties.TryGetValue(TokenKey, out var value) &&
-                value is TokenSequence tokenSequence)
-            {
-                return tokenSequence.Current;
-            }
-
-            if (command.Parent is { } parent)
-            {
-                var token = parent.GetOrCreateToken();
-                command.SetToken(token);
-                return token;
-            }
-
-            if (KernelInvocationContext.Current?.Command is { } contextCommand &&
-                !CommandEqualityComparer.Instance.Equals(contextCommand, command))
-            {
-                var token = contextCommand.GetOrCreateToken();
-                command.SetToken(token);
-                return token;
-            }
-
-            return command.GenerateToken();
+            var token = parent.GetOrCreateToken();
+            command.SetToken(token);
+            return token;
         }
 
-        internal static void SetId(
-            this KernelCommand command,
-            string id)
+        if (KernelInvocationContext.Current?.Command is { } contextCommand &&
+            !CommandEqualityComparer.Instance.Equals(contextCommand, command))
         {
-            command.Properties[IdKey] = id;
+            var token = contextCommand.GetOrCreateToken();
+            command.SetToken(token);
+            return token;
         }
 
-        internal static string GetOrCreateId(this KernelCommand command)
+        return command.GenerateToken();
+    }
+
+    internal static void SetId(
+        this KernelCommand command,
+        string id)
+    {
+        command.Properties[IdKey] = id;
+    }
+
+    internal static string GetOrCreateId(this KernelCommand command)
+    {
+        if (command is null)
         {
-            if (command is null)
-            {
-                throw new ArgumentNullException(nameof(command));
-            }
-
-            if (command.Properties.TryGetValue(IdKey, out var value))
-            {
-                return (string) value;
-            }
-
-            var id = Guid.NewGuid().ToString("N");
-            command.SetId(id);
-            return id;
-
+            throw new ArgumentNullException(nameof(command));
         }
 
-        private static string GetNextToken(this KernelCommand command)
+        if (command.Properties.TryGetValue(IdKey, out var value))
         {
-            if (command.Properties.TryGetValue(TokenKey, out var value) &&
-                value is TokenSequence tokenSequence)
-            {
-                return tokenSequence.GetNext();
-            }
-
-            return command.GenerateToken();
+            return (string) value;
         }
 
-        private static string GenerateToken(this KernelCommand command)
+        var id = Guid.NewGuid().ToString("N");
+        command.SetId(id);
+        return id;
+
+    }
+
+    private static string GetNextToken(this KernelCommand command)
+    {
+        if (command.Properties.TryGetValue(TokenKey, out var value) &&
+            value is TokenSequence tokenSequence)
         {
-            var seed = command.Parent?.GetNextToken();
-
-            var sequence = new TokenSequence(seed);
-
-            command.Properties.Add(TokenKey, sequence);
-
-            return sequence.Current;
+            return tokenSequence.GetNext();
         }
 
-        private class TokenSequence
+        return command.GenerateToken();
+    }
+
+    private static string GenerateToken(this KernelCommand command)
+    {
+        var seed = command.Parent?.GetNextToken();
+
+        var sequence = new TokenSequence(seed);
+
+        command.Properties.Add(TokenKey, sequence);
+
+        return sequence.Current;
+    }
+
+    private class TokenSequence
+    {
+        private readonly object _lock = new();
+
+        public TokenSequence(string? current = null)
         {
-            private readonly object _lock = new();
-
-            public TokenSequence(string? current = null)
-            {
-                Current = current ?? Hash(Guid.NewGuid().ToString());
-            }
-
-            internal string Current { get; private set; }
-
-            public string GetNext()
-            {
-                string next;
-
-                lock (_lock)
-                {
-                    next = Current = Hash(Current);
-                }
-
-                return next;
-            }
-
-            private static string Hash(string seed)
-            {
-                var inputBytes = Encoding.ASCII.GetBytes(seed);
-
-                byte[] hash;
-                using (var sha = SHA256.Create())
-                {
-                    hash = sha.ComputeHash(inputBytes);
-                }
-
-                return Convert.ToBase64String(hash);
-            }
+            Current = current ?? Hash(Guid.NewGuid().ToString());
         }
 
+        internal string Current { get; private set; }
 
-        internal static bool IsEquivalentTo(this KernelCommand src, KernelCommand other)
+        public string GetNext()
         {
-            return ReferenceEquals(src, other)
-                   || src.GetOrCreateId() == other.GetOrCreateId();
+            string next;
+
+            lock (_lock)
+            {
+                next = Current = Hash(Current);
+            }
+
+            return next;
         }
+
+        private static string Hash(string seed)
+        {
+            var inputBytes = Encoding.ASCII.GetBytes(seed);
+
+            byte[] hash;
+            using (var sha = SHA256.Create())
+            {
+                hash = sha.ComputeHash(inputBytes);
+            }
+
+            return Convert.ToBase64String(hash);
+        }
+    }
+
+
+    internal static bool IsEquivalentTo(this KernelCommand src, KernelCommand other)
+    {
+        return ReferenceEquals(src, other)
+               || src.GetOrCreateId() == other.GetOrCreateId();
     }
 }

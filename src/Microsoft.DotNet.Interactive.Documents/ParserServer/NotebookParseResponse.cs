@@ -3,16 +3,15 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive.Documents.ParserServer
-{
-    public class NotebookParseResponse : NotebookParserServerResponse
-    {
-        public InteractiveDocument Document { get; }
+namespace Microsoft.DotNet.Interactive.Documents.ParserServer;
 
-        public NotebookParseResponse(string id, InteractiveDocument document)
-            : base(id)
-        {
-            Document = document ?? throw new ArgumentNullException(nameof(document));
-        }
+public class NotebookParseResponse : NotebookParserServerResponse
+{
+    public InteractiveDocument Document { get; }
+
+    public NotebookParseResponse(string id, InteractiveDocument document)
+        : base(id)
+    {
+        Document = document ?? throw new ArgumentNullException(nameof(document));
     }
 }

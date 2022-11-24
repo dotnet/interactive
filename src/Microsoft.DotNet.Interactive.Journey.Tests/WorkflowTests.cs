@@ -11,114 +11,113 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Journey.Tests
+namespace Microsoft.DotNet.Interactive.Journey.Tests;
+
+public class WorkflowTests : ProgressiveLearningTestBase
 {
-    public class WorkflowTests : ProgressiveLearningTestBase
+    private readonly IReadOnlyList<SendEditableCode> _sampleContent = new SendEditableCode[]
     {
-        private readonly IReadOnlyList<SendEditableCode> _sampleContent = new SendEditableCode[]
-        {
-            new("markdown",
-@"# Challenge 1
+        new("markdown",
+            @"# Challenge 1
 
 ## Add 1 with 2 and return it"),
 
-            new("csharp",
-@"// write your answer here")
-        };
+        new("csharp",
+            @"// write your answer here")
+    };
 
-        private string sampleAnswer =
-@"#!csharp
+    private string sampleAnswer =
+        @"#!csharp
 1 + 2";
 
  
-        [Fact]
-        public async Task teacher_can_evaluate_a_challenge()
+    [Fact]
+    public async Task teacher_can_evaluate_a_challenge()
+    {
+        using var kernel = await CreateKernel(LessonMode.StudentMode);
+        using var events = kernel.KernelEvents.ToSubscribedList();
+
+        // teacher defines challenge
+        var challenge = new Challenge(contents: _sampleContent);
+        challenge.AddRule(ruleContext =>
         {
-            using var kernel = await CreateKernel(LessonMode.StudentMode);
-            using var events = kernel.KernelEvents.ToSubscribedList();
-
-            // teacher defines challenge
-            var challenge = new Challenge(contents: _sampleContent);
-            challenge.AddRule(ruleContext =>
-            {
-                ruleContext.Fail("this rule failed because reasons");
-            });
-            challenge.OnCodeSubmitted(challengeContext =>
-            {
-                double numPassed = challengeContext.RuleEvaluations.Count(e => e.Passed);
-                var total = challengeContext.RuleEvaluations.Count();
-                if (numPassed / total >= 0.5)
-                { }
-                else
-                {
-                    challengeContext.SetMessage("Keep working!");
-                }
-            });
-
-            // teacher sends challenge
-            await Lesson.StartChallengeAsync(challenge);
-
-            // student submit code
-            await kernel.SubmitCodeAsync("1+1");
-
-            events.Should().ContainSingle<DisplayedValueProduced>()
-                .Which.FormattedValues
-                .Should()
-                .ContainSingle(v =>
-                    v.MimeType == "text/html"
-                    && v.Value.Contains("Keep working!")
-                    && v.Value.Contains("this rule failed because reasons"));
-        }
-
-        [Fact]
-        public async Task teacher_can_access_challenge_submission_history_for_challenge_evaluation()
+            ruleContext.Fail("this rule failed because reasons");
+        });
+        challenge.OnCodeSubmitted(challengeContext =>
         {
-            using var kernel = await CreateKernel(LessonMode.StudentMode);
-            using var events = kernel.KernelEvents.ToSubscribedList();
-
-            // teacher defines challenge
-            var challenge = new Challenge(contents: _sampleContent);
-            challenge.AddRule(ruleContext =>
+            double numPassed = challengeContext.RuleEvaluations.Count(e => e.Passed);
+            var total = challengeContext.RuleEvaluations.Count();
+            if (numPassed / total >= 0.5)
+            { }
+            else
             {
-                ruleContext.Fail("this rule failed because reasons");
-            });
-            challenge.OnCodeSubmitted(challengeContext =>
+                challengeContext.SetMessage("Keep working!");
+            }
+        });
+
+        // teacher sends challenge
+        await Lesson.StartChallengeAsync(challenge);
+
+        // student submit code
+        await kernel.SubmitCodeAsync("1+1");
+
+        events.Should().ContainSingle<DisplayedValueProduced>()
+            .Which.FormattedValues
+            .Should()
+            .ContainSingle(v =>
+                v.MimeType == "text/html"
+                && v.Value.Contains("Keep working!")
+                && v.Value.Contains("this rule failed because reasons"));
+    }
+
+    [Fact]
+    public async Task teacher_can_access_challenge_submission_history_for_challenge_evaluation()
+    {
+        using var kernel = await CreateKernel(LessonMode.StudentMode);
+        using var events = kernel.KernelEvents.ToSubscribedList();
+
+        // teacher defines challenge
+        var challenge = new Challenge(contents: _sampleContent);
+        challenge.AddRule(ruleContext =>
+        {
+            ruleContext.Fail("this rule failed because reasons");
+        });
+        challenge.OnCodeSubmitted(challengeContext =>
+        {
+            double numPassed = challengeContext.RuleEvaluations.Count(e => e.Passed);
+            var total = challengeContext.RuleEvaluations.Count();
+            if (numPassed / total >= 0.5)
             {
-                double numPassed = challengeContext.RuleEvaluations.Count(e => e.Passed);
-                var total = challengeContext.RuleEvaluations.Count();
-                if (numPassed / total >= 0.5)
+                challengeContext.SetMessage("Good work! Challenge 1 passed.");
+            }
+            else
+            {
+                var history = challengeContext.SubmissionHistory;
+                var pastFailures = 0;
+                foreach (var submission in history)
                 {
-                    challengeContext.SetMessage("Good work! Challenge 1 passed.");
+                    numPassed = submission.RuleEvaluations.Count(e => e.Passed);
+                    total = submission.RuleEvaluations.Count();
+                    if (numPassed / total < 0.5) pastFailures++;
                 }
-                else
-                {
-                    var history = challengeContext.SubmissionHistory;
-                    var pastFailures = 0;
-                    foreach (var submission in history)
-                    {
-                        numPassed = submission.RuleEvaluations.Count(e => e.Passed);
-                        total = submission.RuleEvaluations.Count();
-                        if (numPassed / total < 0.5) pastFailures++;
-                    }
 
-                    challengeContext.SetMessage(pastFailures > 2 ? "Enough! Try something else." : "Keep working!");
-                }
-            });
+                challengeContext.SetMessage(pastFailures > 2 ? "Enough! Try something else." : "Keep working!");
+            }
+        });
 
-            // teacher sends challenge
-            await Lesson.StartChallengeAsync(challenge);
+        // teacher sends challenge
+        await Lesson.StartChallengeAsync(challenge);
 
-            // student submit code
-            await kernel.SubmitCodeAsync(sampleAnswer);
-            await kernel.SubmitCodeAsync(sampleAnswer);
-            await kernel.SubmitCodeAsync(sampleAnswer);
-            await kernel.SubmitCodeAsync(sampleAnswer);
+        // student submit code
+        await kernel.SubmitCodeAsync(sampleAnswer);
+        await kernel.SubmitCodeAsync(sampleAnswer);
+        await kernel.SubmitCodeAsync(sampleAnswer);
+        await kernel.SubmitCodeAsync(sampleAnswer);
 
-            events
-                .Should()
-                .ContainSingle<DisplayedValueProduced>(
-                    e => e.FormattedValues.Single(v => v.MimeType == "text/html")
-                        .Value.Contains("Enough! Try something else."));
-        }
+        events
+            .Should()
+            .ContainSingle<DisplayedValueProduced>(
+                e => e.FormattedValues.Single(v => v.MimeType == "text/html")
+                    .Value.Contains("Enough! Try something else."));
     }
 }

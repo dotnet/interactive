@@ -6,19 +6,18 @@ using Microsoft.CodeAnalysis.Text;
 
 #nullable enable
 
-namespace Microsoft.DotNet.Interactive.Parsing
-{
-    [DebuggerStepThrough]
-    public class PolyglotSubmissionNode : SyntaxNode
-    {
-        internal PolyglotSubmissionNode(
-            string defaultLanguage,
-            SourceText sourceText,
-            PolyglotSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
-        {
-            DefaultLanguage = defaultLanguage;
-        }
+namespace Microsoft.DotNet.Interactive.Parsing;
 
-        public string DefaultLanguage { get; }
+[DebuggerStepThrough]
+public class PolyglotSubmissionNode : SyntaxNode
+{
+    internal PolyglotSubmissionNode(
+        string defaultLanguage,
+        SourceText sourceText,
+        PolyglotSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+    {
+        DefaultLanguage = defaultLanguage;
     }
+
+    public string DefaultLanguage { get; }
 }

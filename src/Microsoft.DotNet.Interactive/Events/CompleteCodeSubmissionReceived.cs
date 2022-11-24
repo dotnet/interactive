@@ -3,16 +3,15 @@
 
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Events
+namespace Microsoft.DotNet.Interactive.Events;
+
+public class CompleteCodeSubmissionReceived : KernelEvent
 {
-    public class CompleteCodeSubmissionReceived : KernelEvent
+    public CompleteCodeSubmissionReceived(SubmitCode submitCode) : base(submitCode)
     {
-        public CompleteCodeSubmissionReceived(SubmitCode submitCode) : base(submitCode)
-        {
-        }
-
-        public string Code => ((SubmitCode)Command).Code;
-
-        public override string ToString() => $"{base.ToString()}: {Code.TruncateForDisplay()}";
     }
+
+    public string Code => ((SubmitCode)Command).Code;
+
+    public override string ToString() => $"{base.ToString()}: {Code.TruncateForDisplay()}";
 }

@@ -4,16 +4,15 @@
 using Microsoft.DotNet.Interactive.Formatting;
 using System.Text.Json;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Messaging
-{
-    internal static class MessageFormatter
-    {
-        static MessageFormatter()
-        {
-            SerializerOptions = JsonFormatter.SerializerOptions;
-            SerializerOptions.Converters.Add(new MessageConverter());
-        }
+namespace Microsoft.DotNet.Interactive.Jupyter.Messaging;
 
-        public static JsonSerializerOptions SerializerOptions { get; }
+internal static class MessageFormatter
+{
+    static MessageFormatter()
+    {
+        SerializerOptions = JsonFormatter.SerializerOptions;
+        SerializerOptions.Converters.Add(new MessageConverter());
     }
+
+    public static JsonSerializerOptions SerializerOptions { get; }
 }

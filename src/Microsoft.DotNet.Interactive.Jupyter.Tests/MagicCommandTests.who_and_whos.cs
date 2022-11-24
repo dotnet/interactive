@@ -14,127 +14,126 @@ using static System.Environment;
 using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 
 #pragma warning disable 8509 // don't warn on incomplete pattern matches
-namespace Microsoft.DotNet.Interactive.Jupyter.Tests
+namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
+
+public partial class MagicCommandTests
 {
-    public partial class MagicCommandTests
+    public class who_and_whos
     {
-        public class who_and_whos
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task whos_lists_the_names_and_values_of_variables_in_scope(Language language)
         {
-            [Theory]
-            [InlineData(Language.CSharp)]
-            [InlineData(Language.FSharp)]
-            public async Task whos_lists_the_names_and_values_of_variables_in_scope(Language language)
+            using var baseKernel = language switch
             {
-                using var baseKernel = language switch
+                Language.CSharp => new CSharpKernel().UseWho() as Kernel,
+                Language.FSharp => new FSharpKernel().UseWho()
+            };
+            using var kernel = new CompositeKernel
                 {
-                    Language.CSharp => new CSharpKernel().UseWho() as Kernel,
-                    Language.FSharp => new FSharpKernel().UseWho()
-                };
-                using var kernel = new CompositeKernel
-                    {
-                        baseKernel
-                    }
-                    .LogEventsToPocketLogger();
-
-                using var events = kernel.KernelEvents.ToSubscribedList();
-
-                var commands = language switch
-                {
-                    Language.CSharp => new[]
-                    {
-                        "var x = 1;",
-                        "x = 2;",
-                        "var y = \"hi>!\";",
-                        "var z = new object[] { x, y };",
-                    },
-                    Language.FSharp => new[]
-                    {
-                        "let mutable x = 1",
-                        "x <- 2",
-                        "let y = \"hi>!\"",
-                        "let z = [| x :> obj; y :> obj |]"
-                    },
-                };
-
-                foreach (var command in commands)
-                {
-                    await kernel.SendAsync(new SubmitCode(command));
+                    baseKernel
                 }
+                .LogEventsToPocketLogger();
 
-                await kernel.SendAsync(new SubmitCode("#!whos"));
+            using var events = kernel.KernelEvents.ToSubscribedList();
 
-                events.Should()
-                      .ContainSingle(e => e is DisplayedValueProduced)
-                      .Which
-                      .As<DisplayedValueProduced>()
-                      .FormattedValues
-                      .Should()
-                      .ContainSingle(v => v.MimeType == "text/html")
-                      .Which
-                      .Value
-                      .As<string>()
-                      .Should()
-                      .ContainAll(
-                          $"<td>x</td><td><span><a href=\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-5.0\">System.Int32</a></span></td><td>{PlainTextBegin}2{PlainTextEnd}</td>",
-                          $"<td>y</td><td><span><a href=\"https://docs.microsoft.com/dotnet/api/system.string?view=net-5.0\">System.String</a></span></td><td>{PlainTextBegin}hi&gt;!{PlainTextEnd}</td>",
-                          $"<td>z</td><td><span><a href=\"https://docs.microsoft.com/dotnet/api/system.object[]?view=net-5.0\">System.Object[]</a></span></td><td>{PlainTextBegin}Object[]{NewLine}  - 2{NewLine}  - hi&gt;!{PlainTextEnd}</td>");
+            var commands = language switch
+            {
+                Language.CSharp => new[]
+                {
+                    "var x = 1;",
+                    "x = 2;",
+                    "var y = \"hi>!\";",
+                    "var z = new object[] { x, y };",
+                },
+                Language.FSharp => new[]
+                {
+                    "let mutable x = 1",
+                    "x <- 2",
+                    "let y = \"hi>!\"",
+                    "let z = [| x :> obj; y :> obj |]"
+                },
+            };
+
+            foreach (var command in commands)
+            {
+                await kernel.SendAsync(new SubmitCode(command));
             }
 
-            [Theory]
-            [InlineData(Language.CSharp)]
-            [InlineData(Language.FSharp)]
-            public async Task who_lists_the_names_of_variables_in_scope(Language language)
+            await kernel.SendAsync(new SubmitCode("#!whos"));
+
+            events.Should()
+                .ContainSingle(e => e is DisplayedValueProduced)
+                .Which
+                .As<DisplayedValueProduced>()
+                .FormattedValues
+                .Should()
+                .ContainSingle(v => v.MimeType == "text/html")
+                .Which
+                .Value
+                .As<string>()
+                .Should()
+                .ContainAll(
+                    $"<td>x</td><td><span><a href=\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-5.0\">System.Int32</a></span></td><td>{PlainTextBegin}2{PlainTextEnd}</td>",
+                    $"<td>y</td><td><span><a href=\"https://docs.microsoft.com/dotnet/api/system.string?view=net-5.0\">System.String</a></span></td><td>{PlainTextBegin}hi&gt;!{PlainTextEnd}</td>",
+                    $"<td>z</td><td><span><a href=\"https://docs.microsoft.com/dotnet/api/system.object[]?view=net-5.0\">System.Object[]</a></span></td><td>{PlainTextBegin}Object[]{NewLine}  - 2{NewLine}  - hi&gt;!{PlainTextEnd}</td>");
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task who_lists_the_names_of_variables_in_scope(Language language)
+        {
+            using var baseKernel = language switch
             {
-                using var baseKernel = language switch
+                Language.CSharp => new CSharpKernel().UseWho() as Kernel,
+                Language.FSharp => new FSharpKernel().UseWho(),
+            };
+            using var kernel = new CompositeKernel
                 {
-                    Language.CSharp => new CSharpKernel().UseWho() as Kernel,
-                    Language.FSharp => new FSharpKernel().UseWho(),
-                };
-                using var kernel = new CompositeKernel
-                    {
-                        baseKernel
-                    }
-                    .LogEventsToPocketLogger();
-
-                using var events = kernel.KernelEvents.ToSubscribedList();
-
-                var commands = language switch
-                {
-                    Language.CSharp => new[]
-                    {
-                        "var x = 1;",
-                        "x = 2;",
-                        "var y = \"hi!\";",
-                        "var z = new object[] { x, y };",
-                    },
-                    Language.FSharp => new[]
-                    {
-                        "let mutable x = 1",
-                        "x <- 2",
-                        "let y = \"hi!\"",
-                        "let z = [| x :> obj; y :> obj |]",
-                    },
-                };
-
-                foreach (var command in commands)
-                {
-                    await kernel.SendAsync(new SubmitCode(command));
+                    baseKernel
                 }
+                .LogEventsToPocketLogger();
 
-                await kernel.SendAsync(new SubmitCode("#!who"));
+            using var events = kernel.KernelEvents.ToSubscribedList();
 
-                events.Should()
-                      .ContainSingle<DisplayedValueProduced>()
-                      .Which
-                      .FormattedValues
-                      .Should()
-                      .ContainSingle(v => v.MimeType == "text/html")
-                      .Which
-                      .Value
-                      .As<string>()
-                      .Should()
-                      .ContainAll("x", "y", "z");
+            var commands = language switch
+            {
+                Language.CSharp => new[]
+                {
+                    "var x = 1;",
+                    "x = 2;",
+                    "var y = \"hi!\";",
+                    "var z = new object[] { x, y };",
+                },
+                Language.FSharp => new[]
+                {
+                    "let mutable x = 1",
+                    "x <- 2",
+                    "let y = \"hi!\"",
+                    "let z = [| x :> obj; y :> obj |]",
+                },
+            };
+
+            foreach (var command in commands)
+            {
+                await kernel.SendAsync(new SubmitCode(command));
             }
+
+            await kernel.SendAsync(new SubmitCode("#!who"));
+
+            events.Should()
+                .ContainSingle<DisplayedValueProduced>()
+                .Which
+                .FormattedValues
+                .Should()
+                .ContainSingle(v => v.MimeType == "text/html")
+                .Which
+                .Value
+                .As<string>()
+                .Should()
+                .ContainAll("x", "y", "z");
         }
     }
 }

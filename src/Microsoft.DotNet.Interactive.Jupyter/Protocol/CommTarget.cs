@@ -3,17 +3,16 @@
 
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
-{
-    public class CommTarget
-    {
-        [JsonPropertyName("target_name")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string TargetName { get; set; }
+namespace Microsoft.DotNet.Interactive.Jupyter.Protocol;
 
-        public CommTarget(string targetName)
-        {
-            TargetName = targetName;
-        }
+public class CommTarget
+{
+    [JsonPropertyName("target_name")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string TargetName { get; set; }
+
+    public CommTarget(string targetName)
+    {
+        TargetName = targetName;
     }
 }

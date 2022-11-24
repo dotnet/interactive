@@ -6,188 +6,187 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Microsoft.DotNet.Interactive.Formatting.Csv
+namespace Microsoft.DotNet.Interactive.Formatting.Csv;
+
+public static class CsvFormatter
 {
-    public static class CsvFormatter
+    public const string MimeType = "text/csv";
+
+    internal static ITypeFormatter[] DefaultFormatters =
     {
-        public const string MimeType = "text/csv";
-
-        internal static ITypeFormatter[] DefaultFormatters =
+        new CsvFormatter<IEnumerable>((seq, context) =>
         {
-            new CsvFormatter<IEnumerable>((seq, context) =>
-            {
-                ITypeFormatter formatter = FormattersForAnyEnumerable.GetOrCreateFormatterForType(seq.GetType(), false);
+            ITypeFormatter formatter = FormattersForAnyEnumerable.GetOrCreateFormatterForType(seq.GetType(), false);
 
-                formatter.Format(seq, context);
+            formatter.Format(seq, context);
 
-                return true;
-            }),
+            return true;
+        }),
 
-            new CsvFormatter<object>((obj, context) =>
-            {
-                var formatter = FormattersForAnyEnumerable.GetOrCreateFormatterForType(obj.GetType(), false);
-
-                formatter.Format(obj, context);
-
-                return true;
-            }),
-        };
-
-        public static ITypeFormatter GetPreferredFormatterFor(Type type) =>
-            Formatter.GetPreferredFormatterFor(type, MimeType);
-
-        public static ITypeFormatter<T> GetPreferredFormatterFor<T>() =>
-            (ITypeFormatter<T>)Formatter.GetPreferredFormatterFor(typeof(T), MimeType);
-
-        internal static FormatterMapByType FormattersForAnyEnumerable =
-            new(typeof(CsvFormatter<>), nameof(CsvFormatter<object>.Create));
-
-        internal static string EscapeCsvValue(this string value)
+        new CsvFormatter<object>((obj, context) =>
         {
-            var input = value.AsMemory();
+            var formatter = FormattersForAnyEnumerable.GetOrCreateFormatterForType(obj.GetType(), false);
 
-            value = value.Replace("\"", "\"\"");
+            formatter.Format(obj, context);
 
-            if (ShouldBeWrappedInQuotes())
+            return true;
+        }),
+    };
+
+    public static ITypeFormatter GetPreferredFormatterFor(Type type) =>
+        Formatter.GetPreferredFormatterFor(type, MimeType);
+
+    public static ITypeFormatter<T> GetPreferredFormatterFor<T>() =>
+        (ITypeFormatter<T>)Formatter.GetPreferredFormatterFor(typeof(T), MimeType);
+
+    internal static FormatterMapByType FormattersForAnyEnumerable =
+        new(typeof(CsvFormatter<>), nameof(CsvFormatter<object>.Create));
+
+    internal static string EscapeCsvValue(this string value)
+    {
+        var input = value.AsMemory();
+
+        value = value.Replace("\"", "\"\"");
+
+        if (ShouldBeWrappedInQuotes())
+        {
+            value = $"\"{value}\"";
+        }
+
+        return value;
+
+        bool ShouldBeWrappedInQuotes()
+        {
+            for (var i = 0; i < input.Length; i++)
             {
-                value = $"\"{value}\"";
-            }
+                var v = value[i];
 
-            return value;
-
-            bool ShouldBeWrappedInQuotes()
-            {
-                for (var i = 0; i < input.Length; i++)
+                if (char.IsWhiteSpace(v))
                 {
-                    var v = value[i];
-
-                    if (char.IsWhiteSpace(v))
-                    {
-                        return true;
-                    }
+                    return true;
                 }
-
-                return false;
             }
+
+            return false;
         }
     }
+}
 
-    public class CsvFormatter<T> : TypeFormatter<T>
+public class CsvFormatter<T> : TypeFormatter<T>
+{
+    private readonly FormatDelegate<T> _format;
+
+    public CsvFormatter(FormatDelegate<T> format)
     {
-        private readonly FormatDelegate<T> _format;
+        _format = format;
+    }
 
-        public CsvFormatter(FormatDelegate<T> format)
+    public override bool Format(T value, FormatContext context) => _format(value, context);
+
+    public override string MimeType => CsvFormatter.MimeType;
+
+    internal static CsvFormatter<T> Create(bool includeInternals)
+    {
+        Func<T, IEnumerable> getHeaderValues = null;
+
+        Func<T, IEnumerable> getRowValues;
+
+        IDestructurer destructurer;
+        if (typeof(T).IsEnumerable())
         {
-            _format = format;
+            destructurer = Destructurer.GetOrCreate(typeof(T).GetElementTypeIfEnumerable());
+            getRowValues = instance => (IEnumerable)instance;
+        }
+        else
+        {
+            destructurer = Destructurer<T>.GetOrCreate();
+            getRowValues = instance => new[] { instance };
         }
 
-        public override bool Format(T value, FormatContext context) => _format(value, context);
+        var isDictionary =
+            typeof(T).GetAllInterfaces()
+                .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)) is not null
+            ||
+            typeof(T).GetAllInterfaces()
+                .FirstOrDefault(i => i == typeof(IDictionary)) is not null;
 
-        public override string MimeType => CsvFormatter.MimeType;
-
-        internal static CsvFormatter<T> Create(bool includeInternals)
+        if (isDictionary)
         {
-            Func<T, IEnumerable> getHeaderValues = null;
-
-            Func<T, IEnumerable> getRowValues;
-
-            IDestructurer destructurer;
-            if (typeof(T).IsEnumerable())
-            {
-                destructurer = Destructurer.GetOrCreate(typeof(T).GetElementTypeIfEnumerable());
-                getRowValues = instance => (IEnumerable)instance;
-            }
-            else
-            {
-                destructurer = Destructurer<T>.GetOrCreate();
-                getRowValues = instance => new[] { instance };
-            }
-
-            var isDictionary =
-                typeof(T).GetAllInterfaces()
-                         .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)) is not null
-                ||
-                typeof(T).GetAllInterfaces()
-                         .FirstOrDefault(i => i == typeof(IDictionary)) is not null;
-
-            if (isDictionary)
-            {
-                getHeaderValues = instance => ((IDictionary)instance).Keys;
-                getRowValues = instance => new[] { instance };
-            }
-            else
-            {
-                getHeaderValues = _ => destructurer.Keys;
-            }
-
-            return new CsvFormatter<T>( (v,c) => BuildTable(v, getHeaderValues, getRowValues, c));
+            getHeaderValues = instance => ((IDictionary)instance).Keys;
+            getRowValues = instance => new[] { instance };
+        }
+        else
+        {
+            getHeaderValues = _ => destructurer.Keys;
         }
 
-        internal static bool BuildTable(T value,  Func<T, IEnumerable> getHeaderValues, Func<T, IEnumerable> getRowValues, FormatContext context)
-        {
-            var keys = getHeaderValues(value);
+        return new CsvFormatter<T>( (v,c) => BuildTable(v, getHeaderValues, getRowValues, c));
+    }
 
-            if (keys is not ICollection headers)
+    internal static bool BuildTable(T value,  Func<T, IEnumerable> getHeaderValues, Func<T, IEnumerable> getRowValues, FormatContext context)
+    {
+        var keys = getHeaderValues(value);
+
+        if (keys is not ICollection headers)
+        {
+            return false;
+        }
+
+        var headerIndex = 0;
+
+        foreach (var header in headers)
+        {
+            context.Writer.Write(header);
+
+            if (++headerIndex < headers.Count)
             {
-                return false;
+                context.Writer.Write(",");
+            }
+        }
+
+        context.Writer.WriteLine();
+
+        IDestructurer rowDestructurer = null;
+
+        var rows = getRowValues(value);
+
+        foreach (var row in rows)
+        {
+            var rowIndex = 0;
+
+            if (row is not IEnumerable cells)
+            {
+                rowDestructurer ??= Destructurer.GetOrCreate(row.GetType());
+
+                cells = rowDestructurer.Destructure(row).Values;
+            }
+            else if (row is IDictionary d)
+            {
+                cells = d.Values;
             }
 
-            var headerIndex = 0;
-
-            foreach (var header in headers)
+            foreach (var cell in cells)
             {
-                context.Writer.Write(header);
+                var formatted = cell switch
+                {
+                    DateTime d => d.ToString("o"),
+                    null => "",
+                    _ => cell.ToString()
+                };
 
-                if (++headerIndex < headers.Count)
+                context.Writer.Write(formatted.EscapeCsvValue());
+
+                if (++rowIndex < headers.Count)
                 {
                     context.Writer.Write(",");
                 }
             }
 
             context.Writer.WriteLine();
-
-            IDestructurer rowDestructurer = null;
-
-            var rows = getRowValues(value);
-
-            foreach (var row in rows)
-            {
-                var rowIndex = 0;
-
-                if (row is not IEnumerable cells)
-                {
-                    rowDestructurer ??= Destructurer.GetOrCreate(row.GetType());
-
-                    cells = rowDestructurer.Destructure(row).Values;
-                }
-                else if (row is IDictionary d)
-                {
-                    cells = d.Values;
-                }
-
-                foreach (var cell in cells)
-                {
-                    var formatted = cell switch
-                    {
-                        DateTime d => d.ToString("o"),
-                        null => "",
-                        _ => cell.ToString()
-                    };
-
-                    context.Writer.Write(formatted.EscapeCsvValue());
-
-                    if (++rowIndex < headers.Count)
-                    {
-                        context.Writer.Write(",");
-                    }
-                }
-
-                context.Writer.WriteLine();
-            }
-
-            return true;
         }
 
-       
+        return true;
     }
+
+       
 }

@@ -4,38 +4,37 @@
 using System;
 using System.IO;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+public class PackageReferenceOrFileInfo
 {
-    public class PackageReferenceOrFileInfo
+    private readonly int _case;
+
+    public PackageReferenceOrFileInfo(FileInfo fileInfo)
     {
-        private readonly int _case;
-
-        public PackageReferenceOrFileInfo(FileInfo fileInfo)
-        {
-            FileInfo = fileInfo;
-            _case = 1;
-        }
-
-        public PackageReferenceOrFileInfo(PackageReference packageReference)
-        {
-            PackageReference = packageReference;
-            _case = 2;
-        }
-
-        public FileInfo FileInfo { get; }
-
-        public PackageReference PackageReference { get; }
-
-        public object Value =>
-            _case switch
-            {
-                1 => FileInfo,
-                2 => PackageReference,
-                _ => throw new InvalidOperationException()
-            };
-
-        public static implicit operator PackageReferenceOrFileInfo(FileInfo source) => new(source);
-
-        public static implicit operator PackageReferenceOrFileInfo(PackageReference source) => new(source);
+        FileInfo = fileInfo;
+        _case = 1;
     }
+
+    public PackageReferenceOrFileInfo(PackageReference packageReference)
+    {
+        PackageReference = packageReference;
+        _case = 2;
+    }
+
+    public FileInfo FileInfo { get; }
+
+    public PackageReference PackageReference { get; }
+
+    public object Value =>
+        _case switch
+        {
+            1 => FileInfo,
+            2 => PackageReference,
+            _ => throw new InvalidOperationException()
+        };
+
+    public static implicit operator PackageReferenceOrFileInfo(FileInfo source) => new(source);
+
+    public static implicit operator PackageReferenceOrFileInfo(PackageReference source) => new(source);
 }

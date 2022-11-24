@@ -8,44 +8,43 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+[TypeFormatterSource(typeof(DataExplorerFormatterSource))]
+public abstract class DataExplorer<TData>
 {
-    [TypeFormatterSource(typeof(DataExplorerFormatterSource))]
-    public abstract class DataExplorer<TData>
+    static DataExplorer()
     {
-        static DataExplorer()
+        RegisterFormatters();
+    }
+
+    public string Id { get; } = Guid.NewGuid().ToString("N");
+
+    public TData Data { get; }
+
+    protected DataExplorer(TData data)
+    {
+        Data = data;
+    }
+
+    public static void RegisterFormatters()
+    {
+        Formatter.Register<DataExplorer<TData>>((explorer, writer) =>
         {
-            RegisterFormatters();
-        }
+            explorer.ToHtml().WriteTo(writer, HtmlEncoder.Default);
+        }, HtmlFormatter.MimeType);
 
-        public string Id { get; } = Guid.NewGuid().ToString("N");
+        // TODO: (RegisterFormatters) this should go somewhere else
+        Formatter.SetPreferredMimeTypesFor(
+            typeof(DataExplorer<TabularDataResource>),
+            HtmlFormatter.MimeType,
+            CsvFormatter.MimeType);
+    }
 
-        public TData Data { get; }
+    protected abstract IHtmlContent ToHtml();
 
-        protected DataExplorer(TData data)
-        {
-            Data = data;
-        }
-
-        public static void RegisterFormatters()
-        {
-            Formatter.Register<DataExplorer<TData>>((explorer, writer) =>
-            {
-                explorer.ToHtml().WriteTo(writer, HtmlEncoder.Default);
-            }, HtmlFormatter.MimeType);
-
-            // TODO: (RegisterFormatters) this should go somewhere else
-            Formatter.SetPreferredMimeTypesFor(
-                typeof(DataExplorer<TabularDataResource>),
-                HtmlFormatter.MimeType,
-                CsvFormatter.MimeType);
-        }
-
-        protected abstract IHtmlContent ToHtml();
-
-        public static void Register<TDataExplorer>() where TDataExplorer : DataExplorer<TData>
-        {
-            DataExplorer.Register(typeof(TData), typeof(TDataExplorer));
-        }
+    public static void Register<TDataExplorer>() where TDataExplorer : DataExplorer<TData>
+    {
+        DataExplorer.Register(typeof(TData), typeof(TDataExplorer));
     }
 }

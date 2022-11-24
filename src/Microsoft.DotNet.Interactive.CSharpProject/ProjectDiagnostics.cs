@@ -5,19 +5,18 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject
+namespace Microsoft.DotNet.Interactive.CSharpProject;
+
+public class ProjectDiagnostics : ReadOnlyCollection<SerializableDiagnostic>, IRunResultFeature
 {
-    public class ProjectDiagnostics : ReadOnlyCollection<SerializableDiagnostic>, IRunResultFeature
+    public ProjectDiagnostics(IEnumerable<SerializableDiagnostic> diagnostics) : base(diagnostics.ToArray())
     {
-        public ProjectDiagnostics(IEnumerable<SerializableDiagnostic> diagnostics) : base(diagnostics.ToArray())
-        {
-        }
+    }
 
-        public string Name => nameof(ProjectDiagnostics);
+    public string Name => nameof(ProjectDiagnostics);
 
-        public void Apply(FeatureContainer result)
-        {
-            result.AddProperty("projectDiagnostics", this.Sort());
-        }
+    public void Apply(FeatureContainer result)
+    {
+        result.AddProperty("projectDiagnostics", this.Sort());
     }
 }

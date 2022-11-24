@@ -7,42 +7,41 @@ using Microsoft.CodeAnalysis.Text;
 
 #nullable enable
 
-namespace Microsoft.DotNet.Interactive.Parsing
+namespace Microsoft.DotNet.Interactive.Parsing;
+
+[DebuggerStepThrough]
+internal class TextWindow
 {
-    [DebuggerStepThrough]
-    internal class TextWindow
+    public TextWindow(int start, int limit)
     {
-        public TextWindow(int start, int limit)
-        {
-            Start = start;
-            Limit = limit;
-            End = start;
-        }
+        Start = start;
+        Limit = limit;
+        End = start;
+    }
 
-        public int Start { get; }
+    public int Start { get; }
 
-        public int End { get; private set; }
+    public int End { get; private set; }
         
-        public int Limit { get; }
+    public int Limit { get; }
 
-        public int Length => End - Start;
+    public int Length => End - Start;
 
-        public bool IsEmpty => Start == End;
+    public bool IsEmpty => Start == End;
 
-        public void Advance()
-        {
-            End++;
+    public void Advance()
+    {
+        End++;
 
 #if DEBUG
-            if (End > Limit)
-            {
-                throw new InvalidOperationException();
-            }
-#endif
+        if (End > Limit)
+        {
+            throw new InvalidOperationException();
         }
-
-        public TextSpan Span => new TextSpan(Start, Length);
-
-        public override string ToString() => $"[{Start}..{End}]";
+#endif
     }
+
+    public TextSpan Span => new TextSpan(Start, Length);
+
+    public override string ToString() => $"[{Start}..{End}]";
 }

@@ -5,28 +5,27 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject
+namespace Microsoft.DotNet.Interactive.CSharpProject;
+
+public interface IDirectoryAccessor
 {
-    public interface IDirectoryAccessor
-    {
-        bool FileExists(RelativeFilePath path);
+    bool FileExists(RelativeFilePath path);
 
-        bool DirectoryExists(RelativeDirectoryPath path);
+    bool DirectoryExists(RelativeDirectoryPath path);
 
-        void EnsureDirectoryExists(RelativeDirectoryPath path);
+    void EnsureDirectoryExists(RelativeDirectoryPath path);
 
-        string ReadAllText(RelativeFilePath path);
+    string ReadAllText(RelativeFilePath path);
 
-        void WriteAllText(RelativeFilePath path, string text);
+    void WriteAllText(RelativeFilePath path, string text);
 
-        IEnumerable<RelativeFilePath> GetAllFilesRecursively();
+    IEnumerable<RelativeFilePath> GetAllFilesRecursively();
 
-        IEnumerable<RelativeFilePath> GetAllFiles();
+    IEnumerable<RelativeFilePath> GetAllFiles();
 
-        IEnumerable<RelativeDirectoryPath> GetAllDirectoriesRecursively();
+    IEnumerable<RelativeDirectoryPath> GetAllDirectoriesRecursively();
 
-        FileSystemInfo GetFullyQualifiedPath(RelativePath path);
+    FileSystemInfo GetFullyQualifiedPath(RelativePath path);
 
-        IDirectoryAccessor GetDirectoryAccessorForRelativePath(RelativeDirectoryPath path);
-    }
+    IDirectoryAccessor GetDirectoryAccessorForRelativePath(RelativeDirectoryPath path);
 }

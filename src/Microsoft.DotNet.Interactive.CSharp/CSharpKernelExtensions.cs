@@ -3,20 +3,19 @@
 
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.CSharp
+namespace Microsoft.DotNet.Interactive.CSharp;
+
+public static class CSharpKernelExtensions
 {
-    public static class CSharpKernelExtensions
+    public static CSharpKernel UseKernelHelpers(
+        this CSharpKernel kernel)
     {
-        public static CSharpKernel UseKernelHelpers(
-            this CSharpKernel kernel)
-        {
-            var command = new SubmitCode($@"
+        var command = new SubmitCode($@"
 using static {typeof(Kernel).FullName};
 ");
 
-            kernel.DeferCommand(command);
+        kernel.DeferCommand(command);
 
-            return kernel;
-        }
+        return kernel;
     }
 }

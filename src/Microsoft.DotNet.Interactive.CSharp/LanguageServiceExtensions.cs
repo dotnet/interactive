@@ -5,26 +5,25 @@ using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis.QuickInfo;
 
-namespace Microsoft.DotNet.Interactive.CSharp
+namespace Microsoft.DotNet.Interactive.CSharp;
+
+public static class LanguageServiceExtensions
 {
-    public static class LanguageServiceExtensions
+    public static string ToMarkdownString(this QuickInfoItem info)
     {
-        public static string ToMarkdownString(this QuickInfoItem info)
+        var stringBuilder = new StringBuilder();
+        var description = info.Sections.FirstOrDefault(s => QuickInfoSectionKinds.Description.Equals(s.Kind))?.Text ?? string.Empty;
+        var documentation = info.Sections.FirstOrDefault(s => QuickInfoSectionKinds.DocumentationComments.Equals(s.Kind))?.Text ?? string.Empty;
+
+        if (!string.IsNullOrEmpty(description))
         {
-            var stringBuilder = new StringBuilder();
-            var description = info.Sections.FirstOrDefault(s => QuickInfoSectionKinds.Description.Equals(s.Kind))?.Text ?? string.Empty;
-            var documentation = info.Sections.FirstOrDefault(s => QuickInfoSectionKinds.DocumentationComments.Equals(s.Kind))?.Text ?? string.Empty;
-
-            if (!string.IsNullOrEmpty(description))
+            stringBuilder.Append(description);
+            if (!string.IsNullOrEmpty(documentation))
             {
-                stringBuilder.Append(description);
-                if (!string.IsNullOrEmpty(documentation))
-                {
-                    stringBuilder.Append("\r\n> ").Append(documentation);
-                }
+                stringBuilder.Append("\r\n> ").Append(documentation);
             }
-
-            return stringBuilder.ToString();
         }
+
+        return stringBuilder.ToString();
     }
 }

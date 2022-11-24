@@ -6,16 +6,15 @@ using Microsoft.CodeAnalysis.Text;
 
 #nullable enable
 
-namespace Microsoft.DotNet.Interactive.Parsing
+namespace Microsoft.DotNet.Interactive.Parsing;
+
+[DebuggerStepThrough]
+public class DirectiveArgsToken : SyntaxToken
 {
-    [DebuggerStepThrough]
-    public class DirectiveArgsToken : SyntaxToken
+    internal DirectiveArgsToken(
+        SourceText text,
+        TextSpan span,
+        PolyglotSyntaxTree? syntaxTree) : base(text, span, syntaxTree)
     {
-        internal DirectiveArgsToken(
-            SourceText text,
-            TextSpan span,
-            PolyglotSyntaxTree? syntaxTree) : base(text, span, syntaxTree)
-        {
-        }
     }
 }

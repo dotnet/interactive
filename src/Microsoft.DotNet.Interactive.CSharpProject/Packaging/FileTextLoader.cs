@@ -8,34 +8,33 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
+namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
+
+public class FileTextLoader : TextLoader
 {
-    public class FileTextLoader : TextLoader
+    private readonly string _absolutePath;
+
+    public FileTextLoader(string absolutePath)
     {
-        private readonly string _absolutePath;
-
-        public FileTextLoader(string absolutePath)
+        if (!Path.IsPathRooted(absolutePath))
         {
-            if (!Path.IsPathRooted(absolutePath))
-            {
-                throw new ArgumentException("Path must be absolute", nameof(absolutePath));
-            }
-
-            _absolutePath = absolutePath;
+            throw new ArgumentException("Path must be absolute", nameof(absolutePath));
         }
 
-        public override async Task<TextAndVersion> LoadTextAndVersionAsync(
-            CodeAnalysis.Workspace workspace,
-            DocumentId documentId,
-            CancellationToken cancellationToken)
-        {
-            var sourceFile = new FileInfo(_absolutePath);
+        _absolutePath = absolutePath;
+    }
 
-            var prevLastWriteTime = sourceFile.LastWriteTime;
+    public override async Task<TextAndVersion> LoadTextAndVersionAsync(
+        CodeAnalysis.Workspace workspace,
+        DocumentId documentId,
+        CancellationToken cancellationToken)
+    {
+        var sourceFile = new FileInfo(_absolutePath);
 
-            var sourceText = SourceText.From(await sourceFile.ReadAsync());
+        var prevLastWriteTime = sourceFile.LastWriteTime;
 
-            return TextAndVersion.Create(sourceText, VersionStamp.Create(prevLastWriteTime), _absolutePath);
-        }
+        var sourceText = SourceText.From(await sourceFile.ReadAsync());
+
+        return TextAndVersion.Create(sourceText, VersionStamp.Create(prevLastWriteTime), _absolutePath);
     }
 }

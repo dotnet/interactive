@@ -8,55 +8,54 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 
-namespace Microsoft.DotNet.Interactive.Http
+namespace Microsoft.DotNet.Interactive.Http;
+
+public class KernelsRouter : IRouter
 {
-    public class KernelsRouter : IRouter
+    private readonly Kernel _kernel;
+
+    public KernelsRouter(Kernel kernel)
     {
-        private readonly Kernel _kernel;
+        _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
+    }
 
-        public KernelsRouter(Kernel kernel)
-        {
-            _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
-        }
+    public VirtualPathData GetVirtualPath(VirtualPathContext context)
+    {
+        return null;
+    }
 
-        public VirtualPathData GetVirtualPath(VirtualPathContext context)
+    public Task RouteAsync(RouteContext context)
+    {
+        if (context.HttpContext.Request.Method == HttpMethods.Get)
         {
-            return null;
-        }
+            var segments =
+                context.HttpContext
+                    .Request
+                    .Path
+                    .Value
+                    .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 
-        public Task RouteAsync(RouteContext context)
-        {
-            if (context.HttpContext.Request.Method == HttpMethods.Get)
+            if (segments.FirstOrDefault() == "kernels")
             {
-                var segments =
-                    context.HttpContext
-                        .Request
-                        .Path
-                        .Value
-                        .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-
-                if (segments.FirstOrDefault() == "kernels")
+                var targetKernel = _kernel;
+                var names = new List<string>
                 {
-                    var targetKernel = _kernel;
-                    var names = new List<string>
-                    {
-                        targetKernel.Name
-                    };
+                    targetKernel.Name
+                };
 
-                    if (targetKernel is CompositeKernel compositeKernel)
-                    {
-                        names.AddRange(compositeKernel.ChildKernels.Select(k => k.Name));
-                    }
-
-                    context.Handler = async httpContext =>
-                    {
-                        httpContext.Response.ContentType = "application/json";
-                        await httpContext.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(names));
-                    };
+                if (targetKernel is CompositeKernel compositeKernel)
+                {
+                    names.AddRange(compositeKernel.ChildKernels.Select(k => k.Name));
                 }
-            }
 
-            return Task.CompletedTask;
+                context.Handler = async httpContext =>
+                {
+                    httpContext.Response.ContentType = "application/json";
+                    await httpContext.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(names));
+                };
+            }
         }
+
+        return Task.CompletedTask;
     }
 }

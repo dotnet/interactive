@@ -8,26 +8,25 @@ using ICSharpCode.Decompiler.DebugInfo;
 using ICSharpCode.Decompiler.Disassembler;
 using ICSharpCode.Decompiler.Metadata;
 
-namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.ILDecompiler
+namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.ILDecompiler;
+
+internal static class ILDecompiler
 {
-    internal static class ILDecompiler
+    internal static string Decompile(PEFile assembly, IDebugInfoProvider debugInfoProvider)
     {
-        internal static string Decompile(PEFile assembly, IDebugInfoProvider debugInfoProvider)
+        var ilDecompilation = new PlainTextOutput() { IndentationString = Defaults.DefaultIndent };
+
+        var ilDecompiler = new ReflectionDisassembler(ilDecompilation, CancellationToken.None)
         {
-            var ilDecompilation = new PlainTextOutput() { IndentationString = Defaults.DefaultIndent };
+            DebugInfo = debugInfoProvider,
+            DetectControlStructure = true,
+            ExpandMemberDefinitions = true,
+            ShowMetadataTokens = true,
+            ShowSequencePoints = true
+        };
 
-            var ilDecompiler = new ReflectionDisassembler(ilDecompilation, CancellationToken.None)
-            {
-                DebugInfo = debugInfoProvider,
-                DetectControlStructure = true,
-                ExpandMemberDefinitions = true,
-                ShowMetadataTokens = true,
-                ShowSequencePoints = true
-            };
+        ilDecompiler.WriteModuleContents(assembly);
 
-            ilDecompiler.WriteModuleContents(assembly);
-
-            return ilDecompilation.ToString();
-        }
+        return ilDecompilation.ToString();
     }
 }

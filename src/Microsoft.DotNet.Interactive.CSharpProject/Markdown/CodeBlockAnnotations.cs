@@ -5,66 +5,65 @@ using System.CommandLine.Parsing;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown
+namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown;
+
+internal class CodeBlockAnnotations : CodeFenceAnnotations
 {
-    internal class CodeBlockAnnotations : CodeFenceAnnotations
+    protected static int _sessionIndex;
+
+    public CodeBlockAnnotations(
+        RelativeFilePath destinationFile = null,
+        string package = null,
+        string region = null,
+        string session = null,
+        bool editable = false,
+        bool hidden = false,
+        string runArgs = null,
+        ParseResult parseResult = null,
+        string packageVersion = null) 
+        : base(parseResult, session, runArgs)
     {
-        protected static int _sessionIndex;
+        DestinationFile = destinationFile;
+        Package = package;
+        Region = region;
+        Session = session;
+        PackageVersion = packageVersion;
+        Editable = !hidden && editable;
+        Hidden = hidden;
 
-        public CodeBlockAnnotations(
-            RelativeFilePath destinationFile = null,
-            string package = null,
-            string region = null,
-            string session = null,
-            bool editable = false,
-            bool hidden = false,
-            string runArgs = null,
-            ParseResult parseResult = null,
-            string packageVersion = null) 
-            : base(parseResult, session, runArgs)
+        if (string.IsNullOrWhiteSpace(Session) && Editable)
         {
-            DestinationFile = destinationFile;
-            Package = package;
-            Region = region;
-            Session = session;
-            PackageVersion = packageVersion;
-            Editable = !hidden && editable;
-            Hidden = hidden;
-
-            if (string.IsNullOrWhiteSpace(Session) && Editable)
-            {
-                Session = $"Run{++_sessionIndex}";
-            }
+            Session = $"Run{++_sessionIndex}";
         }
+    }
 
-        public virtual string Package { get; }
-        public RelativeFilePath DestinationFile { get; }
-        public string Region { get; }
-        public string PackageVersion { get; }
-        public bool Editable { get; }
-        public bool Hidden { get; }
+    public virtual string Package { get; }
+    public RelativeFilePath DestinationFile { get; }
+    public string Region { get; }
+    public string PackageVersion { get; }
+    public bool Editable { get; }
+    public bool Hidden { get; }
 
-        public virtual Task<CodeBlockContentFetchResult> TryGetExternalContent() => 
-            Task.FromResult(CodeBlockContentFetchResult.None);
+    public virtual Task<CodeBlockContentFetchResult> TryGetExternalContent() => 
+        Task.FromResult(CodeBlockContentFetchResult.None);
 
-        public virtual Task AddAttributes(AnnotatedCodeBlock block)
+    public virtual Task AddAttributes(AnnotatedCodeBlock block)
+    {
+        if (Package != null)
         {
-            if (Package != null)
-            {
-                block.AddAttribute("data-trydotnet-package", Package);
-            }
+            block.AddAttribute("data-trydotnet-package", Package);
+        }
             
-            if (PackageVersion != null)
-            {
-                block.AddAttribute("data-trydotnet-package-version", PackageVersion);
-            }
-
-            if (!string.IsNullOrWhiteSpace(NormalizedLanguage))
-            {
-                block.AddAttribute("data-trydotnet-language", NormalizedLanguage);
-            }
-
-            return Task.CompletedTask;
+        if (PackageVersion != null)
+        {
+            block.AddAttribute("data-trydotnet-package-version", PackageVersion);
         }
+
+        if (!string.IsNullOrWhiteSpace(NormalizedLanguage))
+        {
+            block.AddAttribute("data-trydotnet-language", NormalizedLanguage);
+        }
+
+        return Task.CompletedTask;
     }
 }

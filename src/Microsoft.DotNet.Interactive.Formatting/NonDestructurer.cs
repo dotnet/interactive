@@ -4,26 +4,25 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting;
+
+internal class NonDestructurer : IDestructurer
 {
-    internal class NonDestructurer : IDestructurer
+    private static readonly ICollection<string> _keys = new ReadOnlyCollection<string>(new[] { "value" });
+
+    private NonDestructurer()
     {
-        private static readonly ICollection<string> _keys = new ReadOnlyCollection<string>(new[] { "value" });
-
-        private NonDestructurer()
-        {
-        }
-
-        public static IDestructurer Instance { get; } = new NonDestructurer();
-
-        public IDictionary<string, object> Destructure(object instance)
-        {
-            return new Dictionary<string, object>
-            {
-                ["value"] = instance
-            };
-        }
-
-        public ICollection<string> Keys => _keys;
     }
+
+    public static IDestructurer Instance { get; } = new NonDestructurer();
+
+    public IDictionary<string, object> Destructure(object instance)
+    {
+        return new Dictionary<string, object>
+        {
+            ["value"] = instance
+        };
+    }
+
+    public ICollection<string> Keys => _keys;
 }

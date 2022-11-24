@@ -14,78 +14,77 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Tests
+namespace Microsoft.DotNet.Interactive.Tests;
+
+public class JavaScriptKernelTests
 {
-    public class JavaScriptKernelTests
+    [Fact]
+    public async Task javascript_kernel_emits_code_as_it_was_given()
     {
-        [Fact]
-        public async Task javascript_kernel_emits_code_as_it_was_given()
+        using var kernel = new CompositeKernel
         {
-            using var kernel = new CompositeKernel
-            {
-                new JavaScriptKernel()
-            };
+            new JavaScriptKernel()
+        };
 
-            var scriptContent = "alert('Hello World!');";
+        var scriptContent = "alert('Hello World!');";
 
-            using var events = kernel.KernelEvents.ToSubscribedList();
+        using var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SendAsync(new SubmitCode($"#!javascript\n{scriptContent}"));
+        await kernel.SendAsync(new SubmitCode($"#!javascript\n{scriptContent}"));
 
-            var formatted =
-                events
-                    .OfType<DisplayedValueProduced>()
-                    .Select(v => v.Value)
-                    .Cast<ScriptContent>()
-                    .ToArray();
+        var formatted =
+            events
+                .OfType<DisplayedValueProduced>()
+                .Select(v => v.Value)
+                .Cast<ScriptContent>()
+                .ToArray();
 
-            formatted
-                .Should()
-                .ContainSingle()
-                .Which
-                .ScriptValue
-                .Should()
-                .Be($"{scriptContent}");
-        }
+        formatted
+            .Should()
+            .ContainSingle()
+            .Which
+            .ScriptValue
+            .Should()
+            .Be($"{scriptContent}");
+    }
 
 
-        [Fact]
-        public async Task javascript_kernel_forwards_commands_to_frontend()
+    [Fact]
+    public async Task javascript_kernel_forwards_commands_to_frontend()
+    {
+        var client = new TestClient();
+        using var kernel = new CompositeKernel
         {
-            var client = new TestClient();
-            using var kernel = new CompositeKernel
-            {
-                new JavaScriptKernel(client)
-            };
+            new JavaScriptKernel(client)
+        };
             
-            kernel.FindKernelByName(JavaScriptKernel.DefaultKernelName).RegisterCommandType<CustomCommand>();
+        kernel.FindKernelByName(JavaScriptKernel.DefaultKernelName).RegisterCommandType<CustomCommand>();
 
-            using var events = kernel.KernelEvents.ToSubscribedList();
+        using var events = kernel.KernelEvents.ToSubscribedList();
 
-            var command = new CustomCommand(JavaScriptKernel.DefaultKernelName);
+        var command = new CustomCommand(JavaScriptKernel.DefaultKernelName);
             
-            await kernel.SendAsync(command, CancellationToken.None);
+        await kernel.SendAsync(command, CancellationToken.None);
 
-            client.ForwardedCommands.Should().Contain(command);
-        }
+        client.ForwardedCommands.Should().Contain(command);
+    }
 
-        public class CustomCommand : KernelCommand
+    public class CustomCommand : KernelCommand
+    {
+        public CustomCommand(string targetKernelName) : base(targetKernelName: targetKernelName)
         {
-            public CustomCommand(string targetKernelName) : base(targetKernelName: targetKernelName)
-            {
                 
-            }
         }
+    }
 
-        public class TestClient : KernelClientBase
+    public class TestClient : KernelClientBase
+    {
+        public List<KernelCommand> ForwardedCommands { get; } = new();
+        public override IObservable<KernelEvent> KernelEvents { get; } = new Subject<KernelEvent>();
+        public override Task SendAsync(KernelCommand command, string token = null)
         {
-            public List<KernelCommand> ForwardedCommands { get; } = new();
-            public override IObservable<KernelEvent> KernelEvents { get; } = new Subject<KernelEvent>();
-            public override Task SendAsync(KernelCommand command, string token = null)
-            {
-                ForwardedCommands.Add(command);
-                return Task.CompletedTask;
-            }
+            ForwardedCommands.Add(command);
+            return Task.CompletedTask;
         }
     }
 }

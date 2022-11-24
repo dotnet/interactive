@@ -3,15 +3,14 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+internal static class TypeExtensions
 {
-    internal static class TypeExtensions
+    internal static bool CanBeInstantiated(this Type type)
     {
-        internal static bool CanBeInstantiated(this Type type)
-        {
-            return !type.IsAbstract
-                   && !type.IsGenericTypeDefinition
-                   && !type.IsInterface;
-        }
+        return !type.IsAbstract
+               && !type.IsGenericTypeDefinition
+               && !type.IsInterface;
     }
 }

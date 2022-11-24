@@ -7,27 +7,26 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 
-namespace Microsoft.DotNet.Interactive.Jupyter
+namespace Microsoft.DotNet.Interactive.Jupyter;
+
+public class ShutdownRequestHandler : RequestHandlerBase<ShutdownRequest>
 {
-    public class ShutdownRequestHandler : RequestHandlerBase<ShutdownRequest>
+    public ShutdownRequestHandler(Kernel kernel, IScheduler scheduler) : base(kernel, scheduler)
     {
-        public ShutdownRequestHandler(Kernel kernel, IScheduler scheduler) : base(kernel, scheduler)
-        {
 
-        }
+    }
 
 
-        protected override void OnKernelEventReceived(KernelEvent @event, JupyterRequestContext context)
-        {
+    protected override void OnKernelEventReceived(KernelEvent @event, JupyterRequestContext context)
+    {
            
-        }
+    }
 
-        public Task Handle(JupyterRequestContext context)
-        {
-            var shutdownReplyPayload = new ShutdownReply();
-            context.JupyterMessageSender.Send(shutdownReplyPayload);
-            Environment.Exit(0);
-            return Task.CompletedTask;
-        }
+    public Task Handle(JupyterRequestContext context)
+    {
+        var shutdownReplyPayload = new ShutdownReply();
+        context.JupyterMessageSender.Send(shutdownReplyPayload);
+        Environment.Exit(0);
+        return Task.CompletedTask;
     }
 }

@@ -1,11 +1,10 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.DotNet.Interactive.Documents.ParserServer
+namespace Microsoft.DotNet.Interactive.Documents.ParserServer;
+
+public enum DocumentSerializationType
 {
-    public enum DocumentSerializationType
-    {
-        Dib,
-        Ipynb,
-    }
+    Dib,
+    Ipynb,
 }

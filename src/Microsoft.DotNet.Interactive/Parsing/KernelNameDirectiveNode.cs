@@ -6,16 +6,15 @@ using Microsoft.CodeAnalysis.Text;
 
 #nullable enable
 
-namespace Microsoft.DotNet.Interactive.Parsing
+namespace Microsoft.DotNet.Interactive.Parsing;
+
+[DebuggerStepThrough]
+public class KernelNameDirectiveNode : DirectiveNode
 {
-    [DebuggerStepThrough]
-    public class KernelNameDirectiveNode : DirectiveNode
+    internal KernelNameDirectiveNode(
+        DirectiveToken directiveToken,
+        SourceText sourceText,
+        PolyglotSyntaxTree? syntaxTree) : base(directiveToken, sourceText, syntaxTree)
     {
-        internal KernelNameDirectiveNode(
-            DirectiveToken directiveToken,
-            SourceText sourceText,
-            PolyglotSyntaxTree? syntaxTree) : base(directiveToken, sourceText, syntaxTree)
-        {
-        }
     }
 }

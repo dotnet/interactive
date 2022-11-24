@@ -3,70 +3,69 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+public class LinePositionSpan : IEquatable<LinePositionSpan>
 {
-    public class LinePositionSpan : IEquatable<LinePositionSpan>
+    public LinePosition Start { get; }
+    public LinePosition End { get; }
+
+    public LinePositionSpan(LinePosition start, LinePosition end)
     {
-        public LinePosition Start { get; }
-        public LinePosition End { get; }
+        Start = start;
+        End = end;
+    }
 
-        public LinePositionSpan(LinePosition start, LinePosition end)
+    public LinePositionSpan SubtractLineOffset(LinePosition offset)
+    {
+        return new LinePositionSpan(
+            Start.SubtractLineOffset(offset),
+            End.SubtractLineOffset(offset));
+    }
+
+    public override bool Equals(object obj)
+    {
+        return Equals(obj as LinePositionSpan);
+    }
+
+    public bool Equals(LinePositionSpan other)
+    {
+        return other is { } && this == other;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Start, End);
+    }
+
+    public override string ToString()
+    {
+        return $"[{Start}-{End})";
+    }
+
+    public static bool operator ==(LinePositionSpan a, LinePositionSpan b)
+    {
+        if (a is null && b is null)
         {
-            Start = start;
-            End = end;
+            return true;
         }
 
-        public LinePositionSpan SubtractLineOffset(LinePosition offset)
+        if (a is null || b is null)
         {
-            return new LinePositionSpan(
-                Start.SubtractLineOffset(offset),
-                End.SubtractLineOffset(offset));
+            return false;
         }
 
-        public override bool Equals(object obj)
-        {
-            return Equals(obj as LinePositionSpan);
-        }
+        return a.Start == b.Start
+               && a.End == b.End;
+    }
 
-        public bool Equals(LinePositionSpan other)
-        {
-            return other is { } && this == other;
-        }
+    public static bool operator !=(LinePositionSpan a, LinePositionSpan b)
+    {
+        return !(a == b);
+    }
 
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Start, End);
-        }
-
-        public override string ToString()
-        {
-            return $"[{Start}-{End})";
-        }
-
-        public static bool operator ==(LinePositionSpan a, LinePositionSpan b)
-        {
-            if (a is null && b is null)
-            {
-                return true;
-            }
-
-            if (a is null || b is null)
-            {
-                return false;
-            }
-
-            return a.Start == b.Start
-                && a.End == b.End;
-        }
-
-        public static bool operator !=(LinePositionSpan a, LinePositionSpan b)
-        {
-            return !(a == b);
-        }
-
-        public static LinePositionSpan FromCodeAnalysisLinePositionSpan(CodeAnalysis.Text.LinePositionSpan linePositionSpan)
-        {
-            return new LinePositionSpan(LinePosition.FromCodeAnalysisLinePosition(linePositionSpan.Start), LinePosition.FromCodeAnalysisLinePosition(linePositionSpan.End));
-        }
+    public static LinePositionSpan FromCodeAnalysisLinePositionSpan(CodeAnalysis.Text.LinePositionSpan linePositionSpan)
+    {
+        return new LinePositionSpan(LinePosition.FromCodeAnalysisLinePosition(linePositionSpan.Start), LinePosition.FromCodeAnalysisLinePosition(linePositionSpan.End));
     }
 }

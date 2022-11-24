@@ -9,56 +9,55 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Parsing;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+internal static class KernelEventExtensions
 {
-    internal static class KernelEventExtensions
+    public static LinePositionSpan CalculateLineOffsetFromParentCommand(this KernelEvent @event, LinePositionSpan initialRange)
     {
-        public static LinePositionSpan CalculateLineOffsetFromParentCommand(this KernelEvent @event, LinePositionSpan initialRange)
+        if (initialRange is null)
         {
-            if (initialRange is null)
-            {
-                return null;
-            }
-
-            var requestCommand = @event.Command as LanguageServiceCommand;
-            if (requestCommand?.Parent is LanguageServiceCommand parentRequest)
-            {
-                var requestPosition = requestCommand.LinePosition;
-                var lineOffset = parentRequest.LinePosition.Line - requestPosition.Line;
-                return new LinePositionSpan(
-                    new LinePosition(initialRange.Start.Line + lineOffset, initialRange.Start.Character),
-                    new LinePosition(initialRange.End.Line + lineOffset, initialRange.End.Character));
-            }
-
-            return initialRange;
+            return null;
         }
 
-        public static IReadOnlyCollection<Diagnostic> RemapDiagnosticsFromRequestingCommand(this KernelEvent @event, IReadOnlyCollection<Diagnostic> diagnostics)
+        var requestCommand = @event.Command as LanguageServiceCommand;
+        if (requestCommand?.Parent is LanguageServiceCommand parentRequest)
         {
-            return @event.Command switch
-            {
-                SubmitCode submitCode
+            var requestPosition = requestCommand.LinePosition;
+            var lineOffset = parentRequest.LinePosition.Line - requestPosition.Line;
+            return new LinePositionSpan(
+                new LinePosition(initialRange.Start.Line + lineOffset, initialRange.Start.Character),
+                new LinePosition(initialRange.End.Line + lineOffset, initialRange.End.Character));
+        }
+
+        return initialRange;
+    }
+
+    public static IReadOnlyCollection<Diagnostic> RemapDiagnosticsFromRequestingCommand(this KernelEvent @event, IReadOnlyCollection<Diagnostic> diagnostics)
+    {
+        return @event.Command switch
+        {
+            SubmitCode submitCode
                 when submitCode.LanguageNode is { } => submitCode.LanguageNode.RemapDiagnosticsFromLanguageNode(diagnostics),
 
-                RequestDiagnostics requestDiagnostics
+            RequestDiagnostics requestDiagnostics
                 when requestDiagnostics.LanguageNode is { } => requestDiagnostics.LanguageNode.RemapDiagnosticsFromLanguageNode(diagnostics),
 
-                _ => diagnostics // no meaningful remapping can occur
-            };
-        }
+            _ => diagnostics // no meaningful remapping can occur
+        };
+    }
 
-        private static IReadOnlyCollection<Diagnostic> RemapDiagnosticsFromLanguageNode(this LanguageNode languageNode, IReadOnlyCollection<Diagnostic> diagnostics)
-        {
-            var root = languageNode.SyntaxTree.GetRoot();
-            var initialSpan = languageNode.Span;
-            var sourceText = SourceText.From(root.Text);
-            var codePosition = sourceText.Lines.GetLinePositionSpan(initialSpan);
-            return diagnostics.Select(d => d.WithLinePositionSpan(
+    private static IReadOnlyCollection<Diagnostic> RemapDiagnosticsFromLanguageNode(this LanguageNode languageNode, IReadOnlyCollection<Diagnostic> diagnostics)
+    {
+        var root = languageNode.SyntaxTree.GetRoot();
+        var initialSpan = languageNode.Span;
+        var sourceText = SourceText.From(root.Text);
+        var codePosition = sourceText.Lines.GetLinePositionSpan(initialSpan);
+        return diagnostics.Select(d => d.WithLinePositionSpan(
                 new LinePositionSpan(
                     new LinePosition(d.LinePositionSpan.Start.Line + codePosition.Start.Line, d.LinePositionSpan.Start.Character),
                     new LinePosition(d.LinePositionSpan.End.Line + codePosition.Start.Line, d.LinePositionSpan.End.Character))
-                )
-            ).ToImmutableList();
-        }
+            )
+        ).ToImmutableList();
     }
 }

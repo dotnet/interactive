@@ -3,17 +3,16 @@
 
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.Commands
-{
-    public class Cancel : KernelCommand
-    {
-        public Cancel(string targetKernelName = null): base(targetKernelName)
-        {
-        }
+namespace Microsoft.DotNet.Interactive.Commands;
 
-        public override Task InvokeAsync(KernelInvocationContext context)
-        {
-            return Task.CompletedTask;
-        }
+public class Cancel : KernelCommand
+{
+    public Cancel(string targetKernelName = null): base(targetKernelName)
+    {
+    }
+
+    public override Task InvokeAsync(KernelInvocationContext context)
+    {
+        return Task.CompletedTask;
     }
 }

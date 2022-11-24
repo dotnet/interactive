@@ -3,17 +3,16 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
+namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
+
+public static class CodeManipulation
 {
-    public static class CodeManipulation
+    public static (string processed, int markLocation) ProcessMarkup(string source)
     {
-        public static (string processed, int markLocation) ProcessMarkup(string source)
-        {
-            // TODO: (ProcessMarkup) remove, use MarkupTestFile instead
-            var normalised = source.EnforceLF();
-            var markLocation = normalised.IndexOf("$$", StringComparison.InvariantCulture);
-            var processed = normalised.Replace("$$", string.Empty);
-            return (processed, markLocation);
-        }
+        // TODO: (ProcessMarkup) remove, use MarkupTestFile instead
+        var normalised = source.EnforceLF();
+        var markLocation = normalised.IndexOf("$$", StringComparison.InvariantCulture);
+        var processed = normalised.Replace("$$", string.Empty);
+        return (processed, markLocation);
     }
 }

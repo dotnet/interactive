@@ -3,10 +3,9 @@
 
 using System.Diagnostics;
 
-namespace System.Runtime.CompilerServices
+namespace System.Runtime.CompilerServices;
+
+[DebuggerNonUserCode]
+internal static class IsExternalInit
 {
-    [DebuggerNonUserCode]
-    internal static class IsExternalInit
-    {
-    }
 }

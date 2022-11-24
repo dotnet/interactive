@@ -4,28 +4,27 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.Jupyter
+namespace Microsoft.DotNet.Interactive.Jupyter;
+
+public class JupyterRequestContextScheduler
 {
-    public class JupyterRequestContextScheduler
+    private Func<JupyterRequestContext, Task> handle;
+
+    public JupyterRequestContextScheduler(Func<JupyterRequestContext, Task> handle)
     {
-        private Func<JupyterRequestContext, Task> handle;
+        this.handle = handle ?? throw new ArgumentNullException(nameof(handle));
+    }
 
-        public JupyterRequestContextScheduler(Func<JupyterRequestContext, Task> handle)
+    public async Task Schedule(JupyterRequestContext context)
+    {
+        try
         {
-            this.handle = handle ?? throw new ArgumentNullException(nameof(handle));
+            JupyterRequestContext.Current = context;
+            await handle(context);
         }
-
-        public async Task Schedule(JupyterRequestContext context)
+        finally
         {
-            try
-            {
-                JupyterRequestContext.Current = context;
-                await handle(context);
-            }
-            finally
-            {
-                JupyterRequestContext.Current = null;
-            }
+            JupyterRequestContext.Current = null;
         }
     }
 }

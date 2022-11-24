@@ -3,13 +3,12 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive
-{
-    public class KernelException : Exception
-    {
-        public KernelException(string message) : base(message)
-        {
+namespace Microsoft.DotNet.Interactive;
 
-        }
+public class KernelException : Exception
+{
+    public KernelException(string message) : base(message)
+    {
+
     }
 }

@@ -4,13 +4,12 @@
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation
+namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation;
+
+public static class EnumerableExtensions
 {
-    public static class EnumerableExtensions
+    public static string Join<T>(this IEnumerable<T> seq, string separator = ",")
     {
-        public static string Join<T>(this IEnumerable<T> seq, string separator = ",")
-        {
-            return String.Join(separator, seq);
-        }
+        return String.Join(separator, seq);
     }
 }

@@ -17,59 +17,59 @@ using Xunit.Abstractions;
 using static System.Environment;
 using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 
-namespace Microsoft.DotNet.Interactive.Formatting.Tests
+namespace Microsoft.DotNet.Interactive.Formatting.Tests;
+
+public static class Tags
 {
-    public static class Tags
-    {
-        public const string PlainTextBegin = "<div class=\"dni-plaintext\"><pre>";
-        public const string PlainTextEnd = "</pre></div>";
-    }
+    public const string PlainTextBegin = "<div class=\"dni-plaintext\"><pre>";
+    public const string PlainTextEnd = "</pre></div>";
+}
 
-    public class HtmlFormatterTests : FormatterTestBase
+public class HtmlFormatterTests : FormatterTestBase
+{
+    public class Objects : FormatterTestBase
     {
-        public class Objects : FormatterTestBase
+        [Fact]
+        public void Formatters_are_generated_on_the_fly_when_HTML_mime_type_is_requested()
         {
-            [Fact]
-            public void Formatters_are_generated_on_the_fly_when_HTML_mime_type_is_requested()
-            {
-                var output = new { a = 123 }.ToDisplayString(HtmlFormatter.MimeType);
+            var output = new { a = 123 }.ToDisplayString(HtmlFormatter.MimeType);
 
-                output.Should()
-                      .Be($"<table><thead><tr><th>a</th></tr></thead><tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td></tr></tbody></table>");
-            }
+            output.Should()
+                .Be($"<table><thead><tr><th>a</th></tr></thead><tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td></tr></tbody></table>");
+        }
 
-            [Fact]
-            public void Null_references_are_indicated()
-            {
-                string value = null;
+        [Fact]
+        public void Null_references_are_indicated()
+        {
+            string value = null;
 
-                value.ToDisplayString(HtmlFormatter.MimeType).RemoveStyleElement()
-                     .Should()
-                     .Be($"{PlainTextBegin}&lt;null&gt;{PlainTextEnd}");
-            }
+            value.ToDisplayString(HtmlFormatter.MimeType).RemoveStyleElement()
+                .Should()
+                .Be($"{PlainTextBegin}&lt;null&gt;{PlainTextEnd}");
+        }
 
-            [Fact]
-            public void Formatter_puts_div_with_class_around_string()
-            {
-                var formatter = HtmlFormatter.GetPreferredFormatterFor<string>();
+        [Fact]
+        public void Formatter_puts_div_with_class_around_string()
+        {
+            var formatter = HtmlFormatter.GetPreferredFormatterFor<string>();
 
-                var s = "hello".ToDisplayString(formatter).RemoveStyleElement();
+            var s = "hello".ToDisplayString(formatter).RemoveStyleElement();
 
-                s.Should().Be($"{PlainTextBegin}hello{PlainTextEnd}");
-            }
+            s.Should().Be($"{PlainTextBegin}hello{PlainTextEnd}");
+        }
 
-            [Fact]
-            public void Formatter_expands_properties_of_ExpandoObjects()
-            {
-                dynamic expando = new ExpandoObject();
-                expando.Name = "socks";
-                expando.Count = 2;
+        [Fact]
+        public void Formatter_expands_properties_of_ExpandoObjects()
+        {
+            dynamic expando = new ExpandoObject();
+            expando.Name = "socks";
+            expando.Count = 2;
 
-                var formatter = HtmlFormatter.GetPreferredFormatterFor<ExpandoObject>();
+            var formatter = HtmlFormatter.GetPreferredFormatterFor<ExpandoObject>();
 
-                var output = ((object) expando).ToDisplayString(formatter).RemoveStyleElement();
+            var output = ((object) expando).ToDisplayString(formatter).RemoveStyleElement();
 
-                output.Should().BeEquivalentHtmlTo($@"
+            output.Should().BeEquivalentHtmlTo($@"
 <table>
     <thead>
        <tr><th>Count</th><th>Name</th></tr>
@@ -77,279 +77,279 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
     <tbody><tr><td>{PlainTextBegin}2{PlainTextEnd}</td><td>socks</td></tr>
     </tbody>
 </table>");
-            }
+        }
 
-            [Fact]
-            public void It_formats_objects_as_tables_having_properties_on_the_y_axis()
-            {
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(EntityId));
+        [Fact]
+        public void It_formats_objects_as_tables_having_properties_on_the_y_axis()
+        {
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(EntityId));
 
-                var writer = new StringWriter();
+            var writer = new StringWriter();
 
-                var instance = new EntityId("TheEntity", "123");
+            var instance = new EntityId("TheEntity", "123");
 
-                formatter.Format(instance, writer);
+            formatter.Format(instance, writer);
 
-                writer.ToString()
-                      .Should()
-                      .BeEquivalentHtmlTo($@"
+            writer.ToString()
+                .Should()
+                .BeEquivalentHtmlTo($@"
 <table>
    <thead><tr><th>TypeName</th><th>Id</th></tr></thead>
    <tbody>
      <tr><td>{PlainTextBegin}TheEntity{PlainTextEnd}</td><td>{PlainTextBegin}123{PlainTextEnd}</td></tr>
   </tbody>
 </table>");
-            }
+        }
 
-            [Fact]
-            public void It_formats_anonymous_types_as_tables_having_properties_on_the_y_axis()
+        [Fact]
+        public void It_formats_anonymous_types_as_tables_having_properties_on_the_y_axis()
+        {
+            var writer = new StringWriter();
+
+            var instance = new
             {
-                var writer = new StringWriter();
+                PropertyA = 123,
+                PropertyB = "hello"
+            };
 
-                var instance = new
-                {
-                    PropertyA = 123,
-                    PropertyB = "hello"
-                };
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
 
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
+            formatter.Format(instance, writer);
 
-                formatter.Format(instance, writer);
-
-                writer.ToString()
-                      .Should()
-                      .BeEquivalentHtmlTo($@"
+            writer.ToString()
+                .Should()
+                .BeEquivalentHtmlTo($@"
 <table>
  <thead><tr><th>PropertyA</th><th>PropertyB</th></tr></thead>
  <tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td><td>{PlainTextBegin}hello{PlainTextEnd}</td></tr></tbody>
 </table>");
-            }
-
-            [Fact]
-            public void It_formats_tuples_as_tables_having_properties_on_the_y_axis()
-            {
-                var writer = new StringWriter();
-
-                var instance = (123, "hello");
-
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
-
-                formatter.Format(instance, writer);
-
-                writer.ToString()
-                      .Should()
-                      .BeEquivalentHtmlTo($@"<table><thead><tr><th>Item1</th><th>Item2</th></tr></thead>
-<tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td><td>{PlainTextBegin}hello{PlainTextEnd}</td></tr></tbody></table>");
-            }
-
-            [Fact]
-            public void Object_properties_are_formatted_using_plain_text_formatter()
-            {
-                var writer = new StringWriter();
-
-                var instance = new
-                {
-                    A = 123,
-                    B = new { BA = 456 }
-                };
-
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
-
-                formatter.Format(instance, writer);
-
-                writer.ToString()
-                      .Should()
-                      .Match($"<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td><td>{PlainTextBegin}&lt;&gt;f__AnonymousType*&lt;Int32&gt;{NewLine}        BA: 456{PlainTextEnd}</td></tr></tbody></table>");
-            }
-
-            [Fact]
-            public void Sequence_properties_are_formatted_using_plain_text_formatter()
-            {
-                var writer = new StringWriter();
-
-                var instance = new
-                {
-                    PropertyA = 123,
-                    PropertyB = Enumerable.Range(1, 3)
-                };
-
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
-
-                formatter.Format(instance, writer);
-
-                writer.ToString()
-                      .Should()
-                      .Contain($"<table><thead><tr><th>PropertyA</th><th>PropertyB</th></tr></thead><tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td><td>{PlainTextBegin}[ 1, 2, 3 ]{PlainTextEnd}</td></tr></tbody></table>");
-            }
-
-            [Fact]
-            public void Collection_properties_are_formatted_using_plain_text_formatting()
-            {
-                var writer = new StringWriter();
-
-                var instance = new
-                {
-                    PropertyA = Enumerable.Range(1, 3)
-                };
-
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
-
-                formatter.Format(instance, writer);
-
-                writer.ToString()
-                      .Should()
-                      .Contain("[ 1, 2, 3 ]");
-            }
-
-            [Fact]
-            public void It_displays_exceptions_thrown_by_properties_in_the_property_value_cell()
-            {
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(SomePropertyThrows));
-
-                var writer = new StringWriter();
-
-                var widget = new SomePropertyThrows();
-
-                formatter.Format(widget, writer);
-
-                writer.ToString()
-                      .Should()
-                      .Contain($"<td>{PlainTextBegin}System.Exception");
-            }
-
-            [Fact]
-            public void Type_instances_do_not_have_properties_expanded()
-            {
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Type));
-
-                var writer = new StringWriter();
-
-                formatter.Format(typeof(Dummy.ClassNotInSystemNamespace), writer);
-
-                writer.ToString()
-                      .Should()
-                      .Be("Dummy.ClassNotInSystemNamespace");
-            }
-
-            [Fact]
-            public void Type_instances_have_link_added_for_System_namespace_type()
-            {
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Type));
-
-                var writer = new StringWriter();
-
-                formatter.Format(typeof(string), writer);
-
-                writer.ToString()
-                      .Should()
-                      .Be("<span><a href=\"https://docs.microsoft.com/dotnet/api/system.string?view=net-5.0\">System.String</a></span>");
-            }
-
-
-            [Fact]
-            public void Type_instances_have_link_added_for_Microsoft_namespace_type()
-            {
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Type));
-
-                var writer = new StringWriter();
-
-                formatter.Format(typeof(Microsoft.CSharp.RuntimeBinder.RuntimeBinderException), writer);
-
-                writer.ToString()
-                      .Should()
-                      .Be("<span><a href=\"https://docs.microsoft.com/dotnet/api/microsoft.csharp.runtimebinder.runtimebinderexception?view=net-5.0\">Microsoft.CSharp.RuntimeBinder.RuntimeBinderException</a></span>");
-            }
-
-
-            [Fact]
-            public void Enums_are_formatted_using_their_names()
-            {
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(FileAccess));
-
-                var writer = new StringWriter();
-
-                formatter.Format(FileAccess.ReadWrite, writer);
-
-                writer.ToString().Should().Contain("ReadWrite");
-            }
-
-            [Fact]
-            public void TimeSpan_is_not_destructured()
-            {
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(TimeSpan));
-
-                var writer = new StringWriter();
-
-                var timespan = 25.Milliseconds();
-
-                formatter.Format(timespan, writer);
-
-                writer.ToString().Should().Contain(timespan.ToString());
-            }
         }
 
-        public class PreformatPlainText : FormatterTestBase
+        [Fact]
+        public void It_formats_tuples_as_tables_having_properties_on_the_y_axis()
         {
-            [Fact]
-            public void It_can_format_a_String_with_class()
+            var writer = new StringWriter();
+
+            var instance = (123, "hello");
+
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
+
+            formatter.Format(instance, writer);
+
+            writer.ToString()
+                .Should()
+                .BeEquivalentHtmlTo($@"<table><thead><tr><th>Item1</th><th>Item2</th></tr></thead>
+<tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td><td>{PlainTextBegin}hello{PlainTextEnd}</td></tr></tbody></table>");
+        }
+
+        [Fact]
+        public void Object_properties_are_formatted_using_plain_text_formatter()
+        {
+            var writer = new StringWriter();
+
+            var instance = new
             {
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(string));
+                A = 123,
+                B = new { BA = 456 }
+            };
 
-                var writer = new StringWriter();
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
 
-                var instance = @"this
+            formatter.Format(instance, writer);
+
+            writer.ToString()
+                .Should()
+                .Match($"<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td><td>{PlainTextBegin}&lt;&gt;f__AnonymousType*&lt;Int32&gt;{NewLine}        BA: 456{PlainTextEnd}</td></tr></tbody></table>");
+        }
+
+        [Fact]
+        public void Sequence_properties_are_formatted_using_plain_text_formatter()
+        {
+            var writer = new StringWriter();
+
+            var instance = new
+            {
+                PropertyA = 123,
+                PropertyB = Enumerable.Range(1, 3)
+            };
+
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
+
+            formatter.Format(instance, writer);
+
+            writer.ToString()
+                .Should()
+                .Contain($"<table><thead><tr><th>PropertyA</th><th>PropertyB</th></tr></thead><tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td><td>{PlainTextBegin}[ 1, 2, 3 ]{PlainTextEnd}</td></tr></tbody></table>");
+        }
+
+        [Fact]
+        public void Collection_properties_are_formatted_using_plain_text_formatting()
+        {
+            var writer = new StringWriter();
+
+            var instance = new
+            {
+                PropertyA = Enumerable.Range(1, 3)
+            };
+
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
+
+            formatter.Format(instance, writer);
+
+            writer.ToString()
+                .Should()
+                .Contain("[ 1, 2, 3 ]");
+        }
+
+        [Fact]
+        public void It_displays_exceptions_thrown_by_properties_in_the_property_value_cell()
+        {
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(SomePropertyThrows));
+
+            var writer = new StringWriter();
+
+            var widget = new SomePropertyThrows();
+
+            formatter.Format(widget, writer);
+
+            writer.ToString()
+                .Should()
+                .Contain($"<td>{PlainTextBegin}System.Exception");
+        }
+
+        [Fact]
+        public void Type_instances_do_not_have_properties_expanded()
+        {
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Type));
+
+            var writer = new StringWriter();
+
+            formatter.Format(typeof(Dummy.ClassNotInSystemNamespace), writer);
+
+            writer.ToString()
+                .Should()
+                .Be("Dummy.ClassNotInSystemNamespace");
+        }
+
+        [Fact]
+        public void Type_instances_have_link_added_for_System_namespace_type()
+        {
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Type));
+
+            var writer = new StringWriter();
+
+            formatter.Format(typeof(string), writer);
+
+            writer.ToString()
+                .Should()
+                .Be("<span><a href=\"https://docs.microsoft.com/dotnet/api/system.string?view=net-5.0\">System.String</a></span>");
+        }
+
+
+        [Fact]
+        public void Type_instances_have_link_added_for_Microsoft_namespace_type()
+        {
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Type));
+
+            var writer = new StringWriter();
+
+            formatter.Format(typeof(Microsoft.CSharp.RuntimeBinder.RuntimeBinderException), writer);
+
+            writer.ToString()
+                .Should()
+                .Be("<span><a href=\"https://docs.microsoft.com/dotnet/api/microsoft.csharp.runtimebinder.runtimebinderexception?view=net-5.0\">Microsoft.CSharp.RuntimeBinder.RuntimeBinderException</a></span>");
+        }
+
+
+        [Fact]
+        public void Enums_are_formatted_using_their_names()
+        {
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(FileAccess));
+
+            var writer = new StringWriter();
+
+            formatter.Format(FileAccess.ReadWrite, writer);
+
+            writer.ToString().Should().Contain("ReadWrite");
+        }
+
+        [Fact]
+        public void TimeSpan_is_not_destructured()
+        {
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(TimeSpan));
+
+            var writer = new StringWriter();
+
+            var timespan = 25.Milliseconds();
+
+            formatter.Format(timespan, writer);
+
+            writer.ToString().Should().Contain(timespan.ToString());
+        }
+    }
+
+    public class PreformatPlainText : FormatterTestBase
+    {
+        [Fact]
+        public void It_can_format_a_String_with_class()
+        {
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(string));
+
+            var writer = new StringWriter();
+
+            var instance = @"this
 is a 
    multiline<>
 string";
 
-                formatter.Format(instance, writer);
+            formatter.Format(instance, writer);
 
-                writer.ToString().RemoveStyleElement()
-                      .Should()
-                      .BeEquivalentHtmlTo(
-                          $"{PlainTextBegin}{instance.HtmlEncode()}{PlainTextEnd}");
-            }
-
-            [Fact]
-            public void HtmlFormatter_returns_plain_for_BigInteger()
-            {
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(BigInteger));
-
-                var writer = new StringWriter();
-
-                var instance = BigInteger.Parse("78923589327589332402359");
-
-                formatter.Format(instance, writer);
-
-                var html = writer.ToString().RemoveStyleElement();
-
-                html.Should()
-                    .Be($"{PlainTextBegin}78923589327589332402359{PlainTextEnd}");
-            }
+            writer.ToString().RemoveStyleElement()
+                .Should()
+                .BeEquivalentHtmlTo(
+                    $"{PlainTextBegin}{instance.HtmlEncode()}{PlainTextEnd}");
         }
 
-        public class Sequences : FormatterTestBase
+        [Fact]
+        public void HtmlFormatter_returns_plain_for_BigInteger()
         {
-            [Fact]
-            public void It_formats_sequences_as_tables_with_an_index_on_the_y_axis()
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(BigInteger));
+
+            var writer = new StringWriter();
+
+            var instance = BigInteger.Parse("78923589327589332402359");
+
+            formatter.Format(instance, writer);
+
+            var html = writer.ToString().RemoveStyleElement();
+
+            html.Should()
+                .Be($"{PlainTextBegin}78923589327589332402359{PlainTextEnd}");
+        }
+    }
+
+    public class Sequences : FormatterTestBase
+    {
+        [Fact]
+        public void It_formats_sequences_as_tables_with_an_index_on_the_y_axis()
+        {
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(List<EntityId>));
+
+            var writer = new StringWriter();
+
+            var instance = new List<EntityId>
             {
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(List<EntityId>));
+                new("entity one", "123"),
+                new("entity two", "456")
+            };
 
-                var writer = new StringWriter();
+            formatter.Format(instance, writer);
 
-                var instance = new List<EntityId>
-                {
-                    new("entity one", "123"),
-                    new("entity two", "456")
-                };
-
-                formatter.Format(instance, writer);
-
-                writer.ToString()
-                      .RemoveStyleElement()
-                      .Should()
-                      .BeEquivalentHtmlTo(
-                          @$"
+            writer.ToString()
+                .RemoveStyleElement()
+                .Should()
+                .BeEquivalentHtmlTo(
+                    @$"
 <table>
    <thead>
      <tr><th><i>index</i></th><th>TypeName</th><th>Id</th></tr>
@@ -359,74 +359,74 @@ string";
      <tr><td>1</td><td>entity two</td><td>456</td></tr>
    </tbody>
 </table>");
-            }
+        }
 
-            [Fact]
-            public void It_formats_sequence_properties_using_plain_text_formatting()
+        [Fact]
+        public void It_formats_sequence_properties_using_plain_text_formatting()
+        {
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(List<float[]>));
+
+            var writer = new StringWriter();
+
+            var listOfArrays = new List<float[]>
             {
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(List<float[]>));
-
-                var writer = new StringWriter();
-
-                var listOfArrays = new List<float[]>
+                new[]
                 {
-                    new[]
-                    {
-                        1.1f,
-                        2.2f,
-                        3.3f
-                    }
-                };
+                    1.1f,
+                    2.2f,
+                    3.3f
+                }
+            };
 
-                formatter.Format(listOfArrays, writer);
+            formatter.Format(listOfArrays, writer);
 
-                writer.ToString()
-                      .Should()
-                      .Contain($"<td>{PlainTextBegin}{listOfArrays.First().ToDisplayString("text/plain")}{PlainTextEnd}</td>");
-            }
+            writer.ToString()
+                .Should()
+                .Contain($"<td>{PlainTextBegin}{listOfArrays.First().ToDisplayString("text/plain")}{PlainTextEnd}</td>");
+        }
             
-            [Fact]
-            public void It_formats_generic_dictionaries_that_arent_non_generic_as_tables_with_the_key_on_the_y_axis()
+        [Fact]
+        public void It_formats_generic_dictionaries_that_arent_non_generic_as_tables_with_the_key_on_the_y_axis()
+        {
+            var writer = new StringWriter();
+
+            IDictionary<string, EntityId> instance = new GenericDictionary<string, EntityId>
             {
-                var writer = new StringWriter();
+                { "first", new EntityId("entity one", "123") },
+                { "second", new EntityId("entity two", "456") }
+            };
 
-                IDictionary<string, EntityId> instance = new GenericDictionary<string, EntityId>
-                {
-                    { "first", new EntityId("entity one", "123") },
-                    { "second", new EntityId("entity two", "456") }
-                };
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
 
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
+            formatter.Format(instance, writer);
 
-                formatter.Format(instance, writer);
+            writer.ToString()
+                .RemoveStyleElement()
+                .Should()
+                .BeEquivalentHtmlTo(
+                    "<table><thead><tr><th><i>key</i></th><th>TypeName</th><th>Id</th></tr></thead><tbody><tr><td>first</td><td>entity one</td><td>123</td></tr><tr><td>second</td><td>entity two</td><td>456</td></tr></tbody></table>");
+        }
 
-                writer.ToString()
-                      .RemoveStyleElement()
-                      .Should()
-                      .BeEquivalentHtmlTo(
-                          "<table><thead><tr><th><i>key</i></th><th>TypeName</th><th>Id</th></tr></thead><tbody><tr><td>first</td><td>entity one</td><td>123</td></tr><tr><td>second</td><td>entity two</td><td>456</td></tr></tbody></table>");
-            }
+        [Fact]
+        public void It_formats_non_generic_dictionaries_that_arent_generic_as_tables_with_the_key_on_the_y_axis()
+        {
+            var writer = new StringWriter();
 
-            [Fact]
-            public void It_formats_non_generic_dictionaries_that_arent_generic_as_tables_with_the_key_on_the_y_axis()
+            IDictionary instance = new NonGenericDictionary
             {
-                var writer = new StringWriter();
+                { "first", new EntityId("entity one", "123") },
+                { "second", new EntityId("entity two", "456") }
+            };
 
-                IDictionary instance = new NonGenericDictionary
-                {
-                    { "first", new EntityId("entity one", "123") },
-                    { "second", new EntityId("entity two", "456") }
-                };
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
 
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
+            formatter.Format(instance, writer);
 
-                formatter.Format(instance, writer);
-
-                writer.ToString()
-                      .RemoveStyleElement()
-                      .Should()
-                      .BeEquivalentHtmlTo(
-                          $@"<table>
+            writer.ToString()
+                .RemoveStyleElement()
+                .Should()
+                .BeEquivalentHtmlTo(
+                    $@"<table>
     <thead>
        <tr><th><i>key</i></th><th>TypeName</th><th>Id</th></tr>
     </thead>
@@ -435,61 +435,61 @@ string";
       <tr><td>second</td><td>entity two</td><td>456</td></tr>
     </tbody>
 </table>");
-            }
+        }
 
-            [Fact]
-            public void It_formats_DateTime_correctly()
-            {
-                var date1 = DateTime.Now;
+        [Fact]
+        public void It_formats_DateTime_correctly()
+        {
+            var date1 = DateTime.Now;
 
-                var html = date1.ToDisplayString("text/html");
+            var html = date1.ToDisplayString("text/html");
 
-                html.Should().BeEquivalentHtmlTo(
-                    $"<span>{date1:u}</span>");
-            }
+            html.Should().BeEquivalentHtmlTo(
+                $"<span>{date1:u}</span>");
+        }
 
-            [Fact]
-            public void It_formats_DateTimeOffset_correctly()
-            {
-                var date1 = DateTimeOffset.Now;
+        [Fact]
+        public void It_formats_DateTimeOffset_correctly()
+        {
+            var date1 = DateTimeOffset.Now;
 
-                var html = date1.ToDisplayString("text/html");
+            var html = date1.ToDisplayString("text/html");
 
-                html.Should().BeEquivalentHtmlTo(
-                    $"<span>{date1:u}</span>");
-            }
+            html.Should().BeEquivalentHtmlTo(
+                $"<span>{date1:u}</span>");
+        }
 
-            [Fact]
-            public void It_formats_enum_value_using_the_name()
-            {
-                var day = DayOfWeek.Monday;
+        [Fact]
+        public void It_formats_enum_value_using_the_name()
+        {
+            var day = DayOfWeek.Monday;
 
-                var html = day.ToDisplayString("text/html");
+            var html = day.ToDisplayString("text/html");
 
-                html.Should().BeEquivalentHtmlTo(
-                    $"<span>{day}</span>");
-            }
+            html.Should().BeEquivalentHtmlTo(
+                $"<span>{day}</span>");
+        }
 
-            [Fact]
-            public void It_formats_string_with_encoding_and_preserving_whitespace_and_with_tags()
-            {
-                var text = "hello<b>world  </b>  \n\n  ";
+        [Fact]
+        public void It_formats_string_with_encoding_and_preserving_whitespace_and_with_tags()
+        {
+            var text = "hello<b>world  </b>  \n\n  ";
 
-                var html = text.ToDisplayString("text/html").RemoveStyleElement();
+            var html = text.ToDisplayString("text/html").RemoveStyleElement();
 
-                html.Should().Be($"{PlainTextBegin}hello&lt;b&gt;world  &lt;/b&gt;  \n\n  {PlainTextEnd}");
-            }
+            html.Should().Be($"{PlainTextBegin}hello&lt;b&gt;world  &lt;/b&gt;  \n\n  {PlainTextEnd}");
+        }
 
-            [Fact]
-            public void It_formats_string_arrays_correctly()
-            {
-                var strings = new[] { "apple", "banana", "cherry" };
+        [Fact]
+        public void It_formats_string_arrays_correctly()
+        {
+            var strings = new[] { "apple", "banana", "cherry" };
 
-                strings.ToDisplayString("text/html")
-                       .RemoveStyleElement()
-                       .Should()
-                       .BeEquivalentHtmlTo(
-                           $@"
+            strings.ToDisplayString("text/html")
+                .RemoveStyleElement()
+                .Should()
+                .BeEquivalentHtmlTo(
+                    $@"
 <table>
   <thead>
     <tr><th><i>index</i></th><th>value</th></tr>
@@ -500,19 +500,19 @@ string";
     <tr><td>2</td><td>cherry</td></tr>
   </tbody>
 </table>");
-            }
+        }
 
-            [Fact]
-            public void It_formats_ordered_enumerables_correctly()
-            {
-                var sorted = new[]
-                        { "kiwi", "plantain", "apple" }
-                    .OrderBy(fruit => fruit.Length);
+        [Fact]
+        public void It_formats_ordered_enumerables_correctly()
+        {
+            var sorted = new[]
+                    { "kiwi", "plantain", "apple" }
+                .OrderBy(fruit => fruit.Length);
 
-                var html = sorted.ToDisplayString("text/html").RemoveStyleElement();
+            var html = sorted.ToDisplayString("text/html").RemoveStyleElement();
 
-                html.Should()
-                    .BeEquivalentHtmlTo($@"
+            html.Should()
+                .BeEquivalentHtmlTo($@"
 <table>
   <thead>
      <tr><th><i>index</i></th><th>value</th></tr>
@@ -523,114 +523,114 @@ string";
      <tr><td>2</td><td>plantain</td></tr>
   </tbody>
 </table>");
+        }
+
+        [Fact]
+        public void Empty_sequences_are_indicated()
+        {
+            var list = new List<string>();
+
+            var html = list.ToDisplayString("text/html").RemoveStyleElement();
+
+            html.Should().BeEquivalentHtmlTo("<i>(empty)</i>");
+        }
+
+        [Fact]
+        public void Empty_dictionaries_are_indicated()
+        {
+            var list = new Dictionary<int, int>();
+
+            var html = list.ToDisplayString("text/html").RemoveStyleElement();
+
+            html.Should().BeEquivalentHtmlTo("<i>(empty)</i>");
+        }
+
+        [Fact]
+        public void Formatter_truncates_expansion_of_ICollection()
+        {
+            var list = new List<string>();
+            for (var i = 1; i < 11; i++)
+            {
+                list.Add("number " + i);
             }
 
-            [Fact]
-            public void Empty_sequences_are_indicated()
+            Formatter.ListExpansionLimit = 4;
+
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(ICollection));
+
+            var formatted = list.ToDisplayString(formatter);
+
+            formatted.Should().Contain("number 1");
+            formatted.Should().Contain("number 4");
+            formatted.Should().NotContain("number 5");
+            formatted.Should().Contain("<i>(6 more)</i>");
+        }
+
+        [Fact]
+        public void Formatter_truncates_expansion_of_IDictionary()
+        {
+            var list = new Dictionary<string, int>();
+
+            for (var i = 1; i < 11; i++)
             {
-                var list = new List<string>();
-
-                var html = list.ToDisplayString("text/html").RemoveStyleElement();
-
-                html.Should().BeEquivalentHtmlTo("<i>(empty)</i>");
+                list.Add("number " + i, i);
             }
 
-            [Fact]
-            public void Empty_dictionaries_are_indicated()
+            Formatter.ListExpansionLimit = 4;
+
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(list.GetType());
+
+            var formatted = list.ToDisplayString(formatter);
+
+            formatted.Should().Contain("number 1");
+            formatted.Should().Contain("number 4");
+            formatted.Should().NotContain("number 5");
+            formatted.Should().Contain("6 more");
+        }
+
+        [Fact]
+        public void Formatter_truncates_expansion_of_IEnumerable()
+        {
+            Formatter.ListExpansionLimit = 4;
+
+            var formatter = HtmlFormatter.GetPreferredFormatterFor<IEnumerable<string>>();
+
+            var formatted = InfiniteSequence().ToDisplayString(formatter);
+
+            formatted.Should().Contain("number 9");
+            formatted.Should().Contain("<i>... (more)</i>");
+
+            static IEnumerable<string> InfiniteSequence()
             {
-                var list = new Dictionary<int, int>();
-
-                var html = list.ToDisplayString("text/html").RemoveStyleElement();
-
-                html.Should().BeEquivalentHtmlTo("<i>(empty)</i>");
-            }
-
-            [Fact]
-            public void Formatter_truncates_expansion_of_ICollection()
-            {
-                var list = new List<string>();
-                for (var i = 1; i < 11; i++)
+                while(true)
                 {
-                    list.Add("number " + i);
-                }
-
-                Formatter.ListExpansionLimit = 4;
-
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(ICollection));
-
-                var formatted = list.ToDisplayString(formatter);
-
-                formatted.Should().Contain("number 1");
-                formatted.Should().Contain("number 4");
-                formatted.Should().NotContain("number 5");
-                formatted.Should().Contain("<i>(6 more)</i>");
-            }
-
-            [Fact]
-            public void Formatter_truncates_expansion_of_IDictionary()
-            {
-                var list = new Dictionary<string, int>();
-
-                for (var i = 1; i < 11; i++)
-                {
-                    list.Add("number " + i, i);
-                }
-
-                Formatter.ListExpansionLimit = 4;
-
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(list.GetType());
-
-                var formatted = list.ToDisplayString(formatter);
-
-                formatted.Should().Contain("number 1");
-                formatted.Should().Contain("number 4");
-                formatted.Should().NotContain("number 5");
-                formatted.Should().Contain("6 more");
-            }
-
-            [Fact]
-            public void Formatter_truncates_expansion_of_IEnumerable()
-            {
-                Formatter.ListExpansionLimit = 4;
-
-                var formatter = HtmlFormatter.GetPreferredFormatterFor<IEnumerable<string>>();
-
-                var formatted = InfiniteSequence().ToDisplayString(formatter);
-
-                formatted.Should().Contain("number 9");
-                formatted.Should().Contain("<i>... (more)</i>");
-
-                static IEnumerable<string> InfiniteSequence()
-                {
-                    while(true)
-                    {
-                        yield return "number 9"; 
-                    }
+                    yield return "number 9"; 
                 }
             }
+        }
 
-            [Fact]
-            public void DateTime_is_not_destructured()
-            {
-                var date1 = DateTime.Now;
-                var date2 = DateTime.Now.AddHours(1.23);
+        [Fact]
+        public void DateTime_is_not_destructured()
+        {
+            var date1 = DateTime.Now;
+            var date2 = DateTime.Now.AddHours(1.23);
 
-                var objects = new object[] { date1, date2 };
+            var objects = new object[] { date1, date2 };
 
-                var html = objects.ToDisplayString("text/html").RemoveStyleElement();
+            var html = objects.ToDisplayString("text/html").RemoveStyleElement();
 
-                html.Should().BeEquivalentHtmlTo(
-                    $"<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td><span>{date1.ToDisplayString("text/plain")}</span></td></tr><tr><td>1</td><td><span>{date2.ToDisplayString("text/plain")}</span></td></tr></tbody></table>");
-            }
+            html.Should().BeEquivalentHtmlTo(
+                $"<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td><span>{date1.ToDisplayString("text/plain")}</span></td></tr><tr><td>1</td><td><span>{date2.ToDisplayString("text/plain")}</span></td></tr></tbody></table>");
+        }
 
-            [Fact]
-            public void System_Type_is_not_destructured()
-            {
-                var objects = new object[] { typeof(string), typeof(int) };
+        [Fact]
+        public void System_Type_is_not_destructured()
+        {
+            var objects = new object[] { typeof(string), typeof(int) };
 
-                var html = objects.ToDisplayString("text/html").RemoveStyleElement();
+            var html = objects.ToDisplayString("text/html").RemoveStyleElement();
 
-                html.Should().BeEquivalentHtmlTo($@"<table>
+            html.Should().BeEquivalentHtmlTo($@"<table>
       <thead>
         <tr>
           <th>
@@ -658,50 +658,50 @@ string";
         </tr>
       </tbody>
     </table>");
-            }
+        }
 
-            [Fact]
-            public void Dictionary_with_non_string_keys_are_formatted_correctly()
-            {
-                var dict = new SomeDictUsingInterfaceImpls();
+        [Fact]
+        public void Dictionary_with_non_string_keys_are_formatted_correctly()
+        {
+            var dict = new SomeDictUsingInterfaceImpls();
 
-                var html = dict.ToDisplayString("text/html").RemoveStyleElement();
+            var html = dict.ToDisplayString("text/html").RemoveStyleElement();
 
-                html.Should().BeEquivalentHtmlTo(
-                    $"<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>{PlainTextBegin}1{PlainTextEnd}</td><td>2</td></tr></tbody></table>");
-            }
+            html.Should().BeEquivalentHtmlTo(
+                $"<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>{PlainTextBegin}1{PlainTextEnd}</td><td>2</td></tr></tbody></table>");
+        }
 
-            [Fact]
-            public void ReadOnlyMemory_of_char_is_formatted_like_a_string()
-            {
-                var formatter = HtmlFormatter.GetPreferredFormatterFor<ReadOnlyMemory<char>>();
+        [Fact]
+        public void ReadOnlyMemory_of_char_is_formatted_like_a_string()
+        {
+            var formatter = HtmlFormatter.GetPreferredFormatterFor<ReadOnlyMemory<char>>();
 
-                var writer = new StringWriter();
+            var writer = new StringWriter();
 
-                var readOnlyMemory = "Hi!".AsMemory();
+            var readOnlyMemory = "Hi!".AsMemory();
 
-                formatter.Format(readOnlyMemory, writer);
+            formatter.Format(readOnlyMemory, writer);
 
-                writer.ToString()
-                      .Should()
-                      .BeEquivalentHtmlTo("<span>Hi!</span>");
-            }
+            writer.ToString()
+                .Should()
+                .BeEquivalentHtmlTo("<span>Hi!</span>");
+        }
 
-            [Fact]
-            public void ReadOnlyMemory_of_int_is_formatted_like_a_int_array()
-            {
-                var formatter = HtmlFormatter.GetPreferredFormatterFor<ReadOnlyMemory<int>>();
+        [Fact]
+        public void ReadOnlyMemory_of_int_is_formatted_like_a_int_array()
+        {
+            var formatter = HtmlFormatter.GetPreferredFormatterFor<ReadOnlyMemory<int>>();
 
-                var writer = new StringWriter();
+            var writer = new StringWriter();
 
-                var readOnlyMemory = new ReadOnlyMemory<int>(new[] { 7, 8, 9 });
+            var readOnlyMemory = new ReadOnlyMemory<int>(new[] { 7, 8, 9 });
 
-                formatter.Format(readOnlyMemory, writer);
+            formatter.Format(readOnlyMemory, writer);
                 
-                writer.ToString().RemoveStyleElement()
-                      .Should()
-                      .BeEquivalentHtmlTo(
-                          $@"
+            writer.ToString().RemoveStyleElement()
+                .Should()
+                .BeEquivalentHtmlTo(
+                    $@"
 <table>
   <thead>
     <tr><th><i>index</i></th><th>value</th></tr>
@@ -712,20 +712,20 @@ string";
     <tr><td>2</td><td>{PlainTextBegin}9{PlainTextEnd}</td></tr>
   </tbody>
 </table>");
-            }
+        }
 
-            [Fact]
-            public void It_shows_null_items_in_the_sequence_as_null()
-            {
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(object[]));
+        [Fact]
+        public void It_shows_null_items_in_the_sequence_as_null()
+        {
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(object[]));
 
-                var writer = new StringWriter();
+            var writer = new StringWriter();
 
-                formatter.Format(new object[] { 8, null, 9 }, writer);
+            formatter.Format(new object[] { 8, null, 9 }, writer);
 
-                writer.ToString().RemoveStyleElement().Should()
-                      .BeEquivalentHtmlTo(
-                          $@"
+            writer.ToString().RemoveStyleElement().Should()
+                .BeEquivalentHtmlTo(
+                    $@"
 <table>
   <thead>
     <tr><th><i>index</i></th><th>value</th></tr>
@@ -736,19 +736,19 @@ string";
     <tr><td>2</td><td>{PlainTextBegin}9{PlainTextEnd}</td></tr>
   </tbody>
 </table>");
-            }
+        }
 
-            [Fact]
-            public void It_shows_properties_up_to_default_max()
-            {
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Dummy.ClassWithManyProperties));
+        [Fact]
+        public void It_shows_properties_up_to_default_max()
+        {
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Dummy.ClassWithManyProperties));
 
-                var writer = new StringWriter();
+            var writer = new StringWriter();
 
-                formatter.Format(new Dummy.ClassWithManyProperties(), writer);
+            formatter.Format(new Dummy.ClassWithManyProperties(), writer);
 
-                writer.ToString().Should()
-                      .BeEquivalentHtmlTo($@"<table>
+            writer.ToString().Should()
+                .BeEquivalentHtmlTo($@"<table>
       <thead>
         <tr>
           <th>X1</th>
@@ -799,20 +799,20 @@ string";
         </tr>
       </tbody>
     </table>");
-            }
+        }
 
-            [Fact]
-            public void It_shows_properties_up_to_custom_max()
-            {
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Dummy.ClassWithManyProperties));
+        [Fact]
+        public void It_shows_properties_up_to_custom_max()
+        {
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Dummy.ClassWithManyProperties));
 
-                var writer = new StringWriter();
-                HtmlFormatter.MaxProperties = 1;
+            var writer = new StringWriter();
+            HtmlFormatter.MaxProperties = 1;
 
-                formatter.Format(new Dummy.ClassWithManyProperties(), writer);
+            formatter.Format(new Dummy.ClassWithManyProperties(), writer);
 
-                writer.ToString().Should()
-                      .BeEquivalentHtmlTo($@"<table>
+            writer.ToString().Should()
+                .BeEquivalentHtmlTo($@"<table>
       <thead>
         <tr>
           <th>X1</th>
@@ -825,43 +825,43 @@ string";
         </tr>
       </tbody>
     </table>");
+        }
+
+        [Fact]
+        public void Setting_properties_to_zero_means_no_table_formatting_and_plaintext_gets_used()
+        {
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Dummy.ClassWithManyProperties));
+
+            var writer = new StringWriter();
+            HtmlFormatter.MaxProperties = 0;
+            PlainTextFormatter.MaxProperties = 0;
+
+            formatter.Format(new Dummy.ClassWithManyProperties(), writer);
+
+            writer.ToString()
+                .RemoveStyleElement()
+                .Should()
+                .Be($"{PlainTextBegin}Dummy.ClassWithManyProperties{PlainTextEnd}");
+        }
+
+        [Fact]
+        public void Sequences_can_contain_different_types_of_elements()
+        {
+            IEnumerable<object> GetCollection()
+            {
+                yield return true;
+                yield return 99;
+                yield return "Hello, World";
             }
 
-            [Fact]
-            public void Setting_properties_to_zero_means_no_table_formatting_and_plaintext_gets_used()
-            {
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Dummy.ClassWithManyProperties));
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(IEnumerable<object>));
 
-                var writer = new StringWriter();
-                HtmlFormatter.MaxProperties = 0;
-                PlainTextFormatter.MaxProperties = 0;
+            var writer = new StringWriter();
 
-                formatter.Format(new Dummy.ClassWithManyProperties(), writer);
+            formatter.Format(GetCollection(), writer);
 
-                writer.ToString()
-                      .RemoveStyleElement()
-                      .Should()
-                      .Be($"{PlainTextBegin}Dummy.ClassWithManyProperties{PlainTextEnd}");
-            }
-
-            [Fact]
-            public void Sequences_can_contain_different_types_of_elements()
-            {
-                IEnumerable<object> GetCollection()
-                {
-                    yield return true;
-                    yield return 99;
-                    yield return "Hello, World";
-                }
-
-                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(IEnumerable<object>));
-
-                var writer = new StringWriter();
-
-                formatter.Format(GetCollection(), writer);
-
-                writer.ToString().RemoveStyleElement().Should()
-                      .BeEquivalentHtmlTo($@"<table>
+            writer.ToString().RemoveStyleElement().Should()
+                .BeEquivalentHtmlTo($@"<table>
       <thead>
         <tr>
           <th>
@@ -903,25 +903,25 @@ string";
         </tr>
       </tbody>
     </table>");
-            }
+        }
             
-            [Fact]
-            public void All_properties_are_shown_when_sequences_contain_different_types()
+        [Fact]
+        public void All_properties_are_shown_when_sequences_contain_different_types()
+        {
+            var objects = new object[]
             {
-                var objects = new object[]
-                {
-                    1, 
-                    (2, "two"), 
-                    Enumerable.Range(1, 3),
-                    new { name = "apple", color = "green" }
-                };
+                1, 
+                (2, "two"), 
+                Enumerable.Range(1, 3),
+                new { name = "apple", color = "green" }
+            };
 
-                var result= objects.ToDisplayString("text/html").RemoveStyleElement();
+            var result= objects.ToDisplayString("text/html").RemoveStyleElement();
 
-                result
-                       .Should()
-                       .BeEquivalentHtmlTo(
-                          $@"<table>
+            result
+                .Should()
+                .BeEquivalentHtmlTo(
+                    $@"<table>
       <thead>
         <tr>
           <th>
@@ -988,25 +988,25 @@ string";
         </tr>
       </tbody>
     </table>");
-            }
+        }
 
-            [Fact]
-            public void All_properties_are_shown_when_sequences_contain_different_types_in_order_they_are_encountered()
+        [Fact]
+        public void All_properties_are_shown_when_sequences_contain_different_types_in_order_they_are_encountered()
+        {
+            var objects = new object[]
             {
-                var objects = new object[]
-                {
-                    new { name = "apple", Item2 = "green" },
-                    (2, "two"),
-                    1,
-                    Enumerable.Range(1, 3),
-                };
+                new { name = "apple", Item2 = "green" },
+                (2, "two"),
+                1,
+                Enumerable.Range(1, 3),
+            };
 
-                var result = objects.ToDisplayString("text/html").RemoveStyleElement();
+            var result = objects.ToDisplayString("text/html").RemoveStyleElement();
 
-                result
-                    .Should()
-                    .BeEquivalentHtmlTo(
-                        $@"<table>
+            result
+                .Should()
+                .BeEquivalentHtmlTo(
+                    $@"<table>
       <thead>
         <tr>
           <th>
@@ -1068,29 +1068,29 @@ string";
         </tr>
       </tbody>
     </table>");
-            }
+        }
 
-            [Fact]
-            public void Respective_HTML_formatters_are_used_when_sequences_contain_different_types()
-            {
-                var anonymousObj = new { name = "apple", color = "green" };
+        [Fact]
+        public void Respective_HTML_formatters_are_used_when_sequences_contain_different_types()
+        {
+            var anonymousObj = new { name = "apple", color = "green" };
 
-                Formatter.Register(anonymousObj.GetType(), (o, writer) => writer.Write($"<i>{o}</i>"), HtmlFormatter.MimeType);
+            Formatter.Register(anonymousObj.GetType(), (o, writer) => writer.Write($"<i>{o}</i>"), HtmlFormatter.MimeType);
               
-                var objects = new object[]
-                {
-                    anonymousObj,
-                    (123, "two"),
-                    456,
-                    new [] { 7, 8, 9 } 
-                };
+            var objects = new object[]
+            {
+                anonymousObj,
+                (123, "two"),
+                456,
+                new [] { 7, 8, 9 } 
+            };
 
-                var result = objects.ToDisplayString("text/html").RemoveStyleElement();
+            var result = objects.ToDisplayString("text/html").RemoveStyleElement();
 
-                result
-                    .Should()
-                    .BeEquivalentHtmlTo(
-                        $@"<table>
+            result
+                .Should()
+                .BeEquivalentHtmlTo(
+                    $@"<table>
   <thead>
     <tr>
       <th>
@@ -1155,176 +1155,175 @@ string";
     </tr>
   </tbody>
 </table>");
-            }
-
-            class SomeDictUsingInterfaceImpls : IDictionary<int, string>
-            {
-                string IDictionary<int, string>.this[int key] { get => "2"; set => throw new NotImplementedException(); }
-
-                ICollection<int> IDictionary<int, string>.Keys => new[] { 1 };
-
-                ICollection<string> IDictionary<int, string>.Values => new[] { "2" };
-
-                int ICollection<KeyValuePair<int, string>>.Count => 1;
-
-                bool ICollection<KeyValuePair<int, string>>.IsReadOnly => true;
-
-                void IDictionary<int, string>.Add(int key, string value)
-                {
-                }
-
-                void ICollection<KeyValuePair<int, string>>.Add(KeyValuePair<int, string> item)
-                {
-                }
-
-                void ICollection<KeyValuePair<int, string>>.Clear()
-                {
-                }
-
-                bool ICollection<KeyValuePair<int, string>>.Contains(KeyValuePair<int, string> item)
-                {
-                    return (item.Key == 1 && item.Value == "2");
-                }
-
-                bool IDictionary<int, string>.ContainsKey(int key)
-                {
-                    return (key == 1);
-                }
-
-                void ICollection<KeyValuePair<int, string>>.CopyTo(KeyValuePair<int, string>[] array, int arrayIndex)
-                {
-                    throw new NotImplementedException();
-                }
-
-                IEnumerator<KeyValuePair<int, string>> IEnumerable<KeyValuePair<int, string>>.GetEnumerator()
-                {
-                    return ((IEnumerable < KeyValuePair<int, string> > ) new[] { new KeyValuePair<int, string>(1, "2") }).GetEnumerator();
-                }
-
-                bool IDictionary<int, string>.Remove(int key)
-                {
-                    throw new NotImplementedException();
-                }
-
-                bool ICollection<KeyValuePair<int, string>>.Remove(KeyValuePair<int, string> item)
-                {
-                    return false;
-                }
-
-                bool IDictionary<int, string>.TryGetValue(int key, out string value)
-                {
-                    value = "2";
-                    return (key == 1);
-                }
-
-                IEnumerator IEnumerable.GetEnumerator()
-                {
-                    return ((IEnumerable)new[] { new KeyValuePair<int, string>(1, "2") }).GetEnumerator();
-                }
-            }
         }
 
-        public class Json : FormatterTestBase
+        class SomeDictUsingInterfaceImpls : IDictionary<int, string>
         {
-            private readonly ITestOutputHelper _output;
+            string IDictionary<int, string>.this[int key] { get => "2"; set => throw new NotImplementedException(); }
 
-            public Json(ITestOutputHelper output)
+            ICollection<int> IDictionary<int, string>.Keys => new[] { 1 };
+
+            ICollection<string> IDictionary<int, string>.Values => new[] { "2" };
+
+            int ICollection<KeyValuePair<int, string>>.Count => 1;
+
+            bool ICollection<KeyValuePair<int, string>>.IsReadOnly => true;
+
+            void IDictionary<int, string>.Add(int key, string value)
             {
-                _output = output;
             }
 
-            [Fact]
-            public void JsonDocument_and_JsonDocument_RootElement_output_the_same_HTML()
+            void ICollection<KeyValuePair<int, string>>.Add(KeyValuePair<int, string> item)
             {
-                var jsonString = JsonSerializer.Serialize(new { Name = "cherry", Deliciousness = 9000 });
-
-                var jsonDocument = JsonDocument.Parse(jsonString);
-                var jsonElement = JsonDocument.Parse(jsonString).RootElement;
-
-                var jsonDocumentHtml = jsonDocument.ToDisplayString(HtmlFormatter.MimeType);
-                var jsonElementHtml = jsonElement.ToDisplayString(HtmlFormatter.MimeType);
-
-                jsonDocumentHtml.Should().Be(jsonElementHtml);
             }
 
-            [Fact]
-            public void JSON_object_output_contains_a_text_summary()
+            void ICollection<KeyValuePair<int, string>>.Clear()
             {
-                var jsonString = JsonSerializer.Serialize(new { Name = "cherry", Deliciousness = 9000 });
-
-                var jsonDocument = JsonDocument.Parse(jsonString);
-
-                var html = jsonDocument.ToDisplayString(HtmlFormatter.MimeType);
-
-                html.Should().ContainAll(
-                    "<code>", 
-                    jsonString.HtmlEncode().ToString(),
-                    "</code>");
             }
 
-            [Fact]
-            public void JSON_object_output_contains_table_of_properties_within_details_tag()
+            bool ICollection<KeyValuePair<int, string>>.Contains(KeyValuePair<int, string> item)
             {
-                var jsonString = JsonSerializer.Serialize(new { Name = "cherry", Deliciousness = 9000 });
-
-                var jsonDocument = JsonDocument.Parse(jsonString);
-
-                var html = jsonDocument.ToDisplayString(HtmlFormatter.MimeType);
-
-                html.Should().ContainAll(
-                    "<details",
-                    "<td>Name</td>",
-                    "<td><span>&quot;cherry&quot;</span></td>",
-                    "</details>");
+                return (item.Key == 1 && item.Value == "2");
             }
 
-            [Fact]
-            public void JSON_array_output_contains_a_text_summary()
+            bool IDictionary<int, string>.ContainsKey(int key)
             {
-                var jsonString = JsonSerializer.Serialize(new object[] { "apple", "banana", "cherry" });
-
-                var jsonDocument = JsonDocument.Parse(jsonString);
-
-                var html = jsonDocument.ToDisplayString(HtmlFormatter.MimeType);
-
-                html.Should().ContainAll(
-                    "<code>",
-                    jsonString.HtmlEncode().ToString(),
-                    "</code>");
+                return (key == 1);
             }
+
+            void ICollection<KeyValuePair<int, string>>.CopyTo(KeyValuePair<int, string>[] array, int arrayIndex)
+            {
+                throw new NotImplementedException();
+            }
+
+            IEnumerator<KeyValuePair<int, string>> IEnumerable<KeyValuePair<int, string>>.GetEnumerator()
+            {
+                return ((IEnumerable < KeyValuePair<int, string> > ) new[] { new KeyValuePair<int, string>(1, "2") }).GetEnumerator();
+            }
+
+            bool IDictionary<int, string>.Remove(int key)
+            {
+                throw new NotImplementedException();
+            }
+
+            bool ICollection<KeyValuePair<int, string>>.Remove(KeyValuePair<int, string> item)
+            {
+                return false;
+            }
+
+            bool IDictionary<int, string>.TryGetValue(int key, out string value)
+            {
+                value = "2";
+                return (key == 1);
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return ((IEnumerable)new[] { new KeyValuePair<int, string>(1, "2") }).GetEnumerator();
+            }
+        }
+    }
+
+    public class Json : FormatterTestBase
+    {
+        private readonly ITestOutputHelper _output;
+
+        public Json(ITestOutputHelper output)
+        {
+            _output = output;
+        }
+
+        [Fact]
+        public void JsonDocument_and_JsonDocument_RootElement_output_the_same_HTML()
+        {
+            var jsonString = JsonSerializer.Serialize(new { Name = "cherry", Deliciousness = 9000 });
+
+            var jsonDocument = JsonDocument.Parse(jsonString);
+            var jsonElement = JsonDocument.Parse(jsonString).RootElement;
+
+            var jsonDocumentHtml = jsonDocument.ToDisplayString(HtmlFormatter.MimeType);
+            var jsonElementHtml = jsonElement.ToDisplayString(HtmlFormatter.MimeType);
+
+            jsonDocumentHtml.Should().Be(jsonElementHtml);
+        }
+
+        [Fact]
+        public void JSON_object_output_contains_a_text_summary()
+        {
+            var jsonString = JsonSerializer.Serialize(new { Name = "cherry", Deliciousness = 9000 });
+
+            var jsonDocument = JsonDocument.Parse(jsonString);
+
+            var html = jsonDocument.ToDisplayString(HtmlFormatter.MimeType);
+
+            html.Should().ContainAll(
+                "<code>", 
+                jsonString.HtmlEncode().ToString(),
+                "</code>");
+        }
+
+        [Fact]
+        public void JSON_object_output_contains_table_of_properties_within_details_tag()
+        {
+            var jsonString = JsonSerializer.Serialize(new { Name = "cherry", Deliciousness = 9000 });
+
+            var jsonDocument = JsonDocument.Parse(jsonString);
+
+            var html = jsonDocument.ToDisplayString(HtmlFormatter.MimeType);
+
+            html.Should().ContainAll(
+                "<details",
+                "<td>Name</td>",
+                "<td><span>&quot;cherry&quot;</span></td>",
+                "</details>");
+        }
+
+        [Fact]
+        public void JSON_array_output_contains_a_text_summary()
+        {
+            var jsonString = JsonSerializer.Serialize(new object[] { "apple", "banana", "cherry" });
+
+            var jsonDocument = JsonDocument.Parse(jsonString);
+
+            var html = jsonDocument.ToDisplayString(HtmlFormatter.MimeType);
+
+            html.Should().ContainAll(
+                "<code>",
+                jsonString.HtmlEncode().ToString(),
+                "</code>");
+        }
             
-            [Fact]
-            public void JSON_array_output_contains_table_of_items_within_details_tag()
-            {
-                var jsonString = JsonSerializer.Serialize(new object[] { "apple", "banana", "cherry" });
+        [Fact]
+        public void JSON_array_output_contains_table_of_items_within_details_tag()
+        {
+            var jsonString = JsonSerializer.Serialize(new object[] { "apple", "banana", "cherry" });
 
-                var jsonDocument = JsonDocument.Parse(jsonString);
+            var jsonDocument = JsonDocument.Parse(jsonString);
 
-                var html = jsonDocument.ToDisplayString(HtmlFormatter.MimeType).RemoveStyleElement();
+            var html = jsonDocument.ToDisplayString(HtmlFormatter.MimeType).RemoveStyleElement();
 
-                html.Should().Contain(
-                    "<tr><td><span>&quot;apple&quot;</span></td></tr><tr><td><span>&quot;banana&quot;</span></td></tr><tr><td><span>&quot;cherry&quot;</span></td></tr>");
-            }
+            html.Should().Contain(
+                "<tr><td><span>&quot;apple&quot;</span></td></tr><tr><td><span>&quot;banana&quot;</span></td></tr><tr><td><span>&quot;cherry&quot;</span></td></tr>");
+        }
 
-            [Fact]
-            public void Strings_with_escaped_sequences_are_encoded()
-            {
-                var value = "hola! \n \t \" \" ' ' the joy of escapes! ==> &   white  space  ";
+        [Fact]
+        public void Strings_with_escaped_sequences_are_encoded()
+        {
+            var value = "hola! \n \t \" \" ' ' the joy of escapes! ==> &   white  space  ";
 
-                var text = value.ToDisplayString("text/html").RemoveStyleElement();
+            var text = value.ToDisplayString("text/html").RemoveStyleElement();
 
-                text.Should().Be($"{PlainTextBegin}hola! \n \t &quot; &quot; &#39; &#39; the joy of escapes! ==&gt; &amp;   white  space  {PlainTextEnd}");
-            }
+            text.Should().Be($"{PlainTextBegin}hola! \n \t &quot; &quot; &#39; &#39; the joy of escapes! ==&gt; &amp;   white  space  {PlainTextEnd}");
+        }
 
-            [Fact]
-            public void Strings_with_unicode_sequences_are_encoded()
-            {
-                var value = "hola! ʰ˽˵ΘϱϪԘÓŴ𝓌🦁♿🌪🍒☝🏿";
+        [Fact]
+        public void Strings_with_unicode_sequences_are_encoded()
+        {
+            var value = "hola! ʰ˽˵ΘϱϪԘÓŴ𝓌🦁♿🌪🍒☝🏿";
 
-                var text = value.ToDisplayString("text/html").RemoveStyleElement();
+            var text = value.ToDisplayString("text/html").RemoveStyleElement();
 
-                text.Should().Be($"{PlainTextBegin}{value.HtmlEncode()}{PlainTextEnd}");
-            }
+            text.Should().Be($"{PlainTextBegin}{value.HtmlEncode()}{PlainTextEnd}");
         }
     }
 }

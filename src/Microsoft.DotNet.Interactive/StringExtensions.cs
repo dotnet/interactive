@@ -3,23 +3,22 @@
 
 using System.Diagnostics;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+[DebuggerStepThrough]
+internal static class StringExtensions
 {
-    [DebuggerStepThrough]
-    internal static class StringExtensions
+    public static string TruncateForDisplay(
+        this string value,
+        int length = 50)
     {
-        public static string TruncateForDisplay(
-            this string value,
-            int length = 50)
+        value = value.Trim();
+
+        if (value.Length > length)
         {
-            value = value.Trim();
-
-            if (value.Length > length)
-            {
-                value = value.Substring(0, length) + " ...";
-            }
-
-            return value;
+            value = value.Substring(0, length) + " ...";
         }
+
+        return value;
     }
 }

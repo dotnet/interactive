@@ -3,13 +3,12 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive
-{
-    public class KernelExtensionLoadException : Exception
-    {
-        public KernelExtensionLoadException(Exception innerException) : base("Failure loading Kernel Extension", innerException)
-        {
+namespace Microsoft.DotNet.Interactive;
 
-        }
+public class KernelExtensionLoadException : Exception
+{
+    public KernelExtensionLoadException(Exception innerException) : base("Failure loading Kernel Extension", innerException)
+    {
+
     }
 }

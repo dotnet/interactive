@@ -8,23 +8,22 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Tests
+namespace Microsoft.DotNet.Interactive.Tests;
+
+public class LogDirectiveTests
 {
-    public class LogDirectiveTests
+    [Fact]
+    public async Task It_outputs_diagnostic_log_events()
     {
-        [Fact]
-        public async Task It_outputs_diagnostic_log_events()
-        {
-            using var kernel = new CSharpKernel()
-                .UseLogMagicCommand();
+        using var kernel = new CSharpKernel()
+            .UseLogMagicCommand();
 
-            using var events = kernel.KernelEvents.ToSubscribedList();
+        using var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SubmitCodeAsync("#!log\n123");
+        await kernel.SubmitCodeAsync("#!log\n123");
 
-            events.Should()
-                  .ContainSingle<DiagnosticLogEntryProduced>(
-                      e => e.Message == "Logging enabled");
-        }
+        events.Should()
+            .ContainSingle<DiagnosticLogEntryProduced>(
+                e => e.Message == "Logging enabled");
     }
 }

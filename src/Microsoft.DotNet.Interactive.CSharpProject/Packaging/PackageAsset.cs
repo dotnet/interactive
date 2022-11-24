@@ -4,29 +4,28 @@
 using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 using System;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
+namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
+
+public abstract class PackageAsset
 {
-    public abstract class PackageAsset
+    protected PackageAsset(IDirectoryAccessor directoryAccessor)
     {
-        protected PackageAsset(IDirectoryAccessor directoryAccessor)
-        {
-            DirectoryAccessor = directoryAccessor ?? throw new ArgumentNullException(nameof(directoryAccessor));
-        }
-
-        public IDirectoryAccessor DirectoryAccessor { get; }
+        DirectoryAccessor = directoryAccessor ?? throw new ArgumentNullException(nameof(directoryAccessor));
     }
 
-    public class WebAssemblyAsset : PackageAsset
-    {
-        public WebAssemblyAsset(IDirectoryAccessor directoryAccessor) : base(directoryAccessor)
-        {
-        }
-    }
+    public IDirectoryAccessor DirectoryAccessor { get; }
+}
 
-    public class ContentAsset : PackageAsset
+public class WebAssemblyAsset : PackageAsset
+{
+    public WebAssemblyAsset(IDirectoryAccessor directoryAccessor) : base(directoryAccessor)
     {
-        public ContentAsset(IDirectoryAccessor directoryAccessor) : base(directoryAccessor)
-        {
-        }
+    }
+}
+
+public class ContentAsset : PackageAsset
+{
+    public ContentAsset(IDirectoryAccessor directoryAccessor) : base(directoryAccessor)
+    {
     }
 }

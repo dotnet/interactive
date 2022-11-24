@@ -4,17 +4,16 @@
 
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
-{
-    [JupyterMessageType(JupyterMessageContentTypes.InputReply)]
-    public class InputReply : ReplyMessage
-    {
-        [JsonPropertyName("value")]
-        public string Value { get; }
+namespace Microsoft.DotNet.Interactive.Jupyter.Protocol;
 
-        public InputReply(string value)
-        {
-            Value = value;
-        }
+[JupyterMessageType(JupyterMessageContentTypes.InputReply)]
+public class InputReply : ReplyMessage
+{
+    [JsonPropertyName("value")]
+    public string Value { get; }
+
+    public InputReply(string value)
+    {
+        Value = value;
     }
 }

@@ -5,28 +5,27 @@ using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using System;
 using System.Text.Json;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
+namespace Microsoft.DotNet.Interactive.Jupyter.Protocol;
+
+public class CommCloseConverter : JsonConverter<CommClose>
 {
-    public class CommCloseConverter : JsonConverter<CommClose>
+    public override CommClose Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        public override CommClose Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
-            EnsureStartObject(reader, typeToConvert);
+        EnsureStartObject(reader, typeToConvert);
 
-            _ = JsonDocument.TryParseValue(ref reader, out JsonDocument doc);
-            JsonElement root = doc.RootElement;
+        _ = JsonDocument.TryParseValue(ref reader, out JsonDocument doc);
+        JsonElement root = doc.RootElement;
 
-            _ = root.TryGetProperty("comm_id", out JsonElement commIdElement);
-            _ = root.TryGetProperty("data", out JsonElement dataElement);
+        _ = root.TryGetProperty("comm_id", out JsonElement commIdElement);
+        _ = root.TryGetProperty("data", out JsonElement dataElement);
 
-            return new CommClose(commIdElement.GetString(),
-                dataElement.ValueKind == JsonValueKind.Object ?
+        return new CommClose(commIdElement.GetString(),
+            dataElement.ValueKind == JsonValueKind.Object ?
                 dataElement.ToReadOnlyDictionary() : null);
-        }
+    }
 
-        public override void Write(Utf8JsonWriter writer, CommClose value, JsonSerializerOptions options)
-        {
-            JsonSerializer.Serialize(writer, value, value.GetType(), options);
-        }
+    public override void Write(Utf8JsonWriter writer, CommClose value, JsonSerializerOptions options)
+    {
+        JsonSerializer.Serialize(writer, value, value.GetType(), options);
     }
 }

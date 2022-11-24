@@ -12,205 +12,205 @@ using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Xunit;
 using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 
-namespace Microsoft.DotNet.Interactive.Formatting.Tests
+namespace Microsoft.DotNet.Interactive.Formatting.Tests;
+
+public class TabularDataResourceFormatterTests : IDisposable
 {
-    public class TabularDataResourceFormatterTests : IDisposable
+    private readonly Configuration _configuration;
+
+    public TabularDataResourceFormatterTests()
     {
-        private readonly Configuration _configuration;
+        _configuration = new Configuration()
+            .SetInteractive(Debugger.IsAttached)
+            .UsingExtension("json");
+    }
 
-        public TabularDataResourceFormatterTests()
+    [Fact]
+    public void can_generate_tabular_json_when_non_numeric_literals_are_used()
+    {
+        var data = new[]
         {
-            _configuration = new Configuration()
-                .SetInteractive(Debugger.IsAttached)
-                .UsingExtension("json");
-        }
+            new { Name = "Q", IsValid = false, Cost = double.NaN },
+            new { Name = "U", IsValid = false, Cost = 5.0 },
+            new { Name = "E", IsValid = true, Cost = double.NegativeInfinity },
+            new { Name = "S", IsValid = false, Cost = 10.0 },
+            new { Name = "T", IsValid = false, Cost = double.PositiveInfinity }
+        };
 
-        [Fact]
-        public void can_generate_tabular_json_when_non_numeric_literals_are_used()
+        var formattedData = data.ToDisplayString(TabularDataResourceFormatter.MimeType);
+
+        this.Assent(formattedData, _configuration);
+    }
+
+    [Fact]
+    public void can_generate_tabular_json_from_object_array()
+    {
+        var data = new[]
         {
-            var data = new[]
+            new { Name = "Q", IsValid = false, Cost = 10.0 },
+            new { Name = "U", IsValid = false, Cost = 5.0 },
+            new { Name = "E", IsValid = true, Cost = 10.2 },
+            new { Name = "S", IsValid = false, Cost = 10.0 },
+            new { Name = "T", IsValid = false, Cost = 10.0 }
+        };
+
+        var formattedData = data.ToDisplayString(TabularDataResourceFormatter.MimeType);
+
+        this.Assent(formattedData, _configuration);
+    }
+
+    [Fact]
+    public void can_generate_tabular_json_from_sequence_of_sequences_of_ValueTuples()
+    {
+        IEnumerable<IEnumerable<(string name, object value)>> data =
+            new[]
             {
-                new { Name = "Q", IsValid = false, Cost = double.NaN },
-                new { Name = "U", IsValid = false, Cost = 5.0 },
-                new { Name = "E", IsValid = true, Cost = double.NegativeInfinity },
-                new { Name = "S", IsValid = false, Cost = 10.0 },
-                new { Name = "T", IsValid = false, Cost = double.PositiveInfinity }
-            };
-
-            var formattedData = data.ToDisplayString(TabularDataResourceFormatter.MimeType);
-
-            this.Assent(formattedData, _configuration);
-        }
-
-        [Fact]
-        public void can_generate_tabular_json_from_object_array()
-        {
-            var data = new[]
-            {
-                new { Name = "Q", IsValid = false, Cost = 10.0 },
-                new { Name = "U", IsValid = false, Cost = 5.0 },
-                new { Name = "E", IsValid = true, Cost = 10.2 },
-                new { Name = "S", IsValid = false, Cost = 10.0 },
-                new { Name = "T", IsValid = false, Cost = 10.0 }
-            };
-
-            var formattedData = data.ToDisplayString(TabularDataResourceFormatter.MimeType);
-
-            this.Assent(formattedData, _configuration);
-        }
-
-        [Fact]
-        public void can_generate_tabular_json_from_sequence_of_sequences_of_ValueTuples()
-        {
-            IEnumerable<IEnumerable<(string name, object value)>> data =
-                new[]
+                new (string name, object value)[]
                 {
-                    new (string name, object value)[]
-                    {
-                        ("id", 1),
-                        ("name", "apple"),
-                        ("color", "green"),
-                        ("deliciousness", 10)
-                    },
-                    new (string name, object value)[]
-                    {
-                        ("id", 2),
-                        ("name", "banana"),
-                        ("color", "yellow"),
-                        ("deliciousness", 11)
-                    },
-                    new (string name, object value)[]
-                    {
-                        ("id", 3),
-                        ("name", "cherry"),
-                        ("color", "red"),
-                        ("deliciousness", 9000)
-                    },
-                };
-
-            var formattedData = data.ToDisplayString(TabularDataResourceFormatter.MimeType);
-
-            this.Assent(formattedData, _configuration);
-        }
-
-        [Fact]
-        public void can_generate_tabular_json_from_sequence_of_sequences_of_KeyValuePairs()
-        {
-            IEnumerable<IEnumerable<KeyValuePair<string, object>>> data =
-                new[]
-                {
-                    new[]
-                    {
-                        new KeyValuePair<string, object>("id", 1),
-                        new KeyValuePair<string, object>("name", "apple"),
-                        new KeyValuePair<string, object>("color", "green"),
-                        new KeyValuePair<string, object>("deliciousness", 10)
-                    },
-                    new[]
-                    {
-                        new KeyValuePair<string, object>("id", 2),
-                        new KeyValuePair<string, object>("name", "banana"),
-                        new KeyValuePair<string, object>("color", "yellow"),
-                        new KeyValuePair<string, object>("deliciousness", 11)
-                    },
-                    new[]
-                    {
-                        new KeyValuePair<string, object>("id", 3),
-                        new KeyValuePair<string, object>("name", "cherry"),
-                        new KeyValuePair<string, object>("color", "red"),
-                        new KeyValuePair<string, object>("deliciousness", 9000)
-                    },
-                };
-
-            var formattedData = data.ToDisplayString(TabularDataResourceFormatter.MimeType);
-
-            this.Assent(formattedData, _configuration);
-        }
-
-        [Fact]
-        public void can_generate_tabular_json_from_dictionary()
-        {
-            var data = new Dictionary<string,int>
-            {
-                ["one"] = 1,
-                ["two"] = 2
-            };
-
-            var formattedData = data.ToDisplayString(TabularDataResourceFormatter.MimeType);
-
-            this.Assent(formattedData, _configuration);
-        }
-
-        [Fact]
-        public void serialization_of_sequence_of_dictionaries_is_equivalent_to_sequence_of_objects()
-        {
-            var dict = new Dictionary<string, object>[]
-            {
-                new()
-                {
-                    ["a"] = 1,
-                    ["b"] = "2",
-                    ["c"] = null
+                    ("id", 1),
+                    ("name", "apple"),
+                    ("color", "green"),
+                    ("deliciousness", 10)
                 },
-                new()
+                new (string name, object value)[]
                 {
-                    ["a"] = 4,
-                    ["b"] = "5",
-                    ["c"] = 6
-                }
+                    ("id", 2),
+                    ("name", "banana"),
+                    ("color", "yellow"),
+                    ("deliciousness", 11)
+                },
+                new (string name, object value)[]
+                {
+                    ("id", 3),
+                    ("name", "cherry"),
+                    ("color", "red"),
+                    ("deliciousness", 9000)
+                },
             };
-            var obj = new[]
+
+        var formattedData = data.ToDisplayString(TabularDataResourceFormatter.MimeType);
+
+        this.Assent(formattedData, _configuration);
+    }
+
+    [Fact]
+    public void can_generate_tabular_json_from_sequence_of_sequences_of_KeyValuePairs()
+    {
+        IEnumerable<IEnumerable<KeyValuePair<string, object>>> data =
+            new[]
             {
-                new { a = 1, b = "2", c = (int?)null },
-                new { a = 4, b = "5", c = (int?)6 },
+                new[]
+                {
+                    new KeyValuePair<string, object>("id", 1),
+                    new KeyValuePair<string, object>("name", "apple"),
+                    new KeyValuePair<string, object>("color", "green"),
+                    new KeyValuePair<string, object>("deliciousness", 10)
+                },
+                new[]
+                {
+                    new KeyValuePair<string, object>("id", 2),
+                    new KeyValuePair<string, object>("name", "banana"),
+                    new KeyValuePair<string, object>("color", "yellow"),
+                    new KeyValuePair<string, object>("deliciousness", 11)
+                },
+                new[]
+                {
+                    new KeyValuePair<string, object>("id", 3),
+                    new KeyValuePair<string, object>("name", "cherry"),
+                    new KeyValuePair<string, object>("color", "red"),
+                    new KeyValuePair<string, object>("deliciousness", 9000)
+                },
             };
 
-            var dictJson = dict.ToDisplayString(TabularDataResourceFormatter.MimeType);
-            var objJson = obj.ToDisplayString(TabularDataResourceFormatter.MimeType);
+        var formattedData = data.ToDisplayString(TabularDataResourceFormatter.MimeType);
 
-            dictJson.Should().Be(objJson);
-        }
+        this.Assent(formattedData, _configuration);
+    }
 
-        [Fact]
-        public void can_generate_tabular_json_from_data_with_nullable_types()
+    [Fact]
+    public void can_generate_tabular_json_from_dictionary()
+    {
+        var data = new Dictionary<string,int>
         {
-            var data = new Dictionary<string, int?>
+            ["one"] = 1,
+            ["two"] = 2
+        };
+
+        var formattedData = data.ToDisplayString(TabularDataResourceFormatter.MimeType);
+
+        this.Assent(formattedData, _configuration);
+    }
+
+    [Fact]
+    public void serialization_of_sequence_of_dictionaries_is_equivalent_to_sequence_of_objects()
+    {
+        var dict = new Dictionary<string, object>[]
+        {
+            new()
             {
-                ["one"] = 1,
-                ["two"] = null
-            };
-
-            var formattedData = data.ToDisplayString(TabularDataResourceFormatter.MimeType);
-
-            this.Assent(formattedData, _configuration);
-        }
-
-        [Fact]
-        public void Tabular_data_resource_with_is_formatted_as_a_table()
+                ["a"] = 1,
+                ["b"] = "2",
+                ["c"] = null
+            },
+            new()
+            {
+                ["a"] = 4,
+                ["b"] = "5",
+                ["c"] = 6
+            }
+        };
+        var obj = new[]
         {
-            var tabularDataResource = CreateTabularDataResource();
+            new { a = 1, b = "2", c = (int?)null },
+            new { a = 4, b = "5", c = (int?)6 },
+        };
 
-            tabularDataResource
-                .ToDisplayString("text/html")
-                .RemoveStyleElement()
-                .Should()
-                .Be($"<table><thead><tr><td><span>name</span></td><td><span>deliciousness</span></td><td><span>color</span></td><td><span>available</span></td></tr></thead><tbody><tr><td>Granny Smith apple</td><td>{PlainTextBegin}12{PlainTextEnd}</td><td>green</td><td>{PlainTextBegin}True{PlainTextEnd}</td></tr><tr><td>Rainier cherry</td><td>{PlainTextBegin}9000{PlainTextEnd}</td><td>yellow</td><td>{PlainTextBegin}True{PlainTextEnd}</td></tr></tbody></table>");
-        }
+        var dictJson = dict.ToDisplayString(TabularDataResourceFormatter.MimeType);
+        var objJson = obj.ToDisplayString(TabularDataResourceFormatter.MimeType);
 
-        [Fact]
-        public void Serialization_as_MIME_type_application_json_uses_custom_formatter()
+        dictJson.Should().Be(objJson);
+    }
+
+    [Fact]
+    public void can_generate_tabular_json_from_data_with_nullable_types()
+    {
+        var data = new Dictionary<string, int?>
         {
-            var tabularDataResource = CreateTabularDataResource();
+            ["one"] = 1,
+            ["two"] = null
+        };
 
-            var tabularDataResourceJson = tabularDataResource.ToDisplayString(TabularDataResourceFormatter.MimeType);
-            var applicationJson = tabularDataResource.ToDisplayString(JsonFormatter.MimeType);
+        var formattedData = data.ToDisplayString(TabularDataResourceFormatter.MimeType);
 
-            applicationJson.Should().Be(tabularDataResourceJson);
-        }
+        this.Assent(formattedData, _configuration);
+    }
 
-        private static TabularDataResource CreateTabularDataResource()
-        {
-            return JsonDocument.Parse(@"
+    [Fact]
+    public void Tabular_data_resource_with_is_formatted_as_a_table()
+    {
+        var tabularDataResource = CreateTabularDataResource();
+
+        tabularDataResource
+            .ToDisplayString("text/html")
+            .RemoveStyleElement()
+            .Should()
+            .Be($"<table><thead><tr><td><span>name</span></td><td><span>deliciousness</span></td><td><span>color</span></td><td><span>available</span></td></tr></thead><tbody><tr><td>Granny Smith apple</td><td>{PlainTextBegin}12{PlainTextEnd}</td><td>green</td><td>{PlainTextBegin}True{PlainTextEnd}</td></tr><tr><td>Rainier cherry</td><td>{PlainTextBegin}9000{PlainTextEnd}</td><td>yellow</td><td>{PlainTextBegin}True{PlainTextEnd}</td></tr></tbody></table>");
+    }
+
+    [Fact]
+    public void Serialization_as_MIME_type_application_json_uses_custom_formatter()
+    {
+        var tabularDataResource = CreateTabularDataResource();
+
+        var tabularDataResourceJson = tabularDataResource.ToDisplayString(TabularDataResourceFormatter.MimeType);
+        var applicationJson = tabularDataResource.ToDisplayString(JsonFormatter.MimeType);
+
+        applicationJson.Should().Be(tabularDataResourceJson);
+    }
+
+    private static TabularDataResource CreateTabularDataResource()
+    {
+        return JsonDocument.Parse(@"
 [
   {
       ""name"": ""Granny Smith apple"", 
@@ -225,11 +225,10 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
       ""available"":true
   }
 ]").ToTabularDataResource();
-        }
+    }
 
-        public void Dispose()
-        {
-            Formatter.ResetToDefault();
-        }
+    public void Dispose()
+    {
+        Formatter.ResetToDefault();
     }
 }

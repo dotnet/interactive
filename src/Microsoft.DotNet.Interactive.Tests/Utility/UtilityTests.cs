@@ -4,51 +4,50 @@
 using Microsoft.DotNet.Interactive.Utility;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Tests.Utility
+namespace Microsoft.DotNet.Interactive.Tests.Utility;
+
+public class UtilityTests
 {
-    public class UtilityTests
+    [Fact]
+    public void replacement_position_can_be_found_at_the_end_of_a_string()
     {
-        [Fact]
-        public void replacement_position_can_be_found_at_the_end_of_a_string()
-        {
-            var code = "System.Linq.Enumerable.";
-            // finding this                   ^
-            var pos = SourceUtilities.ComputeReplacementStartPosition(code, code.Length);
-            Assert.Equal(code.Length, pos);
-        }
+        var code = "System.Linq.Enumerable.";
+        // finding this                   ^
+        var pos = SourceUtilities.ComputeReplacementStartPosition(code, code.Length);
+        Assert.Equal(code.Length, pos);
+    }
 
-        [Fact]
-        public void replacement_position_can_be_found_not_at_the_end_of_a_string()
-        {
-            var code = "System.Linq.Enumerable.Ran";
-            // finding this                   ^
-            var lastDotPos = code.LastIndexOf('.') + 1;
-            var pos = SourceUtilities.ComputeReplacementStartPosition(code, lastDotPos);
-            Assert.Equal(lastDotPos, pos);
-        }
+    [Fact]
+    public void replacement_position_can_be_found_not_at_the_end_of_a_string()
+    {
+        var code = "System.Linq.Enumerable.Ran";
+        // finding this                   ^
+        var lastDotPos = code.LastIndexOf('.') + 1;
+        var pos = SourceUtilities.ComputeReplacementStartPosition(code, lastDotPos);
+        Assert.Equal(lastDotPos, pos);
+    }
 
-        [Fact]
-        public void replacement_position_can_be_found_at_the_end_of_a_multiline_string()
-        {
-            var code = @"
+    [Fact]
+    public void replacement_position_can_be_found_at_the_end_of_a_multiline_string()
+    {
+        var code = @"
 using System.Linq;
 Enumerable.
 //        ^ finding this";
-            var lastDotPos = code.LastIndexOf('.') + 1;
-            var pos = SourceUtilities.ComputeReplacementStartPosition(code, lastDotPos);
-            Assert.Equal(lastDotPos, pos);
-        }
+        var lastDotPos = code.LastIndexOf('.') + 1;
+        var pos = SourceUtilities.ComputeReplacementStartPosition(code, lastDotPos);
+        Assert.Equal(lastDotPos, pos);
+    }
 
-        [Fact]
-        public void replacement_position_can_be_found_not_at_the_end_of_a_multiline_string()
-        {
-            var code = @"
+    [Fact]
+    public void replacement_position_can_be_found_not_at_the_end_of_a_multiline_string()
+    {
+        var code = @"
 using System.Linq;
 Enumerable.Ran
 //        ^ finding this";
-            var lastDotPos = code.LastIndexOf('.') + 1;
-            var pos = SourceUtilities.ComputeReplacementStartPosition(code, lastDotPos);
-            Assert.Equal(lastDotPos, pos);
-        }
+        var lastDotPos = code.LastIndexOf('.') + 1;
+        var pos = SourceUtilities.ComputeReplacementStartPosition(code, lastDotPos);
+        Assert.Equal(lastDotPos, pos);
     }
 }

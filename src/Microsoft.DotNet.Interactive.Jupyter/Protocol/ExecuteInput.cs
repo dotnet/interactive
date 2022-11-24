@@ -4,21 +4,20 @@
 
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
+namespace Microsoft.DotNet.Interactive.Jupyter.Protocol;
+
+[JupyterMessageType(JupyterMessageContentTypes.ExecuteInput)]
+public class ExecuteInput : PubSubMessage
 {
-    [JupyterMessageType(JupyterMessageContentTypes.ExecuteInput)]
-    public class ExecuteInput : PubSubMessage
+    [JsonPropertyName("code")]
+    public string Code { get; }
+
+    [JsonPropertyName("execution_count")]
+    public int ExecutionCount { get; }
+
+    public ExecuteInput(string code = null, int executionCount = 0)
     {
-        [JsonPropertyName("code")]
-        public string Code { get; }
-
-        [JsonPropertyName("execution_count")]
-        public int ExecutionCount { get; }
-
-        public ExecuteInput(string code = null, int executionCount = 0)
-        {
-            Code = code;
-            ExecutionCount = executionCount;
-        }
+        Code = code;
+        ExecutionCount = executionCount;
     }
 }

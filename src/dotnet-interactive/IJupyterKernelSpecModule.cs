@@ -5,11 +5,10 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Utility;
 
-namespace Microsoft.DotNet.Interactive.App
+namespace Microsoft.DotNet.Interactive.App;
+
+public interface IJupyterKernelSpecModule
 {
-    public interface IJupyterKernelSpecModule
-    {
-        Task<CommandLineResult> InstallKernel(DirectoryInfo sourceDirectory);
-        DirectoryInfo GetDefaultKernelSpecDirectory();
-    }
+    Task<CommandLineResult> InstallKernel(DirectoryInfo sourceDirectory);
+    DirectoryInfo GetDefaultKernelSpecDirectory();
 }
