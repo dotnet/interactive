@@ -1,7 +1,6 @@
 {
   "name": "@microsoft/dotnet-interactive",
   "displayName": ".NET Interactive Notebooks",
-  "//description": "During build, the description gets the git SHA appended to it.",
   "description": ".NET Interactive Notebook APIs for NodeJS.",
   "license": "MIT",
   "//version": "The version '42.42.42' is auto-set during CI package creation.",

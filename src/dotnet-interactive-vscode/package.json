@@ -1,8 +1,7 @@
 {
   "name": "dotnet-interactive-vscode",
   "displayName": "Polyglot Notebooks",
-  "//description": "During build, the description gets the git SHA appended to it.",
-  "description": "Polyglot Notebooks for VS Code.",
+  "description": "Polyglot Notebooks for VS Code. Use multiple languages in one notebook with full language server support for each language and share variables between them.",
   "icon": "images/icon.png",
   "publisher": "ms-dotnettools",
   "author": "Microsoft Corporation",
