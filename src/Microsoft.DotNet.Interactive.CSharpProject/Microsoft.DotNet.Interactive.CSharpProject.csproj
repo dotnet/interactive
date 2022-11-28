@@ -45,11 +45,9 @@
     <PackageReference Include="Microsoft.AspNetCore.Html.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
-    <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic.Workspaces" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
     <PackageReference Include="Microsoft.CodeAnalysis.Features" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
     <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
-    <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic.Features" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
     <PackageReference Include="Microsoft.CodeAnalysis.Scripting.Common" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
     <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
