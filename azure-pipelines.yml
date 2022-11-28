@@ -166,7 +166,7 @@ stages:
           displayName: Pack VS Code Extensions
           inputs:
             filePath: $(Build.SourcesDirectory)/eng/package/PackVSCodeExtension.ps1
-            arguments: -stableToolVersionNumber $(StableToolVersionNumber) -gitSha $(Build.SourceVersion) -outDir "$(Build.ArtifactStagingDirectory)\vscode"
+            arguments: -stableToolVersionNumber $(StableToolVersionNumber) -outDir "$(Build.ArtifactStagingDirectory)\vscode"
             workingDirectory: "$(Build.SourcesDirectory)/src"
             pwsh: true
 
@@ -181,7 +181,7 @@ stages:
           displayName: Pack NPM package
           inputs:
             filePath: $(Build.SourcesDirectory)/eng/package/PackNpmPackage.ps1
-            arguments: -packageVersionNumber $(StableToolVersionNumber) -gitSha $(Build.SourceVersion) -outDir "$(Build.ArtifactStagingDirectory)\npm"
+            arguments: -packageVersionNumber $(StableToolVersionNumber) -outDir "$(Build.ArtifactStagingDirectory)\npm"
             workingDirectory: "$(Build.SourcesDirectory)/src/microsoft-dotnet-interactive"
             pwsh: true
 
