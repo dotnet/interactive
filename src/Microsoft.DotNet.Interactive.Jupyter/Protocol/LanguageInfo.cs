@@ -15,13 +15,13 @@ public class LanguageInfo
     public string Version { get; }
 
     [JsonPropertyName("mimetype")]
-    public string MimeType { get;  }
+    public string MimeType { get; }
 
     [JsonPropertyName("file_extension")]
     public string FileExtension { get; }
 
     [JsonPropertyName("pygments_lexer")]
-    public string PygmentsLexer { get;  }
+    public string PygmentsLexer { get; }
 
     [JsonPropertyName("codemirror_mode")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -29,7 +29,7 @@ public class LanguageInfo
 
     [JsonPropertyName("nbconvert_exporter")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string NbConvertExporter { get;  }
+    public string NbConvertExporter { get; }
 
     public LanguageInfo(string name, string version, string mimeType, string fileExtension, string pygmentsLexer = null, object codeMirrorMode = null, string nbConvertExporter = null)
     {
@@ -71,7 +71,7 @@ public class CSharpLanguageInfo : LanguageInfo
 
 public class FSharpLanguageInfo : LanguageInfo
 {
-    public FSharpLanguageInfo(string version = "6.0") : base("F#", version, "text/x-fsharp", ".fs", pygmentsLexer: "fsharp")
+    public FSharpLanguageInfo(string version = "7.0") : base("F#", version, "text/x-fsharp", ".fs", pygmentsLexer: "fsharp")
     {
     }
 }

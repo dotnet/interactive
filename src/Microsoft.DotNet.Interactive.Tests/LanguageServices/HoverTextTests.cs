@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
@@ -112,7 +113,7 @@ public class HoverTextTests : LanguageKernelTestBase
 
     [Theory]
     [InlineData(Language.CSharp, "var one = 1;", "Console.WriteLine(o$$ne)", "text/markdown", ") int one")]
-    [InlineData(Language.FSharp, "let one = 1", "printfn \"%a\" o$$ne", "text/markdown", "```fsharp\nval one : int\n```\n\n----\n*Full name: one*")]
+    [InlineData(Language.FSharp, "let one = 1", "printfn \"%a\" o$$ne", "text/markdown", "```fsharp\nval one : int // 1\n```\n\n----\n*Full name: one*")]
     public async Task language_service_methods_run_deferred_commands(Language language, string deferredCode, string markupCode, string expectedMimeType, string expectedContentEnd)
     {
         // declare a variable in deferred code
@@ -376,25 +377,25 @@ public class SampleClass
     [Theory]
     [InlineData(Language.CSharp)]
     [InlineData(Language.FSharp)]
-    public async Task csharp_hover_text_is_returned_for_shadowing_variables(Language language)
+    public async Task hover_text_is_returned_for_shadowing_variables(Language language)
     {
         var (declaration, shadowingDeclaration, expectedEnd) = language switch
         {
-            Language.CSharp => 
+            Language.CSharp =>
                 (new SubmitCode("var identifier = 1234;"),
                     new SubmitCode("var identifier = \"one-two-three-four\";"),
                     ") string identifier"), // word "field" is locale-dependent
-            Language.FSharp => 
+            Language.FSharp =>
                 (new SubmitCode("let identifier = 1234"),
                     new SubmitCode("let identifier = \"one-two-three-four\""),
-                    "```fsharp\nval identifier : string\n```\n\n----\n*Full name: identifier*")
+                    "```fsharp\nval identifier : string // \"one-two-three-four\"\n```\n\n----\n*Full name: identifier*")
         };
 
         using var kernel = CreateKernel(language);
 
-        await kernel.SendAsync(declaration); 
+        await kernel.SendAsync(declaration);
 
-        await kernel.SendAsync(shadowingDeclaration); 
+        await kernel.SendAsync(shadowingDeclaration);
 
         var markupCode = "ident$$ifier";
 
@@ -402,9 +403,9 @@ public class SampleClass
 
         var commandResult = await SendHoverRequest(kernel, code, line, column);
 
-        commandResult
-            .KernelEvents
-            .ToSubscribedList()
+        var events = commandResult.KernelEvents.ToSubscribedList();
+
+        events
             .Should()
             .ContainSingle<HoverTextProduced>()
             .Which
