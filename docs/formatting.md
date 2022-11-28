@@ -25,7 +25,7 @@ You can also use these APIs independently of .NET Interactive via the [`Microsof
 Every formatter has a corresponding MIME type. Formatters can be created for an arbitrary number of MIME types. By default, the preferred MIME type in a notebook will be `text/html`, but this can be changed for any given .NET `Type`. For example:
 
 ```csharp
-Formatter.SetPreferredMimeTypeFor(typeof(System.Guid), "text/plain");
+Formatter.SetPreferredMimeTypesFor(typeof(System.Guid), "text/plain");
 ```
 
 For more details, see the language-specific documentation on using `SetPreferredMimeTypeFor`.
