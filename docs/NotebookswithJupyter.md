@@ -14,7 +14,7 @@ Both of these methods can read and write `.ipynb` files, which are fully portabl
 
 First, make sure you have the following installed:
 
-* The [.NET 6 SDK](https://dotnet.microsoft.com/download/dotnet/6.0).
+* The [.NET 7 SDK](https://dotnet.microsoft.com/en-us/download).
 * **Jupyter**. An easy way to install Jupyter is through [Anaconda](https://www.anaconda.com/distribution).
 
 * You can verify the installations by opening the **Anaconda Prompt** (Windows) or a terminal (macOS, Linux) and running the following commands to ensure that Jupyter and .NET are installed and present on the path:

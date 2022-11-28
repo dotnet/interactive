@@ -35,7 +35,7 @@ With the Polyglot Notebooks extension, you can use multiple languages in the sam
 
 1.  Install the latest [Visual Studio Code](https://code.visualstudio.com/).
 
-2.  Install the latest [.NET 6 SDK](https://dotnet.microsoft.com/download/dotnet/6.0). 
+2.  Install the latest [.NET 7 SDK](https://dotnet.microsoft.com/en-us/download).
 
 3.  Install the Polyglot Notebooks extension from the [marketplace](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode).
 
