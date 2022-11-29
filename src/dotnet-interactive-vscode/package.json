@@ -195,7 +195,7 @@
         {
           "type": "webview",
           "id": "polyglot-notebook-panel-values",
-          "name": "Values",
+          "name": "Variables",
           "icon": "resources/icons/notebook.svg"
         }
       ]
@@ -271,7 +271,7 @@
       },
       {
         "command": "polyglot-notebook.notebookEditor.openValueViewer",
-        "title": "Values",
+        "title": "Variables",
         "icon": "$(variable-group)"
       }
     ],

@@ -109,7 +109,7 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
 
                     input {
                         background-color: var(--vscode-settings-textInputBackground);
-                        border: var(--vscode-settings-textInputBorder);
+                        border: 1px solid var(--vscode-inputValidation-infoBorder);
                         color: var(--vscode-settings-textInputForeground);
                     }
                     button {
@@ -166,9 +166,10 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                   </symbol>
                 </svg>
                 <script defer type="text/javascript" src="${apiFileUri.toString()}"></script>
-                <label for="filter">Filter</label>
-                <input id="filter" type="text" />
-                <button id="clear">Clear</button>
+                <div style="margin: 2px 0px 2px 0px;">
+                  <label for="filter">Filter</label>
+                  <input id="filter" type="text" />
+                </div>
                 <div id="content"></div>
             </body>
         </html>
