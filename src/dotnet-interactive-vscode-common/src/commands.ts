@@ -144,9 +144,6 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
     context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.restartCurrentNotebookKernel', async (notebook?: vscode.NotebookDocument | undefined) => {
         notebook = notebook || getCurrentNotebookDocument();
         if (notebook) {
-            // clear the value explorer view
-            await vscode.commands.executeCommand('polyglot-notebook.clearValueExplorer');
-
             // notifty the client that the kernel is about to restart
             const restartCompletionSource = new PromiseCompletionSource<void>();
             vscode.window.withProgress({
@@ -160,9 +157,6 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
             restartCompletionSource.resolve();
             await vscode.commands.executeCommand('workbench.notebook.layout.webview.reset', notebook.uri);
             vscode.window.showInformationMessage('Kernel restarted.');
-
-            // notify the ValueExplorer that the kernel has restarted
-            await vscode.commands.executeCommand('polyglot-notebook.resetValueExplorerSubscriptions');
         }
     }));
 
