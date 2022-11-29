@@ -43,9 +43,13 @@ public class SqlDiscoverabilityKernel :
             }
         });
 
+        var codeSample = !string.IsNullOrWhiteSpace(command.Code)
+            ? command.Code
+            : @"SELECT TOP * FROM ...";
+
         if (connectedSqlKernelNames.Count == 0)
         {
-            context.Display(HTML(@"
+            context.Display(HTML($@"
 <p>A SQL connection has not been established.</p>
 <p>To connect to a database, first add the SQL extension package by running the following in a C# cell:</p>
 <code>
@@ -62,25 +66,31 @@ Now, you can connect to a Microsoft SQL Server database by running the following
 <p>Once a connection is established, you can send SQL statements by prefixing them with the magic command for your connection.</p>
 <code>
     <pre>
-    #!sql-mydatabase
-    SELECT * FROM MyDatabase.MyTable
+#!sql-mydatabase
+{codeSample}
     </pre>
 </code>
 "), "text/html");
         }
         else
         {
+
             PocketView view =
                 div(
                     p("You can send SQL statements to one of the following connected SQL kernels:"),
                     connectedSqlKernelNames.Select(
                         name =>
                             code(
-                                pre($"    #!{name}\n    SELECT TOP * FROM ..."))));
+                                pre($"#!{name}\n{codeSample}"))));
 
             context.Display(view);
         }
-
+        
+        if (!string.IsNullOrWhiteSpace(command.Code))
+        {
+            context.Fail(command, message: "SQL statements cannot be executed in this kernel.");
+        }
+        
         return Task.CompletedTask;
     }
 }

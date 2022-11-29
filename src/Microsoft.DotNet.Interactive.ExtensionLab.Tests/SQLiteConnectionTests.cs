@@ -45,7 +45,13 @@ SELECT * FROM fruit
 
         var events = result.KernelEvents.ToSubscribedList();
 
-        events.Should().NotContainErrors();
+        events.Should()
+            .ContainSingle<CommandFailed>()
+            .Which
+            .Message
+            .Should()
+            .Be("SQL statements cannot be executed in this kernel.");
+        
         events.Should()
             .ContainSingle<DisplayedValueProduced>()
             .Which

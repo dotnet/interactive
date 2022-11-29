@@ -13,6 +13,7 @@ using FluentAssertions.Execution;
 using FluentAssertions.Extensions;
 
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -1111,6 +1112,26 @@ System.Threading.Thread.Sleep(1000);
             .Value
             .Should()
             .Be("meow!");
+    }
+
+    [Fact]
+    public async Task it_supports_csharp_11()
+    {
+        using var kernel = CreateKernel();
+
+        var events = kernel.KernelEvents.ToSubscribedList();
+
+        await kernel.SendAsync(new SubmitCode(@"public static int CheckSwitch(int[] values)
+    => values switch
+    {
+        [1, 2, .., 10] => 1,
+        [1, 2] => 2,
+        [1, _] => 3,
+        [1, ..] => 4,
+        [..] => 50
+    };"));
+
+        events.OfType<DiagnosticsProduced>().Should().BeEmpty();
     }
 
     [Theory]

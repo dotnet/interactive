@@ -58,24 +58,4 @@ public class CSharpKernelTests : LanguageKernelTestBase
             .Should()
             .ContainSingle(v => v.Name == "x");
     }
-
-    [Fact]
-    public async Task Supports_csharp_11()
-    {
-        using var kernel = new CSharpKernel();
-
-        var events = kernel.KernelEvents.ToSubscribedList();
-
-        await kernel.SendAsync(new SubmitCode(@"public static int CheckSwitch(int[] values)
-    => values switch
-    {
-        [1, 2, .., 10] => 1,
-        [1, 2] => 2,
-        [1, _] => 3,
-        [1, ..] => 4,
-        [..] => 50
-    };"));
-
-        events.OfType<DiagnosticsProduced>().Should().BeEmpty();
-    }
 }
