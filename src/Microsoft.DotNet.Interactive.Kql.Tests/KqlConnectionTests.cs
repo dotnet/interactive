@@ -141,7 +141,7 @@ StormEvents | take 10
         var queryCode = "StormEvents | take 10";
         result = await kernel.SubmitCodeAsync($@"
 #!kql
-queryCode
+{queryCode}
 ");
 
         var events = result.KernelEvents.ToSubscribedList();
