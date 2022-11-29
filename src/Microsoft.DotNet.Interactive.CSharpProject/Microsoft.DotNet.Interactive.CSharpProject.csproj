@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
@@ -39,8 +39,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Buildalyzer" Version="4.1.6" />
-    <PackageReference Include="Buildalyzer.Workspaces" Version="4.1.2" />
+    <PackageReference Include="Buildalyzer" Version="4.1.7" />
+    <PackageReference Include="Buildalyzer.Workspaces" Version="4.1.7" />
     <PackageReference Include="Markdig.Signed" Version="0.30.4" />
     <PackageReference Include="Microsoft.AspNetCore.Html.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
