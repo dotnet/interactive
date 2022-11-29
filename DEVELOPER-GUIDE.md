@@ -18,6 +18,10 @@ This project depends on .NET 6.0. Before working on the project, check that the 
 - [Prerequisites for .NET on Linux](https://docs.microsoft.com/en-us/dotnet/core/install/linux?tabs=net60#dependencies)
 - [Prerequisites for .NET on macOS](https://docs.microsoft.com/en-us/dotnet/core/install/macos?tabs=net60#dependencies)
 
+## First build
+
+The first build must be executed on the command line (see below for details), but subsequent builds can be done directly within Visual Studio / Visual Studio Code.
+
 ### Visual Studio / Visual Studio Code
 
 This project supports [Visual Studio 2022](https://visualstudio.com) and [Visual Studio for Mac](https://www.visualstudio.com/vs/visual-studio-mac/). Any version, including the free Community Edition, should be sufficient, as long as you install Visual Studio support for .NET development.
