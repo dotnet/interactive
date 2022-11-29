@@ -42,9 +42,13 @@ public class KqlDiscoverabilityKernel :
             }
         });
 
+        var codeSample = !string.IsNullOrWhiteSpace(command.Code)
+            ? command.Code
+            : @"tableName | take 10";
+
         if (connectedKqlKernelNames.Count == 0)
         {
-            context.Display(HTML(@"
+            context.Display(HTML($@"
 <p>A KQL connection has not been established.</p>
 <p>To connect to a database, first add the KQL extension package by running the following in a C# cell:</p>
 <code>
@@ -61,8 +65,8 @@ Now, you can connect to a Microsoft Kusto Server database by running the followi
 <p>Once a connection is established, you can send KQL statements by prefixing them with the magic command for your connection.</p>
 <code>
     <pre>
-    #!kql-mydatabase
-    tableName | take 10
+#!kql-mydatabase
+{codeSample}
     </pre>
 </code>
 "), "text/html");
@@ -75,9 +79,14 @@ Now, you can connect to a Microsoft Kusto Server database by running the followi
                     connectedKqlKernelNames.Select(
                         name =>
                             code(
-                                pre($"    #!{name}\n tableName | take 10"))));
+                                pre($"#!{name}\n{codeSample}"))));
 
             context.Display(view);
+        }
+
+        if (!string.IsNullOrWhiteSpace(command.Code))
+        {
+            context.Fail(command, message: "KQL statements cannot be executed in this kernel.");
         }
 
         return Task.CompletedTask;

@@ -138,17 +138,15 @@ StormEvents | take 10
             .ToSubscribedList()
             .Should()
             .NotContainErrors();
-
-        result = await kernel.SubmitCodeAsync(@"
+        var queryCode = "StormEvents | take 10";
+        result = await kernel.SubmitCodeAsync($@"
 #!kql
-StormEvents | take 10
+queryCode
 ");
 
         var events = result.KernelEvents.ToSubscribedList();
 
         events.Should()
-            .NotContainErrors()
-            .And
             .ContainSingle<DisplayedValueProduced>(e =>
                 e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
             .Which.FormattedValues.Single(f => f.MimeType == HtmlFormatter.MimeType)
@@ -156,9 +154,11 @@ StormEvents | take 10
             .Should()
             .Contain("#!kql-KustoHelp")
             .And
-            .Contain(" tableName | take 10");
+            .Contain(queryCode);
 
     }
+
+    
 
     [KqlFact]
     public async Task Field_types_are_deserialized_correctly()
