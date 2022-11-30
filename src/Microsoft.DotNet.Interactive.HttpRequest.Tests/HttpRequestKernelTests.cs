@@ -239,6 +239,33 @@ Content-Type: application/json
     }
 
     [Fact]
+    public async Task comments_can_be_placed_before_a_variable_expanded_request()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpRequestKernel(client: client);
+        kernel.SetValue("theHost", "example.com");
+
+        var code = @"
+// something to ensure we're not on the first line
+GET https://{{theHost}}";
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+        var events = result.KernelEvents.ToSubscribedList();
+
+        events.Should().NotContainErrors();
+
+        request.RequestUri.AbsoluteUri.Should().Be("https://example.com/");
+    }
+
+    [Fact]
     public async Task diagnostic_messages_are_produced_for_unresolved_symbols()
     {
         using var kernel = new HttpRequestKernel();

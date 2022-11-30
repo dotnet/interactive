@@ -16,7 +16,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
@@ -30,8 +29,7 @@ public class HttpRequestKernel :
     private readonly Argument<Uri> _hostArgument = new();
 
     private readonly Dictionary<string, string> _variables = new(StringComparer.InvariantCultureIgnoreCase);
-    private static readonly Regex PlaceHolderPattern;
-    private static readonly Regex LineStartPattern;
+    private static readonly Regex IsRequest;
     private static readonly Regex IsHeader;
 
     private const string InterpolationStartMarker = "{{";
@@ -39,12 +37,10 @@ public class HttpRequestKernel :
 
     static HttpRequestKernel()
     {
-        PlaceHolderPattern = new Regex(@"(\{\{(?<symbol>[^{}]+)\}\})", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
         var verbs = string.Join("|",
             typeof(HttpMethod).GetProperties(BindingFlags.Static | BindingFlags.Public).Select(p => p.GetValue(null).ToString()));
 
-        LineStartPattern = new Regex(@"^\s*(" + verbs + ")", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        IsRequest = new Regex(@"^\s*(" + verbs + ")", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         IsHeader = new Regex(@"^\s*(?<key>[\w-]+):\s*(?<value>.*)", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.IgnoreCase);
     }
@@ -88,6 +84,14 @@ public class HttpRequestKernel :
     public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
     {
         var requests = ParseRequests(command.Code);
+        var diagnostics = requests.SelectMany(r => r.Diagnostics);
+        PublishDiagnostics(context, command, diagnostics);
+        if (diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error))
+        {
+            context.Fail(command);
+            return;
+        }
+        
         foreach (var httpRequest in requests)
         {
             var message = new HttpRequestMessage(new HttpMethod(httpRequest.Verb), httpRequest.Address);
@@ -119,143 +123,107 @@ public class HttpRequestKernel :
         }
     }
 
+    private void PublishDiagnostics(KernelInvocationContext context, KernelCommand command, IEnumerable<Diagnostic> diagnostics)
+    {
+        var formattedDiagnostics =
+            diagnostics
+                .Select(d => d.ToString())
+                .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
+                .ToImmutableArray();
+        context.Publish(new DiagnosticsProduced(diagnostics, command, formattedDiagnostics));
+    }
+
 
     public Task HandleAsync(RequestDiagnostics command, KernelInvocationContext context)
     {
-        foreach (var (request, start, length) in GetAllRequests(command.Code))
-        {
-            var diagnostics = GetInterpolationDiagnostics(command.Code, start, length);
-            var formattedDiagnostics =
-                diagnostics
-                    .Select(d => d.ToString())
-                    .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
-                    .ToImmutableArray();
-            context.Publish(new DiagnosticsProduced(diagnostics, command, formattedDiagnostics));
-        }
+        var requestsAndDiagnostics = InterpolateAndGetDiagnostics(command.Code);
+        var diagnostics = requestsAndDiagnostics.SelectMany(r => r.Diagnostics);
+        PublishDiagnostics(context, command, diagnostics);
         return Task.CompletedTask;
     }
 
-    private IEnumerable<Diagnostic> GetInterpolationDiagnostics(string code, int spanStart, int spanLength)
+    private IEnumerable<(string Request, List<Diagnostic> Diagnostics)> InterpolateAndGetDiagnostics(string code)
     {
         var canResolveHost = BaseAddress is { };
-        var diagnostics = new List<Diagnostic>();
-        var spanEnd = spanStart + spanLength;
-        var index = 0;
+        var lines = code.Split('\n');
 
-        var currentLine = 0;
-        var currentColumn = 0;
+        var result = new List<(string Request, List<Diagnostic>)>();
+        var currentLines = new List<string>();
+        var currentDiagnostics = new List<Diagnostic>();
 
-        // count lines and columns until the real start
-        while (index < spanStart)
+        for (var line = 0; line < lines.Length; line++)
         {
-            switch (code[index])
+            var lineText = lines[line];
+            if (IsRequest.IsMatch(lineText))
             {
-                case '\n':
-                    currentLine++;
-                    currentColumn = 0;
-                    break;
-                default:
-                    currentColumn++;
-                    break;
-            }
-            index++;
-        }
-
-        while (index < spanEnd)
-        {
-            // find start/end values of interpolation
-            var interpolationStart = code.IndexOf(InterpolationStartMarker, index);
-            if (interpolationStart < 0 || interpolationStart > spanEnd)
-            {
-                // no more variables
-                break;
-            }
-
-            var interpolationEnd = code.IndexOf(InterpolationEndMarker, index + InterpolationStartMarker.Length);
-            if (interpolationEnd < 0 || interpolationEnd > spanEnd)
-            {
-                // no closing tag
-                // TODO: error?
-                break;
-            }
-
-            // count lines and columns until the start of the variable name
-            while (index < interpolationStart + InterpolationStartMarker.Length)
-            {
-                switch (code[index])
+                if (MightContainRequest(currentLines))
                 {
-                    case '\n':
-                        currentLine++;
-                        currentColumn = 0;
-                        break;
-                    default:
-                        currentColumn++;
-                        break;
+                    var requestCode = string.Join('\n', currentLines);
+                    result.Add((requestCode, currentDiagnostics));
                 }
 
-                index++;
+                currentLines = new List<string>();
+                currentDiagnostics = new List<Diagnostic>();
             }
 
-            var variableStartPosition = new LinePosition(currentLine, currentColumn);
-
-            // count lines and columns until the end of the variable name
-            while (index < interpolationEnd)
+            var rebuiltLine = new StringBuilder();
+            var lastStart = 0;
+            var interpolationStart = lineText.IndexOf(InterpolationStartMarker);
+            while (interpolationStart >= 0)
             {
-                switch (code[index])
+                rebuiltLine.Append(lineText[lastStart..interpolationStart]);
+                var interpolationEnd = lineText.IndexOf(InterpolationEndMarker, interpolationStart + InterpolationStartMarker.Length);
+                if (interpolationEnd < 0)
                 {
-                    case '\n':
-                        currentLine++;
-                        currentColumn = 0;
-                        break;
-                    default:
-                        currentColumn++;
-                        break;
+                    // no end marker
+                    // TODO: error?
                 }
 
-                index++;
+                var variableName = lineText[(interpolationStart + InterpolationStartMarker.Length)..interpolationEnd];
+                var canResolveSymbol = (variableName == "host" && canResolveHost) || _variables.ContainsKey(variableName);
+                if (canResolveSymbol)
+                {
+                    // found variable; inline it
+                    var variableValue = variableName == "host"
+                        ? BaseAddress.Host
+                        : _variables[variableName];
+                    rebuiltLine.Append(variableValue);
+                }
+                else
+                {
+                    // no variable found; keep old code and report diagnostic
+                    rebuiltLine.Append(InterpolationStartMarker);
+                    rebuiltLine.Append(variableName);
+                    rebuiltLine.Append(InterpolationEndMarker);
+                    var position = new LinePositionSpan(
+                        new LinePosition(line, interpolationStart + InterpolationStartMarker.Length),
+                        new LinePosition(line, interpolationEnd));
+                    currentDiagnostics.Add(new Diagnostic(position, DiagnosticSeverity.Error, "HTTP404", $"Cannot resolve symbol '{variableName}'"));
+                }
+
+                lastStart = interpolationEnd + InterpolationEndMarker.Length;
+                interpolationStart = lineText.IndexOf(InterpolationStartMarker, lastStart);
             }
 
-            var variableEndPosition = new LinePosition(currentLine, currentColumn);
-
-            var variableName = code[(interpolationStart + InterpolationStartMarker.Length)..interpolationEnd];
-            var canResolveSymbol = (variableName == "host" && canResolveHost) || _variables.ContainsKey(variableName);
-            if (!canResolveSymbol)
-            {
-                var position = new LinePositionSpan(
-                    variableStartPosition,
-                    variableEndPosition);
-                diagnostics.Add(new Diagnostic(position, DiagnosticSeverity.Error, "HTTP404", $"Cannot resolve symbol '{variableName}'"));
-            }
-
-            index = interpolationEnd + InterpolationEndMarker.Length;
+            rebuiltLine.Append(lineText[lastStart..]);
+            currentLines.Add(rebuiltLine.ToString());
         }
 
-        return diagnostics;
+        if (MightContainRequest(currentLines))
+        {
+            var requestCode = string.Join('\n', currentLines);
+            result.Add((requestCode, currentDiagnostics));
+        }
+
+        return result;
     }
 
-    public IEnumerable<(string request, int start, int length)> GetAllRequests(string requests)
+    private static bool MightContainRequest(IEnumerable<string> lines)
     {
-        var splitRequests = new List<(string request, int start, int length)>();
-        requests = requests.Replace("\r\n", "\n");
-        var matches = LineStartPattern.Matches(requests);
-        for (var i = 0; i < matches.Count; i++)
-        {
-            var match = matches[i];
-
-            var start = match.Index;
-            var end = requests.Length;
-            var next = i + 1;
-            if (next < matches.Count)
-            {
-                end = matches[next].Index;
-            }
-
-            var request = requests.Substring(start, end - start);
-            splitRequests.Add(new(request, start, end - start));
-        }
-
-        return splitRequests;
+        return lines.Any(line => IsRequest.IsMatch(line));
+        //return lines.Any() && lines.Any(line => !string.IsNullOrWhiteSpace(line));
     }
+    
     private IEnumerable<HttpRequest> ParseRequests(string requests)
     {
         var parsedRequests = new List<HttpRequest>();
@@ -266,7 +234,7 @@ public class HttpRequestKernel :
          * optional body
          */
 
-        foreach (var (request, _, _) in GetAllRequests(requests))
+        foreach (var (request, diagnostics) in InterpolateAndGetDiagnostics(requests))
         {
             var body = new StringBuilder();
             string verb = null;
@@ -278,21 +246,21 @@ public class HttpRequestKernel :
                 var line = lines[index];
                 if (verb == null)
                 {
-                    if (string.IsNullOrWhiteSpace(line))
+                    if (string.IsNullOrWhiteSpace(line) || line.StartsWith("//"))
                     {
                         continue;
                     }
 
                     var parts = line.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries);
                     verb = parts[0].Trim();
-                    address = InterpolateLine(parts[1].Trim(), _variables);
+                    address = parts[1].Trim();
                 }
                 else if (!string.IsNullOrWhiteSpace(line) && IsHeader.Matches(line) is { } matches)
                 {
                     foreach (Match match in matches)
                     {
                         var key = match.Groups["key"].Value;
-                        var value = InterpolateLine(match.Groups["value"].Value.Trim(), _variables);
+                        var value = match.Groups["value"].Value.Trim();
                         headerValues[key] = value;
                     }
                 }
@@ -305,15 +273,11 @@ public class HttpRequestKernel :
                 }
             }
 
-            var bodyText = body.ToString();
-            if (!string.IsNullOrWhiteSpace(bodyText))
-            {
-                bodyText = InterpolateLine(bodyText, _variables).Trim();
-            }
+            var bodyText = body.ToString().Trim();
 
             if (string.IsNullOrWhiteSpace(address) && BaseAddress is null)
             {
-                throw new InvalidOperationException("Cannot perform HttpRequest without an valid uri.");
+                throw new InvalidOperationException("Cannot perform HttpRequest without a valid uri.");
             }
 
             var uri = new Uri(address, UriKind.RelativeOrAbsolute);
@@ -323,61 +287,27 @@ public class HttpRequestKernel :
             }
 
             uri = uri.IsAbsoluteUri ? uri : new Uri(BaseAddress, uri);
-            parsedRequests.Add(new HttpRequest(verb, uri.AbsoluteUri, bodyText, headerValues));
+            parsedRequests.Add(new HttpRequest(verb, uri.AbsoluteUri, bodyText, headerValues, diagnostics));
         }
 
         return parsedRequests;
     }
 
-    private string InterpolateLine(string template, IReadOnlyDictionary<string, string> variables)
-    {
-        var result = template;
-        var matches = PlaceHolderPattern.Matches(template);
-        for (var index = 0; index < matches.Count; index++)
-        {
-            var match = matches[index];
-            var symbol = match.Groups["symbol"]?.Value.ToLowerInvariant();
-            if (!string.IsNullOrWhiteSpace(symbol))
-            {
-                var toReplace = $"{{{{{symbol}}}}}";
-
-                switch (symbol)
-                {
-                    case "host" when BaseAddress is { }:
-                        result = result.Replace(toReplace, BaseAddress.Host);
-                        break;
-                    default:
-                        if (variables.TryGetValue(symbol, out var symbolValue))
-                        {
-
-                        }
-                        else
-                        {
-                            throw new InvalidOperationException($"Cannot resolve replacement for {toReplace}");
-                        }
-                        result = result.Replace(toReplace, variables[symbol]);
-                        break;
-                }
-
-            }
-        }
-
-        return result;
-    }
-
     public class HttpRequest
     {
-        public HttpRequest(string verb, string address, string body, IEnumerable<KeyValuePair<string, string>> headers)
+        public HttpRequest(string verb, string address, string body, IEnumerable<KeyValuePair<string, string>> headers, IEnumerable<Diagnostic> diagnostics)
         {
             Verb = verb;
             Address = address;
             Body = body;
             Headers = headers;
+            Diagnostics = diagnostics;
         }
 
         public string Verb { get; }
         public string Address { get; }
         public string Body { get; }
         public IEnumerable<KeyValuePair<string, string>> Headers { get; }
+        public IEnumerable<Diagnostic> Diagnostics { get; }
     }
 }
