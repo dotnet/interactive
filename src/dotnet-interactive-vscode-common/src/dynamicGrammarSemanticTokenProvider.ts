@@ -43,6 +43,7 @@ const magicCommandSelector: string = '#!';
 // grammars shipped with this extension
 const wellKnownLanguages: { languageName: string, grammarFileName: string, aliases: string[] }[] = [
     { languageName: 'kql', grammarFileName: 'kql.tmGrammar.json', aliases: [] },
+    { languageName: 'http', grammarFileName: 'http.tmGrammar.json', aliases: [] },
 ];
 
 // aliases that we might want to manually specify
