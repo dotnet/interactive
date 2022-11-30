@@ -16,6 +16,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
@@ -32,6 +33,9 @@ public class HttpRequestKernel :
     private static readonly Regex PlaceHolderPattern;
     private static readonly Regex LineStartPattern;
     private static readonly Regex IsHeader;
+
+    private const string InterpolationStartMarker = "{{";
+    private const string InterpolationEndMarker = "}}";
 
     static HttpRequestKernel()
     {
@@ -120,7 +124,7 @@ public class HttpRequestKernel :
     {
         foreach (var (request, start, length) in GetAllRequests(command.Code))
         {
-            var diagnostics = GetInterpolationDiagnostics(request, start, length, _variables, command.Code);
+            var diagnostics = GetInterpolationDiagnostics(command.Code, start, length);
             var formattedDiagnostics =
                 diagnostics
                     .Select(d => d.ToString())
@@ -131,50 +135,99 @@ public class HttpRequestKernel :
         return Task.CompletedTask;
     }
 
-    private IEnumerable<Diagnostic> GetInterpolationDiagnostics(string request, int start, int length,
-        IReadOnlyDictionary<string, string> variables, string originalCode)
+    private IEnumerable<Diagnostic> GetInterpolationDiagnostics(string code, int spanStart, int spanLength)
     {
+        var canResolveHost = BaseAddress is { };
         var diagnostics = new List<Diagnostic>();
-        var matches = PlaceHolderPattern.Matches(request);
-        for (var index = 0; index < matches.Count; index++)
-        {
-            var match = matches[index];
-            var symbol = match.Groups["symbol"]?.Value.ToLowerInvariant();
-            if (!string.IsNullOrWhiteSpace(symbol))
-            {
-                var toReplace = $"{{{{{symbol}}}}}";
+        var spanEnd = spanStart + spanLength;
+        var index = 0;
 
-                switch (symbol)
+        var currentLine = 0;
+        var currentColumn = 0;
+
+        // count lines and columns until the real start
+        while (index < spanStart)
+        {
+            switch (code[index])
+            {
+                case '\n':
+                    currentLine++;
+                    currentColumn = 0;
+                    break;
+                default:
+                    currentColumn++;
+                    break;
+            }
+            index++;
+        }
+
+        while (index < spanEnd)
+        {
+            // find start/end values of interpolation
+            var interpolationStart = code.IndexOf(InterpolationStartMarker, index);
+            if (interpolationStart < 0 || interpolationStart > spanEnd)
+            {
+                // no more variables
+                break;
+            }
+
+            var interpolationEnd = code.IndexOf(InterpolationEndMarker, index + InterpolationStartMarker.Length);
+            if (interpolationEnd < 0 || interpolationEnd > spanEnd)
+            {
+                // no closing tag
+                // TODO: error?
+                break;
+            }
+
+            // count lines and columns until the start of the variable name
+            while (index < interpolationStart + InterpolationStartMarker.Length)
+            {
+                switch (code[index])
                 {
-                    case "host" when BaseAddress is { }:
+                    case '\n':
+                        currentLine++;
+                        currentColumn = 0;
                         break;
                     default:
-                        if (!variables.TryGetValue(symbol, out _))
-                        {
-                            var character = 0;
-                            var line = 1;
-                            for (var x = 0; x < match.Index; x++)
-                            {
-                                if (originalCode[x] == '\n')
-                                {
-                                    line++;
-                                    character = 0;
-                                }
-                                else
-                                {
-                                    character++;
-                                }
-                            }
-                            var position = new LinePositionSpan(
-                                new LinePosition(line, character), 
-                                new LinePosition(line, character + toReplace.Length - 1));
-                            diagnostics.Add(new Diagnostic(position, DiagnosticSeverity.Error, originalCode, $"Cannot resolve symbol {toReplace}"));
-                        }
-
+                        currentColumn++;
                         break;
                 }
 
+                index++;
             }
+
+            var variableStartPosition = new LinePosition(currentLine, currentColumn);
+
+            // count lines and columns until the end of the variable name
+            while (index < interpolationEnd)
+            {
+                switch (code[index])
+                {
+                    case '\n':
+                        currentLine++;
+                        currentColumn = 0;
+                        break;
+                    default:
+                        currentColumn++;
+                        break;
+                }
+
+                index++;
+            }
+
+            var variableEndPosition = new LinePosition(currentLine, currentColumn);
+
+            var variableName = code[(interpolationStart + InterpolationStartMarker.Length)..interpolationEnd];
+            var canResolveSymbol = (variableName == "host" && canResolveHost) || _variables.ContainsKey(variableName);
+            if (!canResolveSymbol)
+            {
+                var position = new LinePositionSpan(
+                    variableStartPosition,
+                    variableEndPosition);
+                diagnostics.Add(new Diagnostic(position, DiagnosticSeverity.Error, "HTTP404", $"Cannot resolve symbol '{variableName}'"));
+            }
+
+            index = interpolationEnd + InterpolationEndMarker.Length;
         }
 
         return diagnostics;
@@ -232,14 +285,14 @@ public class HttpRequestKernel :
 
                     var parts = line.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries);
                     verb = parts[0].Trim();
-                    address = Interpolate(parts[1].Trim(), _variables);
+                    address = InterpolateLine(parts[1].Trim(), _variables);
                 }
                 else if (!string.IsNullOrWhiteSpace(line) && IsHeader.Matches(line) is { } matches)
                 {
                     foreach (Match match in matches)
                     {
                         var key = match.Groups["key"].Value;
-                        var value = Interpolate(match.Groups["value"].Value.Trim(), _variables);
+                        var value = InterpolateLine(match.Groups["value"].Value.Trim(), _variables);
                         headerValues[key] = value;
                     }
                 }
@@ -255,7 +308,7 @@ public class HttpRequestKernel :
             var bodyText = body.ToString();
             if (!string.IsNullOrWhiteSpace(bodyText))
             {
-                bodyText = Interpolate(bodyText, _variables).Trim();
+                bodyText = InterpolateLine(bodyText, _variables).Trim();
             }
 
             if (string.IsNullOrWhiteSpace(address) && BaseAddress is null)
@@ -264,23 +317,19 @@ public class HttpRequestKernel :
             }
 
             var uri = new Uri(address, UriKind.RelativeOrAbsolute);
-
             if (!uri.IsAbsoluteUri && BaseAddress is null)
             {
                 throw new InvalidOperationException($"Cannot use relative path {uri} without a base address.");
             }
 
             uri = uri.IsAbsoluteUri ? uri : new Uri(BaseAddress, uri);
-
-
             parsedRequests.Add(new HttpRequest(verb, uri.AbsoluteUri, bodyText, headerValues));
-
         }
 
         return parsedRequests;
     }
 
-    private string Interpolate(string template, IReadOnlyDictionary<string, string> variables)
+    private string InterpolateLine(string template, IReadOnlyDictionary<string, string> variables)
     {
         var result = template;
         var matches = PlaceHolderPattern.Matches(template);
@@ -316,7 +365,6 @@ public class HttpRequestKernel :
         return result;
     }
 
-
     public class HttpRequest
     {
         public HttpRequest(string verb, string address, string body, IEnumerable<KeyValuePair<string, string>> headers)
@@ -332,6 +380,4 @@ public class HttpRequestKernel :
         public string Body { get; }
         public IEnumerable<KeyValuePair<string, string>> Headers { get; }
     }
-
 }
-

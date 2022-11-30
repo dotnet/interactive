@@ -8,6 +8,8 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentAssertions.Execution;
+using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -237,9 +239,8 @@ Content-Type: application/json
     }
 
     [Fact]
-    public async Task produces_diagnostics_for_unresolved_symbols()
+    public async Task diagnostic_messages_are_produced_for_unresolved_symbols()
     {
-
         using var kernel = new HttpRequestKernel();
         kernel.BaseAddress = new Uri("http://baseAddress.com");
 
@@ -251,6 +252,69 @@ Content-Type: application/json
 
         var diagnostics = events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-        diagnostics.FormattedDiagnostics.First().Value.Should().Be(@"get https://anotherlocation.com/{{api_endpoint}}: [LinePosition: {1, 32})-LinePosition: {1, 47})) Cannot resolve symbol {{api_endpoint}}");
+        diagnostics.Diagnostics.First().Message.Should().Be(@"Cannot resolve symbol 'api_endpoint'");
+    }
+
+    [Fact]
+    public async Task diagnostic_positions_are_correct_for_unresolved_symbols()
+    {
+        using var kernel = new HttpRequestKernel();
+        kernel.BaseAddress = new Uri("http://baseAddress.com");
+
+        var code = @"
+// something to ensure we're not on the first line
+GET https://example.com/{{unresolved_symbol}}";
+
+        var result = await kernel.SendAsync(new RequestDiagnostics(code));
+
+        var events = result.KernelEvents.ToSubscribedList();
+
+        events.Should().NotContainErrors();
+
+        var diagnostics = events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.Should().ContainSingle().Which.LinePositionSpan.Should().Be(new LinePositionSpan(new LinePosition(2, 26), new LinePosition(2, 43)));
+    }
+
+    [Fact]
+    public async Task diagnostic_positions_are_correct_for_unresolved_symbols_after_other_symbols_were_successfully_resolved()
+    {
+        using var kernel = new HttpRequestKernel();
+        kernel.BaseAddress = new Uri("http://baseAddress.com");
+
+        var code = @"
+GET {{host}}/index.html
+User-Agent: {{user_agent}}";
+
+        var result = await kernel.SendAsync(new RequestDiagnostics(code));
+
+        var events = result.KernelEvents.ToSubscribedList();
+
+        events.Should().NotContainErrors();
+
+        var diagnostics = events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.Should().ContainSingle().Which.LinePositionSpan.Should().Be(new LinePositionSpan(new LinePosition(2, 14), new LinePosition(2, 24)));
+    }
+
+    [Fact]
+    public async Task multiple_diagnostics_are_returned_from_the_same_submission()
+    {
+        using var kernel = new HttpRequestKernel();
+        kernel.BaseAddress = new Uri("http://baseAddress.com");
+
+        var code = @"
+GET {{missing_value_1}}/index.html
+User-Agent: {{missing_value_2}}";
+
+        var result = await kernel.SendAsync(new RequestDiagnostics(code));
+
+        var events = result.KernelEvents.ToSubscribedList();
+
+        events.Should().NotContainErrors();
+
+        var diagnostics = events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.Should().HaveCount(2);
     }
 }
