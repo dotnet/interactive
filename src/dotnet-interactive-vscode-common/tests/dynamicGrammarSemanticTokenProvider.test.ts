@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as contracts from '../../src/vscode-common/dotnet-interactive/contracts';
+import * as fs from 'fs';
 import * as path from 'path';
 import * as vscodeLike from '../../src/vscode-common/interfaces/vscode-like';
 import { expect } from 'chai';
@@ -374,6 +375,65 @@ $x = "this is perl code";
         expect(tokens).to.deep.equal([]); // should be empty, but this gives better error messages
     });
 
+    it('http grammar can classify code', async () => {
+        const updatedKernelInfos: contracts.KernelInfo[] = [
+            {
+                localName: 'httpRequest',
+                uri: 'kernel://httpRequest',
+                languageName: 'http',
+                aliases: [],
+                displayName: '',
+                supportedKernelCommands: [],
+                supportedDirectives: [],
+            }
+        ];
+        dynamicTokenProvider.rebuildNotebookGrammar(testUri, updatedKernelInfos);
+
+        const code = `
+// some comment
+GET /{{subPath}}/page.html
+User-Agent: abc/{{userAgent}}/def`;
+        const tokens = await getTokens('httpRequest', code);
+        expect(tokens).to.deep.equal([
+            {
+                tokenText: '// some comment',
+                tokenType: 'polyglot-notebook-comment'
+            },
+            {
+                tokenText: 'GET',
+                tokenType: 'polyglot-notebook-keyword'
+            },
+            {
+                tokenText: '{{',
+                tokenType: 'polyglot-notebook-punctuation-section-brackets-single-begin'
+            },
+            {
+                tokenText: 'subPath',
+                tokenType: 'polyglot-notebook-variable-language'
+            },
+            {
+                tokenText: '}}',
+                tokenType: 'polyglot-notebook-punctuation-section-brackets-single-end'
+            },
+            {
+                tokenText: 'User-Agent:',
+                tokenType: 'polyglot-notebook-keyword-control'
+            },
+            {
+                tokenText: '{{',
+                tokenType: 'polyglot-notebook-punctuation-section-brackets-single-begin'
+            },
+            {
+                tokenText: 'userAgent',
+                tokenType: 'polyglot-notebook-variable-language'
+            },
+            {
+                tokenText: '}}',
+                tokenType: 'polyglot-notebook-punctuation-section-brackets-single-end'
+            }
+        ]);
+    });
+
     ////////////////////////////////////////////////////////////////////////////
     //                                                               setup stuff
     ////////////////////////////////////////////////////////////////////////////
@@ -481,7 +541,17 @@ $x = "this is perl code";
                 }
             ]
         }));
-        dynamicTokenProvider = new DynamicGrammarSemanticTokenProvider(packageJSON, testExtensionGrammars, path => true, path => grammarContentsByPath.get(path)!);
+
+        function getGrammarContents(grammarPath: string): string {
+            const grammarContents = grammarContentsByPath.get(grammarPath);
+            if (grammarContents) {
+                return grammarContents;
+            }
+
+            return fs.readFileSync(grammarPath, 'utf8');
+        }
+
+        dynamicTokenProvider = new DynamicGrammarSemanticTokenProvider(packageJSON, testExtensionGrammars, _path => true, path => getGrammarContents(path)!);
         await dynamicTokenProvider.init();
 
         dynamicTokenProvider.rebuildNotebookGrammar(testUri, defaultKernelInfos);
