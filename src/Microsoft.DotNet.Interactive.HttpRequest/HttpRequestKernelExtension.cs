@@ -2,9 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 
+using System;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
@@ -47,7 +50,7 @@ public class HttpRequestKernelExtension : IKernelExtension
     {
         var responseBodyString = await responseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
 
-        context.Writer.WriteLine($"Status Code: {responseMessage.StatusCode}");
+        context.Writer.WriteLine($"Status Code: {(int)responseMessage.StatusCode} {responseMessage.StatusCode}");
         context.Writer.WriteLine($"Request URI: {responseMessage.RequestMessage.RequestUri}");
         context.Writer.WriteLine($"Content type: {responseMessage.Content.Headers.ContentType}");
         foreach (var header in responseMessage.Headers)
@@ -61,10 +64,8 @@ public class HttpRequestKernelExtension : IKernelExtension
             {
                 case "application/json":
                 case "text/json":
-                    System.Text.Json.JsonDocument.Parse(responseBodyString).RootElement.FormatTo(context, PlainTextFormatter.MimeType);
-                    //context.
-                    //context.Writer.WriteLine(System.Text.Json.JsonDocument.Parse(responseBodyString).RootElement.ToDisplayString(PlainText
-                    //Microsoft.DotNet.Interactive.JsonConverter<string>
+                    var formatted = JsonSerializer.Serialize(JsonDocument.Parse(responseBodyString).RootElement, new JsonSerializerOptions { WriteIndented = true });
+                    context.Writer.WriteLine($"Body: {formatted}");
                     break;
                 default:
                     context.Writer.WriteLine($"Body: {responseBodyString}");
