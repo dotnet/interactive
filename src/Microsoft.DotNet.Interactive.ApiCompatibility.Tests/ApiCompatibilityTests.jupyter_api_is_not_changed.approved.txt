@@ -350,5 +350,5 @@ Microsoft.DotNet.Interactive.Jupyter.ZMQ
     public static Microsoft.DotNet.Interactive.Jupyter.Messaging.Message GetMessage()
   public class SignatureValidator
     .ctor(System.String key, System.String algorithm)
-    public System.Text.Encoding Enc { get;}
+    public System.Text.Encoding Encoding { get;}
     public System.String CreateSignature(System.Byte[][] data)
