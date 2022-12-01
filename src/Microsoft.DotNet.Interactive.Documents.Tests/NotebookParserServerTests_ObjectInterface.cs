@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Documents.ParserServer;
+using Newtonsoft.Json;
+
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Documents.Tests;
@@ -114,6 +116,181 @@ x = 1 # this is Python
             DocumentSerializationType.Dib,
             defaultLanguage: "csharp",
             rawData: Encoding.UTF8.GetBytes(dibContents));
+
+        var response = NotebookParserServer.HandleRequest(request);
+
+        response
+            .Should()
+            .BeOfType<NotebookParseResponse>()
+            .Which
+            .Document
+            .Elements
+            .Single()
+            .KernelName
+            .Should()
+            .Be("snake-language");
+    }
+
+
+    [Fact]
+    public void Notebook_parser_server_can_parse_a_ipynb_file_with_well_known_kernel_metadata()
+    {
+        var ipynb = new
+        {
+            cells = new object[]
+            {
+                new
+                {
+                    cell_type = "code",
+                    execution_count = 0,
+                    source = new[] { "let x  = 1" },
+                    metadata = new
+                    {
+                        polyglot_notebook = new
+                        {
+                            kernelName = "fsharp"
+                        }
+                    }
+                },
+                new
+                {
+                    cell_type = "code",
+                    execution_count = 0,
+                    source = new[] { "var x = 123;" },
+                    metadata = new
+                    {
+                        polyglot_notebook = new
+                        {
+                            kernelName = "csharp"
+                        }
+                    }
+                }
+            },
+            metadata = new
+            {
+                kernelspec = new
+                {
+                    display_name = ".NET (C#)",
+                    language = "C#",
+                    name = ".net-csharp"
+                },
+                language_info = new
+                {
+                    file_extension = ".cs",
+                    mimetype = "text/x-csharp",
+                    name = "C#",
+                    pygments_lexer = "csharp",
+                    version = "11.0"
+                },
+                polyglot_notebook = new
+                {
+                    defaultKernelName = "csharp",
+                    items = new object[]
+                    {
+                        new
+                        {
+                            name = "csharp",
+                            languageName = "csharp"
+                        },
+                        new
+                        {
+                            name = "fsharp",
+                            languageName = "fsharp"
+                        }
+                    }
+                }
+            },
+            nbformat = 4,
+            nbformat_minor = 4
+        };
+        
+        var ipynbContents = JsonConvert.SerializeObject(ipynb);
+
+        var request = new NotebookParseRequest(
+            "the-id",
+            DocumentSerializationType.Ipynb,
+            defaultLanguage: "csharp",
+            rawData: Encoding.UTF8.GetBytes(ipynbContents));
+
+        var response = NotebookParserServer.HandleRequest(request);
+
+        response
+            .Should()
+            .BeOfType<NotebookParseResponse>()
+            .Which
+            .Document
+            .Elements
+            .Select(e => e.KernelName)
+            .Should()
+            .Equal(new[] { "fsharp", "csharp" });
+    }
+
+    [Fact]
+    public void Notebook_parser_server_can_parse_a_ipynb_file_with_not_well_known_kernel_metadata()
+    {
+        var ipynb = new
+        {
+            cells = new object[]
+             {
+                new
+                {
+                    cell_type = "code",
+                    execution_count = 0,
+                    source = new[] { "x  = 1" },
+                    metadata = new
+                    {
+                        polyglot_notebook = new
+                        {
+                            kernelName = "snake-language"
+                        }
+                    }
+                }
+             },
+            metadata = new
+            {
+                kernelspec = new
+                {
+                    display_name = ".NET (C#)",
+                    language = "C#",
+                    name = ".net-csharp"
+                },
+                language_info = new
+                {
+                    file_extension = ".cs",
+                    mimetype = "text/x-csharp",
+                    name = "C#",
+                    pygments_lexer = "csharp",
+                    version = "11.0"
+                },
+                polyglot_notebook = new
+                {
+                    defaultKernelName = "csharp",
+                    items = new object[]
+                     {
+                        new
+                        {
+                            name = "csharp",
+                            languageName = "csharp"
+                        },
+                        new
+                        {
+                            name = "snake-language",
+                            languageName = "python"
+                        }
+                     }
+                }
+            },
+            nbformat = 4,
+            nbformat_minor = 4
+        };
+
+        var ipynbContents = JsonConvert.SerializeObject(ipynb);
+        
+        var request = new NotebookParseRequest(
+            "the-id",
+            DocumentSerializationType.Ipynb,
+            defaultLanguage: "csharp",
+            rawData: Encoding.UTF8.GetBytes(ipynbContents));
 
         var response = NotebookParserServer.HandleRequest(request);
 
