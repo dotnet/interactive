@@ -3,8 +3,12 @@
 
 using System;
 using System.Linq;
+using System.Text;
+
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
+
 using NetMQ;
+
 using Recipes;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ;
@@ -13,35 +17,49 @@ public class MessageSender
 {
     private readonly IOutgoingSocket _socket;
     private readonly SignatureValidator _signatureValidator;
+    private readonly Encoding _enc;
+    private readonly object _lock;
 
     public MessageSender(IOutgoingSocket socket, SignatureValidator signatureValidator)
     {
         _socket = socket ?? throw new ArgumentNullException(nameof(socket));
         _signatureValidator = signatureValidator ?? throw new ArgumentNullException(nameof(signatureValidator));
+        _enc = _signatureValidator.Encoding ?? new UTF8Encoding();
+        _lock = new object();
     }
 
     public void Send(Message message)
     {
-        var hmac = _signatureValidator.CreateSignature(message);
+        // Translate everything before getting the lock.
+        var hdr = Encode(message.Header);
+        var par = Encode(message.ParentHeader);
+        var md = Encode(message.MetaData);
+        var cnt = Encode(message.Content);
+        var hmac = _signatureValidator.CreateSignature(hdr, par, md, cnt);
 
-        if (message.Identifiers is not null)
+        // Multiple channels (eg, control and shell) can send messages on separate threads.
+        // Need to lock to avoid interleaving frames. Symptom of not doing this is random
+        // signature exceptions in jupyter lab.
+        lock (_lock)
         {
-            foreach (var ident in message.Identifiers)
+            if (message.Identifiers != null)
             {
-                _socket.TrySendFrame(ident.ToArray(), true);
+                foreach (var ident in message.Identifiers)
+                    _socket.SendFrame(ident.ToArray(), true);
             }
-        }
 
-        Send(Constants.DELIMITER, _socket);
-        Send(hmac, _socket);
-        Send(message.Header.ToJson(), _socket);
-        Send((message.ParentHeader?? new object()).ToJson(), _socket);
-        Send((message.MetaData?? new object()).ToJson(), _socket);
-        Send(message.Content.ToJson(), _socket, false);
+            _socket.SendFrame("<IDS|MSG>", true);
+            _socket.SendFrame(hmac, true);
+            _socket.SendFrame(hdr, true);
+            _socket.SendFrame(par, true);
+            _socket.SendFrame(md, true);
+            _socket.SendFrame(cnt, false);
+        }
     }
 
-    private static void Send(string message, IOutgoingSocket socket, bool sendMore = true)
+    private byte[] Encode(object val)
     {
-        socket.SendFrame(message, sendMore);
+        var str = (val ?? new object()).ToJson();
+        return _enc.GetBytes(str);
     }
 }
