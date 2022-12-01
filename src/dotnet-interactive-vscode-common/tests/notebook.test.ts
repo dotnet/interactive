@@ -71,9 +71,9 @@ describe('Notebook tests', () => {
             }));
             const clientMapper = new ClientMapper(config);
             const client = await clientMapper.getOrAddClient(createUri('test/path'));
-            let result: Array<vscodeLike.NotebookCellOutput> = [];
-            await client.execute(code, language, outputs => result = outputs, _ => { }, { token });
-            const decodedResults = decodeNotebookCellOutputs(result);
+            const outputs: Array<vscodeLike.NotebookCellOutput> = [];
+            await client.execute(code, language, output => outputs.push(output), _ => { }, { token });
+            const decodedResults = decodeNotebookCellOutputs(outputs);
             expect(decodedResults).to.deep.equal([
                 {
                     id: '1',
@@ -173,9 +173,9 @@ Console.WriteLine(3);
         }));
         const clientMapper = new ClientMapper(config);
         const client = await clientMapper.getOrAddClient(createUri('test/path'));
-        let result: Array<vscodeLike.NotebookCellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
-        const decodedResults = decodeNotebookCellOutputs(result);
+        const outputs: Array<vscodeLike.NotebookCellOutput> = [];
+        await client.execute(code, 'csharp', output => outputs.push(output), _ => { }, { token });
+        const decodedResults = decodeNotebookCellOutputs(outputs);
         expect(decodedResults).to.deep.equal([
             {
                 id: '1',
@@ -216,93 +216,6 @@ Console.WriteLine(3);
                     }
                 ]
             }
-        ]);
-    });
-
-    it('updated values are replaced instead of added', async () => {
-        const token = '123';
-        const code = '#r nuget:Newtonsoft.Json';
-        const config = createChannelConfig(async (_notebookPath) => new TestDotnetInteractiveChannel({
-            'SubmitCode': [
-                {
-                    eventType: CodeSubmissionReceivedType,
-                    event: {
-                        code: code
-                    },
-                    token
-                },
-                {
-                    eventType: CompleteCodeSubmissionReceivedType,
-                    event: {
-                        code: code
-                    },
-                    token
-                },
-                {
-                    eventType: DisplayedValueProducedType,
-                    event: {
-                        valueId: 'newtonsoft.json',
-                        formattedValues: [{
-                            mimeType: "text/plain",
-                            value: "Installing package Newtonsoft.Json..."
-                        }]
-                    },
-                    token
-                },
-                {
-                    eventType: DisplayedValueUpdatedType,
-                    event: {
-                        valueId: 'newtonsoft.json',
-                        formattedValues: [
-                            {
-                                mimeType: "text/plain",
-                                value: "Installed package Newtonsoft.Json version 1.2.3.4"
-                            }]
-                    },
-                    token
-                },
-                {
-                    eventType: DisplayedValueProducedType,
-                    event: {
-                        valueId: null,
-                        formattedValues: [{
-                            mimeType: "text/plain",
-                            value: "sentinel"
-                        }]
-                    },
-                    token
-                },
-                {
-                    eventType: CommandSucceededType,
-                    event: {},
-                    token
-                }
-            ]
-        }));
-        const clientMapper = new ClientMapper(config);
-        const client = await clientMapper.getOrAddClient(createUri('test/path'));
-        let result: Array<vscodeLike.NotebookCellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
-        const decodedResults = decodeNotebookCellOutputs(result);
-        expect(decodedResults).to.deep.equal([
-            {
-                id: '2',
-                items: [
-                    {
-                        mime: 'text/plain',
-                        decodedData: 'Installed package Newtonsoft.Json version 1.2.3.4',
-                    }
-                ]
-            },
-            {
-                id: '3',
-                items: [
-                    {
-                        mime: 'text/plain',
-                        decodedData: 'sentinel',
-                    }
-                ]
-            },
         ]);
     });
 
@@ -347,9 +260,9 @@ Console.WriteLine(3);
         }));
         const clientMapper = new ClientMapper(config);
         const client = await clientMapper.getOrAddClient(createUri('test/path'));
-        let result: Array<vscodeLike.NotebookCellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
-        const decodedResults = decodeNotebookCellOutputs(result);
+        const outputs: Array<vscodeLike.NotebookCellOutput> = [];
+        await client.execute(code, 'csharp', output => outputs.push(output), _ => { }, { token });
+        const decodedResults = decodeNotebookCellOutputs(outputs);
         expect(decodedResults).to.deep.equal([
             {
                 id: '1',

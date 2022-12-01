@@ -1,3 +1,7 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"name":"csharp","aliases":["c#","C#"],"languageName":"C#"},{"name":".NET","aliases":[]},{"name":"fsharp","aliases":["f#","F#"],"languageName":"F#"},{"name":"html","aliases":[],"languageName":"HTML"},{"name":"javascript","aliases":["js"],"languageName":"JavaScript"},{"name":"kql","aliases":[],"languageName":"KQL"},{"name":"mermaid","aliases":[],"languageName":"Mermaid"},{"name":"pwsh","aliases":["powershell"],"languageName":"PowerShell"},{"name":"sql","aliases":[],"languageName":"SQL"},{"name":"value","aliases":[]},{"name":"webview","aliases":[]},{"name":"vscode","languageName":null,"aliases":["frontend"]}]}}
+
 #!markdown
 
 # Verify execution count.
@@ -18,6 +22,8 @@ You'll notice a counter that appears and starts incrementing.  After a second or
 5
 Command cancelled
 ```
+
+N.b., the old values (e.g., `1`, `2`, `3`, `4`, etc.) should no longer be displayed, but overwritten.
 
 #!csharp
 
@@ -94,7 +100,7 @@ return kernels;
 1234
 ```
 
-And the `POLYGLOT NOTEBOOK: VALUES` window should contain a variable with name `asdf`, value `1234` and kernel Name `csharp`
+And the `POLYGLOT NOTEBOOK: VARIABLES` window should contain a variable with name `asdf`, value `1234` and kernel Name `csharp`
 
 #!javascript
 
@@ -190,7 +196,7 @@ input.Result
 
 This should prompt you for input.
 
-#!fsharp
+#!value
 
 #!value --from-value @input:wat --name value_from_input
 
