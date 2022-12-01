@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -56,9 +57,7 @@ public static class CodeSubmission
 
                 if (InteractiveDocument.TryGetKernelInfoFromMetadata(metadata, out var kernelInfoFromMetadata))
                 {
-                    kernelInfo = new(); // clear the old set
-                    kernelInfo.AddRange(kernelInfoFromMetadata);
-                    kernelInfo = WithMarkdownKernel(kernelInfo);
+                    InteractiveDocument.MergeKernelInfos(kernelInfo, kernelInfoFromMetadata);
                 }
             }
 
@@ -210,5 +209,19 @@ public static class CodeSubmission
     {
         var content = document.ToCodeSubmissionContent(newline);
         writer.Write(content);
+    }
+
+    public static void Write(InteractiveDocument document, Stream stream, KernelInfoCollection kernelInfos, string newline = "\n")
+    {
+        InteractiveDocument.MergeKernelInfos(document, kernelInfos);
+        Write(document, stream, newline);
+    }
+
+   
+
+    public static void Write(InteractiveDocument document, TextWriter writer, KernelInfoCollection kernelInfos, string newline = "\n")
+    {
+        InteractiveDocument.MergeKernelInfos(document, kernelInfos);
+        Write(document, writer, newline);
     }
 }
