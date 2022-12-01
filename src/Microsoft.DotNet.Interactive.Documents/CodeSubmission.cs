@@ -57,9 +57,7 @@ public static class CodeSubmission
 
                 if (InteractiveDocument.TryGetKernelInfoFromMetadata(metadata, out var kernelInfoFromMetadata))
                 {
-                    kernelInfo = new(); // clear the old set
-                    kernelInfo.AddRange(kernelInfoFromMetadata);
-                    kernelInfo = WithMarkdownKernel(kernelInfo);
+                    InteractiveDocument.MergeKernelInfos(kernelInfo, kernelInfoFromMetadata);
                 }
             }
 

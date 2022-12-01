@@ -133,6 +133,50 @@ x = 1 # this is Python
 
 
     [Fact]
+    public void Notebook_parser_server_can_parse_a_dib_file_with_merged_kernel_metadata()
+    {
+        var dibContents = @"
+#!meta
+{
+  ""kernelInfo"": {
+    ""defaultKernelName"": ""csharp"",
+    ""items"": [
+      {
+        ""name"": ""csharp"",
+        ""languageName"": ""csharp""
+      }
+    ]
+  }
+}
+
+#!csharp
+
+var x = 1; // this is C#
+
+#!fsharp
+
+let x = 1 (* this is F# *)
+".Trim();
+        var request = new NotebookParseRequest(
+            "the-id",
+            DocumentSerializationType.Dib,
+            defaultLanguage: "csharp",
+            rawData: Encoding.UTF8.GetBytes(dibContents));
+
+        var response = NotebookParserServer.HandleRequest(request);
+
+        response
+            .Should()
+            .BeOfType<NotebookParseResponse>()
+            .Which
+            .Document
+            .Elements
+            .Select(e => e.KernelName)
+            .Should()
+            .Equal(new[] { "csharp", "fsharp" });
+    }
+    
+    [Fact]
     public void Notebook_parser_server_can_parse_a_ipynb_file_with_well_known_kernel_metadata()
     {
         var ipynb = new
