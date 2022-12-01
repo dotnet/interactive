@@ -95,11 +95,6 @@ public class Message
             throw new ArgumentNullException(nameof(request));
         }
 
-        if (!(request.Content is RequestMessage) && request.Content != Protocol.Message.Empty)
-        {
-            throw new ArgumentOutOfRangeException($"{request.Content.GetType()} is not a valid {nameof(RequestMessage)}");
-        }
-
         var replyMessage = Create(content, request.Header, request.Identifiers, request.MetaData, request.Signature, channel: channel);
 
         return replyMessage;
@@ -119,11 +114,6 @@ public class Message
         if (request is null)
         {
             throw new ArgumentNullException(nameof(request));
-        }
-
-        if (!(request.Content is RequestMessage) && request.Content != Protocol.Message.Empty)
-        {
-            throw new ArgumentOutOfRangeException($"{request.Content.GetType()} is nor a valid {nameof(RequestMessage)}");
         }
 
         var topic = Topic(content, kernelIdentity);
