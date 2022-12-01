@@ -81,6 +81,12 @@ public static class Notebook
         writer.Flush();
     }
 
+    public static void Write(InteractiveDocument document, Stream stream, KernelInfoCollection kernelInfos)
+    {
+        InteractiveDocument.MergeKernelInfos(document, kernelInfos);
+        Write(document, stream);
+    }
+
     public static string ToJupyterJson(
         this InteractiveDocument document,
         string? defaultLanguage = null)
@@ -106,4 +112,10 @@ public static class Notebook
         var content = document.ToJupyterJson();
         writer.Write(content);
     }
+    public static void Write(InteractiveDocument document, TextWriter writer, KernelInfoCollection kernelInfos)
+    {
+        InteractiveDocument.MergeKernelInfos(document, kernelInfos);
+        Write(document, writer);
+    }
+
 }
