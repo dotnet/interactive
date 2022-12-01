@@ -32,6 +32,7 @@ public class NotebookParserServer : IDisposable
         new("html", languageName: "HTML"),
         new("sql", languageName: "SQL"),
         new("kql", languageName: "KQL"),
+        new("mermaid", languageName: "Mermaid"),
         new("value"),
     };
         
@@ -92,10 +93,10 @@ public class NotebookParserServer : IDisposable
                     switch (request.SerializationType)
                     {
                         case DocumentSerializationType.Dib:
-                            CodeSubmission.Write(serialize.Document, resultStream);
+                            CodeSubmission.Write(serialize.Document, resultStream, WellKnownKernelInfos);
                             break;
                         case DocumentSerializationType.Ipynb:
-                            Notebook.Write(serialize.Document, resultStream);
+                            Notebook.Write(serialize.Document, resultStream, WellKnownKernelInfos);
                             break;
                         default:
                             throw new NotSupportedException($"Unable to serialize a interactive document of type '{request.SerializationType}'");

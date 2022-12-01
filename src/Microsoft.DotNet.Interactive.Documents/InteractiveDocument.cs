@@ -212,6 +212,24 @@ public class InteractiveDocument : IEnumerable
         return null;
     }
 
+    internal static void MergeKernelInfos(InteractiveDocument document, KernelInfoCollection kernelInfos)
+    {
+        if (TryGetKernelInfoFromMetadata(document.Metadata, out var kernelInfoCollection))
+        {
+            var added = new HashSet<string>();
+            foreach (var kernelInfo in kernelInfoCollection)
+            {
+                added.Add(kernelInfo.Name);
+            }
+            kernelInfoCollection.AddRange(kernelInfos.Where(ki => added.Add(ki.Name)));
+            kernelInfos.AddRange(kernelInfoCollection);
+        }
+        else
+        {
+            document.Metadata["kernelInfo"] = kernelInfos;
+        }
+    }
+
     internal static bool TryGetKernelInfoFromMetadata(
         IDictionary<string, object>? metadata,
         [NotNullWhen(true)] out KernelInfoCollection? kernelInfo)
