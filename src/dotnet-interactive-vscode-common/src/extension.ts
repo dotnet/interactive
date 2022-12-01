@@ -40,6 +40,7 @@ import { ActiveNotebookTracker } from './activeNotebookTracker';
 import { onKernelInfoUpdates } from './dotnet-interactive';
 import * as metadataUtilities from './metadataUtilities';
 import * as constants from './constants';
+import { ServiceCollection } from './serviceCollection';
 
 export class CachedDotNetPathManager {
     private dotNetPath: string = 'dotnet'; // default to global tool if possible
@@ -231,6 +232,9 @@ export async function activate(context: vscode.ExtensionContext) {
     registerKernelCommands(context, clientMapper);
     registerVariableExplorer(context, clientMapper);
 
+    ServiceCollection.initialize(context, clientMapper);
+    context.subscriptions.push(new ActiveNotebookTracker(clientMapper));
+
     const hostVersionSuffix = vscodeUtilities.isInsidersBuild() ? 'Insiders' : 'Stable';
     diagnosticsChannel.appendLine(`Extension started for VS Code ${hostVersionSuffix}.`);
     const languageServiceDelay = polyglotConfig.get<number>('languageServiceDelay') || 500; // fall back to something reasonable
@@ -253,7 +257,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(vscode.workspace.onDidRenameFiles(e => handleFileRenames(e, clientMapper)));
     context.subscriptions.push(serializerLineAdapter);
-    context.subscriptions.push(new ActiveNotebookTracker(context, clientMapper));
 
     // rebuild notebook grammar
     const compositeKernelToNotebookUri: Map<CompositeKernel, vscodeLike.Uri> = new Map();

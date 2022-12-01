@@ -73,9 +73,9 @@ describe('InteractiveClient tests', () => {
         }));
         const clientMapper = new ClientMapper(config);
         const client = await clientMapper.getOrAddClient(createUri('test/path'));
-        let result: Array<vscodeLike.NotebookCellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
-        const decodedResults = decodeNotebookCellOutputs(result);
+        const outputs: Array<vscodeLike.NotebookCellOutput> = [];
+        await client.execute(code, 'csharp', output => outputs.push(output), _ => { }, { token });
+        const decodedResults = decodeNotebookCellOutputs(outputs);
         expect(decodedResults).to.deep.equal([
             {
                 id: '1',
@@ -98,280 +98,7 @@ describe('InteractiveClient tests', () => {
         ]);
     });
 
-    it('deferred events do not interfere with display update events', async () => {
-        const token = 'test-token';
-        const code = '1 + 1';
-        const config = createChannelConfig(async (notebookPath) => new TestDotnetInteractiveChannel({
-            'SubmitCode': [
-                {
-                    // deferred event; unassociated with the original submission; has its own token
-                    eventType: DisplayedValueProducedType,
-                    event: {
-                        value: '',
-                        valueId: null,
-                        formattedValues: [
-                            {
-                                mimeType: 'text/plain',
-                                value: 'deferred output'
-                            }
-                        ]
-                    },
-                    token: 'deferredCommand::123'
-                },
-                {
-                    eventType: DisplayedValueProducedType,
-                    event: {
-                        value: 1,
-                        valueId: "displayId",
-                        formattedValues: [
-                            {
-                                mimeType: 'text/html',
-                                value: '1'
-                            }
-                        ]
-                    },
-                    token
-                },
-                {
-                    eventType: DisplayedValueUpdatedType,
-                    event: {
-                        value: 2,
-                        valueId: "displayId",
-                        formattedValues: [
-                            {
-                                mimeType: 'text/html',
-                                value: '2'
-                            }
-                        ]
-                    },
-                    token
-                },
-                {
-                    eventType: CommandSucceededType,
-                    event: {},
-                    token
-                }
-            ]
-        }));
-        const clientMapper = new ClientMapper(config);
-        const client = await clientMapper.getOrAddClient(createUri('test/path'));
-        let result: Array<vscodeLike.NotebookCellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
-        const decodedResults = decodeNotebookCellOutputs(result);
-        expect(decodedResults).to.deep.equal([
-            {
-                id: '1',
-                items: [
-                    {
-                        mime: 'text/plain',
-                        decodedData: 'deferred output',
-                    }
-                ]
-            },
-            {
-                id: '3',
-                items: [
-                    {
-                        mime: 'text/html',
-                        decodedData: '2',
-                    }
-                ]
-            }
-        ]);
-    });
-
-    it('interleaved deferred events do not interfere with display update events', async () => {
-        const token = 'test-token';
-        const code = '1 + 1';
-        const config = createChannelConfig(async (notebookPath) => new TestDotnetInteractiveChannel({
-            'SubmitCode': [
-                {
-                    // deferred event; unassociated with the original submission; has its own token
-                    eventType: DisplayedValueProducedType,
-                    event: {
-                        value: '',
-                        valueId: null,
-                        formattedValues: [
-                            {
-                                mimeType: 'text/plain',
-                                value: 'deferred output 1'
-                            }
-                        ]
-                    },
-                    token: 'deferredCommand::123'
-                },
-                {
-                    eventType: DisplayedValueProducedType,
-                    event: {
-                        value: 1,
-                        valueId: "displayId",
-                        formattedValues: [
-                            {
-                                mimeType: 'text/html',
-                                value: '1'
-                            }
-                        ]
-                    },
-                    token
-                },
-                {
-                    // deferred event; unassociated with the original submission; has its own token
-                    eventType: DisplayedValueProducedType,
-                    event: {
-                        value: '',
-                        valueId: null,
-                        formattedValues: [
-                            {
-                                mimeType: 'text/plain',
-                                value: 'deferred output 2'
-                            }
-                        ]
-                    },
-                    token: 'deferredCommand::456'
-                },
-                {
-                    eventType: DisplayedValueUpdatedType,
-                    event: {
-                        value: 2,
-                        valueId: "displayId",
-                        formattedValues: [
-                            {
-                                mimeType: 'text/html',
-                                value: '2'
-                            }
-                        ]
-                    },
-                    token
-                },
-                {
-                    eventType: CommandSucceededType,
-                    event: {},
-                    token
-                }
-            ]
-        }));
-        const clientMapper = new ClientMapper(config);
-        const client = await clientMapper.getOrAddClient(createUri('test/path'));
-        let result: Array<vscodeLike.NotebookCellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
-        const decodedResults = decodeNotebookCellOutputs(result);
-        expect(decodedResults).to.deep.equal([
-            {
-                id: '1',
-                items: [
-                    {
-                        mime: 'text/plain',
-                        decodedData: 'deferred output 1',
-                    }
-                ]
-            },
-            {
-                id: '4',
-                items: [
-                    {
-                        mime: 'text/html',
-                        decodedData: '2',
-                    }
-                ]
-            },
-            {
-                id: '3',
-                items: [
-                    {
-                        mime: 'text/plain',
-                        decodedData: 'deferred output 2',
-                    }
-                ]
-            }
-        ]);
-    });
-
-    it('display update events from separate submissions trigger the correct observer', async () => {
-        const code = '1 + 1';
-        const config = createChannelConfig(async (notebookPath) => new TestDotnetInteractiveChannel({
-            'SubmitCode#1': [
-                {
-                    eventType: DisplayedValueProducedType,
-                    event: {
-                        value: 1,
-                        valueId: "displayId",
-                        formattedValues: [
-                            {
-                                mimeType: 'text/html',
-                                value: '1'
-                            }
-                        ]
-                    },
-                    token: 'token 1'
-                },
-                {
-                    eventType: CommandSucceededType,
-                    event: {},
-                    token: 'token 1'
-                }
-            ],
-            'SubmitCode#2': [
-                {
-                    eventType: DisplayedValueProducedType,
-                    event: {
-                        value: 2,
-                        valueId: "displayId",
-                        formattedValues: [
-                            {
-                                mimeType: 'text/html',
-                                value: '2'
-                            }
-                        ]
-                    },
-                    token: 'token 2'
-                },
-                {
-                    eventType: CommandSucceededType,
-                    event: {},
-                    token: 'token 2'
-                }
-            ]
-        }));
-        const clientMapper = new ClientMapper(config);
-        const client = await clientMapper.getOrAddClient(createUri('test/path'));
-
-        // execute first command
-        let result1: Array<vscodeLike.NotebookCellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result1 = outputs, _ => { }, { token: 'token 1' });
-        let decodedResults1 = decodeNotebookCellOutputs(result1);
-        expect(decodedResults1).to.deep.equal([
-            {
-                id: '1',
-                items: [
-                    {
-                        mime: 'text/html',
-                        decodedData: '1',
-                    }
-                ]
-            }
-        ]);
-
-        // execute second command
-        let result2: Array<vscodeLike.NotebookCellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result2 = outputs, _ => { }, { token: 'token 2' });
-        expect(result2).to.deep.equal([]);
-
-        // ensure first result array was updated
-        decodedResults1 = decodeNotebookCellOutputs(result1);
-        expect(decodedResults1).to.deep.equal([
-            {
-                id: '2',
-                items: [
-                    {
-                        mime: 'text/html',
-                        decodedData: '2',
-                    }
-                ]
-            }
-        ]);
-    });
-
-    it('display events with multiple mimeTyoes', async () => {
+    it('display events with multiple mimeTypes', async () => {
         const code = '1 + 1';
         const config = createChannelConfig(async (notebookPath) => new TestDotnetInteractiveChannel({
             'SubmitCode#1': [
@@ -404,12 +131,12 @@ describe('InteractiveClient tests', () => {
         const client = await clientMapper.getOrAddClient(createUri('test/path'));
 
         // execute first command
-        let result1: Array<vscodeLike.NotebookCellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result1 = outputs, _ => { }, { token: 'token 1' });
-        let decodedResults1 = decodeNotebookCellOutputs(result1);
+        const outputs1: Array<vscodeLike.NotebookCellOutput> = [];
+        await client.execute(code, 'csharp', output => outputs1.push(output), _ => { }, { token: 'token 1' });
+        let decodedResults1 = decodeNotebookCellOutputs(outputs1);
         expect(decodedResults1).to.deep.equal([
             {
-                id: '1',
+                id: 'displayId',
                 items: [
                     {
                         mime: 'text/html',
@@ -551,9 +278,9 @@ describe('InteractiveClient tests', () => {
             },
         }));
         const clientMapper = new ClientMapper(config);
-        let seenOutputs: Array<vscodeLike.NotebookCellOutput> = [];
+        const seenOutputs: Array<vscodeLike.NotebookCellOutput> = [];
         clientMapper.getOrAddClient(createUri('test-path.dib')).then(client => {
-            expect(client.execute("1+1", "csharp", outputs => { seenOutputs = outputs; }, _diagnostics => { }, { token, id: '' })).eventually.rejected.then(() => {
+            expect(client.execute("1+1", "csharp", output => seenOutputs.push(output), _diagnostics => { }, { token, id: '' })).eventually.rejected.then(() => {
                 try {
                     const decodedOutputs = decodeNotebookCellOutputs(seenOutputs);
                     expect(decodedOutputs).to.deep.equal([{
