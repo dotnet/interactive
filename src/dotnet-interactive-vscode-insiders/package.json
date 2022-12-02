@@ -144,7 +144,8 @@
             "[vscode]",
             "stdio",
             "--working-dir",
-            "{working_dir}"
+            "{working_dir}",
+            "--preview"
           ],
           "description": "Command and arguments used to start a notebook session."
         },

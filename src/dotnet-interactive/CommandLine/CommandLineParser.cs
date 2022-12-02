@@ -293,6 +293,8 @@ public static class CommandLineParser
                 isDefault: true,
                 description: "Name of the kernel host.");
 
+            var previewOption = new Option<bool>("--preview", description: "Enable preview kernel features.");
+
             var workingDirOption = new Option<DirectoryInfo>(
                 "--working-dir",
                 () => new DirectoryInfo(Environment.CurrentDirectory),
@@ -306,6 +308,7 @@ public static class CommandLineParser
                 httpPortRangeOption,
                 httpPortOption,
                 kernelHostOption,
+                previewOption,
                 workingDirOption
             };
 
@@ -351,8 +354,11 @@ public static class CommandLineParser
                         var vscodeSetup = new VSCodeClientKernelExtension();
                         await vscodeSetup.OnLoadAsync(kernel);
 
-                        var http = new HttpRequestKernelExtension();
-                        await http.OnLoadAsync(kernel);
+                        if (startupOptions.Preview)
+                        {
+                            var http = new HttpRequestKernelExtension();
+                            await http.OnLoadAsync(kernel);
+                        }
                     }
                        
                     if (startupOptions.EnableHttpApi)
