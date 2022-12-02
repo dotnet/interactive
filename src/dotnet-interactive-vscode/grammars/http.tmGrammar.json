@@ -1,0 +1,61 @@
+{
+  "scopeName": "source.http",
+  "patterns": [
+    {
+      "include": "#verb"
+    },
+    {
+      "include": "#header-key"
+    },
+    {
+      "include": "#interpolated-variable"
+    },
+    {
+      "include": "#comment"
+    }
+  ],
+  "repository": {
+    "verb": {
+      "patterns": [
+        {
+          "match": "^\\s*(DELETE|GET|HEAD|OPTIONS|PATCH|POST|PUT|TRACE)\\b",
+          "captures": {
+            "1": {
+              "name": "keyword"
+            }
+          }
+        }
+      ]
+    },
+    "header-key": {
+      "patterns": [
+        {
+          "match": "(^\\s*[\\w-]+:)",
+          "captures": {
+            "1": {
+              "name": "keyword.control"
+            }
+          }
+        }
+      ]
+    },
+    "interpolated-variable": {
+      "match": "(\\{\\{)([^{}]*)(\\}\\})",
+      "captures": {
+        "1": {
+          "name": "punctuation.section.brackets.single.begin"
+        },
+        "2": {
+          "name": "variable.language"
+        },
+        "3": {
+          "name": "punctuation.section.brackets.single.end"
+        }
+      }
+    },
+    "comment": {
+      "match": "^//.*",
+      "name": "comment.line"
+    }
+  }
+}
