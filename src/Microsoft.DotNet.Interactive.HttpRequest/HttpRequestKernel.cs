@@ -50,7 +50,7 @@ public class HttpRequestKernel :
     {
 
         KernelInfo.LanguageName = "http";
-        KernelInfo.DisplayName = "HTTP Request (Preview)";
+        KernelInfo.DisplayName = "HTTP Request";
 
         _client = client ?? new HttpClient();
         var setHost = new Command("#!set-host");
