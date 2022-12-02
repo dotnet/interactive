@@ -118,8 +118,7 @@ public class HttpRequestKernel :
                 }
             }
             var response = await _client.SendAsync(message);
-            var formattedValue = new FormattedValue(PlainTextFormatter.MimeType, response.ToDisplayString(PlainTextFormatter.MimeType));
-            context.Publish(new ReturnValueProduced(response, command, new[] { formattedValue }));
+            context.Display(response);
         }
     }
 
