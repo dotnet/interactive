@@ -15,6 +15,7 @@ public class StartupOptions
         HttpPortRange httpPortRange = null,
         HttpPort httpPort = null,
         Uri kernelHost = null,
+        bool preview = false,
         DirectoryInfo workingDir = null)
     {
         LogPath = logPath;
@@ -22,6 +23,7 @@ public class StartupOptions
         HttpPortRange = httpPortRange;
         HttpPort = httpPort;
         KernelHost = kernelHost;
+        Preview = preview;
         WorkingDir = workingDir;
     }
 
@@ -34,6 +36,8 @@ public class StartupOptions
     public HttpPortRange HttpPortRange { get; internal set; }
         
     public Uri KernelHost { get; }
+
+    public bool Preview { get; }
 
     public DirectoryInfo WorkingDir { get; internal set; }
 
