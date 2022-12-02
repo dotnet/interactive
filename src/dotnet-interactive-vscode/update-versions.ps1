@@ -1,6 +1,7 @@
 [CmdletBinding(PositionalBinding = $false)]
 param (
-    [switch]$updateAll = $false
+    [switch]$updateAll = $false,
+    [string]$version
 )
 
 Set-StrictMode -version 2.0
@@ -45,7 +46,7 @@ try {
         Write-Host
     }
 
-    $vsCodeStableVersion = (Get-Content "$PSScriptRoot\vscodeStableVersion.txt").Trim() # e.g., "1.53"
+    $vsCodeStableVersion = $version
     $vsCodeVersionParts = $vsCodeStableVersion -split "\."
     $vsCodeInsidersVersion = $vsCodeVersionParts[0] + "." + ([int]$vsCodeVersionParts[1] + 1)
 
