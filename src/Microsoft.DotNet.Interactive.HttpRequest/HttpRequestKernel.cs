@@ -118,7 +118,7 @@ public class HttpRequestKernel :
                 }
             }
             var response = await _client.SendAsync(message);
-            context.Display(response);
+            context.Display(response, HtmlFormatter.MimeType, PlainTextFormatter.MimeType);
         }
     }
 
