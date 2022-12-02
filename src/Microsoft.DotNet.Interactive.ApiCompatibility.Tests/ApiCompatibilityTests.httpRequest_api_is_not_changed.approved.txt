@@ -1,0 +1,18 @@
+Microsoft.DotNet.Interactive.HttpRequest
+  public class HttpRequestKernel : Microsoft.DotNet.Interactive.Kernel, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestDiagnostics>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SendValue>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
+    .ctor(System.String name = null, System.Net.Http.HttpClient client = null)
+    public System.Uri BaseAddress { get; set;}
+    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SendValue command, Microsoft.DotNet.Interactive.KernelInvocationContext context)
+    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SubmitCode command, Microsoft.DotNet.Interactive.KernelInvocationContext context)
+    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.RequestDiagnostics command, Microsoft.DotNet.Interactive.KernelInvocationContext context)
+    public System.Void SetValue(System.String valueName, System.String value)
+   class HttpRequest
+    .ctor(System.String verb, System.String address, System.String body, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<System.String,System.String>> headers, System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Diagnostic> diagnostics)
+    public System.String Address { get;}
+    public System.String Body { get;}
+    public System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Diagnostic> Diagnostics { get;}
+    public System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<System.String,System.String>> Headers { get;}
+    public System.String Verb { get;}
+  public class HttpRequestKernelExtension, Microsoft.DotNet.Interactive.IKernelExtension
+    .ctor()
+    public System.Threading.Tasks.Task OnLoadAsync(Microsoft.DotNet.Interactive.Kernel kernel)
