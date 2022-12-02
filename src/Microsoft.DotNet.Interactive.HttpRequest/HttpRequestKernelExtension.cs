@@ -131,7 +131,7 @@ public class HttpRequestKernelExtension : IKernelExtension
                 font-weight: 700;
             }}");
 
-    public static async Task FormatHttpResponseMessageAsHtml(
+    private static async Task FormatHttpResponseMessageAsHtml(
         HttpResponseMessage responseMessage,
         FormatContext context)
     {
