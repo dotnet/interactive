@@ -50,7 +50,7 @@ public class HttpRequestKernel :
     {
 
         KernelInfo.LanguageName = "http";
-        KernelInfo.DisplayName = "HTTP Request (Preview)";
+        KernelInfo.DisplayName = "HTTP Request";
 
         _client = client ?? new HttpClient();
         var setHost = new Command("#!set-host");
@@ -118,8 +118,7 @@ public class HttpRequestKernel :
                 }
             }
             var response = await _client.SendAsync(message);
-            var formattedValue = new FormattedValue(PlainTextFormatter.MimeType, response.ToDisplayString(PlainTextFormatter.MimeType));
-            context.Publish(new ReturnValueProduced(response, command, new[] { formattedValue }));
+            context.Display(response, HtmlFormatter.MimeType, PlainTextFormatter.MimeType);
         }
     }
 
