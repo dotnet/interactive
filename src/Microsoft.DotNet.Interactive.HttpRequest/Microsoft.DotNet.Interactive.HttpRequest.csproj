@@ -19,4 +19,8 @@
     <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="$(OutputPath)/Microsoft.DotNet.Interactive.HttpRequest.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
+  </ItemGroup>
+
 </Project>
