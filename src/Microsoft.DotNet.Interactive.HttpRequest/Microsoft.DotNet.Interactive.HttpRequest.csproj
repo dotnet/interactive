@@ -3,12 +3,13 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <NoWarn>$(NoWarn);2003;CS8002</NoWarn>
+    <NoWarn>$(NoWarn);2003;CS8002;VSTHRD002;NU5100</NoWarn>
     <!-- AssemblyInformationalVersionAttribute contains a non-standard value -->
     <Deterministic Condition="'$(NCrunch)' == '1'">false</Deterministic>
   </PropertyGroup>
 
   <PropertyGroup>
+    <IncludeBuildOutput>true</IncludeBuildOutput>
     <IsPackable>true</IsPackable>
     <PackageDescription>Microsoft.DotNet.Interactive.Kernel implementation for Http Request</PackageDescription>
     <PackageTags>polyglot notebook dotnet interactive http request</PackageTags>
@@ -17,6 +18,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(OutputPath)/Microsoft.DotNet.Interactive.HttpRequest.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
   </ItemGroup>
 
 </Project>
