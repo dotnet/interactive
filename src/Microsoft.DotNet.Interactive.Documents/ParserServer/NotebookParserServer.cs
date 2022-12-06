@@ -33,7 +33,7 @@ public class NotebookParserServer : IDisposable
         new("sql", languageName: "SQL"),
         new("kql", languageName: "KQL"),
         new("mermaid", languageName: "Mermaid"),
-        new("httpRequest", languageName: "HTTP Request"),
+        new("httpRequest", languageName: "http"),
         new("value"),
     };
         
