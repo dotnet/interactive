@@ -75,9 +75,9 @@ public partial class MagicCommandTests
                 .As<string>()
                 .Should()
                 .ContainAll(
-                    $"<td>x</td><td><span><a href=\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-5.0\">System.Int32</a></span></td><td>{PlainTextBegin}2{PlainTextEnd}</td>",
-                    $"<td>y</td><td><span><a href=\"https://docs.microsoft.com/dotnet/api/system.string?view=net-5.0\">System.String</a></span></td><td>{PlainTextBegin}hi&gt;!{PlainTextEnd}</td>",
-                    $"<td>z</td><td><span><a href=\"https://docs.microsoft.com/dotnet/api/system.object[]?view=net-5.0\">System.Object[]</a></span></td><td>{PlainTextBegin}Object[]{NewLine}  - 2{NewLine}  - hi&gt;!{PlainTextEnd}</td>");
+                    $"<td>x</td><td><span><a href=\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-7.0\">System.Int32</a></span></td><td>{PlainTextBegin}2{PlainTextEnd}</td>",
+                    $"<td>y</td><td><span><a href=\"https://docs.microsoft.com/dotnet/api/system.string?view=net-7.0\">System.String</a></span></td><td>{PlainTextBegin}hi&gt;!{PlainTextEnd}</td>",
+                    $"<td>z</td><td><span><a href=\"https://docs.microsoft.com/dotnet/api/system.object[]?view=net-7.0\">System.Object[]</a></span></td><td>{PlainTextBegin}Object[]{NewLine}  - 2{NewLine}  - hi&gt;!{PlainTextEnd}</td>");
         }
 
         [Theory]
