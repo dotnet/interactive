@@ -132,6 +132,13 @@ public static class HtmlFormatter
             return true;
         }),
 
+        //new HtmlFormatter<decimal>((d, context) =>
+        //{
+        //    FormatAndStyleAsPlainText(d, context);
+        //    return true;
+        //}),
+
+
         new HtmlFormatter<TimeSpan>((timespan, context) =>
         {
             PocketView view = span(timespan.ToString());
@@ -164,7 +171,7 @@ public static class HtmlFormatter
                     genericTypeDefinition.FullName.ToLower().Replace("+",".").Replace("`","-");
 
                 PocketView view = 
-                    span(a[href: $"https://docs.microsoft.com/dotnet/api/{typeLookupName}?view=net-5.0"](
+                    span(a[href: $"https://docs.microsoft.com/dotnet/api/{typeLookupName}?view=net-7.0"](
                         text));
                 view.WriteTo(context);
             }
@@ -209,6 +216,14 @@ public static class HtmlFormatter
             FormatAndStyleAsPlainText(value, context);
             return true;
         }),
+
+        // decimal should be displayed as plain text
+        new HtmlFormatter<decimal>((value, context) =>
+        {
+            FormatAndStyleAsPlainText(value, context);
+            return true;
+        }),
+
 
         // Try to display object results as tables. This will return false for nested tables.
         new HtmlFormatter<object>((value, context) =>

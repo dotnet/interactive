@@ -242,7 +242,7 @@ public class HtmlFormatterTests : FormatterTestBase
 
             writer.ToString()
                 .Should()
-                .Be("<span><a href=\"https://docs.microsoft.com/dotnet/api/system.string?view=net-5.0\">System.String</a></span>");
+                .Be("<span><a href=\"https://docs.microsoft.com/dotnet/api/system.string?view=net-7.0\">System.String</a></span>");
         }
 
 
@@ -257,7 +257,7 @@ public class HtmlFormatterTests : FormatterTestBase
 
             writer.ToString()
                 .Should()
-                .Be("<span><a href=\"https://docs.microsoft.com/dotnet/api/microsoft.csharp.runtimebinder.runtimebinderexception?view=net-5.0\">Microsoft.CSharp.RuntimeBinder.RuntimeBinderException</a></span>");
+                .Be("<span><a href=\"https://docs.microsoft.com/dotnet/api/microsoft.csharp.runtimebinder.runtimebinderexception?view=net-7.0\">Microsoft.CSharp.RuntimeBinder.RuntimeBinderException</a></span>");
         }
 
 
@@ -644,7 +644,7 @@ string";
           <td>0</td>
           <td>
             <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.string?view=net-5.0\""}>System.String</a>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.string?view=net-7.0\""}>System.String</a>
             </span>
           </td>
         </tr>
@@ -652,7 +652,7 @@ string";
           <td>1</td>
           <td>
             <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-5.0\""}>System.Int32</a>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-7.0\""}>System.Int32</a>
             </span>
           </td>
         </tr>
@@ -878,7 +878,7 @@ string";
           <td>0</td>
           <td>
             <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.boolean?view=net-5.0\""}>System.Boolean</a>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.boolean?view=net-7.0\""}>System.Boolean</a>
             </span>
           </td>
           <td>{PlainTextBegin}True{PlainTextEnd}</td>
@@ -887,7 +887,7 @@ string";
           <td>1</td>
           <td>
             <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-5.0\""}>System.Int32</a>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-7.0\""}>System.Int32</a>
             </span>
           </td>
           <td>{PlainTextBegin}99{PlainTextEnd}</td>
@@ -896,7 +896,7 @@ string";
           <td>2</td>
           <td>
             <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.string?view=net-5.0\""}>System.String</a>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.string?view=net-7.0\""}>System.String</a>
             </span>
           </td>
           <td>Hello, World</td>
@@ -942,7 +942,7 @@ string";
           <td>0</td>
           <td>
             <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-5.0\""}>System.Int32</a>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-7.0\""}>System.Int32</a>
             </span>
           </td>
           <td>{PlainTextBegin}1{PlainTextEnd}</td>
@@ -955,7 +955,7 @@ string";
           <td>1</td>
           <td>
             <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.valuetuple-2?view=net-5.0\""}>System.ValueTuple&lt;System.Int32,System.String&gt;</a>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.valuetuple-2?view=net-7.0\""}>System.ValueTuple&lt;System.Int32,System.String&gt;</a>
             </span>
           </td>
           <td></td>
@@ -968,7 +968,7 @@ string";
           <td>2</td>
           <td>
             <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.linq.enumerable.rangeiterator?view=net-5.0\""}>System.Linq.Enumerable+RangeIterator</a>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.linq.enumerable.rangeiterator?view=net-7.0\""}>System.Linq.Enumerable+RangeIterator</a>
             </span>
           </td>
           <td>{PlainTextBegin}[ 1, 2, 3 ]{PlainTextEnd}</td>
@@ -1034,7 +1034,7 @@ string";
           <td>1</td>
           <td>
             <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.valuetuple-2?view=net-5.0\""}>System.ValueTuple&lt;System.Int32,System.String&gt;</a>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.valuetuple-2?view=net-7.0\""}>System.ValueTuple&lt;System.Int32,System.String&gt;</a>
             </span>
           </td>
           <td></td>
@@ -1046,7 +1046,7 @@ string";
           <td>2</td>
           <td>
             <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-5.0\""}>System.Int32</a>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-7.0\""}>System.Int32</a>
             </span>
           </td>
           <td></td>
@@ -1058,7 +1058,7 @@ string";
           <td>3</td>
           <td>
             <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.linq.enumerable.rangeiterator?view=net-5.0\""}>System.Linq.Enumerable+RangeIterator</a>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.linq.enumerable.rangeiterator?view=net-7.0\""}>System.Linq.Enumerable+RangeIterator</a>
             </span>
           </td>
           <td></td>
@@ -1118,7 +1118,7 @@ string";
       <td>1</td>
       <td>
         <span>
-          <a href=""https://docs.microsoft.com/dotnet/api/system.valuetuple-2?view=net-5.0"">System.ValueTuple&lt;System.Int32,System.String&gt;</a>
+          <a href=""https://docs.microsoft.com/dotnet/api/system.valuetuple-2?view=net-7.0"">System.ValueTuple&lt;System.Int32,System.String&gt;</a>
         </span>
       </td>
       <td></td>
@@ -1131,7 +1131,7 @@ string";
       <td>2</td>
       <td>
         <span>
-          <a href=""https://docs.microsoft.com/dotnet/api/system.int32?view=net-5.0"">System.Int32</a>
+          <a href=""https://docs.microsoft.com/dotnet/api/system.int32?view=net-7.0"">System.Int32</a>
         </span>
       </td>
       <td>
@@ -1144,7 +1144,7 @@ string";
       <td>3</td>
       <td>
         <span>
-          <a href=""https://docs.microsoft.com/dotnet/api/system.int32[]?view=net-5.0"">System.Int32[]</a>
+          <a href=""https://docs.microsoft.com/dotnet/api/system.int32[]?view=net-7.0"">System.Int32[]</a>
         </span>
       </td>
       <td>

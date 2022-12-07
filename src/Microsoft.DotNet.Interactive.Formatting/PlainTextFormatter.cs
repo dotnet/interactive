@@ -278,6 +278,13 @@ public static class PlainTextFormatter
             return true;
         }),
 
+        // Decimal should be displayed as plain text
+        new PlainTextFormatter<decimal>((value, context) =>
+        {
+            value.FormatTo(context, PlainTextFormatter.MimeType);
+            return true;
+        }),
+
         // Fallback for any object
         new PlainTextFormatter<object>((obj, context) =>
         {
