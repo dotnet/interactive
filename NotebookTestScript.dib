@@ -315,3 +315,10 @@ using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 
 var _ = Kernel.Root.SendAsync(new SendEditableCode("fsharp","#!share --from csharp x\nx"));
+
+#!csharp
+
+using Microsoft.DotNet.Interactive;
+using Microsoft.DotNet.Interactive.Commands;
+
+var _ = Kernel.Root.SendAsync(new SendEditableCode("markdown","# markdown cell"));
