@@ -193,30 +193,40 @@ export async function activate(context: vscode.ExtensionContext) {
                 const addCell = <contracts.SendEditableCode>commandInvocation.commandEnvelope.command;
                 const kernelName = addCell.kernelName;
                 const contents = addCell.code;
-                const kernel = compositeKernel.findKernelByName(kernelName);
                 const notebookDocument = vscode.workspace.notebookDocuments.find(notebook => notebook.uri.toString() === notebookUri.toString());
-                if (kernel && notebookDocument) {
-                    const language = tokensProvider.dynamicTokenProvider.getLanguageNameFromKernelNameOrAlias(notebookDocument, kernel.kernelInfo.localName);
-                    const range = new vscode.NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount);
-                    const cellKind = languageToCellKind(language);
-                    const cellLanguage = cellKind === vscode.NotebookCellKind.Code ? constants.CellLanguageIdentifier : 'markdown';
-                    const newCell = new vscode.NotebookCellData(cellKind, contents, cellLanguage);
-                    const notebookCellMetadata: metadataUtilities.NotebookCellMetadata = {
-                        kernelName
-                    };
-                    const rawCellMetadata = metadataUtilities.getRawNotebookCellMetadataFromNotebookCellMetadata(notebookCellMetadata);
-                    newCell.metadata = rawCellMetadata;
-                    const succeeded = await versionSpecificFunctions.replaceNotebookCells(notebookDocument.uri, range, [newCell]);
-                    if (!succeeded) {
-                        throw new Error(`Unable to add cell to notebook '${notebookUri.toString()}'.`);
-                    }
 
-                    // when new cells are added, the previous cell's kernel name is copied forward, but in this case we want to force it back
-                    const addedCell = notebookDocument.cellAt(notebookDocument.cellCount - 1); // the newly added cell is always the last one
-                    await vscodeUtilities.setCellKernelName(addedCell, kernelName);
-                } else {
+                if (!notebookDocument) {
                     throw new Error(`Unable to get notebook document for URI '${notebookUri.toString()}'.`);
                 }
+                const range = new vscode.NotebookRange(notebookDocument!.cellCount, notebookDocument!.cellCount);
+                const kernel = compositeKernel.findKernelByName(kernelName);
+                let newCell: vscode.NotebookCellData;
+                if (kernelName.toLowerCase() === 'markdown') {
+                    newCell = new vscode.NotebookCellData(vscode.NotebookCellKind.Markup, contents, kernelName);
+
+                } else if (kernel) {
+                    const language = tokensProvider.dynamicTokenProvider.getLanguageNameFromKernelNameOrAlias(notebookDocument, kernel.kernelInfo.localName);
+                    const cellKind = languageToCellKind(language);
+                    const cellLanguage = cellKind === vscode.NotebookCellKind.Code ? constants.CellLanguageIdentifier : 'markdown';
+                    newCell = new vscode.NotebookCellData(cellKind, contents, cellLanguage);
+
+                } else {
+                    throw new Error(`Unable to add cell to notebook '${notebookUri.toString()}', kernel ${kernelName} is not found.`);
+                }
+                const notebookCellMetadata: metadataUtilities.NotebookCellMetadata = {
+                    kernelName
+                };
+                const rawCellMetadata = metadataUtilities.getRawNotebookCellMetadataFromNotebookCellMetadata(notebookCellMetadata);
+                newCell.metadata = rawCellMetadata;
+                const succeeded = await versionSpecificFunctions.replaceNotebookCells(notebookDocument.uri, range, [newCell]);
+
+                if (!succeeded) {
+                    throw new Error(`Unable to add cell to notebook '${notebookUri.toString()}'.`);
+                }
+
+                // when new cells are added, the previous cell's kernel name is copied forward, but in this case we want to force it back
+                const addedCell = notebookDocument.cellAt(notebookDocument.cellCount - 1); // the newly added cell is always the last one
+                await vscodeUtilities.setCellKernelName(addedCell, kernelName);
             }
         });
     }
