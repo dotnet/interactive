@@ -29,7 +29,7 @@ To connect to data and query in Polyglot Notebooks in VS Code, follow the steps 
 
 1. Create a new Polyglot Notebook starting with a C# cell. 
 
-1. In the first cell, use the required Nuget package from above. Make sure this has it's own cell and run it. 
+1. In the first cell, use the required Nuget package from above. Make sure this has its own cell and run it. 
 
 1. Add another C# cell and use the corresponding `#!connect` command from above to establish your connection and run the cell.
     - The `--kernel-name` parameter is used to alias your data connection. This is the name you'd like to refer to this connection as while you continue to work in your notebook. It will become available in the dynamic kernel picker in the bottom right of cells. 
@@ -51,7 +51,7 @@ Kusto Example
 
 # Storing and Sharing Query Results
 
-Since Polyglot Notebooks not only allows you to use different languages in the same notebook but share variables between them, you might be interested in storing query results to pass of beteween language to language. 
+Since Polyglot Notebooks not only allows you to use different languages in the same notebook but share variables between them, you might be interested in storing query results to pass of between language to language. 
 
 The syntax to store MSSQL or KQL queries: 
 
