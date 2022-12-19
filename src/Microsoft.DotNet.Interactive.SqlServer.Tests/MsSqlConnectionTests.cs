@@ -456,6 +456,29 @@ select @x, @y";
     }
 
     [MsSqlFact]
+    public async Task Shared_variable_are_not_stored_as_part_of_the_resultSet()
+    {
+        using var kernel = await CreateKernelAsync();
+        await kernel.SubmitCodeAsync(
+            $"#!connect mssql --kernel-name adventureworks \"{MsSqlFactAttribute.GetConnectionStringForTests()}\"");
+
+        await kernel.SendAsync(new SubmitCode(@"var testVar = 2;"));
+
+        var code = @"
+#!sql-adventureworks --name testQuery
+#!share --from csharp testVar
+select TOP(@testVar) * from sys.databases";
+        
+        await kernel.SendAsync(new SubmitCode(code));
+
+        var sqlKernel = kernel.FindKernelByName("sql-adventureworks") as ToolsServiceKernel;
+
+        sqlKernel.TryGetValue<IEnumerable<object>>("testQuery", out var resultSet);
+
+        resultSet.Should().NotBeNull().And.HaveCount(1);
+    }
+
+    [MsSqlFact]
     public async Task An_input_type_hint_is_set_for_connection_strings()
     {
         using var kernel = await CreateKernelAsync();
