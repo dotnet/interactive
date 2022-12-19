@@ -22,17 +22,17 @@ public static class JsonExtensions
             throw new InvalidOperationException("input must be a valid array of object");
         }
 
-        var dictionaries = new List<Dictionary<string, object>>();
+        var rows = new List<IEnumerable<KeyValuePair<string, object>>>();
 
         foreach (var element in jsonElement.EnumerateArray())
         {
             if (element.ValueKind == JsonValueKind.Object)
             {
-                var dict = new Dictionary<string, object>();
+                var row = new List<KeyValuePair<string, object>>();
 
                 foreach (var property in element.EnumerateObject())
                 {
-                    dict.Add(
+                    row.Add(new KeyValuePair<string, object>(                  
                         property.Name,
                         property.Value.ValueKind switch
                         {
@@ -45,13 +45,13 @@ public static class JsonExtensions
                             JsonValueKind.Object => property.Value,
                             JsonValueKind.Array => property.Value,
                             _ => throw new ArgumentOutOfRangeException()
-                        });
+                        }));
                 }
 
-                dictionaries.Add(dict);
+                rows.Add(row);
             }
         }
 
-        return dictionaries.ToTabularDataResource();
+        return rows.ToTabularDataResource();
     }
 }
