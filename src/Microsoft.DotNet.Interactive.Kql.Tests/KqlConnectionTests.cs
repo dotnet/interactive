@@ -12,6 +12,7 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
+using Microsoft.DotNet.Interactive.SqlServer;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -299,7 +300,7 @@ print testVar";
             .Should()
             .ContainValue(expectedValue);
     }
-
+    
     [KqlTheory]
     [InlineData("string testVar = null;")] // Don't support null vars currently
     [InlineData("nint testVar = 123456;")] // Unsupported type
@@ -331,6 +332,32 @@ print testVar";
         var events = result.KernelEvents.ToSubscribedList();
 
         events.Should().ContainSingle<CommandFailed>();
+    }
+
+    [KqlFact]
+    public async Task Shared_variable_are_not_stored_as_part_of_the_resultSet()
+    {
+        var cluster = KqlFactAttribute.GetClusterForTests();
+        using var kernel = await CreateKernelAsync();
+        await kernel.SubmitCodeAsync(
+            $"#!connect kql --kernel-name KustoHelp --cluster \"{cluster}\" --database \"Samples\"");
+
+        await kernel.SendAsync(new SubmitCode(@"var testVar = 2;"));
+
+        var code = @"
+#!kql-KustoHelp --name testQuery
+#!share --from csharp testVar
+StormEvents | take testVar";
+
+
+        await kernel.SendAsync(new SubmitCode(code));
+
+
+        var kustoKernel = kernel.FindKernelByName("kql-KustoHelp") as ToolsServiceKernel;
+
+        kustoKernel.TryGetValue<IEnumerable<object>>("testQuery", out var resultSet);
+
+        resultSet.Should().NotBeNull().And.HaveCount(1);
     }
 
     public void Dispose()
