@@ -43,10 +43,10 @@ public static class TabularDataResourceFormatter
         return new TabularDataResource(schema, data.ToArray());
     }
 
-    private static (TableSchema schema, IEnumerable<IDictionary<string, object>> data) Generate<T>(IEnumerable<T> source)
+    private static (TableSchema schema, IEnumerable<IEnumerable<KeyValuePair<string, object>>> data) Generate<T>(IEnumerable<T> source)
     {
         var fields = new Dictionary<string, TableSchemaFieldType?>();
-        var data = new List<IDictionary<string, object>>();
+        var data = new List<IEnumerable<KeyValuePair<string, object>>>();
         IDestructurer destructurer = default;
 
         foreach (var item in source)
@@ -54,47 +54,47 @@ public static class TabularDataResourceFormatter
             switch (item)
             {
                 case IEnumerable<(string name, object value)> valueTuples:
-                {
-                    var tuples = valueTuples.ToArray();
-
-                    EnsureFieldsAreInitializedFromValueTuples(tuples);
-
-                    var obj = new Dictionary<string, object>();
-                    foreach (var (name, value) in tuples)
                     {
-                        obj.Add(name, value);
-                    }
+                        var tuples = valueTuples.ToArray();
 
-                    data.Add(obj);
-                }
+                        EnsureFieldsAreInitializedFromValueTuples(tuples);
+
+                        var obj = new List<KeyValuePair<string, object>>();
+                        foreach (var (name, value) in tuples)
+                        {
+                            obj.Add(new KeyValuePair<string, object>(name, value));
+                        }
+
+                        data.Add(obj);
+                    }
                     break;
 
                 case IEnumerable<KeyValuePair<string, object>> keyValuePairs:
-                {
-                    var pairs = keyValuePairs.ToArray();
-
-                    EnsureFieldsAreInitializedFromKeyValuePairs(pairs);
-
-                    var obj = new Dictionary<string, object>();
-                    foreach (var pair in pairs)
                     {
-                        obj.Add(pair.Key, pair.Value);
-                    }
+                        var pairs = keyValuePairs.ToArray();
 
-                    data.Add(obj);
-                }
+                        EnsureFieldsAreInitializedFromKeyValuePairs(pairs);
+
+                        var obj = new List<KeyValuePair<string, object>>();
+                        foreach (var pair in pairs)
+                        {
+                            obj.Add(new KeyValuePair<string, object>(pair.Key, pair.Value));
+                        }
+
+                        data.Add(obj);
+                    }
                     break;
 
                 default:
-                {
-                    destructurer ??= Destructurer.GetOrCreate(item.GetType());
+                    {
+                        destructurer ??= Destructurer.GetOrCreate(item.GetType());
 
-                    var dict = destructurer.Destructure(item);
+                        var dict = destructurer.Destructure(item);
 
-                    EnsureFieldsAreInitializedFromKeyValuePairs(dict);
+                        EnsureFieldsAreInitializedFromKeyValuePairs(dict);
 
-                    data.Add(dict);
-                }
+                        data.Add(dict);
+                    }
                     break;
             }
         }
@@ -116,7 +116,7 @@ public static class TabularDataResourceFormatter
                 {
                     fields.Add(keyValuePair.Key, InferTableSchemaFieldTypeFromValue(keyValuePair.Value));
                 }
-                else if (InferTableSchemaFieldTypeFromValue(keyValuePair.Value) is {} type &&
+                else if (InferTableSchemaFieldTypeFromValue(keyValuePair.Value) is { } type &&
                          type != TableSchemaFieldType.Null)
                 {
                     fields[keyValuePair.Key] = type;
