@@ -23,6 +23,7 @@ public class SQLiteKernel :
     public SQLiteKernel(string name, string connectionString) : base(name)
     {
         KernelInfo.LanguageName = "SQLite";
+        KernelInfo.DisplayName = "SQLite";
         _connectionString = connectionString;
     }
 
