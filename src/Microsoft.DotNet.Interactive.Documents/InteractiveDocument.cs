@@ -241,13 +241,68 @@ public class InteractiveDocument : IEnumerable
     {
         if (metadata is not null)
         {
-            if (metadata.TryGetValue("kernelInfo", out var kernelInfoObj) &&
-                kernelInfoObj is JsonElement kernelInfoJson && kernelInfoJson.Deserialize<KernelInfoCollection>(ParserServerSerializer.JsonSerializerOptions) is
-                    { } kernelInfoDeserialized)
+            if (metadata.TryGetValue("kernelInfo", out var kernelInfoObj) )
             {
-                kernelInfo = kernelInfoDeserialized;
-                return true;
+                if (kernelInfoObj is JsonElement kernelInfoJson &&
+                    kernelInfoJson.Deserialize<KernelInfoCollection>(ParserServerSerializer.JsonSerializerOptions) is
+                        { } kernelInfoDeserialized)
+                {
+                    kernelInfo = kernelInfoDeserialized;
+                    return true;
+                }
+
+                // todo: the kernelInfo should not deserialize as a dictionary
+                if (kernelInfoObj is Dictionary<string,object> kernelInfoAsDictionary)
+                {
+                    var deserializedKernelInfo  = new KernelInfoCollection();
+                    if (kernelInfoAsDictionary.TryGetValue("defaultKernelName", out var defaultKernelNameObj) &&
+                       defaultKernelNameObj is string defaultKernelName)
+                    {
+                        deserializedKernelInfo.DefaultKernelName = defaultKernelName;
+                    }
+
+                    if (kernelInfoAsDictionary.TryGetValue("items",
+                            out var items))
+                    {
+                        if (items is IEnumerable<object> itemList)
+                        {
+                            foreach (var item in itemList.Cast<IDictionary<string,object>>())
+                            {
+                                if (item.TryGetValue("name", out var nameObj) &&
+                                    nameObj is string name)
+                                {
+                                    string? language = null;
+                                    if (
+                                    item.TryGetValue("language", out var languageObj) &&
+                                        languageObj is string deserializedLanguage)
+                                    {
+                                        language = deserializedLanguage;
+                                    }
+
+                                    IReadOnlyCollection<string>? aliases = null;
+                                    if (
+                                        item.TryGetValue("aliases", out var aliasesObj) &&
+                                        aliasesObj is object[] deserializedAliases)
+                                    {
+                                        aliases = deserializedAliases.Select(a => a.ToString()).ToArray();
+                                    }
+
+                                    deserializedKernelInfo.Add(new KernelInfo(name, language, aliases));
+                                }
+                            }
+                            kernelInfo = deserializedKernelInfo;
+                            return true;
+                        }
+                    }
+                }
+
+                if (kernelInfoObj is KernelInfoCollection kernelInfoCollection)
+                {
+                    kernelInfo = kernelInfoCollection;
+                    return true;
+                }
             }
+        
 
             if (metadata.TryGetValue("dotnet_interactive", out var dotnetInteractiveObj))
             {
