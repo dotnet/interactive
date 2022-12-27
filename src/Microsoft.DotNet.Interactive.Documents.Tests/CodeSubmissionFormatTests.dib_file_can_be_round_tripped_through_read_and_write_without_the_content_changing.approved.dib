@@ -1,6 +1,6 @@
 #!meta
 
-{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":["cs","C#","c#"],"name":"csharp"},{"aliases":["fs","F#","f#"],"name":"fsharp"},{"aliases":["powershell"],"name":"pwsh"},{"name":"mermaid"},{"name":"javascript"}]}}
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"name":"csharp","aliases":["cs","C#","c#"]},{"name":"fsharp","aliases":["fs","F#","f#"]},{"name":"pwsh","aliases":["powershell"]},{"name":"mermaid"},{"name":"javascript"}]}}
 
 #!markdown
 
