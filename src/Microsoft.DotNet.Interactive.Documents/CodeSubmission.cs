@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -63,7 +62,7 @@ public static class CodeSubmission
 
             if (line.StartsWith(MagicCommandPrefix))
             {
-                var cellKernelName = line.Substring(MagicCommandPrefix.Length);
+                var cellKernelName = line[MagicCommandPrefix.Length..];
 
                 if (kernelInfo.TryGetByAlias(cellKernelName, out var name))
                 {
