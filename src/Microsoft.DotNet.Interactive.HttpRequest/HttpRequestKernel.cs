@@ -46,10 +46,9 @@ public class HttpRequestKernel :
     }
 
     public HttpRequestKernel(string name = null, HttpClient client = null)
-        : base(name ?? "httpRequest")
+        : base(name ?? "http")
     {
-
-        KernelInfo.LanguageName = "http";
+        KernelInfo.LanguageName = "HTTP";
         KernelInfo.DisplayName = "HTTP Request";
 
         _client = client ?? new HttpClient();
@@ -83,9 +82,11 @@ public class HttpRequestKernel :
 
     public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
     {
-        var requests = ParseRequests(command.Code);
-        var diagnostics = requests.SelectMany(r => r.Diagnostics);
+        var requests = ParseRequests(command.Code).ToArray();
+        var diagnostics = requests.SelectMany(r => r.Diagnostics).ToArray();
+
         PublishDiagnostics(context, command, diagnostics);
+        
         if (diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error))
         {
             context.Fail(command);
