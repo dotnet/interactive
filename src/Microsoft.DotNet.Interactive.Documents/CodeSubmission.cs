@@ -57,6 +57,7 @@ public static class CodeSubmission
                 if (InteractiveDocument.TryGetKernelInfoFromMetadata(metadata, out var kernelInfoFromMetadata))
                 {
                     InteractiveDocument.MergeKernelInfos(kernelInfo, kernelInfoFromMetadata);
+                    document.Metadata["kernelInfo"] = kernelInfoFromMetadata;
                 }
             }
 
@@ -98,6 +99,7 @@ public static class CodeSubmission
         {
             document.Metadata.MergeWith(metadata);
         }
+
 
         return document;
 
