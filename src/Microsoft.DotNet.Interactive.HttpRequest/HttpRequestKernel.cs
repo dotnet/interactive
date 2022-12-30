@@ -21,6 +21,7 @@ namespace Microsoft.DotNet.Interactive.HttpRequest;
 
 public class HttpRequestKernel :
        Kernel,
+       IKernelCommandHandler<RequestValue>,
        IKernelCommandHandler<SendValue>,
        IKernelCommandHandler<SubmitCode>,
        IKernelCommandHandler<RequestDiagnostics>
@@ -29,6 +30,7 @@ public class HttpRequestKernel :
     private readonly Argument<Uri> _hostArgument = new();
 
     private readonly Dictionary<string, string> _variables = new(StringComparer.InvariantCultureIgnoreCase);
+    private Uri _baseAddress;
     private static readonly Regex IsRequest;
     private static readonly Regex IsHeader;
 
@@ -45,6 +47,25 @@ public class HttpRequestKernel :
         IsHeader = new Regex(@"^\s*(?<key>[\w-]+):\s*(?<value>.*)", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.IgnoreCase);
     }
 
+    public static void AddKernelToCurrentRoot()
+    {
+        if (KernelInvocationContext.Current is { } context &&
+            context.HandlingKernel.RootKernel is CompositeKernel root)
+        {
+            var httpKernel = new HttpRequestKernel();
+            root.Add(httpKernel);
+            httpKernel.UseValueSharing();
+
+            context.DisplayAs($"""
+                Added kernel `{httpKernel.Name}`. Send HTTP requests using the following syntax:
+
+                ```
+                GET https://example.com
+                ```
+                """, "text/markdown");
+        }
+    }
+
     public HttpRequestKernel(string name = null, HttpClient client = null)
         : base(name ?? "http")
     {
@@ -52,11 +73,12 @@ public class HttpRequestKernel :
         KernelInfo.DisplayName = "HTTP Request";
 
         _client = client ?? new HttpClient();
-        var setHost = new Command("#!set-host");
+        var setHost = new Command("#!set-host", "Sets the host name to be used when sending requests using relative URLs");
         setHost.AddArgument(_hostArgument);
         setHost.SetHandler(context =>
         {
-            BaseAddress = context.ParseResult.GetValueForArgument(_hostArgument);
+            var host = context.ParseResult.GetValueForArgument(_hostArgument);
+            BaseAddress = host;
         });
         AddDirective(setHost);
 
@@ -65,8 +87,27 @@ public class HttpRequestKernel :
 
     public Uri BaseAddress
     {
-        get;
-        set;
+        get => _baseAddress;
+        set
+        {
+            _baseAddress = value;
+            SetValue("host", value?.Host);
+        }
+    }
+
+    public Task HandleAsync(RequestValue command, KernelInvocationContext context)
+    {
+        if (_variables.TryGetValue(command.Name, out var value))
+        {
+            var valueProduced = new ValueProduced(
+                value,
+                command.Name,
+                FormattedValue.FromObject(value).FirstOrDefault(),
+                command);
+            context.Publish(valueProduced);
+        }
+
+        return Task.CompletedTask;
     }
 
     public Task HandleAsync(SendValue command, KernelInvocationContext context)
@@ -86,13 +127,13 @@ public class HttpRequestKernel :
         var diagnostics = requests.SelectMany(r => r.Diagnostics).ToArray();
 
         PublishDiagnostics(context, command, diagnostics);
-        
+
         if (diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error))
         {
             context.Fail(command);
             return;
         }
-        
+
         foreach (var httpRequest in requests)
         {
             var message = new HttpRequestMessage(new HttpMethod(httpRequest.Verb), httpRequest.Address);
@@ -100,12 +141,13 @@ public class HttpRequestKernel :
             {
                 message.Content = new StringContent(httpRequest.Body);
             }
+
             foreach (var kvp in httpRequest.Headers)
             {
                 switch (kvp.Key.ToLowerInvariant())
                 {
                     case "content-type":
-                        message.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(kvp.Value); 
+                        message.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(kvp.Value);
                         break;
                     case "accept":
                         message.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse(kvp.Value));
@@ -118,6 +160,7 @@ public class HttpRequestKernel :
                         break;
                 }
             }
+
             var response = await _client.SendAsync(message);
             context.Display(response, HtmlFormatter.MimeType, PlainTextFormatter.MimeType);
         }
@@ -132,7 +175,6 @@ public class HttpRequestKernel :
                 .ToImmutableArray();
         context.Publish(new DiagnosticsProduced(diagnostics, command, formattedDiagnostics));
     }
-
 
     public Task HandleAsync(RequestDiagnostics command, KernelInvocationContext context)
     {
@@ -180,14 +222,9 @@ public class HttpRequestKernel :
                 }
 
                 var variableName = lineText[(interpolationStart + InterpolationStartMarker.Length)..interpolationEnd];
-                var canResolveSymbol = (variableName == "host" && canResolveHost) || _variables.ContainsKey(variableName);
-                if (canResolveSymbol)
+                if (_variables.TryGetValue(variableName, out var value))
                 {
-                    // found variable; inline it
-                    var variableValue = variableName == "host"
-                        ? BaseAddress.Host
-                        : _variables[variableName];
-                    rebuiltLine.Append(variableValue);
+                    rebuiltLine.Append(value);
                 }
                 else
                 {
@@ -293,7 +330,7 @@ public class HttpRequestKernel :
         return parsedRequests;
     }
 
-    public class HttpRequest
+    private class HttpRequest
     {
         public HttpRequest(string verb, string address, string body, IEnumerable<KeyValuePair<string, string>> headers, IEnumerable<Diagnostic> diagnostics)
         {

@@ -32,7 +32,7 @@ public class HttpRequestKernelExtension : IKernelExtension
                 ExecutionContext.SuppressFlow();
                 try
                 {
-                    FormatHttpResponseMessage(
+                    FormatHttpResponseMessageAsPlainText(
                         responseMessage,
                         context).Wait();
                 }
@@ -67,7 +67,7 @@ public class HttpRequestKernelExtension : IKernelExtension
         return Task.CompletedTask;
     }
 
-    private static async Task FormatHttpResponseMessage(
+    private static async Task FormatHttpResponseMessageAsPlainText(
         HttpResponseMessage responseMessage,
         FormatContext context)
     {
