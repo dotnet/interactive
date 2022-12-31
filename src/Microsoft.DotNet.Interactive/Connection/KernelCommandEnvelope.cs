@@ -210,16 +210,7 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
             serializationModel,
             Serializer.JsonSerializerOptions);
     }
-
-    public static JsonElement SerializeToJsonElement(IKernelCommandEnvelope envelope)
-    {
-        var serializationModel = CreateSerializationModel(envelope);
-
-        return JsonSerializer.SerializeToElement(
-            serializationModel, 
-            Serializer.JsonSerializerOptions);
-    }
-
+    
     private static SerializationModel CreateSerializationModel(IKernelCommandEnvelope envelope)
     {
         var serializationModel = new SerializationModel

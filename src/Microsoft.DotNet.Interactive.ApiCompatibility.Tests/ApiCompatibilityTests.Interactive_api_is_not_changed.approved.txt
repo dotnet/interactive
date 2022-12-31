@@ -516,7 +516,6 @@ Microsoft.DotNet.Interactive.Connection
     public static System.Void RegisterDefaults()
     public static System.String Serialize(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public static System.String Serialize(IKernelCommandEnvelope envelope)
-    public static System.Text.Json.JsonElement SerializeToJsonElement(IKernelCommandEnvelope envelope)
     public System.String CommandId { get;}
     public System.String CommandType { get;}
     public System.String Token { get;}

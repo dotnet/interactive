@@ -8,8 +8,6 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using FluentAssertions;
-using FluentAssertions.Execution;
-using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -73,7 +71,7 @@ public class HttpRequestKernelTests
         });
         var client = new HttpClient(handler);
         using var kernel = new HttpRequestKernel(client: client);
-        kernel.BaseAddress = new Uri("http://baseAddress.com");
+        kernel.BaseAddress = new Uri("http://example.com");
         
         var result = await kernel.SendAsync(new SubmitCode("get  https://anotherlocation.com/endpoint"));
 
@@ -120,7 +118,7 @@ public class HttpRequestKernelTests
         });
         var client = new HttpClient(handler);
         using var kernel = new HttpRequestKernel(client: client);
-        kernel.BaseAddress = new Uri("http://baseAddress.com");
+        kernel.BaseAddress = new Uri("http://example.com");
 
         var result = await kernel.SendAsync(new SubmitCode("get  https://{{host}}:1200/endpoint"));
 
@@ -128,11 +126,11 @@ public class HttpRequestKernelTests
 
         events.Should().NotContainErrors();
 
-        request.RequestUri.Should().Be("https://baseaddress.com:1200/endpoint");
+        request.RequestUri.Should().Be("https://example.com:1200/endpoint");
     }
 
     [Fact]
-    public async Task can_handle_multiple_request_in_a_singleSubmission()
+    public async Task can_handle_multiple_request_in_a_single_submission()
     {
         List<HttpRequestMessage> requests = new ();
         var handler = new InterceptingHttpMessageHandler((message, _) =>
@@ -269,7 +267,7 @@ GET https://{{theHost}}";
     public async Task diagnostic_messages_are_produced_for_unresolved_symbols()
     {
         using var kernel = new HttpRequestKernel();
-        kernel.BaseAddress = new Uri("http://baseAddress.com");
+        kernel.BaseAddress = new Uri("http://example.com");
 
         var result = await kernel.SendAsync(new RequestDiagnostics("get https://anotherlocation.com/{{api_endpoint}}"));
 
@@ -286,7 +284,7 @@ GET https://{{theHost}}";
     public async Task diagnostic_positions_are_correct_for_unresolved_symbols()
     {
         using var kernel = new HttpRequestKernel();
-        kernel.BaseAddress = new Uri("http://baseAddress.com");
+        kernel.BaseAddress = new Uri("http://example.com");
 
         var code = @"
 // something to ensure we're not on the first line
@@ -304,10 +302,26 @@ GET https://example.com/{{unresolved_symbol}}";
     }
 
     [Fact]
+    public async Task Setting_BaseAddress_sets_host_variable()
+    {
+        using var kernel = new HttpRequestKernel();
+        kernel.BaseAddress = new Uri("http://example.com");
+
+        var result = await kernel.SendAsync(new RequestValue("host"));
+
+        var events = result.KernelEvents.ToSubscribedList();
+
+        events.Should().NotContainErrors();
+
+        events.Should().ContainSingle<ValueProduced>()
+              .Which.Value.Should().Be("example.com");
+    }
+
+    [Fact]
     public async Task diagnostic_positions_are_correct_for_unresolved_symbols_after_other_symbols_were_successfully_resolved()
     {
         using var kernel = new HttpRequestKernel();
-        kernel.BaseAddress = new Uri("http://baseAddress.com");
+        kernel.BaseAddress = new Uri("http://example.com");
 
         var code = @"
 GET {{host}}/index.html
@@ -328,7 +342,7 @@ User-Agent: {{user_agent}}";
     public async Task multiple_diagnostics_are_returned_from_the_same_submission()
     {
         using var kernel = new HttpRequestKernel();
-        kernel.BaseAddress = new Uri("http://baseAddress.com");
+        kernel.BaseAddress = new Uri("http://example.com");
 
         var code = @"
 GET {{missing_value_1}}/index.html

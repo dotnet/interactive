@@ -1,8 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>11</LangVersion>
     <NoWarn>$(NoWarn);2003;CS8002;VSTHRD002;NU5100</NoWarn>
     <!-- AssemblyInformationalVersionAttribute contains a non-standard value -->
     <Deterministic Condition="'$(NCrunch)' == '1'">false</Deterministic>
@@ -11,9 +11,15 @@
   <PropertyGroup>
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <IsPackable>true</IsPackable>
-    <PackageDescription>Microsoft.DotNet.Interactive.Kernel implementation for Http Request</PackageDescription>
+    <PackageDescription>Microsoft.DotNet.Interactive.Kernel for making HTTP request using a common syntax.</PackageDescription>
     <PackageTags>polyglot notebook dotnet interactive http request</PackageTags>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="bin\**" />
+    <EmbeddedResource Remove="bin\**" />
+    <None Remove="bin\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
@@ -21,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="$(OutputPath)/Microsoft.DotNet.Interactive.HttpRequest.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
+    <None Include="extension.dib" Pack="true" PackagePath="interactive-extensions/dotnet" />
   </ItemGroup>
 
 </Project>

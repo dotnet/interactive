@@ -29,15 +29,14 @@ public class CommandRoutingSlip : RoutingSlip
         if (Entries.SingleOrDefault(e => e.AbsoluteUriWithoutQuery == absoluteUri) is null)
         {
             throw new InvalidOperationException($"The uri {absoluteUri} is not in the routing slip");
-
         }
 
-        if (Entries.SingleOrDefault(e => e.AbsoluteUriWithoutQuery == absoluteUri) is {Tag: null} entry)
+        if (Entries.SingleOrDefault(e => e.AbsoluteUriWithoutQuery == absoluteUri) is { Tag: null } entry)
         {
             throw new InvalidOperationException($"The uri {entry.AbsoluteUriWithQuery} is already in the routing slip");
         }
 
-        Entries.Add(new Entry( absoluteUri));
+        Entries.Add(new Entry(absoluteUri));
     }
 
     public void StampAsArrived(Uri uri)
