@@ -2,7 +2,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "// install extension id ms-vscode.vscode-github-issue-notebooks\r\n// un-triaged issues\r\nrepo:dotnet/interactive is:issue is:open -label:external -label:enhancement -label:impact-medium -label:impact-low -label:impact-high -label:plan -label:question -label:Urgency-High -label:Maintainability"
+    "value": "// install extension id ms-vscode.vscode-github-issue-notebooks\r\n// un-triaged issues\r\nrepo:dotnet/interactive is:issue is:open -label:external -label:enhancement -label:impact-medium -label:impact-low -label:impact-high -label:plan -label:question -label:Urgency-High -label:Maintainability -label:waiting-on-feedback"
   },
   {
     "kind": 2,
@@ -12,6 +12,6 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "// old waiting on feedback - UPDATE DATE TO BE 1 MONTH AGO\r\nrepo:dotnet/interactive is:issue is:open label:waiting-on-feedback updated:<2022-10-29"
+    "value": "// old waiting on feedback - UPDATE DATE TO BE 1 MONTH AGO\r\nrepo:dotnet/interactive is:issue is:open label:waiting-on-feedback updated:<2022-12-03"
   }
 ]
