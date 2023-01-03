@@ -40,14 +40,13 @@ To connect to data and query in Polyglot Notebooks in VS Code, follow the steps 
 
 ## Examples
 
-MS SQL Example
+Microsoft SQL Server Example
 
 ![image](https://user-images.githubusercontent.com/19276747/207750707-c227d359-1a25-4cc7-875d-b2dc056ccbe6.png)
 
 Kusto Example
 
 ![image](https://user-images.githubusercontent.com/19276747/207726856-343eff43-2f93-49d7-a747-21c4ccc80033.png)
-
 
 # Storing and Sharing Query Results
 
