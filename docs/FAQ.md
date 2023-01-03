@@ -50,7 +50,21 @@ A subkernel is a concept in .NET Interactive that describes one among many kerne
 
 ### What is a proxy kernel?
 
-A proxy kernel is a concept in .NET Interactive that describes a subkernel that proxies a remote .NET Interactive kernel into a local "composite kernel." Proxy kernels allow you to create notebooks that combine work from kernels running in multiple different processes or on different machines.
+A proxy kernel is a concept in .NET Interactive that describes a subkernel that proxies a remote kernel so that it can be used locally just like any other subkernel. Proxy kernels allow you to create notebooks that combine kernels running in multiple different processes or on different machines. 
+
+One prominent example of a proxy kernel is the JavaScript kernel. The actual implementation is written in TypeScript and runs in a separate process from the .NET Interactive kernel. For example, in the Polyglot Notebooks extension, the JavaScript kernel runs within the same web view that renders the notebook's HTML output. But this kernel can be called programmatically in .NET using the same APIs used to call, for example, the C# kernel. The proxy kernel serves as the adapter that enables this.
+
+```csharp
+using Microsoft.DotNet.Interactive;
+using Microsoft.DotNet.Interactive.Commands;
+
+var javascriptCode = "console.log('hello from JavaScript!')";
+
+await Kernel.Root.SendAsync(
+    new SubmitCode(
+        javascriptCode, 
+        "javascript"));
+```
 
 ### What is Polyglot Notebooks?
 
@@ -60,7 +74,7 @@ A proxy kernel is a concept in .NET Interactive that describes a subkernel that 
 
 The `.ipynb` file extension is the standard Jupyter notebook format. Despite the name, it's no longer specific to IPython, and can be used for many different languages. It's a JSON-based format and it can store content and metadata for code cells, Markdown cells, and cell outputs, which store the results of code execution for display. Multiple outputs can be stored for each code cell, as long as they differ by MIME type. There are many tools available for diffing, converting, and displaying `.ipynb` files. In GitHub,`.ipynb` files are displayed using a notebook-style layout.
 
-The Polyglot Notebooks extension can read and write the `.ipynb` format. It can also read and write a different format, `.dib`. Unlike `.ipynb`, which is a presentation-focused document format, `.dib` is a scripting format. It does not store outputs, and the raw code of a `.dib` can be pasted into a single Polyglot Notebook cell and run directly. This format can contain multiple languages delimited by kernel selector magic commands (e.g. `#!csharp`). The `.dib` format is also a plain text format, not JSON. It's easier to diff without the need for special tools and the contents don't need any special escaping.
+The [Polyglot Notebooks extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode) can read and write the `.ipynb` format. It can also read and write a different format, `.dib`. Unlike `.ipynb`, which is a presentation-focused document format, `.dib` is a scripting format. It does not store outputs, and the raw code of a `.dib` can be pasted into a single Polyglot Notebook cell and run directly. This format can contain multiple languages delimited by kernel selector magic commands (e.g. `#!csharp`). The `.dib` format is also a plain text format, not JSON. It's easier to diff without the need for special tools and the contents don't need any special escaping.
 
 ### What is a magic command?
 

@@ -48,7 +48,10 @@ There are several ways to get started using .NET Interactive with Jupyter, inclu
 ## REPLs
 
 .NET Interactive can be used as the execution engine for REPLs. For an example using a CLI, see [.NET REPL](https://github.com/jonsequitur/dotnet-repl). In addition, .NET REPL can actually be used to set up automation for your Polyglot Notebooks. 
- 
+
+## FAQ
+
+For more information, please refer to our [FAQ](./docs/FAQ.md). 
 
 ## Acknowledgements 
 
@@ -64,7 +67,7 @@ The multi-language experience of .NET Interactive is truly a collaborative effor
 
 We support running on devices like Raspberry Pi and [pi-top [4]](https://github.com/pi-top/pi-top-4-.NET-Core-API). You can find instructions [here](small-factor-devices.md).
 
-### Telemetry
+## Telemetry
 
 Telemetry is collected when .NET Interactive is started. Once .NET Interactive is running, we collect hashed versions of packages imported into the notebook and the languages used to run individual cells. We do not collect any additional code or clear text from cells. The telemetry is anonymous and reports only the values for a specific subset of the verbs in the .NET Interactive CLI. Those verbs are:
 
@@ -73,11 +76,11 @@ Telemetry is collected when .NET Interactive is started. Once .NET Interactive i
 * `dotnet interactive http`
 * `dotnet interactive stdio`
 
-#### How to opt out
+### How to opt out
 
 The .NET Interactive telemetry feature is enabled by default. To opt out of the telemetry feature, set the `DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT` environment variable to `1` or `true`.
 
-#### Disclosure
+### Disclosure
 
 The .NET Interactive tool displays text similar to the following when you first run one of the .NET Interactive CLI commands (for example, `dotnet interactive jupyter install`). Text may vary slightly depending on the version of the tool you're running. This "first run" experience is how Microsoft notifies you about data collection.
 
