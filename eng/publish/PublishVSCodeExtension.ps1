@@ -11,7 +11,7 @@ Set-StrictMode -version 2.0
 $ErrorActionPreference = "Stop"
 
 try {
-    npm install -g vsce
+    npm install -g @vscode/vsce
     if ($LASTEXITCODE -ne 0) {
         exit $LASTEXITCODE
     }
