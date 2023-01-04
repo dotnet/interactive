@@ -200,15 +200,89 @@ Not all kernels support variable sharing, but for those that do, you can use the
 
 ### How do I display a value?
 
+There are a few ways to display values, and some differences depending on which language you're using.
+
+#### Console output
+
+The most universal approach is to write to the console, though this will result in plain text output that might be less interesting in some cases. (Return values and display values, described below, can be richly formatted using .NET Interactive [formatters](formatting.md).)
+
+In C# and F# you can call `Console.WriteLine`.
+
+<img alt="image" src="https://user-images.githubusercontent.com/547415/210457457-514887d0-55f7-4fcf-a94f-d1c7a45cadaf.png" width="60%">
+
+In PowerShell, an unpiped expression will produce console output by default, so all you have to do is this:
+
+<img alt="image" src="https://user-images.githubusercontent.com/547415/210457374-4a36ce9f-5375-44a8-8e67-a0003c974385.png" width="60%">
+
+In JavaScript, you can call `console.log`.
+
+<img alt="image" src="https://user-images.githubusercontent.com/547415/210458819-f2744884-ccaa-4d08-99bc-910929b9b1e7.png" width="60%" >
+
+#### Return values
+
+You can also return a value in order to display it. C# Script and F# have a similar syntax for this, which is a trailing expression. This is the common syntax for returning a value in F#. In C# Script, it's a syntax that is not valid in common C#.
+
+<img alt="image" src="https://user-images.githubusercontent.com/547415/210460177-e94c082f-b689-47b1-ae9c-4e7bf5a5e12f.png" width="60%" >
+
+#### Display APIs
+
+Since a return statement is only valid once in a given submission, .NET Interactive also provides an extension method that can be used to display any object. This can be called more than once in a single submission.
+
+<img alt="image" src="https://user-images.githubusercontent.com/547415/210459216-76c43f16-6d28-4cd7-8192-d37230085ba1.png" width="60%" >
+
+In PowerShell, you can use `Out-Display` to pipe values through the display helper.
+
+<img width="719" alt="image" src="https://user-images.githubusercontent.com/547415/210459686-94209e69-acf3-4837-9d52-1af72b743654.png">
+
+### Can I change how a value is displayed?
+
+The formatter APIs allow extensive control over the way that outputs (including notebook cell return values and values displayed using the `Display` method) are displayed. All type-specific formatting, as well as the differences between notebook outputs (typcally HTML) and REPL outputs (typically plain text), is powered by these APIs.
+
+You can read more about the formatter APIs [here](formatting.md).
+
 ### How do I prompt a user for input?
 
-### Can I customize the way a value is displayed?
+There are a few ways to prompt a user for input in a notebook.
+
+You can prompt for input using a token such as `@input:prompt_name` within any magic command:
+
+<img alt="image" src="https://user-images.githubusercontent.com/547415/210602472-22bbf35c-316b-4c32-b891-58b226853301.png" width="60%" >
+
+(As you can see from the file picker in the screenshot, input prompts can be type-specific.) 
+
+There is also an API that can be called directly to prompt users for input. Here's an example in C#:
+
+```csharp
+using Microsoft.DotNet.Interactive;
+
+var input = await Kernel.GetInputAsync("Pick a number.");
+```
+
+When you run this code in Polyglot Notebooks (as shown in the screenshot below), a text input prompt appears at the top of the Visual Studio Code window.
+
+<img alt="image" src="https://user-images.githubusercontent.com/547415/210603522-8738fa01-105d-4d0f-93cd-976da0a73a6c.png" width="60%" >
+
+You can read more about input prompts [here](input-prompts.md).
+
+### I need to use secrets in a notebook. How do I do it without saving the secret in the file?
+
+User input prompts are a good way to provide secrets to a notebook without risk of storing them in the file. Similar to the 
+
+```csharp
+using Microsoft.DotNet.Interactive;
+
+var input = await Kernel.GetPasswordAsync("Pick a number.");
+```
+
+When you run this code in Polyglot Notebooks (as shown in the screenshot below), an input prompt appears at the top of the Visual Studio Code window. When the user types into this prompt, the text is masked.
+
+<img alt="image" src="https://user-images.githubusercontent.com/547415/210673597-2603b6e5-ecba-4e4d-abc4-dbeba28df9c4.png" width="60%" >
 
 ### A notebook cell is stuck. How do I stop it?
 
 When you run a cell, the run button (▶️) changes to a stop button (⏹️). Pressing the stop button will attempt to stop the running cell, but it might not always work. Some programs can't be interrupted easily. If the stop button doesn't work, then you can restart the kernel using the `Polyglot Notebook: Restart the current notebooks kernel` command from the command palette.
 
-### If I have some code stored in a variable, can run it?
+### If I have some code stored in a variable, can I run it?
 
 Yes, you can use the .NET Interactive APIs to send code to any kernel by name.
 
@@ -218,21 +292,42 @@ Here's an example in C#:
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 
-await Kernel.Root.SendAsync(
-    new SubmitCode(
-        @"Console.WriteLine(""Hello!"");", 
-        "csharp"));
+var code = @"Console.WriteLine(""Hello!"");";
+
+await Kernel.Root.FindKernelByName("csharp")
+            .SendAsync(new SubmitCode(code));
 ```
 
 ### Is there a way to run a notebook from the command line?
 
-### I need to use secrets in a notebook. How do I do it without saving the secret in the file?
+The [.NET REPL](https://github.com/jonsequitur/dotnet-repl) has a number of features relating to command line automation with notebooks. The GitHub project page has more details. 
 
-### How can I add other languages to a notebook?
 
 ### Can I call one notebook from within another?
 
+Yes. You can use the `#!import` magic command to load and run a number of different file types within a notebook, including `.ipynb` and `.dib`. Both of these file formats support polyglot, so notebooks imported this way can include cells in various languages. 
+
+### How can I add other languages to a notebook?
+
+Yes. The .NET Interactive [extensibility APIs](extending-dotnet-interactive.md) allows for NuGet packages to add new subkernels at runtime. This is how SQL and KQL support are implemented.
+
 ### Can I add cells to a notebook programmatically?
 
+Yes, in Polyglot Notebooks you can programmatically add a new cell by sending the `SendEditableCode` command.
 
+```csharp
+using Microsoft.DotNet.Interactive;
+using Microsoft.DotNet.Interactive.Commands;
 
+var command = new SendEditableCode(
+    "csharp", 
+    "Console.WriteLine(\"Hello!\");");
+
+var input = await Kernel.Root.SendAsync(command);
+```
+
+When you send this command, a new cell will be appended to the notebook with the specified content and selected kernel:
+
+<img  alt="image" src="https://user-images.githubusercontent.com/547415/210672882-9825764b-f2dc-4f57-9d9e-21cefc86bed5.png" width="60%">
+
+This command is not currently supported in other notebook frontends such as JupyterLab.
