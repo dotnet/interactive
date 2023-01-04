@@ -310,6 +310,11 @@ The [.NET REPL](https://github.com/jonsequitur/dotnet-repl) has a number of feat
 
 Yes. You can use the `#!import` magic command to load and run a number of different file types within a notebook, including `.ipynb` and `.dib`. Both of these file formats support polyglot, so notebooks imported this way can include cells in various languages. 
 
+
+Yes. The .NET Interactive [extensibility APIs](extending-dotnet-interactive.md) allows for NuGet packages to add new subkernels at runtime. This is how SQL and KQL support are implemented.
+
+Yes. You can use the `#!import` magic command to load and run a number of different file types within a notebook, including `.ipynb` and `.dib`. Both of these file formats support polyglot, so notebooks imported this way can include cells in various languages. 
+
 ### How can I add other languages to a notebook?
 
 Yes. The .NET Interactive [extensibility APIs](extending-dotnet-interactive.md) allows for NuGet packages to add new subkernels at runtime. This is how SQL and KQL support are implemented.
