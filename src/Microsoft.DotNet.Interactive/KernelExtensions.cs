@@ -93,7 +93,7 @@ public static class KernelExtensions
         var command = new Command("#!import", "Imports and runs another notebook.");
         command.AddArgument(new Argument<FileInfo>("notebookFile").ExistingOnly());
         command.Handler = CommandHandler.Create(
-            async (FileInfo notebookFile, KernelInvocationContext _) =>
+            async (FileInfo notebookFile, KernelInvocationContext context) =>
             {
                 var document = await InteractiveDocument.LoadAsync(
                     notebookFile,
@@ -101,7 +101,17 @@ public static class KernelExtensions
 
                 foreach (var element in document.Elements)
                 {
-                    await kernel.RootKernel.SendAsync(new SubmitCode(element.Contents, element.KernelName));
+                    switch (element.KernelName?.ToLowerInvariant())
+                    {
+                        case "markdown":
+                            var @event = new DisplayedValueProduced(element.Contents, context.Command, new[] { new FormattedValue("text/markdown", element.Contents) });
+                            context.Publish(@event);
+                            break;
+                        default:
+                            await kernel.RootKernel.SendAsync(new SubmitCode(element.Contents, element.KernelName));
+                            break;
+                    }
+                   
                 }
             });
 
