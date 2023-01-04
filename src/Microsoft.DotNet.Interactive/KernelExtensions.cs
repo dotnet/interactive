@@ -104,7 +104,11 @@ public static class KernelExtensions
                     switch (element.KernelName?.ToLowerInvariant())
                     {
                         case "markdown":
-                            var @event = new DisplayedValueProduced(element.Contents, context.Command, new[] { new FormattedValue("text/markdown", element.Contents) });
+                            var @event = new DisplayedValueProduced(element.Contents, context.Command, new[]
+                            {
+                                new FormattedValue("text/markdown", element.Contents),
+                                new FormattedValue(PlainTextFormatter.MimeType, element.Contents)
+                            });
                             context.Publish(@event);
                             break;
                         default:
