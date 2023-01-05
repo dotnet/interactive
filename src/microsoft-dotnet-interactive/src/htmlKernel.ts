@@ -8,7 +8,8 @@ import { PromiseCompletionSource } from "./promiseCompletionSource";
 
 export class HtmlKernel extends Kernel {
     constructor(kernelName?: string, private readonly htmlFragmentInserter?: (htmlFragment: string) => Promise<string>, languageName?: string, languageVersion?: string) {
-        super(kernelName ?? "html", languageName ?? "HTML");
+        super(kernelName ?? "html", languageName ?? "HTML", languageVersion ?? "5");
+        this.kernelInfo.displayName = 'HTML';
         if (!this.htmlFragmentInserter) {
             this.htmlFragmentInserter = htmlDomFragmentInserter;
         }
