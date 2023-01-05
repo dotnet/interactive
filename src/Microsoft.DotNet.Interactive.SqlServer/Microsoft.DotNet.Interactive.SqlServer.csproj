@@ -7,7 +7,7 @@
 
  <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <PackageDescription>Support for dotnet-interactive</PackageDescription>
+    <PackageDescription>Microsoft SQL Server support for .NET Interactive</PackageDescription>
     <PackageTags>polyglot notebook dotnet interactive SQL EF Data EFCore EntityFramework</PackageTags>
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <NoWarn>$(NoWarn);NU5100;VSTHRD002</NoWarn><!-- dll outside of lib/ folder -->

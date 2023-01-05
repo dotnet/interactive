@@ -1,5 +1,7 @@
 # Using HTML and JavaScript with .NET Interactive
 
+[ **_Outdated_** ]
+
 Creating visualizations for data is one of the key features of notebooks. In both Visual Studio Code and Jupyter, the frontend can render HTML, and there are numerous libraries available for .NET and Python the help create plots and visualizations. It's common in such libraries that you can write code that executes in the kernel, and the library handles the transformation into HTML and JavaScript for you. With .NET Interactive, there are some APIs available to simplify the process of directly writing your HTML and JavaScript. This enables you to create custom visualizations and directly access the broader ecosysytem of JavaScript libraries without needing wrapper libraries. You may choose to use these APIs directly or use them to create custom extensions to enrich the visualization of .NET types.
 
 In this section, we'll take a look at:
@@ -36,6 +38,8 @@ Just like you can directly write HTML using a magic command, you can also script
 
 ## Accessing kernel data from client-side JavaScript code
 
+[ **_Outdated_** ]
+
 Most of the interesting work in your notebook is probably happening in the kernel, not in the client, so .NET Interactive gives you a way to access the data from the kernel. Any top-level variables declared in a kernel can be accessed from JavaScript running in the client using the `interactive` object. 
 
 Here's an example:
@@ -50,6 +54,8 @@ The `interactive` object contains the following properties, corresponding to the
 * `interactive.value`
 
 ## Loading external JavaScript modules at runtime
+
+[ **_Outdated_** ]
 
 Sometimes you might need to import JavaScript modules into your notebook. You can use the `interactive` object to do so.
 
