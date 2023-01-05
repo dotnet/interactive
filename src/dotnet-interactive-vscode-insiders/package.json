@@ -750,7 +750,7 @@
   },
   "scripts": {
     "compile-webview": "cd ../microsoft-dotnet-interactive && npm run compile-webview",
-    "copy-preloads": "npx copyfiles --error --verbose --up 3 ../microsoft-dotnet-interactive/dist/kernelApiBootstrapper.js ./resources",
+    "copy-preloads": "npx copyfiles --error --verbose --up 3 ../microsoft-dotnet-interactive/dist/activation.js ./resources",
     "copy-variable-grid": "npx copyfiles --error --verbose --up 3 ../microsoft-dotnet-interactive/dist/variableGrid.js ./resources",
     "vscode:prepublish": "npm run compile",
     "compile": "npm run lint && tsc -p ./ && npm run compile-webview && npm run copy-preloads && npm run copy-variable-grid",

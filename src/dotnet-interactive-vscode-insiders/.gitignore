@@ -1,4 +1,4 @@
 out/
-resources/kernelApiBootstrapper.js
+resources/activation.js
 resources/variableGrid.js
 dotnet-interactive-vscode-*.vsix
