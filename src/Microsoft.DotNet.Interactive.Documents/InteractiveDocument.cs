@@ -35,7 +35,7 @@ public class InteractiveDocument : IEnumerable
         Elements = elements ?? new List<InteractiveDocumentElement>();
     }
 
-    public IList<InteractiveDocumentElement> Elements { get; } = new List<InteractiveDocumentElement>();
+    public IList<InteractiveDocumentElement> Elements { get; }
 
     public IDictionary<string, object> Metadata =>
         _metadata ??= new Dictionary<string, object>();
