@@ -13,13 +13,16 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
+
 using Pocket;
+
 using CompletionItem = System.CommandLine.Completions.CompletionItem;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 
@@ -95,26 +98,27 @@ public static class KernelExtensions
         command.Handler = CommandHandler.Create(
             async (FileInfo notebookFile, KernelInvocationContext context) =>
             {
+                var kernelInfoCollection = CreateKernelInfos(kernel.RootKernel as CompositeKernel);
                 var document = await InteractiveDocument.LoadAsync(
                     notebookFile,
-                    CreateKernelInfos(kernel.RootKernel as CompositeKernel));
-
+                    kernelInfoCollection);
+                var lookup = kernelInfoCollection.ToDictionary(k => k.Name, StringComparer.OrdinalIgnoreCase);
                 foreach (var element in document.Elements)
                 {
-                    switch (element.KernelName?.ToLowerInvariant())
+                    if (lookup.TryGetValue(element.KernelName!, out var kernelInfo) && StringComparer.OrdinalIgnoreCase.Equals(kernelInfo.LanguageName, "markdown"))
                     {
-                        case "markdown":
-                            var @event = new DisplayedValueProduced(element.Contents, context.Command, new[]
-                            {
+
+                        var @event = new DisplayedValueProduced(element.Contents, context.Command, new[]
+                        {
                                 new FormattedValue("text/markdown", element.Contents)
                             });
-                            context.Publish(@event);
-                            break;
-                        default:
-                            await kernel.RootKernel.SendAsync(new SubmitCode(element.Contents, element.KernelName));
-                            break;
+                        context.Publish(@event);
                     }
-                   
+                    else
+                    {
+                        await kernel.RootKernel.SendAsync(new SubmitCode(element.Contents, element.KernelName));
+                    }
+
                 }
             });
 
@@ -126,18 +130,15 @@ public static class KernelExtensions
         {
             KernelInfoCollection kernelInfos = new();
 
-            var kernelChoosers = kernel.Directives.OfType<ChooseKernelDirective>();
-
-            foreach (var kernelChooser in kernelChoosers)
+            foreach (var childKernel in kernel.ChildKernels)
             {
-                List<string> kernelAliases = new();
+                kernelInfos.Add(new Documents.KernelInfo(childKernel.Name, languageName: childKernel.KernelInfo.LanguageName, aliases: childKernel.KernelInfo.Aliases));
+            }
 
-                foreach (var alias in kernelChooser.Aliases.Where(a => a != kernelChooser.Name))
-                {
-                    kernelAliases.Add(alias[2..]);
-                }
-
-                kernelInfos.Add(new Documents.KernelInfo(kernelChooser.Name[2..], aliases: kernelAliases));
+            if (!kernelInfos.Contains("markdown"))
+            {
+                kernelInfos = kernelInfos.Clone();
+                kernelInfos.Add(new Documents.KernelInfo("markdown", languageName: "markdown", aliases: new[] { "md" }));
             }
 
             return kernelInfos;
@@ -342,7 +343,7 @@ public static class KernelExtensions
     public static TKernel UseWho<TKernel>(this TKernel kernel)
         where TKernel : Kernel
     {
-        if (kernel.KernelInfo.SupportsCommand(nameof(RequestValueInfos)) && 
+        if (kernel.KernelInfo.SupportsCommand(nameof(RequestValueInfos)) &&
             kernel.KernelInfo.SupportsCommand(nameof(RequestValue)))
         {
             kernel.AddDirective(who());
