@@ -106,8 +106,7 @@ public static class KernelExtensions
                         case "markdown":
                             var @event = new DisplayedValueProduced(element.Contents, context.Command, new[]
                             {
-                                new FormattedValue("text/markdown", element.Contents),
-                                new FormattedValue(PlainTextFormatter.MimeType, element.Contents)
+                                new FormattedValue("text/markdown", element.Contents)
                             });
                             context.Publish(@event);
                             break;
