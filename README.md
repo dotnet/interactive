@@ -45,7 +45,7 @@ There are several ways to get started using .NET Interactive with Jupyter, inclu
 * [Share notebooks online using Binder](docs/CreateBinder.md).
 
 
-## REPLs
+### REPLs
 
 .NET Interactive can be used as the execution engine for REPLs. For an example using a CLI, see [.NET REPL](https://github.com/jonsequitur/dotnet-repl). In addition, .NET REPL can actually be used to set up automation for your Polyglot Notebooks. 
 
