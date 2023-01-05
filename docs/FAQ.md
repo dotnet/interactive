@@ -18,11 +18,27 @@ Jupyter Notebook is a browser-based notebook UI (or "frontend") from Project Jup
 
 ### What is JupyterLab?
 
-JupyterLab is another browser-based frontend for Jupyter kernels, similar to Jupyter Notebook, but richer and more extensibible.
+JupyterLab is another browser-based frontend for Jupyter kernels, similar to Jupyter Notebook, but richer and more extensible.
+
+### What is a frontend?
+
+The term "frontend" is often used to describe the UI for a notebook editor. Jupyter Notebook, JupyterLab, nteract Desktop, and the [Jupyter Extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) for VS Code and GitHub Codespaces are examples of notebook frontends.
+
+### What is a kernel?
+
+A kernel is an execution engine for a notebook. While the notebook UI (or "frontend") is responsible for displaying text, code, and execution results, the kernel is where the actual processing of the code takes place. Kernels are UI-agnostic. They typically run in a different process from the UI, and can often run on a different machine.
+
+In .NET Interactive, there might be several kernels within a single kernel process. We refer to these kernels as "subkernels." Each one represents a stateful unit of computation with a set of capabilities that can include running code, sharing variables, and providing language services (e.g. code completions, diagnostic squiggles, and inline help) for a specific language. A kernel in .NET Interactive does not need to be in its own process. Multiple .NET Interactive subkernels can work together in a single notebook session whether they share a process or are distributed across multiple machines.
+
+### What is a Jupyter kernel?
+
+A Jupyter kernel is any kernel that implements the [Jupyter Message Protocol (JMP)](https://jupyter-client.readthedocs.io/en/stable/messaging.html#). The most commonly-used Jupyter kernel is [IPython](https://en.wikipedia.org/wiki/IPython), an interactive shell for Python, from which Project Jupyter grew. 
+
+.NET Interactive is a Jupyter kernel when started in Jupyter mode (using the command line `dotnet interactive jupyter`).
 
 ### What is .NET Interactive?
 
-.NET Interactive is a [.NET tool](https://learn.microsoft.com/en-us/dotnet/core/tools/global-tools) ([`dotnet-interactive`](https://www.nuget.org/packages/Microsoft.dotnet-interactive)) containing a general-purpose engine for interactive programming including, but not limited to, use with notebooks. It includes suport for a number of languages, including C#, F#, PowerShell, and JavaScript, as well as the ability to load additional languages such as SQL and Python.
+.NET Interactive is a [.NET tool](https://learn.microsoft.com/en-us/dotnet/core/tools/global-tools) ([`dotnet-interactive`](https://www.nuget.org/packages/Microsoft.dotnet-interactive)) containing a general-purpose engine for interactive programming including, but not limited to, use with notebooks. .NET Interactive has a progammatic interface but no graphical user interface. Various notebook frontends can be used to provide a GUI over .NET Interactive. It includes suport for a number of languages, including C#, F#, PowerShell, and JavaScript, as well as the ability to load support for additional languages such as SQL and Python.
 
 ### What is the difference between .NET Interactive and Jupyter?
 
@@ -30,29 +46,25 @@ The .NET Interactive kernel (i.e. the `dotnet-interactive` [.NET tool](https://l
 
 The Polyglot Notebooks extension for VS Code isn't required to use the .NET Interactive kernel, but it does provide access to some additional functionality that isn't typical of Jupyter frontends, such as the ability to switch languages (i.e. subkernels) on a per-cell basis.
 
-### What is a kernel?
+### What is Polyglot Notebooks?
 
-A kernel is an execution engine for a notebook. While the notebook UI (or "frontend") is responsible for displaying text, code, and execution results, the kernel is where the actual processing of the code takes place. Kernels are UI-agnostic. They typically run in a different process from the UI, and can often run on a different machine.
+[Polyglot Notebooks](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode) is an extension for Visual Studio Code that provides a notebook frontend and related tools for editing and running notebooks with the .NET Interactive kernel.
 
-In .NET Interactive, there might be several kernels within a single kernel process. We refer to these kernels as "subkernels." Each one represents a stateful unit of computation with a set of capabilities that can include running code, sharing variables, and providing language services (e.g. code completions, diagnostic squiggles, inline help) for a specific language. A kernel in .NET Interactive need not be in its own process. Multiple .NET Interactive subkernels can work together in a single notebook session whether they share a process or are distributed across multiple machines.
+### What is the difference between Polyglot Notebooks and .NET Interactive?
 
-### What is a Jupyter kernel?
+[Polyglot Notebooks](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode) is a notebook frontend. It allows you read and write notebook files, run the code in the notebook, and visualize the results.
 
-A Jupyter kernel is any kernel that implements the [Jupyter Message Protocol (JMP)](https://jupyter-client.readthedocs.io/en/stable/messaging.html#). The most commonly-used Jupyter kernel is [IPython](https://en.wikipedia.org/wiki/IPython), an interactive shell for Python, from which Project Jupyter grew. When started in Jupyter mode (using the command line `dotnet interactive jupyter`), .NET Interactive is a Jupyter kernel.
-
-### What is a frontend?
-
-The term "frontend" is often used to describe the UI for a notebook editor. Jupyter Notebook, JupyterLab, nteract Desktop, and the [Jupyter Extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) for VS Code and GitHub Codespaces are examples of notebook frontends.
+[.NET Interactive](https://github.com/dotnet/interactive) is a kernel. It has an API but no user interface. When you press a cell's run button in a frontend such as Polyglot Notebooks, it sends a message to the kernel. The kernel processes the response and sends messages  back, including code execution results for the frontend to display.
 
 ### What is a subkernel?
 
-A subkernel is a concept in .NET Interactive that describes one among many kernels within a single notebook session. Subkernels correspond to the different languages available in a Polyglot Notebook. Subkernels can be added dynamically at runtime, for example when connecting to a data source or a kernel running in a remote process.
+A subkernel is a concept in .NET Interactive that describes one among many kernels within a single notebook session. Each languages available in a Polyglot Notebook corresponds to a different subkernel. Subkernels can also be added dynamically at runtime, for example when connecting to a data source or a kernel running in a remote process.
 
 ### What is a proxy kernel?
 
-A proxy kernel is a concept in .NET Interactive that describes a subkernel that proxies a remote kernel so that it can be used locally just like any other subkernel. Proxy kernels allow you to create notebooks that combine kernels running in multiple different processes or on different machines. 
+A proxy kernel is a concept in .NET Interactive that describes a subkernel that proxies a remote kernel. A proxy kernel can be used locally just like any other subkernel. Proxy kernels allow you to create notebooks that combine kernels running in multiple different processes or on different machines. 
 
-One prominent example of a proxy kernel is the JavaScript kernel. The actual implementation is written in TypeScript and runs in a separate process from the .NET Interactive kernel. For example, in the Polyglot Notebooks extension, the JavaScript kernel runs within the same web view that renders the notebook's HTML output. But this kernel can be called programmatically in .NET using the same APIs used to call, for example, the C# kernel. The proxy kernel serves as the adapter that enables this.
+One prominent example of a proxy kernel is the JavaScript kernel. The actual implementation is written in TypeScript and runs in a separate process from the .NET Interactive kernel. For example, in the Polyglot Notebooks extension, the JavaScript kernel runs within the same web view that renders the notebook's HTML output. But this kernel can be called programmatically in .NET using the same APIs used to call in-process kernels such as the C# kernel. The proxy kernel serves as the adapter that enables this.
 
 ```csharp
 using Microsoft.DotNet.Interactive;
@@ -66,10 +78,6 @@ await Kernel.Root.SendAsync(
         "javascript"));
 ```
 
-### What is Polyglot Notebooks?
-
-[Polyglot Notebooks](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode) is an extension for Visual Studio Code that provides a notebook UI and related tools for running code using the .NET Interactive kernel.
-
 ### What's the difference between a .dib file and an .ipynb file?
 
 The `.ipynb` file extension is the standard Jupyter notebook format. Despite the name, it's no longer specific to IPython, and can be used for many different languages. It's a JSON-based format and it can store content and metadata for code cells, Markdown cells, and cell outputs, which store the results of code execution for display. Multiple outputs can be stored for each code cell, as long as they differ by MIME type. There are many tools available for diffing, converting, and displaying `.ipynb` files. In GitHub,`.ipynb` files are displayed using a notebook-style layout.
@@ -78,15 +86,11 @@ The [Polyglot Notebooks extension](https://marketplace.visualstudio.com/items?it
 
 ### What is a magic command?
 
-A magic command is a special code command that can be run in a cell, typically using a different syntax than the primary language supported by the kernel.
+A magic command is a special code command that can be run in a notebook cell, typically using a different syntax than the primary language supported by the kernel.
 
 In IPython, magic commands are prefixed with `%`. Since this is not a valid operator in common Python, it allows IPython to easily identify magic commands.
 
 In .NET Interactive, magics are instead prefixed with `#!`, since the `#` character indicates a comment or preprocessor directive in all of the major .NET languages. Magics must come at the beginning of the line and, while multiple magics can be used in a single cell, a single magic cannot span more than one line.
-
-### What is the difference between Polyglot Notebooks and .NET Interactive?
-
-[Polyglot Notebooks](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode) is an extension for Visual Studio Code that provides a frontend for the .NET Interactive kernel.
 
 ### What is a REPL?
 
@@ -301,7 +305,6 @@ await Kernel.Root.FindKernelByName("csharp")
 ### Is there a way to run a notebook from the command line?
 
 The [.NET REPL](https://github.com/jonsequitur/dotnet-repl) has a number of features relating to command line automation with notebooks. The GitHub project page has more details. 
-
 
 ### Can I call one notebook from within another?
 
