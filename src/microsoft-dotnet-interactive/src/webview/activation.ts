@@ -7,7 +7,17 @@ import * as connection from "../connection";
 import { Logger } from "../logger";
 import { KernelHost } from '../kernelHost';
 
-export function configure(global?: any) {
+type KernelMessagingApi = {
+    onDidReceiveKernelMessage: (arg: any) => any;
+    postKernelMessage: (data: unknown) => void;
+};
+
+export function activate(context: KernelMessagingApi) {
+    configure(window, context);
+    Logger.default.info(`set up 'webview' host module complete`);
+}
+
+function configure(global: any, context: KernelMessagingApi) {
     if (!global) {
         global = window;
     }
@@ -17,13 +27,11 @@ export function configure(global?: any) {
 
     localToRemote.subscribe({
         next: envelope => {
-            // @ts-ignore
-            postKernelMessage({ envelope });
+            context.postKernelMessage({ envelope });
         }
     });
 
-    // @ts-ignore
-    onDidReceiveKernelMessage((arg: any) => {
+    context.onDidReceiveKernelMessage((arg: any) => {
         if (arg.envelope) {
             const envelope = <connection.KernelCommandOrEventEnvelope><any>(arg.envelope);
             if (connection.isKernelEventEnvelope(envelope)) {
@@ -39,17 +47,14 @@ export function configure(global?: any) {
         'webview',
         configureRequire,
         entry => {
-            // @ts-ignore
-            postKernelMessage({ logEntry: entry });
+            context.postKernelMessage({ logEntry: entry });
         },
         localToRemote,
         remoteToLocal,
         () => {
             const kernelInfoProduced = (<KernelHost>(global['webview'].kernelHost)).getKernelInfoProduced();
             const hostUri = (<KernelHost>(global['webview'].kernelHost)).uri;
-            // @ts-ignore
-            postKernelMessage({ preloadCommand: '#!connect', kernelInfoProduced, hostUri });
-
+            context.postKernelMessage({ preloadCommand: '#!connect', kernelInfoProduced, hostUri });
         }
     );
 }
@@ -73,7 +78,3 @@ function configureRequire(interactive: any) {
         };
     }
 }
-
-Logger.default.info(`setting up 'webview' host`);
-configure(window);
-Logger.default.info(`set up 'webview' host complete`);
