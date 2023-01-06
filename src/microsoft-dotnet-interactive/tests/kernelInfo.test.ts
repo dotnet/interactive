@@ -40,7 +40,7 @@ describe("kernelInfo", () => {
                     aliases: ['child1Js'],
                     languageName: 'JavaScript',
                     languageVersion: undefined,
-                    displayName: 'child1',
+                    displayName: 'JavaScript',
                     localName: 'child1',
                     supportedDirectives: [],
                     supportedKernelCommands:
@@ -55,7 +55,7 @@ describe("kernelInfo", () => {
                     aliases: ['child2Js'],
                     languageName: 'JavaScript',
                     languageVersion: undefined,
-                    displayName: 'child2',
+                    displayName: 'JavaScript',
                     localName: 'child2',
                     supportedDirectives: [],
                     supportedKernelCommands:
@@ -109,7 +109,7 @@ describe("kernelInfo", () => {
                             aliases: ['child1Js'],
                             languageName: 'JavaScript',
                             languageVersion: undefined,
-                            displayName: 'child1',
+                            displayName: 'JavaScript',
                             localName: 'child1',
                             supportedDirectives: [],
                             supportedKernelCommands:

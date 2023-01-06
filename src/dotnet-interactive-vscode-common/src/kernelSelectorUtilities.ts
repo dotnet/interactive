@@ -13,7 +13,13 @@ export interface KernelSelectorOption {
 }
 
 export function getKernelInfoDisplayValue(kernelInfo: contracts.KernelInfo): string {
-    return `${kernelInfo.localName} - ${kernelInfo.displayName}`;
+    const localName = kernelInfo.localName;
+    const displayName = kernelInfo.displayName;
+    if (localName === displayName) {
+        return localName;
+    } else {
+        return `${kernelInfo.localName} - ${kernelInfo.displayName}`;
+    }
 }
 
 export function getKernelSelectorOptions(kernel: CompositeKernel, document: vscodeLike.NotebookDocument, requiredSupportedCommandType: contracts.KernelCommandType): KernelSelectorOption[] {

@@ -54,7 +54,7 @@ describe('kernel selector utility tests', async () => {
             },
             {
                 kernelName: 'fsharp',
-                displayValue: 'fsharp - fsharp'
+                displayValue: 'fsharp'
             }
         ]);
     });
