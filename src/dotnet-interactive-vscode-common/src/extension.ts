@@ -26,7 +26,7 @@ import { OutputChannelAdapter } from './OutputChannelAdapter';
 import * as notebookControllers from '../notebookControllers';
 import * as notebookSerializers from '../notebookSerializers';
 import * as versionSpecificFunctions from '../versionSpecificFunctions';
-import { ErrorOutputCreator } from './interactiveClient';
+import { ErrorOutputCreator, InteractiveClient } from './interactiveClient';
 
 import * as vscodeUtilities from './vscodeUtilities';
 import fetch from 'node-fetch';
@@ -37,7 +37,6 @@ import { NotebookParserServer } from './notebookParserServer';
 import { registerVariableExplorer } from './variableExplorer';
 import { KernelCommandAndEventChannel } from './DotnetInteractiveChannel';
 import { ActiveNotebookTracker } from './activeNotebookTracker';
-import { onKernelInfoUpdates } from './dotnet-interactive';
 import * as metadataUtilities from './metadataUtilities';
 import * as constants from './constants';
 import { ServiceCollection } from './serviceCollection';
@@ -242,7 +241,7 @@ export async function activate(context: vscode.ExtensionContext) {
     registerKernelCommands(context, clientMapper);
     registerVariableExplorer(context, clientMapper);
 
-    ServiceCollection.initialize(context, clientMapper);
+    ServiceCollection.initialize(context, clientMapper, tokensProvider.dynamicTokenProvider);
     context.subscriptions.push(new ActiveNotebookTracker(clientMapper));
 
     const hostVersionSuffix = vscodeUtilities.isInsidersBuild() ? 'Insiders' : 'Stable';
@@ -269,20 +268,21 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(serializerLineAdapter);
 
     // rebuild notebook grammar
-    const compositeKernelToNotebookUri: Map<CompositeKernel, vscodeLike.Uri> = new Map();
-    clientMapper.onClientCreate((uri, client) => {
-        compositeKernelToNotebookUri.set(client.kernel, uri);
-    });
-    onKernelInfoUpdates.push((compositeKernel) => {
-        const notebookUri = compositeKernelToNotebookUri.get(compositeKernel);
-        if (notebookUri) {
-            const kernelInfos = compositeKernel.childKernels.map(k => k.kernelInfo);
-            tokensProvider.dynamicTokenProvider.rebuildNotebookGrammar(notebookUri, kernelInfos);
-            debounce('refresh-tokens-after-grammar-update', 500, () => {
-                tokensProvider.refresh();
-            });
+    context.subscriptions.push(ServiceCollection.Instance.KernelInfoUpdaterService.onKernelInfoUpdated((notebook: vscode.NotebookDocument, client: InteractiveClient) => {
+        const kernelInfos = client.kernel.childKernels.map(k => k.kernelInfo);
+        tokensProvider.dynamicTokenProvider.rebuildNotebookGrammar(notebook.uri, kernelInfos);
+        debounce('refresh-tokens-after-grammar-update', 500, () => {
+            tokensProvider.refresh();
+        });
+    }));
+
+    // ensure appropriate language configuration
+    context.subscriptions.push(ServiceCollection.Instance.KernelInfoUpdaterService.onKernelInfoUpdated((notebook: vscode.NotebookDocument, client: InteractiveClient) => {
+        const activeTextEditor = vscode.window.activeTextEditor;
+        if (activeTextEditor) {
+            ServiceCollection.Instance.LanguageConfigurationManager.ensureLanguageConfigurationForDocument(activeTextEditor.document);
         }
-    });
+    }));
 
     // build initial notebook grammar
     context.subscriptions.push(vscode.workspace.onDidOpenNotebookDocument(async notebook => {

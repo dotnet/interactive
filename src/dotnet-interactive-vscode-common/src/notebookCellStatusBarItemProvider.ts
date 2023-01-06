@@ -10,6 +10,7 @@ import { isKernelEventEnvelope } from './dotnet-interactive';
 import * as kernelSelectorUtilities from './kernelSelectorUtilities';
 import * as constants from './constants';
 import * as vscodeUtilities from './vscodeUtilities';
+import { ServiceCollection } from './serviceCollection';
 
 const selectKernelCommandName = 'polyglot-notebook.selectCellKernel';
 
@@ -41,10 +42,16 @@ export function registerNotbookCellStatusBarItemProvider(context: vscode.Extensi
                         const codeCell = await vscodeUtilities.ensureCellKernelKind(cell, vscode.NotebookCellKind.Code);
                         const notebookCellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(cell);
                         if (notebookCellMetadata.kernelName !== selectedKernelData.kernelName) {
+                            // update metadata
                             notebookCellMetadata.kernelName = selectedKernelData.kernelName;
                             const newRawMetadata = metadataUtilities.getRawNotebookCellMetadataFromNotebookCellMetadata(notebookCellMetadata);
                             const mergedMetadata = metadataUtilities.mergeRawMetadata(cell.metadata, newRawMetadata);
                             const _succeeded = await versionSpecificFunctions.replaceNotebookCellMetadata(codeCell.notebook.uri, codeCell.index, mergedMetadata);
+
+                            // update language configuration
+                            ServiceCollection.Instance.LanguageConfigurationManager.ensureLanguageConfigurationForDocument(cell.document);
+
+                            // update tokens
                             await vscode.commands.executeCommand('polyglot-notebook.refreshSemanticTokens');
                         }
                     }
