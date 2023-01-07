@@ -217,6 +217,9 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
         </html>
         `;
         this.webview.html = html;
+
+        const currentNotebookUri = vscode.window.activeNotebookEditor?.notebook.uri;
+        this.showNotebookVariables(currentNotebookUri);
     }
 
     private setRows(rows: VariableGridRow[]) {
