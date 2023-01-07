@@ -115,7 +115,15 @@ export function isArrayOfString(collection: any): collection is string[] {
     return Array.isArray(collection) && collection.length > 0 && typeof (collection[0]) === typeof ("");
 }
 
-export const onKernelInfoUpdates: ((compositeKernel: CompositeKernel) => void)[] = [];
+const onKernelInfoUpdates: ((compositeKernel: CompositeKernel) => void)[] = [];
+export function registerForKernelInfoUpdates(callback: (compositeKernel: CompositeKernel) => void) {
+    onKernelInfoUpdates.push(callback);
+}
+function notifyOfKernelInfoUpdates(compositeKernel: CompositeKernel) {
+    for (const updater of onKernelInfoUpdates) {
+        updater(compositeKernel);
+    }
+}
 
 export function ensureOrUpdateProxyForKernelInfo(kernelInfoProduced: contracts.KernelInfoProduced, compositeKernel: CompositeKernel) {
     const uriToLookup = kernelInfoProduced.kernelInfo.uri ?? kernelInfoProduced.kernelInfo.remoteUri;
@@ -139,9 +147,7 @@ export function ensureOrUpdateProxyForKernelInfo(kernelInfoProduced: contracts.K
             updateKernelInfo(kernel.kernelInfo, kernelInfoProduced.kernelInfo);
         }
 
-        for (const updater of onKernelInfoUpdates) {
-            updater(compositeKernel);
-        }
+        notifyOfKernelInfoUpdates(compositeKernel);
     }
 }
 

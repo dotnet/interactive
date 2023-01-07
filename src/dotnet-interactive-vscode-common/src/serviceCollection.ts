@@ -3,9 +3,14 @@
 
 import * as vscode from 'vscode';
 import { ClientMapper } from './clientMapper';
+import { DynamicGrammarSemanticTokenProvider } from './dynamicGrammarSemanticTokenProvider';
+import { KernelInfoUpdaterService } from './kernelInfoUpdaterService';
+import { LanguageConfigurationManager } from './languageConfigurationManager';
 import { NotebookWatcherService } from './notebookWatcherService';
 
 export class ServiceCollection {
+    private kernelInfoUpdaterService: KernelInfoUpdaterService;
+    private languageConfigurationManager: LanguageConfigurationManager;
     private notebookWatcherService: NotebookWatcherService;
 
     static _instance: ServiceCollection;
@@ -18,20 +23,31 @@ export class ServiceCollection {
         return ServiceCollection._instance;
     }
 
-    constructor(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
+    constructor(context: vscode.ExtensionContext, clientMapper: ClientMapper, dynamicTokensProvider: DynamicGrammarSemanticTokenProvider) {
+        this.kernelInfoUpdaterService = new KernelInfoUpdaterService(clientMapper);
+        this.languageConfigurationManager = new LanguageConfigurationManager(dynamicTokensProvider);
         this.notebookWatcherService = new NotebookWatcherService(context, clientMapper);
         context.subscriptions.push(this);
+    }
+
+    get KernelInfoUpdaterService() {
+        return this.kernelInfoUpdaterService;
+    }
+
+    get LanguageConfigurationManager() {
+        return this.languageConfigurationManager;
     }
 
     get NotebookWatcher() {
         return this.notebookWatcherService;
     }
 
-    static initialize(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
-        ServiceCollection._instance = new ServiceCollection(context, clientMapper);
+    static initialize(context: vscode.ExtensionContext, clientMapper: ClientMapper, dynamicTokensProvider: DynamicGrammarSemanticTokenProvider) {
+        ServiceCollection._instance = new ServiceCollection(context, clientMapper, dynamicTokensProvider);
     }
 
     dispose() {
+        this.languageConfigurationManager.dispose();
         this.notebookWatcherService.dispose();
     }
 }
