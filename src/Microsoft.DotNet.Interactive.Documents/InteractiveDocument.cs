@@ -158,12 +158,20 @@ public class InteractiveDocument : IEnumerable
 
         return file.Extension.ToLowerInvariant() switch
         {
+            // polyglot formats
             ".ipynb" => Notebook.Parse(fileContents, kernelInfos),
             ".dib" => CodeSubmission.Parse(fileContents, kernelInfos),
 
+            // single-language formats
+            ".cs" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "csharp") },
+            ".csx" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "csharp") },
+            ".fs" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "fsharp") },
+            ".fsx" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "fsharp") },
+            ".ps1" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "pwsh") },
+            ".html" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "html") },
+            ".js" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "javascript") },
 
-
-            _ => throw new InvalidOperationException($"Unrecognized extension for a notebook: {file.Extension}"),
+            _ => throw new InvalidOperationException($"Unrecognized extension for a notebook: {file.Extension}")
         };
     }
 
