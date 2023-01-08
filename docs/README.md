@@ -25,17 +25,11 @@ As a powerful and versatile engine, .NET Interactive can be used to create and p
 - REPLs
 - Embeddable script enginges
 
-## Polyglot Notebooks
+### Polyglot Notebooks
 
-Since .NET Interactive is capable of behaving as a kernel for notebooks, it enables a polyglot (multi-language) notebook experience. 
+Since .NET Interactive is capable of running as a kernel for notebooks, it enables a polyglot (multi-language) notebook experience. When using the .NET Interactive kernel, you can use different languages from one cell to the next, share variables between languages, and dynamically connect new languages and remote kernels within a notebook. There's no need to install different Jupyter kernels, use wrapper libraries, or install different tools to get the best experience for the language of your choice. You can always use the best language for the job and seamlessly transition between different stages of your workflow, all within one notebook.
 
-In Polyglot Notebooks, you can use multiple languages and share variables between them. No more installing different Jupyter kernels, using wrapper libraries, or different tools to get the best language server support for the language of your choice. Always use the best language for the job and seamlessly transition between different states of your workflow, all within one notebook.
-
-### Visual Studio Code
-
-For the best experience when working with multi-language notebooks, we recommend installing the [Polyglot Notebooks Extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode).  
-
-
+For the best experience when working with multi-language notebooks, we recommend installing the [Polyglot Notebooks](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode) extension for Visual Studio Code. While the full .NET Interactive feature set is available in Jupyter, many features are only usable via code, whereas the Polyglot Notebooks extension provides additional features including a language/kernel picker for each cell, enhanced language services, a multi-kernel variable viewer, and more.
 
 ### Jupyter and nteract
 
@@ -45,19 +39,16 @@ There are several ways to get started using .NET Interactive with Jupyter, inclu
 * [Create and run .NET notebooks on your machine](NotebookswithJupyter.md).
 * [Share .NET notebooks online using Binder](CreateBinder.md).
 
+### REPLs
 
-## REPLs
-
-.NET Interactive can be used as the execution engine for REPLs. For an example using a CLI, see [.NET REPL](https://github.com/jonsequitur/dotnet-repl). In addition, .NET REPL can actually be used to set up automation for your Polyglot Notebooks. 
- 
+.NET Interactive can be used as the execution engine for REPLs as well. The experimental [.NET REPL](https://github.com/jonsequitur/dotnet-repl) is one example of a command line REPL built on .NET Interactive. In addition, .NET REPL can actually be used to set up automation for your Polyglot Notebooks. 
 
 ## Acknowledgements 
 
 The multi-language experience of .NET Interactive is truly a collaborative effort amongst other groups at Microsoft. We'd like to thank the following teams for contributing their time and expertise to helping light up functionality for other languages. 
 
-- **PowerShell Team:** PowerShell
-- **Azure Data/SQL Team:** SQL, KQL
-
+- **PowerShell Team:** PowerShell support
+- **Azure Data Team:** SQL and KQL support
 
 ## Other
 
@@ -90,13 +81,13 @@ The .NET Core tools collect usage data in order to help us improve your experien
 
 To disable this message and the .NET Core welcome message, set the `DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT` environment variable to `true`. Note that this variable has no effect on telemetry opt out.
 
-## Features
+## Using notebooks
 
 * [Support for multiple languages](polyglot.md)
 * Display output ([C#](display-output-csharp.md) | F# | PowerShell)
-* Create plots with with [Xplot](https://fslab.org/XPlot/)
 * ["Magic commands"](./magic-commands.md)
 * [Import NuGet packages](nuget-overview.md)
+* [Running code from other notebooks and source files using `#!import`](import-magic-command.md)
 * Language-specific features
     * C#
         * The [C# scripting](https://docs.microsoft.com/en-us/archive/msdn-magazine/2016/january/essential-net-csharp-scripting) dialect
@@ -108,23 +99,17 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_INTER
         * [PowerShell profile support](../samples/notebooks/powershell/Docs/Profile%20Support.ipynb)
         * [PowerShell host support](../samples/notebooks/powershell/Docs/Interactive-Host-Experience.ipynb)
         * [AzShell support](../samples/notebooks/powershell/Docs/Interact-With-Azure-Cloud-Shell.ipynb)
-* Getting input from the user
+* [Getting input from the user](input-prompts.md)
+* [Formatter APIs](formatting.md)
+    * [PocketView](pocketview.md)
 * [Multi-language notebooks](polyglot.md)
-    * Switching between languages
-        * Per-cell
-        * Within a single cell
     * [.NET variable sharing](variable-sharing.md)
     * [Accessing kernel variables from the client with JavaScript](javascript-overview.md) 
 
-## Technical details
+## Technical overview
 
 * [Architecture](kernels-overview.md)
 * How Jupyter kernel installation works
-
-## Visualization
-
-* XPlot
-* Visualization with JavaScript libraries
 
 ## .NET Interactive API Guides
 
@@ -133,13 +118,10 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_INTER
 ### .NET API Guide ([TODO](https://github.com/dotnet/interactive/issues/815))
 
 * Commands and events
-* [Formatter APIs](formatting.md)
-    * Working with MIME types 
-* PocketView
+    * Message protocol ([TODO](https://github.com/dotnet/interactive/issues/813))
 * Magic commands
 * Kernel APIs
     * Variable sharing
-* JSON API for Standard I/O and HTTP modes ([TODO](https://github.com/dotnet/interactive/issues/813))
 
 ### JavaScript API Guide ([TODO](https://github.com/dotnet/interactive/issues/814))
 
@@ -150,9 +132,6 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_INTER
  
 ## Extending .NET Interactive
 
-* [Overview](extending-dotnet-interactive.md)
 * [Building your own extension](extending-dotnet-interactive.md)
   * [Adding magic commands](extending-dotnet-interactive.md#adding-magic-commands)
 * Publishing your extension using NuGet
-
-

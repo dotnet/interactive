@@ -324,7 +324,11 @@ More details can be found on the GitHub [project page](https://github.com/jonseq
 
 ### Can I call one notebook from within another?
 
-Yes. You can use the `#!import` magic command to load and run a number of different file types within a notebook, including `.ipynb` and `.dib`. Both of these file formats support polyglot, so notebooks imported this way can include cells in various languages. 
+Yes. You can use the `#!import` magic command to load and run a number of different file types within a notebook, including `.ipynb` and `.dib`. Both of these file formats support polyglot, so notebooks imported this way can include cells in various languages.
+
+You can also use `#!import` to run single-language files within a notebook, including `.cs`, `.csx`, `.js`, and `.ps1` files. 
+
+You can read more about `#!import` [here](import-magic-command.md).
 
 
 Yes. The .NET Interactive [extensibility APIs](extending-dotnet-interactive.md) allows for NuGet packages to add new subkernels at runtime. This is how SQL and KQL support are implemented.
