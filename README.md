@@ -49,10 +49,6 @@ There are several ways to get started using .NET Interactive with Jupyter, inclu
 
 .NET Interactive can be used as the execution engine for REPLs. For an example using a CLI, see [.NET REPL](https://github.com/jonsequitur/dotnet-repl). In addition, .NET REPL can actually be used to set up automation for your Polyglot Notebooks. 
 
-## FAQ
-
-For more information, please refer to our [FAQ](./docs/FAQ.md). 
-
 ### Small factor devices
 
 We support running on devices like Raspberry Pi and [pi-top [4]](https://github.com/pi-top/pi-top-4-.NET-Core-API). You can find instructions [here](small-factor-devices.md).
