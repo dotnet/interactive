@@ -1,5 +1,8 @@
 # FAQ
 
+* [Definitions and concepts](#definitions-and-concepts)
+* [Using Polyglot Notebooks](#using-polyglot-notebooks)
+
 ## _Definitions and concepts_
 
 ### What is a notebook?
