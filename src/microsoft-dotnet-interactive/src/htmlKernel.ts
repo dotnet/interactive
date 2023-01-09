@@ -66,11 +66,15 @@ export function htmlDomFragmentInserter(htmlFragment: string, configuration?: Ht
     const updateContainerContent = configuration?.updateContainerContent ?? ((container, htmlFragment) => container.innerHTML = htmlFragment);
     const createMutationObserver = configuration?.createMutationObserver ?? (callback => new MutationObserver(callback));
     let jsEvaluator: (js: string) => Promise<void>;
+
     if (configuration?.jsEvaluator) {
         jsEvaluator = configuration.jsEvaluator;
     } else {
         const AsyncFunction = eval(`Object.getPrototypeOf(async function(){}).constructor`);
-        jsEvaluator = (code) => AsyncFunction("console", code);
+        jsEvaluator = (code) => {
+            const evaluator = AsyncFunction(code);
+            return (<() => Promise<void>>evaluator)();
+        };
     }
     let container = getOrCreateContainer();
 
