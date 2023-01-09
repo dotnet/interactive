@@ -3,9 +3,10 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Formatting.TabularData;
-
+[JsonConverter(typeof(TableDataFieldDescriptorsJsonConverter))]
 public class TableDataFieldDescriptors : IReadOnlyCollection<TableSchemaFieldDescriptor>
 {
     private readonly Dictionary<string, TableSchemaFieldDescriptor> _descriptors = new();

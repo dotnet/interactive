@@ -37,7 +37,7 @@ public static class JsonExtensions
                         property.Value.ValueKind switch
                         {
                             JsonValueKind.String => property.Value.GetString(),
-                            JsonValueKind.Number => property.Value.GetSingle(),
+                            JsonValueKind.Number => GetNumber(property.Value),
                             JsonValueKind.True => true,
                             JsonValueKind.False => false,
                             JsonValueKind.Null => null,
@@ -53,5 +53,28 @@ public static class JsonExtensions
         }
 
         return rows.ToTabularDataResource();
+
+        static object GetNumber(JsonElement propertyValue)
+        {
+
+            if (propertyValue.TryGetInt32(out var integer))
+            {
+                return integer;
+            }
+
+            if (propertyValue.TryGetInt64(out var longInt))
+            {
+                return longInt;
+            }
+
+            if (propertyValue.TryGetDouble(out var doublePrecision))
+            {
+                return doublePrecision;
+            }
+
+            return propertyValue.GetDecimal();
+        }
     }
+
+    
 }

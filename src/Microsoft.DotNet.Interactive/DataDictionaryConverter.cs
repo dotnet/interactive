@@ -41,7 +41,7 @@ public class DataDictionaryConverter : JsonConverter<IDictionary<string, object>
                 itemValue = reader.GetString();
                 break;
             case JsonTokenType.Number:
-                itemValue = reader.GetDouble();
+                itemValue = GetNumber(ref reader);
                 break;
             case JsonTokenType.True:
                 itemValue = true;
@@ -63,6 +63,26 @@ public class DataDictionaryConverter : JsonConverter<IDictionary<string, object>
         }
 
         return itemValue;
+
+        static object GetNumber(ref Utf8JsonReader reader)
+        {
+            if (reader.TryGetInt32(out var integer))
+            {
+                return integer;
+            }
+
+            if (reader.TryGetInt64(out var longInt))
+            {
+                return longInt;
+            }
+
+            if (reader.TryGetDouble(out var doublePrecision))
+            {
+                return doublePrecision;
+            }
+
+            return reader.GetDecimal();
+        }
     }
 
     private static object ParseArray(ref Utf8JsonReader reader, JsonSerializerOptions options)

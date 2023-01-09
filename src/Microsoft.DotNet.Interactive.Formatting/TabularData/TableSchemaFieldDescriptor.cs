@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Formatting.TabularData;
 
+[JsonConverter(typeof(TableSchemaFieldDescriptorJsonConverter))]
 public class TableSchemaFieldDescriptor
 {
     public TableSchemaFieldDescriptor(string name, TableSchemaFieldType? type = TableSchemaFieldType.Null, string description = null, string format= null)

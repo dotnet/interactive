@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Text.Json;
 
 using FluentAssertions;
@@ -26,7 +25,7 @@ public class TabularDataResourceTests
                 Fields = new TableDataFieldDescriptors
                 {
                     new("name", TableSchemaFieldType.String),
-                    new("age", TableSchemaFieldType.Number),
+                    new("age", TableSchemaFieldType.Integer),
                     new("salary", TableSchemaFieldType.Number),
                     new("active", TableSchemaFieldType.Boolean),
                 }
@@ -53,14 +52,14 @@ public class TabularDataResourceTests
         var tabularDataResource = JsonDocument.Parse(@"
 [
   {
-      ""name"": ""Granny Smith apple"", 
-      ""deliciousness"": null, 
-      ""color"":null 
+        ""name"": ""Granny Smith apple"",
+        ""deliciousness"": null,
+        ""color"":null
   },
-  { 
-      ""name"": ""Rainier cherry"",
-      ""deliciousness"": 9000, 
-      ""color"":""yellow""
+  {
+        ""name"": ""Rainier cherry"",
+        ""deliciousness"": 9000, 
+        ""color"":""yellow""
   }
 ]").ToTabularDataResource();
 
@@ -72,11 +71,90 @@ public class TabularDataResourceTests
         tabularDataResource
             .Schema
             .Fields["deliciousness"]
-            .Type.Should().Be(TableSchemaFieldType.Number);
+            .Type.Should().Be(TableSchemaFieldType.Integer);
 
         tabularDataResource
             .Schema
             .Fields["color"]
             .Type.Should().Be(TableSchemaFieldType.String);
+    }
+
+    [Fact]
+    public void can_be_deserialized_from_json()
+    {
+        var json = @"
+{   ""profile"": ""tabular-data-resource"",
+    ""schema"": {
+        ""primaryKey"": [],
+        ""fields"": [
+            {
+                ""name"": ""name"",
+                ""type"": ""string""
+            },
+            {
+                ""name"": ""age"",
+                ""type"": ""integer""
+            },
+            {
+                ""name"": ""salary"",
+                ""type"": ""number""
+            },
+            {
+                ""name"": ""active"",
+                ""type"": ""boolean""
+            },
+            {
+                ""name"": ""date"",
+                ""type"": ""datetime""
+            },
+            {
+                ""name"": ""summary"",
+                ""type"": ""object""
+            },
+            {
+                ""name"": ""list"",
+                ""type"": ""array""
+            }
+        ]
+    },
+    ""data"" : [
+        { ""name"": ""mitch"", ""age"": 42, ""salary"":10.0, ""active"":true, ""date"": ""2020-01-01"", ""summary"": { ""a"": 1, ""b"": 2 }, ""list"":[1,2,3,4] }
+    ]
+}";
+        var expected = new TabularDataResource(
+            new TableSchema
+            {
+                Fields = new TableDataFieldDescriptors
+                {
+                    new("name", TableSchemaFieldType.String),
+                    new("age", TableSchemaFieldType.Integer),
+                    new("salary", TableSchemaFieldType.Number),
+                    new("active", TableSchemaFieldType.Boolean),
+                    new("date", TableSchemaFieldType.DateTime),
+                    new("summary", TableSchemaFieldType.Object),
+                    new("list", TableSchemaFieldType.Array)
+                }
+            },
+            new[]
+            {
+                new Dictionary<string, object>
+                {
+                    ["name"] = "mitch",
+                    ["age"] = 42,
+                    ["salary"] = 10.0,
+                    ["active"] = true,
+                    ["date"] = new DateTime(2020, 1, 1),
+                    ["summary"] = new Dictionary<string, object>
+                    {
+                        ["a"] = 1,
+                        ["b"] = 2
+                    },
+                    ["list"] = new object[]{1,2,3,4}
+                }
+            });
+
+        var actual = JsonSerializer.Deserialize<TabularDataResource>(json, JsonFormatter.SerializerOptions);
+
+        actual.Should().BeEquivalentTo(expected);
     }
 }
