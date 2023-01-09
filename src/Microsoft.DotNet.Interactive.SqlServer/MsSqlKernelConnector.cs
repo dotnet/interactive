@@ -28,8 +28,8 @@ public class MsSqlKernelConnector : IKernelConnector
             throw new InvalidOperationException($"{nameof(PathToService)} cannot be null or whitespace.");
         }
 
-        var logPath = Environment.GetEnvironmentVariable("DOTNET_SQLTOOLSSERVICE_LOGPATH");
-        string extraArgs = logPath != null ? $" --log-path {logPath} --trace-level Verbose" : string.Empty;
+        var logFile = Environment.GetEnvironmentVariable("DOTNET_SQLTOOLSSERVICE_LOGFILE");
+        string extraArgs = logFile != null ? $" --log-path \"{logFile}\" --trace-level Verbose" : string.Empty;
 
         var client = new ToolsServiceClient(PathToService, $"--parent-pid {Environment.ProcessId}{extraArgs}");
 
