@@ -101,7 +101,7 @@ public static class KernelExtensions
                 var kernelInfoCollection = CreateKernelInfos(kernel.RootKernel as CompositeKernel);
                 var document = await InteractiveDocument.LoadAsync(
                     file,
-                    CreateKernelInfos(kernel.RootKernel as CompositeKernel));
+                    kernelInfoCollection);
 
                 foreach (var element in document.Elements)
                 {
