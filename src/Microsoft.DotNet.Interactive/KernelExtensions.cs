@@ -102,7 +102,7 @@ public static class KernelExtensions
                 var document = await InteractiveDocument.LoadAsync(
                     file,
                     kernelInfoCollection);
-
+var lookup = kernelInfoCollection.ToDictionary(k => k.Name, StringComparer.OrdinalIgnoreCase);
                 foreach (var element in document.Elements)
                 {
                     if (lookup.TryGetValue(element.KernelName!, out var kernelInfo) && StringComparer.OrdinalIgnoreCase.Equals(kernelInfo.LanguageName, "markdown"))
