@@ -73,7 +73,7 @@ Telemetry is collected when .NET Interactive is started. Once .NET Interactive i
 * `dotnet interactive http`
 * `dotnet interactive stdio`
 
-### How to opt out of telemetry
+### How to opt out
 
 The .NET Interactive telemetry feature is enabled by default. To opt out of the telemetry feature, set the `DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT` environment variable to `1` or `true`.
 

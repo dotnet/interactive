@@ -78,7 +78,7 @@ await Kernel.Root.SendAsync(
         "javascript"));
 ```
 
-### What's the difference between a .dib file and an .ipynb file?
+### What's the difference between a `.dib` file and an `.ipynb` file?
 
 The `.ipynb` file extension is the standard Jupyter notebook format. Despite the name, it's no longer specific to IPython, and can be used for many different languages. It's a JSON-based format and it can store content and metadata for code cells, Markdown cells, and cell outputs, which store the results of code execution for display. Multiple outputs can be stored for each code cell, as long as they differ by MIME type. There are many tools available for diffing, converting, and displaying `.ipynb` files. In GitHub,`.ipynb` files are displayed using a notebook-style layout.
 
@@ -99,6 +99,8 @@ A "read-eval-print loop", or [REPL](https://en.wikipedia.org/wiki/Read%E2%80%93e
 ### What is .NET REPL?
 
 .NET Repl is a [.NET tool](https://learn.microsoft.com/en-us/dotnet/core/tools/global-tools) ([`dotnet-repl`](https://github.com/jonsequitur/dotnet-repl)) that uses the .NET Interactive engine to provide a terminal-based REPL supporting the same general features that you can find in Polyglot Notebooks, including support for combining multiple languages in one session and support for the `.ipynb` and `.dib` file formats. It also provides some additional features, including the ability to execute notebooks without a UI, allowing for testing notebook files or using them as automation scripts with built-in log capture.
+
+[_This is an experimental feature that might be added to the core .NET Interactive product in the future._]
 
 ### What is the C# Interactive Window?
 
@@ -304,11 +306,29 @@ await Kernel.Root.FindKernelByName("csharp")
 
 ### Is there a way to run a notebook from the command line?
 
-The [.NET REPL](https://github.com/jonsequitur/dotnet-repl) has a number of features relating to command line automation with notebooks. The GitHub project page has more details. 
+The [.NET REPL](https://github.com/jonsequitur/dotnet-repl) has a number of features relating to command line automation with notebooks. The GitHub [project page](https://github.com/jonsequitur/dotnet-repl) has more details. 
+
+[_This is an experimental feature that might be added to the core .NET Interactive product in the future._]
+
+### How can I test my notebooks?
+
+One approach to automated testing of notebooks is to use [.NET REPL](https://github.com/jonsequitur/dotnet-repl). The following example shows how to run a notebook headlessly and output a `.trx` file containing the results:
+
+```console
+dotnet repl --run /path/to/notebook.ipynb --output-format trx --output-path /path/to/results.trx --exit-after-run 
+```
+
+More details can be found on the GitHub [project page](https://github.com/jonsequitur/dotnet-repl).
+
+[_This is an experimental feature that might be added to the core .NET Interactive product in the future._]
 
 ### Can I call one notebook from within another?
 
-Yes. You can use the `#!import` magic command to load and run a number of different file types within a notebook, including `.ipynb` and `.dib`. Both of these file formats support polyglot, so notebooks imported this way can include cells in various languages. 
+Yes. You can use the `#!import` magic command to load and run a number of different file types within a notebook, including `.ipynb` and `.dib`. Both of these file formats support polyglot, so notebooks imported this way can include cells in various languages.
+
+You can also use `#!import` to run single-language files within a notebook, including `.cs`, `.csx`, `.js`, and `.ps1` files. 
+
+You can read more about `#!import` [here](import-magic-command.md).
 
 ### How can I add other languages to a notebook?
 

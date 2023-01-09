@@ -93,16 +93,16 @@ public static class KernelExtensions
     public static TKernel UseImportMagicCommand<TKernel>(this TKernel kernel)
         where TKernel : Kernel
     {
-        var command = new Command("#!import", "Imports and runs another notebook.");
-        command.AddArgument(new Argument<FileInfo>("notebookFile").ExistingOnly());
+        var command = new Command("#!import", "Runs another notebook or source code file inline.");
+        command.AddArgument(new Argument<FileInfo>("file").ExistingOnly());
         command.Handler = CommandHandler.Create(
-            async (FileInfo notebookFile, KernelInvocationContext context) =>
+            async (FileInfo file, KernelInvocationContext context) =>
             {
                 var kernelInfoCollection = CreateKernelInfos(kernel.RootKernel as CompositeKernel);
                 var document = await InteractiveDocument.LoadAsync(
-                    notebookFile,
+                    file,
                     kernelInfoCollection);
-                var lookup = kernelInfoCollection.ToDictionary(k => k.Name, StringComparer.OrdinalIgnoreCase);
+var lookup = kernelInfoCollection.ToDictionary(k => k.Name, StringComparer.OrdinalIgnoreCase);
                 foreach (var element in document.Elements)
                 {
                     if (lookup.TryGetValue(element.KernelName!, out var kernelInfo) && StringComparer.OrdinalIgnoreCase.Equals(kernelInfo.LanguageName, "markdown"))
