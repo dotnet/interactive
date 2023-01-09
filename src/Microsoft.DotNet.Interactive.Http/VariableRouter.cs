@@ -34,8 +34,6 @@ public class VariableRouter : IRouter
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
             Converters =
             {
-                new TableSchemaFieldTypeConverter(),
-                new TabularDataResourceConverter(),
                 new DataDictionaryConverter()
             }
         };

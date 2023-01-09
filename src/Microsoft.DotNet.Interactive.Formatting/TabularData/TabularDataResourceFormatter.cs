@@ -25,8 +25,6 @@ public static class TabularDataResourceFormatter
             ReferenceHandler = null,
             Converters =
             {
-                new TableSchemaFieldTypeConverter(),
-                new TabularDataResourceConverter(),
                 new DataDictionaryConverter()
             }
         };

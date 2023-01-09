@@ -23,8 +23,6 @@ internal class JavaScriptValueDeclarer
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
             Converters =
             {
-                new TableSchemaFieldTypeConverter(),
-                new TabularDataResourceConverter(),
                 new DataDictionaryConverter()
             }
         };

@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Formatting.TabularData;
 
+[JsonConverter(typeof(TableSchemaJsonConverter))]
 public class TableSchema
 {
     [JsonPropertyName("primaryKey")]

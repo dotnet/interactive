@@ -134,6 +134,7 @@ Microsoft.DotNet.Interactive.Formatting
   public abstract class ITypeFormatterSource
     public System.Collections.Generic.IEnumerable<ITypeFormatter> CreateTypeFormatters()
   public abstract class JsonConverter<T> : JsonConverter<T>
+    protected System.Void EnsureStartArray(System.Text.Json.Utf8JsonReader reader, System.Type typeToConvert)
     protected System.Void EnsureStartObject(System.Text.Json.Utf8JsonReader reader, System.Type typeToConvert)
     protected System.Void OnWrite(System.Text.Json.Utf8JsonWriter writer, T value, System.Text.Json.JsonSerializerOptions options)
     public System.Void Write(System.Text.Json.Utf8JsonWriter writer, T value, System.Text.Json.JsonSerializerOptions options)
@@ -292,6 +293,10 @@ Microsoft.DotNet.Interactive.Formatting.TabularData
     public System.Void Add(TableSchemaFieldDescriptor descriptor)
     public System.Boolean Contains(System.String name)
     public System.Collections.Generic.IEnumerator<TableSchemaFieldDescriptor> GetEnumerator()
+  public class TableDataFieldDescriptorsJsonConverter : Microsoft.DotNet.Interactive.Formatting.JsonConverter<TableDataFieldDescriptors>
+    .ctor()
+    public TableDataFieldDescriptors Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+    public System.Void Write(System.Text.Json.Utf8JsonWriter writer, TableDataFieldDescriptors value, System.Text.Json.JsonSerializerOptions options)
   public class TableSchema
     .ctor()
     public TableDataFieldDescriptors Fields { get; set;}
@@ -302,6 +307,10 @@ Microsoft.DotNet.Interactive.Formatting.TabularData
     public System.String Format { get;}
     public System.String Name { get;}
     public TableSchemaFieldType Type { get;}
+  public class TableSchemaFieldDescriptorJsonConverter : Microsoft.DotNet.Interactive.Formatting.JsonConverter<TableSchemaFieldDescriptor>
+    .ctor()
+    public TableSchemaFieldDescriptor Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+    public System.Void Write(System.Text.Json.Utf8JsonWriter writer, TableSchemaFieldDescriptor value, System.Text.Json.JsonSerializerOptions options)
   public enum TableSchemaFieldType : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
     Any=0
     Object=1
@@ -314,20 +323,20 @@ Microsoft.DotNet.Interactive.Formatting.TabularData
     DateTime=8
     GeoPoint=9
     GeoJson=10
-  public class TableSchemaFieldTypeConverter : Microsoft.DotNet.Interactive.Formatting.JsonConverter<TableSchemaFieldType>
+  public class TableSchemaFieldTypeJsonConverter : Microsoft.DotNet.Interactive.Formatting.JsonConverter<TableSchemaFieldType>
     .ctor()
     public TableSchemaFieldType Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
     public System.Void Write(System.Text.Json.Utf8JsonWriter writer, TableSchemaFieldType value, System.Text.Json.JsonSerializerOptions options)
+  public class TableSchemaJsonConverter : Microsoft.DotNet.Interactive.Formatting.JsonConverter<TableSchema>
+    .ctor()
+    public TableSchema Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+    public System.Void Write(System.Text.Json.Utf8JsonWriter writer, TableSchema value, System.Text.Json.JsonSerializerOptions options)
   public class TabularDataResource
-    .ctor(TableSchema schema, System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<System.String,System.Object>>> data)
+    .ctor(TableSchema schema, System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<System.String,System.Object>>> data, System.String profile = null)
     public System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<System.String,System.Object>>> Data { get;}
     public System.String Profile { get;}
     public TableSchema Schema { get;}
     public TabularDataResourceJsonString ToJsonString()
-  public class TabularDataResourceConverter : Microsoft.DotNet.Interactive.Formatting.JsonConverter<TabularDataResource>
-    .ctor()
-    public TabularDataResource Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
-    public System.Void Write(System.Text.Json.Utf8JsonWriter writer, TabularDataResource value, System.Text.Json.JsonSerializerOptions options)
   public static class TabularDataResourceFormatter
     public static System.Text.Json.JsonSerializerOptions JsonSerializerOptions { get;}
     public static TableSchemaFieldType ToTableSchemaFieldType()
@@ -337,6 +346,10 @@ Microsoft.DotNet.Interactive.Formatting.TabularData
     .ctor(Action<T,Microsoft.DotNet.Interactive.Formatting.FormatContext> format)
     public System.String MimeType { get;}
     public System.Boolean Format(T value, Microsoft.DotNet.Interactive.Formatting.FormatContext context)
+  public class TabularDataResourceJsonConverter : Microsoft.DotNet.Interactive.Formatting.JsonConverter<TabularDataResource>
+    .ctor()
+    public TabularDataResource Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+    public System.Void Write(System.Text.Json.Utf8JsonWriter writer, TabularDataResource value, System.Text.Json.JsonSerializerOptions options)
   public class TabularDataResourceJsonString : Microsoft.DotNet.Interactive.Formatting.JsonString, Microsoft.AspNetCore.Html.IHtmlContent
     public static TabularDataResourceJsonString Create(System.Collections.Generic.IReadOnlyDictionary<System.String,System.Type> fields, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IDictionary<System.String,System.Object>> data)
     .ctor(System.String json)

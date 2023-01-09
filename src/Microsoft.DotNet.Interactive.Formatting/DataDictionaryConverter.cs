@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Text.Json;
 
 namespace Microsoft.DotNet.Interactive.Formatting;
@@ -41,7 +42,7 @@ public class DataDictionaryConverter : JsonConverter<IDictionary<string, object>
                 itemValue = reader.GetString();
                 break;
             case JsonTokenType.Number:
-                itemValue = reader.GetDouble();
+                itemValue = GetNumber(ref  reader);
                 break;
             case JsonTokenType.True:
                 itemValue = true;
@@ -63,6 +64,26 @@ public class DataDictionaryConverter : JsonConverter<IDictionary<string, object>
         }
 
         return itemValue;
+    }
+
+    private static object GetNumber(ref Utf8JsonReader reader)
+    {
+        if (reader.TryGetInt32(out var integer))
+        {
+            return integer;
+        }
+        else if (reader.TryGetInt64(out var longInt))
+        {
+            return longInt;
+        }
+        else if (reader.TryGetDouble(out var doublePrecision))
+        {
+            return doublePrecision;
+        }
+        else
+        {
+            return reader.GetDecimal();
+        }
     }
 
     private static object ParseArray(ref Utf8JsonReader reader, JsonSerializerOptions options)

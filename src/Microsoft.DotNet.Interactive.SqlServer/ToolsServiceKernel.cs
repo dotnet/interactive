@@ -9,13 +9,12 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Data.Analysis;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.ExtensionLab;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.ValueSharing;
-
-using static Azure.Core.HttpHeader;
 
 namespace Microsoft.DotNet.Interactive.SqlServer;
 
@@ -156,19 +155,17 @@ public abstract class ToolsServiceKernel :
                                     RowsStartIndex = 0,
                                     RowsCount = Convert.ToInt32(resultSummary.RowCount)
                                 };
-                                    
+
                                 var subsetResult = await ServiceClient.ExecuteQueryExecuteSubsetAsync(subsetParams, context.CancellationToken);
-                                var tabularDataResources = GetTabularDataResources(resultSummary.ColumnInfo, subsetResult.ResultSubset.Rows);
+                                var tabularDataResource = GetTabularDataResource(resultSummary.ColumnInfo, subsetResult.ResultSubset.Rows);
 
-                                foreach (var tabularDataResource in tabularDataResources)
-                                {
-                                    // Store each result set in the list of result sets being saved
+                                // Store each result set in the list of result sets being saved
 
-                                    results.Add(tabularDataResource);
+                                results.Add(tabularDataResource);
 
-                                    var explorer = DataExplorer.CreateDefault(tabularDataResource);
-                                    context.Display(explorer);
-                                }
+                                var explorer = DataExplorer.CreateDefault(tabularDataResource);
+                                context.Display(explorer);
+
                             }
                             else
                             {
@@ -247,7 +244,162 @@ public abstract class ToolsServiceKernel :
     {
     }
 
-    private static IEnumerable<TabularDataResource> GetTabularDataResources(ColumnInfo[] columnInfos, CellValue[][] rows)
+    private static DataFrame GetDataFrame(ColumnInfo[] columnInfos,
+        CellValue[][] rows)
+    {
+        var columnNames = columnInfos.Select(c => c.ColumnName).ToArray();
+
+        SqlKernelUtils.AliasDuplicateColumnNames(columnNames);
+
+        var dataFrameColumns = CreateDataFrameColumns(columnInfos, columnNames, rows);
+
+        var dataFrame = new DataFrame(dataFrameColumns);
+
+        return dataFrame;
+    }
+
+    private static IEnumerable<DataFrameColumn> CreateDataFrameColumns(ColumnInfo[] columnInfos, string[] columnNames,
+        CellValue[][] cellValues)
+    {
+        var columns = new List<DataFrameColumn>();
+        for (var i = 0; i < columnInfos.Length; i++)
+        {
+            var columnInfo = columnInfos[i];
+            var columnName = columnNames[i];
+            var expectedType = Type.GetType(columnInfo.DataType);
+
+            switch (expectedType)
+            {
+                case { } when expectedType == typeof(char):
+                    {
+                        var values = cellValues.Select(row => ConvertValue<char?>(row[i].DisplayValue, expectedType, row[i].IsNull)).ToArray();
+                        columns.Add(new CharDataFrameColumn(columnName, values));
+                    }
+                    break;
+                case { } when expectedType == typeof(string):
+                    {
+                        var values = cellValues.Select(row => ConvertValue<string>(row[i].DisplayValue, expectedType, row[i].IsNull)).ToArray();
+                        columns.Add(new StringDataFrameColumn(columnName, values));
+                    }
+                    break;
+                case { } when expectedType == typeof(bool):
+                    {
+                        var values = cellValues.Select(row => ConvertValue<bool?>(row[i].DisplayValue, expectedType, row[i].IsNull)).ToArray();
+                        columns.Add(new BooleanDataFrameColumn(columnName, values));
+                    }
+                    break;
+                case { } when expectedType == typeof(byte):
+                    {
+                        var values = cellValues.Select(row => ConvertValue<byte?>(row[i].DisplayValue, expectedType, row[i].IsNull)).ToArray();
+                        columns.Add(new ByteDataFrameColumn(columnName, values));
+                    }
+                    break;
+                case { } when expectedType == typeof(sbyte):
+                    {
+                        var values = cellValues.Select(row => ConvertValue<sbyte?>(row[i].DisplayValue, expectedType, row[i].IsNull)).ToArray();
+                        columns.Add(new SByteDataFrameColumn(columnName, values));
+                    }
+                    break;
+                case { } when expectedType == typeof(short):
+                    {
+                        var values = cellValues.Select(row => ConvertValue<short?>(row[i].DisplayValue, expectedType, row[i].IsNull)).ToArray();
+                        columns.Add(new Int16DataFrameColumn(columnName, values));
+                    }
+                    break;
+                case { } when expectedType == typeof(ushort):
+                    {
+                        var values = cellValues.Select(row => ConvertValue<ushort?>(row[i].DisplayValue, expectedType, row[i].IsNull)).ToArray();
+                        columns.Add(new UInt16DataFrameColumn(columnName, values));
+                    }
+                    break;
+                case { } when expectedType == typeof(int):
+                    {
+                        var values = cellValues.Select(row => ConvertValue<int?>(row[i].DisplayValue, expectedType, row[i].IsNull)).ToArray();
+                        columns.Add(new Int32DataFrameColumn(columnName, values));
+                    }
+                    break;
+                case { } when expectedType == typeof(uint):
+                    {
+                        var values = cellValues.Select(row => ConvertValue<uint?>(row[i].DisplayValue, expectedType, row[i].IsNull)).ToArray();
+                        columns.Add(new UInt32DataFrameColumn(columnName, values));
+                    }
+                    break;
+                case { } when expectedType == typeof(long):
+                    {
+                        var values = cellValues.Select(row => ConvertValue<long?>(row[i].DisplayValue, expectedType, row[i].IsNull)).ToArray();
+                        columns.Add(new Int64DataFrameColumn(columnName, values));
+                    }
+                    break;
+                case { } when expectedType == typeof(ulong):
+                    {
+                        var values = cellValues.Select(row => ConvertValue<ulong?>(row[i].DisplayValue, expectedType, row[i].IsNull)).ToArray();
+                        columns.Add(new UInt64DataFrameColumn(columnName, values));
+                    }
+                    break;
+                case { } when expectedType == typeof(decimal):
+                    {
+                        var values = cellValues.Select(row => ConvertValue<decimal?>(row[i].DisplayValue, expectedType, row[i].IsNull)).ToArray();
+                        columns.Add(new DecimalDataFrameColumn(columnName, values));
+                    }
+                    break;
+                case { } when expectedType == typeof(float):
+                    {
+                        var values = cellValues.Select(row => ConvertValue<float?>(row[i].DisplayValue, expectedType, row[i].IsNull)).ToArray();
+                        columns.Add(new SingleDataFrameColumn(columnName, values));
+                    }
+                    break;
+                case { } when expectedType == typeof(double):
+                    {
+                        var values = cellValues.Select(row => ConvertValue<double?>(row[i].DisplayValue, expectedType, row[i].IsNull)).ToArray();
+                        columns.Add(new DoubleDataFrameColumn(columnName, values));
+                    }
+                    break;
+                case { } when expectedType == typeof(DateTime):
+                    {
+                        var values = cellValues.Select(row => ConvertValue<DateTime?>(row[i].DisplayValue, expectedType, row[i].IsNull)).ToArray();
+                        columns.Add(new DateTimeDataFrameColumn(columnName, values));
+                    }
+                    break;
+                default:
+                    throw new InvalidOperationException($"Unsupported type {expectedType}");
+            }
+
+        }
+
+        return columns;
+
+        static T ConvertValue<T>(string displayValue, Type expectedType, bool isNull)
+        {
+            T convertedValue = default;
+
+            if (TypeDescriptor.GetConverter(expectedType) is { } typeConverter)
+            {
+                if (!isNull)
+                {
+                    if (typeConverter.CanConvertFrom(typeof(string)))
+                    {
+                        // TODO:fix handling target boolean type when the column is bit type with numeric value
+                        if ((expectedType == typeof(bool) || expectedType == typeof(bool?)) &&
+
+                            decimal.TryParse(displayValue, out var numericValue))
+                        {
+                            convertedValue = (T)(object)(numericValue != 0);
+                        }
+                        else
+                        {
+                            convertedValue =
+                                (T)typeConverter.ConvertFromInvariantString(displayValue);
+                        }
+                    }
+                }
+            }
+
+            return convertedValue;
+        }
+
+    }
+
+    private static TabularDataResource GetTabularDataResource(ColumnInfo[] columnInfos, CellValue[][] rows)
     {
         var schema = new TableSchema();
         var dataRows = new List<List<KeyValuePair<string, object>>>();
@@ -255,7 +407,7 @@ public abstract class ToolsServiceKernel :
 
         SqlKernelUtils.AliasDuplicateColumnNames(columnNames);
 
-        for (var i = 0; i <  columnInfos.Length; i++)
+        for (var i = 0; i < columnInfos.Length; i++)
         {
             var columnInfo = columnInfos[i];
             var columnName = columnNames[i];
@@ -267,10 +419,10 @@ public abstract class ToolsServiceKernel :
                 schema.PrimaryKey.Add(columnName);
             }
         }
-            
+
         foreach (var row in rows)
         {
-            var dataRow = new List<KeyValuePair<string,object>>();
+            var dataRow = new List<KeyValuePair<string, object>>();
 
             for (var colIndex = 0; colIndex < row.Length; colIndex++)
             {
@@ -308,14 +460,14 @@ public abstract class ToolsServiceKernel :
                 {
                     convertedValue = row[colIndex].DisplayValue;
                 }
-                    
-                dataRow.Add(new KeyValuePair<string, object>( columnNames[colIndex], convertedValue));
+
+                dataRow.Add(new KeyValuePair<string, object>(columnNames[colIndex], convertedValue));
             }
-                
+
             dataRows.Add(dataRow);
         }
 
-        yield return new TabularDataResource(schema, dataRows);
+        return new TabularDataResource(schema, dataRows);
     }
 
     public async Task HandleAsync(RequestCompletions command, KernelInvocationContext context)

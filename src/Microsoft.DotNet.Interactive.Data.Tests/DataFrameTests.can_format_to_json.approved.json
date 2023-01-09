@@ -1,0 +1,30 @@
+{
+  "profile": "tabular-data-resource",
+  "schema": {
+    "primaryKey": [],
+    "fields": [
+      {
+        "type": "integer",
+        "name": "Int32Column"
+      },
+      {
+        "type": "string",
+        "name": "StringColumn"
+      }
+    ]
+  },
+  "data": [
+    {
+      "Int32Column": 1,
+      "StringColumn": "a"
+    },
+    {
+      "Int32Column": 2,
+      "StringColumn": "b"
+    },
+    {
+      "Int32Column": 3,
+      "StringColumn": "c"
+    }
+  ]
+}

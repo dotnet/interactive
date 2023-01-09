@@ -37,7 +37,7 @@ public static class JsonExtensions
                         property.Value.ValueKind switch
                         {
                             JsonValueKind.String => property.Value.GetString(),
-                            JsonValueKind.Number => property.Value.GetSingle(),
+                            JsonValueKind.Number => property.Value.GetDouble(),
                             JsonValueKind.True => true,
                             JsonValueKind.False => false,
                             JsonValueKind.Null => null,

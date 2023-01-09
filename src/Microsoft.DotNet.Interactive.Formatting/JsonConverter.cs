@@ -17,6 +17,15 @@ public abstract class JsonConverter<T> : System.Text.Json.Serialization.JsonConv
         }
     }
 
+    protected void EnsureStartArray(Utf8JsonReader reader, Type typeToConvert)
+    {
+        if (reader.TokenType != JsonTokenType.StartArray)
+        {
+            throw new JsonException(
+                $"Cannot deserialize {typeToConvert.Name}, expecting {JsonTokenType.StartObject} but found {reader.TokenType}");
+        }
+    }
+
     public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
     {
         OnWrite(writer, value, options);

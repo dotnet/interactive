@@ -31,7 +31,7 @@ public class TabularDataResourceFormatterTests : IDisposable
         var data = new[]
         {
             new { Name = "Q", IsValid = false, Cost = double.NaN },
-            new { Name = "U", IsValid = false, Cost = 5.0 },
+            new { Name = "U", IsValid = false, Cost = 4.0 },
             new { Name = "E", IsValid = true, Cost = double.NegativeInfinity },
             new { Name = "S", IsValid = false, Cost = 10.0 },
             new { Name = "T", IsValid = false, Cost = double.PositiveInfinity }
