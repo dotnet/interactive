@@ -96,7 +96,7 @@ public static class KernelExtensions
         var command = new Command("#!import", "Runs another notebook or source code file inline.");
         command.AddArgument(new Argument<FileInfo>("file").ExistingOnly());
         command.Handler = CommandHandler.Create(
-            async (FileInfo notebookFile, KernelInvocationContext context) =>
+            async (FileInfo file, KernelInvocationContext context) =>
             {
                 var kernelInfoCollection = CreateKernelInfos(kernel.RootKernel as CompositeKernel);
                 var document = await InteractiveDocument.LoadAsync(
