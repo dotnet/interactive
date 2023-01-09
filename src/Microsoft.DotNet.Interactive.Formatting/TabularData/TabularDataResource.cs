@@ -4,16 +4,18 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Formatting.TabularData;
 
 [TypeFormatterSource(typeof(TabularDataFormatterSource))]
+[JsonConverter(typeof(TabularDataResourceJsonConverter))]
 public class TabularDataResource
 {
     public TabularDataResource(
-        TableSchema schema, IEnumerable<IEnumerable<KeyValuePair<string, object>>> data)
+        TableSchema schema, IEnumerable<IEnumerable<KeyValuePair<string, object>>> data, string profile = null)
     {
-        Profile = "tabular-data-resource";
+        Profile = string.IsNullOrWhiteSpace(profile) ? "tabular-data-resource" : profile;
         Schema = schema ?? throw new ArgumentNullException(nameof(schema));
         Data = data ?? throw new ArgumentNullException(nameof(data));
     }

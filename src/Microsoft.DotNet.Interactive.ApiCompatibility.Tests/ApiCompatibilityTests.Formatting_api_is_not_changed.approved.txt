@@ -134,6 +134,7 @@ Microsoft.DotNet.Interactive.Formatting
   public abstract class ITypeFormatterSource
     public System.Collections.Generic.IEnumerable<ITypeFormatter> CreateTypeFormatters()
   public abstract class JsonConverter<T> : JsonConverter<T>
+    protected System.Void EnsureStartArray(System.Text.Json.Utf8JsonReader reader, System.Type typeToConvert)
     protected System.Void EnsureStartObject(System.Text.Json.Utf8JsonReader reader, System.Type typeToConvert)
     protected System.Void OnWrite(System.Text.Json.Utf8JsonWriter writer, T value, System.Text.Json.JsonSerializerOptions options)
     public System.Void Write(System.Text.Json.Utf8JsonWriter writer, T value, System.Text.Json.JsonSerializerOptions options)
@@ -314,20 +315,12 @@ Microsoft.DotNet.Interactive.Formatting.TabularData
     DateTime=8
     GeoPoint=9
     GeoJson=10
-  public class TableSchemaFieldTypeConverter : Microsoft.DotNet.Interactive.Formatting.JsonConverter<TableSchemaFieldType>
-    .ctor()
-    public TableSchemaFieldType Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
-    public System.Void Write(System.Text.Json.Utf8JsonWriter writer, TableSchemaFieldType value, System.Text.Json.JsonSerializerOptions options)
   public class TabularDataResource
-    .ctor(TableSchema schema, System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<System.String,System.Object>>> data)
+    .ctor(TableSchema schema, System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<System.String,System.Object>>> data, System.String profile = null)
     public System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<System.String,System.Object>>> Data { get;}
     public System.String Profile { get;}
     public TableSchema Schema { get;}
     public TabularDataResourceJsonString ToJsonString()
-  public class TabularDataResourceConverter : Microsoft.DotNet.Interactive.Formatting.JsonConverter<TabularDataResource>
-    .ctor()
-    public TabularDataResource Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
-    public System.Void Write(System.Text.Json.Utf8JsonWriter writer, TabularDataResource value, System.Text.Json.JsonSerializerOptions options)
   public static class TabularDataResourceFormatter
     public static System.Text.Json.JsonSerializerOptions JsonSerializerOptions { get;}
     public static TableSchemaFieldType ToTableSchemaFieldType()

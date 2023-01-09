@@ -4,16 +4,16 @@
     "primaryKey": [],
     "fields": [
       {
-        "name": "Name",
-        "type": "string"
+        "type": "string",
+        "name": "Name"
       },
       {
-        "name": "IsValid",
-        "type": "boolean"
+        "type": "boolean",
+        "name": "IsValid"
       },
       {
-        "name": "Cost",
-        "type": "number"
+        "type": "number",
+        "name": "Cost"
       }
     ]
   },

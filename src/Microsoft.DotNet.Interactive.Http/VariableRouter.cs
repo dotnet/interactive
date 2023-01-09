@@ -15,8 +15,6 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Formatting.TabularData;
-using Microsoft.DotNet.Interactive.ValueSharing;
 
 namespace Microsoft.DotNet.Interactive.Http;
 
@@ -32,12 +30,7 @@ public class VariableRouter : IRouter
             NumberHandling = JsonNumberHandling.AllowReadingFromString |
                              JsonNumberHandling.AllowNamedFloatingPointLiterals,
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-            Converters =
-            {
-                new TableSchemaFieldTypeConverter(),
-                new TabularDataResourceConverter(),
-                new DataDictionaryConverter()
-            }
+            Converters = { new DataDictionaryConverter() }
         };
     }
     private readonly Kernel _kernel;
@@ -143,7 +136,7 @@ public class VariableRouter : IRouter
         }
     }
 
-    private async Task<FormattedValue> GetValueAsync(Kernel targetKernel, string variableName)
+    private static async Task<FormattedValue> GetValueAsync(Kernel targetKernel, string variableName)
     {
         var result = await targetKernel.SendAsync(new RequestValue(variableName));
 

@@ -23,12 +23,7 @@ public static class TabularDataResourceFormatter
             NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
             ReferenceHandler = null,
-            Converters =
-            {
-                new TableSchemaFieldTypeConverter(),
-                new TabularDataResourceConverter(),
-                new DataDictionaryConverter()
-            }
+            Converters = { new DataDictionaryConverter() }
         };
     }
 

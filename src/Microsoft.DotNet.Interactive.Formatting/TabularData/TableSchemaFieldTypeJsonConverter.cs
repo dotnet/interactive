@@ -6,12 +6,12 @@ using System.Text.Json;
 
 namespace Microsoft.DotNet.Interactive.Formatting.TabularData;
 
-public class TableSchemaFieldTypeConverter : JsonConverter<TableSchemaFieldType>
+internal class TableSchemaFieldTypeJsonConverter : JsonConverter<TableSchemaFieldType>
 {
     public override TableSchemaFieldType Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        var tableSchemaFieldType = Enum.TryParse<TableSchemaFieldType>(reader.GetString(), true, out var fieldType) 
-            ? fieldType 
+        var tableSchemaFieldType = Enum.TryParse<TableSchemaFieldType>(reader.GetString(), true, out var fieldType)
+            ? fieldType
             : TableSchemaFieldType.Null;
         reader.Read();
         return tableSchemaFieldType;

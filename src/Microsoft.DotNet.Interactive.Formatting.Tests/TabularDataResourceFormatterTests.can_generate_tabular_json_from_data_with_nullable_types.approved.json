@@ -4,12 +4,12 @@
     "primaryKey": [],
     "fields": [
       {
-        "name": "Key",
-        "type": "string"
+        "type": "string",
+        "name": "Key"
       },
       {
-        "name": "Value",
-        "type": "integer"
+        "type": "integer",
+        "name": "Value"
       }
     ]
   },
