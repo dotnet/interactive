@@ -35,7 +35,10 @@ public class KqlKernelConnector : IKernelConnector
 
         var connectionDetails = await BuildConnectionDetailsAsync();
 
-        var client = new ToolsServiceClient(PathToService);
+        var logPath = Environment.GetEnvironmentVariable("DOTNET_KUSTOSERVICE_LOGPATH");
+        string extraArgs = logPath != null ? $" --log-path {logPath} --trace-level Verbose" : string.Empty;
+
+        var client = new ToolsServiceClient(PathToService, $"--parent-pid {Environment.ProcessId}{extraArgs}");
 
         var kernel = new MsKqlKernel(
                 $"kql-{kernelName}",
