@@ -29,7 +29,7 @@ public class MsSqlKernelConnector : IKernelConnector
         }
 
         var logFile = Environment.GetEnvironmentVariable("DOTNET_SQLTOOLSSERVICE_LOGFILE");
-        string extraArgs = logFile != null ? $" --log-path \"{logFile}\" --trace-level Verbose" : string.Empty;
+        string extraArgs = logFile != null ? $" --log-file \"{logFile}\" --tracing-level Verbose" : string.Empty;
 
         var client = new ToolsServiceClient(PathToService, $"--parent-pid {Environment.ProcessId}{extraArgs}");
 

@@ -36,7 +36,7 @@ public class KqlKernelConnector : IKernelConnector
         var connectionDetails = await BuildConnectionDetailsAsync();
 
         var logFile = Environment.GetEnvironmentVariable("DOTNET_KUSTOSERVICE_LOGFILE");
-        string extraArgs = logFile != null ? $" --log-path \"{logFile}\" --trace-level Verbose" : string.Empty;
+        string extraArgs = logFile != null ? $" --log-file \"{logFile}\" --tracing-level Verbose" : string.Empty;
 
         var client = new ToolsServiceClient(PathToService, $"--parent-pid {Environment.ProcessId}{extraArgs}");
 
