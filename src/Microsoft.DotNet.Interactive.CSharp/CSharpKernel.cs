@@ -138,7 +138,7 @@ public class CSharpKernel :
     public IReadOnlyCollection<KernelValueInfo> GetValueInfos() =>
         ScriptState?.Variables
             .GroupBy(v => v.Name)
-            .Select(g => new KernelValueInfo(g.Key, new FormattedValue(PlainTextFormatter.MimeType, g.Last().Value?.ToDisplayString(PlainTextFormatter.MimeType)), g.Last().Type))
+            .Select(g => new KernelValueInfo(g.Key, new FormattedValue(PlainTextFormatter.MimeType, g.LastOrDefault().Value?.ToDisplayString(PlainTextFormatter.MimeType)), g.Last().Type))
             .ToArray() ??
         Array.Empty<KernelValueInfo>();
 
