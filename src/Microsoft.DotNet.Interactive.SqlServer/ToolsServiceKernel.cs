@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.ExtensionLab;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.ValueSharing;
 
@@ -343,7 +344,7 @@ public abstract class ToolsServiceKernel :
 
     public IReadOnlyCollection<KernelValueInfo> GetValueInfos()
     {
-        return QueryResults.Keys.Select(key => new KernelValueInfo(key, typeof(IEnumerable<TabularDataResource>))).ToArray();
+        return QueryResults.Keys.Select(key => new KernelValueInfo(key, new FormattedValue(PlainTextFormatter.MimeType, _variables[key]?.ToDisplayString(PlainTextFormatter.MimeType)), type: typeof(IEnumerable<TabularDataResource>))).ToArray();
     }
 
     public Task HandleAsync(RequestValue command, KernelInvocationContext context)

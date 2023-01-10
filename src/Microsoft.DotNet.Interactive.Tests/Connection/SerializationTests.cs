@@ -387,9 +387,9 @@ public class SerializationTests
 
             yield return new ValueInfosProduced(new[]
             {
-                new KernelValueInfo("a", typeof(string)),
-                new KernelValueInfo("b", typeof(string)),
-                new KernelValueInfo("c", typeof(string))
+                new KernelValueInfo("a",new FormattedValue(PlainTextFormatter.MimeType, "value a"), typeof(string)),
+                new KernelValueInfo("b",new FormattedValue(PlainTextFormatter.MimeType, "value b"), typeof(string)),
+                new KernelValueInfo("c",new FormattedValue(PlainTextFormatter.MimeType, "value c"), typeof(string))
             }, new RequestValueInfos("csharp"));
 
             yield return new ValueProduced(

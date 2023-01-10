@@ -938,10 +938,12 @@ Microsoft.DotNet.Interactive.ValueSharing
     public System.Type Type { get;}
     public System.Object Value { get;}
   public class KernelValueInfo
-    .ctor(System.String name, System.Type type = null)
+    .ctor(System.String name, Microsoft.DotNet.Interactive.FormattedValue formattedValue, System.Type type = null, System.String typeName = null)
+    public Microsoft.DotNet.Interactive.FormattedValue FormattedValue { get;}
     public System.String Name { get;}
     public System.Collections.Generic.IReadOnlyCollection<System.String> PreferredMimeTypes { get; set;}
     public System.Type Type { get;}
+    public System.String TypeName { get; set;}
   public class KernelValues, System.Collections.Generic.IEnumerable<KernelValue>, System.Collections.IEnumerable
     .ctor(System.Collections.Generic.IEnumerable<KernelValue> variables, System.Boolean detailed)
     public System.Boolean Detailed { get;}

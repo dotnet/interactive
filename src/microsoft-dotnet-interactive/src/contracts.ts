@@ -482,7 +482,9 @@ export interface KernelDirectiveInfo {
 }
 
 export interface KernelValueInfo {
+    typeName: string;
     name: string;
+    formattedValue: FormattedValue;
     preferredMimeTypes: Array<string>;
 }
 

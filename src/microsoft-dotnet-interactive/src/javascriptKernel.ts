@@ -69,7 +69,14 @@ export class JavascriptKernel extends Kernel {
     }
 
     private handleRequestValueInfos(invocation: IKernelCommandInvocation): Promise<void> {
-        const valueInfos: contracts.KernelValueInfo[] = this.allLocalVariableNames().filter(v => !this.suppressedLocals.has(v)).map(v => ({ name: v, preferredMimeTypes: [] }));
+        const valueInfos: contracts.KernelValueInfo[] = this.allLocalVariableNames().filter(v => !this.suppressedLocals.has(v)).map(v => (
+            {
+                name: v,
+                typeName: typeof (this.getLocalVariable(v)),
+                formattedValue: formatValue(this.getLocalVariable(v), "text/plain"),
+                preferredMimeTypes: []
+            }));
+
         const event: contracts.ValueInfosProduced = {
             valueInfos
         };
