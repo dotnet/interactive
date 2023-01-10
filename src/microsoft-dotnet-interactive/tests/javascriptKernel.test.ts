@@ -75,6 +75,23 @@ describe("javascriptKernel", () => {
                 }]);
     });
 
+    it("valueinfo report variable type", async () => {
+        const events: contracts.KernelEventEnvelope[] = [];
+        const kernel = new JavascriptKernel();
+        kernel.subscribeToKernelEvents((e) => events.push(e));
+        const valueName = `value_${Guid.create().toString().replace(/-/g, "_")}`; //?
+        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: `${valueName} = [42,43];` } });
+        await kernel.send({ commandType: contracts.RequestValueInfosType, command: <contracts.RequestValueInfos>{} });
+        expect((<contracts.ValueInfosProduced>events.find(e => e.eventType === contracts.ValueInfosProducedType)!.event).valueInfos)
+            .to.deep.equal(
+                [{
+                    formattedValue: { mimeType: 'text/plain', value: '[42,43]' },
+                    name: valueName,
+                    preferredMimeTypes: [],
+                    typeName: 'number[]'
+                }]);
+    });
+
     it("returns values from RequestValue", async () => {
         const events: contracts.KernelEventEnvelope[] = [];
         const kernel = new JavascriptKernel();
