@@ -5,6 +5,7 @@ import * as contracts from "./contracts";
 import { ConsoleCapture } from "./consoleCapture";
 import { Kernel, IKernelCommandInvocation } from "./kernel";
 import { Logger } from "./logger";
+import { TruthyTypesOf } from "rxjs";
 
 export class JavascriptKernel extends Kernel {
     private suppressedLocals: Set<string>;
@@ -72,7 +73,7 @@ export class JavascriptKernel extends Kernel {
         const valueInfos: contracts.KernelValueInfo[] = this.allLocalVariableNames().filter(v => !this.suppressedLocals.has(v)).map(v => (
             {
                 name: v,
-                typeName: typeof (this.getLocalVariable(v)),
+                typeName: getType(this.getLocalVariable(v)),
                 formattedValue: formatValue(this.getLocalVariable(v), "text/plain"),
                 preferredMimeTypes: []
             }));
@@ -127,6 +128,9 @@ export function formatValue(arg: any, mimeType: string): contracts.FormattedValu
     switch (mimeType) {
         case 'text/plain':
             value = arg?.toString() || 'undefined';
+            if (Array.isArray(arg)) {
+                value = `[${value}]`;
+            }
             break;
         case 'application/json':
             value = JSON.stringify(arg);
@@ -139,4 +143,14 @@ export function formatValue(arg: any, mimeType: string): contracts.FormattedValu
         mimeType,
         value,
     };
+}
+
+export function getType(arg: any): string {
+    let type: string = arg ? typeof (arg) : "";//?
+
+    if (Array.isArray(arg)) {
+        type = `${typeof (arg[0])}[]`;//?
+    }
+
+    return type; //?
 }
