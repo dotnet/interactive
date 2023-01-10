@@ -191,7 +191,7 @@ There are a couple of approaches that might work, depending on what you're tryin
 
 You can load a JavaScript library using `require`.
 
-[Example](../samples/notebooks/javascript/Plotly.ipynb)
+[Example](../samples/notebooks/javascript/Plotly%20with%20RequireJS.ipynb)
 
 JavaScript package managers are not currently supported, however.
 

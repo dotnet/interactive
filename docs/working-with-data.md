@@ -1,4 +1,5 @@
 # Connecting to Data
+
 Currently, you can connect to and query **Microsoft SQL Server Databases** or **Kusto Cluster Databases**. 
 
 To connect to data, you will need to reference Nuget packages and use the `#!connect` command. 
