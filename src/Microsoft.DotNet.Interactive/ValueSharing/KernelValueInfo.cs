@@ -12,13 +12,19 @@ public class KernelValueInfo
 {
     private readonly IReadOnlyCollection<string> _preferredMimeTypes;
 
-    public KernelValueInfo(string name, Type type = null)
+    public KernelValueInfo(string name, FormattedValue formattedValue, Type type = null, string typeName = null)
     {
         Name = name;
         Type = type;
+        TypeName = string.IsNullOrWhiteSpace(typeName) ? type?.Name : typeName;
+        FormattedValue = formattedValue;
     }
 
+    public string TypeName { get; set; }
+
     public string Name { get; }
+
+    public FormattedValue FormattedValue { get; }
 
     public IReadOnlyCollection<string> PreferredMimeTypes
     {

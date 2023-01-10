@@ -401,7 +401,7 @@ public static class KernelExtensions
                 using var __ = result.KernelEvents.OfType<ValueProduced>().Subscribe(e => valueEvents.Add(e));
             }
 
-            var kernelValues = valueEvents.Select(e => new KernelValue(new KernelValueInfo(e.Name, e.Value?.GetType()), e.Value, context.HandlingKernel.Name));
+            var kernelValues = valueEvents.Select(e => new KernelValue(new KernelValueInfo(e.Name, new FormattedValue(PlainTextFormatter.MimeType, e.Value?.ToDisplayString(PlainTextFormatter.MimeType)) ,e.Value?.GetType()), e.Value, context.HandlingKernel.Name));
 
             var currentVariables = new KernelValues(
                 kernelValues,

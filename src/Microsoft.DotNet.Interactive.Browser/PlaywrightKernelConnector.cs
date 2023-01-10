@@ -153,7 +153,7 @@ Added browser kernels:
                 {
                     context.Publish(new ValueInfosProduced(new KernelValueInfo[]
                     {
-                        new(":root", typeof(ILocator))
+                        new(":root", new FormattedValue(PlainTextFormatter.MimeType,"document root"),typeof(ILocator))
                     }, request));
                     return Task.CompletedTask;
                 });

@@ -26,6 +26,7 @@ window.addEventListener('DOMContentLoaded', () => {
             row.element.style.display = 'none';
             if (contains(row.row.name, filterElement.value) ||
                 contains(row.row.value, filterElement.value) ||
+                contains(row.row.typeName, filterElement.value) ||
                 contains(row.row.kernelDisplayName, filterElement.value)) {
                 row.element.style.display = '';
             }
@@ -72,6 +73,11 @@ function setDataRows(container: HTMLElement, rows: VariableGridRow[]): Displayed
     valueHeader.innerText = 'Value';
     header.appendChild(valueHeader);
 
+    const typeHeader = document.createElement('th');
+    typeHeader.classList.add('type-column');
+    typeHeader.innerText = 'Type';
+    header.appendChild(typeHeader);
+
     const kernelHeader = document.createElement('th');
     kernelHeader.classList.add('kernel-column');
     kernelHeader.innerText = 'Kernel';
@@ -99,6 +105,10 @@ function setDataRows(container: HTMLElement, rows: VariableGridRow[]): Displayed
         const dataValue = document.createElement('td');
         dataValue.innerText = truncateValue(row.value);
         dataRow.appendChild(dataValue);
+
+        const dataType = document.createElement('td');
+        dataType.innerText = truncateValue(row.typeName);
+        dataRow.appendChild(dataType);
 
         const dataKernel = document.createElement('td');
         dataKernel.innerText = truncateValue(row.kernelDisplayName);

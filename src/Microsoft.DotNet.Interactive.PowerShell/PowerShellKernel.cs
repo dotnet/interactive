@@ -146,7 +146,7 @@ public class PowerShellKernel :
 
         if (psObject?.BaseObject is Dictionary<string, PSVariable>.ValueCollection valueCollection)
         {
-            return valueCollection.Select(v => new KernelValueInfo(v.Name, v.Value?.GetType())).ToArray();
+            return valueCollection.Select(v => new KernelValueInfo(v.Name, new FormattedValue(PlainTextFormatter.MimeType, v.Value?.ToDisplayString(PlainTextFormatter.MimeType)) ,v.Value?.GetType())).ToArray();
         }
 
         return Array.Empty<KernelValueInfo>();

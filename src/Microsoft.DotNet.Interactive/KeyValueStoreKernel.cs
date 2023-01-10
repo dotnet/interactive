@@ -9,6 +9,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.ValueSharing;
 using static Microsoft.DotNet.Interactive.ChooseKeyValueStoreKernelDirective;
 
@@ -34,7 +35,7 @@ public class KeyValueStoreKernel :
 
     Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
     {
-        var valueInfos = _values.Select(e => new KernelValueInfo(e.Key, typeof(string))).ToArray();
+        var valueInfos = _values.Select(e => new KernelValueInfo(e.Key, new FormattedValue(PlainTextFormatter.MimeType, e.Value?.ToDisplayString(PlainTextFormatter.MimeType)),typeof(string))).ToArray();
         context.Publish(new ValueInfosProduced(valueInfos, command));
         return Task.CompletedTask;
     }

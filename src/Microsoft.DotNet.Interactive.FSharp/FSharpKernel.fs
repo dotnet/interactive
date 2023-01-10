@@ -377,7 +377,7 @@ type FSharpKernel () as this =
             let valueInfos =
                 script.Value.Fsi.GetBoundValues()
                 |> List.filter (fun x -> x.Name <> "it") // don't report special variable `it`
-                |> List.map (fun x -> new KernelValueInfo(x.Name, this.getValueType(x.Name)))
+                |> List.map (fun x -> new KernelValueInfo(x.Name, new FormattedValue(PlainTextFormatter.MimeType, x.Value.ToDisplayString(PlainTextFormatter.MimeType)),this.getValueType(x.Name)))
                 :> IReadOnlyCollection<KernelValueInfo>
             context.Publish(new ValueInfosProduced(valueInfos, requestValueInfos))
         }
@@ -401,7 +401,7 @@ type FSharpKernel () as this =
     member this.GetValues() =
         script.Value.Fsi.GetBoundValues()
         |> List.filter (fun x -> x.Name <> "it") // don't report special variable `it`
-        |> List.map (fun x -> KernelValue( new KernelValueInfo(x.Name, x.Value.ReflectionType), x.Value.ReflectionValue, this.Name))
+        |> List.map (fun x -> KernelValue( new KernelValueInfo(x.Name, new FormattedValue(PlainTextFormatter.MimeType, x.Value.ToDisplayString(PlainTextFormatter.MimeType)) , x.Value.ReflectionType), x.Value.ReflectionValue, this.Name))
 
     member this.getValueType(name:string) = 
         match script.Value.Fsi.TryFindBoundValue(name) with

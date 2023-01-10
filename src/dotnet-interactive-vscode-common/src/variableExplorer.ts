@@ -169,10 +169,13 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                     .name-column {
                         width: 20%;
                     }
+                    .type-column {
+                        width: 15%;
+                    }
                     .value-column {
                     }
                     .kernel-column {
-                        width: 20%;
+                        width: 15%;
                     }
                     .share-column {
                         width: 10%;
@@ -251,14 +254,15 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                     const valueInfos = await client.requestValueInfos(kernel.name);
                     for (const valueInfo of valueInfos.valueInfos) {
                         try {
-                            const value = await client.requestValue(valueInfo.name, kernel.name);
-                            const valueName = value.name;
-                            const valueValue = value.formattedValue.value;
+                            const valueName = valueInfo.name;
+                            const valueValue = valueInfo.formattedValue.value;
+                            const typeName = valueInfo.typeName;
                             const displayName = kernelSelectorUtilities.getKernelInfoDisplayValue(kernel.kernelInfo);
                             const commandUrl = `command:polyglot-notebook.shareValueWith?${encodeURIComponent(JSON.stringify({ valueName, kernelName: kernel.name }))}`;
                             rows.push({
                                 name: valueName,
                                 value: valueValue,
+                                typeName: typeName,
                                 kernelDisplayName: displayName,
                                 kernelName: kernel.name,
                                 link: commandUrl,
