@@ -23,6 +23,18 @@ public static class Tags
 {
     public const string PlainTextBegin = "<div class=\"dni-plaintext\"><pre>";
     public const string PlainTextEnd = "</pre></div>";
+    public static readonly string DefaultStyles = "";
+
+    static Tags()
+    {
+        var formatter = new HtmlFormatter<string>((value, context) => context.RequireDefaultStyles());
+
+        using var writer = new StringWriter();
+
+        formatter.Format("", writer);
+
+        DefaultStyles = writer.ToString();
+    }
 }
 
 public class HtmlFormatterTests : FormatterTestBase
@@ -34,7 +46,9 @@ public class HtmlFormatterTests : FormatterTestBase
         {
             var output = new { a = 123 }.ToDisplayString(HtmlFormatter.MimeType);
 
-            output.Should()
+            output
+                .RemoveStyleElement()
+                .Should()
                 .Be($"<table><thead><tr><th>a</th></tr></thead><tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td></tr></tbody></table>");
         }
 
@@ -90,7 +104,9 @@ public class HtmlFormatterTests : FormatterTestBase
 
             formatter.Format(instance, writer);
 
-            writer.ToString()
+            var html = writer.ToString().RemoveStyleElement();
+
+            html
                 .Should()
                 .BeEquivalentHtmlTo($@"
 <table>
@@ -99,6 +115,22 @@ public class HtmlFormatterTests : FormatterTestBase
      <tr><td>{PlainTextBegin}TheEntity{PlainTextEnd}</td><td>{PlainTextBegin}123{PlainTextEnd}</td></tr>
   </tbody>
 </table>");
+        }
+
+        [Fact]
+        public void Formatted_objects_include_custom_styles()
+        {
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(FileInfo));
+
+            var writer = new StringWriter();
+
+            var instance = new FileInfo("a.txt");
+
+            formatter.Format(instance, writer);
+
+            var html = writer.ToString();
+
+            html.Should().Contain(DefaultStyles);
         }
 
         [Fact]
@@ -116,7 +148,7 @@ public class HtmlFormatterTests : FormatterTestBase
 
             formatter.Format(instance, writer);
 
-            writer.ToString()
+            writer.ToString().RemoveStyleElement()
                 .Should()
                 .BeEquivalentHtmlTo($@"
 <table>
@@ -136,7 +168,7 @@ public class HtmlFormatterTests : FormatterTestBase
 
             formatter.Format(instance, writer);
 
-            writer.ToString()
+            writer.ToString().RemoveStyleElement()
                 .Should()
                 .BeEquivalentHtmlTo($@"<table><thead><tr><th>Item1</th><th>Item2</th></tr></thead>
 <tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td><td>{PlainTextBegin}hello{PlainTextEnd}</td></tr></tbody></table>");
@@ -157,7 +189,7 @@ public class HtmlFormatterTests : FormatterTestBase
 
             formatter.Format(instance, writer);
 
-            writer.ToString()
+            writer.ToString().RemoveStyleElement()
                 .Should()
                 .Match($"<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td><td>{PlainTextBegin}&lt;&gt;f__AnonymousType*&lt;Int32&gt;{NewLine}        BA: 456{PlainTextEnd}</td></tr></tbody></table>");
         }
@@ -747,7 +779,7 @@ string";
 
             formatter.Format(new Dummy.ClassWithManyProperties(), writer);
 
-            writer.ToString().Should()
+            writer.ToString().RemoveStyleElement().Should()
                 .BeEquivalentHtmlTo($@"<table>
       <thead>
         <tr>
@@ -811,7 +843,7 @@ string";
 
             formatter.Format(new Dummy.ClassWithManyProperties(), writer);
 
-            writer.ToString().Should()
+            writer.ToString().RemoveStyleElement().Should()
                 .BeEquivalentHtmlTo($@"<table>
       <thead>
         <tr>

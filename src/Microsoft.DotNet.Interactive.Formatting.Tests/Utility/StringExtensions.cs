@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 
 public static class StringExtensions
 {
-    private readonly static Regex _removeStyleElementRegex = new("<style.*</style>", RegexOptions.Singleline | RegexOptions.Compiled);
+    private static readonly Regex _removeStyleElementRegex = new("<style.*</style>", RegexOptions.Singleline | RegexOptions.Compiled);
 
     /// <summary>
     /// Attempts to homogenize an HTML string by reducing whitespace for easier comparison.
