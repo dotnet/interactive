@@ -4,6 +4,12 @@
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.RoslynWorkspaceServerConsoleProjectTests</FixtureName>
       </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.RebuildablePackageTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.PackageTests</FixtureName>
+      </FixtureTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

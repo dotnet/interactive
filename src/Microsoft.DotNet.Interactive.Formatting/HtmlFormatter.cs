@@ -224,10 +224,11 @@ public static class HtmlFormatter
             return true;
         }),
 
-
         // Try to display object results as tables. This will return false for nested tables.
         new HtmlFormatter<object>((value, context) =>
         {
+            context.RequireDefaultStyles();
+
             var type = value.GetType();
             var formatter = GetDefaultFormatterForAnyObject(type);
             return formatter.Format(value, context);

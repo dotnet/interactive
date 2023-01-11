@@ -43,14 +43,14 @@ public static class Notebook
 
     public static InteractiveDocument Parse(
         string json,
-        KernelInfoCollection? kernelInfo = null)
+        KernelInfoCollection? kernelInfos = null)
     {
         var document = JsonSerializer.Deserialize<InteractiveDocument>(json, JsonSerializerOptions) ??
                        throw new JsonException($"Unable to parse as {typeof(InteractiveDocument)}:\n\n{json}");
 
-        if (kernelInfo is not null)
+        if (kernelInfos is not null)
         {
-            document.NormalizeElementKernelNames(kernelInfo);
+            document.NormalizeElementKernelNames(kernelInfos);
         }
 
         return document;

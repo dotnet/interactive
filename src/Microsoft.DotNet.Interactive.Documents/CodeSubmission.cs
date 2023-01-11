@@ -21,17 +21,17 @@ public static class CodeSubmission
 
     public static InteractiveDocument Parse(
         string content,
-        KernelInfoCollection? kernelInfo = default)
+        KernelInfoCollection? kernelInfos = default)
     {
-        kernelInfo ??= new();
+        kernelInfos ??= new();
         Dictionary<string, object>? metadata = null;
         var lines = content.SplitIntoLines();
 
         var document = new InteractiveDocument();
-        var currentKernelName = kernelInfo.DefaultKernelName ?? "csharp";
+        var currentKernelName = kernelInfos.DefaultKernelName ?? "csharp";
         var currentElementLines = new List<string>();
 
-        kernelInfo = WithMarkdownKernel(kernelInfo);
+        kernelInfos = WithMarkdownKernel(kernelInfos);
 
         var foundMetadata = false;
 
@@ -56,7 +56,7 @@ public static class CodeSubmission
 
                 if (InteractiveDocument.TryGetKernelInfoFromMetadata(metadata, out var kernelInfoFromMetadata))
                 {
-                    InteractiveDocument.MergeKernelInfos(kernelInfo, kernelInfoFromMetadata);
+                    InteractiveDocument.MergeKernelInfos(kernelInfos, kernelInfoFromMetadata);
                     document.Metadata["kernelInfo"] = kernelInfoFromMetadata;
                 }
             }
@@ -65,7 +65,7 @@ public static class CodeSubmission
             {
                 var cellKernelName = line[MagicCommandPrefix.Length..];
 
-                if (kernelInfo.TryGetByAlias(cellKernelName, out var name))
+                if (kernelInfos.TryGetByAlias(cellKernelName, out var name))
                 {
                     // recognized language, finalize the current element
                     AddElement();
