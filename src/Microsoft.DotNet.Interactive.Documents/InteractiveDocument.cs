@@ -152,7 +152,7 @@ public class InteractiveDocument : IEnumerable
 
     public static async Task<InteractiveDocument> LoadAsync(
         FileInfo file,
-        KernelInfoCollection kernelInfos = null)
+        KernelInfoCollection? kernelInfos = null)
     {
         var fileContents = await File.ReadAllTextAsync(file.FullName);
 
