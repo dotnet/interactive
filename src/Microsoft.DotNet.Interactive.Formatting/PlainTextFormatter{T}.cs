@@ -104,14 +104,14 @@ public class PlainTextFormatter<T> : TypeFormatter<T>
 
             var enumerableType = typeof(IEnumerable<>).MakeGenericType(t);
 
-            var delegateType = typeof(Action<,,,>).MakeGenericType(
-                new[] { enumerableType, typeof(TextWriter), typeof(FormatContext), typeof(int?) });
+            var delegateType = typeof(Action<,,>).MakeGenericType(
+                new[] { enumerableType, typeof(TextWriter), typeof(FormatContext) });
 
             var m = genericMethod.CreateDelegate(delegateType);
 
             return new((value, context) =>
             {
-                m.DynamicInvoke(value, context.Writer, context, Formatter<T>.ListExpansionLimit);
+                m.DynamicInvoke(value, context.Writer, context);
                 return true;
             });
         }
