@@ -5,7 +5,7 @@
   "command": {
     "kernelName": "someKernelName",
     "code": "code",
-    "targetKernelName": "vscode",
+    "targetKernelName": null,
     "originUri": null,
     "destinationUri": null
   },
