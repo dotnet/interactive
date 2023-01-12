@@ -16,14 +16,12 @@ public class JavaScriptKernel :
 {
     private readonly KernelClientBase _client;
     public const string DefaultKernelName = "javascript";
-    private const string LanguageName = "javascript";
-    private const string DisplayName = "JavaScript";
+    private const string LanguageName = "JavaScript";
 
     public JavaScriptKernel(KernelClientBase client = null) : base(DefaultKernelName)
     {
         _client = client;
         KernelInfo.LanguageName = LanguageName;
-        KernelInfo.DisplayName = DisplayName;
     }
 
     Task IKernelCommandHandler<SubmitCode>.HandleAsync(

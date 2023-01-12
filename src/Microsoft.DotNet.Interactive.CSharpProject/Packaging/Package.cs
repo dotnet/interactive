@@ -26,7 +26,6 @@ using Pocket;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.CSharpProject.Packaging.Package>;
 using Disposable = System.Reactive.Disposables.Disposable;
-using Workspace = Microsoft.CodeAnalysis.Workspace;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 

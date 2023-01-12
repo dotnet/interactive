@@ -17,7 +17,6 @@ public class HtmlKernel :
     public HtmlKernel() : base(DefaultKernelName)
     {
         KernelInfo.LanguageName = "HTML";
-        KernelInfo.DisplayName = "HTML";
     }
 
     Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)

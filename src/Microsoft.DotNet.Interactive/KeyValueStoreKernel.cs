@@ -30,7 +30,7 @@ public class KeyValueStoreKernel :
 
     public KeyValueStoreKernel(string name = DefaultKernelName) : base(name)
     {
-        KernelInfo.DisplayName = "Value Storage";
+        KernelInfo.DisplayName = "Raw Value Storage";
     }
 
     Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)

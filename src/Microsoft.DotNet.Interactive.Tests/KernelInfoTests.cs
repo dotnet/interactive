@@ -31,6 +31,22 @@ public class KernelInfoTests
         }
 
         [Fact]
+        public void When_LanguageName_is_not_set_then_DisplayName_is_LocalName()
+        {
+            var kernelInfo = new KernelInfo("csharp");
+            kernelInfo.DisplayName.Should().Be("csharp");
+        }
+
+        [Fact]
+        public void By_default_DisplayName_is_derived_from_local_and_language_names()
+        {
+            var kernelInfo = new KernelInfo("csharp");
+            kernelInfo.LanguageName = "C#";
+
+            kernelInfo.DisplayName.Should().Be("csharp - C#");
+        }
+
+        [Fact]
         public async Task It_returns_kernel_info_for_all_children()
         {
             using var kernel = new CompositeKernel
