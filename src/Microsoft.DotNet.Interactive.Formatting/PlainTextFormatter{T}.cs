@@ -123,7 +123,7 @@ public class PlainTextFormatter<T> : TypeFormatter<T>
                 case IEnumerable enumerable:
                     Formatter.Join(enumerable,
                         context.Writer,
-                        context, Formatter<T>.ListExpansionLimit);
+                        context);
                     break;
                 default:
                     context.Writer.Write(value.ToString());

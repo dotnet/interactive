@@ -346,9 +346,8 @@ public static class Formatter
     internal static void Join(
         IEnumerable list,
         TextWriter writer,
-        FormatContext context,
-        int? listExpansionLimit = null) =>
-        JoinGeneric(list.Cast<object>(), writer, context, listExpansionLimit);
+        FormatContext context) =>
+        JoinGeneric(list.Cast<object>(), writer, context);
 
     internal static void JoinGeneric<T>(
         IEnumerable<T> seq,

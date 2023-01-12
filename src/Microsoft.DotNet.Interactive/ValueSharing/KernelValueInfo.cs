@@ -20,8 +20,14 @@ public class KernelValueInfo
         FormattedValue = formattedValue;
     }
 
+    /// <summary>
+    /// The type name of the value, as appropriate to the source kernel.
+    /// </summary>
     public string TypeName { get; set; }
 
+    /// <summary>
+    /// The name of the value.
+    /// </summary>
     public string Name { get; }
 
     public FormattedValue FormattedValue { get; }

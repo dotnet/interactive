@@ -10,7 +10,7 @@ using System.Linq;
 namespace Microsoft.DotNet.Interactive.ValueSharing;
 
 [TypeFormatterSource(typeof(KernelValuesFormatterSource))]
-public class KernelValues : IEnumerable<KernelValue>
+internal class KernelValues : IEnumerable<KernelValue>
 {
     private readonly Dictionary<string, KernelValue> _variables = new();
 

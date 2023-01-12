@@ -25,13 +25,13 @@ public static class PlainTextFormatter
         void Initialize() => MaxProperties = DefaultMaxProperties;
     }
 
+    public const string MimeType = "text/plain";
+
     public static ITypeFormatter GetPreferredFormatterFor(Type type) =>
         Formatter.GetPreferredFormatterFor(type, MimeType);
 
     public static ITypeFormatter GetPreferredFormatterFor<T>() =>
         GetPreferredFormatterFor(typeof(T));
-
-    public const string MimeType = "text/plain";
 
     /// <summary>
     ///   Indicates the maximum number of properties to show in the default plaintext display of arbitrary objects.
