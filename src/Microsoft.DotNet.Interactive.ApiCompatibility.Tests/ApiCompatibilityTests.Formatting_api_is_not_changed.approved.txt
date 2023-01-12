@@ -166,6 +166,7 @@ Microsoft.DotNet.Interactive.Formatting
     .ctor(Func<T,System.String> format)
     public System.String MimeType { get;}
     public System.Boolean Format(T value, FormatContext context)
+  public static class PlainTextSummaryFormatter
   public class PocketView : System.Dynamic.DynamicObject, Microsoft.AspNetCore.Html.IHtmlContent, System.Dynamic.IDynamicMetaObjectProvider
     public static System.Object Transform(System.Action<HtmlTag,System.Object> transform)
     public static System.Object Transform(System.Action<HtmlTag,System.Object,FormatContext> transform)

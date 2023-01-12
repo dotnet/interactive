@@ -42,6 +42,7 @@
     "id": "command-id",
     "commandType": "RequestValueInfos",
     "command": {
+      "mimeType": "text/plain\u002Bsummary",
       "targetKernelName": "csharp",
       "originUri": null,
       "destinationUri": null

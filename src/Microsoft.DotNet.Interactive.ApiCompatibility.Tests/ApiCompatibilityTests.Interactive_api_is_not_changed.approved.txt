@@ -429,9 +429,10 @@ Microsoft.DotNet.Interactive.Commands
     public System.String MimeType { get;}
     public System.String Name { get;}
   public class RequestValueInfos : KernelCommand
-    .ctor(System.String targetKernelName = null)
+    .ctor(System.String targetKernelName = null, System.String mimeType = text/plain+summary)
+    public System.String MimeType { get;}
   public class SendEditableCode : KernelCommand
-    .ctor(System.String kernelName, System.String code, System.String targetKernelName = vscode)
+    .ctor(System.String kernelName, System.String code, System.String targetKernelName = null)
     public System.String Code { get;}
     public System.String KernelName { get;}
   public class SendValue : KernelCommand
@@ -944,10 +945,6 @@ Microsoft.DotNet.Interactive.ValueSharing
     public System.Collections.Generic.IReadOnlyCollection<System.String> PreferredMimeTypes { get; set;}
     public System.Type Type { get;}
     public System.String TypeName { get; set;}
-  public class KernelValues, System.Collections.Generic.IEnumerable<KernelValue>, System.Collections.IEnumerable
-    .ctor(System.Collections.Generic.IEnumerable<KernelValue> variables, System.Boolean detailed)
-    public System.Boolean Detailed { get;}
-    public System.Collections.Generic.IEnumerator<KernelValue> GetEnumerator()
 System
   public static class DisplayExtensions
     public static Microsoft.DotNet.Interactive.DisplayedValue Display(String[] mimeTypes)

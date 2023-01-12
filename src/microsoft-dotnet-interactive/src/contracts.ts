@@ -119,6 +119,7 @@ export interface RequestValue extends KernelCommand {
 }
 
 export interface RequestValueInfos extends KernelCommand {
+    mimeType: string;
 }
 
 export interface SendEditableCode extends KernelCommand {

@@ -47,7 +47,7 @@ public class SerializationTests
         // ignore these specific properties because they're not serialized
         var ignoredProperties = new HashSet<string>
         {
-            $"{nameof(SendValue)}.{nameof(SendValue.Value)}",
+            $"{nameof(SendValue)}.{nameof(SendValue.Value)}"
         };
 
         deserializedEnvelope
