@@ -352,8 +352,7 @@ public static class Formatter
     internal static void JoinGeneric<T>(
         IEnumerable<T> seq,
         TextWriter writer,
-        FormatContext context,
-        int? listExpansionLimit = null)
+        FormatContext context)
     {
         if (seq is null)
         {
@@ -372,9 +371,9 @@ public static class Formatter
             context.Writer.WriteLine();
         }
 
-        listExpansionLimit ??= Formatter<T>.ListExpansionLimit;
+        var listExpansionLimit = Formatter<T>.ListExpansionLimit;
 
-        var (itemsToWrite, remainingCount) = seq.TakeAndCountRemaining(listExpansionLimit.Value);
+        var (itemsToWrite, remainingCount) = seq.TakeAndCountRemaining(listExpansionLimit);
 
         for (var i = 0; i < itemsToWrite.Count; i++)
         {
