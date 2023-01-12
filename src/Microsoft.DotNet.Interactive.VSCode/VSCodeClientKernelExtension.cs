@@ -22,6 +22,7 @@ public class VSCodeClientKernelExtension : IKernelExtension
             hostKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestInput)));
             root.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), "vscode");
             hostKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(SendEditableCode)));
+            root.SetDefaultTargetKernelNameForCommand(typeof(SendEditableCode), "vscode");
 
             var jsKernel = await root.Host.ConnectProxyKernelOnDefaultConnectorAsync(
                 "javascript",

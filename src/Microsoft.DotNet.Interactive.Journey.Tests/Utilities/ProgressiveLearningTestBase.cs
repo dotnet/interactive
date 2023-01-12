@@ -24,19 +24,20 @@ public abstract class ProgressiveLearningTestBase
     {
         var vscodeKernel = new FakeKernel("vscode");
         vscodeKernel.RegisterCommandHandler<SendEditableCode>((_, _) => Task.CompletedTask);
-        var kernel = new CompositeKernel
+        var compositeKernel = new CompositeKernel
         {
             new CSharpKernel().UseNugetDirective().UseKernelHelpers(),
             vscodeKernel
         };
 
-        kernel.DefaultKernelName = "csharp";
+        compositeKernel.DefaultKernelName = "csharp";
+        compositeKernel.SetDefaultTargetKernelNameForCommand(typeof(SendEditableCode), "vscode");
 
         Lesson.Mode = mode;
 
-        await Main.OnLoadAsync(kernel, httpClient);
+        await Main.OnLoadAsync(compositeKernel, httpClient);
 
-        return kernel;
+        return compositeKernel;
     }
 
     protected string ToModelAnswer(string answer)

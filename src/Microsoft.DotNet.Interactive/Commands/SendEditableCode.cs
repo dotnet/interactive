@@ -5,13 +5,14 @@ namespace Microsoft.DotNet.Interactive.Commands;
 
 public class SendEditableCode : KernelCommand
 {
-    public string KernelName { get; }
-    public string Code { get;  }
-
-    public SendEditableCode(string kernelName, string code, string targetKernelName = "vscode")
+    public SendEditableCode(string kernelName, string code, string targetKernelName = null)
         : base(targetKernelName)
     {
         KernelName = kernelName;
         Code = code;
     }
+
+    public string KernelName { get; }
+
+    public string Code { get; }
 }
