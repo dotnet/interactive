@@ -13,6 +13,7 @@ public class KernelInfo
 {
     private readonly HashSet<KernelCommandInfo> _supportedKernelCommands = new();
     private readonly HashSet<KernelDirectiveInfo> _supportedDirectives = new();
+    private string _displayName;
 
     [JsonConstructor]
     public KernelInfo(string localName, string[]? aliases = null)
@@ -28,7 +29,6 @@ public class KernelInfo
         }
 
         LocalName = localName;
-        DisplayName = localName;
         NameAndAliases = new HashSet<string> { LocalName };
         Uri = new Uri($"kernel://local/{LocalName}");
 
@@ -52,8 +52,12 @@ public class KernelInfo
 
     private string CreateDisplayName()
     {
-        var displayName = $"{LanguageName} {LanguageVersion}".Trim();
-        return displayName;
+        if (string.IsNullOrWhiteSpace(LanguageName))
+        {
+            return LocalName;
+        }
+
+        return $"{LocalName} - {LanguageName}";
     }
 
     public string[] Aliases
@@ -66,7 +70,14 @@ public class KernelInfo
 
     public string? LanguageVersion { get; set; }
 
-    public string DisplayName { get; set; }
+    public string DisplayName
+    {
+        get
+        {
+            return _displayName ?? CreateDisplayName();
+        }
+        set => _displayName = value;
+    }
 
     public string LocalName { get; }
 

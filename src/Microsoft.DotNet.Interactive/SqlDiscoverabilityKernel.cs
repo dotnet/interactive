@@ -45,7 +45,7 @@ public class SqlDiscoverabilityKernel :
 
         var codeSample = !string.IsNullOrWhiteSpace(command.Code)
             ? command.Code
-            : @"SELECT TOP * FROM ...";
+            : "SELECT TOP * FROM ...";
 
         if (connectedSqlKernelNames.Count == 0)
         {
