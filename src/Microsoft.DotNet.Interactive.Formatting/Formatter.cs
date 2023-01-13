@@ -13,7 +13,6 @@ using System.Reflection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
-using static Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter;
 
 namespace Microsoft.DotNet.Interactive.Formatting;
 
@@ -118,10 +117,10 @@ public static class Formatter
         _defaultTypeFormatters.PushRange(CsvFormatter.DefaultFormatters.Reverse().ToArray());
         _defaultTypeFormatters.PushRange(HtmlFormatter.DefaultFormatters.Reverse().ToArray());
         _defaultTypeFormatters.PushRange(JsonFormatter.DefaultFormatters.Reverse().ToArray());
-        _defaultTypeFormatters.PushRange(DefaultFormatters.Reverse().ToArray());
+        _defaultTypeFormatters.PushRange(PlainTextSummaryFormatter.DefaultFormatters.Reverse().ToArray());
+        _defaultTypeFormatters.PushRange(PlainTextFormatter.DefaultFormatters.Reverse().ToArray());
 
-        // It is unclear if we need this default:
-        _defaultPreferredMimeTypes.Push((typeof(string), MimeType));
+        _defaultPreferredMimeTypes.Push((typeof(string), PlainTextFormatter.MimeType));
 
         ListExpansionLimit = 20;
         RecursionLimit = 6;
@@ -253,7 +252,7 @@ public static class Formatter
 
     public static string ToDisplayString(
         this object obj,
-        string mimeType = MimeType)
+        string mimeType = PlainTextFormatter.MimeType)
     {
         if (mimeType is null)
         {
@@ -297,7 +296,7 @@ public static class Formatter
     public static void FormatTo<T>(
         this T obj,
         FormatContext context,
-        string mimeType = MimeType)
+        string mimeType = PlainTextFormatter.MimeType)
     {
         if (obj is not null)
         {
@@ -445,7 +444,7 @@ public static class Formatter
     /// <param name="mimeType">The MimeType for this formatter. If it is not specified it defaults to <see cref="PlainTextFormatter.MimeType"/></param>
     public static void Register<T>(
         FormatDelegate<T> formatter,
-        string mimeType = MimeType)
+        string mimeType = PlainTextFormatter.MimeType)
     {
         Register(new AnonymousTypeFormatter<T>(formatter, mimeType));
     }
@@ -459,7 +458,7 @@ public static class Formatter
     public static void Register(
         Type type,
         FormatDelegate<object> formatter,
-        string mimeType = MimeType)
+        string mimeType = PlainTextFormatter.MimeType)
     {
         Register(new AnonymousTypeFormatter<object>(formatter, mimeType, type));
     }
@@ -473,7 +472,7 @@ public static class Formatter
     public static void Register(
         Type type,
         Action<object, TextWriter> formatter,
-        string mimeType = MimeType)
+        string mimeType = PlainTextFormatter.MimeType)
     {
         Register(new AnonymousTypeFormatter<object>((value, context) =>
         {
@@ -489,7 +488,7 @@ public static class Formatter
     /// <param name="mimeType">The MimeType for this formatter. If it is not specified it defaults to <see cref="PlainTextFormatter.MimeType"/></param>
     public static void Register<T>(
         Action<T, TextWriter> formatter,
-        string mimeType = MimeType)
+        string mimeType = PlainTextFormatter.MimeType)
     {
         Register(new AnonymousTypeFormatter<object>((value, context) =>
         {
@@ -505,7 +504,7 @@ public static class Formatter
     /// <param name="mimeType">The MimeType for this formatter. If it is not specified it defaults to <see cref="PlainTextFormatter.MimeType"/></param>
     public static void Register<T>(
         Func<T, string> formatter,
-        string mimeType = MimeType)
+        string mimeType = PlainTextFormatter.MimeType)
     {
         Register(new AnonymousTypeFormatter<T>((value, context) =>
         {

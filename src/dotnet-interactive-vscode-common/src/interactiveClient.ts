@@ -291,6 +291,7 @@ export class InteractiveClient {
     requestValueInfos(kernelName: string): Promise<ValueInfosProduced> {
         const command: RequestValueInfos = {
             targetKernelName: kernelName,
+            mimeType: "text/plain+summary"
         };
         return this.submitCommandAndGetResult(command, RequestValueInfosType, ValueInfosProducedType, undefined);
     }

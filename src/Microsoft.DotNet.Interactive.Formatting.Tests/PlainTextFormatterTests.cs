@@ -16,16 +16,26 @@ using static System.Environment;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
-public class PlainTextFormatterTests_MultiLine : FormatterTestBase
+public partial class PlainTextFormatterTests : FormatterTestBase
 {
     public class Objects : FormatterTestBase
     {
         [Fact]
-        public void Null_references_are_indicated()
+        public void Null_reference_types_are_indicated()
         {
             string value = null;
 
             value.ToDisplayString().Should().Be("<null>");
+        }
+
+        [Fact]
+        public void Null_nullables_are_indicated()
+        {
+            int? nullable = null;
+
+            var output = nullable.ToDisplayString();
+
+            output.Should().Be(((object)null).ToDisplayString());
         }
 
         [Fact]
@@ -106,7 +116,7 @@ public class PlainTextFormatterTests_MultiLine : FormatterTestBase
         [Fact]
         public void When_Zero_properties_available_to_choose_just_ToString_is_used()
         {
-            var formatter = PlainTextFormatter.GetPreferredFormatterFor<Dummy.ClassWithNoPropertiesAndCustomToString>();
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor<ClassWithNoPropertiesAndCustomToString>();
 
             var writer = new StringWriter();
             formatter.Format(new Dummy.ClassWithNoPropertiesAndCustomToString(), writer);

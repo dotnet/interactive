@@ -116,8 +116,25 @@ public class CSharpKernel :
 
     Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
     {
-        var valueInfos = GetValueInfos();
+        var valueInfos =
+            ScriptState?.Variables
+                       .GroupBy(v => v.Name)
+                       .Select(g =>
+                       {
+                           var formattedValues = FormattedValue.FromObject(
+                               g.LastOrDefault()?.Value,
+                               command.MimeType);
+                           
+                           return new KernelValueInfo(
+                               g.Key,
+                               formattedValues[0],
+                               g.Last().Type);
+                       })
+                       .ToArray() ??
+            Array.Empty<KernelValueInfo>();
+
         context.Publish(new ValueInfosProduced(valueInfos, command));
+
         return Task.CompletedTask;
     }
 
@@ -134,13 +151,6 @@ public class CSharpKernel :
 
         return Task.CompletedTask;
     }
-
-    public IReadOnlyCollection<KernelValueInfo> GetValueInfos() =>
-        ScriptState?.Variables
-            .GroupBy(v => v.Name)
-            .Select(g => new KernelValueInfo(g.Key, new FormattedValue(PlainTextFormatter.MimeType, g.LastOrDefault().Value?.ToDisplayString(PlainTextFormatter.MimeType)), g.Last().Type))
-            .ToArray() ??
-        Array.Empty<KernelValueInfo>();
 
     public bool TryGetValue<T>(
         string name,

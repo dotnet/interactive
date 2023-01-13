@@ -25,17 +25,19 @@ public class FormattedValue
 
     public string Value { get; }
 
-    public static IReadOnlyCollection<FormattedValue> FromObject(object value, params string[] mimeTypes)
+    public static IReadOnlyList<FormattedValue> FromObject(object value, params string[] mimeTypes)
     {
-        if (mimeTypes is null || 
+        if (mimeTypes is null ||
             mimeTypes.Length == 0)
         {
             mimeTypes = Formatter.GetPreferredMimeTypesFor(value?.GetType()).ToArray();
         }
 
-        var formattedValues = mimeTypes.Select(mimeType => new FormattedValue(
-            mimeType,
-            value.ToDisplayString(mimeType))).ToArray();
+        var formattedValues = mimeTypes
+                              .Select(mimeType => new FormattedValue(
+                                          mimeType,
+                                          value.ToDisplayString(mimeType)))
+                              .ToArray();
 
         return formattedValues;
     }

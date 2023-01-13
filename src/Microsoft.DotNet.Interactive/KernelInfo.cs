@@ -13,7 +13,7 @@ public class KernelInfo
 {
     private readonly HashSet<KernelCommandInfo> _supportedKernelCommands = new();
     private readonly HashSet<KernelDirectiveInfo> _supportedDirectives = new();
-    private string _displayName;
+    private string? _displayName;
 
     [JsonConstructor]
     public KernelInfo(string localName, string[]? aliases = null)

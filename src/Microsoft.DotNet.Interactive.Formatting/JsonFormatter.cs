@@ -10,6 +10,8 @@ namespace Microsoft.DotNet.Interactive.Formatting;
 
 public static class JsonFormatter
 {
+    public const string MimeType = "application/json";
+
     static JsonFormatter()
     {
         SerializerOptions = new JsonSerializerOptions
@@ -30,9 +32,16 @@ public static class JsonFormatter
         return Formatter.GetPreferredFormatterFor(type, MimeType);
     }
 
-    public const string MimeType = "application/json";
-
-    internal static ITypeFormatter[] DefaultFormatters { get; } = DefaultJsonFormatterSet.DefaultFormatters;
+    internal static ITypeFormatter[] DefaultFormatters { get; } =
+    {
+        new JsonFormatter<string>((s, context) =>
+        {
+            var data = JsonSerializer.Serialize(s, SerializerOptions);
+            context.Writer.Write(data);
+            return true;
+        }),
+        new JsonFormatter<object>()
+    };
 
     public static JsonSerializerOptions SerializerOptions { get; }
 }

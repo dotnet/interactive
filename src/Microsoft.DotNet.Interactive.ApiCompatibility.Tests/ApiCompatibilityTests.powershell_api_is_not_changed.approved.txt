@@ -5,7 +5,6 @@ Microsoft.DotNet.Interactive.PowerShell
     public System.Func<System.String,Microsoft.DotNet.Interactive.PasswordString> ReadPassword { get; set;}
     public System.Void AddAccelerator(System.String name, System.Type type)
     public System.Void AddModulePath(System.String modulePath)
-    public System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.ValueSharing.KernelValueInfo> GetValueInfos()
     public System.Boolean TryGetValue<T>(System.String name, ref T& value)
   public static class PowerShellKernelExtensions
     public static PowerShellKernel UseProfiles()
