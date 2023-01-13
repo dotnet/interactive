@@ -16,7 +16,7 @@ internal static class StringExtensions
 
         if (value.Length > length)
         {
-            value = value.Substring(0, length) + " ...";
+            value = value[..length] + " ...";
         }
 
         return value;

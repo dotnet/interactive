@@ -129,7 +129,7 @@ function setDataRows(container: HTMLElement, rows: VariableGridRow[]): Displayed
 const maxDisplayLength = 100;
 
 function truncateValue(value: string): string {
-    if (value.length > maxDisplayLength) {
+    if (value?.length > maxDisplayLength) {
         return value.substring(0, maxDisplayLength - 3) + '...';
     }
 

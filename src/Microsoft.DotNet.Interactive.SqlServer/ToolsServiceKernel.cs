@@ -12,11 +12,8 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.ExtensionLab;
-using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.ValueSharing;
-
-using static Azure.Core.HttpHeader;
 
 namespace Microsoft.DotNet.Interactive.SqlServer;
 
@@ -342,11 +339,6 @@ public abstract class ToolsServiceKernel :
         return false;
     }
 
-    public IReadOnlyCollection<KernelValueInfo> GetValueInfos()
-    {
-        return QueryResults.Keys.Select(key => new KernelValueInfo(key, new FormattedValue(PlainTextFormatter.MimeType, _variables[key]?.ToDisplayString(PlainTextFormatter.MimeType)), type: typeof(IEnumerable<TabularDataResource>))).ToArray();
-    }
-
     public Task HandleAsync(RequestValue command, KernelInvocationContext context)
     {
         if (TryGetValue<object>(command.Name, out var value))
@@ -363,8 +355,19 @@ public abstract class ToolsServiceKernel :
 
     public Task HandleAsync(RequestValueInfos command, KernelInvocationContext context)
     {
-        var valueInfos = GetValueInfos();
+        var valueInfos = QueryResults.Keys.Select(key =>
+        {
+            var formattedValues = FormattedValue.FromObject(
+                _variables[key],
+                command.MimeType);
+
+            return new KernelValueInfo(
+                key, formattedValues[0],
+                type: typeof(IEnumerable<TabularDataResource>));
+        }).ToArray();
+
         context.Publish(new ValueInfosProduced(valueInfos, command));
+
         return Task.CompletedTask;
     }
 

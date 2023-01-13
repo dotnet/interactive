@@ -8,7 +8,6 @@ namespace Microsoft.DotNet.Interactive.CSharpProject;
 
 public class SerializableDiagnostic
 {
-    // FIX: (SerializableDiagnostic) delete this and use Microsoft.DotNet.Interactive.Diagnostic instead
     [JsonConstructor]
     public SerializableDiagnostic(
         int start,

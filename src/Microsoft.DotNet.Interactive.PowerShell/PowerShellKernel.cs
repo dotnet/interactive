@@ -60,7 +60,7 @@ public class PowerShellKernel :
 
     internal int DefaultRunspaceId => _lazyPwsh.IsValueCreated ? pwsh.Runspace.Id : -1;
 
-    private readonly HashSet<string> _suppressedValueInfoNames;
+    private readonly HashSet<string> _suppressedValueInfoNames = new();
 
     static PowerShellKernel()
     {
@@ -87,7 +87,13 @@ public class PowerShellKernel :
         KernelInfo.DisplayName = LanguageName;
         _psHost = new PSKernelHost(this);
         _lazyPwsh = new Lazy<PowerShell>(CreatePowerShell);
-        _suppressedValueInfoNames = GetAllValueInfos().Select(v => v.Name).ToHashSet();
+
+        var psObject = pwsh.Runspace.SessionStateProxy.InvokeProvider.Item.Get("variable:")?.FirstOrDefault();
+
+        if (psObject?.BaseObject is Dictionary<string, PSVariable>.ValueCollection valueCollection)
+        {
+            _suppressedValueInfoNames.UnionWith(valueCollection.Select(x => x.Name));
+        }
     }
 
     private PowerShell CreatePowerShell()
@@ -140,23 +146,6 @@ public class PowerShellKernel :
         _addAccelerator?.Invoke(null, new object[] { name, type });
     }
 
-    private IEnumerable<KernelValueInfo> GetAllValueInfos()
-    {
-        var psObject = pwsh.Runspace.SessionStateProxy.InvokeProvider.Item.Get("variable:")?.FirstOrDefault();
-
-        if (psObject?.BaseObject is Dictionary<string, PSVariable>.ValueCollection valueCollection)
-        {
-            return valueCollection.Select(v => new KernelValueInfo(v.Name, new FormattedValue(PlainTextFormatter.MimeType, v.Value?.ToDisplayString(PlainTextFormatter.MimeType)) ,v.Value?.GetType())).ToArray();
-        }
-
-        return Array.Empty<KernelValueInfo>();
-    }
-
-    public IReadOnlyCollection<KernelValueInfo> GetValueInfos()
-    {
-        return GetAllValueInfos().Where(v => !_suppressedValueInfoNames.Contains(v.Name)).ToArray();
-    }
-
     public bool TryGetValue<T>(string name, out T value)
     {
         var variable = pwsh.Runspace.SessionStateProxy.PSVariable.Get(name);
@@ -178,8 +167,33 @@ public class PowerShellKernel :
 
     Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
     {
-        var valueInfos = GetValueInfos();
+        var psObject = pwsh.Runspace.SessionStateProxy.InvokeProvider.Item.Get("variable:")?.FirstOrDefault();
+
+        KernelValueInfo[] valueInfos;
+
+        if (psObject?.BaseObject is Dictionary<string, PSVariable>.ValueCollection valueCollection)
+        {
+            valueInfos = valueCollection
+                         .Where(v => !_suppressedValueInfoNames.Contains(v.Name))
+                         .Select(v =>
+                         {
+                             var formattedValue = FormattedValue.FromObject(
+                                 v.Value,
+                                 command.MimeType)[0];
+
+                             return new KernelValueInfo(
+                                 v.Name,
+                                 formattedValue,
+                                 v.Value?.GetType());
+                         }).ToArray();
+        }
+        else
+        {
+            valueInfos = Array.Empty<KernelValueInfo>();
+        }
+
         context.Publish(new ValueInfosProduced(valueInfos, command));
+
         return Task.CompletedTask;
     }
 
