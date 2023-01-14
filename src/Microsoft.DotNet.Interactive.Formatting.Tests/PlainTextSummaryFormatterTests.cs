@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using System.IO;
 using Dummy;
 using FluentAssertions;
@@ -11,11 +12,37 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 public class PlainTextSummaryFormatterTests : FormatterTestBase
 {
     [Fact]
+    public void Default_formatter_for_Type_displays_generic_parameter_name_for_single_parameter_generic_type()
+    {
+        typeof(List<string>).ToDisplayString(PlainTextSummaryFormatter.MimeType)
+                            .Should().Be("System.Collections.Generic.List<System.String>");
+        new List<string>().GetType().ToDisplayString(PlainTextSummaryFormatter.MimeType)
+                          .Should().Be("System.Collections.Generic.List<System.String>");
+    }
+
+    [Fact]
+    public void Default_formatter_for_Type_displays_generic_parameter_name_for_multiple_parameter_generic_type()
+    {
+        typeof(Dictionary<string, IEnumerable<int>>).ToDisplayString(PlainTextSummaryFormatter.MimeType)
+                                                    .Should().Be(
+                                                        "System.Collections.Generic.Dictionary<System.String,System.Collections.Generic.IEnumerable<System.Int32>>");
+    }
+
+    [Fact]
+    public void Default_formatter_for_Type_displays_generic_parameter_names_for_open_generic_types()
+    {
+        typeof(IList<>).ToDisplayString(PlainTextSummaryFormatter.MimeType)
+                       .Should().Be("System.Collections.Generic.IList<T>");
+        typeof(IDictionary<,>).ToDisplayString()
+                              .Should().Be("System.Collections.Generic.IDictionary<TKey,TValue>");
+    }
+
+    [Fact]
     public void Null_reference_types_are_indicated()
     {
         string value = null;
 
-        value.ToDisplayString(PlainTextSummaryFormatter.MimeType).Should().Be("<null>");
+        value.ToDisplayString(PlainTextSummaryFormatter.MimeType).Should().Be(Formatter.NullString);
     }
 
     [Fact]
@@ -25,7 +52,7 @@ public class PlainTextSummaryFormatterTests : FormatterTestBase
 
         var output = nullable.ToDisplayString(PlainTextSummaryFormatter.MimeType);
 
-        output.Should().Be(((object)null).ToDisplayString());
+        output.Should().Be(Formatter.NullString);
     }
 
     [Fact]

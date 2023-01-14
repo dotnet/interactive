@@ -25,7 +25,7 @@ public partial class PlainTextFormatterTests : FormatterTestBase
         {
             string value = null;
 
-            value.ToDisplayString().Should().Be("<null>");
+            value.ToDisplayString().Should().Be(Formatter.NullString);
         }
 
         [Fact]
@@ -35,7 +35,7 @@ public partial class PlainTextFormatterTests : FormatterTestBase
 
             var output = nullable.ToDisplayString();
 
-            output.Should().Be(((object)null).ToDisplayString());
+            output.Should().Be(Formatter.NullString);
         }
 
         [Fact]
