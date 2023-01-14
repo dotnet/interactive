@@ -39,11 +39,11 @@ public static class HtmlFormatter
 
     public const string MimeType = "text/html";
 
-    internal static ITypeFormatter GetDefaultFormatterForAnyObject(Type type, bool includeInternals = false) =>
-        FormattersForAnyObject.GetOrCreateFormatterForType(type, includeInternals);
+    internal static ITypeFormatter GetDefaultFormatterForAnyObject(Type type) =>
+        FormattersForAnyObject.GetOrCreateFormatterForType(type);
 
     internal static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
-        FormattersForAnyEnumerable.GetOrCreateFormatterForType(type, false);
+        FormattersForAnyEnumerable.GetOrCreateFormatterForType(type);
 
     internal static void FormatAndStyleAsPlainText(
         object text, 

@@ -54,10 +54,10 @@ public class HtmlFormatter<T> : TypeFormatter<T>
 
     public override string MimeType => HtmlFormatter.MimeType;
 
-    internal static HtmlFormatter<T> CreateForAnyObject(bool includeInternals)
+    internal static HtmlFormatter<T> CreateForAnyObject()
     {
-        var members = typeof(T).GetMembersToFormat(includeInternals)
-            .GetMemberAccessors<T>();
+        var members = typeof(T).GetMembersToFormat()
+                               .GetMemberAccessors<T>();
 
         return new HtmlFormatter<T>((instance, context) =>
         {
@@ -107,7 +107,7 @@ public class HtmlFormatter<T> : TypeFormatter<T>
         });
     }
 
-    internal static HtmlFormatter<T> CreateForAnyEnumerable(bool includeInternals)
+    internal static HtmlFormatter<T> CreateForAnyEnumerable()
     {
         Func<T, IEnumerable> getKeys = null;
         Func<T, IEnumerable> getValues = instance => (IEnumerable) instance;

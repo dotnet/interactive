@@ -14,6 +14,8 @@ namespace Microsoft.DotNet.Interactive.Formatting;
 
 internal static class TypeExtensions
 {
+    private const BindingFlags BindingFlagsForFormattedMembers = BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.GetField | BindingFlags.Public;
+
     private static readonly HashSet<Type> _typesToTreatAsScalar = new()
     {
         typeof(decimal),
@@ -53,7 +55,7 @@ internal static class TypeExtensions
         this Type type,
         params Expression<Func<T, object>>[] forProperties)
     {
-        var allMembers = typeof(T).GetMembersToFormat(true).ToArray();
+        var allMembers = typeof(T).GetMembersToFormat().ToArray();
 
         if (forProperties is null || !forProperties.Any())
         {
@@ -74,15 +76,11 @@ internal static class TypeExtensions
             .Select(MemberAccessor.CreateMemberAccessor<T>)
             .ToArray();
 
-    public static IEnumerable<MemberInfo> GetMembersToFormat(this Type type, bool includeInternals = false)
+    public static IEnumerable<MemberInfo> GetMembersToFormat(this Type type)
     {
-        var bindingFlags = includeInternals
-            ? BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.GetField | BindingFlags.Public | BindingFlags.NonPublic
-            : BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.GetField | BindingFlags.Public;
-
-        return type.GetMembers(bindingFlags)
-            .Where(ShouldDisplay)
-            .ToArray();
+        return type.GetMembers(BindingFlagsForFormattedMembers)
+                   .Where(ShouldDisplay)
+                   .ToArray();
     }
 
     public static IEnumerable<Type> GetAllInterfaces(this Type type)

@@ -56,7 +56,7 @@ public class PlainTextFormatter<T> : TypeFormatter<T>
         return _format(value, context);
     }
 
-    public static PlainTextFormatter<T> CreateForAnyObject(bool includeInternals = false)
+    internal static PlainTextFormatter<T> CreateForAnyObject()
     {
         if (typeof(T).IsScalar())
         {
@@ -69,19 +69,10 @@ public class PlainTextFormatter<T> : TypeFormatter<T>
 
         return new PlainTextFormatter<T>(
             PlainTextFormatter.CreateFormatDelegate<T>(
-                typeof(T).GetMembersToFormat(includeInternals).ToArray()));
+                typeof(T).GetMembersToFormat().ToArray()));
     }
-
-    public static PlainTextFormatter<T> CreateForMembers(params Expression<Func<T, object>>[] members)
-    {
-        var format = PlainTextFormatter.CreateFormatDelegate<T>(
-            typeof(T).GetMembers(members).ToArray());
-
-        return new PlainTextFormatter<T>(format);
-    }
-
-    [SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Part of Pattern")]
-    public static PlainTextFormatter<T> CreateForAnyEnumerable(bool includeInternals = false)
+  
+    internal static PlainTextFormatter<T> CreateForAnyEnumerable()
     {
         if (typeof(T) == typeof(string))
         {
@@ -100,7 +91,7 @@ public class PlainTextFormatter<T> : TypeFormatter<T>
         {
             var joinMethod = typeof(Formatter).GetMethod(nameof(Formatter.JoinGeneric), BindingFlags.NonPublic | BindingFlags.Static);
 
-            var genericMethod = joinMethod.MakeGenericMethod(new[] { t });
+            var genericMethod = joinMethod!.MakeGenericMethod(new[] { t });
 
             var enumerableType = typeof(IEnumerable<>).MakeGenericType(t);
 
@@ -134,5 +125,5 @@ public class PlainTextFormatter<T> : TypeFormatter<T>
         });
     }
 
-    public static PlainTextFormatter<T> Default = CreateForAnyEnumerable(false);
+    public static PlainTextFormatter<T> Default = CreateForAnyEnumerable();
 }
