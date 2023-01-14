@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -17,6 +17,14 @@ public static class PlainTextSummaryFormatter
 
     internal static ITypeFormatter[] DefaultFormatters { get; } =
     {
+
+        new AnonymousTypeFormatter<Type>((value, context) =>
+        {
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor<Type>();
+
+            return formatter.Format(value, context);
+        }, MimeType),
+        
         new AnonymousTypeFormatter<string>((value, context) =>
         {
             if (value is null)
