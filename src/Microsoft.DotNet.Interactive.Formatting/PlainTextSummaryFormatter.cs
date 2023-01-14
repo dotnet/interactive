@@ -1,4 +1,4 @@
-// Copyright (c) .NET Foundation and contributors. All rights reserved.
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -47,7 +47,7 @@ public static class PlainTextSummaryFormatter
             }
 
             var type = obj.GetType();
-            var formatter = FormattersForAnyEnumerable.GetOrCreateFormatterForType(type, false);
+            var formatter = FormattersForAnyEnumerable.GetOrCreateFormatterForType(type);
             return formatter.Format(obj, context);
         }, MimeType),
 

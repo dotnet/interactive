@@ -94,7 +94,7 @@ public partial class PlainTextFormatterTests : FormatterTestBase
             PlainTextFormatter.MaxProperties = 1;
 
             var writer = new StringWriter();
-            formatter.Format(new Dummy.ClassWithManyProperties(), writer);
+            formatter.Format(new ClassWithManyProperties(), writer);
 
             var s = writer.ToString();
             s.Should().Be($"ClassWithManyProperties{NewLine}    X1: 1{NewLine}    ...");
@@ -119,42 +119,12 @@ public partial class PlainTextFormatterTests : FormatterTestBase
             var formatter = PlainTextFormatter.GetPreferredFormatterFor<ClassWithNoPropertiesAndCustomToString>();
 
             var writer = new StringWriter();
-            formatter.Format(new Dummy.ClassWithNoPropertiesAndCustomToString(), writer);
+            formatter.Format(new ClassWithNoPropertiesAndCustomToString(), writer);
 
             var s = writer.ToString();
             s.Should().Be($"{typeof(ClassWithNoPropertiesAndCustomToString)} custom ToString value");
         }
-
-        [Fact]
-        public void CreateForMembers_emits_the_specified_property_names_and_values_for_a_specific_type()
-        {
-            var formatter = PlainTextFormatter<SomethingWithLotsOfProperties>.CreateForMembers(
-                o => o.DateProperty,
-                o => o.StringProperty);
-
-            var s = new SomethingWithLotsOfProperties
-            {
-                DateProperty = DateTime.MinValue,
-                StringProperty = "howdy"
-            }.ToDisplayString(formatter);
-
-            s.Should().Contain("DateProperty: 0001-01-01 00:00:00Z");
-            s.Should().Contain("StringProperty: howdy");
-            s.Should().NotContain("IntProperty");
-            s.Should().NotContain("BoolProperty");
-            s.Should().NotContain("UriProperty");
-        }
-
-        [Fact]
-        public void CreateForMembers_throws_when_an_expression_is_not_a_MemberExpression()
-        {
-            var ex = Assert.Throws<ArgumentException>(() => PlainTextFormatter<SomethingWithLotsOfProperties>.CreateForMembers(
-                                                          o => o.DateProperty.ToShortDateString(),
-                                                          o => o.StringProperty));
-
-            ex.Message.Should().Contain("o => o.DateProperty.ToShortDateString()");
-        }
-
+        
         [Theory]
         [InlineData(typeof(Boolean), "False")]
         [InlineData(typeof(Byte), "0")]
@@ -311,40 +281,7 @@ Parts: <null>".ReplaceLineEndings());
             output.Should().Contain("DateField: ");
             output.Should().Contain("DateProperty: ");
         }
-
-        [Fact]
-        public void Output_can_include_internal_fields()
-        {
-            var formatter = PlainTextFormatter<Node>.CreateForAnyObject(true);
-
-            var node = new Node { Id = "5" };
-
-            var output = node.ToDisplayString(formatter);
-
-            output.Should().Contain("_id: 5");
-        }
-
-        [Fact]
-        public void Output_does_not_include_autoproperty_backing_fields()
-        {
-            var formatter = PlainTextFormatter<Node>.CreateForAnyObject(true);
-
-            var output = new Node().ToDisplayString(formatter);
-
-            output.Should().NotContain("<Nodes>k__BackingField");
-            output.Should().NotContain("<NodesArray>k__BackingField");
-        }
-
-        [Fact]
-        public void Output_can_include_internal_properties()
-        {
-            var formatter = PlainTextFormatter<Node>.CreateForAnyObject(true);
-
-            var output = new Node { Id = "6" }.ToDisplayString(formatter);
-
-            output.Should().Contain("InternalId: 6");
-        }
-
+        
         [Fact]
         public void Tuple_values_are_formatted_on_one_line_when_all_scalar()
         {

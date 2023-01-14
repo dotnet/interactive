@@ -39,10 +39,11 @@ public static class PlainTextFormatter
     /// </summary>
     public static int MaxProperties { get; set; } = DefaultMaxProperties;
 
-    internal const int DefaultMaxProperties = 20;
+    private const int DefaultMaxProperties = 20;
+    private const int NumberOfSpacesToIndent = 4;
 
     internal static ITypeFormatter GetDefaultFormatterForAnyObject(Type type, bool includeInternals = false) =>
-        FormattersForAnyObject.GetOrCreateFormatterForType(type, includeInternals);
+        FormattersForAnyObject.GetOrCreateFormatterForType(type);
 
     internal static FormatDelegate<T> CreateFormatDelegate<T>(MemberInfo[] forMembers)
     {
@@ -267,7 +268,7 @@ public static class PlainTextFormatter
                 return true;
             }
             var type = obj.GetType();
-            var formatter = FormattersForAnyEnumerable.GetOrCreateFormatterForType(type, false);
+            var formatter = FormattersForAnyEnumerable.GetOrCreateFormatterForType(type);
             return formatter.Format(obj, context);
         }),
 
@@ -300,11 +301,11 @@ public static class PlainTextFormatter
     };
 
     private static string IndentAtNewLines(this string s, FormatContext context) => 
-        Regex.Replace(s, @"^\s+", new string(' ', (context.Depth + 1) * 4), RegexOptions.Multiline);
+        Regex.Replace(s, @"^\s+", new string(' ', (context.Depth + 1) * NumberOfSpacesToIndent), RegexOptions.Multiline);
 
     internal static void WriteIndent(FormatContext context, string bonus = "    ")
     {
-        var effectiveIndent = context.Depth * 4;
+        var effectiveIndent = context.Depth * NumberOfSpacesToIndent;
         var indent = new string(' ', effectiveIndent);
         context.Writer.Write(indent);
         context.Writer.Write(bonus);

@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.Formatting;
 
 internal class FormatterMapByType
 {
-    private readonly ConcurrentDictionary<(Type type, bool flag), ITypeFormatter> _formatters = new();
+    private readonly ConcurrentDictionary<Type, ITypeFormatter> _formatters = new();
     private readonly Type _genericDef;
     private readonly string _name;
 
@@ -21,16 +21,12 @@ internal class FormatterMapByType
         _name = name;
     }
 
-    internal ITypeFormatter GetOrCreateFormatterForType(Type type, bool includeInternals) =>
+    internal ITypeFormatter GetOrCreateFormatterForType(Type type) =>
         _formatters.GetOrAdd(
-            (type, includeInternals),
-            tup =>
-            {
-                return
-                    (ITypeFormatter)
-                    _genericDef
-                        .MakeGenericType(tup.type)
-                        .GetMethod(_name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)
-                        .Invoke(null, new object[] { includeInternals });
-            });
+            type,
+            t => (ITypeFormatter)
+                _genericDef
+                    .MakeGenericType(t)
+                    .GetMethod(_name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)
+                    .Invoke(null, Array.Empty<object>()));
 }

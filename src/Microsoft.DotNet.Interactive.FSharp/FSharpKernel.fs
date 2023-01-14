@@ -377,7 +377,7 @@ type FSharpKernel () as this =
             let valueInfos =
                 script.Value.Fsi.GetBoundValues()
                 |> List.filter (fun x -> x.Name <> "it") // don't report special variable `it`
-                |> List.map (fun x -> new KernelValueInfo(x.Name, FormattedValue.FromObject(x.Value, requestValueInfos.MimeType)[0], this.getValueType(x.Name)))
+                |> List.map (fun x -> new KernelValueInfo(x.Name, FormattedValue.FromObject(x.Value.ReflectionValue, requestValueInfos.MimeType)[0], this.getValueType(x.Name)))
                 :> IReadOnlyCollection<KernelValueInfo>
             context.Publish(new ValueInfosProduced(valueInfos, requestValueInfos))
         }
