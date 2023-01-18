@@ -74,7 +74,7 @@ public static class Formatter<T>
 
         using var _ = context.IncrementDepth();
 
-        if (context.Depth <= Formatter.RecursionLimit)
+        if (context.AllowRecursion)
         {
             var formatter = Formatter.GetPreferredFormatterFor(typeof(T), mimeType);
             formatter.Format(obj, context);

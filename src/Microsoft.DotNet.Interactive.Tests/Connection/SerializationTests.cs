@@ -376,7 +376,7 @@ public class SerializationTests
                 new SubmitCode("Console.Write(123);", "csharp", SubmissionType.Run),
                 new[]
                 {
-                    new FormattedValue("text/plain", "123"),
+                    new FormattedValue("text/plain", "123")
                 });
 
             yield return new WorkingDirectoryChanged(
@@ -387,9 +387,9 @@ public class SerializationTests
 
             yield return new ValueInfosProduced(new[]
             {
-                new KernelValueInfo("a",new FormattedValue(PlainTextFormatter.MimeType, "value a"), typeof(string)),
-                new KernelValueInfo("b",new FormattedValue(PlainTextFormatter.MimeType, "value b"), typeof(string)),
-                new KernelValueInfo("c",new FormattedValue(PlainTextFormatter.MimeType, "value c"), typeof(string))
+                new KernelValueInfo("a",new FormattedValue(PlainTextSummaryFormatter.MimeType, "a"), typeof(string)),
+                new KernelValueInfo("b",new FormattedValue(PlainTextSummaryFormatter.MimeType, "b"), typeof(List<string>)),
+                new KernelValueInfo("c",new FormattedValue(PlainTextSummaryFormatter.MimeType, "c"), typeof(string[]))
             }, new RequestValueInfos("csharp"));
 
             yield return new ValueProduced(

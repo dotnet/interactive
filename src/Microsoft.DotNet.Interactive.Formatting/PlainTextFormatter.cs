@@ -40,6 +40,8 @@ public static class PlainTextFormatter
     public static int MaxProperties { get; set; } = DefaultMaxProperties;
 
     private const int DefaultMaxProperties = 20;
+
+    // FIX: (PlainTextFormatter) change to 2
     private const int NumberOfSpacesToIndent = 4;
 
     internal static ITypeFormatter GetDefaultFormatterForAnyObject(Type type, bool includeInternals = false) =>

@@ -2,36 +2,36 @@
   "event": {
     "valueInfos": [
       {
-        "typeName": "String",
+        "typeName": "System.String",
         "name": "a",
         "formattedValue": {
-          "mimeType": "text/plain",
-          "value": "value a"
+          "mimeType": "text/plain\u002Bsummary",
+          "value": "a"
         },
         "preferredMimeTypes": [
           "text/plain"
         ]
       },
       {
-        "typeName": "String",
+        "typeName": "System.Collections.Generic.List\u003CSystem.String\u003E",
         "name": "b",
         "formattedValue": {
-          "mimeType": "text/plain",
-          "value": "value b"
+          "mimeType": "text/plain\u002Bsummary",
+          "value": "b"
         },
         "preferredMimeTypes": [
-          "text/plain"
+          "text/html"
         ]
       },
       {
-        "typeName": "String",
+        "typeName": "System.String[]",
         "name": "c",
         "formattedValue": {
-          "mimeType": "text/plain",
-          "value": "value c"
+          "mimeType": "text/plain\u002Bsummary",
+          "value": "c"
         },
         "preferredMimeTypes": [
-          "text/plain"
+          "text/html"
         ]
       }
     ]
