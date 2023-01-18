@@ -6,7 +6,6 @@ export const CellLanguageIdentifier = 'polyglot-notebook';
 
 // notebook controllers
 export const NotebookControllerId = 'polyglot-notebook';
-export const LegacyNotebookControllerId = 'polyglot-notebook-legacy';
 export const JupyterNotebookControllerId = 'polyglot-notebook-for-jupyter';
 
 // notebook kernel
@@ -16,7 +15,6 @@ export const JupyterKernelId = 'polyglot-notebook-for-jupyter';
 export const NotebookViewType = 'polyglot-notebook';
 export const JupyterNotebookViewType = 'polyglot-notebook-jupyter';
 export const JupyterViewType = 'jupyter-notebook';
-export const LegacyNotebookViewType = 'polyglot-notebook-legacy';
 
 // other
 export const DotnetConfigurationSectionName = 'dotnet-interactive';

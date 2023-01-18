@@ -285,7 +285,6 @@ export function isVersionSufficient(firstVersion: string, secondVersion: string)
 export function extensionToDocumentType(extension: string): contracts.DocumentSerializationType {
     switch (extension) {
         case '.dib':
-        case '.dotnet-interactive':
             return contracts.DocumentSerializationType.Dib;
         case '.ipynb':
             return contracts.DocumentSerializationType.Ipynb;
