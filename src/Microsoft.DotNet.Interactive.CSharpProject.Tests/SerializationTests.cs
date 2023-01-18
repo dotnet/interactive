@@ -19,6 +19,7 @@ using Microsoft.DotNet.Interactive.ValueSharing;
 using Pocket;
 using Xunit;
 using Xunit.Abstractions;
+using System.Text.Encodings.Web;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
@@ -228,7 +229,8 @@ public class SerializationTests
     {
         json = JsonNode.Parse(json).ToJsonString(new JsonSerializerOptions
         {
-            WriteIndented = true
+            WriteIndented = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
         });
         return json;
     }

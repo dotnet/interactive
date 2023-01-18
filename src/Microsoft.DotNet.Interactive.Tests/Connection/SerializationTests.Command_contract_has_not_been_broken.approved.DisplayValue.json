@@ -5,7 +5,7 @@
   "command": {
     "formattedValue": {
       "mimeType": "text/html",
-      "value": "\u003Cb\u003Ehi!\u003C/b\u003E"
+      "value": "<b>hi!</b>"
     },
     "valueId": null,
     "targetKernelName": null,

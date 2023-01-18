@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Assent;
@@ -422,7 +423,8 @@ public class SerializationTests
     {
         json = JsonNode.Parse(json).ToJsonString(new JsonSerializerOptions
         {
-            WriteIndented = true
+            WriteIndented = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
         });
         return json;
     }

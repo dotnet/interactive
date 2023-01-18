@@ -5,7 +5,7 @@
         "typeName": "System.String",
         "name": "a",
         "formattedValue": {
-          "mimeType": "text/plain\u002Bsummary",
+          "mimeType": "text/plain+summary",
           "value": "a"
         },
         "preferredMimeTypes": [
@@ -13,10 +13,10 @@
         ]
       },
       {
-        "typeName": "System.Collections.Generic.List\u003CSystem.String\u003E",
+        "typeName": "System.Collections.Generic.List<System.String>",
         "name": "b",
         "formattedValue": {
-          "mimeType": "text/plain\u002Bsummary",
+          "mimeType": "text/plain+summary",
           "value": "b"
         },
         "preferredMimeTypes": [
@@ -27,7 +27,7 @@
         "typeName": "System.String[]",
         "name": "c",
         "formattedValue": {
-          "mimeType": "text/plain\u002Bsummary",
+          "mimeType": "text/plain+summary",
           "value": "c"
         },
         "preferredMimeTypes": [
@@ -42,7 +42,7 @@
     "id": "command-id",
     "commandType": "RequestValueInfos",
     "command": {
-      "mimeType": "text/plain\u002Bsummary",
+      "mimeType": "text/plain+summary",
       "targetKernelName": "csharp",
       "originUri": null,
       "destinationUri": null
