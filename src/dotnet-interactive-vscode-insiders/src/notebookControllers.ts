@@ -18,7 +18,6 @@ import * as constants from './vscode-common/constants';
 import * as versionSpecificFunctions from './versionSpecificFunctions';
 import * as semanticTokens from './vscode-common/documentSemanticTokenProvider';
 import { ServiceCollection } from './vscode-common/serviceCollection';
-import { PromiseCompletionSource } from './vscode-common/dotnet-interactive';
 
 const executionTasks: Map<string, vscode.NotebookCellExecution> = new Map();
 const standardOutputMimeType = 'application/vnd.code.notebook.stdout';
@@ -51,16 +50,6 @@ export class DotNetNotebookKernel {
             preloads
         );
         this.commonControllerInit(dibController);
-
-        // .dotnet-interactive execution
-        const legacyController = vscode.notebooks.createNotebookController(
-            constants.LegacyNotebookControllerId,
-            constants.LegacyNotebookViewType,
-            '.NET Interactive',
-            this.executeHandler.bind(this),
-            preloads
-        );
-        this.commonControllerInit(legacyController);
 
         // .ipynb execution via Jupyter extension (optional)
         const jupyterController = vscode.notebooks.createNotebookController(

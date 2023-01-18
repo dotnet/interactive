@@ -216,7 +216,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
     const eol = getEol();
 
     const notebookFileFilters = {
-        'Polyglot Notebooks': ['dib', 'dotnet-interactive'],
+        'Polyglot Notebooks': ['dib'],
         'Jupyter Notebooks': ['ipynb'],
     };
 
@@ -248,7 +248,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
     }));
 
     async function newNotebook(extension: string): Promise<void> {
-        const viewType = extension === '.dib' || extension === '.dotnet-interactive'
+        const viewType = extension === '.dib'
             ? constants.NotebookViewType
             : constants.JupyterViewType;
 
@@ -319,7 +319,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
 
     async function openNotebook(uri: vscode.Uri): Promise<void> {
         const extension = path.extname(uri.toString());
-        const viewType = extension === '.dib' || extension === '.dotnet-interactive'
+        const viewType = extension === '.dib'
             ? constants.NotebookViewType
             : constants.JupyterViewType;
         await vscode.commands.executeCommand('vscode.openWith', uri, viewType);
@@ -344,7 +344,6 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
             await vscode.workspace.fs.writeFile(uri, buffer);
             switch (path.extname(uriPath)) {
                 case '.dib':
-                case '.dotnet-interactive':
                     await vscode.commands.executeCommand('polyglot-notebook.openNotebook', uri);
                     break;
             }

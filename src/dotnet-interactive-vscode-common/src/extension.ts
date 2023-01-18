@@ -402,7 +402,6 @@ async function openNotebookFromUrl(notebookUrl: string, notebookFormat: string |
             let extension = path.extname(resolvedUri.path);
             switch (extension) {
                 case '.dib':
-                case '.dotnet-interactive':
                     notebookFormat = 'dib';
                     break;
                 case '.ipynb':

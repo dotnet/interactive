@@ -27,7 +27,6 @@ export function registerNotbookCellStatusBarItemProvider(context: vscode.Extensi
     });
     context.subscriptions.push(vscode.notebooks.registerNotebookCellStatusBarItemProvider(constants.NotebookViewType, cellItemProvider));
     context.subscriptions.push(vscode.notebooks.registerNotebookCellStatusBarItemProvider(constants.JupyterViewType, cellItemProvider)); // TODO: fix this
-    context.subscriptions.push(vscode.notebooks.registerNotebookCellStatusBarItemProvider(constants.LegacyNotebookViewType, cellItemProvider));
     context.subscriptions.push(vscode.commands.registerCommand(selectKernelCommandName, async (cell?: vscode.NotebookCell) => {
         if (cell) {
             const client = await clientMapper.tryGetClient(cell.notebook.uri);
