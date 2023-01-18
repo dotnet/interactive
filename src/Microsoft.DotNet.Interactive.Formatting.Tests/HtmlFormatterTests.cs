@@ -191,7 +191,7 @@ public class HtmlFormatterTests : FormatterTestBase
 
             writer.ToString().RemoveStyleElement()
                 .Should()
-                .Match($"<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td><td>{PlainTextBegin}&lt;&gt;f__AnonymousType*&lt;Int32&gt;{NewLine}        BA: 456{PlainTextEnd}</td></tr></tbody></table>");
+                .Match($"<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td><td>{PlainTextBegin}&lt;&gt;f__AnonymousType*&lt;Int32&gt;{NewLine}      BA: 456{PlainTextEnd}</td></tr></tbody></table>");
         }
 
         [Fact]
