@@ -13,7 +13,7 @@
   "//version": "The version '42.42.42' is auto-set during CI package creation.",
   "version": "42.42.42",
   "engines": {
-    "vscode": "1.76.0-insider"
+    "vscode": "1.75.0-insider"
   },
   "bugs": {
     "url": "https://github.com/dotnet/interactive/issues"
