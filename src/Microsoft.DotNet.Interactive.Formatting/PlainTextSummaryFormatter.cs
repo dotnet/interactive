@@ -17,7 +17,6 @@ public static class PlainTextSummaryFormatter
 
     internal static ITypeFormatter[] DefaultFormatters { get; } =
     {
-
         new AnonymousTypeFormatter<Type>((value, context) =>
         {
             var formatter = PlainTextFormatter.GetPreferredFormatterFor<Type>();
@@ -48,7 +47,14 @@ public static class PlainTextSummaryFormatter
 
             var type = obj.GetType();
             var formatter = FormattersForAnyEnumerable.GetOrCreateFormatterForType(type);
-            return formatter.Format(obj, context);
+
+            context.DisableRecursion();
+
+            var result = formatter.Format(obj, context);
+
+            context.EnableRecursion();
+
+            return result;
         }, MimeType),
 
         new AnonymousTypeFormatter<object>((value, context) =>
@@ -73,6 +79,7 @@ public static class PlainTextSummaryFormatter
             return true;
         }, MimeType)
     };
+
     private static string Truncate(object value)
     {
         var formatted = value.ToString()

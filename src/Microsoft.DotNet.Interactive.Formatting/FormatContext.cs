@@ -13,12 +13,13 @@ namespace Microsoft.DotNet.Interactive.Formatting;
 public class FormatContext : IDisposable
 {
     private Dictionary<string, Action<FormatContext>> _requiredContent;
+    private bool _disableRecursion;
 
     public FormatContext(TextWriter writer)
     {
         Writer = writer;
     }
-        
+
     public int Depth { get; private set; }
 
     internal int Indent { get; set; }
@@ -53,6 +54,14 @@ public class FormatContext : IDisposable
         TableDepth++;
         return Disposable.Create(() => TableDepth--);
     }
+
+    internal bool AllowRecursion =>
+        Depth <= Formatter.RecursionLimit &&
+        !_disableRecursion;
+
+    internal bool DisableRecursion() => _disableRecursion = true;
+
+    internal bool EnableRecursion() => _disableRecursion = false;
 
     internal bool IsStartingObjectWithinSequence { get; set; }
 

@@ -10,12 +10,16 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.Csv;
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.FSharp;
+using Microsoft.DotNet.Interactive.HttpRequest;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
 using Pocket.For.Xunit;
 using Xunit;
+using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
@@ -423,6 +427,20 @@ y");
         var (success, valueInfosProduced) = await kernel.TryRequestValueInfosAsync();
 
         valueInfosProduced.ValueInfos.Should().Contain(v => v.Name == "x");
+    }
+
+    [Fact]
+    public async Task RequestValueInfos_shows_expected_type_name()
+    {
+        var kernel = CreateKernel(Language.CSharp);
+
+        await kernel.SubmitCodeAsync("var x = new List<string>();");
+
+        var (success, valueInfosProduced) = await kernel.TryRequestValueInfosAsync();
+
+        valueInfosProduced.ValueInfos
+                          .Should()
+                          .Contain(v => v.TypeName == "System.Collections.Generic.List<System.String>");
     }
 
     [Theory]

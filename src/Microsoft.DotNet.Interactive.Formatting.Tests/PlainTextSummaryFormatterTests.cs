@@ -12,6 +12,13 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 public class PlainTextSummaryFormatterTests : FormatterTestBase
 {
     [Fact]
+    public void Default_formatter_Type_displays_keyword_when_available_for_arrays()
+    {
+        typeof(string[]).ToDisplayString(PlainTextSummaryFormatter.MimeType)
+                        .Should().Be("System.String[]");
+    }
+
+    [Fact]
     public void Default_formatter_for_Type_displays_generic_parameter_name_for_single_parameter_generic_type()
     {
         typeof(List<string>).ToDisplayString(PlainTextSummaryFormatter.MimeType)

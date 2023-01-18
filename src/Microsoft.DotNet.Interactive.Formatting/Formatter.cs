@@ -359,7 +359,9 @@ public static class Formatter
             return;
         }
 
-        if (Formatter<T>.TypeIsScalar)
+        var condensed = Formatter<T>.TypeIsScalar || !context.AllowRecursion;
+
+        if (condensed)
         {
             context.Writer.Write("[ ");
         }
@@ -381,7 +383,7 @@ public static class Formatter
             {
                 if (i > 0)
                 {
-                    if (Formatter<T>.TypeIsScalar)
+                    if (condensed)
                     {
                         context.Writer.Write(", ");
                     }
@@ -416,7 +418,7 @@ public static class Formatter
             writer.Write("more)");
         }
 
-        if (Formatter<T>.TypeIsScalar)
+        if (condensed)
         {
             context.Writer.Write(" ]");
         }
