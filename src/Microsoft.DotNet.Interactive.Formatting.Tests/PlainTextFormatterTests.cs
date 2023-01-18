@@ -207,14 +207,52 @@ Parts: <null>".ReplaceLineEndings());
             var log = new SomePropertyThrows().ToDisplayString();
 
             log.Should().Match(
-@"SomePropertyThrows
-        Fine: Fine
-        NotOk: System.Exception: not ok
-            at Microsoft.DotNet.Interactive.Formatting.Tests.SomePropertyThrows.get_NotOk()*
-            at lambda_method*(Closure, SomePropertyThrows)
-            at Microsoft.DotNet.Interactive.Formatting.MemberAccessor`1.GetValueOrException(T instance)*
-        Ok: ok
-        PerfectlyFine: PerfectlyFine".ReplaceLineEndings());
+                """
+                SomePropertyThrows
+                      Fine: Fine
+                      NotOk: System.Exception: not ok
+                      at Microsoft.DotNet.Interactive.Formatting.Tests.SomePropertyThrows.get_NotOk()*
+                      at lambda_method*(Closure, SomePropertyThrows)
+                      at Microsoft.DotNet.Interactive.Formatting.MemberAccessor`1.GetValueOrException(T instance)*
+                      Ok: ok
+                      PerfectlyFine: PerfectlyFine
+                """.ReplaceLineEndings());
+
+    /*
+Xunit.Sdk.XunitException: Expected log to match "
+
+SomePropertyThrows
+    Fine: Fine
+    NotOk: System.Exception: not ok
+    at Microsoft.DotNet.Interactive.Formatting.Tests.SomePropertyThrows.get_NotOk()*
+    at lambda_method*(Closure, SomePropertyThrows)
+    at Microsoft.DotNet.Interactive.Formatting.MemberAccessor`1.GetValueOrException(T instance)*
+    Ok: ok
+    PerfectlyFine: PerfectlyFine", but "
+    
+    SomePropertyThrows
+      Fine: Fine
+      NotOk: System.Exception: not ok
+      at Microsoft.DotNet.Interactive.Formatting.Tests.SomePropertyThrows.get_NotOk() in C:\dev\interactive\src\Microsoft.DotNet.Interactive.Formatting.Tests\TestClasses.cs:line 41
+      at lambda_method3(Closure, SomePropertyThrows)
+      at Microsoft.DotNet.Interactive.Formatting.MemberAccessor`1.GetValueOrException(T instance) in C:\dev\interactive\src\Microsoft.DotNet.Interactive.Formatting\MemberAccessor{T}.cs:line 57
+      Ok: ok
+      PerfectlyFine: PerfectlyFine" does not.
+   at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message) in /_/Src/FluentAssertions/Execution/XUnit2TestFramework.cs:line 35
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message) in /_/Src/FluentAssertions/Execution/TestFrameworkProvider.cs:line 34
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message) in /_/Src/FluentAssertions/Execution/DefaultAssertionStrategy.cs:line 25
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc) in /_/Src/FluentAssertions/Execution/AssertionScope.cs:line 274
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc) in /_/Src/FluentAssertions/Execution/AssertionScope.cs:line 246
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args) in /_/Src/FluentAssertions/Execution/AssertionScope.cs:line 296
+   at FluentAssertions.Primitives.StringWildcardMatchingValidator.ValidateAgainstMismatch() in /_/Src/FluentAssertions/Primitives/StringWildcardMatchingValidator.cs:line 22
+   at FluentAssertions.Primitives.StringValidator.Validate() in /_/Src/FluentAssertions/Primitives/StringValidator.cs:line 46
+   at FluentAssertions.Primitives.StringAssertions`1.Match(String wildcardPattern, String because, Object[] becauseArgs) in /_/Src/FluentAssertions/Primitives/StringAssertions.cs:line 220
+   at Microsoft.DotNet.Interactive.Formatting.Tests.PlainTextFormatterTests.Objects.When_a_property_throws_then_then_exception_is_written_in_place_of_the_property_and_indented() in C:\dev\interactive\src\Microsoft.DotNet.Interactive.Formatting.Tests\PlainTextFormatterTests.cs:line 209
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodInvoker.Invoke(Object obj, IntPtr* args, BindingFlags invokeAttr)
+
+
+    */
         }
         
         [Fact]
@@ -397,12 +435,17 @@ Parts: <null>".ReplaceLineEndings());
             var writer = new StringWriter();
             formatter.Format(obj, writer);
 
-            writer.ToString().Should().Match(@"<>f__AnonymousType*<String,<>f__AnonymousType*<String,String>,String>
-    PropertyA: A
-    PropertyB: <>f__AnonymousType*<String,String>
-        PropertyB1: B.1
-        PropertyB2: B.2
-    PropertyC: C".ReplaceLineEndings());
+            var formatted = writer.ToString();
+
+            formatted.Should().Match(
+                """
+                <>f__AnonymousType*<String,<>f__AnonymousType*<String,String>,String>
+                    PropertyA: A
+                    PropertyB: <>f__AnonymousType*<String,String>
+                      PropertyB1: B.1
+                      PropertyB2: B.2
+                    PropertyC: C
+                """.ReplaceLineEndings());
         }
 
         [Fact]
@@ -432,14 +475,16 @@ Parts: <null>".ReplaceLineEndings());
             var writer = new StringWriter();
             formatter.Format(obj, writer);
 
-            writer.ToString().Should().Match(@"<>f__AnonymousType*<String,<>f__AnonymousType*<Int32,String>[],String>
-    PropertyA: A
-    PropertyB: <>f__AnonymousType*<Int32,String>[]
-          - IntProperty: 1
-            StringProperty: one
-          - IntProperty: 2
-            StringProperty: two
-    PropertyC: C".ReplaceLineEndings());
+            writer.ToString().Should().Match("""
+                <>f__AnonymousType*<String,<>f__AnonymousType*<Int32,String>[],String>
+                    PropertyA: A
+                    PropertyB: <>f__AnonymousType*<Int32,String>[]
+                      - IntProperty: 1
+                        StringProperty: one
+                      - IntProperty: 2
+                        StringProperty: two
+                    PropertyC: C
+                """.ReplaceLineEndings());
         }
 
         [Fact(Skip = "TODO")]
@@ -598,12 +643,12 @@ Object[]
             var formatted = list.ToDisplayString(formatter);
 
             formatted.Should().Be(@"List<Widget>
-      - Name: widget x
-        Parts: <null>
-      - Name: widget y
-        Parts: <null>
-      - Name: widget z
-        Parts: <null>".ReplaceLineEndings());
+    - Name: widget x
+      Parts: <null>
+    - Name: widget y
+      Parts: <null>
+    - Name: widget z
+      Parts: <null>".ReplaceLineEndings());
 
             /* or ... ?
 TheWidgets: Widget[]
@@ -709,17 +754,19 @@ TheWidgets: Widget[]
             formatter.Format(node, writer);
 
             writer.ToString().Should().Contain(
-@"Node
-    Id: 1
-    Nodes: Node[]
-          - Id: 1.1
-            Nodes: <null>
-          - Id: 1.2
-            Nodes: Node[]
-                  - Id: 1.2.1
-                    Nodes: <null>
-          - Id: 1.3
-            Nodes: <null>".ReplaceLineEndings());
+            """
+                Node
+                    Id: 1
+                    Nodes: Node[]
+                      - Id: 1.1
+                        Nodes: <null>
+                      - Id: 1.2
+                        Nodes: Node[]
+                          - Id: 1.2.1
+                            Nodes: <null>
+                      - Id: 1.3
+                        Nodes: <null>
+                """.ReplaceLineEndings());
         }
     }
 }
