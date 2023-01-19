@@ -255,7 +255,7 @@ There are a few ways to prompt a user for input in a notebook.
 
 You can prompt for input using a token such as `@input:prompt_name` within any magic command:
 
-<img alt="image" src="https://user-images.githubusercontent.com/547415/210602472-22bbf35c-316b-4c32-b891-58b226853301.png" width="60%" >
+<img width="75%" alt="image" src="https://user-images.githubusercontent.com/547415/213321240-2e332e83-1b9e-42cd-a951-931006def638.png">
 
 (As you can see from the file picker in the screenshot, input prompts can be type-specific.) 
 
