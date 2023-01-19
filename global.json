@@ -1,11 +1,11 @@
 {
   "sdk": {
-    "version": "8.0.100-alpha.1.23061.8",
+    "version": "7.0.100",
     "allowPrerelease": true,
     "rollForward": "latestMinor"
   },
   "tools": {
-    "dotnet": "8.0.100-alpha.1.23061.8",
+    "dotnet": "7.0.100",
     "rollForward": "latestMinor"
   },
   "msbuild-sdks": {
