@@ -7,7 +7,7 @@
     "args": {
       // Update 'VARIANT' to pick a .NET Core version: 3.1, 5.0, 6.0
       // Append -bullseye or -focal to pin to an OS version.
-      "VARIANT": "7.0",
+      "VARIANT": "8.0",
       // Options
       "NODE_VERSION": "16"
     }
@@ -16,7 +16,7 @@
   "settings": {
     "dotnet-interactive.kernelTransportArgs": [
       "{dotnet_path}",
-      "/workspaces/interactive/artifacts/bin/dotnet-interactive/Debug/net7.0/Microsoft.DotNet.Interactive.App.dll",
+      "/workspaces/interactive/artifacts/bin/dotnet-interactive/Debug/net8.0/Microsoft.DotNet.Interactive.App.dll",
       "[vscode]",
       "stdio",
       "--working-dir",
@@ -24,7 +24,7 @@
     ],
     "dotnet-interactive.notebookParserArgs": [
       "{dotnet_path}",
-      "/workspaces/interactive/artifacts/bin/dotnet-interactive/Debug/net7.0/Microsoft.DotNet.Interactive.App.dll",
+      "/workspaces/interactive/artifacts/bin/dotnet-interactive/Debug/net8.0/Microsoft.DotNet.Interactive.App.dll",
       "notebook-parser"
     ],
     "editor.formatOnSave": true,

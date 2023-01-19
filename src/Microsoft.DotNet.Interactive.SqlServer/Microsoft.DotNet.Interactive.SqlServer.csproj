@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <OutputType>Library</OutputType>
   </PropertyGroup>
 
@@ -42,7 +42,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="bin\Debug\net7.0\/Microsoft.DotNet.Interactive.SqlServer.dll" />
+    <None Remove="bin\Debug\net8.0\/Microsoft.DotNet.Interactive.SqlServer.dll" />
   </ItemGroup>
 
   <ItemGroup>

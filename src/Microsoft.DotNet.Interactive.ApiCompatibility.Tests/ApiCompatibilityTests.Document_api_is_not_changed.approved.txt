@@ -99,7 +99,7 @@ Microsoft.DotNet.Interactive.Documents.Jupyter
     public static System.Void Write(Microsoft.DotNet.Interactive.Documents.InteractiveDocument document, System.IO.TextWriter writer)
     public static System.Void Write(Microsoft.DotNet.Interactive.Documents.InteractiveDocument document, System.IO.TextWriter writer, Microsoft.DotNet.Interactive.Documents.KernelInfoCollection kernelInfos)
 Microsoft.DotNet.Interactive.Documents.ParserServer
-  public enum DocumentSerializationType : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
+  public enum DocumentSerializationType : System.Enum, System.IComparable, System.IConvertible, System.IFormattable, System.ISpanFormattable
     Dib=0
     Ipynb=1
   public class NotebookErrorResponse : NotebookParserServerResponse
@@ -141,6 +141,6 @@ Microsoft.DotNet.Interactive.Documents.ParserServer
     public System.Byte[] RawData { get;}
   public static class ParserServerSerializer
     public static System.Text.Json.JsonSerializerOptions JsonSerializerOptions { get;}
-  public enum RequestType : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
+  public enum RequestType : System.Enum, System.IComparable, System.IConvertible, System.IFormattable, System.ISpanFormattable
     Parse=0
     Serialize=1

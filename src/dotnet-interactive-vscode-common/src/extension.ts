@@ -69,7 +69,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const dotnetConfig = vscode.workspace.getConfiguration(constants.DotnetConfigurationSectionName);
     const polyglotConfig = vscode.workspace.getConfiguration(constants.PolyglotConfigurationSectionName);
-    const minDotNetSdkVersion = dotnetConfig.get<string>('minimumDotNetSdkVersion') || '7.0';
+    const minDotNetSdkVersion = dotnetConfig.get<string>('minimumDotNetSdkVersion') || '8.0';
     const diagnosticsChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('Polyglot Notebook : diagnostics'));
     const loggerChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('Polyglot Notebook : logger'));
     DotNetPathManager.setOutputChannelAdapter(diagnosticsChannel);

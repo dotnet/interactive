@@ -440,7 +440,7 @@ Microsoft.DotNet.Interactive.Commands
     public Microsoft.DotNet.Interactive.FormattedValue FormattedValue { get;}
     public System.String Name { get;}
     public System.Object Value { get;}
-  public enum SubmissionType : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
+  public enum SubmissionType : System.Enum, System.IComparable, System.IConvertible, System.IFormattable, System.ISpanFormattable
     Run=0
     Diagnose=1
   public class SubmitCode : KernelCommand
@@ -627,7 +627,7 @@ Microsoft.DotNet.Interactive.Events
   public class InputProduced : KernelEvent
     .ctor(System.String value, Microsoft.DotNet.Interactive.Commands.RequestInput command)
     public System.String Value { get;}
-  public enum InsertTextFormat : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
+  public enum InsertTextFormat : System.Enum, System.IComparable, System.IConvertible, System.IFormattable, System.ISpanFormattable
     PlainText=1
     Snippet=2
   public abstract class KernelCommandCompletionEvent : KernelEvent
@@ -682,7 +682,7 @@ Microsoft.DotNet.Interactive.Parsing
     public Location Location { get;}
     public System.String Message { get;}
     public DiagnosticSeverity Severity { get;}
-  public enum DiagnosticSeverity : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
+  public enum DiagnosticSeverity : System.Enum, System.IComparable, System.IConvertible, System.IFormattable, System.ISpanFormattable
     Hidden=0
     Info=1
     Warning=2

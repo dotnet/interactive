@@ -108,7 +108,7 @@ public static class KernelExtensionTestHelper
 <Project Sdk=""Microsoft.NET.Sdk"">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <IsPackable>true</IsPackable>
     <PackageId>{packageName}</PackageId>
     <PackageVersion>{packageVersion}</PackageVersion>
@@ -139,7 +139,7 @@ public static class KernelExtensionTestHelper
 "),
             ("global.json", @"{
   ""sdk"": {
-    ""version"": ""7.0.100"",
+    ""version"": ""8.0.100-alpha.1.23061.8"",
     ""allowPrerelease"": true,
     ""rollForward"": ""latestMinor""
   }
@@ -247,7 +247,7 @@ public static class KernelExtensionTestHelper
 <Project Sdk=""Microsoft.NET.Sdk"">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <AssemblyName>{extensionName}</AssemblyName>
   </PropertyGroup>
 
@@ -261,7 +261,7 @@ public static class KernelExtensionTestHelper
 "),
             ("global.json", @"{
   ""sdk"": {
-    ""version"": ""7.0.100"",
+    ""version"": ""8.0.100-alpha.1.23061.8"",
     ""allowPrerelease"": true,
     ""rollForward"": ""latestMinor""
   }
