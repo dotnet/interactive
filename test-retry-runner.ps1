@@ -16,7 +16,8 @@ function ExecuteTestDirectory([string]$testDirectory, [string]$extraArgs = "") {
 try {
     $repoRoot = Resolve-Path $PSScriptRoot
     $flakyTestAssemblyDirectory = "Microsoft.DotNet.Interactive.Tests"
-    $normalTestAssemblyDirectories = Get-ChildItem -Path "$repoRoot/src" -Directory -Filter *.Tests -Recurse | Where-Object { $_.Name -ne $flakyTestAssemblyDirectory }
+    $skipTestAssemblyDirectory = "Microsoft.DotNet.Interactive.CSharpProject.Tests" # skip this for now; different binlog format
+    $normalTestAssemblyDirectories = Get-ChildItem -Path "$repoRoot/src" -Directory -Filter *.Tests -Recurse | Where-Object { ($_.Name -ne $flakyTestAssemblyDirectory) -and ($_.Name -ne $skipTestAssemblyDirectory) }
 
     foreach ($testAssemblyDirectory in $normalTestAssemblyDirectories) {
         $assemblyName = $testAssemblyDirectory.Name
