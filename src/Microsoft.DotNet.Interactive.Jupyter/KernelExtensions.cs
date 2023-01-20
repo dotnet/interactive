@@ -209,7 +209,10 @@ using static {typeof(TopLevelMethods).FullName};
             {
                 var context = cmdLineContext.GetService<KernelInvocationContext>();
 
-                var commands =  kernel.Directives.Where(d => !d.IsHidden).ToArray();
+                var commands =  kernel.Directives
+                                      .Where(d => !d.IsHidden)
+                                      .OrderBy(d => d.Name)
+                                      .ToArray();
 
                 var supportedDirectives = new SupportedDirectives(kernel.Name, commands);
 
