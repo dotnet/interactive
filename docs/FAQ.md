@@ -93,7 +93,7 @@ A magic command is a special code command that can be run in a notebook cell, ty
 
 In IPython, magic commands are prefixed with `%`. Since this is not a valid operator in common Python, it allows IPython to easily identify magic commands.
 
-In .NET Interactive, magics are instead prefixed with `#!`, since the `#` character indicates a comment or preprocessor directive in all of the major .NET languages. Magics must come at the beginning of the line and, while multiple magics can be used in a single cell, a single magic cannot span more than one line.
+In .NET Interactive, magics are instead prefixed with `#!`, since the `#` character indicates a comment or preprocessor directive in all of the major .NET languages. Magics must come at the beginning of the line and, while multiple magics can be used in a single cell, a single magic cannot span more than one line. In .NET Interactive, there is no distinction between a "cell magic" and a "line magic". 
 
 ### What is a REPL?
 
