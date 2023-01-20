@@ -26,6 +26,7 @@ using Pocket;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.CSharpProject.Packaging.Package>;
 using Disposable = System.Reactive.Disposables.Disposable;
+using AsyncKeyedLock;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 
@@ -36,9 +37,16 @@ public abstract class Package :
 {
     internal const string DesignTimeBuildBinlogFileName = "package_designTimeBuild.binlog";
 
-
-    private static readonly ConcurrentDictionary<string, SemaphoreSlim> _packageBuildSemaphores = new();
-    private static readonly ConcurrentDictionary<string, SemaphoreSlim> _packagePublishSemaphores = new();
+    private static readonly AsyncKeyedLocker<string> _packageBuildLocker = new(o =>
+    {
+        o.PoolSize = 20;
+        o.PoolInitialFill = 1;
+    });
+    private static readonly AsyncKeyedLocker<string> _packagePublishLocker = new(o =>
+    {
+        o.PoolSize = 20;
+        o.PoolInitialFill = 1;
+    });
 
     static Package()
     {
@@ -76,9 +84,6 @@ public abstract class Package :
     private readonly IScheduler _buildThrottleScheduler;
     private readonly SerialDisposable _fullBuildThrottlerSubscription;
 
-    private readonly SemaphoreSlim _buildSemaphore;
-    private readonly SemaphoreSlim _publishSemaphore;
-
     private readonly Subject<Unit> _designTimeBuildRequestChannel;
     private readonly SerialDisposable _designTimeBuildThrottlerSubscription;
 
@@ -109,8 +114,6 @@ public abstract class Package :
         SetupWorkspaceCreationFromDesignTimeBuildChannel();
         TryLoadDesignTimeBuildFromBuildLog();
 
-        _buildSemaphore = _packageBuildSemaphores.GetOrAdd(Name, _ => new SemaphoreSlim(1, 1));
-        _publishSemaphore = _packagePublishSemaphores.GetOrAdd(Name, _ => new SemaphoreSlim(1, 1));
         RoslynWorkspace = null;
     }
 
@@ -161,7 +164,7 @@ public abstract class Package :
         }
     }
 
-      
+
 
     private DateTimeOffset? LastDesignTimeBuild { get; set; }
 
@@ -199,10 +202,10 @@ public abstract class Package :
 
     public static DirectoryInfo DefaultPackagesDirectory { get; }
 
-    public FileInfo EntryPointAssemblyPath => 
+    public FileInfo EntryPointAssemblyPath =>
         _entryPointAssemblyPath ??= this.GetEntryPointAssemblyPath(IsWebProject);
 
-    public string TargetFramework => 
+    public string TargetFramework =>
         _targetFramework ??= this.GetTargetFramework();
 
     public Task<CodeAnalysis.Workspace> CreateWorkspaceForRunAsync()
@@ -434,9 +437,9 @@ public abstract class Package :
     public virtual async Task EnsurePublishedAsync()
     {
         await EnsureBuiltAsync();
-            
+
         using var operation = _log.OnEnterAndConfirmOnExit();
-            
+
         if (PublicationTime == null || PublicationTime < LastSuccessfulBuildTime)
         {
             await Publish();
@@ -460,9 +463,7 @@ public abstract class Package :
                 // build
                 var buildInProgress = Interlocked.Increment(ref buildCount) > 1;
 
-                await _buildSemaphore.WaitAsync();
-
-                using (Disposable.Create(() => _buildSemaphore.Release()))
+                using (await _packageBuildLocker.LockAsync(Name).ConfigureAwait(false))
                 {
                     if (buildInProgress)
                     {
@@ -499,17 +500,15 @@ public abstract class Package :
         {
             operation.Info("Publishing package {name}", Name);
             var publishInProgress = Interlocked.Increment(ref publishCount) > 1;
-            await _publishSemaphore.WaitAsync();
-
-            if (publishInProgress)
-            {
-                operation.Info("Skipping publish for package {name}", Name);
-                return;
-            }
-
             CommandLineResult result;
-            using (Disposable.Create(() => _publishSemaphore.Release()))
+            using (await _packagePublishLocker.LockAsync(Name).ConfigureAwait(false))
             {
+                if (publishInProgress)
+                {
+                    operation.Info("Skipping publish for package {name}", Name);
+                    return;
+                }
+
                 operation.Info("Publishing workspace in {directory}", Directory);
                 result = await new Dotnet(Directory)
                     .Publish("--no-dependencies --no-restore --no-build");
