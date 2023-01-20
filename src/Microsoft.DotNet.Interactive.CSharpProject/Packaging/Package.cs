@@ -1,32 +1,30 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Concurrent;
-using System.IO;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Subjects;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
-using System.Xml.XPath;
+using AsyncKeyedLock;
 using Buildalyzer;
 using Buildalyzer.Workspaces;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading;
+using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
-using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
+using System;
+using System.IO;
+using System.Linq;
+using System.Reactive;
+using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Xml.Linq;
+using System.Xml.XPath;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.CSharpProject.Packaging.Package>;
-using Disposable = System.Reactive.Disposables.Disposable;
-using AsyncKeyedLock;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 
