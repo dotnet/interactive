@@ -43,7 +43,7 @@ public class KernelCommandAndEventReceiver : IKernelCommandAndEventReceiver, IDi
 
                                         var thread = new Thread(ReaderLoop);
                                         thread.Name = $"{nameof(KernelCommandAndEventReceiver)} loop ({GetHashCode()})";
-
+                                        thread.IsBackground = true;
                                         thread.Start();
 
                                         return Disposable.Create(() =>
