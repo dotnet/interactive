@@ -74,25 +74,21 @@ class DotNetNotebookCellStatusBarItemProvider {
     }
 
     async provideCellStatusBarItems(cell: vscode.NotebookCell, token: vscode.CancellationToken): Promise<vscode.NotebookCellStatusBarItem[]> {
-        if (!metadataUtilities.isDotNetNotebook(cell.notebook)) {
+        if (!metadataUtilities.isDotNetNotebook(cell.notebook) || cell.document.languageId === 'markdown') {
             return [];
         }
 
+        const cellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(cell);
+        const cellKernelName = cellMetadata.kernelName ?? 'csharp';
+        const notebookDocument = getNotebookDcoumentFromCellDocument(cell.document);
+        const client = await this.clientMapper.tryGetClient(notebookDocument!.uri); // don't force client creation
         let displayText: string;
-        if (cell.document.languageId === 'markdown') {
-            displayText = 'Markdown';
-        } else {
-            const cellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(cell);
-            const cellKernelName = cellMetadata.kernelName ?? 'csharp';
-            const notebookDocument = getNotebookDcoumentFromCellDocument(cell.document);
-            const client = await this.clientMapper.tryGetClient(notebookDocument!.uri); // don't force client creation
-            if (client) {
-                const matchingKernel = client.kernel.childKernels.find(k => k.kernelInfo.localName === cellKernelName);
-                displayText = matchingKernel ? kernelSelectorUtilities.getKernelInfoDisplayValue(matchingKernel.kernelInfo) : cellKernelName;
-            }
-            else {
-                displayText = cellKernelName;
-            }
+        if (client) {
+            const matchingKernel = client.kernel.childKernels.find(k => k.kernelInfo.localName === cellKernelName);
+            displayText = matchingKernel ? kernelSelectorUtilities.getKernelInfoDisplayValue(matchingKernel.kernelInfo) : cellKernelName;
+        }
+        else {
+            displayText = cellKernelName;
         }
 
         const item = new vscode.NotebookCellStatusBarItem(displayText, vscode.NotebookCellStatusBarAlignment.Right);

@@ -256,7 +256,13 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
         const languagesAndKernelNames: { [key: string]: string } = {
             'C#': 'csharp',
             'F#': 'fsharp',
+            'HTML': 'html',
+            'JavaScript': 'javascript',
+            'KQL': 'kql',
+            'Markdown': 'markdown',
+            'Mermaid': 'mermaid',
             'PowerShell': 'pwsh',
+            'SQL': 'sql',
         };
 
         const newLanguageOptions: string[] = [];
@@ -270,20 +276,25 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
         }
 
         const kernelName = languagesAndKernelNames[notebookLanguage];
+        const isMarkdown = kernelName.toLowerCase() === 'markdown';
+
+        // the metadata needs an actual kernel name, not the special-cased 'markdown'
+        const kernelNameInMetadata = isMarkdown ? 'csharp' : kernelName;
         const notebookCellMetadata: metadataUtilities.NotebookCellMetadata = {
-            kernelName
+            kernelName: kernelNameInMetadata,
         };
         const rawCellMetadata = metadataUtilities.getRawNotebookCellMetadataFromNotebookCellMetadata(notebookCellMetadata);
-        const cell = new vscode.NotebookCellData(vscode.NotebookCellKind.Code, '', constants.CellLanguageIdentifier);
+        const [cellKind, cellLanguage] = isMarkdown ? [vscode.NotebookCellKind.Markup, 'markdown'] : [vscode.NotebookCellKind.Code, constants.CellLanguageIdentifier];
+        const cell = new vscode.NotebookCellData(cellKind, '', cellLanguage);
         cell.metadata = rawCellMetadata;
         const notebookDocumentMetadata: metadataUtilities.NotebookDocumentMetadata = {
             kernelInfo: {
-                defaultKernelName: kernelName,
+                defaultKernelName: kernelNameInMetadata,
                 items: [
                     {
-                        name: kernelName,
+                        name: kernelNameInMetadata,
                         aliases: [],
-                        languageName: kernelName // it just happens that the kernel names we allow are also the language names
+                        languageName: kernelNameInMetadata // it just happens that the kernel names we allow are also the language names
                     }
                 ]
             }
