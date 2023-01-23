@@ -331,10 +331,8 @@ public static class CommandLineParser
 
                     services.AddKernel(kernel);
 
-                    kernel.UseQuitCommand();
-                    
                     cancellationToken.Register(() => kernel.Dispose());
-                    
+
                     var sender = KernelCommandAndEventSender.FromTextWriter(
                         Console.Out,
                         KernelHost.CreateHostUri("stdio"));
@@ -345,6 +343,13 @@ public static class CommandLineParser
                         sender,
                         receiver,
                         startupOptions.KernelHost);
+
+                    kernel.UseQuitCommand(() =>
+                    {
+                        host.Dispose();
+                        Environment.Exit(0);
+                        return Task.CompletedTask;
+                    });
 
                     var isVSCode = context.ParseResult.Directives.Contains("vscode") ||
                                    !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CODESPACES"));
