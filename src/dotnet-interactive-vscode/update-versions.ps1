@@ -27,13 +27,13 @@ try {
             $newToolVersion = ($packageQueryResults."data" | Select-Object -First 1)."version"
 
             # ...compare to existing...
-            $existingToolVersion = $packageJsonContents."contributes"."configuration"."properties"."dotnet-interactive.minimumInteractiveToolVersion"."default"
+            $existingToolVersion = $packageJsonContents."contributes"."configuration"."properties"."dotnet-interactive.requiredInteractiveToolVersion"."default"
             if ($existingToolVersion -eq $newToolVersion) {
                 Write-Host "Existing tool version $existingToolVersion is up to date."
             }
             else {
                 Write-Host "Updating tool version from $existingToolVersion to $newToolVersion"
-                $packageJsonContents."contributes"."configuration"."properties"."dotnet-interactive.minimumInteractiveToolVersion"."default" = $newToolVersion
+                $packageJsonContents."contributes"."configuration"."properties"."dotnet-interactive.requiredInteractiveToolVersion"."default" = $newToolVersion
             }
         }
 
