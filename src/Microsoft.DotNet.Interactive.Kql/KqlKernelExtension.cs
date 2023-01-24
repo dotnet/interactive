@@ -22,7 +22,7 @@ public class KqlKernelExtension : IKernelExtension
             bool kqlToolInstalled = installedGlobalTools.Any(tool => string.Equals(tool, kqlToolName, StringComparison.InvariantCultureIgnoreCase));
             if (!kqlToolInstalled)
             {
-                var commandLineResult = await dotnet.ToolInstall("Microsoft.SqlServer.KustoServiceLayer.Tool", null, null, "1.0.0");
+                var commandLineResult = await dotnet.ToolInstall("Microsoft.SqlServer.KustoServiceLayer.Tool", null, null, "1.1.0");
                 commandLineResult.ThrowOnFailure();
             }
 

@@ -35,7 +35,7 @@ public class KqlKernelConnector : IKernelConnector
 
         var connectionDetails = await BuildConnectionDetailsAsync();
 
-        var serviceArgs = string.Empty; // $"--parent-pid {Environment.ProcessId}";
+        var serviceArgs = $"--parent-pid {Environment.ProcessId}";
         var logFile = Environment.GetEnvironmentVariable("DOTNET_KUSTOSERVICE_LOGFILE");
         if (!string.IsNullOrWhiteSpace(logFile))
         {
