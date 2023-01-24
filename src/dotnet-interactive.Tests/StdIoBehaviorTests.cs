@@ -49,7 +49,7 @@ public class StdIoBehaviorTests
         var kernelReadyEventTaskCompletionSource = new TaskCompletionSource();
         process.OutputDataReceived += (_, args) =>
         {
-            if (args?.Data.Contains(nameof(KernelReady)) == true)
+            if (args?.Data?.Contains(nameof(KernelReady)) == true)
             {
                 kernelReadyEventTaskCompletionSource.SetResult();
             }
