@@ -21,8 +21,12 @@ import * as constants from './constants';
 
 export function registerAcquisitionCommands(context: vscode.ExtensionContext, diagnosticChannel: ReportChannel) {
     const dotnetConfig = vscode.workspace.getConfiguration(constants.DotnetConfigurationSectionName);
-    const minDotNetInteractiveVersion = dotnetConfig.get<string>('minimumInteractiveToolVersion');
+    const requiredDotNetInteractiveVersion = dotnetConfig.get<string>('requiredInteractiveToolVersion');
     const interactiveToolSource = dotnetConfig.get<string>('interactiveToolSource');
+
+    if (!requiredDotNetInteractiveVersion) {
+        throw new Error(`Missing or incorrect required configuration setting "${constants.DotnetConfigurationSectionName}.requiredInteractiveToolVersion"`);
+    }
 
     let cachedInstallArgs: InstallInteractiveArgs | undefined = undefined;
     let acquirePromise: Promise<InteractiveLaunchOptions> | undefined = undefined;
@@ -44,7 +48,7 @@ export function registerAcquisitionCommands(context: vscode.ExtensionContext, di
                 const installationPromiseCompletionSource = new PromiseCompletionSource<void>();
                 acquirePromise = acquireDotnetInteractive(
                     installArgs,
-                    minDotNetInteractiveVersion!,
+                    requiredDotNetInteractiveVersion,
                     context.globalStorageUri.fsPath,
                     getInteractiveVersion,
                     createToolManifest,
