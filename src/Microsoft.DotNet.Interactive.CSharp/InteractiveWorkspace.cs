@@ -59,14 +59,14 @@ internal class InteractiveWorkspace : Workspace
             if (Directory.Exists(appRefDir))
             {
                 var latestRuntimeDirAndVersion =
-                    Directory.GetDirectories(appRefDir)
-                        .Select(dir => Path.GetFileName(dir))
+                    Directory
+                        .GetDirectories(appRefDir)
+                        .Select(Path.GetFileName)
                         .Select(dir => new { Directory = dir, Version = TryParseVersion(dir, out var version) ? version : new Version() })
                         .Where(dir => dir.Version <= runtimeVersion)
                         .OrderByDescending(dirPair => dirPair.Version)
                         .Select(dirInfo => Path.Combine(appRefDir, dirInfo.Directory, "ref", $"net{dirInfo.Version.Major}.{dirInfo.Version.Minor}"))
-                        .Where(candidateRefDir => Directory.Exists(candidateRefDir))
-                        .FirstOrDefault();
+                        .FirstOrDefault(Directory.Exists);
                 if (latestRuntimeDirAndVersion is { })
                 {
                     refAssemblyDir = latestRuntimeDirAndVersion;
