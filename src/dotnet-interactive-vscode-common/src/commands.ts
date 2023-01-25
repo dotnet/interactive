@@ -19,13 +19,16 @@ import { PromiseCompletionSource } from './dotnet-interactive/promiseCompletionS
 
 import * as constants from './constants';
 
-export function registerAcquisitionCommands(context: vscode.ExtensionContext, diagnosticChannel: ReportChannel) {
+export async function registerAcquisitionCommands(context: vscode.ExtensionContext, diagnosticChannel: ReportChannel): Promise<void> {
     const dotnetConfig = vscode.workspace.getConfiguration(constants.DotnetConfigurationSectionName);
     const requiredDotNetInteractiveVersion = dotnetConfig.get<string>('requiredInteractiveToolVersion');
     const interactiveToolSource = dotnetConfig.get<string>('interactiveToolSource');
 
     if (!requiredDotNetInteractiveVersion) {
-        throw new Error(`Missing or incorrect required configuration setting "${constants.DotnetConfigurationSectionName}.requiredInteractiveToolVersion"`);
+        const errorTitle = 'Polyglot Notebooks extension will not work.';
+        const errorDetails = `Incorrect value for option "${constants.DotnetConfigurationSectionName}.requiredInteractiveToolVersion" in settings.json.  Please remove this value and restart VS Code.`;
+        await vscode.window.showErrorMessage(errorTitle, { modal: true, detail: errorDetails });
+        throw new Error(errorDetails);
     }
 
     let cachedInstallArgs: InstallInteractiveArgs | undefined = undefined;

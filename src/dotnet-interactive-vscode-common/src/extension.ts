@@ -88,7 +88,7 @@ export async function activate(context: vscode.ExtensionContext) {
     await waitForSdkPackExtension();
 
     // this must happen early, because some following functions use the acquisition command
-    registerAcquisitionCommands(context, diagnosticsChannel);
+    await registerAcquisitionCommands(context, diagnosticsChannel);
 
     // check sdk version
     let showHelpPage = false;
