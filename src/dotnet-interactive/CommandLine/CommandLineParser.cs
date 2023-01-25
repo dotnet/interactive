@@ -549,24 +549,6 @@ public static class CommandLineParser
                 throw new ArgumentOutOfRangeException(nameof(frontendEnvironment));
         }
 
-        Formatter.Register<HttpResponseMessage>((responseMessage, context) =>
-        {
-            // Formatter.Register() doesn't support async formatters yet.
-            // Prevent SynchronizationContext-induced deadlocks given the following sync-over-async code.
-            ExecutionContext.SuppressFlow();
-
-            try
-            {
-                HttpResponseFormatter.FormatHttpResponseMessage(
-                    responseMessage,
-                    context).Wait();
-            }
-            finally
-            {
-                ExecutionContext.RestoreFlow();
-            }
-
-            return true;
-        }, HtmlFormatter.MimeType);
+      
     }
 }
