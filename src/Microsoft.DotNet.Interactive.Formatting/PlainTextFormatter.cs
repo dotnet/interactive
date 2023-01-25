@@ -6,11 +6,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using System.Net.Http;
 using System.Numerics;
 using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
+
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.CSharp;
 
@@ -287,6 +290,23 @@ public static class PlainTextFormatter
             return true;
         }),
 
+        new PlainTextFormatter<HttpResponseMessage>((value, context) =>
+            {
+                // Formatter.Register() doesn't support async formatters yet.
+                // Prevent SynchronizationContext-induced deadlocks given the following sync-over-async code.
+                ExecutionContext.SuppressFlow();
+                try
+                {
+                    value.FormatAsPlainText(context).Wait();
+                }
+                finally
+                {
+                    ExecutionContext.RestoreFlow();
+                }
+
+                return true;
+        }),
+
         // Fallback for any object
         new PlainTextFormatter<object>((obj, context) =>
         {
@@ -299,6 +319,8 @@ public static class PlainTextFormatter
             var formatter = GetDefaultFormatterForAnyObject(type);
             return formatter.Format(obj, context);
         })
+
+       
     };
 
     private static string IndentAtNewLines(this string s, FormatContext context) => 
