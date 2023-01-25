@@ -82,7 +82,7 @@ public static class AspNetCoreCSharpKernelExtensions
 
                     await startHostTask.ConfigureAwait(false);
 
-                    var httpClient = HttpClientFormatter.CreateEnhancedHttpClient(interactiveHost.Address, interactiveLoggerProvider);
+                    var httpClient = EnhancedHttpClient.Create(interactiveHost.Address, interactiveLoggerProvider);
                     await kernel.SetValueAsync("App", interactiveHost.App, typeof(IApplicationBuilder)).ConfigureAwait(false);
                     await kernel.SetValueAsync("Endpoints", interactiveHost.Endpoints, typeof(IEndpointRouteBuilder)).ConfigureAwait(false);
                     await kernel.SetValueAsync("HttpClient", httpClient, typeof(HttpClient)).ConfigureAwait(false);
@@ -111,26 +111,6 @@ public static class AspNetCoreCSharpKernelExtensions
             interactiveHost?.Dispose();
             interactiveHost = null;
         });
-
-        Formatter.Register<HttpResponseMessage>((responseMessage, context) =>
-        {
-            // Formatter.Register() doesn't support async formatters yet.
-            // Prevent SynchronizationContext-induced deadlocks given the following sync-over-async code.
-            ExecutionContext.SuppressFlow();
-
-            try
-            {
-                HttpClientFormatter.FormatHttpResponseMessage(
-                    responseMessage, 
-                    context).Wait();
-            }
-            finally
-            {
-                ExecutionContext.RestoreFlow();
-            }
-
-            return true;
-        }, HtmlFormatter.MimeType);
 
         return kernel;
     }
