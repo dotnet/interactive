@@ -15,9 +15,9 @@ using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
-public class HttpRequestKernelExtension : IKernelExtension
+public class HttpRequestKernelExtension 
 {
-    public Task OnLoadAsync(Kernel kernel)
+    public static void  Load(Kernel kernel)
     {
         if (kernel.RootKernel is CompositeKernel compositeKernel)
         {
@@ -63,8 +63,15 @@ public class HttpRequestKernelExtension : IKernelExtension
 
                 return true;
             }, HtmlFormatter.MimeType);
+
+            KernelInvocationContext.Current?.DisplayAs($"""
+                Added kernel `{httpRequestKernel.Name}`. Send HTTP requests using the following syntax:
+
+                ```
+                GET https://example.com
+                ```
+                """, "text/markdown");
         }
-        return Task.CompletedTask;
     }
 
     private static async Task FormatHttpResponseMessageAsPlainText(

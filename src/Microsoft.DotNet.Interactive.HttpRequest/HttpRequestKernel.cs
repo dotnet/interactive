@@ -47,24 +47,7 @@ public class HttpRequestKernel :
         IsHeader = new Regex(@"^\s*(?<key>[\w-]+):\s*(?<value>.*)", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.IgnoreCase);
     }
 
-    public static void AddKernelToCurrentRoot()
-    {
-        if (KernelInvocationContext.Current is { } context &&
-            context.HandlingKernel.RootKernel is CompositeKernel root)
-        {
-            var httpKernel = new HttpRequestKernel();
-            root.Add(httpKernel);
-            httpKernel.UseValueSharing();
-
-            context.DisplayAs($"""
-                Added kernel `{httpKernel.Name}`. Send HTTP requests using the following syntax:
-
-                ```
-                GET https://example.com
-                ```
-                """, "text/markdown");
-        }
-    }
+  
 
     public HttpRequestKernel(string name = null, HttpClient client = null)
         : base(name ?? "http")
