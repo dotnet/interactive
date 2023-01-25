@@ -24,45 +24,6 @@ public class HttpRequestKernelExtension
             var httpRequestKernel = new HttpRequestKernel();
             compositeKernel.Add(httpRequestKernel);
             httpRequestKernel.UseValueSharing();
-            
-            Formatter.Register<HttpResponseMessage>((responseMessage, context) =>
-            {
-                // Formatter.Register() doesn't support async formatters yet.
-                // Prevent SynchronizationContext-induced deadlocks given the following sync-over-async code.
-                ExecutionContext.SuppressFlow();
-                try
-                {
-                    FormatHttpResponseMessageAsPlainText(
-                        responseMessage,
-                        context).Wait();
-                }
-                finally
-                {
-                    ExecutionContext.RestoreFlow();
-                }
-
-                return true;
-            }, PlainTextFormatter.MimeType);
-
-
-            Formatter.Register<HttpResponseMessage>((responseMessage, context) =>
-            {
-                // Formatter.Register() doesn't support async formatters yet.
-                // Prevent SynchronizationContext-induced deadlocks given the following sync-over-async code.
-                ExecutionContext.SuppressFlow();
-                try
-                {
-                    FormatHttpResponseMessageAsHtml(
-                        responseMessage,
-                        context).Wait();
-                }
-                finally
-                {
-                    ExecutionContext.RestoreFlow();
-                }
-
-                return true;
-            }, HtmlFormatter.MimeType);
 
             KernelInvocationContext.Current?.DisplayAs($"""
                 Added kernel `{httpRequestKernel.Name}`. Send HTTP requests using the following syntax:

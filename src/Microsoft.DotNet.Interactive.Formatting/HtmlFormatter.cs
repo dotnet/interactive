@@ -6,9 +6,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using System.Net.Http;
 using System.Numerics;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Threading;
 using Microsoft.AspNetCore.Html;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
@@ -316,6 +318,22 @@ public static class HtmlFormatter
             context.RequireDefaultStyles();
 
             view.WriteTo(context);
+
+            return true;
+        }),
+
+        new HtmlFormatter<HttpResponseMessage>((value, context) =>
+        {
+            // Prevent SynchronizationContext-induced deadlocks given the following sync-over-async code.
+            ExecutionContext.SuppressFlow();
+            try
+            {
+                value.FormatAsHtml(context).Wait();
+            }
+            finally
+            {
+                ExecutionContext.RestoreFlow();
+            }
 
             return true;
         })
