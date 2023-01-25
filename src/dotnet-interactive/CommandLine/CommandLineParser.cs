@@ -27,7 +27,6 @@ using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Http;
-using Microsoft.DotNet.Interactive.HttpRequest;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Jupyter.Formatting;
 using Microsoft.DotNet.Interactive.Mermaid;
@@ -358,12 +357,6 @@ public static class CommandLineParser
                     {
                         var vscodeSetup = new VSCodeClientKernelExtension();
                         await vscodeSetup.OnLoadAsync(kernel);
-
-                        if (startupOptions.Preview)
-                        {
-                            var http = new HttpRequestKernelExtension();
-                            await http.OnLoadAsync(kernel);
-                        }
                     }
                        
                     if (startupOptions.EnableHttpApi)

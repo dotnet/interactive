@@ -349,33 +349,7 @@ public class CommandLineParserTests : IDisposable
             .Be(new Uri("kernel://some-kernel-name"));
     }
 
-    [Fact]
-    public void stdio_command_preview_option_defaults_to_false()
-    {
-        var result = _parser.Parse("stdio");
-
-        var binder = new ModelBinder<StartupOptions>();
-
-        var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
-
-        options.Preview
-            .Should()
-            .BeFalse();
-    }
-
-    [Fact]
-    public void stdio_command_preview_option_can_be_set()
-    {
-        var result = _parser.Parse("stdio --preview");
-
-        var binder = new ModelBinder<StartupOptions>();
-
-        var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
-
-        options.Preview
-            .Should()
-            .BeTrue();
-    }
+ 
 
     [Fact]
     public void stdio_command_working_dir_defaults_to_process_current()
