@@ -1,7 +1,3 @@
-#!meta
-
-{"kernelInfo":{"defaultKernelName":"csharp","items":[{"name":"csharp","aliases":[]},{"name":"kql","languageName":"KQL","aliases":[]},{"name":"vscode","languageName":null,"aliases":["frontend"]}]}}
-
 #!csharp
 
 Microsoft.DotNet.Interactive.HttpRequest.HttpRequestKernelExtension.Load(Microsoft.DotNet.Interactive.KernelInvocationContext.Current.HandlingKernel.RootKernel);
