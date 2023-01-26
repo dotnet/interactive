@@ -247,21 +247,14 @@ public class PocketView : DynamicObject, IHtmlContent
     /// </returns>
     public override string ToString()
     {
-        if (HtmlTag is null)
+        using var writer = new StringWriter(CultureInfo.InvariantCulture);
+        using (var formatContext = new FormatContext(writer))
         {
-            return "";
+            ApplyTransform(null, null, formatContext);
+            HtmlTag.WriteTo(formatContext);
         }
-        else
-        {
-            var writer = new StringWriter(CultureInfo.InvariantCulture);
-            using (var formatContext = new FormatContext(writer))
-            {
-                ApplyTransform(null, null, formatContext);
-                HtmlTag.WriteTo(formatContext);
-            }
 
-            return writer.ToString();
-        }
+        return writer.ToString();
     }
 
     /// <summary>
@@ -277,12 +270,12 @@ public class PocketView : DynamicObject, IHtmlContent
     /// <param name="encoder">An HTML encoder.</param>
     public void WriteTo(TextWriter writer, HtmlEncoder encoder)
     {
-        HtmlTag?.WriteTo(writer, encoder);
+        HtmlTag.WriteTo(writer, encoder);
     }
         
     public void WriteTo(FormatContext context)
     {
-        HtmlTag?.WriteTo(context);
+        HtmlTag.WriteTo(context);
 
         if (_dependentContent is not null)
         {
@@ -330,11 +323,6 @@ public class PocketView : DynamicObject, IHtmlContent
         void TagTransform(HtmlTag tag, object contents, FormatContext _) => transform(tag, contents);
 
         return new TagTransform(TagTransform);
-    }
-
-    public static object Transform(Action<HtmlTag, dynamic, FormatContext> transform)
-    {
-        return new TagTransform(transform);
     }
 
     private delegate void TagTransform(HtmlTag tag, object contents, FormatContext context = null);

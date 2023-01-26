@@ -89,8 +89,10 @@ public class HtmlFormatter<T> : TypeFormatter<T>
 
                 IEnumerable<object> values =
                     reducedMembers.Select(m => m.GetValueOrException(instance))
-                        .Select(v => td(
-                            div[@class: "dni-plaintext"](pre(v.ToDisplayString(PlainTextFormatter.MimeType)))));
+                        .Select(v =>
+                        {
+                            return td(div[@class: "dni-plaintext"](pre(v.ToDisplayString(PlainTextFormatter.MimeType))));
+                        });
 
                 PocketView t =
                     table(
@@ -139,8 +141,9 @@ public class HtmlFormatter<T> : TypeFormatter<T>
 
             if (context.TableDepth > 1)
             {
-                HtmlFormatter.FormatAndStyleAsPlainText(source,  context);
-                return true;
+                // FIX: (CreateForAnyEnumerable) 
+                // HtmlFormatter.FormatAndStyleAsPlainText(source,  context);
+                // return true;
             }
 
             var canCountRemainder = source is ICollection;
