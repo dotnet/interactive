@@ -73,7 +73,7 @@ public partial class Kernel
     public static void CSS(string content) =>
         // From https://stackoverflow.com/questions/524696/how-to-create-a-style-tag-with-javascript
         Javascript($@"
-            var css = '{content}',
+            var css = `{content}`,
             head = document.head || document.getElementsByTagName('head')[0],
             style = document.createElement('style');
 
