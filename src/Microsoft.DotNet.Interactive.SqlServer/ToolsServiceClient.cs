@@ -116,7 +116,21 @@ public class ToolsServiceClient : IDisposable
 
     public async Task<bool> ConnectAsync(ConnectParams connectParams)
     {
-        return await _rpc.InvokeWithParameterObjectAsync<bool>("connection/connect", connectParams);
+        try
+        {
+            return await _rpc.InvokeWithParameterObjectAsync<bool>("connection/connect", connectParams);
+        }
+        catch (ConnectionLostException ex)
+        {
+            if (_process.HasExited)
+            {
+                throw new InvalidOperationException($"{_serviceExePath} failed to start properly. Exit code: {_process.ExitCode}.", ex);
+            }
+            else
+            {
+                throw;
+            }
+        }
     }
 
     public async Task<bool> DisconnectAsync(Uri ownerUri)
