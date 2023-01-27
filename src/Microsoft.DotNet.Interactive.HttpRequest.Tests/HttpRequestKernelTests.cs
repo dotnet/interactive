@@ -30,6 +30,7 @@ public class HttpRequestKernelTests
         {
             request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
             return Task.FromResult(response);
         });
         var client = new HttpClient(handler);

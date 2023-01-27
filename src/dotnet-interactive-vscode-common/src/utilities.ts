@@ -274,7 +274,15 @@ export function getVersionNumber(output: string): string {
     return lines[lines.length - 1];
 }
 
-export function isVersionSufficient(firstVersion: string, secondVersion: string): boolean {
+export function isVersionExactlyEqual(firstVersion: string, secondVersion: string): boolean {
+    try {
+        return compareVersions.compare(firstVersion, secondVersion, '=');
+    } catch (_) {
+        return false;
+    }
+}
+
+export function isVersionGreaterOrEqual(firstVersion: string, secondVersion: string): boolean {
     try {
         return compareVersions.compare(firstVersion, secondVersion, '>=');
     } catch (_) {

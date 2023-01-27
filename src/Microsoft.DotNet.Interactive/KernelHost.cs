@@ -73,7 +73,8 @@ public class KernelHost : IDisposable
     {
         _eventLoop = new EventLoopScheduler(a => new Thread(a)
         {
-            Name = "KernelHost command dispatcher"
+            Name = "KernelHost command dispatcher",
+            IsBackground = true,
         });
 
         _kernelEventSubscription = _kernel.KernelEvents.Subscribe(e =>

@@ -190,36 +190,6 @@ await HttpClient.GetAsync(""/"")"));
     }
 
     [Fact]
-    public async Task result_includes_trace_level_logs()
-    {
-        var commandResult = await _kernel.SendAsync(new SubmitCode("#!aspnet"));
-
-        commandResult.KernelEvents.ToSubscribedList().Should().NotContainErrors();
-
-        var result = await _kernel.SendAsync(new SubmitCode(@"
-#!aspnet
-
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
-Endpoints.MapGet(""/"", async httpContext =>
-{
-    var loggerFactory = httpContext.RequestServices.GetRequiredService<ILoggerFactory>();
-    var logger = loggerFactory.CreateLogger(""interactive"");
-    logger.LogTrace(""Log from MapGet!"");
-
-    await httpContext.Response.WriteAsync(""Hello from MapGet!"");
-});
-
-await HttpClient.GetAsync(""/"")"));
-
-        result.KernelEvents.ToSubscribedList().Should().NotContainErrors()
-            .And.ContainSingle<ReturnValueProduced>()
-            .Which.FormattedValues.Should().ContainSingle(f => f.MimeType == "text/html")
-            .Which.Value.Should().Contain("Log from MapGet!");
-    }
-
-    [Fact]
     public async Task server_listens_on_ephemeral_port()
     {
         var result = await _kernel.SendAsync(new SubmitCode(@"

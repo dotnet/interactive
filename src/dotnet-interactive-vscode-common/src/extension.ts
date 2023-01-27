@@ -20,7 +20,7 @@ import { registerAcquisitionCommands, registerKernelCommands, registerFileComman
 import { languageToCellKind } from './interactiveNotebook';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from './interfaces';
 
-import { createOutput, debounce, getDotNetVersionOrThrow, getWorkingDirectoryForNotebook, isVersionSufficient, processArguments } from './utilities';
+import { createOutput, debounce, getDotNetVersionOrThrow, getWorkingDirectoryForNotebook, isVersionGreaterOrEqual, processArguments } from './utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
 
 import * as notebookControllers from '../notebookControllers';
@@ -88,13 +88,13 @@ export async function activate(context: vscode.ExtensionContext) {
     await waitForSdkPackExtension();
 
     // this must happen early, because some following functions use the acquisition command
-    registerAcquisitionCommands(context, diagnosticsChannel);
+    await registerAcquisitionCommands(context, diagnosticsChannel);
 
     // check sdk version
     let showHelpPage = false;
     try {
         const dotnetVersion = await getDotNetVersionOrThrow(DotNetPathManager.getDotNetPath(), diagnosticsChannel);
-        if (!isVersionSufficient(dotnetVersion, minDotNetSdkVersion)) {
+        if (!isVersionGreaterOrEqual(dotnetVersion, minDotNetSdkVersion)) {
             showHelpPage = true;
             const message = `The .NET SDK version ${dotnetVersion} is not sufficient. The minimum required version is ${minDotNetSdkVersion}.`;
             diagnosticsChannel.appendLine(message);

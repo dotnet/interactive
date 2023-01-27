@@ -269,7 +269,6 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
         public RemoteCommand(string targetKernelName) : base(targetKernelName)
         {
         }
-        
     }
 
     [Fact]

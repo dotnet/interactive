@@ -27,7 +27,6 @@ using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Http;
-using Microsoft.DotNet.Interactive.HttpRequest;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Jupyter.Formatting;
 using Microsoft.DotNet.Interactive.Mermaid;
@@ -331,10 +330,8 @@ public static class CommandLineParser
 
                     services.AddKernel(kernel);
 
-                    kernel.UseQuitCommand();
-                    
                     cancellationToken.Register(() => kernel.Dispose());
-                    
+
                     var sender = KernelCommandAndEventSender.FromTextWriter(
                         Console.Out,
                         KernelHost.CreateHostUri("stdio"));
@@ -346,6 +343,13 @@ public static class CommandLineParser
                         receiver,
                         startupOptions.KernelHost);
 
+                    kernel.UseQuitCommand(() =>
+                    {
+                        host.Dispose();
+                        Environment.Exit(0);
+                        return Task.CompletedTask;
+                    });
+
                     var isVSCode = context.ParseResult.Directives.Contains("vscode") ||
                                    !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CODESPACES"));
 
@@ -353,12 +357,6 @@ public static class CommandLineParser
                     {
                         var vscodeSetup = new VSCodeClientKernelExtension();
                         await vscodeSetup.OnLoadAsync(kernel);
-
-                        if (startupOptions.Preview)
-                        {
-                            var http = new HttpRequestKernelExtension();
-                            await http.OnLoadAsync(kernel);
-                        }
                     }
                        
                     if (startupOptions.EnableHttpApi)
@@ -551,24 +549,6 @@ public static class CommandLineParser
                 throw new ArgumentOutOfRangeException(nameof(frontendEnvironment));
         }
 
-        Formatter.Register<HttpResponseMessage>((responseMessage, context) =>
-        {
-            // Formatter.Register() doesn't support async formatters yet.
-            // Prevent SynchronizationContext-induced deadlocks given the following sync-over-async code.
-            ExecutionContext.SuppressFlow();
-
-            try
-            {
-                HttpResponseFormatter.FormatHttpResponseMessage(
-                    responseMessage,
-                    context).Wait();
-            }
-            finally
-            {
-                ExecutionContext.RestoreFlow();
-            }
-
-            return true;
-        }, HtmlFormatter.MimeType);
+      
     }
 }
