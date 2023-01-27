@@ -303,6 +303,22 @@ public static class KernelExtensions
                     }
                 });
             }
+            else
+            {
+                var fromValue = cmdLineContext.ParseResult.GetValueForOption(fromValueOption);
+                if (kernel.SupportsCommandType(typeof(SendValue)))
+                {
+                    kernel.SendAsync(
+                            new SendValue(
+                                valueName,
+                                fromValue))
+                        .GetAwaiter().GetResult();
+                }
+                else
+                {
+                    context.Fail(context.Command, new CommandNotSupportedException(typeof(SendValue), kernel));
+                }
+            }
         });
 
         kernel.AddDirective(set);
