@@ -33,6 +33,35 @@ public class SetMagicCommandTests
     }
 
     [Fact]
+    public async Task can_set_value_prompting_user()
+    {
+        using var kernel = CreateKernel(Language.CSharp).UseSet();
+
+        var composite = new CompositeKernel();
+
+        composite.Add(kernel);
+
+        composite.RegisterCommandHandler<RequestInput>((requestInput, context) =>
+        {
+            context.Publish(new InputProduced("hello!", requestInput));
+            return Task.CompletedTask;
+        });
+
+        composite.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), composite.Name);
+
+
+        await composite.SendAsync(new SubmitCode(@"
+#!set --name x --from-value @input:input-please
+1+3"));
+        var (succeeded, valueProduced) = await kernel.TryRequestValueAsync("x");
+
+        using var _ = new AssertionScope();
+
+        succeeded.Should().BeTrue();
+        valueProduced.Value.Should().BeEquivalentTo("hello!");
+    }
+
+    [Fact]
     public async Task set_value_using_return_value_fails_when_there_is_no_ReturnValueProduced()
     {
         using var kernel = CreateKernel(Language.CSharp).UseSet();
