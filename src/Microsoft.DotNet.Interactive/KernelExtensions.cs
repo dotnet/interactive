@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.NamingConventionBinder;
+using System.CommandLine.Parsing;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
@@ -213,15 +215,25 @@ public static class KernelExtensions
 
     public static T UseSet<T>(this T kernel) where T : Kernel
     {
-        var nameOption = new Option<string>(
-            "--name",
-            description:"This is the name used to declare and set the value in the kernel."
-            );
 
-        var fromResultOption = new Option<bool>(
+
+        var fromResultOption = new Option<bool?>(
             "--from-result",
-            description:"stores the execution result.",
-            getDefaultValue: () => false);
+            description:"Captures the execution result.");
+
+
+        var fromValueOption = new Option<string>(
+            "--from-value",
+            description: "Specifies a value to be stored directly. Specifying @input:value allows you to prompt the user for this value.",
+            parseArgument: result =>
+            {
+                if (SetErrorIfAlsoUsed(fromResultOption, result))
+                {
+                    return null;
+                }
+
+                return result.Tokens.Single().Value;
+            });
 
         var mimeTypeOption = new Option<string>("--mime-type", "Share the value as a string formatted to the specified MIME type.")
             .AddCompletions(
@@ -229,10 +241,28 @@ public static class KernelExtensions
                 HtmlFormatter.MimeType,
                 PlainTextFormatter.MimeType);
 
+        var nameOption = new Option<string>(
+            "--name",
+            description: "This is the name used to declare and set the value in the kernel.",
+            parseArgument: result =>
+            {
+                if (SetErrorIfNoneAreUsed(result, fromResultOption, fromValueOption))
+                {
+                    return null;
+                }
+
+                return result.Tokens.Single().Value;
+            }
+        )
+        {
+            IsRequired = true
+        };
+
         var set = new Command("#!set")
         {
             nameOption,
             fromResultOption,
+            fromValueOption
         };
 
         set.SetHandler(cmdLineContext =>
@@ -241,7 +271,7 @@ public static class KernelExtensions
             var valueName = cmdLineContext.ParseResult.GetValueForOption(nameOption);
             var context = cmdLineContext.GetService<KernelInvocationContext>();
 
-            if (fromResult)
+            if (fromResult is true)
             {
                 var returnValueProducedEvents = new List<ReturnValueProduced>();
                 var eventSubscription = kernel.KernelEvents.OfType<ReturnValueProduced>()
@@ -278,6 +308,36 @@ public static class KernelExtensions
         kernel.AddDirective(set);
 
         return kernel;
+
+        bool SetErrorIfAlsoUsed(Option otherOption, ArgumentResult result)
+        {
+            var otherOptionResult = result.FindResultFor(otherOption);
+
+            if (otherOptionResult is { })
+            {
+                result.ErrorMessage =
+                    $"The {otherOptionResult.Token.Value} and {((OptionResult)result.Parent).Token.Value} options cannot be used together.";
+
+                return true;
+            }
+
+            return false;
+        }
+
+        bool SetErrorIfNoneAreUsed( ArgumentResult result, params Option[] options)
+        {
+            var otherOptionResults = options.Select( result.FindResultFor).Where(option => option is not null).ToList();
+
+            if (otherOptionResults.Count == 0)
+            {
+                result.ErrorMessage =
+                    $"At least one of the options [{string.Join(", ", options.Select(o => o.Name))}] must be specified.";
+
+                return true;
+            }
+
+            return false;
+        }
     }
 
     public static T UseValueSharing<T>(this T kernel) where T : Kernel
