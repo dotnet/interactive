@@ -215,9 +215,7 @@ public static class KernelExtensions
 
     public static T UseSet<T>(this T kernel) where T : Kernel
     {
-
-
-        var fromResultOption = new Option<bool?>(
+        var fromResultOption = new Option<bool>(
             "--from-result",
             description:"Captures the execution result.");
 
@@ -262,63 +260,12 @@ public static class KernelExtensions
         {
             nameOption,
             fromResultOption,
-            fromValueOption
+            fromValueOption,
         };
 
         set.SetHandler(cmdLineContext =>
         {
-            var fromResult = cmdLineContext.ParseResult.GetValueForOption(fromResultOption);
-            var valueName = cmdLineContext.ParseResult.GetValueForOption(nameOption);
-            var context = cmdLineContext.GetService<KernelInvocationContext>();
-
-            if (fromResult is true)
-            {
-                var returnValueProducedEvents = new List<ReturnValueProduced>();
-                var eventSubscription = kernel.KernelEvents.OfType<ReturnValueProduced>()
-                    .Subscribe(e => returnValueProducedEvents.Add(e));
-                context.OnComplete((c) =>
-                {
-                    eventSubscription.Dispose();
-                    var returnValueProduced = returnValueProducedEvents.SingleOrDefault();
-
-                    if (returnValueProduced is { })
-                    {
-                        if (kernel.SupportsCommandType(typeof(SendValue)))
-                        {
-                            kernel.SendAsync(
-                                new SendValue(
-                                    valueName,
-                                    returnValueProduced.Value,
-                                    returnValueProduced.FormattedValues.FirstOrDefault()))
-                                .GetAwaiter().GetResult();
-                        }
-                        else
-                        {
-                            c.Fail(c.Command, new CommandNotSupportedException(typeof(SendValue), kernel));
-                        }
-                    }
-                    else
-                    {
-                        c.Fail(c.Command, message: "The command was expected to produce a ReturnValueProduced event.");
-                    }
-                });
-            }
-            else
-            {
-                var fromValue = cmdLineContext.ParseResult.GetValueForOption(fromValueOption);
-                if (kernel.SupportsCommandType(typeof(SendValue)))
-                {
-                    kernel.SendAsync(
-                            new SendValue(
-                                valueName,
-                                fromValue))
-                        .GetAwaiter().GetResult();
-                }
-                else
-                {
-                    context.Fail(context.Command, new CommandNotSupportedException(typeof(SendValue), kernel));
-                }
-            }
+            HandleSetMagicCommand(kernel, cmdLineContext, fromResultOption, nameOption, fromValueOption);
         });
 
         kernel.AddDirective(set);
@@ -353,6 +300,104 @@ public static class KernelExtensions
             }
 
             return false;
+        }
+    }
+
+    private static void HandleSetMagicCommand<T>(
+        T kernel, 
+        InvocationContext cmdLineContext, 
+        Option<bool> fromResultOption,
+        Option<string> nameOption, 
+        Option<string> fromValueOption) 
+        where T : Kernel
+    {
+        var fromResult = cmdLineContext.ParseResult.GetValueForOption(fromResultOption);
+        var valueName = cmdLineContext.ParseResult.GetValueForOption(nameOption);
+        var context = cmdLineContext.GetService<KernelInvocationContext>();
+
+        if (fromResult)
+        {
+            context.OnComplete((c) =>
+            {
+                if (c.IsFailed)
+                {
+                    return;
+                }
+
+                SetValueFromReturnValueProduced(c);
+            });
+        }
+        else
+        {
+            SetValueFromValueProduced();
+        }
+
+        void SetValueFromReturnValueProduced(KernelInvocationContext c)
+        {
+            var returnValueProducedEvents = new List<ReturnValueProduced>();
+            using var eventSubscription = context.KernelEvents.OfType<ReturnValueProduced>()
+                .Subscribe(e => returnValueProducedEvents.Add(e));
+
+            var returnValueProduced = returnValueProducedEvents.SingleOrDefault();
+
+            if (returnValueProduced is { })
+            {
+                if (kernel.SupportsCommandType(typeof(SendValue)))
+                {
+                    kernel.SendAsync(
+                            new SendValue(
+                                valueName,
+                                returnValueProduced.Value,
+                                returnValueProduced.FormattedValues.FirstOrDefault()))
+                        .GetAwaiter().GetResult();
+                }
+                else
+                {
+                    c.Fail(c.Command, new CommandNotSupportedException(typeof(SendValue), kernel));
+                }
+            }
+            else
+            {
+                c.Fail(c.Command, message: "The submission did not produce a return value.");
+            }
+        }
+
+        void SetValueFromValueProduced()
+        {
+            if (kernel.SupportsCommandType(typeof(SendValue)))
+            {
+                var events = new List<ValueProduced>();
+
+                using var subscription = context.KernelEvents.OfType<ValueProduced>().Subscribe(e => events.Add(e));
+
+                var valueProduced = events.SingleOrDefault();
+
+
+                if (valueProduced is { })
+                {
+                    kernel.SendAsync(
+                            new SendValue(
+                                valueName,
+                                valueProduced.Value,
+                                valueProduced.FormattedValue
+                            ))
+                        .GetAwaiter().GetResult();
+                }
+                else
+                {
+                    var interpolatedValue = cmdLineContext.ParseResult.GetValueForOption(fromValueOption);
+                    kernel.SendAsync(
+                            new SendValue(
+                                valueName,
+                                interpolatedValue
+                            ))
+                        .GetAwaiter().GetResult();
+                }
+            }
+            else
+            {
+                context.Fail(context.Command, new CommandNotSupportedException(typeof(SendValue), kernel));
+            }
         }
     }
 

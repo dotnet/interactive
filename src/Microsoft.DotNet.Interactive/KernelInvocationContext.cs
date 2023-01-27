@@ -20,8 +20,6 @@ namespace Microsoft.DotNet.Interactive;
 
 public class KernelInvocationContext : IDisposable
 {
-    private bool _isFailed;
-        
     private static readonly AsyncLocal<KernelInvocationContext> _current = new();
 
     private readonly ReplaySubject<KernelEvent> _events = new();
@@ -68,6 +66,7 @@ public class KernelInvocationContext : IDisposable
 
         _disposables.Add(operation);
     }
+    internal bool IsFailed { get; private set; }
 
     public KernelCommand Command { get; }
 
@@ -79,7 +78,7 @@ public class KernelInvocationContext : IDisposable
 
     public void Complete(KernelCommand command)
     {
-        SucceedOrFail(!_isFailed, command);
+        SucceedOrFail(!IsFailed, command);
     }
 
     public void Fail(
@@ -118,7 +117,7 @@ public class KernelInvocationContext : IDisposable
 
             var completingMainCommand = CommandEqualityComparer.Instance.Equals(command, Command);
                 
-            if (succeed && !_isFailed)
+            if (succeed && !IsFailed)
             {
                 if (completingMainCommand)
                 {
@@ -145,7 +144,7 @@ public class KernelInvocationContext : IDisposable
 
                     TryCancel();
 
-                    _isFailed = true;
+                    IsFailed = true;
                 }
                 else
                 {

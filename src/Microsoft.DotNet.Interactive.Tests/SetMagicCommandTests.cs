@@ -87,7 +87,7 @@ public class SetMagicCommandTests
     }
 
     [Fact]
-    public async Task set_value_using_return_value_fails_when_there_is_no_ReturnValueProduced()
+    public async Task set_value_using_return_value_fails_when_successful_code_does_not_produce_return_value()
     {
         using var kernel = CreateKernel(Language.CSharp).UseSet();
 
@@ -98,8 +98,23 @@ var num = 1+3;"));
         var events = results.KernelEvents.ToSubscribedList();
 
         events.Should().ContainSingle<CommandFailed>()
-            .Which.Message.Should().Be("The command was expected to produce a ReturnValueProduced event.");
+            .Which.Message.Should().Be("The submission did not produce a return value.");
 
+    }
+
+    [Fact]
+    public async Task does_not_set_value_if_the_submission_fails()
+    {
+        using var kernel = CreateKernel(Language.CSharp).UseSet();
+
+        var results = await kernel.SendAsync(new SubmitCode(@"
+#!set --name x --from-result
+throw new Exception(""custom error."");"));
+
+        var events = results.KernelEvents.ToSubscribedList();
+
+        events.Should().ContainSingle<CommandFailed>()
+            .Which.Message.Should().Contain("System.Exception: custom error.");
     }
 
     [Fact]
