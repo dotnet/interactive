@@ -16,11 +16,10 @@ namespace Microsoft.DotNet.Interactive.Tests;
 
 public class SetMagicCommandTests
 {
-    [Theory]
-    [InlineData(Language.CSharp)]
-    public async Task can_set_value_using_return_value(Language language)
+    [Fact]
+    public async Task can_set_value_using_return_value()
     {
-        using var kernel = CreateKernel(language).UseSet();
+        using var kernel = CreateKernel(Language.CSharp).UseSet();
 
         await kernel.SendAsync(new SubmitCode(@"
 #!set --name x --from-result
@@ -31,14 +30,12 @@ public class SetMagicCommandTests
 
         succeeded.Should().BeTrue();
         valueProduced.Value.Should().BeEquivalentTo(4);
-
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    public async Task set_value_using_return_value_fails_when_there_is_no_ReturnValueProduced(Language language)
+    [Fact]
+    public async Task set_value_using_return_value_fails_when_there_is_no_ReturnValueProduced()
     {
-        using var kernel = CreateKernel(language).UseSet();
+        using var kernel = CreateKernel(Language.CSharp).UseSet();
 
         var results  = await kernel.SendAsync(new SubmitCode(@"
 #!set --name x --from-result
@@ -49,6 +46,34 @@ var num = 1+3;"));
         events.Should().ContainSingle<CommandFailed>()
             .Which.Message.Should().Be("The command was expected to produce a ReturnValueProduced event.");
 
+    }
+
+    [Fact]
+    public async Task set_does_not_allow_from_value_and_from_results_at_the_same_time()
+    {
+        using var kernel = CreateKernel(Language.CSharp).UseSet();
+
+        var results = await kernel.SendAsync(new SubmitCode(@"
+#!set --name x --from-result --from-value fsharp:y
+1+3"));
+        var events = results.KernelEvents.ToSubscribedList();
+
+        events.Should().ContainSingle<CommandFailed>()
+            .Which.Message.Should().Be("The --from-result and --from-value options cannot be used together.");
+    }
+
+    [Fact]
+    public async Task set_requires_from_value_or_from_results_at_the_same_time()
+    {
+        using var kernel = CreateKernel(Language.CSharp).UseSet();
+
+        var results = await kernel.SendAsync(new SubmitCode(@"
+#!set --name x
+1+3"));
+        var events = results.KernelEvents.ToSubscribedList();
+
+        events.Should().ContainSingle<CommandFailed>()
+            .Which.Message.Should().Be("At least one of the options [from-result, from-value] must be specified.");
     }
 
     private static Kernel CreateKernel(Language language)
