@@ -3,13 +3,13 @@
 
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
 using static Microsoft.DotNet.Interactive.ChooseKeyValueStoreKernelDirective;
 
@@ -95,7 +95,7 @@ public class KeyValueStoreKernel :
 
         if (options.FromFile is { } file)
         {
-            newValue = await File.ReadAllTextAsync(file.FullName);
+            newValue = await IOExtensions.ReadAllTextAsync(file.FullName);
             loadedFromOptions = true;
         }
         else if (options.FromUrl is { } uri)

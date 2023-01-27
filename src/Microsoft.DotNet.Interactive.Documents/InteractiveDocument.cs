@@ -11,10 +11,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Microsoft.DotNet.Interactive.Documents.ParserServer;
 using Microsoft.DotNet.Interactive.Documents.Utility;
+using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Documents;
 
@@ -154,7 +155,7 @@ public class InteractiveDocument : IEnumerable
         FileInfo file,
         KernelInfoCollection? kernelInfos = null)
     {
-        var fileContents = await File.ReadAllTextAsync(file.FullName);
+        var fileContents = await IOExtensions.ReadAllTextAsync(file.FullName);
 
         return file.Extension.ToLowerInvariant() switch
         {
