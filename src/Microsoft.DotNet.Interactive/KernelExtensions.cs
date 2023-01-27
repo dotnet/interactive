@@ -211,6 +211,64 @@ public static class KernelExtensions
         return kernel;
     }
 
+    public static T UseSet<T>(this T kernel) where T : Kernel
+    {
+        var nameOption = new Option<string>(
+            "--name");
+
+        var fromResultOption = new Option<bool>(
+            "--from-result", 
+            getDefaultValue: () => false);
+
+        var set = new Command("#!set")
+        {
+            nameOption,
+            fromResultOption,
+        };
+
+        set.SetHandler(cmdLineContext =>
+        {
+            var fromResult = cmdLineContext.ParseResult.GetValueForOption(fromResultOption);
+            var valueName = cmdLineContext.ParseResult.GetValueForOption(nameOption);
+            var context = cmdLineContext.GetService<KernelInvocationContext>();
+
+            if (fromResult)
+            {
+                var returnValueProducedEvents = new List<ReturnValueProduced>();
+                var eventSubscription = kernel.KernelEvents.OfType<ReturnValueProduced>()
+                    .Subscribe(e => returnValueProducedEvents.Add(e));
+                context.OnComplete((c) =>
+                {
+                    eventSubscription.Dispose();
+                    var returnValueProduced = returnValueProducedEvents.SingleOrDefault();
+
+                    if (returnValueProduced is { })
+                    {
+                        if (kernel.SupportsCommandType(typeof(SendValue)))
+                        {
+                            kernel.SendAsync(
+                                new SendValue(
+                                    valueName,
+                                    returnValueProduced.Value)).GetAwaiter().GetResult();
+                        }
+                        else
+                        {
+                            c.Fail(c.Command, new CommandNotSupportedException(typeof(SendValue), kernel));
+                        }
+                    }
+                    else
+                    {
+                        c.Fail(c.Command, message: "The command was expected to produce a ReturnValueProduced event.");
+                    }
+                });
+            }
+        });
+
+        kernel.AddDirective(set);
+
+        return kernel;
+    }
+
     public static T UseValueSharing<T>(this T kernel) where T : Kernel
     {
         var sourceValueNameArg = new Argument<string>(
