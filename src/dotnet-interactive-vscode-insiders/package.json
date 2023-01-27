@@ -28,16 +28,12 @@
     "Visualization"
   ],
   "keywords": [
-    ".NET Core",
     ".NET",
     "interactive",
-    ".NET Interactive",
-    "dotnet interactive",
     "C#",
     "data science",
     "dotnet",
     "F#",
-    "interactive programming",
     "ipynb",
     "Jupyter",
     "notebooks",
@@ -142,8 +138,7 @@
             "[vscode]",
             "stdio",
             "--working-dir",
-            "{working_dir}",
-            "--preview"
+            "{working_dir}"
           ],
           "description": "Command and arguments used to start a notebook session."
         },
@@ -173,10 +168,10 @@
           "default": "8.0",
           "description": "The minimum required version of the .NET SDK."
         },
-        "dotnet-interactive.minimumInteractiveToolVersion": {
+        "dotnet-interactive.requiredInteractiveToolVersion": {
           "type": "string",
           "default": "1.0.406101",
-          "description": "The minimum required version of the .NET Interactive tool."
+          "description": "The required version of the .NET Interactive tool."
         }
       }
     },

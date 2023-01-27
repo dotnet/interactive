@@ -3,11 +3,11 @@
 
 using System;
 using System.Threading.Tasks;
+using ClockExtension;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
-using ClockExtension;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -24,8 +24,7 @@ namespace SampleExtensions.Tests
                 new CSharpKernel()
             };
 
-            Task.Run(() => new ClockKernelExtension().OnLoadAsync(_kernel))
-                .Wait();
+            ClockKernelExtension.Load(_kernel);
 
             KernelEvents = _kernel.KernelEvents.ToSubscribedList();
         }

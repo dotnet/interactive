@@ -6,9 +6,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using System.Net.Http;
 using System.Numerics;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Threading;
 using Microsoft.AspNetCore.Html;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
@@ -132,13 +134,6 @@ public static class HtmlFormatter
             return true;
         }),
 
-        //new HtmlFormatter<decimal>((d, context) =>
-        //{
-        //    FormatAndStyleAsPlainText(d, context);
-        //    return true;
-        //}),
-
-
         new HtmlFormatter<TimeSpan>((timespan, context) =>
         {
             PocketView view = span(timespan.ToString());
@@ -217,12 +212,12 @@ public static class HtmlFormatter
             return true;
         }),
 
-        // decimal should be displayed as plain text
-        new HtmlFormatter<decimal>((value, context) =>
-        {
-            FormatAndStyleAsPlainText(value, context);
-            return true;
-        }),
+         // decimal should be displayed as plain text
+         new HtmlFormatter<decimal>((value, context) =>
+         {
+             FormatAndStyleAsPlainText(value, context);
+             return true;
+         }),
 
         // Try to display object results as tables. This will return false for nested tables.
         new HtmlFormatter<object>((value, context) =>
@@ -323,6 +318,22 @@ public static class HtmlFormatter
             context.RequireDefaultStyles();
 
             view.WriteTo(context);
+
+            return true;
+        }),
+
+        new HtmlFormatter<HttpResponseMessage>((value, context) =>
+        {
+            // Prevent SynchronizationContext-induced deadlocks given the following sync-over-async code.
+            ExecutionContext.SuppressFlow();
+            try
+            {
+                value.FormatAsHtml(context).Wait();
+            }
+            finally
+            {
+                ExecutionContext.RestoreFlow();
+            }
 
             return true;
         })

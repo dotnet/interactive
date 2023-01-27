@@ -318,7 +318,7 @@ var y = x + 2;
     }
 
     [Theory]
-    [InlineData(Language.CSharp, "System.Environment.Command$$Line", "Gets the command line for this process.")]
+    [InlineData(Language.CSharp, "System.Environment.Command$$Line", "Gets the command line for this process.", Skip = "Disabled pending https://github.com/dotnet/interactive/issues/2637")]
     public async Task completion_doc_comments_can_be_loaded_from_bcl_types(Language language, string markupCode, string expectedCompletionSubstring)
     {
         using var kernel = CreateKernel(language);
@@ -336,7 +336,7 @@ var y = x + 2;
     }
 
     [Theory]
-    [InlineData(Language.CSharp, "/// <summary>Adds two numbers.</summary>\nint Add(int a, int b) => a + b;", "Ad$$", "Adds two numbers.")]
+    [InlineData(Language.CSharp, "/// <summary>Adds two numbers.</summary>\nint Add(int a, int b) => a + b;", "Ad$$", "Adds two numbers.", Skip = "Disabled pending https://github.com/dotnet/interactive/issues/2637")]
     [InlineData(Language.FSharp, "/// Adds two numbers.\nlet add a b = a + b", "ad$$", "Adds two numbers.")]
     public async Task completion_doc_comments_can_be_loaded_from_source_in_a_previous_submission(Language language, string previousSubmission, string markupCode, string expectedCompletionSubString)
     {
@@ -357,7 +357,7 @@ var y = x + 2;
     }
 
     [Theory]
-    [InlineData(Language.CSharp)]
+    [InlineData(Language.CSharp, Skip = "Disabled pending https://github.com/dotnet/interactive/issues/2637")]
     [InlineData(Language.FSharp)]
     public async Task completion_contains_doc_comments_from_individually_referenced_assemblies_with_xml_files(Language language)
     {
@@ -394,7 +394,7 @@ public class C
             .ContainSingle(ci => !string.IsNullOrEmpty(ci.Documentation) && ci.Documentation.Contains("This is the answer."));
     }
 
-    [Fact]
+    [Fact(Skip = "Disabled pending https://github.com/dotnet/interactive/issues/2637")]
     public async Task csharp_completions_can_read_doc_comments_from_nuget_packages_after_forcing_the_assembly_to_load()
     {
         using var kernel = CreateKernel(Language.CSharp);

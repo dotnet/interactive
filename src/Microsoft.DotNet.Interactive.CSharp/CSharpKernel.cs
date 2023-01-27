@@ -448,10 +448,12 @@ public class CSharpKernel :
         }
 
         var items = new List<CompletionItem>();
-        foreach (var item in completionList.ItemsList)
+
+        foreach (CodeAnalysis.Completion.CompletionItem item in completionList.ItemsList)
         {
-            var description = await service.GetDescriptionAsync(document, item, contextCancellationToken);
-            var completionItem = item.ToModel(description);
+            // TODO: Getting a description for each item significantly slows this overall operation. We should look into caching approaches but shouldn't block completions here.
+           // var description = await service.GetDescriptionAsync(document, item, contextCancellationToken);
+            var completionItem = item.ToModel(CompletionDescription.Empty);
             items.Add(completionItem);
         }
 

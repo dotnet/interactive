@@ -341,7 +341,7 @@ using {typeof(PocketView).Namespace};
             .Should()
             .ContainSingle(v =>
                 v.MimeType == "text/html" &&
-                v.Value.ToString().Contains($"var css = '{cssContent}'"));
+                v.Value.ToString().Contains($"var css = `{cssContent}`"));
     }
 
     [Theory]

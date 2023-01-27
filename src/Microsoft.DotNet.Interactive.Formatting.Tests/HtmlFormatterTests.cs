@@ -41,6 +41,8 @@ public class HtmlFormatterTests : FormatterTestBase
 {
     public class Objects : FormatterTestBase
     {
+
+
         [Fact]
         public void Formatters_are_generated_on_the_fly_when_HTML_mime_type_is_requested()
         {
@@ -71,7 +73,7 @@ public class HtmlFormatterTests : FormatterTestBase
 
             s.Should().Be($"{PlainTextBegin}hello{PlainTextEnd}");
         }
-
+        
         [Fact]
         public void Formatter_expands_properties_of_ExpandoObjects()
         {
@@ -318,6 +320,7 @@ public class HtmlFormatterTests : FormatterTestBase
 
             writer.ToString().Should().Contain(timespan.ToString());
         }
+
     }
 
     public class PreformatPlainText : FormatterTestBase
@@ -341,6 +344,17 @@ string";
                 .BeEquivalentHtmlTo(
                     $"{PlainTextBegin}{instance.HtmlEncode()}{PlainTextEnd}");
         }
+
+        [Fact]
+        public void HtmlFormatter_returns_plain_for_decimal()
+        {
+            var formatter = HtmlFormatter.GetPreferredFormatterFor<decimal>();
+
+            var d = 10.123m.ToDisplayString(formatter).RemoveStyleElement();
+
+            d.Should().Be($"{PlainTextBegin}10.123{PlainTextEnd}");
+        }
+
 
         [Fact]
         public void HtmlFormatter_returns_plain_for_BigInteger()
