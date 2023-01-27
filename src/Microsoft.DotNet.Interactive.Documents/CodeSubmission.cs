@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Documents.ParserServer;
 using Microsoft.DotNet.Interactive.Documents.Utility;
+using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Documents;
 

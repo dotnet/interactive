@@ -22,10 +22,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\Microsoft.DotNet.Interactive.Formatting\DictionaryExtensions.cs" Link="Utility\DictionaryExtensions.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="System.Runtime.Loader" Version="$(SystemRuntimeLoaderVersion)" />
     <PackageReference Include="System.Reactive" Version="$(SystemReactiveVersion)" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
@@ -55,5 +51,7 @@
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\Microsoft.DotNet.Interactive.Documents\Microsoft.DotNet.Interactive.Documents.csproj" />
   </ItemGroup>
+
+  <Import Project="..\Microsoft.Dotnet.Interactive.Shared\Microsoft.Dotnet.Interactive.Shared.projitems" Label="Shared" />
 
 </Project>
