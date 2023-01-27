@@ -35,9 +35,9 @@ public class SetMagicCommandTests
     [Fact]
     public async Task can_set_value_prompting_user()
     {
-        using var kernel = CreateKernel(Language.CSharp).UseSet();
+        var kernel = CreateKernel(Language.CSharp).UseSet();
 
-        var composite = new CompositeKernel();
+        using var composite = new CompositeKernel();
 
         composite.Add(kernel);
 
@@ -59,6 +59,31 @@ public class SetMagicCommandTests
 
         succeeded.Should().BeTrue();
         valueProduced.Value.Should().BeEquivalentTo("hello!");
+    }
+    [Fact]
+    public async Task can_set_value_from_another_kernel()
+    {
+        var csharpKernel = CreateKernel(Language.CSharp).UseSet();
+        var fsharpKernel = CreateKernel(Language.FSharp);
+
+        using var composite = new CompositeKernel
+        {
+            csharpKernel,
+            fsharpKernel
+        };
+
+        await fsharpKernel.SendAsync(new SubmitCode("let y = 456"));
+
+        await composite.SendAsync(new SubmitCode($@"
+#!set --name x --from-value @{fsharpKernel.Name}:y
+1+3", targetKernelName: csharpKernel.Name));
+
+        var (succeeded, valueProduced) = await csharpKernel.TryRequestValueAsync("x");
+
+        using var _ = new AssertionScope();
+
+        succeeded.Should().BeTrue();
+        valueProduced.Value.Should().BeEquivalentTo(456);
     }
 
     [Fact]
