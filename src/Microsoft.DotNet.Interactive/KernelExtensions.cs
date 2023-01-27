@@ -214,11 +214,20 @@ public static class KernelExtensions
     public static T UseSet<T>(this T kernel) where T : Kernel
     {
         var nameOption = new Option<string>(
-            "--name");
+            "--name",
+            description:"This is the name used to declare and set the value in the kernel."
+            );
 
         var fromResultOption = new Option<bool>(
-            "--from-result", 
+            "--from-result",
+            description:"stores the execution result.",
             getDefaultValue: () => false);
+
+        var mimeTypeOption = new Option<string>("--mime-type", "Share the value as a string formatted to the specified MIME type.")
+            .AddCompletions(
+                JsonFormatter.MimeType,
+                HtmlFormatter.MimeType,
+                PlainTextFormatter.MimeType);
 
         var set = new Command("#!set")
         {
@@ -249,7 +258,9 @@ public static class KernelExtensions
                             kernel.SendAsync(
                                 new SendValue(
                                     valueName,
-                                    returnValueProduced.Value)).GetAwaiter().GetResult();
+                                    returnValueProduced.Value,
+                                    returnValueProduced.FormattedValues.FirstOrDefault()))
+                                .GetAwaiter().GetResult();
                         }
                         else
                         {
