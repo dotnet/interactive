@@ -8,7 +8,7 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <PackageDescription Condition="'$(PackageDescription)'==''">Notebooks support for .NET Interactive</PackageDescription>
+    <PackageDescription Condition="'$(PackageDescription)'==''">Provides APIs for reading and writing .ipynb and other file formats for .NET Interactive</PackageDescription>
     <PackageTags Condition="'$(PackageTags)'==''">polyglot notebook dotnet interactive</PackageTags>
     <RootNamespace>Microsoft.DotNet.Interactive.Documents</RootNamespace>
     <Nullable>enable</Nullable>

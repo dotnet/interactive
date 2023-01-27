@@ -454,6 +454,7 @@ public static class CommandLineParser
         using var _ = Log.OnEnterAndExit("Creating Kernels");
 
         var compositeKernel = new CompositeKernel();
+        compositeKernel.UseNuGetExtensions();
         compositeKernel.FrontendEnvironment = frontendEnvironment;
 
         // TODO: temporary measure to support vscode integrations
@@ -504,12 +505,7 @@ public static class CommandLineParser
         kernel.AddKernelConnector(new ConnectNamedPipeCommand());
         kernel.AddKernelConnector(new ConnectSignalRCommand());
         kernel.AddKernelConnector(new ConnectStdIoCommand(startupOptions.KernelHost));
-
-        if (startupOptions.Verbose)
-        {
-            kernel.LogEventsToPocketLogger();
-        }
-
+        
         SetUpFormatters(frontendEnvironment);
 
         kernel.DefaultKernelName = defaultKernelName;
