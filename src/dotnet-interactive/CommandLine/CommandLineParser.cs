@@ -9,7 +9,6 @@ using System.CommandLine.IO;
 using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
 using System.IO;
-using System.Net.Http;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
@@ -454,7 +453,6 @@ public static class CommandLineParser
         using var _ = Log.OnEnterAndExit("Creating Kernels");
 
         var compositeKernel = new CompositeKernel();
-        compositeKernel.UseNuGetExtensions();
         compositeKernel.FrontendEnvironment = frontendEnvironment;
 
         // TODO: temporary measure to support vscode integrations
@@ -505,7 +503,12 @@ public static class CommandLineParser
         kernel.AddKernelConnector(new ConnectNamedPipeCommand());
         kernel.AddKernelConnector(new ConnectSignalRCommand());
         kernel.AddKernelConnector(new ConnectStdIoCommand(startupOptions.KernelHost));
-        
+
+        if (startupOptions.Verbose)
+        {
+            kernel.LogEventsToPocketLogger();
+        }
+
         SetUpFormatters(frontendEnvironment);
 
         kernel.DefaultKernelName = defaultKernelName;
