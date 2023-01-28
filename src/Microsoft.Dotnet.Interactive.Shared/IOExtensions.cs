@@ -14,10 +14,19 @@ internal class IOExtensions
     private const int DefaultBufferSize = 4096;
     private static readonly Encoding DefaultEncoding = Encoding.UTF8;
 
-    internal static async Task<string> ReadAllTextAsync(
+    internal static Task<string> ReadAllTextAsync(
         string filePath,
         Encoding? encoding = null,
         CancellationToken cancellationToken = default)
+#if !NETSTANDARD2_0
+            => File.ReadAllTextAsync(filePath, encoding, cancellationToken);
+#else
+            => ReadAllTextInternalAsync(filePath, encoding, cancellationToken);
+
+    private static async Task<string> ReadAllTextInternalAsync(
+        string filePath,
+        Encoding? encoding,
+        CancellationToken cancellationToken)
     {
         encoding ??= DefaultEncoding;
 
@@ -42,4 +51,5 @@ internal class IOExtensions
 
         return builder.ToString();
     }
+#endif
 }
