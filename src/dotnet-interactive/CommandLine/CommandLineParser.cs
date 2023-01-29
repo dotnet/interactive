@@ -498,7 +498,8 @@ public static class CommandLineParser
             .UseDefaultMagicCommands()
             .UseLogMagicCommand()
             .UseAboutMagicCommand()
-            .UseImportMagicCommand();
+            .UseImportMagicCommand()
+            .UseNuGetExtensions();
 
         kernel.AddKernelConnector(new ConnectNamedPipeCommand());
         kernel.AddKernelConnector(new ConnectSignalRCommand());

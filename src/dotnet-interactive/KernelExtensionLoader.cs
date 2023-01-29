@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.App;
 
 public static class KernelExtensionLoader
 {
-    public static void UseNuGetExtensions(this CompositeKernel kernel)
+    public static CompositeKernel UseNuGetExtensions(this CompositeKernel kernel)
     {
         var packagesToCheckForExtensions = new ConcurrentQueue<PackageAdded>();
 
@@ -44,6 +44,8 @@ public static class KernelExtensionLoader
                   .Where(pa => pa?.PackageReference.PackageRoot is not null)
                   .Distinct(pa => pa.PackageReference.PackageRoot)
                   .Subscribe(added => packagesToCheckForExtensions.Enqueue(added)));
+
+        return kernel;
     }
 
     public static async Task LoadExtensionsFromDirectoryAsync(this CompositeKernel kernel, DirectoryInfo extensionDir, KernelInvocationContext context)

@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests;
 internal class InProcessTestServer : IDisposable
 {
     private Lazy<TestServer> _host;
-    private readonly ServiceCollection _serviceCollection = new ServiceCollection();
+    private readonly ServiceCollection _serviceCollection = new();
 
     public static async Task<InProcessTestServer> StartServer(string args, Action<IServiceCollection> servicesSetup = null)
     {
@@ -45,6 +45,7 @@ internal class InProcessTestServer : IDisposable
     private InProcessTestServer()
     {
     }
+
     public FrontendEnvironment FrontendEnvironment => _host.Value.Services.GetRequiredService<Kernel>().FrontendEnvironment;
 
     public HttpClient HttpClient => _host.Value.CreateClient();
