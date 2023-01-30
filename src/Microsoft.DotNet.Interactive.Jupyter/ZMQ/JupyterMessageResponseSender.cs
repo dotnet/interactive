@@ -22,25 +22,25 @@ internal class JupyterMessageResponseSender : IJupyterMessageResponseSender
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(kernelIdentity));
         }
 
-    _pubSubChannel = pubSubChannel ?? throw new ArgumentNullException(nameof(pubSubChannel));
-    _shellChannel = shellChannel ?? throw new ArgumentNullException(nameof(shellChannel));
-    _stdInChannel = stdInChannel ?? throw new ArgumentNullException(nameof(stdInChannel));
-    _kernelIdentity = kernelIdentity;
-    _request = request;
-}
+        _pubSubChannel = pubSubChannel ?? throw new ArgumentNullException(nameof(pubSubChannel));
+        _shellChannel = shellChannel ?? throw new ArgumentNullException(nameof(shellChannel));
+        _stdInChannel = stdInChannel ?? throw new ArgumentNullException(nameof(stdInChannel));
+        _kernelIdentity = kernelIdentity;
+        _request = request;
+    }
 
-public void Send(PubSubMessage message)
-{
-    _pubSubChannel.Publish(message, _request, _kernelIdentity);
-}
+    public void Send(PubSubMessage message)
+    {
+        _pubSubChannel.Publish(message, _request, _kernelIdentity);
+    }
 
-public void Send(ReplyMessage message)
-{
-    _shellChannel.Reply(message, _request);
-}
+    public void Send(ReplyMessage message)
+    {
+        _shellChannel.Reply(message, _request);
+    }
 
-public string Send(InputRequest message)
-{
-    return _stdInChannel.RequestInput(message, _request);
-}
+    public string Send(InputRequest message)
+    {
+        return _stdInChannel.RequestInput(message, _request);
+    }
 }

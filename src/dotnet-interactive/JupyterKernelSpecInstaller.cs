@@ -73,9 +73,9 @@ public class JupyterKernelSpecInstaller : IJupyterKernelSpecInstaller
 
             return false;
         }
-            
+
         _console.Out.WriteLine($"Installing using path {destination.FullName}.");
-            
+
         var succeeded = CopyKernelSpecFiles(sourceDirectory, destination);
         if (succeeded)
         {

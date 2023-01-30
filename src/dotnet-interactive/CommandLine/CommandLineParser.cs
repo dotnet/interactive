@@ -550,6 +550,6 @@ public static class CommandLineParser
                 throw new ArgumentOutOfRangeException(nameof(frontendEnvironment));
         }
 
-      
+
     }
 }
