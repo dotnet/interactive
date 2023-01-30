@@ -68,6 +68,9 @@
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.App.Tests.StdioConnectionTests.fast_path_commands_over_proxy_can_be_handled</TestName>
       </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>StdIoBehaviorTests.Quit_command_causes_stdio_process_to_end</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>
