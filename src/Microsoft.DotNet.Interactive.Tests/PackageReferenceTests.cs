@@ -4,32 +4,31 @@
 using FluentAssertions;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Tests
+namespace Microsoft.DotNet.Interactive.Tests;
+
+public class PackageReferenceTests
 {
-    public class PackageReferenceTests
+    [Theory]
+    [InlineData("nuget:PocketLogger")]
+    [InlineData("nuget:PocketLogger,1.2.3")]
+    [InlineData("nuget:PocketLogger, 1.2.3")]
+    [InlineData("nuget:PocketLogger, 1.2.3-beta")]
+    public void Nuget_package_reference_correctly_parses_package_name(string value)
     {
-        [Theory]
-        [InlineData("nuget:PocketLogger")]
-        [InlineData("nuget:PocketLogger,1.2.3")]
-        [InlineData("nuget:PocketLogger, 1.2.3")]
-        [InlineData("nuget:PocketLogger, 1.2.3-beta")]
-        public void Nuget_package_reference_correctly_parses_package_name(string value)
-        {
-            PackageReference.TryParse(value, out var reference);
+        PackageReference.TryParse(value, out var reference);
 
-            reference.PackageName.Should().Be("PocketLogger");
-        }
+        reference.PackageName.Should().Be("PocketLogger");
+    }
 
-        [Theory]
-        [InlineData("nuget:PocketLogger", "")]
-        [InlineData("nuget:PocketLogger,1.2.3", "1.2.3")]
-        [InlineData("nuget:PocketLogger, 1.2.3", "1.2.3")]
-        [InlineData("nuget:PocketLogger, 1.2.3-beta", "1.2.3-beta")]
-        public void Nuget_package_reference_correctly_parses_package_version(string value, string expectedVersion)
-        {
-            PackageReference.TryParse(value, out var reference);
+    [Theory]
+    [InlineData("nuget:PocketLogger", "")]
+    [InlineData("nuget:PocketLogger,1.2.3", "1.2.3")]
+    [InlineData("nuget:PocketLogger, 1.2.3", "1.2.3")]
+    [InlineData("nuget:PocketLogger, 1.2.3-beta", "1.2.3-beta")]
+    public void Nuget_package_reference_correctly_parses_package_version(string value, string expectedVersion)
+    {
+        PackageReference.TryParse(value, out var reference);
 
-            reference.PackageVersion.Should().Be(expectedVersion);
-        }
+        reference.PackageVersion.Should().Be(expectedVersion);
     }
 }

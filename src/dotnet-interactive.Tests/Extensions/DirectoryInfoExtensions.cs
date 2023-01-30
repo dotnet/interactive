@@ -6,50 +6,49 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.App.Tests.Extensions
+namespace Microsoft.DotNet.Interactive.App.Tests.Extensions;
+
+internal static class DirectoryInfoExtensions
 {
-    internal static class DirectoryInfoExtensions
+    public static async Task<bool> WaitForFileCondition(this FileInfo file, TimeSpan timeout, Func<FileInfo, bool> predicate)
     {
-        public static async Task<bool> WaitForFileCondition(this FileInfo file, TimeSpan timeout, Func<FileInfo, bool> predicate)
+        var startTime = DateTime.UtcNow;
+        while (DateTime.UtcNow < startTime + timeout)
         {
-            var startTime = DateTime.UtcNow;
-            while (DateTime.UtcNow < startTime + timeout)
+            if (predicate(file))
             {
-                if (predicate(file))
-                {
-                    return true;
-                }
-
-                await Task.Delay(200);
-                file.Refresh();
+                return true;
             }
 
-            return predicate(file);
+            await Task.Delay(200);
+            file.Refresh();
         }
 
-        public static async Task<FileInfo> WaitForFile(this DirectoryInfo directory, TimeSpan timeout, Func<FileInfo, bool> predicate)
-        {
-            var startTime = DateTime.UtcNow;
-            while (DateTime.UtcNow < startTime + timeout)
-            {
-                var file = GetMatchingFile(directory, predicate);
-                if (file is not null)
-                {
-                    return file;
-                }
+        return predicate(file);
+    }
 
-                // no files or no file matched
-                await Task.Delay(200);
-                directory.Refresh();
+    public static async Task<FileInfo> WaitForFile(this DirectoryInfo directory, TimeSpan timeout, Func<FileInfo, bool> predicate)
+    {
+        var startTime = DateTime.UtcNow;
+        while (DateTime.UtcNow < startTime + timeout)
+        {
+            var file = GetMatchingFile(directory, predicate);
+            if (file is not null)
+            {
+                return file;
             }
 
-            // one final check
-            return GetMatchingFile(directory, predicate);
+            // no files or no file matched
+            await Task.Delay(200);
+            directory.Refresh();
         }
 
-        private static FileInfo GetMatchingFile(DirectoryInfo directory, Func<FileInfo, bool> predicate)
-        {
-            return directory.EnumerateFiles().FirstOrDefault(predicate);
-        }
+        // one final check
+        return GetMatchingFile(directory, predicate);
+    }
+
+    private static FileInfo GetMatchingFile(DirectoryInfo directory, Func<FileInfo, bool> predicate)
+    {
+        return directory.EnumerateFiles().FirstOrDefault(predicate);
     }
 }

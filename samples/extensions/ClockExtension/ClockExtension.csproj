@@ -5,7 +5,7 @@
     <TargetFramework>net7.0</TargetFramework>
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <IsPackable>true</IsPackable>
-    <PackageDescription>Renders a clock in dotnet-interactive using SVG</PackageDescription>
+    <PackageDescription>Formats dates as an SVG clock in .NET Interactive</PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,12 +15,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.22405.1" />
-    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.22405.1" />
+    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.22606.2" />
+    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.22606.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="$(OutputPath)/ClockExtension.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
+    <None Include="extension.dib" Pack="true" PackagePath="interactive-extensions/dotnet" />
   </ItemGroup>
-
+  
 </Project>

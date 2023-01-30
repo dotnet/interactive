@@ -3,38 +3,37 @@
 
 using System.Collections.Immutable;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation
+namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation;
+
+internal class ExtractorState
 {
-    internal class ExtractorState
+    public readonly bool IsInstrumentation;
+    public readonly string ProgramDescriptor;
+    public readonly ImmutableList<string> Instrumentation;
+    public readonly ImmutableList<string> StdOut;
+
+    public ExtractorState(
+        bool isInstrumentation = false,
+        string programDescriptor = "",
+        ImmutableList<string> instrumentation = null,
+        ImmutableList<string> stdOut = null)
     {
-        public readonly bool IsInstrumentation;
-        public readonly string ProgramDescriptor;
-        public readonly ImmutableList<string> Instrumentation;
-        public readonly ImmutableList<string> StdOut;
+        IsInstrumentation = isInstrumentation;
+        ProgramDescriptor = programDescriptor;
+        Instrumentation = instrumentation ?? ImmutableList.Create<string>();
+        StdOut = stdOut ?? ImmutableList.Create<string>();
+    }
 
-        public ExtractorState(
-            bool isInstrumentation = false,
-            string programDescriptor = "",
-            ImmutableList<string> instrumentation = null,
-            ImmutableList<string> stdOut = null)
-        {
-            IsInstrumentation = isInstrumentation;
-            ProgramDescriptor = programDescriptor;
-            Instrumentation = instrumentation ?? ImmutableList.Create<string>();
-            StdOut = stdOut ?? ImmutableList.Create<string>();
-        }
-
-        public ExtractorState With(
-            bool? isInstrumentation = null,
-            string programDescriptor = "",
-            ImmutableList<string> instrumentation = null,
-            ImmutableList<string> stdOut = null)
-        {
-            return new ExtractorState(
-                isInstrumentation ?? IsInstrumentation,
-                programDescriptor == "" ? ProgramDescriptor : programDescriptor,
-                instrumentation ?? Instrumentation,
-                stdOut ?? StdOut);
-        }
+    public ExtractorState With(
+        bool? isInstrumentation = null,
+        string programDescriptor = "",
+        ImmutableList<string> instrumentation = null,
+        ImmutableList<string> stdOut = null)
+    {
+        return new ExtractorState(
+            isInstrumentation ?? IsInstrumentation,
+            programDescriptor == "" ? ProgramDescriptor : programDescriptor,
+            instrumentation ?? Instrumentation,
+            stdOut ?? StdOut);
     }
 }

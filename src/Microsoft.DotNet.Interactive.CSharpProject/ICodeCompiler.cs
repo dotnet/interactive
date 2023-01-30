@@ -3,10 +3,9 @@
 
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject
+namespace Microsoft.DotNet.Interactive.CSharpProject;
+
+public interface ICodeCompiler
 {
-    public interface ICodeCompiler
-    {
-        Task<CompileResult> CompileAsync(WorkspaceRequest request);
-    }
+    Task<CompileResult> CompileAsync(WorkspaceRequest request);
 }

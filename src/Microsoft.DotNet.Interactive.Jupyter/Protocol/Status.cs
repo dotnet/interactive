@@ -5,22 +5,21 @@
 using System;
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
+namespace Microsoft.DotNet.Interactive.Jupyter.Protocol;
+
+[JupyterMessageType(JupyterMessageContentTypes.Status)]
+public class Status : PubSubMessage
 {
-    [JupyterMessageType(JupyterMessageContentTypes.Status)]
-    public class Status : PubSubMessage
+    [JsonPropertyName("execution_state")]
+    public string ExecutionState { get; }
+
+    public Status(string executionState)
     {
-        [JsonPropertyName("execution_state")]
-        public string ExecutionState { get; }
-
-        public Status(string executionState)
+        if (string.IsNullOrWhiteSpace(executionState))
         {
-            if (string.IsNullOrWhiteSpace(executionState))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(executionState));
-            }
-
-            ExecutionState = executionState;
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(executionState));
         }
+
+        ExecutionState = executionState;
     }
 }

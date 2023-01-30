@@ -8,65 +8,73 @@ using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Html;
 using Pocket;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting;
+
+public class FormatContext : IDisposable
 {
-    public class FormatContext : IDisposable
+    private Dictionary<string, Action<FormatContext>> _requiredContent;
+    private bool _disableRecursion;
+
+    public FormatContext(TextWriter writer)
     {
-        private Dictionary<string, Action<FormatContext>> _requiredContent;
+        Writer = writer;
+    }
 
-        public FormatContext(TextWriter writer)
+    public int Depth { get; private set; }
+
+    internal int Indent { get; set; }
+
+    internal int TableDepth { get; private set; }
+
+    public TextWriter Writer { get; }
+
+    internal void RequireOnComplete(string id, IHtmlContent content)
+    {
+        if (_requiredContent is null)
         {
-            Writer = writer;
+            _requiredContent = new();
         }
-        
-        public int Depth { get; private set; }
 
-        internal int Indent { get; set; }
-
-        internal int TableDepth { get; private set; }
-
-        public TextWriter Writer { get; }
-
-        internal void RequireOnComplete(string id, IHtmlContent content)
+        if (!_requiredContent.ContainsKey(id))
         {
-            if (_requiredContent is null)
+            _requiredContent.Add(id, WriteContent);
+        }
+
+        void WriteContent(FormatContext context) => content.WriteTo(context.Writer, HtmlEncoder.Default);
+    }
+
+    internal IDisposable IncrementDepth()
+    {
+        Depth++;
+        return Disposable.Create(() => Depth--);
+    }
+
+    internal IDisposable IncrementTableDepth()
+    {
+        TableDepth++;
+        return Disposable.Create(() => TableDepth--);
+    }
+
+    internal bool AllowRecursion =>
+        Depth <= Formatter.RecursionLimit &&
+        !_disableRecursion;
+
+    internal bool DisableRecursion() => _disableRecursion = true;
+
+    internal bool EnableRecursion() => _disableRecursion = false;
+
+    internal bool IsStartingObjectWithinSequence { get; set; }
+
+    public void Dispose()
+    {
+        if (_requiredContent is not null)
+        {
+            foreach (var require in _requiredContent.Values)
             {
-                _requiredContent = new();
+                require(this);
             }
 
-            if (!_requiredContent.ContainsKey(id))
-            {
-                _requiredContent.Add(id, WriteContent);
-            }
-
-            void WriteContent(FormatContext context) => content.WriteTo(context.Writer, HtmlEncoder.Default);
-        }
-
-        internal IDisposable IncrementDepth()
-        {
-            Depth++;
-            return Disposable.Create(() => Depth--);
-        }
-
-        internal IDisposable IncrementTableDepth()
-        {
-            TableDepth++;
-            return Disposable.Create(() => TableDepth--);
-        }
-
-        internal bool IsStartingObjectWithinSequence { get; set; }
-
-        public void Dispose()
-        {
-            if (_requiredContent is not null)
-            {
-                foreach (var require in _requiredContent.Values)
-                {
-                    require(this);
-                }
-
-                _requiredContent = null;
-            }
+            _requiredContent = null;
         }
     }
 }

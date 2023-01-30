@@ -5,6 +5,7 @@ import { ErrorOutputCreator, InteractiveClient } from "./interactiveClient";
 import { ReportChannel, Uri } from "./interfaces/vscode-like";
 import { CompositeKernel } from './dotnet-interactive/compositeKernel';
 import { KernelCommandAndEventChannel } from "./DotnetInteractiveChannel";
+import { Logger } from "./dotnet-interactive";
 
 export interface ClientMapperConfiguration {
     channelCreator: (notebookUri: Uri) => Promise<KernelCommandAndEventChannel>,
@@ -16,6 +17,7 @@ export interface ClientMapperConfiguration {
 export class ClientMapper {
     private clientMap: Map<string, Promise<InteractiveClient>> = new Map();
     private clientCreationCallbacks: ((uri: Uri, client: InteractiveClient) => void)[] = [];
+    private clientDisposalCallbacks: ((uri: Uri, client: InteractiveClient) => void)[] = [];
 
     constructor(readonly config: ClientMapperConfiguration) {
     }
@@ -62,7 +64,11 @@ export class ClientMapper {
                     this.config.configureKernel(client.kernel, uri);
 
                     for (const callback of this.clientCreationCallbacks) {
-                        callback(uri, client);
+                        try {
+                            callback(uri, client);
+                        } catch (e) {
+                            Logger.default.error(`Error executing client creation callback for ${uri.fsPath}: ${e}`);
+                        }
                     }
 
                     resolve(client);
@@ -78,6 +84,10 @@ export class ClientMapper {
 
     onClientCreate(callBack: (uri: Uri, client: InteractiveClient) => void) {
         this.clientCreationCallbacks.push(callBack);
+    }
+
+    onClientDispose(callback: (uri: Uri, client: InteractiveClient) => void) {
+        this.clientDisposalCallbacks.push(callback);
     }
 
     reassociateClient(oldUri: Uri, newUri: Uri) {
@@ -106,6 +116,14 @@ export class ClientMapper {
             this.clientMap.delete(key);
             if (disposeClient) {
                 clientPromise.then(client => {
+                    for (const callback of this.clientDisposalCallbacks) {
+                        try {
+                            callback(uri, client);
+                        } catch (e) {
+                            Logger.default.error(`Error executing client disposal callback for ${uri.fsPath}: ${e}`);
+                        }
+                    }
+
                     client.dispose();
                 });
             };

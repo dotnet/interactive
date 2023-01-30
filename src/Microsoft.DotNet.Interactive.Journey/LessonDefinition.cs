@@ -4,17 +4,16 @@
 using Microsoft.DotNet.Interactive.Commands;
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive.Journey
-{
-    public class LessonDefinition
-    {
-        public string Name { get; }
-        public IReadOnlyList<SubmitCode> Setup { get; }
+namespace Microsoft.DotNet.Interactive.Journey;
 
-        public LessonDefinition(string name, IReadOnlyList<SubmitCode> setup)
-        {
-            Name = name;
-            Setup = setup;
-        }
+public class LessonDefinition
+{
+    public string Name { get; }
+    public IReadOnlyList<SubmitCode> Setup { get; }
+
+    public LessonDefinition(string name, IReadOnlyList<SubmitCode> setup)
+    {
+        Name = name;
+        Setup = setup;
     }
 }

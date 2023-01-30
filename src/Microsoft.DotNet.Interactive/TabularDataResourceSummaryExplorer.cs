@@ -5,17 +5,16 @@ using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
-namespace Microsoft.DotNet.Interactive
-{
-    public class TabularDataResourceSummaryExplorer : DataExplorer<TabularDataResource>
-    {
-        public TabularDataResourceSummaryExplorer(TabularDataResource data) : base(data)
-        {
-        }
+namespace Microsoft.DotNet.Interactive;
 
-        protected override IHtmlContent ToHtml()
-        {
-            return new HtmlString(Data.ToDisplayString(HtmlFormatter.MimeType));
-        }
+public class TabularDataResourceSummaryExplorer : DataExplorer<TabularDataResource>
+{
+    public TabularDataResourceSummaryExplorer(TabularDataResource data) : base(data)
+    {
+    }
+
+    protected override IHtmlContent ToHtml()
+    {
+        return new HtmlString(Data.ToDisplayString(HtmlFormatter.MimeType));
     }
 }

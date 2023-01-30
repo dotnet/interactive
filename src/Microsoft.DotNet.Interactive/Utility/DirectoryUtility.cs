@@ -4,23 +4,22 @@
 using System;
 using System.IO;
 
-namespace Microsoft.DotNet.Interactive.Utility
+namespace Microsoft.DotNet.Interactive.Utility;
+
+public static class DirectoryUtility
 {
-    public static class DirectoryUtility
+    public static DirectoryInfo EnsureExists(this DirectoryInfo directory)
     {
-        public static DirectoryInfo EnsureExists(this DirectoryInfo directory)
+        if (directory is null)
         {
-            if (directory is null)
-            {
-                throw new ArgumentNullException(nameof(directory));
-            }
-
-            if (!directory.Exists)
-            {
-                directory.Create();
-            }
-
-            return directory;
+            throw new ArgumentNullException(nameof(directory));
         }
+
+        if (!directory.Exists)
+        {
+            directory.Create();
+        }
+
+        return directory;
     }
 }

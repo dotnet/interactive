@@ -3,15 +3,14 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown
-{
-    public sealed class FailedCodeFenceOptionParseResult : CodeFenceOptionsParseResult
-    {
-        public FailedCodeFenceOptionParseResult(IList<string> errorMessages)
-        {
-            ErrorMessages = errorMessages;
-        }
+namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown;
 
-        public IList<string> ErrorMessages { get; }
+public sealed class FailedCodeFenceOptionParseResult : CodeFenceOptionsParseResult
+{
+    public FailedCodeFenceOptionParseResult(IList<string> errorMessages)
+    {
+        ErrorMessages = errorMessages;
     }
+
+    public IList<string> ErrorMessages { get; }
 }

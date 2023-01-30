@@ -6,13 +6,13 @@ using Microsoft.DotNet.Interactive.Events;
 using Newtonsoft.Json;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
+namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
+
+public class CompletionItemTests
 {
-    public class CompletionItemTests
-    {
-        [Theory]
-        [InlineData(
-@"{
+    [Theory]
+    [InlineData(
+        @"{
   ""displayText"": ""BackgroundColor"",
   ""kind"": ""Property"",
   ""filterText"": ""BackgroundColor"",
@@ -20,11 +20,10 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
   ""insertText"": ""BackgroundColor"",
   ""documentation"": ""Gets or sets the background color of the console.""
 }")]
-        public void CanDeserializeFromJson(string source)
-        {
-            var ci = JsonConvert.DeserializeObject<CompletionItem>(source);
-            ci.Documentation.Should().NotBeNull();
-            ci.Documentation.Should().Be("Gets or sets the background color of the console.");
-        }
+    public void CanDeserializeFromJson(string source)
+    {
+        var ci = JsonConvert.DeserializeObject<CompletionItem>(source);
+        ci.Documentation.Should().NotBeNull();
+        ci.Documentation.Should().Be("Gets or sets the background color of the console.");
     }
 }

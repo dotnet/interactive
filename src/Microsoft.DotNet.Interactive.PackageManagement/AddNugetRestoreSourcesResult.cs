@@ -4,16 +4,15 @@
 using System.Collections.Generic;
 using Microsoft.DotNet.Interactive.Utility;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+public class AddNugetRestoreSourcesResult : AddNugetResult
 {
-    public class AddNugetRestoreSourcesResult : AddNugetResult
+    public AddNugetRestoreSourcesResult(
+        bool succeeded,
+        PackageReference requestedPackage,
+        IReadOnlyList<ResolvedPackageReference> addedReferences = null,
+        IReadOnlyCollection<string> errors = null) : base(succeeded, requestedPackage, errors)
     {
-        public AddNugetRestoreSourcesResult(
-            bool succeeded,
-            PackageReference requestedPackage,
-            IReadOnlyList<ResolvedPackageReference> addedReferences = null,
-            IReadOnlyCollection<string> errors = null) : base(succeeded, requestedPackage, errors)
-        {
-        }
     }
 }

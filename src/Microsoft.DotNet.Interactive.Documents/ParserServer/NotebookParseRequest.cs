@@ -3,17 +3,16 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive.Documents.ParserServer
-{
-    public class NotebookParseRequest : NotebookParseOrSerializeRequest
-    {
-        public override RequestType Type => RequestType.Parse;
-        public byte[] RawData { get; }
+namespace Microsoft.DotNet.Interactive.Documents.ParserServer;
 
-        public NotebookParseRequest(string id, DocumentSerializationType serializationType, string defaultLanguage, byte[] rawData)
-            : base(id, serializationType, defaultLanguage)
-        {
-            RawData = rawData ?? throw new ArgumentNullException(nameof(rawData));
-        }
+public class NotebookParseRequest : NotebookParseOrSerializeRequest
+{
+    public override RequestType Type => RequestType.Parse;
+    public byte[] RawData { get; }
+
+    public NotebookParseRequest(string id, DocumentSerializationType serializationType, string defaultLanguage, byte[] rawData)
+        : base(id, serializationType, defaultLanguage)
+    {
+        RawData = rawData ?? throw new ArgumentNullException(nameof(rawData));
     }
 }

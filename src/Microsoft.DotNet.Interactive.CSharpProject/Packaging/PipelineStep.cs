@@ -4,119 +4,118 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
+namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
+
+public interface IPipelineStep
 {
-    public interface IPipelineStep
+    void Invalidate();
+}
+
+public class PipelineStep<T> : IPipelineStep
+{
+    private readonly Func<Task<T>> _createValue;
+    private TaskCompletionSource<T> _latestValue = new();
+    private Task<T> _inFlight;
+    private readonly object _lock = new();
+    private bool _invalidated = true;
+    private Guid _operationId;
+    private IPipelineStep _nextStep;
+
+    public PipelineStep(Func<Task<T>> createValue)
     {
-        void Invalidate();
+        if (createValue == null) throw new ArgumentNullException(nameof(createValue));
+
+        _createValue = async () =>
+        {
+            await Task.Yield();
+            return await createValue();
+        };
     }
 
-    public class PipelineStep<T> : IPipelineStep
+    public PipelineStep<U> Then<U>(Func<T, Task<U>> nextStep)
     {
-        private readonly Func<Task<T>> _createValue;
-        private TaskCompletionSource<T> _latestValue = new();
-        private Task<T> _inFlight;
-        private readonly object _lock = new();
-        private bool _invalidated = true;
-        private Guid _operationId;
-        private IPipelineStep _nextStep;
-
-        public PipelineStep(Func<Task<T>> createValue)
+        var newStep= new PipelineStep<U>(async () =>
         {
-            if (createValue == null) throw new ArgumentNullException(nameof(createValue));
+            var previousStepValue = await GetLatestAsync();
+            return await nextStep(previousStepValue);
+        });
 
-            _createValue = async () =>
-            {
-                await Task.Yield();
-                return await createValue();
-            };
-        }
+        _nextStep = newStep;
+        return newStep;
+    }
 
-        public PipelineStep<U> Then<U>(Func<T, Task<U>> nextStep)
+    public Task<T> GetLatestAsync()
+    {
+        lock (_lock)
         {
-            var newStep= new PipelineStep<U>(async () =>
+            if (_invalidated)
             {
-                var previousStepValue = await GetLatestAsync();
-                return await nextStep(previousStepValue);
-            });
-
-            _nextStep = newStep;
-            return newStep;
-        }
-
-        public Task<T> GetLatestAsync()
-        {
-            lock (_lock)
-            {
-                if (_invalidated)
+                if (_inFlight == null)
                 {
-                    if (_inFlight == null)
-                    {
-                        _latestValue = new TaskCompletionSource<T>();
-                        _inFlight = _createValue();
-                    }
-                    else
-                    {
-                        _inFlight = _inFlight
-                            .ContinueWith(t =>  _createValue().Result);
-                    }
-                    var newId = Guid.NewGuid();
-                    _operationId = newId;
-                    _inFlight.ContinueWith(t =>
-                    {
-                        lock (_lock)
-                        {
-                            switch (t.Status)
-                            {
-                                case TaskStatus.Faulted:
-
-                                    if (_operationId == newId)
-                                    {
-                                        _latestValue.SetException(t.Exception.InnerException);
-                                    }
-
-                                    _inFlight = null;
-                                    _invalidated = true;
-
-                                    break;
-                                case TaskStatus.RanToCompletion:
-
-                                    if (_operationId == newId)
-                                    {
-                                        _latestValue.SetResult(t.Result);
-                                    }
-
-                                    _inFlight = null;
-                                    _invalidated = false;
-
-                                    break;
-                            }
-                        }
-                    });
-                    _invalidated = false;
-                    return _latestValue.Task;
-
+                    _latestValue = new TaskCompletionSource<T>();
+                    _inFlight = _createValue();
                 }
                 else
                 {
-                    return _latestValue.Task;
+                    _inFlight = _inFlight
+                        .ContinueWith(t =>  _createValue().Result);
                 }
-            }
-           
-        }
-
-        public void Invalidate()
-        {
-            lock (_lock)
-            {
-                if (!_invalidated)
+                var newId = Guid.NewGuid();
+                _operationId = newId;
+                _inFlight.ContinueWith(t =>
                 {
-                    _invalidated = true;
-                    
-                }
-            }
+                    lock (_lock)
+                    {
+                        switch (t.Status)
+                        {
+                            case TaskStatus.Faulted:
 
-            _nextStep?.Invalidate();
+                                if (_operationId == newId)
+                                {
+                                    _latestValue.SetException(t.Exception.InnerException);
+                                }
+
+                                _inFlight = null;
+                                _invalidated = true;
+
+                                break;
+                            case TaskStatus.RanToCompletion:
+
+                                if (_operationId == newId)
+                                {
+                                    _latestValue.SetResult(t.Result);
+                                }
+
+                                _inFlight = null;
+                                _invalidated = false;
+
+                                break;
+                        }
+                    }
+                });
+                _invalidated = false;
+                return _latestValue.Task;
+
+            }
+            else
+            {
+                return _latestValue.Task;
+            }
         }
+           
+    }
+
+    public void Invalidate()
+    {
+        lock (_lock)
+        {
+            if (!_invalidated)
+            {
+                _invalidated = true;
+                    
+            }
+        }
+
+        _nextStep?.Invalidate();
     }
 }

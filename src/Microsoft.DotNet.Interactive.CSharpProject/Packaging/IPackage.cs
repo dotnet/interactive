@@ -4,40 +4,39 @@
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
+namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
+
+public interface IPackage
 {
-    public interface IPackage
-    {
-        string Name { get; }
-    }
+    string Name { get; }
+}
 
-    public interface IHaveADirectory : IPackage
-    {
-        DirectoryInfo Directory { get; }
-    }
+public interface IHaveADirectory : IPackage
+{
+    DirectoryInfo Directory { get; }
+}
 
-    public interface IHaveADirectoryAccessor : IPackage
-    {
-        IDirectoryAccessor Directory { get; }
-    }
+public interface IHaveADirectoryAccessor : IPackage
+{
+    IDirectoryAccessor Directory { get; }
+}
 
-    public interface ICanSupportWasm : IPackage
-    {
-        bool CanSupportWasm { get; }
-    }
+public interface ICanSupportWasm : IPackage
+{
+    bool CanSupportWasm { get; }
+}
 
-    public interface ICreateWorkspace : IPackage
-    {
-        Task<CodeAnalysis.Workspace> CreateWorkspaceAsync();
-    }
+public interface ICreateWorkspace : IPackage
+{
+    Task<CodeAnalysis.Workspace> CreateWorkspaceAsync();
+}
 
-    public interface ICreateWorkspaceForRun : IPackage, ICreateWorkspace
-    {
-        Task<CodeAnalysis.Workspace> CreateWorkspaceForRunAsync();
-    }
+public interface ICreateWorkspaceForRun : IPackage, ICreateWorkspace
+{
+    Task<CodeAnalysis.Workspace> CreateWorkspaceForRunAsync();
+}
 
-    public interface ICreateWorkspaceForLanguageServices : IPackage, ICreateWorkspace
-    {
-        Task<CodeAnalysis.Workspace> CreateWorkspaceForLanguageServicesAsync();
-    }
+public interface ICreateWorkspaceForLanguageServices : IPackage, ICreateWorkspace
+{
+    Task<CodeAnalysis.Workspace> CreateWorkspaceForLanguageServicesAsync();
 }

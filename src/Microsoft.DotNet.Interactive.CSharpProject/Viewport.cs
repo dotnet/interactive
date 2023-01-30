@@ -4,26 +4,25 @@
 using System;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.MLS.Project
+namespace Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
+
+public class Viewport
 {
-    public class Viewport
+    public Viewport(SourceFile destination, TextSpan region, TextSpan outerRegion, BufferId bufferId)
     {
-        public Viewport(SourceFile destination, TextSpan region, TextSpan outerRegion, BufferId bufferId)
-        {
 
-            Region = region;
-            BufferId = bufferId;
-            OuterRegion = outerRegion;
-            Destination = destination ?? throw new ArgumentNullException(nameof(destination));
-        }
-
-        public BufferId BufferId { get; }
-
-        public TextSpan OuterRegion { get; }
-
-        public TextSpan Region { get; }
-
-        public SourceFile Destination { get; }
-
+        Region = region;
+        BufferId = bufferId;
+        OuterRegion = outerRegion;
+        Destination = destination ?? throw new ArgumentNullException(nameof(destination));
     }
+
+    public BufferId BufferId { get; }
+
+    public TextSpan OuterRegion { get; }
+
+    public TextSpan Region { get; }
+
+    public SourceFile Destination { get; }
+
 }

@@ -6,7 +6,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using FluentAssertions;
+using FSharp.Compiler.Text;
+
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Documents.ParserServer;
+using Newtonsoft.Json;
+
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Documents.Tests;
@@ -114,6 +119,348 @@ x = 1 # this is Python
             DocumentSerializationType.Dib,
             defaultLanguage: "csharp",
             rawData: Encoding.UTF8.GetBytes(dibContents));
+
+        var response = NotebookParserServer.HandleRequest(request);
+
+        response
+            .Should()
+            .BeOfType<NotebookParseResponse>()
+            .Which
+            .Document
+            .Elements
+            .Single()
+            .KernelName
+            .Should()
+            .Be("snake-language");
+    }
+
+    [Fact]
+    public void Notebook_parser_server_can_handle_serialize_requests()
+    {
+        var request = @"{
+  ""type"": ""serialize"",
+  ""id"": ""2"",
+  ""serializationType"": ""dib"",
+  ""defaultLanguage"": ""csharp"",
+  ""newLine"": ""\r\n"",
+  ""document"": {
+    ""elements"": [      
+      {
+        ""executionOrder"": 0,
+        ""kernelName"": ""csharp"",
+        ""contents"": ""#r \""nuget: DotLanguage.InteractiveExtension, *-*\"""",
+        ""outputs"": [
+        ]
+      },
+      {
+        ""executionOrder"": 0,
+        ""kernelName"": ""dot"",
+        ""contents"": ""digraph Blah {\r\n    rankdir=\""LR\""\r\n    node [shape=\""box\""];\r\n    A -> B -> C;\r\n    B -> D;\r\n  }"",
+        ""outputs"": []
+      }
+    ],
+    ""metadata"": {
+      ""kernelInfo"": {
+        ""defaultKernelName"": ""csharp"",
+        ""items"": [
+          {
+            ""name"": ""csharp"",
+            ""languageName"": ""C#"",
+            ""aliases"": [
+              ""c#"",
+              ""cs""
+            ]
+          },
+          {
+            ""name"": ""fsharp"",
+            ""languageName"": ""F#"",
+            ""aliases"": [
+              ""f#"",
+              ""fs""
+            ]
+          },
+          {
+            ""name"": ""pwsh"",
+            ""languageName"": ""PowerShell"",
+            ""aliases"": [
+              ""powershell""
+            ]
+          },
+          {
+            ""name"": ""javascript"",
+            ""languageName"": ""JavaScript"",
+            ""aliases"": [
+              ""js""
+            ]
+          },
+          {
+            ""name"": ""html"",
+            ""languageName"": ""HTML"",
+            ""aliases"": [ ]
+          },
+          {
+            ""name"": ""sql"",
+            ""languageName"": ""SQL"",
+            ""aliases"": []
+          },
+          {
+            ""name"": ""kql"",
+            ""languageName"": ""KQL"",
+            ""aliases"": []
+          },
+          {
+            ""name"": ""mermaid"",
+            ""languageName"": ""Mermaid"",
+            ""aliases"": []
+          },
+          {
+            ""name"": ""value"",
+            ""aliases"": []
+          },
+          {
+            ""name"": ""dot"",
+            ""languageName"": ""dotlang"",
+            ""aliases"": []
+          }
+        ]
+      }
+    }
+  }
+}
+";
+        
+
+        var response = NotebookParserServer.HandleRequest(NotebookParseOrSerializeRequest.FromJson(request));
+
+        var raw = response
+            .Should()
+            .BeOfType<NotebookSerializeResponse>()
+            .Which
+            .RawData;
+
+        var parseRequest = new NotebookParseRequest(
+            "the-id",
+            DocumentSerializationType.Dib,
+            defaultLanguage: "csharp",
+            rawData: raw);
+
+        var parseResponse = NotebookParserServer.HandleRequest(parseRequest);
+
+        var kernelInfos = parseResponse
+            .Should()
+            .BeOfType<NotebookParseResponse>()
+            .Which
+            .Document.Metadata["kernelInfo"] as KernelInfoCollection;
+
+        kernelInfos
+            .Should()
+            .NotBeNull();
+    }
+
+
+    [Fact]
+    public void Notebook_parser_server_can_parse_a_dib_file_with_merged_kernel_metadata()
+    {
+        var dibContents = @"
+#!meta
+{
+  ""kernelInfo"": {
+    ""defaultKernelName"": ""csharp"",
+    ""items"": [
+      {
+        ""name"": ""csharp"",
+        ""languageName"": ""csharp""
+      }
+    ]
+  }
+}
+
+#!csharp
+
+var x = 1; // this is C#
+
+#!fsharp
+
+let x = 1 (* this is F# *)
+".Trim();
+        var request = new NotebookParseRequest(
+            "the-id",
+            DocumentSerializationType.Dib,
+            defaultLanguage: "csharp",
+            rawData: Encoding.UTF8.GetBytes(dibContents));
+
+        var response = NotebookParserServer.HandleRequest(request);
+
+        response
+            .Should()
+            .BeOfType<NotebookParseResponse>()
+            .Which
+            .Document
+            .Elements
+            .Select(e => e.KernelName)
+            .Should()
+            .Equal(new[] { "csharp", "fsharp" });
+    }
+    
+    [Fact]
+    public void Notebook_parser_server_can_parse_a_ipynb_file_with_well_known_kernel_metadata()
+    {
+        var ipynb = new
+        {
+            cells = new object[]
+            {
+                new
+                {
+                    cell_type = "code",
+                    execution_count = 0,
+                    source = new[] { "let x  = 1" },
+                    metadata = new
+                    {
+                        polyglot_notebook = new
+                        {
+                            kernelName = "fsharp"
+                        }
+                    }
+                },
+                new
+                {
+                    cell_type = "code",
+                    execution_count = 0,
+                    source = new[] { "var x = 123;" },
+                    metadata = new
+                    {
+                        polyglot_notebook = new
+                        {
+                            kernelName = "csharp"
+                        }
+                    }
+                }
+            },
+            metadata = new
+            {
+                kernelspec = new
+                {
+                    display_name = ".NET (C#)",
+                    language = "C#",
+                    name = ".net-csharp"
+                },
+                language_info = new
+                {
+                    file_extension = ".cs",
+                    mimetype = "text/x-csharp",
+                    name = "C#",
+                    pygments_lexer = "csharp",
+                    version = "11.0"
+                },
+                polyglot_notebook = new
+                {
+                    defaultKernelName = "csharp",
+                    items = new object[]
+                    {
+                        new
+                        {
+                            name = "csharp",
+                            languageName = "csharp"
+                        },
+                        new
+                        {
+                            name = "fsharp",
+                            languageName = "fsharp"
+                        }
+                    }
+                }
+            },
+            nbformat = 4,
+            nbformat_minor = 4
+        };
+        
+        var ipynbContents = JsonConvert.SerializeObject(ipynb);
+
+        var request = new NotebookParseRequest(
+            "the-id",
+            DocumentSerializationType.Ipynb,
+            defaultLanguage: "csharp",
+            rawData: Encoding.UTF8.GetBytes(ipynbContents));
+
+        var response = NotebookParserServer.HandleRequest(request);
+
+        response
+            .Should()
+            .BeOfType<NotebookParseResponse>()
+            .Which
+            .Document
+            .Elements
+            .Select(e => e.KernelName)
+            .Should()
+            .Equal(new[] { "fsharp", "csharp" });
+    }
+
+    [Fact]
+    public void Notebook_parser_server_can_parse_a_ipynb_file_with_not_well_known_kernel_metadata()
+    {
+        var ipynb = new
+        {
+            cells = new object[]
+             {
+                new
+                {
+                    cell_type = "code",
+                    execution_count = 0,
+                    source = new[] { "x  = 1" },
+                    metadata = new
+                    {
+                        polyglot_notebook = new
+                        {
+                            kernelName = "snake-language"
+                        }
+                    }
+                }
+             },
+            metadata = new
+            {
+                kernelspec = new
+                {
+                    display_name = ".NET (C#)",
+                    language = "C#",
+                    name = ".net-csharp"
+                },
+                language_info = new
+                {
+                    file_extension = ".cs",
+                    mimetype = "text/x-csharp",
+                    name = "C#",
+                    pygments_lexer = "csharp",
+                    version = "11.0"
+                },
+                polyglot_notebook = new
+                {
+                    defaultKernelName = "csharp",
+                    items = new object[]
+                     {
+                        new
+                        {
+                            name = "csharp",
+                            languageName = "csharp"
+                        },
+                        new
+                        {
+                            name = "snake-language",
+                            languageName = "python"
+                        }
+                     }
+                }
+            },
+            nbformat = 4,
+            nbformat_minor = 4
+        };
+
+        var ipynbContents = JsonConvert.SerializeObject(ipynb);
+        
+        var request = new NotebookParseRequest(
+            "the-id",
+            DocumentSerializationType.Ipynb,
+            defaultLanguage: "csharp",
+            rawData: Encoding.UTF8.GetBytes(ipynbContents));
 
         var response = NotebookParserServer.HandleRequest(request);
 

@@ -10,6 +10,7 @@ import { isKernelEventEnvelope } from './dotnet-interactive';
 import * as kernelSelectorUtilities from './kernelSelectorUtilities';
 import * as constants from './constants';
 import * as vscodeUtilities from './vscodeUtilities';
+import { ServiceCollection } from './serviceCollection';
 
 const selectKernelCommandName = 'polyglot-notebook.selectCellKernel';
 
@@ -26,7 +27,6 @@ export function registerNotbookCellStatusBarItemProvider(context: vscode.Extensi
     });
     context.subscriptions.push(vscode.notebooks.registerNotebookCellStatusBarItemProvider(constants.NotebookViewType, cellItemProvider));
     context.subscriptions.push(vscode.notebooks.registerNotebookCellStatusBarItemProvider(constants.JupyterViewType, cellItemProvider)); // TODO: fix this
-    context.subscriptions.push(vscode.notebooks.registerNotebookCellStatusBarItemProvider(constants.LegacyNotebookViewType, cellItemProvider));
     context.subscriptions.push(vscode.commands.registerCommand(selectKernelCommandName, async (cell?: vscode.NotebookCell) => {
         if (cell) {
             const client = await clientMapper.tryGetClient(cell.notebook.uri);
@@ -41,10 +41,16 @@ export function registerNotbookCellStatusBarItemProvider(context: vscode.Extensi
                         const codeCell = await vscodeUtilities.ensureCellKernelKind(cell, vscode.NotebookCellKind.Code);
                         const notebookCellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(cell);
                         if (notebookCellMetadata.kernelName !== selectedKernelData.kernelName) {
+                            // update metadata
                             notebookCellMetadata.kernelName = selectedKernelData.kernelName;
                             const newRawMetadata = metadataUtilities.getRawNotebookCellMetadataFromNotebookCellMetadata(notebookCellMetadata);
                             const mergedMetadata = metadataUtilities.mergeRawMetadata(cell.metadata, newRawMetadata);
                             const _succeeded = await versionSpecificFunctions.replaceNotebookCellMetadata(codeCell.notebook.uri, codeCell.index, mergedMetadata);
+
+                            // update language configuration
+                            ServiceCollection.Instance.LanguageConfigurationManager.ensureLanguageConfigurationForDocument(cell.document);
+
+                            // update tokens
                             await vscode.commands.executeCommand('polyglot-notebook.refreshSemanticTokens');
                         }
                     }
@@ -68,25 +74,21 @@ class DotNetNotebookCellStatusBarItemProvider {
     }
 
     async provideCellStatusBarItems(cell: vscode.NotebookCell, token: vscode.CancellationToken): Promise<vscode.NotebookCellStatusBarItem[]> {
-        if (!metadataUtilities.isDotNetNotebook(cell.notebook)) {
+        if (!metadataUtilities.isDotNetNotebook(cell.notebook) || cell.document.languageId === 'markdown') {
             return [];
         }
 
+        const cellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(cell);
+        const cellKernelName = cellMetadata.kernelName ?? 'csharp';
+        const notebookDocument = getNotebookDcoumentFromCellDocument(cell.document);
+        const client = await this.clientMapper.tryGetClient(notebookDocument!.uri); // don't force client creation
         let displayText: string;
-        if (cell.document.languageId === 'markdown') {
-            displayText = 'Markdown';
-        } else {
-            const cellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(cell);
-            const cellKernelName = cellMetadata.kernelName ?? 'csharp';
-            const notebookDocument = getNotebookDcoumentFromCellDocument(cell.document);
-            const client = await this.clientMapper.tryGetClient(notebookDocument!.uri); // don't force client creation
-            if (client) {
-                const matchingKernel = client.kernel.childKernels.find(k => k.kernelInfo.localName === cellKernelName);
-                displayText = matchingKernel ? kernelSelectorUtilities.getKernelInfoDisplayValue(matchingKernel.kernelInfo) : cellKernelName;
-            }
-            else {
-                displayText = cellKernelName;
-            }
+        if (client) {
+            const matchingKernel = client.kernel.childKernels.find(k => k.kernelInfo.localName === cellKernelName);
+            displayText = matchingKernel ? kernelSelectorUtilities.getKernelInfoDisplayValue(matchingKernel.kernelInfo) : cellKernelName;
+        }
+        else {
+            displayText = cellKernelName;
         }
 
         const item = new vscode.NotebookCellStatusBarItem(displayText, vscode.NotebookCellStatusBarAlignment.Right);

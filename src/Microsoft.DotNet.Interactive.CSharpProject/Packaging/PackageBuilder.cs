@@ -7,162 +7,161 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Utility;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
+namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
+
+public class PackageBuilder
 {
-    public class PackageBuilder
+    private PackageBase _packageBase;
+    private readonly List<Func<PackageBase, Task>> _afterCreateActions = new();
+    private readonly List<(string packageName, string packageVersion, string restoreSources)> _addPackages = new();
+    private string _languageVersion = "8.0";
+
+    public PackageBuilder(string packageName, IPackageInitializer packageInitializer = null)
     {
-        private PackageBase _packageBase;
-        private readonly List<Func<PackageBase, Task>> _afterCreateActions = new();
-       private readonly List<(string packageName, string packageVersion, string restoreSources)> _addPackages = new();
-        private string _languageVersion = "8.0";
-
-        public PackageBuilder(string packageName, IPackageInitializer packageInitializer = null)
+        if (string.IsNullOrWhiteSpace(packageName))
         {
-            if (string.IsNullOrWhiteSpace(packageName))
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(packageName));
+        }
+
+        PackageName = packageName;
+        PackageInitializer = packageInitializer;
+    }
+
+    public string PackageName { get; }
+
+    public IPackageInitializer PackageInitializer { get; private set; }
+
+    public DirectoryInfo Directory { get; set; }
+
+    public bool CreateRebuildablePackage { get; set; }
+
+    public bool BlazorSupported { get; private set; }
+
+    public void CreateUsingDotnet(string template, string projectName = null, string language = null)
+    {
+        PackageInitializer = new PackageInitializer(
+            template,
+            projectName ?? PackageName,
+            language,
+            RunAfterCreateActionsAsync);
+    }
+
+    public void AddPackageReference(string packageId, string version = null, string restoreSources = null)
+    {
+        _addPackages.Add((packageId, version, restoreSources));
+        _afterCreateActions.Add(async package =>
+        {
+            Func<Task> action = async () =>
             {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(packageName));
-            }
+                var dotnet = new Dotnet(package.Directory);
+                await dotnet.AddPackage(packageId, version);
+            };
 
-            PackageName = packageName;
-            PackageInitializer = packageInitializer;
-        }
+            await action();
 
-        public string PackageName { get; }
+        });
+    }
 
-        public IPackageInitializer PackageInitializer { get; private set; }
+    public void SetLanguageVersion(string version)
+    {
+        _languageVersion = version;
 
-        public DirectoryInfo Directory { get; set; }
-
-        public bool CreateRebuildablePackage { get; set; }
-
-        public bool BlazorSupported { get; private set; }
-
-        public void CreateUsingDotnet(string template, string projectName = null, string language = null)
+        _afterCreateActions.Add(async (package) =>
         {
-            PackageInitializer = new PackageInitializer(
-               template,
-               projectName ?? PackageName,
-               language,
-               RunAfterCreateActionsAsync);
-        }
-
-        public void AddPackageReference(string packageId, string version = null, string restoreSources = null)
-        {
-            _addPackages.Add((packageId, version, restoreSources));
-            _afterCreateActions.Add(async package =>
-            {
-                Func<Task> action = async () =>
-                {
-                    var dotnet = new Dotnet(package.Directory);
-                    await dotnet.AddPackage(packageId, version);
-                };
-
-                await action();
-
-            });
-        }
-
-        public void SetLanguageVersion(string version)
-        {
-            _languageVersion = version;
-
-            _afterCreateActions.Add(async (package) =>
-            {
-                async Task Action()
-                {
-                    await Task.Yield();
-                    var projects = package.Directory.GetFiles("*.csproj");
-
-                    foreach (var project in projects)
-                    {
-                        project.SetLanguageVersion(_languageVersion);
-                    }
-                }
-
-                await Action();
-            });
-        }
-
-        public void TrySetLanguageVersion(string version)
-        {
-            _languageVersion = version;
-
-            _afterCreateActions.Add(async (package) =>
-            {
-                async Task Action()
-                {
-                    await Task.Yield();
-                    var projects = package.Directory.GetFiles("*.csproj");
-
-                    foreach (var project in projects)
-                    {
-                        project.TrySetLanguageVersion(_languageVersion);
-                    }
-                }
-
-                await Action();
-            });
-        }
-
-        public void DeleteFile(string relativePath)
-        {
-            _afterCreateActions.Add(async (workspace) =>
+            async Task Action()
             {
                 await Task.Yield();
-                var filePath = Path.Combine(workspace.Directory.FullName, relativePath);
-                if (File.Exists(filePath))
-                {
-                    File.Delete(filePath);
-                }
-            });
-        }
+                var projects = package.Directory.GetFiles("*.csproj");
 
-        public void WriteFile(string relativePath, string content)
+                foreach (var project in projects)
+                {
+                    project.SetLanguageVersion(_languageVersion);
+                }
+            }
+
+            await Action();
+        });
+    }
+
+    public void TrySetLanguageVersion(string version)
+    {
+        _languageVersion = version;
+
+        _afterCreateActions.Add(async (package) =>
         {
-            _afterCreateActions.Add(async workspace =>
+            async Task Action()
             {
                 await Task.Yield();
-                var filePath = Path.Combine(workspace.Directory.FullName, relativePath);
-                File.WriteAllText(filePath,content);
-            });
-        }
+                var projects = package.Directory.GetFiles("*.csproj");
 
-        public PackageBase GetPackage()
-        {
-            if (_packageBase == null)
-            {
-                if (PackageInitializer is BlazorPackageInitializer)
+                foreach (var project in projects)
                 {
-                    _packageBase = new BlazorPackage(
-                            PackageName,
-                            PackageInitializer,
-                            Directory);
-                }
-                else if (CreateRebuildablePackage)
-                {
-                    _packageBase = new RebuildablePackage(
-                            PackageName,
-                            PackageInitializer,
-                            Directory);
-                }
-                else
-                {
-                    _packageBase = new NonrebuildablePackage(
-                            PackageName,
-                            PackageInitializer,
-                            Directory);
+                    project.TrySetLanguageVersion(_languageVersion);
                 }
             }
 
-            return _packageBase;
+            await Action();
+        });
+    }
+
+    public void DeleteFile(string relativePath)
+    {
+        _afterCreateActions.Add(async (workspace) =>
+        {
+            await Task.Yield();
+            var filePath = Path.Combine(workspace.Directory.FullName, relativePath);
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
+        });
+    }
+
+    public void WriteFile(string relativePath, string content)
+    {
+        _afterCreateActions.Add(async workspace =>
+        {
+            await Task.Yield();
+            var filePath = Path.Combine(workspace.Directory.FullName, relativePath);
+            File.WriteAllText(filePath,content);
+        });
+    }
+
+    public PackageBase GetPackage()
+    {
+        if (_packageBase == null)
+        {
+            if (PackageInitializer is BlazorPackageInitializer)
+            {
+                _packageBase = new BlazorPackage(
+                    PackageName,
+                    PackageInitializer,
+                    Directory);
+            }
+            else if (CreateRebuildablePackage)
+            {
+                _packageBase = new RebuildablePackage(
+                    PackageName,
+                    PackageInitializer,
+                    Directory);
+            }
+            else
+            {
+                _packageBase = new NonrebuildablePackage(
+                    PackageName,
+                    PackageInitializer,
+                    Directory);
+            }
         }
 
-        private async Task RunAfterCreateActionsAsync(DirectoryInfo directoryInfo)
+        return _packageBase;
+    }
+
+    private async Task RunAfterCreateActionsAsync(DirectoryInfo directoryInfo)
+    {
+        foreach (var action in _afterCreateActions)
         {
-            foreach (var action in _afterCreateActions)
-            {
-                await action(_packageBase);
-            }
+            await action(_packageBase);
         }
     }
 }

@@ -3,19 +3,18 @@
 
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Events
+namespace Microsoft.DotNet.Interactive.Events;
+
+public class DiagnosticLogEntryProduced : DiagnosticEvent
 {
-    public class DiagnosticLogEntryProduced : DiagnosticEvent
+    public DiagnosticLogEntryProduced(
+        string message,
+        KernelCommand command) : base(command)
     {
-        public DiagnosticLogEntryProduced(
-            string message,
-            KernelCommand command) : base(command)
-        {
-            Message = message;
-        }
-
-        public string Message { get; }
-
-        public override string ToString() => $"{base.ToString()}: {Message}";
+        Message = message;
     }
+
+    public string Message { get; }
+
+    public override string ToString() => $"{base.ToString()}: {Message}";
 }

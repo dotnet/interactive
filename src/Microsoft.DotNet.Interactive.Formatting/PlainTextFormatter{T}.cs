@@ -4,136 +4,124 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting;
+
+public delegate bool FormatDelegate<in T>(T value, FormatContext context);
+
+public class PlainTextFormatter<T> : TypeFormatter<T>
 {
-    public delegate bool FormatDelegate<in T>(T value, FormatContext context);
+    private readonly FormatDelegate<T> _format;
 
-    public class PlainTextFormatter<T> : TypeFormatter<T>
+    public PlainTextFormatter(FormatDelegate<T> format)
     {
-        private readonly FormatDelegate<T> _format;
+        _format = format ?? throw new ArgumentNullException(nameof(format));
+    }
 
-        public PlainTextFormatter(FormatDelegate<T> format)
+    public PlainTextFormatter(Action<T, FormatContext> format)
+    {
+        _format = FormatInstance;
+
+        bool FormatInstance(T instance, FormatContext context)
         {
-            _format = format ?? throw new ArgumentNullException(nameof(format));
+            format(instance, context);
+            return true;
+        }
+    }
+
+    public PlainTextFormatter(Func<T, string> format)
+    {
+        _format = (instance, context) =>
+        {
+            context.Writer.Write(format(instance));
+            return true;
+        };
+    }
+
+    public override string MimeType => PlainTextFormatter.MimeType;
+
+    public override bool Format(T value, FormatContext context)
+    {
+        if (value is null)
+        {
+            context.Writer.Write(Formatter.NullString);
+            return true;
         }
 
-        public PlainTextFormatter(Action<T, FormatContext> format)
+        return _format(value, context);
+    }
+
+    internal static PlainTextFormatter<T> CreateForAnyObject()
+    {
+        if (typeof(T).IsScalar())
         {
-            _format = FormatInstance;
-
-            bool FormatInstance(T instance, FormatContext context)
+            return new PlainTextFormatter<T>((value, context) =>
             {
-                format(instance, context);
-                return true;
-            }
-        }
-
-        public PlainTextFormatter(Func<T, string> format)
-        {
-            _format = (instance, context) =>
-            {
-                context.Writer.Write(format(instance));
-                return true;
-            };
-        }
-
-        public override string MimeType => PlainTextFormatter.MimeType;
-
-        public override bool Format(T value, FormatContext context)
-        {
-            if (value is null)
-            {
-                context.Writer.Write(Formatter.NullString);
-                return true;
-            }
-
-            return _format(value, context);
-        }
-
-        public static PlainTextFormatter<T> CreateForAnyObject(bool includeInternals = false)
-        {
-            if (typeof(T).IsScalar())
-            {
-                return new PlainTextFormatter<T>((value, context) =>
-                {
-                    context.Writer.Write(value);
-                    return true;
-                });
-            }
-
-            return new PlainTextFormatter<T>(
-                PlainTextFormatter.CreateFormatDelegate<T>(
-                    typeof(T).GetMembersToFormat(includeInternals).ToArray()));
-        }
-
-        public static PlainTextFormatter<T> CreateForMembers(params Expression<Func<T, object>>[] members)
-        {
-            var format = PlainTextFormatter.CreateFormatDelegate<T>(
-                typeof(T).GetMembers(members).ToArray());
-
-            return new PlainTextFormatter<T>(format);
-        }
-
-        [SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Part of Pattern")]
-        public static PlainTextFormatter<T> CreateForAnyEnumerable(bool includeInternals = false)
-        {
-            if (typeof(T) == typeof(string))
-            {
-                return new((value, context) =>
-                {
-                    context.Writer.Write(value);
-                    return true;
-                });
-            }
-
-            if (typeof(T).GetInterfaces()
-                         .Where(i => i.IsGenericType)
-                         .Where(i => i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-                         .Select(i => i.GenericTypeArguments[0])
-                         .FirstOrDefault() is { } t)
-            {
-                var joinMethod = typeof(Formatter).GetMethod(nameof(Formatter.JoinGeneric), BindingFlags.NonPublic | BindingFlags.Static);
-
-                var genericMethod = joinMethod.MakeGenericMethod(new[] { t });
-
-                var enumerableType = typeof(IEnumerable<>).MakeGenericType(t);
-
-                var delegateType = typeof(Action<,,,>).MakeGenericType(
-                    new[] { enumerableType, typeof(TextWriter), typeof(FormatContext), typeof(int?) });
-
-                var m = genericMethod.CreateDelegate(delegateType);
-
-                return new((value, context) =>
-                {
-                    m.DynamicInvoke(value, context.Writer, context, Formatter<T>.ListExpansionLimit);
-                    return true;
-                });
-            }
-
-            return new((value, context) =>
-            {
-                switch (value)
-                {
-                    case IEnumerable enumerable:
-                        Formatter.Join(enumerable,
-                                       context.Writer,
-                                       context, Formatter<T>.ListExpansionLimit);
-                        break;
-                    default:
-                        context.Writer.Write(value.ToString());
-                        break;
-                }
-
+                context.Writer.Write(value);
                 return true;
             });
         }
 
-        public static PlainTextFormatter<T> Default = CreateForAnyEnumerable(false);
+        return new PlainTextFormatter<T>(
+            PlainTextFormatter.CreateFormatDelegate<T>(
+                typeof(T).GetMembersToFormat().ToArray()));
     }
+  
+    internal static PlainTextFormatter<T> CreateForAnyEnumerable()
+    {
+        if (typeof(T) == typeof(string))
+        {
+            return new((value, context) =>
+            {
+                context.Writer.Write(value);
+                return true;
+            });
+        }
+
+        if (typeof(T).GetInterfaces()
+                .Where(i => i.IsGenericType)
+                .Where(i => i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                .Select(i => i.GenericTypeArguments[0])
+                .FirstOrDefault() is { } t)
+        {
+            var joinMethod = typeof(Formatter).GetMethod(nameof(Formatter.JoinGeneric), BindingFlags.NonPublic | BindingFlags.Static);
+
+            var genericMethod = joinMethod!.MakeGenericMethod(new[] { t });
+
+            var enumerableType = typeof(IEnumerable<>).MakeGenericType(t);
+
+            var delegateType = typeof(Action<,,>).MakeGenericType(
+                new[] { enumerableType, typeof(TextWriter), typeof(FormatContext) });
+
+            var m = genericMethod.CreateDelegate(delegateType);
+
+            return new((value, context) =>
+            {
+                m.DynamicInvoke(value, context.Writer, context);
+                return true;
+            });
+        }
+
+        return new((value, context) =>
+        {
+            switch (value)
+            {
+                case IEnumerable enumerable:
+                    Formatter.Join(enumerable,
+                        context.Writer,
+                        context);
+                    break;
+                default:
+                    context.Writer.Write(value.ToString());
+                    break;
+            }
+
+            return true;
+        });
+    }
+
+    public static PlainTextFormatter<T> Default = CreateForAnyEnumerable();
 }

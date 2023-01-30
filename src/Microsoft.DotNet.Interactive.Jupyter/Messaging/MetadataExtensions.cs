@@ -6,30 +6,29 @@ using System.Text.Json;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
 
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Messaging
+namespace Microsoft.DotNet.Interactive.Jupyter.Messaging;
+
+public static class MetadataExtensions
 {
-    public static class MetadataExtensions
+    public static Dictionary<string, object> DeserializeMetadataFromJsonString(string metadataJson)
     {
-        public static Dictionary<string, object> DeserializeMetadataFromJsonString(string metadataJson)
+        var metadata = new Dictionary<string, object>();
+        var doc = JsonDocument.Parse(metadataJson);
+        foreach (var property in doc.RootElement.EnumerateObject())
         {
-            var metadata = new Dictionary<string, object>();
-            var doc = JsonDocument.Parse(metadataJson);
-            foreach (var property in doc.RootElement.EnumerateObject())
+            switch (property.Name)
             {
-                switch (property.Name)
-                {
-                    case "dotnet_interactive":
-                    case "polyglot_notebook":
-                        metadata[property.Name] = JsonSerializer.Deserialize<InputCellMetadata>(property.Value.GetRawText());
-                        break;
+                case "dotnet_interactive":
+                case "polyglot_notebook":
+                    metadata[property.Name] = JsonSerializer.Deserialize<InputCellMetadata>(property.Value.GetRawText());
+                    break;
 
-                    default:
-                        metadata[property.Name] = property.Value.ToObject();
-                        break;
-                }
+                default:
+                    metadata[property.Name] = property.Value.ToObject();
+                    break;
             }
-
-            return metadata;
         }
+
+        return metadata;
     }
 }

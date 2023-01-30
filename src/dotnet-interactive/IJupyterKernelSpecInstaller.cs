@@ -4,10 +4,9 @@
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.App
+namespace Microsoft.DotNet.Interactive.App;
+
+public interface IJupyterKernelSpecInstaller
 {
-    public interface IJupyterKernelSpecInstaller
-    {
-        Task<bool> TryInstallKernelAsync(DirectoryInfo kernelSpecPath, DirectoryInfo destination = null);
-    }
+    Task<bool> TryInstallKernelAsync(DirectoryInfo kernelSpecPath, DirectoryInfo destination = null);
 }

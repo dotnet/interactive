@@ -6,26 +6,24 @@ using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+public class HtmlKernel :
+    Kernel,
+    IKernelCommandHandler<SubmitCode>
 {
-    public class HtmlKernel :
-        Kernel,
-        IKernelCommandHandler<SubmitCode>
+    public const string DefaultKernelName = "html";
+
+    public HtmlKernel() : base(DefaultKernelName)
     {
-        public const string DefaultKernelName = "html";
+        KernelInfo.LanguageName = "HTML";
+    }
 
-        public HtmlKernel() : base(DefaultKernelName)
-        {
-            KernelInfo.LanguageName = "HTML";
-            KernelInfo.DisplayName = "HTML";
-        }
-
-        Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
-        {
-            context.Display(
-                new HtmlString(command.Code),
-                HtmlFormatter.MimeType);
-            return Task.CompletedTask;
-        }
+    Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
+    {
+        context.Display(
+            new HtmlString(command.Code),
+            HtmlFormatter.MimeType);
+        return Task.CompletedTask;
     }
 }

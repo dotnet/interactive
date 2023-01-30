@@ -36,7 +36,7 @@ type FSharpKernel () as this =
     inherit Kernel("fsharp")
 
     do this.KernelInfo.LanguageName <- "F#"
-    do this.KernelInfo.LanguageVersion <- "6.0"
+    do this.KernelInfo.LanguageVersion <- "7.0"
     do this.KernelInfo.DisplayName <- "F# Script"
 
     static let lockObj = Object();
@@ -83,7 +83,7 @@ type FSharpKernel () as this =
         | FSharpGlyph.Error -> WellKnownTags.Error
 
     let getFilterText (declarationItem: DeclarationListItem) =
-        match declarationItem.NamespaceToOpen, declarationItem.Name.Split '.' with
+        match declarationItem.NamespaceToOpen, declarationItem.NameInList.Split '.' with
         // There is no namespace to open and the item name does not contain dots, so we don't need to pass special FilterText to Roslyn.
         | None, [|_|] -> null
         // Either we have a namespace to open ("DateTime (open System)") or item name contains dots ("Array.map"), or both.
@@ -168,7 +168,7 @@ type FSharpKernel () as this =
                 | _ -> false
             let insertTextSuffix = if isMethod then "($1)" else ""
             let insertTextFormat = if isMethod then System.Nullable(InsertTextFormat.Snippet) else System.Nullable<InsertTextFormat>()
-            return CompletionItem(declarationItem.Name, kind, filterText=filterText, documentation=documentation, insertText=declarationItem.NameInCode + insertTextSuffix, insertTextFormat=insertTextFormat)
+            return CompletionItem(declarationItem.NameInList, kind, filterText=filterText, documentation=documentation, insertText=declarationItem.NameInCode + insertTextSuffix, insertTextFormat=insertTextFormat)
         }
 
     let getDiagnostic (error: FSharpDiagnostic) =
@@ -250,6 +250,8 @@ type FSharpKernel () as this =
 
     let handleRequestHoverText (requestHoverText: RequestHoverText) (context: KernelInvocationContext) =
         task {
+            let fsiModuleRx = System.Text.RegularExpressions.Regex @"FSI_[0-9]+\."
+            let stdinRx = System.Text.RegularExpressions.Regex @"Stdin\."
             let parse, check, _ctx = script.Value.Fsi.ParseAndCheckInteraction(requestHoverText.Code)
 
             let res = FsAutoComplete.ParseAndCheckResults(parse, check, EntityCache())
@@ -264,47 +266,46 @@ type FSharpKernel () as this =
             let lineContent = text.GetLineString(line - 1)
             let! value =
                 async {
-                    match! res.TryGetSymbolUse (mkPos line col) lineContent with
-                    | Ok (mine, _others) ->
+                    match res.TryGetSymbolUse (mkPos line col) lineContent with
+                    | Some symbolUse ->
                         let fullName = 
-                            match mine with
+                            match symbolUse with
                             | FsAutoComplete.Patterns.SymbolUse.Val sym ->
                                 match sym.DeclaringEntity with
-                                | Some ent when ent.IsFSharpModule ->   
+                                | Some ent when ent.IsFSharpModule ->
                                     match ent.TryFullName with
                                     | Some _ -> Some sym.FullName
                                     | None -> None
                                 | _ -> None
-                            | _ ->
-                                None
-
+                            | _ -> None
                         match fullName with
                         | Some name ->
-                            let expr = if name.StartsWith "Stdin." then name.Substring 6 else name
-                            try return script.Value.Fsi.EvalExpression(expr) |> Some
-                            with _ -> return None
+                            let expr = name
+                            let expr = stdinRx.Replace(expr, "")
+                            let expr = fsiModuleRx.Replace(expr, "")
+                            try
+                                return script.Value.Fsi.EvalExpression(expr) |> Some
+                            with e ->
+                                return None
                         | None -> return None
-
-                    | Error _ ->
-                        return None
+                    | None -> return None
                 }
-            
-            match! res.TryGetToolTipEnhanced (mkPos line col) lineContent with
-            | Result.Ok (startCol, endCol, tip, signature, footer, typeDoc) ->
-                let fsiModuleRx = System.Text.RegularExpressions.Regex @"FSI_[0-9]+\."
-                let stdinRx = System.Text.RegularExpressions.Regex @"Stdin\."
 
-                let results = 
-                    FsAutoComplete.TipFormatter.formatTipEnhanced 
-                        tip signature footer typeDoc 
-                        FsAutoComplete.TipFormatter.FormatCommentStyle.Legacy 
+            match res.TryGetToolTipEnhanced (mkPos line col) lineContent with
+            | Result.Ok (Some (tip, signature, footer, typeDoc)) ->
+                let results =
+                    FsAutoComplete.TipFormatter.formatTipEnhanced
+                        tip signature footer typeDoc
+                        FsAutoComplete.TipFormatter.FormatCommentStyle.Legacy
                     |> Seq.concat
-                    |> Seq.map (fun (signature, comment, footer) ->     
+                    |> Seq.map (fun (signature, comment, footer) ->
                         // make footer look like in Ionide
                         let newFooter = 
-                            footer.Split([|'\n'|], StringSplitOptions.RemoveEmptyEntries) 
+                            footer.Split([|'\n'|], StringSplitOptions.RemoveEmptyEntries)
+                            |> Seq.map (fun line -> line.TrimEnd('\r'))
                             |> Seq.filter (fsiAssemblyRx.IsMatch >> not)
-                            |> Seq.map (sprintf "*%s*") |> String.concat "\n\n----\n"
+                            |> Seq.map (sprintf "*%s*")
+                            |> String.concat "\n\n----\n"
 
                         let markdown = 
                             String.concat "\n\n----\n" [
@@ -312,12 +313,12 @@ type FSharpKernel () as this =
                                     let code =
                                         match value with
                                         // don't show function-values
-                                        | Some (Some value) when not (Reflection.FSharpType.IsFunction value.ReflectionType) -> 
+                                        | Some (Some value) when not (Reflection.FSharpType.IsFunction value.ReflectionType) ->
                                             let valueString = sprintf "%0A" value.ReflectionValue
                                             let lines = valueString.Split([|'\n'|], StringSplitOptions.RemoveEmptyEntries) |> Array.toList
 
                                             match lines with
-                                            | [] -> 
+                                            | [] ->
                                                 signature
                                             | [line] ->
                                                 sprintf "%s // %s" signature line
@@ -349,12 +350,12 @@ type FSharpKernel () as this =
                     )
                     |> Seq.toArray
 
-                let sp = LinePosition(requestHoverText.LinePosition.Line, startCol)
-                let ep = LinePosition(requestHoverText.LinePosition.Line, endCol)
+                let sp = LinePosition(requestHoverText.LinePosition.Line, col)
+                let ep = LinePosition(requestHoverText.LinePosition.Line, col)
                 let lps = LinePositionSpan(sp, ep)
                 context.Publish(HoverTextProduced(requestHoverText, results, lps))
 
-            | Result.Error err ->
+            | _ ->
                 let sp = LinePosition(requestHoverText.LinePosition.Line, col)
                 let ep = LinePosition(requestHoverText.LinePosition.Line, col)
                 let lps = LinePositionSpan(sp, ep)
@@ -376,7 +377,7 @@ type FSharpKernel () as this =
             let valueInfos =
                 script.Value.Fsi.GetBoundValues()
                 |> List.filter (fun x -> x.Name <> "it") // don't report special variable `it`
-                |> List.map (fun x -> new KernelValueInfo(x.Name, this.getValueType(x.Name)))
+                |> List.map (fun x -> new KernelValueInfo(x.Name, FormattedValue.FromObject(x.Value.ReflectionValue, requestValueInfos.MimeType)[0], this.getValueType(x.Name)))
                 :> IReadOnlyCollection<KernelValueInfo>
             context.Publish(new ValueInfosProduced(valueInfos, requestValueInfos))
         }
@@ -400,7 +401,7 @@ type FSharpKernel () as this =
     member this.GetValues() =
         script.Value.Fsi.GetBoundValues()
         |> List.filter (fun x -> x.Name <> "it") // don't report special variable `it`
-        |> List.map (fun x -> KernelValue( new KernelValueInfo(x.Name, x.Value.ReflectionType), x.Value.ReflectionValue, this.Name))
+        |> List.map (fun x -> KernelValue( new KernelValueInfo(x.Name, new FormattedValue(PlainTextFormatter.MimeType, x.Value.ToDisplayString(PlainTextFormatter.MimeType)) , x.Value.ReflectionType), x.Value.ReflectionValue, this.Name))
 
     member this.getValueType(name:string) = 
         match script.Value.Fsi.TryFindBoundValue(name) with

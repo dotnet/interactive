@@ -11,98 +11,104 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
+namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests;
+
+public class SQLiteConnectionTests
 {
-    public class SQLiteConnectionTests
+
+    [Fact]
+    public async Task SQLKernel_suggests_SQLite_connection_when_statements_are_submitted_to_it()
     {
-
-        [Fact]
-        public async Task SQLKernel_suggests_SQLite_connection_when_statements_are_submitted_to_it()
+        using var kernel = new CompositeKernel
         {
-            using var kernel = new CompositeKernel
-            {
-                new CSharpKernel().UseNugetDirective(),
-                new SqlDiscoverabilityKernel(),
-                new KeyValueStoreKernel()
-            };
+            new CSharpKernel().UseNugetDirective(),
+            new SqlDiscoverabilityKernel(),
+            new KeyValueStoreKernel()
+        };
 
-            kernel.AddKernelConnector(new ConnectSQLiteCommand());
+        kernel.AddKernelConnector(new ConnectSQLiteCommand());
 
-            using var _ = CreateInMemorySQLiteDb(out var connectionString);
+        using var _ = CreateInMemorySQLiteDb(out var connectionString);
 
-            var result = await kernel.SubmitCodeAsync(
-                $"#!connect sqlite --kernel-name mydb \"{connectionString}\"");
+        var result = await kernel.SubmitCodeAsync(
+            $"#!connect sqlite --kernel-name mydb \"{connectionString}\"");
 
-            result.KernelEvents
-                .ToSubscribedList()
-                .Should()
-                .NotContainErrors();
+        result.KernelEvents
+            .ToSubscribedList()
+            .Should()
+            .NotContainErrors();
 
-            result = await kernel.SubmitCodeAsync(@"
+        result = await kernel.SubmitCodeAsync(@"
 #!sql
 SELECT * FROM fruit
 ");
 
-            var events = result.KernelEvents.ToSubscribedList();
+        var events = result.KernelEvents.ToSubscribedList();
 
-            events.Should().NotContainErrors();
-            events.Should()
-                  .ContainSingle<DisplayedValueProduced>()
-                  .Which
-                  .FormattedValues
-                  .Should()
-                  .ContainSingle(v => v.Value.Contains("#!sql-mydb") &&
-                                      v.MimeType == "text/html");
-        }
+        events.Should()
+            .ContainSingle<CommandFailed>()
+            .Which
+            .Message
+            .Should()
+            .Be("SQL statements cannot be executed in this kernel.");
+        
+        events.Should()
+            .ContainSingle<DisplayedValueProduced>()
+            .Which
+            .FormattedValues
+            .Should()
+            .ContainSingle(v => v.Value.Contains("#!sql-mydb") &&
+                                v.MimeType == "text/html");
+    }
 
-        [Fact]
-        public async Task It_can_connect_and_query_data()
+    [Fact]
+    public async Task It_can_connect_and_query_data()
+    {
+        using var kernel = new CompositeKernel
         {
-            using var kernel = new CompositeKernel
-            {
-                new CSharpKernel().UseNugetDirective(),
-                new SqlDiscoverabilityKernel(),
-                new KeyValueStoreKernel()
-            };
+            new CSharpKernel().UseNugetDirective(),
+            new SqlDiscoverabilityKernel(),
+            new KeyValueStoreKernel()
+        };
 
-            kernel.AddKernelConnector(new ConnectSQLiteCommand());
+        kernel.AddKernelConnector(new ConnectSQLiteCommand());
 
-            using var _ = CreateInMemorySQLiteDb(out var connectionString);
+        using var _ = CreateInMemorySQLiteDb(out var connectionString);
 
-            var result = await kernel.SubmitCodeAsync(
-                             $"#!connect sqlite --kernel-name mydb  \"{connectionString}\"");
+        var result = await kernel.SubmitCodeAsync(
+            $"#!connect sqlite --kernel-name mydb  \"{connectionString}\"");
 
-            result.KernelEvents
-                  .ToSubscribedList()
-                  .Should()
-                  .NotContainErrors();
+        result.KernelEvents
+            .ToSubscribedList()
+            .Should()
+            .NotContainErrors();
 
-            result = await kernel.SubmitCodeAsync(@"
+        result = await kernel.SubmitCodeAsync(@"
 #!sql-mydb
 SELECT * FROM fruit
 ");
 
-            var events = result.KernelEvents.ToSubscribedList();
+        var events = result.KernelEvents.ToSubscribedList();
 
-            events.Should().NotContainErrors();
+        events.Should().NotContainErrors();
 
-            events.Should()
-                  .ContainSingle<DisplayedValueProduced>()
-                  .Which
-                  .FormattedValues
-                  .Should()
-                  .ContainSingle(f => f.MimeType == HtmlFormatter.MimeType);
-        }
+        events.Should()
+            .ContainSingle<DisplayedValueProduced>()
+            .Which
+            .FormattedValues
+            .Should()
+            .ContainSingle(f => f.MimeType == HtmlFormatter.MimeType);
+    }
 
-        internal static IDisposable CreateInMemorySQLiteDb(out string connectionString)
-        {
-            connectionString = $"Data Source=InMemorySample_{Guid.NewGuid():N};Mode=Memory;Cache=Shared";
-            var topLevelConnection = new SqliteConnection(connectionString);
-            topLevelConnection.Open();
+    internal static IDisposable CreateInMemorySQLiteDb(out string connectionString)
+    {
+        connectionString = $"Data Source=InMemorySample_{Guid.NewGuid():N};Mode=Memory;Cache=Shared";
+        var topLevelConnection = new SqliteConnection(connectionString);
+        topLevelConnection.Open();
 
-            var createCommand = topLevelConnection.CreateCommand();
-            createCommand.CommandText =
-                @"
+        var createCommand = topLevelConnection.CreateCommand();
+        createCommand.CommandText =
+            @"
 DROP TABLE IF EXISTS fruit;  
 CREATE TABLE fruit (
     id INTEGER PRIMARY KEY,
@@ -111,15 +117,15 @@ CREATE TABLE fruit (
     deliciousness INT NOT NULL 
 );
             ";
-            createCommand.ExecuteNonQuery();
+        createCommand.ExecuteNonQuery();
 
-            using var connection = new SqliteConnection(connectionString);
+        using var connection = new SqliteConnection(connectionString);
 
-            connection.Open();
+        connection.Open();
 
-            var updateCommand = connection.CreateCommand();
-            updateCommand.CommandText =
-                @"
+        var updateCommand = connection.CreateCommand();
+        updateCommand.CommandText =
+            @"
 INSERT INTO fruit (name, color, deliciousness)
 VALUES ('apple', 'green', 10);
 
@@ -129,9 +135,8 @@ VALUES ('banana', 'red', 11);
 INSERT INTO fruit (name, color, deliciousness)
 VALUES ('cherry', 'red', 9000);
                 ";
-            updateCommand.ExecuteNonQuery();
+        updateCommand.ExecuteNonQuery();
 
-            return topLevelConnection;
-        }
+        return topLevelConnection;
     }
 }

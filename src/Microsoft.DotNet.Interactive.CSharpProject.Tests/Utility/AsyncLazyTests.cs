@@ -8,51 +8,50 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Utility;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
+namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
+
+public class AsyncLazyTests
 {
-    public class AsyncLazyTests
+    [Fact]
+    public async Task AsyncLazy_returns_the_specified_value()
     {
-        [Fact]
-        public async Task AsyncLazy_returns_the_specified_value()
+        var lazy = new AsyncLazy<string>(async () =>
         {
-            var lazy = new AsyncLazy<string>(async () =>
-            {
-                await Task.Yield();
+            await Task.Yield();
 
-                return "hello!";
-            });
+            return "hello!";
+        });
 
-            var value = await lazy.ValueAsync();
+        var value = await lazy.ValueAsync();
 
-            value.Should().Be("hello!");
-        }
+        value.Should().Be("hello!");
+    }
 
-        [Fact]
-        public async Task AsyncLazy_can_be_awaited_concurrently_without_triggering_initialization_twice()
+    [Fact]
+    public async Task AsyncLazy_can_be_awaited_concurrently_without_triggering_initialization_twice()
+    {
+        var callCount = 0;
+
+        var barrier = new Barrier(5);
+
+        var lazy = new AsyncLazy<string>(async () =>
         {
-            var callCount = 0;
+            await Task.Yield();
 
-            var barrier = new Barrier(5);
+            barrier.SignalAndWait(2000);
 
-            var lazy = new AsyncLazy<string>(async () =>
-            {
-                await Task.Yield();
+            Interlocked.Increment(ref callCount);
 
-                barrier.SignalAndWait(2000);
+            barrier.SignalAndWait(2000);
 
-                Interlocked.Increment(ref callCount);
+            return "hello!";
+        });
 
-                barrier.SignalAndWait(2000);
+        var calls = Enumerable.Range(1, 5)
+            .Select(_ => lazy.ValueAsync());
 
-                return "hello!";
-            });
+        await Task.WhenAll(calls);
 
-            var calls = Enumerable.Range(1, 5)
-                                  .Select(_ => lazy.ValueAsync());
-
-            await Task.WhenAll(calls);
-
-            callCount.Should().Be(1);
-        }
+        callCount.Should().Be(1);
     }
 }

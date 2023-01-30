@@ -100,10 +100,6 @@ namespace Dummy
     {
     }
 
-    public class DummyWithNoProperties
-    {
-    }
-
     public class ClassWithNoPropertiesAndCustomToString
     {
         public override string ToString()
@@ -165,5 +161,13 @@ namespace Dummy
         public int X19 { get; } = 19;
         public int X20 { get; } = 20;
         public int X21 { get; } = 21;
+    }
+
+    public class ClassWithToStringThatThrows
+    {
+        public override string ToString()
+        {
+            throw new Exception("oops!");
+        }
     }
 }

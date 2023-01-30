@@ -4,19 +4,18 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject
+namespace Microsoft.DotNet.Interactive.CSharpProject;
+
+public class Diagnostics : ReadOnlyCollection<SerializableDiagnostic>, IRunResultFeature
 {
-    public class Diagnostics : ReadOnlyCollection<SerializableDiagnostic>, IRunResultFeature
+    public Diagnostics(IList<SerializableDiagnostic> list) : base(list)
     {
-        public Diagnostics(IList<SerializableDiagnostic> list) : base(list)
-        {
-        }
+    }
 
-        public string Name => nameof(Diagnostics);
+    public string Name => nameof(Diagnostics);
 
-        public void Apply(FeatureContainer result)
-        {
-            result.AddProperty("diagnostics", this.Sort());
-        }
+    public void Apply(FeatureContainer result)
+    {
+        result.AddProperty("diagnostics", this.Sort());
     }
 }

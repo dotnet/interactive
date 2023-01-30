@@ -5,18 +5,17 @@ using Microsoft.CodeAnalysis.Text;
 
 #nullable enable
 
-namespace Microsoft.DotNet.Interactive.Parsing
+namespace Microsoft.DotNet.Interactive.Parsing;
+
+public class Location
 {
-    public class Location
+    internal Location(PolyglotSyntaxTree? sourceTree, TextSpan sourceSpan)
     {
-        internal Location(PolyglotSyntaxTree? sourceTree, TextSpan sourceSpan)
-        {
-            SourceTree = sourceTree;
-            SourceSpan = sourceSpan;
-        }
-
-        public PolyglotSyntaxTree? SourceTree { get; }
-
-        public TextSpan SourceSpan { get; }
+        SourceTree = sourceTree;
+        SourceSpan = sourceSpan;
     }
+
+    public PolyglotSyntaxTree? SourceTree { get; }
+
+    public TextSpan SourceSpan { get; }
 }

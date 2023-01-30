@@ -6,43 +6,42 @@ using System.CommandLine.Invocation;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 
-namespace Microsoft.DotNet.Interactive.Kql
+namespace Microsoft.DotNet.Interactive.Kql;
+
+public class ConnectKqlCommand : ConnectKernelCommand
 {
-    public class ConnectKqlCommand : ConnectKernelCommand
+    private readonly string ResolvedToolsServicePath;
+
+    public ConnectKqlCommand(string resolvedToolsServicePath)
+        : base("kql", "Connects to a Microsoft Kusto Server database")
     {
-        private readonly string ResolvedToolsServicePath;
+        ResolvedToolsServicePath = resolvedToolsServicePath;
+        Add(ClusterOption);
+        Add(DatabaseOption);
+    }
 
-        public ConnectKqlCommand(string resolvedToolsServicePath)
-            : base("kql", "Connects to a Microsoft Kusto Server database")
-        {
-            ResolvedToolsServicePath = resolvedToolsServicePath;
-            Add(ClusterOption);
-            Add(DatabaseOption);
-        }
+    public Option<string> ClusterOption { get; } =
+        new("--cluster",
+            "The cluster used to connect") { IsRequired = true };
 
-        public Option<string> ClusterOption { get; } =
-            new("--cluster",
-                "The cluster used to connect") { IsRequired = true };
+    public Option<string> DatabaseOption { get; } =
+        new("--database",
+            "The database to query");
 
-        public Option<string> DatabaseOption { get; } =
-            new("--database",
-                "The database to query");
+    public override async Task<Kernel> ConnectKernelAsync(
+        KernelInvocationContext context,
+        InvocationContext commandLineContext)
+    {
+        var connector = new KqlKernelConnector(
+            commandLineContext.ParseResult.GetValueForOption(ClusterOption),
+            commandLineContext.ParseResult.GetValueForOption(DatabaseOption));
 
-        public override async Task<Kernel> ConnectKernelAsync(
-            KernelInvocationContext context,
-            InvocationContext commandLineContext)
-        {
-            var connector = new KqlKernelConnector(
-                commandLineContext.ParseResult.GetValueForOption(ClusterOption),
-                commandLineContext.ParseResult.GetValueForOption(DatabaseOption));
+        connector.PathToService = ResolvedToolsServicePath;
 
-            connector.PathToService = ResolvedToolsServicePath;
+        var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
 
-            var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
+        var kernel = await connector.CreateKernelAsync(localName);
 
-            var kernel = await connector.CreateKernelAsync(localName);
-
-            return kernel;
-        }
+        return kernel;
     }
 }

@@ -116,8 +116,25 @@ public class CSharpKernel :
 
     Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
     {
-        var valueInfos = GetValueInfos();
+        var valueInfos =
+            ScriptState?.Variables
+                       .GroupBy(v => v.Name)
+                       .Select(g =>
+                       {
+                           var formattedValues = FormattedValue.FromObject(
+                               g.LastOrDefault()?.Value,
+                               command.MimeType);
+                           
+                           return new KernelValueInfo(
+                               g.Key,
+                               formattedValues[0],
+                               g.Last().Type);
+                       })
+                       .ToArray() ??
+            Array.Empty<KernelValueInfo>();
+
         context.Publish(new ValueInfosProduced(valueInfos, command));
+
         return Task.CompletedTask;
     }
 
@@ -134,13 +151,6 @@ public class CSharpKernel :
 
         return Task.CompletedTask;
     }
-
-    public IReadOnlyCollection<KernelValueInfo> GetValueInfos() =>
-        ScriptState?.Variables
-            .GroupBy(v => v.Name)
-            .Select(g => new KernelValueInfo(g.Key, g.Last().Type))
-            .ToArray() ??
-        Array.Empty<KernelValueInfo>();
 
     public bool TryGetValue<T>(
         string name,
@@ -438,10 +448,12 @@ public class CSharpKernel :
         }
 
         var items = new List<CompletionItem>();
-        foreach (var item in completionList.ItemsList)
+
+        foreach (CodeAnalysis.Completion.CompletionItem item in completionList.ItemsList)
         {
-            var description = await service.GetDescriptionAsync(document, item, contextCancellationToken);
-            var completionItem = item.ToModel(description);
+            // TODO: Getting a description for each item significantly slows this overall operation. We should look into caching approaches but shouldn't block completions here.
+           // var description = await service.GetDescriptionAsync(document, item, contextCancellationToken);
+            var completionItem = item.ToModel(CompletionDescription.Empty);
             items.Add(completionItem);
         }
 

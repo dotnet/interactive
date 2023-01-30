@@ -3,31 +3,30 @@
 
 using Microsoft.DotNet.Interactive.Parsing;
 
-namespace Microsoft.DotNet.Interactive.Commands
+namespace Microsoft.DotNet.Interactive.Commands;
+
+public class RequestHoverText : LanguageServiceCommand
 {
-    public class RequestHoverText : LanguageServiceCommand
+    public RequestHoverText(
+        string code,
+        LinePosition linePosition,
+        string targetKernelName = null)
+        : base(code, linePosition, targetKernelName)
     {
-        public RequestHoverText(
-            string code,
-            LinePosition linePosition,
-            string targetKernelName = null)
-            : base(code, linePosition, targetKernelName)
-        {
-        }
+    }
 
-        internal RequestHoverText(
-            LanguageNode languageNode,
-            LinePosition linePosition,
-            KernelCommand parent = null)
-            : base(languageNode, linePosition, parent)
-        {
-        }
+    internal RequestHoverText(
+        LanguageNode languageNode,
+        LinePosition linePosition,
+        KernelCommand parent = null)
+        : base(languageNode, linePosition, parent)
+    {
+    }
 
-        internal override LanguageServiceCommand With(
-            LanguageNode languageNode,
-            LinePosition position)
-        {
-            return new RequestHoverText(languageNode, position, Parent);
-        }
+    internal override LanguageServiceCommand With(
+        LanguageNode languageNode,
+        LinePosition position)
+    {
+        return new RequestHoverText(languageNode, position, Parent);
     }
 }

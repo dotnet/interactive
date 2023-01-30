@@ -9,30 +9,29 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 
-namespace Microsoft.DotNet.Interactive.Http
+namespace Microsoft.DotNet.Interactive.Http;
+
+public class KernelCommandAndEventSignalRHubConnectionSender : IKernelCommandAndEventSender
 {
-    public class KernelCommandAndEventSignalRHubConnectionSender : IKernelCommandAndEventSender
+    // QUESTION: (KernelCommandAndEventSignalRHubConnectionSender) tests?
+    private readonly HubConnection _hubConnection;
+
+    public KernelCommandAndEventSignalRHubConnectionSender(HubConnection sender)
     {
-        // QUESTION: (KernelCommandAndEventSignalRHubConnectionSender) tests?
-        private readonly HubConnection _hubConnection;
-
-        public KernelCommandAndEventSignalRHubConnectionSender(HubConnection sender)
-        {
-            _hubConnection = sender ?? throw new ArgumentNullException(nameof(sender));
-            RemoteHostUri = KernelHost.CreateHostUri($"signalrhub{_hubConnection.ConnectionId}");
-        }
-
-        public async Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
-        {
-            await _hubConnection.SendAsync("kernelCommandFromServer", KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)),
-                                           cancellationToken: cancellationToken);
-        }
-
-        public async Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
-        {
-            await _hubConnection.SendAsync("kernelEventFromServer", KernelEventEnvelope.Serialize(KernelEventEnvelope.Create(kernelEvent)), cancellationToken: cancellationToken);
-        }
-
-        public Uri RemoteHostUri { get; }
+        _hubConnection = sender ?? throw new ArgumentNullException(nameof(sender));
+        RemoteHostUri = KernelHost.CreateHostUri($"signalrhub{_hubConnection.ConnectionId}");
     }
+
+    public async Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
+    {
+        await _hubConnection.SendAsync("kernelCommandFromServer", KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)),
+            cancellationToken: cancellationToken);
+    }
+
+    public async Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
+    {
+        await _hubConnection.SendAsync("kernelEventFromServer", KernelEventEnvelope.Serialize(KernelEventEnvelope.Create(kernelEvent)), cancellationToken: cancellationToken);
+    }
+
+    public Uri RemoteHostUri { get; }
 }

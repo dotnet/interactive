@@ -7,83 +7,82 @@ using System.Reactive.Concurrency;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
+namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
+
+public static class PackageUtilities
 {
-    public static class PackageUtilities
+    private static readonly object CreateDirectoryLock = new();
+
+    public static async Task<Package> Copy(
+        Package fromPackage,
+        string folderNameStartsWith = null,
+        bool isRebuildable = false,
+        IScheduler buildThrottleScheduler = null,
+        DirectoryInfo parentDirectory = null)
     {
-        private static readonly object CreateDirectoryLock = new();
-
-        public static async Task<Package> Copy(
-            Package fromPackage,
-            string folderNameStartsWith = null,
-            bool isRebuildable = false,
-            IScheduler buildThrottleScheduler = null,
-            DirectoryInfo parentDirectory = null)
+        if (fromPackage == null)
         {
-            if (fromPackage == null)
-            {
-                throw new ArgumentNullException(nameof(fromPackage));
-            }
-
-            await fromPackage.EnsureReadyAsync();
-
-            folderNameStartsWith ??= fromPackage.Name;
-            parentDirectory ??= fromPackage.Directory.Parent;
-
-            var destination =
-                CreateDirectory(folderNameStartsWith,
-                    parentDirectory);
-
-            fromPackage.Directory.CopyTo(destination, info =>
-            {
-                switch (info)
-                {
-                    case FileInfo fileInfo:
-                        return FileLock.IsLockFile(fileInfo) || fileInfo.Extension.EndsWith("binlog");
-                    default:
-                        return false;
-                }
-            });
-
-            Package copy;
-            if (isRebuildable)
-            {
-                copy = new RebuildablePackage(directory: destination, name: destination.Name, buildThrottleScheduler: buildThrottleScheduler);
-            }
-            else
-            {
-                copy = new NonrebuildablePackage(directory: destination, name: destination.Name, buildThrottleScheduler: buildThrottleScheduler);
-            }
-
-            return copy;
+            throw new ArgumentNullException(nameof(fromPackage));
         }
 
-        public static DirectoryInfo CreateDirectory(
-            string folderNameStartsWith,
-            DirectoryInfo parentDirectory = null)
+        await fromPackage.EnsureReadyAsync();
+
+        folderNameStartsWith ??= fromPackage.Name;
+        parentDirectory ??= fromPackage.Directory.Parent;
+
+        var destination =
+            CreateDirectory(folderNameStartsWith,
+                parentDirectory);
+
+        fromPackage.Directory.CopyTo(destination, info =>
         {
-            if (string.IsNullOrWhiteSpace(folderNameStartsWith))
+            switch (info)
             {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(folderNameStartsWith));
+                case FileInfo fileInfo:
+                    return FileLock.IsLockFile(fileInfo) || fileInfo.Extension.EndsWith("binlog");
+                default:
+                    return false;
             }
+        });
 
-            parentDirectory = parentDirectory ?? Package.DefaultPackagesDirectory;
-
-            DirectoryInfo created;
-
-            lock (CreateDirectoryLock)
-            {
-                if (!parentDirectory.Exists)
-                {
-                    parentDirectory.Create();
-                }
-
-                var existingFolders = parentDirectory.GetDirectories($"{folderNameStartsWith}.*");
-
-                created = parentDirectory.CreateSubdirectory($"{folderNameStartsWith}.{existingFolders.Length + 1}");
-            }
-
-            return created;
+        Package copy;
+        if (isRebuildable)
+        {
+            copy = new RebuildablePackage(directory: destination, name: destination.Name, buildThrottleScheduler: buildThrottleScheduler);
         }
+        else
+        {
+            copy = new NonrebuildablePackage(directory: destination, name: destination.Name, buildThrottleScheduler: buildThrottleScheduler);
+        }
+
+        return copy;
+    }
+
+    public static DirectoryInfo CreateDirectory(
+        string folderNameStartsWith,
+        DirectoryInfo parentDirectory = null)
+    {
+        if (string.IsNullOrWhiteSpace(folderNameStartsWith))
+        {
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(folderNameStartsWith));
+        }
+
+        parentDirectory = parentDirectory ?? Package.DefaultPackagesDirectory;
+
+        DirectoryInfo created;
+
+        lock (CreateDirectoryLock)
+        {
+            if (!parentDirectory.Exists)
+            {
+                parentDirectory.Create();
+            }
+
+            var existingFolders = parentDirectory.GetDirectories($"{folderNameStartsWith}.*");
+
+            created = parentDirectory.CreateSubdirectory($"{folderNameStartsWith}.{existingFolders.Length + 1}");
+        }
+
+        return created;
     }
 }

@@ -2,52 +2,41 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.DotNet.Interactive.Jupyter.Messaging;
-using Recipes;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
+namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ;
+
+public class SignatureValidator
 {
-    public class SignatureValidator
+    private readonly HMAC _signatureGenerator;
+    private readonly object _gate = new();
+
+    public Encoding Encoding { get; }
+
+    public SignatureValidator(string key, string algorithm)
     {
-        private readonly HMAC _signatureGenerator;
-        private readonly Encoding _encoder;
+        Encoding = new UTF8Encoding();
+        _signatureGenerator = (HMAC)CryptoConfig.CreateFromName(algorithm);
+        _signatureGenerator!.Key = Encoding.GetBytes(key);
+    }
 
-        public SignatureValidator(string key, string algorithm)
+    public string CreateSignature(params byte[][] data)
+    {
+        lock (_gate)
         {
-            _encoder = new UTF8Encoding();
-            _signatureGenerator = (HMAC)CryptoConfig.CreateFromName(algorithm);
-            _signatureGenerator.Key = _encoder.GetBytes(key);
-        }
+            // The signature generator is stateful, so we need to lock. Also need to
+            // initialize in case an exception was thrown in a previous call.
+            _signatureGenerator.Initialize();
 
-        public string CreateSignature(Message message)
-        {
-            var messages = GetMessagesToAddForDigest(message);
+            // For all items update the signature.
+            foreach (var item in data)
+                _signatureGenerator.TransformBlock(item, 0, item.Length, null, 0);
 
-            // For all items update the signature
-            foreach (var item in messages)
-            {
-                var sourceBytes = _encoder.GetBytes(item);
-                _signatureGenerator.TransformBlock(sourceBytes, 0, sourceBytes.Length, null, 0);
-            }
+            _signatureGenerator.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
 
-            _signatureGenerator.TransformFinalBlock(new byte[0], 0, 0);
-
-            // Calculate the digest and remove -
-            return BitConverter.ToString(_signatureGenerator.Hash).Replace("-", "").ToLower();
-        }
-
-        /*
-         * The signature should match exactly the packed contents that are sent 
-         */
-        private static IEnumerable<string> GetMessagesToAddForDigest(Message message)
-        {
-            yield return message.Header.ToJson();
-            yield return (message.ParentHeader ?? new object()).ToJson();
-            yield return (message.MetaData ?? new object()).ToJson();
-            yield return message.Content.ToJson();
+            // Convert the hash, remove '-', and map to lower case.
+            return BitConverter.ToString(_signatureGenerator!.Hash!).Replace("-", "").ToLowerInvariant();
         }
     }
 }

@@ -1,12 +1,12 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Tests.CodeSamples
+namespace Microsoft.DotNet.Interactive.CSharpProject.Tests.CodeSamples;
+
+internal static class SourceCodeProvider
 {
-    internal static class SourceCodeProvider
-    {
-        public static string ConsoleProgramCollidingRegions =>
-            @"using System;
+    public static string ConsoleProgramCollidingRegions =>
+        @"using System;
 
 namespace ConsoleProgramSingleRegion
 {
@@ -25,8 +25,8 @@ namespace ConsoleProgramSingleRegion
     }
 }".EnforceLF();
 
-        public static string ConsoleProgramSingleRegion =>
-            @"using System;
+    public static string ConsoleProgramSingleRegion =>
+        @"using System;
 
 namespace ConsoleProgramSingleRegion
 {
@@ -42,8 +42,8 @@ namespace ConsoleProgramSingleRegion
 }".EnforceLF();
 
 
-        public static string ConsoleProgramSingleRegionExtraUsing =>
-            @"using System;
+    public static string ConsoleProgramSingleRegionExtraUsing =>
+        @"using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -59,6 +59,4 @@ namespace ConsoleProgramSingleRegion
         }
     }
 }".EnforceLF();
-    }
 }
-

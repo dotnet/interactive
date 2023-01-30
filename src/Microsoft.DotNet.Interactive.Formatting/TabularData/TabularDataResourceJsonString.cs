@@ -4,26 +4,25 @@
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive.Formatting.TabularData
+namespace Microsoft.DotNet.Interactive.Formatting.TabularData;
+
+public class TabularDataResourceJsonString : JsonString
 {
-    public class TabularDataResourceJsonString : JsonString
+    public TabularDataResourceJsonString(string json)
+        : base(json)
     {
-        public TabularDataResourceJsonString(string json)
-            : base(json)
+    }
+
+    public static TabularDataResourceJsonString Create(IReadOnlyDictionary<string, Type> fields, IReadOnlyList<IDictionary<string, object>> data)
+    {
+        var schema = new TableSchema();
+
+        foreach (var entry in fields)
         {
+            schema.Fields.Add(new TableSchemaFieldDescriptor(entry.Key, entry.Value.ToTableSchemaFieldType())); 
         }
+        var tabularDataSet = new TabularDataResource(schema, data);
 
-        public static TabularDataResourceJsonString Create(IReadOnlyDictionary<string, Type> fields, IReadOnlyList<IDictionary<string, object>> data)
-        {
-            var schema = new TableSchema();
-
-            foreach (var entry in fields)
-            {
-               schema.Fields.Add(new TableSchemaFieldDescriptor(entry.Key, entry.Value.ToTableSchemaFieldType())); 
-            }
-            var tabularDataSet = new TabularDataResource(schema, data);
-
-            return tabularDataSet.ToJsonString();
-        }
+        return tabularDataSet.ToJsonString();
     }
 }

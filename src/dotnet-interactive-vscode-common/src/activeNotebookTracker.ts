@@ -5,22 +5,23 @@ import * as vscode from 'vscode';
 import * as vscodeLike from './interfaces/vscode-like';
 import { ClientMapper } from './clientMapper';
 import { InteractiveClient } from './interactiveClient';
+import { ServiceCollection } from './serviceCollection';
 
 export class ActiveNotebookTracker {
     private activeClients: Map<vscodeLike.Uri, InteractiveClient> = new Map();
 
-    constructor(context: vscode.ExtensionContext, private readonly clientMapper: ClientMapper) {
-        context.subscriptions.push(vscode.workspace.onDidCloseNotebookDocument(notebook => this.notebookDocumentClosed(notebook)));
-        clientMapper.onClientCreate((uri, client) => this.notebookDocumentCreated(uri, client));
+    constructor(private readonly clientMapper: ClientMapper) {
+        ServiceCollection.Instance.NotebookWatcher.onNotebookDocumentOpened((notebook, client) => this.notebookDocumentOpened(notebook, client));
+        ServiceCollection.Instance.NotebookWatcher.onNotebookDocumentClosed((notebook, client) => this.notebookDocumentClosed(notebook, client));
     }
 
-    private notebookDocumentClosed(notebook: vscode.NotebookDocument) {
+    private notebookDocumentOpened(notebook: vscode.NotebookDocument, client: InteractiveClient) {
+        this.activeClients.set(notebook.uri, client);
+    }
+
+    private notebookDocumentClosed(notebook: vscode.NotebookDocument, client: InteractiveClient) {
         this.activeClients.delete(notebook.uri);
         this.clientMapper.closeClient(notebook.uri, true);
-    }
-
-    private notebookDocumentCreated(uri: vscodeLike.Uri, client: InteractiveClient) {
-        this.activeClients.set(uri, client);
     }
 
     dispose() {

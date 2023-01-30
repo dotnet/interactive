@@ -7,24 +7,23 @@ using Microsoft.CodeAnalysis.Text;
 
 #nullable enable
 
-namespace Microsoft.DotNet.Interactive.Parsing
+namespace Microsoft.DotNet.Interactive.Parsing;
+
+[DebuggerStepThrough]
+public class LanguageNode : SyntaxNode
 {
-    [DebuggerStepThrough]
-    public class LanguageNode : SyntaxNode
+    internal LanguageNode(
+        string kernelName,
+        SourceText sourceText,
+        PolyglotSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
-        internal LanguageNode(
-            string kernelName,
-            SourceText sourceText,
-            PolyglotSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
-        {
-            KernelName = kernelName;
-        }
-
-        public string KernelName { get; }
-
-        internal SchedulingScope? CommandScope { get; set; }
-
-        public override IEnumerable<Diagnostic> GetDiagnostics() =>
-            LanguageSpecificParseResult.None.GetDiagnostics();
+        KernelName = kernelName;
     }
+
+    public string KernelName { get; }
+
+    internal SchedulingScope? CommandScope { get; set; }
+
+    public override IEnumerable<Diagnostic> GetDiagnostics() =>
+        LanguageSpecificParseResult.None.GetDiagnostics();
 }

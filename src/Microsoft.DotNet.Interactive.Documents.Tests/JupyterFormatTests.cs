@@ -1625,9 +1625,9 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 .Be("filename");
     }
 
-    private async Task<string> RoundTripIpynb(string notebookFile)
+    private async Task<string> RoundTripIpynb(string filePath)
     {
-        var expectedContent = await File.ReadAllTextAsync(notebookFile);
+        var expectedContent = await File.ReadAllTextAsync(filePath);
 
         var inputDoc = Notebook.Parse(expectedContent);
 

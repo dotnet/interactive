@@ -6,15 +6,14 @@ using System.Collections.Generic;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.ValueSharing;
 
-namespace Microsoft.DotNet.Interactive.Events
-{
-    public class ValueInfosProduced : KernelEvent
-    {
-        public IReadOnlyCollection<KernelValueInfo> ValueInfos { get; }
+namespace Microsoft.DotNet.Interactive.Events;
 
-        public ValueInfosProduced(IReadOnlyCollection<KernelValueInfo> valueInfos, RequestValueInfos command) : base(command)
-        {
-            ValueInfos = valueInfos ?? Array.Empty<KernelValueInfo>();
-        }
+public class ValueInfosProduced : KernelEvent
+{
+    public IReadOnlyCollection<KernelValueInfo> ValueInfos { get; }
+
+    public ValueInfosProduced(IReadOnlyCollection<KernelValueInfo> valueInfos, RequestValueInfos command) : base(command)
+    {
+        ValueInfos = valueInfos ?? Array.Empty<KernelValueInfo>();
     }
 }

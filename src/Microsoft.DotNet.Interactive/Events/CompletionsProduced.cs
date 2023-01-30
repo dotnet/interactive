@@ -5,29 +5,28 @@ using System;
 using System.Collections.Generic;
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Events
+namespace Microsoft.DotNet.Interactive.Events;
+
+public class CompletionsProduced : KernelEvent
 {
-    public class CompletionsProduced : KernelEvent
+    private readonly LinePositionSpan _linePositionSpan;
+
+    public CompletionsProduced(
+        IEnumerable<CompletionItem> completions,
+        RequestCompletions command,
+        LinePositionSpan linePositionSpan = null) : base(command)
     {
-        private readonly LinePositionSpan _linePositionSpan;
-
-        public CompletionsProduced(
-            IEnumerable<CompletionItem> completions,
-            RequestCompletions command,
-            LinePositionSpan linePositionSpan = null) : base(command)
-        {
-            Completions = completions ?? throw new ArgumentNullException(nameof(completions));
-            _linePositionSpan = linePositionSpan;
-        }
-
-        /// <summary>
-        /// The range of where to replace in a completion request.
-        /// </summary>
-        public LinePositionSpan LinePositionSpan => this.CalculateLineOffsetFromParentCommand(_linePositionSpan);
-
-        /// <summary>
-        /// The list of completions.
-        /// </summary>
-        public IEnumerable<CompletionItem> Completions { get; }
+        Completions = completions ?? throw new ArgumentNullException(nameof(completions));
+        _linePositionSpan = linePositionSpan;
     }
+
+    /// <summary>
+    /// The range of where to replace in a completion request.
+    /// </summary>
+    public LinePositionSpan LinePositionSpan => this.CalculateLineOffsetFromParentCommand(_linePositionSpan);
+
+    /// <summary>
+    /// The list of completions.
+    /// </summary>
+    public IEnumerable<CompletionItem> Completions { get; }
 }

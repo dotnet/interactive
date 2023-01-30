@@ -8,7 +8,8 @@ import { PromiseCompletionSource } from "./promiseCompletionSource";
 
 export class HtmlKernel extends Kernel {
     constructor(kernelName?: string, private readonly htmlFragmentInserter?: (htmlFragment: string) => Promise<string>, languageName?: string, languageVersion?: string) {
-        super(kernelName ?? "html", languageName ?? "HTML");
+        super(kernelName ?? "html", languageName ?? "HTML", languageVersion ?? "5");
+        this.kernelInfo.displayName = 'HTML';
         if (!this.htmlFragmentInserter) {
             this.htmlFragmentInserter = htmlDomFragmentInserter;
         }
@@ -65,11 +66,15 @@ export function htmlDomFragmentInserter(htmlFragment: string, configuration?: Ht
     const updateContainerContent = configuration?.updateContainerContent ?? ((container, htmlFragment) => container.innerHTML = htmlFragment);
     const createMutationObserver = configuration?.createMutationObserver ?? (callback => new MutationObserver(callback));
     let jsEvaluator: (js: string) => Promise<void>;
+
     if (configuration?.jsEvaluator) {
         jsEvaluator = configuration.jsEvaluator;
     } else {
         const AsyncFunction = eval(`Object.getPrototypeOf(async function(){}).constructor`);
-        jsEvaluator = (code) => AsyncFunction("console", code);
+        jsEvaluator = (code) => {
+            const evaluator = AsyncFunction(code);
+            return (<() => Promise<void>>evaluator)();
+        };
     }
     let container = getOrCreateContainer();
 

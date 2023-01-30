@@ -3,37 +3,36 @@
 
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Tests.Utility
+namespace Microsoft.DotNet.Interactive.Tests.Utility;
+
+public class CustomCommandTypes
 {
-    public class CustomCommandTypes
+    // Multiple definitions of MyCommand simulate a user experimentally developing
+    // the command type in a notebook  over time.
+
+    public class FirstSubmission
     {
-        // Multiple definitions of MyCommand simulate a user experimentally developing
-        // the command type in a notebook  over time.
-
-        public class FirstSubmission
+        public class MyCommand : KernelCommand
         {
-            public class MyCommand : KernelCommand
+            public MyCommand(string info)
             {
-                public MyCommand(string info)
-                {
-                    Info = info;
-                }
-                public string Info { get; }
+                Info = info;
             }
+            public string Info { get; }
         }
+    }
 
-        public class SecondSubmission
+    public class SecondSubmission
+    {
+        public class MyCommand : KernelCommand
         {
-            public class MyCommand : KernelCommand
+            public MyCommand(string info, int additionalProperty)
             {
-                public MyCommand(string info, int additionalProperty)
-                {
-                    Info = info;
-                    AdditionalProperty = additionalProperty;
-                }
-                public string Info { get; }
-                public int AdditionalProperty { get; }
+                Info = info;
+                AdditionalProperty = additionalProperty;
             }
+            public string Info { get; }
+            public int AdditionalProperty { get; }
         }
     }
 }

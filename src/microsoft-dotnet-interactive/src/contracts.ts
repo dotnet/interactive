@@ -119,6 +119,7 @@ export interface RequestValue extends KernelCommand {
 }
 
 export interface RequestValueInfos extends KernelCommand {
+    mimeType: string;
 }
 
 export interface SendEditableCode extends KernelCommand {
@@ -482,7 +483,9 @@ export interface KernelDirectiveInfo {
 }
 
 export interface KernelValueInfo {
+    typeName: string;
     name: string;
+    formattedValue: FormattedValue;
     preferredMimeTypes: Array<string>;
 }
 

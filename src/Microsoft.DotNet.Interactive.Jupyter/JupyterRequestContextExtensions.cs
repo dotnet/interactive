@@ -3,26 +3,25 @@
 
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
 
-namespace Microsoft.DotNet.Interactive.Jupyter
+namespace Microsoft.DotNet.Interactive.Jupyter;
+
+public static class JupyterRequestContextExtensions
 {
-    public static class JupyterRequestContextExtensions
+    public static string GetKernelName(this JupyterRequestContext context)
     {
-        public static string GetKernelName(this JupyterRequestContext context)
+        string kernelName = null;
+        if (context.JupyterRequestMessageEnvelope.MetaData.TryGetValue(Notebook.MetadataNamespace, out var candidateDotnetMetadata) &&
+            candidateDotnetMetadata is InputCellMetadata dotnetMetadata)
         {
-            string kernelName = null;
-            if (context.JupyterRequestMessageEnvelope.MetaData.TryGetValue(Notebook.MetadataNamespace, out var candidateDotnetMetadata) &&
-                candidateDotnetMetadata is InputCellMetadata dotnetMetadata)
-            {
-                kernelName = dotnetMetadata.Language;
-            }
-
-            if (context.JupyterRequestMessageEnvelope.MetaData.TryGetValue(Notebook.PolyglotMetadataNamespace, out var candidatePolyglotMetadata) &&
-                candidatePolyglotMetadata is InputCellMetadata polyglotMetadata)
-            {
-                kernelName = polyglotMetadata.KernelName;
-            }
-
-            return kernelName;
+            kernelName = dotnetMetadata.Language;
         }
+
+        if (context.JupyterRequestMessageEnvelope.MetaData.TryGetValue(Notebook.PolyglotMetadataNamespace, out var candidatePolyglotMetadata) &&
+            candidatePolyglotMetadata is InputCellMetadata polyglotMetadata)
+        {
+            kernelName = polyglotMetadata.KernelName;
+        }
+
+        return kernelName;
     }
 }

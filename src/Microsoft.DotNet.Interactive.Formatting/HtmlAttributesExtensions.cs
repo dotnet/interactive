@@ -4,139 +4,138 @@
 using System;
 using System.Linq;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting;
+
+/// <summary>
+///   Provides additional functionality for rendering HTML attributes.
+/// </summary>
+public static class HtmlAttributesExtensions
 {
     /// <summary>
-    ///   Provides additional functionality for rendering HTML attributes.
+    ///   Adds the specified class or classes to the attributes.
     /// </summary>
-    public static class HtmlAttributesExtensions
+    /// <param name = "attributes">The attributes to which to add classes.</param>
+    /// <param name = "classes">The class or classes to be added.</param>
+    /// <returns>The modified <see cref = "HtmlAttributes" /> instance.</returns>
+    /// <remarks>
+    ///   The classes are merged with the existing classes on the <see cref = "HtmlAttributes" /> instance.
+    /// </remarks>
+    public static HtmlAttributes Class(
+        this HtmlAttributes attributes,
+        string classes)
     {
-        /// <summary>
-        ///   Adds the specified class or classes to the attributes.
-        /// </summary>
-        /// <param name = "attributes">The attributes to which to add classes.</param>
-        /// <param name = "classes">The class or classes to be added.</param>
-        /// <returns>The modified <see cref = "HtmlAttributes" /> instance.</returns>
-        /// <remarks>
-        ///   The classes are merged with the existing classes on the <see cref = "HtmlAttributes" /> instance.
-        /// </remarks>
-        public static HtmlAttributes Class(
-            this HtmlAttributes attributes,
-            string classes)
+        attributes.AddCssClass(classes);
+        return attributes;
+    }
+
+    /// <summary>
+    /// Adds the specified class or classes to the attributes.
+    /// </summary>
+    /// <param name="attributes">The attributes to which to add classes.</param>
+    /// <param name="classes">The class or classes to be added.</param>
+    /// <param name="include">If set to <c>true</c>, add the class; otherwise, remove it.</param>
+    /// <returns>
+    /// The modified <see cref="HtmlAttributes"/> instance.
+    /// </returns>
+    /// <remarks>
+    /// The classes are merged with the existing classes on the <see cref="HtmlAttributes"/> instance.
+    /// </remarks>
+    public static HtmlAttributes Class(
+        this HtmlAttributes attributes,
+        string classes,
+        bool include)
+    {
+        if (include)
         {
             attributes.AddCssClass(classes);
-            return attributes;
         }
-
-        /// <summary>
-        /// Adds the specified class or classes to the attributes.
-        /// </summary>
-        /// <param name="attributes">The attributes to which to add classes.</param>
-        /// <param name="classes">The class or classes to be added.</param>
-        /// <param name="include">If set to <c>true</c>, add the class; otherwise, remove it.</param>
-        /// <returns>
-        /// The modified <see cref="HtmlAttributes"/> instance.
-        /// </returns>
-        /// <remarks>
-        /// The classes are merged with the existing classes on the <see cref="HtmlAttributes"/> instance.
-        /// </remarks>
-        public static HtmlAttributes Class(
-            this HtmlAttributes attributes,
-            string classes,
-            bool include)
+        else
         {
-            if (include)
-            {
-                attributes.AddCssClass(classes);
-            }
-            else
-            {
-                attributes.RemoveCssClass(classes);
-            }
-
-            return attributes;
+            attributes.RemoveCssClass(classes);
         }
 
-        /// <summary>
-        ///   Sets or removes the "disabled" attribute.
-        /// </summary>
-        /// <param name = "attributes">The attributes to modify.</param>
-        /// <param name = "value">Specifies whether to set the "disabled" attribute. If set to false, this will remove the "disabled" attribute.</param>
-        /// <returns>
-        ///   The modified <see cref = "HtmlAttributes" /> instance.
-        /// </returns>
-        public static HtmlAttributes Disabled(
-            this HtmlAttributes attributes,
-            bool value = true)
+        return attributes;
+    }
+
+    /// <summary>
+    ///   Sets or removes the "disabled" attribute.
+    /// </summary>
+    /// <param name = "attributes">The attributes to modify.</param>
+    /// <param name = "value">Specifies whether to set the "disabled" attribute. If set to false, this will remove the "disabled" attribute.</param>
+    /// <returns>
+    ///   The modified <see cref = "HtmlAttributes" /> instance.
+    /// </returns>
+    public static HtmlAttributes Disabled(
+        this HtmlAttributes attributes,
+        bool value = true)
+    {
+        if (value)
         {
-            if (value)
-            {
-                attributes["disabled"] = "disabled";
-            }
-            else
-            {
-                attributes.Remove("disabled");
-            }
-
-            return attributes;
+            attributes["disabled"] = "disabled";
         }
-
-        /// <summary>
-        ///   Sets or removes the "selected" attribute.
-        /// </summary>
-        /// <param name = "attributes">The attributes to modify.</param>
-        /// <param name = "value">Specifies whether to set the "selected" attribute. If set to false, this will remove the "selected" attribute.</param>
-        /// <returns>
-        ///   The modified <see cref = "HtmlAttributes" /> instance.
-        /// </returns>
-        public static HtmlAttributes Selected(
-            this HtmlAttributes attributes,
-            bool value = true)
+        else
         {
-            if (value)
-            {
-                attributes["selected"] = "selected";
-            }
-            else
-            {
-                attributes.Remove("selected");
-            }
-
-            return attributes;
+            attributes.Remove("disabled");
         }
 
-        /// <summary>
-        ///   Determines whether attributes contain the specified class.
-        /// </summary>
-        /// <param name = "attributes">The attributes.</param>
-        /// <param name = "class">The class to check for.</param>
-        /// <returns>
-        ///   <c>true</c> if the specified attributes has the specified class; otherwise, <c>false</c>.
-        /// </returns>
-        public static bool HasClass(
-            this HtmlAttributes attributes,
-            string @class)
+        return attributes;
+    }
+
+    /// <summary>
+    ///   Sets or removes the "selected" attribute.
+    /// </summary>
+    /// <param name = "attributes">The attributes to modify.</param>
+    /// <param name = "value">Specifies whether to set the "selected" attribute. If set to false, this will remove the "selected" attribute.</param>
+    /// <returns>
+    ///   The modified <see cref = "HtmlAttributes" /> instance.
+    /// </returns>
+    public static HtmlAttributes Selected(
+        this HtmlAttributes attributes,
+        bool value = true)
+    {
+        if (value)
         {
-            return (attributes["class"] ?? string.Empty)
-                   .ToString()
-                   .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                   .Any(c => c == @class);
+            attributes["selected"] = "selected";
+        }
+        else
+        {
+            attributes.Remove("selected");
         }
 
-        /// <summary>
-        /// Adds the specified attribute.
-        /// </summary>
-        /// <param name="htmlAttributes">The HTML attributes to which to add an attribute.</param>
-        /// <param name="name">The name.</param>
-        /// <param name="value">The value.</param>
-        /// <returns></returns>
-        internal static HtmlAttributes Attr(
-            this HtmlAttributes htmlAttributes,
-            string name,
-            object value)
-        {
-            htmlAttributes[name] = value;
-            return htmlAttributes;
-        }
+        return attributes;
+    }
+
+    /// <summary>
+    ///   Determines whether attributes contain the specified class.
+    /// </summary>
+    /// <param name = "attributes">The attributes.</param>
+    /// <param name = "class">The class to check for.</param>
+    /// <returns>
+    ///   <c>true</c> if the specified attributes has the specified class; otherwise, <c>false</c>.
+    /// </returns>
+    public static bool HasClass(
+        this HtmlAttributes attributes,
+        string @class)
+    {
+        return (attributes["class"] ?? string.Empty)
+            .ToString()
+            .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+            .Any(c => c == @class);
+    }
+
+    /// <summary>
+    /// Adds the specified attribute.
+    /// </summary>
+    /// <param name="htmlAttributes">The HTML attributes to which to add an attribute.</param>
+    /// <param name="name">The name.</param>
+    /// <param name="value">The value.</param>
+    /// <returns></returns>
+    internal static HtmlAttributes Attr(
+        this HtmlAttributes htmlAttributes,
+        string name,
+        object value)
+    {
+        htmlAttributes[name] = value;
+        return htmlAttributes;
     }
 }

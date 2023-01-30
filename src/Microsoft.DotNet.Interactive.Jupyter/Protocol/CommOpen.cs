@@ -5,35 +5,34 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
+namespace Microsoft.DotNet.Interactive.Jupyter.Protocol;
+
+[JupyterMessageType(JupyterMessageContentTypes.CommOpen)]
+public class CommOpen : Message
 {
-    [JupyterMessageType(JupyterMessageContentTypes.CommOpen)]
-    public class CommOpen : Message
+    [JsonPropertyName("comm_id")]
+    public string CommId { get; }
+
+    [JsonPropertyName("target_name")]
+    public string TargetName { get; }
+
+    [JsonPropertyName("data")]
+    public object Data { get; }
+
+    public CommOpen(string commId, string targetName, object data)
     {
-        [JsonPropertyName("comm_id")]
-        public string CommId { get; }
-
-        [JsonPropertyName("target_name")]
-        public string TargetName { get; }
-
-        [JsonPropertyName("data")]
-        public object Data { get; }
-
-        public CommOpen(string commId, string targetName, object data)
+        if (string.IsNullOrWhiteSpace(commId))
         {
-            if (string.IsNullOrWhiteSpace(commId))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(commId));
-            }
-
-            if (string.IsNullOrWhiteSpace(targetName))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(targetName));
-            }
-
-            CommId = commId;
-            TargetName = targetName;
-            Data = data ?? new Dictionary<string, object>();
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(commId));
         }
+
+        if (string.IsNullOrWhiteSpace(targetName))
+        {
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(targetName));
+        }
+
+        CommId = commId;
+        TargetName = targetName;
+        Data = data ?? new Dictionary<string, object>();
     }
 }

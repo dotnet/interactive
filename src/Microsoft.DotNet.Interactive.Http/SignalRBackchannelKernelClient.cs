@@ -10,32 +10,30 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 
-namespace Microsoft.DotNet.Interactive.Http
+namespace Microsoft.DotNet.Interactive.Http;
+
+public class SignalRBackchannelKernelClient : KernelClientBase
 {
-    public class SignalRBackchannelKernelClient : KernelClientBase
+    private IHubContext<KernelHub> _hubContext;
+
+    private readonly Subject<KernelEvent> _kernelEventsFromClient = new();
+
+    public override IObservable<KernelEvent> KernelEvents => _kernelEventsFromClient;
+
+    public override async Task SendAsync(KernelCommand command, string token = null)
     {
-        private IHubContext<KernelHub> _hubContext;
-
-        private readonly Subject<KernelEvent> _kernelEventsFromClient = new();
-
-        public override IObservable<KernelEvent> KernelEvents => _kernelEventsFromClient;
-
-        public override async Task SendAsync(KernelCommand command, string token = null)
-        {
-            string commandEnvelope = KernelCommandEnvelope.Serialize(command);
-            await _hubContext.Clients.All.SendAsync("submitCommand", commandEnvelope);
-        }
-
-        internal void SetContext(IHubContext<KernelHub> hubContext)
-        {
-            _hubContext = hubContext;
-        }
-
-        internal Task HandleKernelEventFromClientAsync(IKernelEventEnvelope envelope)
-        {
-            _kernelEventsFromClient.OnNext(envelope.Event);
-            return Task.CompletedTask;
-        }
+        string commandEnvelope = KernelCommandEnvelope.Serialize(command);
+        await _hubContext.Clients.All.SendAsync("submitCommand", commandEnvelope);
     }
 
+    internal void SetContext(IHubContext<KernelHub> hubContext)
+    {
+        _hubContext = hubContext;
+    }
+
+    internal Task HandleKernelEventFromClientAsync(IKernelEventEnvelope envelope)
+    {
+        _kernelEventsFromClient.OnNext(envelope.Event);
+        return Task.CompletedTask;
+    }
 }

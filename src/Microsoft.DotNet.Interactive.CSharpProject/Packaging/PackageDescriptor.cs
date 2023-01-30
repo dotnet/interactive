@@ -4,47 +4,46 @@
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
+namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
+
+public class PackageDescriptor
 {
-    public class PackageDescriptor
+    public PackageDescriptor(
+        string name, 
+        string version = null)
     {
-        public PackageDescriptor(
-            string name, 
-            string version = null)
+        if (string.IsNullOrWhiteSpace(name))
         {
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
-            }
-
-            Name = name;
-            Version = version;
-            IsPathSpecified = name.Contains("\\") || name.Contains("/");
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
         }
 
-        public string Name { get; }
-
-        public string Version { get; }
-
-        internal bool IsPathSpecified { get; }
-
-        public override bool Equals(object obj)
-        {
-            return obj is PackageDescriptor descriptor &&
-                   Name == descriptor.Name &&
-                   Version == descriptor.Version &&
-                   IsPathSpecified == descriptor.IsPathSpecified;
-        }
-
-        public override int GetHashCode()
-        {
-            var hashCode = -858720875;
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name);
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Version);
-            hashCode = hashCode * -1521134295 + IsPathSpecified.GetHashCode();
-            return hashCode;
-        }
-
-        public override string ToString() => Name;
+        Name = name;
+        Version = version;
+        IsPathSpecified = name.Contains("\\") || name.Contains("/");
     }
+
+    public string Name { get; }
+
+    public string Version { get; }
+
+    internal bool IsPathSpecified { get; }
+
+    public override bool Equals(object obj)
+    {
+        return obj is PackageDescriptor descriptor &&
+               Name == descriptor.Name &&
+               Version == descriptor.Version &&
+               IsPathSpecified == descriptor.IsPathSpecified;
+    }
+
+    public override int GetHashCode()
+    {
+        var hashCode = -858720875;
+        hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name);
+        hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Version);
+        hashCode = hashCode * -1521134295 + IsPathSpecified.GetHashCode();
+        return hashCode;
+    }
+
+    public override string ToString() => Name;
 }

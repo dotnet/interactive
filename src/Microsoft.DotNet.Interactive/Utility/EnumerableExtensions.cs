@@ -4,69 +4,68 @@
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive.Utility
-{
-    internal static class EnumerableExtensions
-    {
-        internal static IEnumerable<T> FlattenBreadthFirst<T>(
-            this IEnumerable<T> source,
-            Func<T, IEnumerable<T>> children)
-        {
-            var queue = new Queue<T>();
+namespace Microsoft.DotNet.Interactive.Utility;
 
-            foreach (var item in source)
+internal static class EnumerableExtensions
+{
+    internal static IEnumerable<T> FlattenBreadthFirst<T>(
+        this IEnumerable<T> source,
+        Func<T, IEnumerable<T>> children)
+    {
+        var queue = new Queue<T>();
+
+        foreach (var item in source)
+        {
+            queue.Enqueue(item);
+        }
+
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+
+            foreach (var item in children(current))
             {
                 queue.Enqueue(item);
             }
 
-            while (queue.Count > 0)
-            {
-                var current = queue.Dequeue();
+            yield return current;
+        }
+    }
 
-                foreach (var item in children(current))
-                {
-                    queue.Enqueue(item);
-                }
+    internal static IEnumerable<T> FlattenDepthFirst<T>(
+        this IEnumerable<T> source,
+        Func<T, IEnumerable<T>> children)
+    {
+        var stack = new Stack<T>();
 
-                yield return current;
-            }
+        foreach (var item in source)
+        {
+            stack.Push(item);
         }
 
-        internal static IEnumerable<T> FlattenDepthFirst<T>(
-            this IEnumerable<T> source,
-            Func<T, IEnumerable<T>> children)
+        while (stack.Count > 0)
         {
-            var stack = new Stack<T>();
+            var current = stack.Pop();
 
-            foreach (var item in source)
+            foreach (var item in children(current))
             {
                 stack.Push(item);
             }
 
-            while (stack.Count > 0)
-            {
-                var current = stack.Pop();
-
-                foreach (var item in children(current))
-                {
-                    stack.Push(item);
-                }
-
-                yield return current;
-            }
+            yield return current;
         }
+    }
 
-        internal static IEnumerable<T> RecurseWhileNotNull<T>(
-            this T source,
-            Func<T, T> next)
-            where T : class
+    internal static IEnumerable<T> RecurseWhileNotNull<T>(
+        this T source,
+        Func<T, T> next)
+        where T : class
+    {
+        yield return source;
+
+        while ((source = next(source)) is not null)
         {
             yield return source;
-
-            while ((source = next(source)) is not null)
-            {
-                yield return source;
-            }
         }
     }
 }

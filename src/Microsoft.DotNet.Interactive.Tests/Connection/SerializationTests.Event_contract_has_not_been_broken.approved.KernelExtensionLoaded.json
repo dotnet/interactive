@@ -6,7 +6,7 @@
     "id": "command-id",
     "commandType": "SubmitCode",
     "command": {
-      "code": "#r \u0022nuget:package\u0022 ",
+      "code": "#r \"nuget:package\" ",
       "submissionType": "run",
       "targetKernelName": null,
       "originUri": null,

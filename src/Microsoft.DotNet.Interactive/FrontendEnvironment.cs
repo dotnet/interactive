@@ -3,17 +3,16 @@
 
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+public abstract class FrontendEnvironment
 {
-    public abstract class FrontendEnvironment
+    public virtual Task ExecuteClientScript(string code, KernelInvocationContext context)
     {
-        public virtual Task ExecuteClientScript(string code, KernelInvocationContext context)
-        {
-            var scriptContent = new ScriptContent(code);
+        var scriptContent = new ScriptContent(code);
 
-            context.Display(scriptContent);
+        context.Display(scriptContent);
 
-            return Task.CompletedTask;
-        }
+        return Task.CompletedTask;
     }
 }

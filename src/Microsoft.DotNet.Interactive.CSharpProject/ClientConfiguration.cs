@@ -4,40 +4,39 @@
 using System;
 using Newtonsoft.Json;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject
+namespace Microsoft.DotNet.Interactive.CSharpProject;
+
+public class ClientConfiguration
 {
-    public class ClientConfiguration
+    [JsonProperty("versionId")]
+    public string VersionId { get; }
+
+    [JsonProperty("defaultTimeoutMs")]
+    public int DefaultTimeoutMs { get; }
+
+    [JsonProperty("_links")]
+    public RequestDescriptors Links { get; }
+
+    [JsonProperty("applicationInsightsKey")]
+    public string ApplicationInsightsKey { get; }
+
+    [JsonProperty("enableBranding")]
+    public bool EnableBranding { get; }
+
+    public ClientConfiguration(string versionId,
+        RequestDescriptors links,
+        int defaultTimeoutMs,
+        string applicationInsightsKey,
+        bool enableBranding)
     {
-        [JsonProperty("versionId")]
-        public string VersionId { get; }
-
-        [JsonProperty("defaultTimeoutMs")]
-        public int DefaultTimeoutMs { get; }
-
-        [JsonProperty("_links")]
-        public RequestDescriptors Links { get; }
-
-        [JsonProperty("applicationInsightsKey")]
-        public string ApplicationInsightsKey { get; }
-
-        [JsonProperty("enableBranding")]
-        public bool EnableBranding { get; }
-
-        public ClientConfiguration(string versionId,
-                                   RequestDescriptors links,
-                                   int defaultTimeoutMs,
-                                   string applicationInsightsKey,
-                                   bool enableBranding)
-        {
-            if (defaultTimeoutMs <= 0)
-                throw new ArgumentOutOfRangeException(nameof(defaultTimeoutMs));
-            if (string.IsNullOrWhiteSpace(versionId))
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(versionId));
-            VersionId = versionId;
-            Links = links ?? throw new ArgumentNullException(nameof(links));
-            DefaultTimeoutMs = defaultTimeoutMs;
-            ApplicationInsightsKey = applicationInsightsKey ?? throw new ArgumentNullException(nameof(applicationInsightsKey));
-            EnableBranding = enableBranding;
-        }
+        if (defaultTimeoutMs <= 0)
+            throw new ArgumentOutOfRangeException(nameof(defaultTimeoutMs));
+        if (string.IsNullOrWhiteSpace(versionId))
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(versionId));
+        VersionId = versionId;
+        Links = links ?? throw new ArgumentNullException(nameof(links));
+        DefaultTimeoutMs = defaultTimeoutMs;
+        ApplicationInsightsKey = applicationInsightsKey ?? throw new ArgumentNullException(nameof(applicationInsightsKey));
+        EnableBranding = enableBranding;
     }
 }

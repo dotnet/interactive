@@ -4,30 +4,29 @@
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Events;
 
-namespace Microsoft.DotNet.Interactive.Commands
+namespace Microsoft.DotNet.Interactive.Commands;
+
+public class DisplayValue : KernelCommand
 {
-    public class DisplayValue : KernelCommand
+    public DisplayValue(FormattedValue formattedValue, string valueId = null)
     {
-        public DisplayValue(FormattedValue formattedValue, string valueId = null)
-        {
-            FormattedValue = formattedValue;
-            ValueId = valueId;
-        }
+        FormattedValue = formattedValue;
+        ValueId = valueId;
+    }
 
-        public FormattedValue FormattedValue { get; }
+    public FormattedValue FormattedValue { get; }
 
-        public string ValueId { get; }
+    public string ValueId { get; }
 
-        public override Task InvokeAsync(KernelInvocationContext context)
-        {
-            context.Publish(
-                new DisplayedValueProduced(
-                    null,
-                    this,
-                    formattedValues: new[] { FormattedValue },
-                    valueId: ValueId));
+    public override Task InvokeAsync(KernelInvocationContext context)
+    {
+        context.Publish(
+            new DisplayedValueProduced(
+                null,
+                this,
+                formattedValues: new[] { FormattedValue },
+                valueId: ValueId));
 
-            return Task.CompletedTask;
-        }
+        return Task.CompletedTask;
     }
 }

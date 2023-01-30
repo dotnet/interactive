@@ -1,6 +1,5 @@
-﻿namespace Microsoft.DotNet.Interactive.Commands
+﻿namespace Microsoft.DotNet.Interactive.Commands;
+
+internal class NoCommand : KernelCommand
 {
-    internal class NoCommand : KernelCommand
-    {
-    }
 }

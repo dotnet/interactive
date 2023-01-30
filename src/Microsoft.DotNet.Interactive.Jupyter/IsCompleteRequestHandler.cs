@@ -8,48 +8,47 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
-namespace Microsoft.DotNet.Interactive.Jupyter
+namespace Microsoft.DotNet.Interactive.Jupyter;
+
+public class IsCompleteRequestHandler : RequestHandlerBase<IsCompleteRequest>
 {
-    public class IsCompleteRequestHandler : RequestHandlerBase<IsCompleteRequest>
+    public IsCompleteRequestHandler(Kernel kernel, IScheduler scheduler = null)
+        : base(kernel, scheduler ?? CurrentThreadScheduler.Instance)
     {
-        public IsCompleteRequestHandler(Kernel kernel, IScheduler scheduler = null)
-            : base(kernel, scheduler ?? CurrentThreadScheduler.Instance)
+    }
+
+    public async Task Handle(JupyterRequestContext context)
+    {
+        var isCompleteRequest = GetJupyterRequest(context);
+        var targetKernelName = context.GetKernelName();
+        var command = new SubmitCode(isCompleteRequest.Code, targetKernelName, submissionType: SubmissionType.Diagnose);
+
+        await SendAsync(context, command);
+    }
+
+    protected override void OnKernelEventReceived(
+        KernelEvent @event,
+        JupyterRequestContext context)
+    {
+        switch (@event)
         {
+            case CompleteCodeSubmissionReceived _:
+                Reply(true, context.JupyterRequestMessageEnvelope, context.JupyterMessageSender);
+                break;
+            case IncompleteCodeSubmissionReceived _:
+                Reply(false, context.JupyterRequestMessageEnvelope, context.JupyterMessageSender);
+                break;
         }
+    }
 
-        public async Task Handle(JupyterRequestContext context)
-        {
-            var isCompleteRequest = GetJupyterRequest(context);
-            var targetKernelName = context.GetKernelName();
-            var command = new SubmitCode(isCompleteRequest.Code, targetKernelName, submissionType: SubmissionType.Diagnose);
+    private void Reply(bool isComplete, ZeroMQMessage request, IJupyterMessageResponseSender jupyterMessageSender)
+    {
+        var status = isComplete ? "complete" : "incomplete";
+        var indent = isComplete ? string.Empty : "*";
+        // reply 
+        var isCompleteReplyPayload = new IsCompleteReply(indent: indent, status: status);
 
-            await SendAsync(context, command);
-        }
-
-        protected override void OnKernelEventReceived(
-            KernelEvent @event,
-            JupyterRequestContext context)
-        {
-            switch (@event)
-            {
-                case CompleteCodeSubmissionReceived _:
-                    Reply( true, context.JupyterRequestMessageEnvelope, context.JupyterMessageSender);
-                    break;
-                case IncompleteCodeSubmissionReceived _:
-                    Reply( false, context.JupyterRequestMessageEnvelope, context.JupyterMessageSender);
-                    break;
-            }
-        }
-
-        private void Reply(bool isComplete, ZeroMQMessage request, IJupyterMessageResponseSender jupyterMessageSender)
-        {
-            var status = isComplete ? "complete" : "incomplete";
-            var indent = isComplete ? string.Empty : "*";
-            // reply 
-            var isCompleteReplyPayload = new IsCompleteReply(indent: indent, status: status);
-
-            // send to server
-            jupyterMessageSender.Send(isCompleteReplyPayload);
-        }
+        // send to server
+        jupyterMessageSender.Send(isCompleteReplyPayload);
     }
 }

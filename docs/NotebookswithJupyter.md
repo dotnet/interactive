@@ -1,20 +1,10 @@
 # Using .NET notebooks with Jupyter Notebook / JupyterLab
 
-To use the .NET Interactive kernel for your multi-language notebooks in Jupyter or JupyterLab, you need to first install the .NET Interactive kernel.  
-
-* Install .NET Interactive as a Jupyter kernel for use with Jupyter Notebook, JupyterLab, nteract, and others.
-
-or 
-
-* Install the [Polyglot Notebooks extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode)
-
-Both of these methods can read and write `.ipynb` files, which are fully portable between them.
-
-## Installing .NET Interactive as a Jupyter kernel
+To use the .NET Interactive kernel for your multi-language notebooks in Jupyter Notebook, JupyterLab, and other Jupyter frontends, you first need to register .NET Interactive as a kernel with Jupyter.  
 
 First, make sure you have the following installed:
 
-* The [.NET 6 SDK](https://dotnet.microsoft.com/download/dotnet/6.0).
+* The [.NET 7 SDK](https://dotnet.microsoft.com/en-us/download).
 * **Jupyter**. An easy way to install Jupyter is through [Anaconda](https://www.anaconda.com/distribution).
 
 * You can verify the installations by opening the **Anaconda Prompt** (Windows) or a terminal (macOS, Linux) and running the following commands to ensure that Jupyter and .NET are installed and present on the path:

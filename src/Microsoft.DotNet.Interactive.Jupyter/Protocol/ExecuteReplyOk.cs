@@ -4,21 +4,20 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
+namespace Microsoft.DotNet.Interactive.Jupyter.Protocol;
+
+[JupyterMessageType(JupyterMessageContentTypes.ExecuteReply)]
+public class ExecuteReplyOk : ExecuteReply
 {
-    [JupyterMessageType(JupyterMessageContentTypes.ExecuteReply)]
-    public class ExecuteReplyOk : ExecuteReply
+    public ExecuteReplyOk(IReadOnlyList<IReadOnlyDictionary<string, string>> payload = null, IReadOnlyDictionary<string, string> userExpressions = null , int executionCount = 0): base(status: StatusValues.Ok, executionCount: executionCount)
     {
-        public ExecuteReplyOk(IReadOnlyList<IReadOnlyDictionary<string, string>> payload = null, IReadOnlyDictionary<string, string> userExpressions = null , int executionCount = 0): base(status: StatusValues.Ok, executionCount: executionCount)
-        {
-            UserExpressions = userExpressions ?? new Dictionary<string, string>();
-            Payload = payload ?? new List<IReadOnlyDictionary<string, string>>();
-        }
-
-        [JsonPropertyName("payload")]
-        public IReadOnlyList<IReadOnlyDictionary<string,string>> Payload { get;  }
-
-        [JsonPropertyName("user_expressions")]
-        public IReadOnlyDictionary<string,string> UserExpressions { get; }
+        UserExpressions = userExpressions ?? new Dictionary<string, string>();
+        Payload = payload ?? new List<IReadOnlyDictionary<string, string>>();
     }
+
+    [JsonPropertyName("payload")]
+    public IReadOnlyList<IReadOnlyDictionary<string,string>> Payload { get;  }
+
+    [JsonPropertyName("user_expressions")]
+    public IReadOnlyDictionary<string,string> UserExpressions { get; }
 }

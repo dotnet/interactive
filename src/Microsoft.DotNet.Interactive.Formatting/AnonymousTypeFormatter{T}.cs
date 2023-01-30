@@ -3,33 +3,32 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting;
+
+internal class AnonymousTypeFormatter<T> : TypeFormatter<T>
 {
-    internal class AnonymousTypeFormatter<T> : TypeFormatter<T>
+    private readonly FormatDelegate<T> _format;
+
+    public AnonymousTypeFormatter(
+        FormatDelegate<T> format,
+        string mimeType,
+        Type type = null)
+        : base(type)
     {
-        private readonly FormatDelegate<T> _format;
-
-        public AnonymousTypeFormatter(
-            FormatDelegate<T> format,
-            string mimeType,
-            Type type = null)
-            : base(type)
+        if (string.IsNullOrWhiteSpace(mimeType))
         {
-            if (string.IsNullOrWhiteSpace(mimeType))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(mimeType));
-            }
-
-            MimeType = mimeType;
-
-            _format = format ?? throw new ArgumentNullException(nameof(format));
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(mimeType));
         }
 
-        public override bool Format(T instance, FormatContext context)
-        {
-            return _format(instance, context);
-        }
+        MimeType = mimeType;
 
-        public override string MimeType { get; }
+        _format = format ?? throw new ArgumentNullException(nameof(format));
     }
+
+    public override bool Format(T instance, FormatContext context)
+    {
+        return _format(instance, context);
+    }
+
+    public override string MimeType { get; }
 }

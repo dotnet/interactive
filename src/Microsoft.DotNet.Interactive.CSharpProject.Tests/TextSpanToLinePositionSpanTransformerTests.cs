@@ -6,25 +6,23 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
+namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
+
+public class TextSpanToLinePositionSpanTransformerTests
 {
-    public class TextSpanToLinePositionSpanTransformerTests
+    [Fact]
+    public void It_Should_Convert_Text_Spans()
     {
-        [Fact]
-        public void It_Should_Convert_Text_Spans()
-        {
-            var sourceText = SourceText.From(
-                ("hello\nworld").EnforceLF()
-            );
+        var sourceText = SourceText.From(
+            ("hello\nworld").EnforceLF()
+        );
 
-            var span = new TextSpan(0, 11);
-            var newSpan = span.ToLinePositionSpan(sourceText);
+        var span = new TextSpan(0, 11);
+        var newSpan = span.ToLinePositionSpan(sourceText);
 
-            newSpan.Start.Line.Should().Be(0);
-            newSpan.Start.Character.Should().Be(0);
-            newSpan.End.Line.Should().Be(1);
-            newSpan.End.Character.Should().Be(5);
-        }
+        newSpan.Start.Line.Should().Be(0);
+        newSpan.Start.Character.Should().Be(0);
+        newSpan.End.Line.Should().Be(1);
+        newSpan.End.Character.Should().Be(5);
     }
 }
-

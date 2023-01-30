@@ -104,23 +104,26 @@ describe("htmlKernel", () => {
             events.push(e);
         });
 
-        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="0"><script>foo = 122;</script></div>' } });
+        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="0"><script type="module">foo = 122;</script><div id="1"><script type="module">bar = 211;</script></div></div>' } });
 
         const lastDisplayedValueProducedEvent = events.filter(e => e.eventType === contracts.DisplayedValueProducedType).at(-1)?.event as contracts.DisplayedValueProduced;
         expect(lastDisplayedValueProducedEvent).to.not.be.undefined;
 
-        expect(lastDisplayedValueProducedEvent).to.deep.equal({
-            displayedValueProduced:
+        expect(lastDisplayedValueProducedEvent).to.deep.equal(
             {
-                formattedValues:
-                    [{
-                        mimeType: 'text/html',
-                        value: '<div id="0"><script>foo = 122;</script></div>'
-                    }]
+                displayedValueProduced:
+                {
+                    formattedValues:
+                        [{
+                            mimeType: 'text/html',
+                            value: '<div id="0"><script type="module">foo = 122;</script><div id="1"><script type="module">bar = 211;</script></div></div>'
+                        }]
+                }
             }
-        });
+        );
 
         expect(dom.window.globalThis["foo"]).to.be.equal(122);
+        expect(dom.window.globalThis["bar"]).to.be.equal(211);
     });
 
     it("can reuse container", async () => {

@@ -12,90 +12,89 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 
-namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
+namespace Microsoft.DotNet.Interactive.Tests.LanguageServices;
+
+public static class LanguageServiceAssertionExtensions
 {
-    public static class LanguageServiceAssertionExtensions
+    public static MarkedUpCode ParseMarkupCode(this string markupCode) => new(markupCode);
+
+    public static IEnumerable<MarkedUpCodeLinePosition> PositionsInMarkedSpans(
+        this MarkedUpCode markedUpCode)
     {
-        public static MarkedUpCode ParseMarkupCode(this string markupCode) => new(markupCode);
-
-        public static IEnumerable<MarkedUpCodeLinePosition> PositionsInMarkedSpans(
-            this MarkedUpCode markedUpCode)
+        foreach (var position in Enumerable.Range(
+                     markedUpCode.Span.Start,
+                     markedUpCode.Span.Length + 1))
         {
-            foreach (var position in Enumerable.Range(
-                markedUpCode.Span.Start,
-                markedUpCode.Span.Length + 1))
-            {
-                var linePosition = LinePosition.FromCodeAnalysisLinePosition(markedUpCode.SourceText.Lines.GetLinePosition(position));
+            var linePosition = LinePosition.FromCodeAnalysisLinePosition(markedUpCode.SourceText.Lines.GetLinePosition(position));
 
-                yield return new MarkedUpCodeLinePosition(markedUpCode, linePosition);
-            }
+            yield return new MarkedUpCodeLinePosition(markedUpCode, linePosition);
+        }
+    }
+
+    public static async Task<AndWhichConstraint<
+        GenericCollectionAssertions<CompletionsProduced>,
+        IEnumerable<CompletionsProduced>>> ProvideCompletionsAsync(
+        this GenericCollectionAssertions<MarkedUpCodeLinePosition> assertions,
+        Kernel kernel)
+    {
+        var items = new List<CompletionsProduced>();
+
+        using var _ = new AssertionScope();
+
+        foreach (var position in assertions.Subject)
+        {
+            var result = await kernel.SendAsync(
+                new RequestCompletions(
+                    position.MarkedUpCode.Code,
+                    position.LinePosition));
+
+            using var events = result.KernelEvents.ToSubscribedList();
+
+            var requestCompleted = events
+                .Should()
+                .ContainSingle<CompletionsProduced>()
+                .Which;
+
+            items.Add(requestCompleted);
         }
 
-        public static async Task<AndWhichConstraint<
+        return new AndWhichConstraint<
             GenericCollectionAssertions<CompletionsProduced>,
-            IEnumerable<CompletionsProduced>>> ProvideCompletionsAsync(
-            this GenericCollectionAssertions<MarkedUpCodeLinePosition> assertions,
-            Kernel kernel)
-        {
-            var items = new List<CompletionsProduced>();
-
-            using var _ = new AssertionScope();
-
-            foreach (var position in assertions.Subject)
-            {
-                var result = await kernel.SendAsync(
-                                     new RequestCompletions(
-                                         position.MarkedUpCode.Code,
-                                         position.LinePosition));
-
-                using var events = result.KernelEvents.ToSubscribedList();
-
-                var requestCompleted = events
-                                       .Should()
-                                       .ContainSingle<CompletionsProduced>()
-                                       .Which;
-
-                items.Add(requestCompleted);
-            }
-
-            return new AndWhichConstraint<
-                GenericCollectionAssertions<CompletionsProduced>,
-                IEnumerable<CompletionsProduced>>(
-                items.Should(), 
-                items);
-        }
+            IEnumerable<CompletionsProduced>>(
+            items.Should(), 
+            items);
     }
+}
 
-    public class MarkedUpCodeLinePosition
+public class MarkedUpCodeLinePosition
+{
+    public MarkedUpCodeLinePosition(MarkedUpCode markedUpCode, in LinePosition linePosition)
     {
-        public MarkedUpCodeLinePosition(MarkedUpCode markedUpCode, in LinePosition linePosition)
-        {
-            MarkedUpCode = markedUpCode;
-            LinePosition = linePosition;
-        }
-
-        public MarkedUpCode MarkedUpCode { get; }
-
-        public LinePosition LinePosition { get; }
+        MarkedUpCode = markedUpCode;
+        LinePosition = linePosition;
     }
 
-    public class MarkedUpCode
+    public MarkedUpCode MarkedUpCode { get; }
+
+    public LinePosition LinePosition { get; }
+}
+
+public class MarkedUpCode
+{
+    public MarkedUpCode(string markupCode)
     {
-        public MarkedUpCode(string markupCode)
-        {
-            MarkupTestFile.GetSpan(markupCode, out var code, out var span);
+        MarkupTestFile.GetSpan(markupCode, out var code, out var span);
 
-            SourceText = SourceText.From(code);
+        SourceText = SourceText.From(code);
 
-            Code = code;
+        Code = code;
 
-            Span = span;
-        }
-
-        public SourceText SourceText { get; }
-
-        public string Code { get; }
-
-        public TextSpan Span { get; }
+        Span = span;
     }
+
+    public SourceText SourceText { get; }
+
+    public string Code { get; }
+
+    public TextSpan Span { get; }
 }

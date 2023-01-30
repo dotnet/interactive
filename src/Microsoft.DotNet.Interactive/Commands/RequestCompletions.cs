@@ -3,31 +3,30 @@
 
 using Microsoft.DotNet.Interactive.Parsing;
 
-namespace Microsoft.DotNet.Interactive.Commands
+namespace Microsoft.DotNet.Interactive.Commands;
+
+public class RequestCompletions : LanguageServiceCommand
 {
-    public class RequestCompletions : LanguageServiceCommand
+    public RequestCompletions(
+        string code,
+        LinePosition linePosition, 
+        string targetKernelName = null)
+        : base(code, linePosition, targetKernelName)
     {
-        public RequestCompletions(
-            string code,
-            LinePosition linePosition, 
-            string targetKernelName = null)
-            : base(code, linePosition, targetKernelName)
-        {
-        }
+    }
 
-        internal RequestCompletions(
-            LanguageNode languageNode,
-            LinePosition linePosition, 
-            KernelCommand parent = null) 
-            : base(languageNode, linePosition, parent)
-        {
-        }
+    internal RequestCompletions(
+        LanguageNode languageNode,
+        LinePosition linePosition, 
+        KernelCommand parent = null) 
+        : base(languageNode, linePosition, parent)
+    {
+    }
 
-        internal override LanguageServiceCommand With(
-            LanguageNode languageNode,
-            LinePosition position)
-        {
-            return new RequestCompletions(languageNode, position, Parent);
-        }
+    internal override LanguageServiceCommand With(
+        LanguageNode languageNode,
+        LinePosition position)
+    {
+        return new RequestCompletions(languageNode, position, Parent);
     }
 }

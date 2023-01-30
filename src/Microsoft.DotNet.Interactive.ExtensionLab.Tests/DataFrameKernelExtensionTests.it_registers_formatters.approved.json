@@ -4,20 +4,20 @@
     "primaryKey": [],
     "fields": [
       {
-        "name": "id",
-        "type": "number"
+        "type": "number",
+        "name": "id"
       },
       {
-        "name": "name",
-        "type": "string"
+        "type": "string",
+        "name": "name"
       },
       {
-        "name": "color",
-        "type": "string"
+        "type": "string",
+        "name": "color"
       },
       {
-        "name": "deliciousness",
-        "type": "number"
+        "type": "number",
+        "name": "deliciousness"
       }
     ]
   },

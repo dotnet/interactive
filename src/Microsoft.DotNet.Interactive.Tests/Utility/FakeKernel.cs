@@ -6,24 +6,23 @@ using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Tests.Utility
+namespace Microsoft.DotNet.Interactive.Tests.Utility;
+
+public class FakeKernel :
+    Kernel,
+    IKernelCommandHandler<SubmitCode>
 {
-    public class FakeKernel :
-        Kernel,
-        IKernelCommandHandler<SubmitCode>
+    public FakeKernel([CallerMemberName] string name = null, string languageName = null, string displayName = null) : base(name)
     {
-        public FakeKernel([CallerMemberName] string name = null, string languageName = null, string displayName = null) : base(name)
-        {
-            KernelInfo.LanguageName = languageName ?? name;
-            KernelInfo.DisplayName = displayName ?? name;
-        }
+        KernelInfo.LanguageName = languageName ?? name;
+        KernelInfo.DisplayName = displayName ?? name;
+    }
 
-        public KernelCommandInvocation Handle { get; set; }
+    public KernelCommandInvocation Handle { get; set; }
 
-        Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
-        {
-            Handle?.Invoke(command, context);
-            return Task.CompletedTask;
-        }
+    Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
+    {
+        Handle?.Invoke(command, context);
+        return Task.CompletedTask;
     }
 }

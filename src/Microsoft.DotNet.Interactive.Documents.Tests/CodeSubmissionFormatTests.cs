@@ -622,9 +622,9 @@ Console.Write(""hello"");
                 .BeEquivalentTo(new InputField("the-password", "password"));
     }
 
-    private async Task<string> RoundTripDib(string notebookFile)
+    private async Task<string> RoundTripDib(string filePath)
     {
-        var expectedContent = await File.ReadAllTextAsync(notebookFile);
+        var expectedContent = await File.ReadAllTextAsync(filePath);
 
         var inputDoc = CodeSubmission.Parse(expectedContent);
 

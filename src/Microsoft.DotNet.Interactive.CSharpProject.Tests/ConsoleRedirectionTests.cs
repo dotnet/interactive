@@ -10,68 +10,67 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.CSharpProject.Utility;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
+namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
+
+public class ConsoleRedirectionTests
 {
-    public class ConsoleRedirectionTests
+    [Fact]
+    public async Task StandardOutput_is_captured()
     {
-        [Fact]
-        public async Task StandardOutput_is_captured()
+        using (var console = await ConsoleOutput.Capture())
         {
+            Console.Write("hello");
+
+            console.StandardOutput.Should().Be("hello");
+        }
+    }
+
+    [Fact]
+    public async Task StandardError_is_captured()
+    {
+        using (var console = await ConsoleOutput.Capture())
+        {
+            var message = $"oops! from {nameof(StandardError_is_captured)}";
+
+            Console.Error.Write(message);
+
+            console.StandardError.Should().Be(message);
+        }
+    }
+
+    [Fact]
+    public async void Multiple_threads_each_capturing_console_dont_conflict()
+    {
+        const int PRINT_COUNT = 10;
+        const int THREAD_COUNT = 10;
+        var barrier = new Barrier(THREAD_COUNT);
+
+        async Task ThreadWork(string toPrint)
+        {
+            barrier.SignalAndWait(1000 /*ms*/);
             using (var console = await ConsoleOutput.Capture())
             {
-                Console.Write("hello");
-
-                console.StandardOutput.Should().Be("hello");
-            }
-        }
-
-        [Fact]
-        public async Task StandardError_is_captured()
-        {
-            using (var console = await ConsoleOutput.Capture())
-            {
-                var message = $"oops! from {nameof(StandardError_is_captured)}";
-
-                Console.Error.Write(message);
-
-                console.StandardError.Should().Be(message);
-            }
-        }
-
-        [Fact]
-        public async void Multiple_threads_each_capturing_console_dont_conflict()
-        {
-            const int PRINT_COUNT = 10;
-            const int THREAD_COUNT = 10;
-            var barrier = new Barrier(THREAD_COUNT);
-
-            async Task ThreadWork(string toPrint)
-            {
-                barrier.SignalAndWait(1000 /*ms*/);
-                using (var console = await ConsoleOutput.Capture())
+                var builder = new StringBuilder();
+                for (var i = 0; i < PRINT_COUNT; i++)
                 {
-                    var builder = new StringBuilder();
-                    for (var i = 0; i < PRINT_COUNT; i++)
-                    {
-                        Console.Write(toPrint);
-                        builder.Append(toPrint);
-                        await Task.Yield();
-                    }
-
-                    console.StandardOutput.Should().Be(builder.ToString());
+                    Console.Write(toPrint);
+                    builder.Append(toPrint);
+                    await Task.Yield();
                 }
-            }
 
-            var threads = new List<Task>();
-            for (var i = 0; i < THREAD_COUNT; i++)
-            {
-                threads.Add(Task.Run(async () => await ThreadWork($"hello from thread {i}!")));
+                console.StandardOutput.Should().Be(builder.ToString());
             }
+        }
 
-            foreach (var thread in threads)
-            {
-                await thread;
-            }
+        var threads = new List<Task>();
+        for (var i = 0; i < THREAD_COUNT; i++)
+        {
+            threads.Add(Task.Run(async () => await ThreadWork($"hello from thread {i}!")));
+        }
+
+        foreach (var thread in threads)
+        {
+            await thread;
         }
     }
 }

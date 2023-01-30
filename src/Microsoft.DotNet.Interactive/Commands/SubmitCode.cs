@@ -4,46 +4,45 @@
 using System;
 using Microsoft.DotNet.Interactive.Parsing;
 
-namespace Microsoft.DotNet.Interactive.Commands
+namespace Microsoft.DotNet.Interactive.Commands;
+
+public class SubmitCode : KernelCommand
 {
-    public class SubmitCode : KernelCommand
+    public SubmitCode(
+        string code,
+        string targetKernelName = null,
+        SubmissionType submissionType = SubmissionType.Run) : base(targetKernelName)
     {
-        public SubmitCode(
-            string code,
-            string targetKernelName = null,
-            SubmissionType submissionType = SubmissionType.Run) : base(targetKernelName)
-        {
-            Code = code ?? throw new ArgumentNullException(nameof(code));
-            SubmissionType = submissionType;
-        }
-      
-        internal SubmitCode(
-            LanguageNode languageNode,
-            SubmissionType submissionType = SubmissionType.Run,
-            KernelCommand parent = null,
-            KernelNameDirectiveNode kernelNameDirectiveNode = null)
-            : base(languageNode.KernelName, parent)
-        {
-            Code = languageNode.Text;
-            LanguageNode = languageNode;
-            SubmissionType = submissionType;
-            KernelNameDirectiveNode = kernelNameDirectiveNode;
-            SchedulingScope = languageNode.CommandScope;
-
-            if (languageNode is ActionDirectiveNode actionDirectiveNode)
-            {
-                TargetKernelName = actionDirectiveNode.ParentKernelName;
-            }
-        }
-
-        public string Code { get; internal set; }
-
-        public SubmissionType SubmissionType { get; }
-
-        public override string ToString() => $"{nameof(SubmitCode)}: {Code.TruncateForDisplay()}";
-
-        internal LanguageNode LanguageNode { get; }
-
-        internal KernelNameDirectiveNode KernelNameDirectiveNode { get; }
+        Code = code ?? throw new ArgumentNullException(nameof(code));
+        SubmissionType = submissionType;
     }
+      
+    internal SubmitCode(
+        LanguageNode languageNode,
+        SubmissionType submissionType = SubmissionType.Run,
+        KernelCommand parent = null,
+        KernelNameDirectiveNode kernelNameDirectiveNode = null)
+        : base(languageNode.KernelName, parent)
+    {
+        Code = languageNode.Text;
+        LanguageNode = languageNode;
+        SubmissionType = submissionType;
+        KernelNameDirectiveNode = kernelNameDirectiveNode;
+        SchedulingScope = languageNode.CommandScope;
+
+        if (languageNode is ActionDirectiveNode actionDirectiveNode)
+        {
+            TargetKernelName = actionDirectiveNode.ParentKernelName;
+        }
+    }
+
+    public string Code { get; internal set; }
+
+    public SubmissionType SubmissionType { get; }
+
+    public override string ToString() => $"{nameof(SubmitCode)}: {Code.TruncateForDisplay()}";
+
+    internal LanguageNode LanguageNode { get; }
+
+    internal KernelNameDirectiveNode KernelNameDirectiveNode { get; }
 }

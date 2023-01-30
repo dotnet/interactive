@@ -6,24 +6,23 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Events
+namespace Microsoft.DotNet.Interactive.Events;
+
+public class DiagnosticsProduced : KernelEvent
 {
-    public class DiagnosticsProduced : KernelEvent
+    private readonly IReadOnlyCollection<Diagnostic> _diagnostics;
+
+    public DiagnosticsProduced(IEnumerable<Diagnostic> diagnostics,
+        KernelCommand command,
+        IReadOnlyCollection<FormattedValue> formattedDiagnostics = null) : base(command)
     {
-        private readonly IReadOnlyCollection<Diagnostic> _diagnostics;
-
-        public DiagnosticsProduced(IEnumerable<Diagnostic> diagnostics,
-            KernelCommand command,
-            IReadOnlyCollection<FormattedValue> formattedDiagnostics = null) : base(command)
-        {
-            _diagnostics = (diagnostics ?? Array.Empty<Diagnostic>()).ToImmutableList();
-            FormattedDiagnostics = formattedDiagnostics ?? Array.Empty<FormattedValue>();
-        }
-
-        public IReadOnlyCollection<Diagnostic> Diagnostics => this.RemapDiagnosticsFromRequestingCommand(_diagnostics);
-
-        public IReadOnlyCollection<FormattedValue> FormattedDiagnostics { get; }
-
-        public override string ToString() => $"{GetType().Name}";
+        _diagnostics = (diagnostics ?? Array.Empty<Diagnostic>()).ToImmutableList();
+        FormattedDiagnostics = formattedDiagnostics ?? Array.Empty<FormattedValue>();
     }
+
+    public IReadOnlyCollection<Diagnostic> Diagnostics => this.RemapDiagnosticsFromRequestingCommand(_diagnostics);
+
+    public IReadOnlyCollection<FormattedValue> FormattedDiagnostics { get; }
+
+    public override string ToString() => $"{GetType().Name}";
 }

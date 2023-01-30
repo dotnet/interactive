@@ -292,6 +292,8 @@ public static class CommandLineParser
                 isDefault: true,
                 description: "Name of the kernel host.");
 
+            var previewOption = new Option<bool>("--preview", description: "Enable preview kernel features.");
+
             var workingDirOption = new Option<DirectoryInfo>(
                 "--working-dir",
                 () => new DirectoryInfo(Environment.CurrentDirectory),
@@ -305,6 +307,7 @@ public static class CommandLineParser
                 httpPortRangeOption,
                 httpPortOption,
                 kernelHostOption,
+                previewOption,
                 workingDirOption
             };
 
@@ -327,8 +330,6 @@ public static class CommandLineParser
 
                     services.AddKernel(kernel);
 
-                    kernel.UseQuitCommand();
-
                     cancellationToken.Register(() => kernel.Dispose());
 
                     var sender = KernelCommandAndEventSender.FromTextWriter(
@@ -341,6 +342,13 @@ public static class CommandLineParser
                         sender,
                         receiver,
                         startupOptions.KernelHost);
+
+                    kernel.UseQuitCommand(() =>
+                    {
+                        host.Dispose();
+                        Environment.Exit(0);
+                        return Task.CompletedTask;
+                    });
 
                     var isVSCode = context.ParseResult.Directives.Contains("vscode") ||
                                    !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CODESPACES"));
@@ -542,24 +550,6 @@ public static class CommandLineParser
                 throw new ArgumentOutOfRangeException(nameof(frontendEnvironment));
         }
 
-        Formatter.Register<HttpResponseMessage>((responseMessage, context) =>
-        {
-            // Formatter.Register() doesn't support async formatters yet.
-            // Prevent SynchronizationContext-induced deadlocks given the following sync-over-async code.
-            ExecutionContext.SuppressFlow();
-
-            try
-            {
-                HttpResponseFormatter.FormatHttpResponseMessage(
-                    responseMessage,
-                    context).Wait();
-            }
-            finally
-            {
-                ExecutionContext.RestoreFlow();
-            }
-
-            return true;
-        }, HtmlFormatter.MimeType);
+      
     }
 }

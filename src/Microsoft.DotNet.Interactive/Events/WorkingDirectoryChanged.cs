@@ -3,16 +3,15 @@
 
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Events
-{
-    public class WorkingDirectoryChanged : KernelEvent
-    {
-        public WorkingDirectoryChanged(string workingDirectory, KernelCommand command)
-            : base(command)
-        {
-            WorkingDirectory = workingDirectory;
-        }
+namespace Microsoft.DotNet.Interactive.Events;
 
-        public string WorkingDirectory { get; }
+public class WorkingDirectoryChanged : KernelEvent
+{
+    public WorkingDirectoryChanged(string workingDirectory, KernelCommand command)
+        : base(command)
+    {
+        WorkingDirectory = workingDirectory;
     }
+
+    public string WorkingDirectory { get; }
 }

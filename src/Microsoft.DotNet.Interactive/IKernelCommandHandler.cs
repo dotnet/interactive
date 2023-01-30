@@ -4,10 +4,9 @@
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+public interface IKernelCommandHandler<in TCommand> where TCommand: KernelCommand
 {
-    public interface IKernelCommandHandler<in TCommand> where TCommand: KernelCommand
-    {
-        Task HandleAsync(TCommand command, KernelInvocationContext context);
-    }
+    Task HandleAsync(TCommand command, KernelInvocationContext context);
 }

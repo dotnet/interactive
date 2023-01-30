@@ -3,10 +3,9 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting;
+
+public interface ITypeFormatterSource
 {
-    public interface ITypeFormatterSource
-    {
-        IEnumerable<ITypeFormatter> CreateTypeFormatters();
-    }
+    IEnumerable<ITypeFormatter> CreateTypeFormatters();
 }

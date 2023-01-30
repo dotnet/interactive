@@ -7,80 +7,79 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+public static class DataExplorer
 {
-    public static class DataExplorer
+    private static ConcurrentDictionary<Type, HashSet<Type>> Explorers = new();
+
+    private static ConcurrentDictionary<Type, Type> DefaultExplorer = new();
+
+    static DataExplorer()
     {
-        private static ConcurrentDictionary<Type, HashSet<Type>> Explorers = new();
+        ResetToDefault();
+    }
 
-        private static ConcurrentDictionary<Type, Type> DefaultExplorer = new();
+    public static void ResetToDefault()
+    {
+        Explorers = new();
 
-        static DataExplorer()
+        DefaultExplorer = new();
+
+        Register<TabularDataResource, TabularDataResourceSummaryExplorer>();
+        SetDefault<TabularDataResource, TabularDataResourceSummaryExplorer>();
+    }
+
+    public static DataExplorer<TData> Create<TData>(string dataExplorerTypeName, TData data)
+    {
+        if (Explorers.TryGetValue(typeof(TData), out var types))
         {
-            ResetToDefault();
-        }
-
-        public static void ResetToDefault()
-        {
-            Explorers = new();
-
-            DefaultExplorer = new();
-
-            Register<TabularDataResource, TabularDataResourceSummaryExplorer>();
-            SetDefault<TabularDataResource, TabularDataResourceSummaryExplorer>();
-        }
-
-        public static DataExplorer<TData> Create<TData>(string dataExplorerTypeName, TData data)
-        {
-            if (Explorers.TryGetValue(typeof(TData), out var types))
+            var explorerType = types.FirstOrDefault(t => t.Name == dataExplorerTypeName);
+            if (explorerType is null)
             {
-                var explorerType = types.FirstOrDefault(t => t.Name == dataExplorerTypeName);
-                if (explorerType is null)
-                {
-                    throw new InvalidOperationException($"DataType {typeof(TData)} have no DataExplorers defined.");
-                }
-
-                return Activator.CreateInstance(explorerType, data) as DataExplorer<TData>;
+                throw new InvalidOperationException($"DataType {typeof(TData)} have no DataExplorers defined.");
             }
-            throw new InvalidOperationException($"DataType {typeof(TData)} have no DataExplorers defined.");
+
+            return Activator.CreateInstance(explorerType, data) as DataExplorer<TData>;
         }
+        throw new InvalidOperationException($"DataType {typeof(TData)} have no DataExplorers defined.");
+    }
 
-        public static DataExplorer<TData> CreateDefault<TData>(TData data)
+    public static DataExplorer<TData> CreateDefault<TData>(TData data)
+    {
+        if (Explorers.TryGetValue(typeof(TData), out var types))
         {
-            if (Explorers.TryGetValue(typeof(TData), out var types))
+            var explorerType = types.FirstOrDefault();
+            if (DefaultExplorer.TryGetValue(typeof(TData), out var defaultExplorerName))
             {
-                var explorerType = types.FirstOrDefault();
-                if (DefaultExplorer.TryGetValue(typeof(TData), out var defaultExplorerName))
-                {
-                    explorerType = defaultExplorerName;
-                }
-                if (explorerType is null)
-                {
-                    throw new InvalidOperationException($"DataType {typeof(TData)} have no DataExplorers defined.");
-                }
-
-                return Activator.CreateInstance(explorerType, data) as DataExplorer<TData>;
+                explorerType = defaultExplorerName;
             }
-            throw new InvalidOperationException($"DataType {typeof(TData)} have no DataExplorers defined.");
-        }
-
-        public static void SetDefault<TData, TExplorer>() where TExplorer : DataExplorer<TData>
-        {
-            DefaultExplorer.AddOrUpdate(typeof(TData), typeof(TExplorer), (_, _) => typeof(TExplorer));
-        }
-
-        public static void Register(Type dataType, Type dataExplorerType)
-        {
-            Explorers.AddOrUpdate(dataType, new HashSet<Type> { dataExplorerType }, (_, types) =>
+            if (explorerType is null)
             {
-                types.Add(dataExplorerType);
-                return types;
-            });
-        }
+                throw new InvalidOperationException($"DataType {typeof(TData)} have no DataExplorers defined.");
+            }
 
-        public static void Register<TData, TExplorer>() where TExplorer : DataExplorer<TData>
-        {
-            Register(typeof(TData), typeof(TExplorer));
+            return Activator.CreateInstance(explorerType, data) as DataExplorer<TData>;
         }
+        throw new InvalidOperationException($"DataType {typeof(TData)} have no DataExplorers defined.");
+    }
+
+    public static void SetDefault<TData, TExplorer>() where TExplorer : DataExplorer<TData>
+    {
+        DefaultExplorer.AddOrUpdate(typeof(TData), typeof(TExplorer), (_, _) => typeof(TExplorer));
+    }
+
+    public static void Register(Type dataType, Type dataExplorerType)
+    {
+        Explorers.AddOrUpdate(dataType, new HashSet<Type> { dataExplorerType }, (_, types) =>
+        {
+            types.Add(dataExplorerType);
+            return types;
+        });
+    }
+
+    public static void Register<TData, TExplorer>() where TExplorer : DataExplorer<TData>
+    {
+        Register(typeof(TData), typeof(TExplorer));
     }
 }

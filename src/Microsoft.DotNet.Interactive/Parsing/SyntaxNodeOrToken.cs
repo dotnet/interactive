@@ -6,29 +6,28 @@ using Microsoft.CodeAnalysis.Text;
 
 #nullable enable
 
-namespace Microsoft.DotNet.Interactive.Parsing
+namespace Microsoft.DotNet.Interactive.Parsing;
+
+[DebuggerStepThrough]
+public abstract class SyntaxNodeOrToken
 {
-    [DebuggerStepThrough]
-    public abstract class SyntaxNodeOrToken
+    private protected SyntaxNodeOrToken(
+        SourceText sourceText, 
+        PolyglotSyntaxTree? syntaxTree)
     {
-        private protected SyntaxNodeOrToken(
-            SourceText sourceText, 
-            PolyglotSyntaxTree? syntaxTree)
-        {
-            SyntaxTree = syntaxTree;
-            SourceText = sourceText;
-        }
-
-        protected SourceText SourceText { get; }
-
-        public SyntaxNode? Parent { get; internal set; }
-
-        public abstract TextSpan Span { get; }
-
-        public PolyglotSyntaxTree? SyntaxTree { get; }
-
-        public string Text => SourceText.GetSubText(Span).ToString();
-
-        public override string ToString() => $"{GetType().Name}: {Text}";
+        SyntaxTree = syntaxTree;
+        SourceText = sourceText;
     }
+
+    protected SourceText SourceText { get; }
+
+    public SyntaxNode? Parent { get; internal set; }
+
+    public abstract TextSpan Span { get; }
+
+    public PolyglotSyntaxTree? SyntaxTree { get; }
+
+    public string Text => SourceText.GetSubText(Span).ToString();
+
+    public override string ToString() => $"{GetType().Name}: {Text}";
 }

@@ -3,12 +3,11 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting;
+
+public interface IDestructurer
 {
-    public interface IDestructurer
-    {
-        IDictionary<string, object> Destructure(object instance);
+    IDictionary<string, object> Destructure(object instance);
         
-        ICollection<string> Keys { get; }
-    }
+    ICollection<string> Keys { get; }
 }

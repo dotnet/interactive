@@ -6,34 +6,33 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+[DebuggerStepThrough]
+internal class CommandEqualityComparer : IEqualityComparer<KernelCommand>
 {
-    [DebuggerStepThrough]
-    internal class CommandEqualityComparer : IEqualityComparer<KernelCommand>
+    public static CommandEqualityComparer Instance { get; } = new();
+
+    public bool Equals(KernelCommand xCommand, KernelCommand yCommand)
     {
-        public static CommandEqualityComparer Instance { get; } = new();
-
-        public bool Equals(KernelCommand xCommand, KernelCommand yCommand)
+        if (ReferenceEquals(xCommand, yCommand))
         {
-            if (ReferenceEquals(xCommand, yCommand))
-            {
-                return true;
-            }
-
-            if (xCommand.Properties.TryGetValue(KernelCommandExtensions.IdKey, out var xCommandId) &&
-                xCommandId is string xCommandIdString &&
-                yCommand.Properties.TryGetValue(KernelCommandExtensions.IdKey, out var yCommandId) &&
-                yCommandId is string yCommandIdString)
-            {
-                return string.Equals(xCommandIdString, yCommandIdString, StringComparison.Ordinal);
-            }
-
-            return false;
+            return true;
         }
 
-        public int GetHashCode(KernelCommand obj)
+        if (xCommand.Properties.TryGetValue(KernelCommandExtensions.IdKey, out var xCommandId) &&
+            xCommandId is string xCommandIdString &&
+            yCommand.Properties.TryGetValue(KernelCommandExtensions.IdKey, out var yCommandId) &&
+            yCommandId is string yCommandIdString)
         {
-            return obj.GetOrCreateId().GetHashCode();
+            return string.Equals(xCommandIdString, yCommandIdString, StringComparison.Ordinal);
         }
+
+        return false;
+    }
+
+    public int GetHashCode(KernelCommand obj)
+    {
+        return obj.GetOrCreateId().GetHashCode();
     }
 }

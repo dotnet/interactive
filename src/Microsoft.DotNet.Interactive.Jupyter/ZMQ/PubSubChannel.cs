@@ -5,20 +5,19 @@ using System;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
-{
-    internal class PubSubChannel 
-    {
-        private readonly MessageSender _sender;
+namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ;
 
-        public PubSubChannel(MessageSender sender)
-        {
-            _sender = sender ?? throw new ArgumentNullException(nameof(sender));
-        }
-        public void Publish(PubSubMessage message, Message request, string kernelIdentity)
-        {
-            var reply = Message.CreatePubSub(message, request, kernelIdentity);
-            _sender.Send(reply);
-        }
+internal class PubSubChannel 
+{
+    private readonly MessageSender _sender;
+
+    public PubSubChannel(MessageSender sender)
+    {
+        _sender = sender ?? throw new ArgumentNullException(nameof(sender));
+    }
+    public void Publish(PubSubMessage message, Message request, string kernelIdentity)
+    {
+        var reply = Message.CreatePubSub(message, request, kernelIdentity);
+        _sender.Send(reply);
     }
 }

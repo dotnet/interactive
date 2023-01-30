@@ -3,31 +3,30 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Formatting
+namespace Microsoft.DotNet.Interactive.Jupyter.Formatting;
+
+public class MathString
 {
-    public class MathString
+    private readonly string _math;
+
+    public MathString(string latexCode)
     {
-        private readonly string _math;
-
-        public MathString(string latexCode)
+        _math = latexCode ?? throw new ArgumentNullException(nameof(latexCode));
+        if (!_math.StartsWith("$$"))
         {
-            _math = latexCode ?? throw new ArgumentNullException(nameof(latexCode));
-            if (!_math.StartsWith("$$"))
-            {
-                _math = $"$${_math}";
-            }
-
-            if (!_math.EndsWith("$$"))
-            {
-                _math = $"{_math}$$";
-            }
+            _math = $"$${_math}";
         }
 
-        public static implicit operator MathString(string source) => new MathString(source);
-
-        public override string ToString()
+        if (!_math.EndsWith("$$"))
         {
-            return _math;
+            _math = $"{_math}$$";
         }
+    }
+
+    public static implicit operator MathString(string source) => new MathString(source);
+
+    public override string ToString()
+    {
+        return _math;
     }
 }

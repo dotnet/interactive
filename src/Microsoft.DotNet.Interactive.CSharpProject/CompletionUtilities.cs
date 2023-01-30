@@ -5,33 +5,32 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.DotNet.Interactive.Events;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject
+namespace Microsoft.DotNet.Interactive.CSharpProject;
+
+internal static class CompletionUtilities
 {
-    internal static class CompletionUtilities
+    public static IEnumerable<CompletionItem> Deduplicate(this IEnumerable<CompletionItem> source)
     {
-        public static IEnumerable<CompletionItem> Deduplicate(this IEnumerable<CompletionItem> source)
+        return source.Distinct(CompletionItemEqualityComparer.Instance);
+    }
+
+    private class CompletionItemEqualityComparer : IEqualityComparer<CompletionItem>
+    {
+        private CompletionItemEqualityComparer()
         {
-            return source.Distinct(CompletionItemEqualityComparer.Instance);
         }
 
-        private class CompletionItemEqualityComparer : IEqualityComparer<CompletionItem>
+        public static CompletionItemEqualityComparer Instance { get; } = new();
+
+        public bool Equals(CompletionItem x, CompletionItem y)
         {
-            private CompletionItemEqualityComparer()
-            {
-            }
+            return x.Kind.Equals(y.Kind) &&
+                   x.InsertText.Equals(y.InsertText);
+        }
 
-            public static CompletionItemEqualityComparer Instance { get; } = new();
-
-            public bool Equals(CompletionItem x, CompletionItem y)
-            {
-                return x.Kind.Equals(y.Kind) &&
-                       x.InsertText.Equals(y.InsertText);
-            }
-
-            public int GetHashCode(CompletionItem obj)
-            {
-                return (obj.Kind + obj.InsertText).GetHashCode();
-            }
+        public int GetHashCode(CompletionItem obj)
+        {
+            return (obj.Kind + obj.InsertText).GetHashCode();
         }
     }
 }

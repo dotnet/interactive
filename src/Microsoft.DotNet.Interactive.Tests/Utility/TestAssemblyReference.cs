@@ -6,48 +6,47 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Utility;
 
-namespace Microsoft.DotNet.Interactive.Tests.Utility
+namespace Microsoft.DotNet.Interactive.Tests.Utility;
+
+public class TestAssemblyReference : IDisposable
 {
-    public class TestAssemblyReference : IDisposable
+    public string ProjectName { get; }
+    public string TargetFramework { get; }
+    public DisposableDirectory Directory { get; }
+
+    public TestAssemblyReference(string projectName, string targetFramework, string sourceFileName, string sourceFileContents)
     {
-        public string ProjectName { get; }
-        public string TargetFramework { get; }
-        public DisposableDirectory Directory { get; }
+        ProjectName = projectName;
+        TargetFramework = targetFramework;
 
-        public TestAssemblyReference(string projectName, string targetFramework, string sourceFileName, string sourceFileContents)
-        {
-            ProjectName = projectName;
-            TargetFramework = targetFramework;
-
-            Directory = DisposableDirectory.Create();
-            Directory.Directory.Populate(($"{ProjectName}.csproj", $@"
+        Directory = DisposableDirectory.Create();
+        Directory.Directory.Populate(($"{ProjectName}.csproj", $@"
 <Project Sdk=""Microsoft.NET.Sdk"">
   <PropertyGroup>
     <TargetFramework>{TargetFramework}</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 </Project>"),
-                (sourceFileName, sourceFileContents));
+            (sourceFileName, sourceFileContents));
 
-        }
+    }
 
-        public async Task<string> BuildAndGetPathToAssembly()
+    public async Task<string> BuildAndGetPathToAssembly()
+    {
+        var dotnet = new Dotnet(Directory.Directory);
+        var result = await dotnet.Build();
+        result.ThrowOnFailure("Failed to build sample assembly");
+        var assemblyPath = Path.Combine(Directory.Directory.FullName, "bin", "Debug", TargetFramework, $"{ProjectName}.dll");
+        if (!File.Exists(assemblyPath))
         {
-            var dotnet = new Dotnet(Directory.Directory);
-            var result = await dotnet.Build();
-            result.ThrowOnFailure("Failed to build sample assembly");
-            var assemblyPath = Path.Combine(Directory.Directory.FullName, "bin", "Debug", TargetFramework, $"{ProjectName}.dll");
-            if (!File.Exists(assemblyPath))
-            {
-                throw new Exception($"The expected assembly was not found at path '{assemblyPath}'.");
-            }
-
-            return assemblyPath;
+            throw new Exception($"The expected assembly was not found at path '{assemblyPath}'.");
         }
 
-        public void Dispose()
-        {
-            Directory.Dispose();
-        }
+        return assemblyPath;
+    }
+
+    public void Dispose()
+    {
+        Directory.Dispose();
     }
 }

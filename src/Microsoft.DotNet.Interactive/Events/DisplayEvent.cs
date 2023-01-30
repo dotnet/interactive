@@ -6,28 +6,27 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Events
+namespace Microsoft.DotNet.Interactive.Events;
+
+public abstract class DisplayEvent : KernelEvent
 {
-    public abstract class DisplayEvent : KernelEvent
+    protected DisplayEvent(
+        object value,
+        KernelCommand command,
+        IReadOnlyCollection<FormattedValue> formattedValues = null,
+        string valueId = null) : base(command)
     {
-        protected DisplayEvent(
-            object value,
-            KernelCommand command,
-            IReadOnlyCollection<FormattedValue> formattedValues = null,
-            string valueId = null) : base(command)
-        {
-            Value = value;
-            FormattedValues = formattedValues ?? Array.Empty<FormattedValue>();
-            ValueId = valueId;
-        }
-
-        [JsonIgnore]
-        public object Value { get; }
-
-        public IReadOnlyCollection<FormattedValue> FormattedValues { get; }
-
-        public string ValueId { get; }
-
-        public override string ToString() => $"{GetType().Name}: {Value?.ToString().TruncateForDisplay()}";
+        Value = value;
+        FormattedValues = formattedValues ?? Array.Empty<FormattedValue>();
+        ValueId = valueId;
     }
+
+    [JsonIgnore]
+    public object Value { get; }
+
+    public IReadOnlyCollection<FormattedValue> FormattedValues { get; }
+
+    public string ValueId { get; }
+
+    public override string ToString() => $"{GetType().Name}: {Value?.ToString().TruncateForDisplay()}";
 }

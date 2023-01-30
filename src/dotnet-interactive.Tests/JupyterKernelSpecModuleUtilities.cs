@@ -4,27 +4,26 @@
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.App.Tests
+namespace Microsoft.DotNet.Interactive.App.Tests;
+
+internal class JupyterKernelSpecModuleUtilities
 {
-    internal class JupyterKernelSpecModuleUtilities
+    private static bool? _isOnPAth;
+
+    public static bool IsOnPath => _isOnPAth ??= CheckIsOnPath();
+    private static bool CheckIsOnPath()
     {
-        private static bool? _isOnPAth;
+        var command = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? "where"
+            : "which";
 
-        public static bool IsOnPath => _isOnPAth ??= CheckIsOnPath();
-        private static bool CheckIsOnPath()
-        {
-            var command = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                ? "where"
-                : "which";
+        var jupyterKernelSpecExists = false;
 
-            var jupyterKernelSpecExists = false;
+        Task.Run(async () => {
+            var result = await Utility.CommandLine.Execute(command, "jupyter-kernelspec");
+            jupyterKernelSpecExists = result.ExitCode == 0;
+        }).Wait(2000);
 
-            Task.Run(async () => {
-                var result = await Utility.CommandLine.Execute(command, "jupyter-kernelspec");
-                jupyterKernelSpecExists = result.ExitCode == 0;
-            }).Wait(2000);
-
-            return jupyterKernelSpecExists;
-        }
+        return jupyterKernelSpecExists;
     }
 }

@@ -7,57 +7,56 @@ using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject
+namespace Microsoft.DotNet.Interactive.CSharpProject;
+
+[JsonConverter(typeof(RunResultJsonConverter))]
+public class RunResult : FeatureContainer
 {
-    [JsonConverter(typeof(RunResultJsonConverter))]
-    public class RunResult : FeatureContainer
+
+    private readonly List<string> _output = new(); 
+
+    public RunResult(
+        bool succeeded,
+        IReadOnlyCollection<string> output = null,
+        string exception = null,
+        IEnumerable<SerializableDiagnostic> diagnostics = null, 
+        string requestId = null)
     {
-
-        private readonly List<string> _output = new(); 
-
-        public RunResult(
-            bool succeeded,
-            IReadOnlyCollection<string> output = null,
-            string exception = null,
-            IEnumerable<SerializableDiagnostic> diagnostics = null, 
-            string requestId = null)
+        if (output != null)
         {
-            if (output != null)
-            {
-                _output.AddRange(output);
-            }
-
-            RequestId = requestId;
-            Succeeded = succeeded;
-            Exception = exception;
-            AddFeature(new Diagnostics(diagnostics?.ToList() ??
-                                       Array.Empty<SerializableDiagnostic>().ToList()));
+            _output.AddRange(output);
         }
 
-        public string RequestId { get; }
-        public bool Succeeded { get; }
+        RequestId = requestId;
+        Succeeded = succeeded;
+        Exception = exception;
+        AddFeature(new Diagnostics(diagnostics?.ToList() ??
+                                   Array.Empty<SerializableDiagnostic>().ToList()));
+    }
 
-        public IReadOnlyCollection<string> Output => _output;
+    public string RequestId { get; }
+    public bool Succeeded { get; }
 
-        public string Exception { get; }
+    public IReadOnlyCollection<string> Output => _output;
 
-        public override string ToString() =>
-            $@"{nameof(Succeeded)}: {Succeeded}
+    public string Exception { get; }
+
+    public override string ToString() =>
+        $@"{nameof(Succeeded)}: {Succeeded}
 {nameof(Output)}: {string.Join("\n", Output)}
 {nameof(Exception)}: {Exception}";
 
-        private class RunResultJsonConverter : FeatureContainerConverter<RunResult>
+    private class RunResultJsonConverter : FeatureContainerConverter<RunResult>
+    {
+        protected override void AddProperties(RunResult result, JObject o)
         {
-            protected override void AddProperties(RunResult result, JObject o)
+            if (result.RequestId != null)
             {
-                if (result.RequestId != null)
-                {
-                    o.Add(new JProperty("requestId", result.RequestId));
-                }
-                o.Add(new JProperty("succeeded", result.Succeeded));
-                o.Add(new JProperty("output", result.Output));
-                o.Add(new JProperty("exception", result.Exception));
+                o.Add(new JProperty("requestId", result.RequestId));
             }
+            o.Add(new JProperty("succeeded", result.Succeeded));
+            o.Add(new JProperty("output", result.Output));
+            o.Add(new JProperty("exception", result.Exception));
         }
     }
 }

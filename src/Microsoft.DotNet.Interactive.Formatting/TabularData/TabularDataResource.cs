@@ -4,29 +4,30 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Formatting.TabularData
+namespace Microsoft.DotNet.Interactive.Formatting.TabularData;
+
+[TypeFormatterSource(typeof(TabularDataFormatterSource))]
+[JsonConverter(typeof(TabularDataResourceJsonConverter))]
+public class TabularDataResource
 {
-    [TypeFormatterSource(typeof(TabularDataFormatterSource))]
-    public class TabularDataResource
+    public TabularDataResource(
+        TableSchema schema, IEnumerable<IEnumerable<KeyValuePair<string, object>>> data, string profile = null)
     {
-        public TabularDataResource(
-            TableSchema schema, IEnumerable<IEnumerable<KeyValuePair<string, object>>> data)
-        {
-            Profile = "tabular-data-resource";
-            Schema = schema ?? throw new ArgumentNullException(nameof(schema));
-            Data = data ?? throw new ArgumentNullException(nameof(data));
-        }
+        Profile = string.IsNullOrWhiteSpace(profile) ? "tabular-data-resource" : profile;
+        Schema = schema ?? throw new ArgumentNullException(nameof(schema));
+        Data = data ?? throw new ArgumentNullException(nameof(data));
+    }
 
-        public string Profile { get; }
+    public string Profile { get; }
 
-        public TableSchema Schema { get; }
+    public TableSchema Schema { get; }
 
-        public IEnumerable<IEnumerable<KeyValuePair<string, object>>> Data { get; }
+    public IEnumerable<IEnumerable<KeyValuePair<string, object>>> Data { get; }
 
-        public TabularDataResourceJsonString ToJsonString()
-        {
-            return new(JsonSerializer.Serialize(this, TabularDataResourceFormatter.JsonSerializerOptions));
-        }
+    public TabularDataResourceJsonString ToJsonString()
+    {
+        return new(JsonSerializer.Serialize(this, TabularDataResourceFormatter.JsonSerializerOptions));
     }
 }

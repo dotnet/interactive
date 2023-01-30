@@ -3,16 +3,15 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive.Documents.ParserServer
-{
-    public class NotebookSerializeResponse : NotebookParserServerResponse
-    {
-        public byte[] RawData { get; }
+namespace Microsoft.DotNet.Interactive.Documents.ParserServer;
 
-        public NotebookSerializeResponse(string id, byte[] rawData)
-            : base(id)
-        {
-            RawData = rawData ?? throw new ArgumentNullException(nameof(rawData));
-        }
+public class NotebookSerializeResponse : NotebookParserServerResponse
+{
+    public byte[] RawData { get; }
+
+    public NotebookSerializeResponse(string id, byte[] rawData)
+        : base(id)
+    {
+        RawData = rawData ?? throw new ArgumentNullException(nameof(rawData));
     }
 }

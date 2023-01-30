@@ -14,156 +14,154 @@ using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Microsoft.DotNet.Interactive.Tests
-{
+namespace Microsoft.DotNet.Interactive.Tests;
 #pragma warning disable 8509
-    public class LanguageKernelAssemblyReferenceTests : LanguageKernelTestBase
+public class LanguageKernelAssemblyReferenceTests : LanguageKernelTestBase
+{
+    public LanguageKernelAssemblyReferenceTests(ITestOutputHelper output) : base(output)
     {
-        public LanguageKernelAssemblyReferenceTests(ITestOutputHelper output) : base(output)
+    }
+
+    [Theory]
+    [InlineData(Language.CSharp)]
+    [InlineData(Language.FSharp)]
+    public async Task it_can_load_assembly_references_using_r_directive_single_submission(Language language)
+    {
+        var kernel = CreateKernel(language);
+
+        // F# strings treat \ as an escape character.  So do C# strings, except #r in C# is special, and doesn't.  F# usually uses @ strings for paths @"c:\temp\...."
+        var dllPath = CreateDllInCurrentDirectory();
+
+        var source = language switch
         {
-        }
-
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        public async Task it_can_load_assembly_references_using_r_directive_single_submission(Language language)
-        {
-            var kernel = CreateKernel(language);
-
-            // F# strings treat \ as an escape character.  So do C# strings, except #r in C# is special, and doesn't.  F# usually uses @ strings for paths @"c:\temp\...."
-            var dllPath = CreateDllInCurrentDirectory();
-
-            var source = language switch
-            {
-                Language.FSharp => $@"#r @""{dllPath.FullName}""
+            Language.FSharp => $@"#r @""{dllPath.FullName}""
 typeof<Hello>.Name",
 
-                Language.CSharp => $@"#r ""{dllPath.FullName}""
+            Language.CSharp => $@"#r ""{dllPath.FullName}""
 typeof(Hello).Name"
-            };
+        };
 
-            await SubmitCode(kernel, source);
+        await SubmitCode(kernel, source);
 
-            KernelEvents.Should().NotContainErrors();
+        KernelEvents.Should().NotContainErrors();
 
-            KernelEvents
-                .Should()
-                .ContainSingle<ReturnValueProduced>()
-                .Which
-                .Value
-                .Should()
-                .Be("Hello");
-        }
+        KernelEvents
+            .Should()
+            .ContainSingle<ReturnValueProduced>()
+            .Which
+            .Value
+            .Should()
+            .Be("Hello");
+    }
 
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        public async Task it_can_load_assembly_references_using_r_directive_separate_submissions(Language language)
+    [Theory]
+    [InlineData(Language.CSharp)]
+    [InlineData(Language.FSharp)]
+    public async Task it_can_load_assembly_references_using_r_directive_separate_submissions(Language language)
+    {
+        var kernel = CreateKernel(language);
+
+        // F# strings treat \ as an escape character.  So do C# strings, except #r in C# is special, and doesn't.  F# usually uses @ strings for paths @"c:\temp\...."
+        var dllPath = CreateDllInCurrentDirectory();
+
+        var source = language switch
         {
-            var kernel = CreateKernel(language);
-
-            // F# strings treat \ as an escape character.  So do C# strings, except #r in C# is special, and doesn't.  F# usually uses @ strings for paths @"c:\temp\...."
-            var dllPath = CreateDllInCurrentDirectory();
-
-            var source = language switch
+            Language.FSharp => new[]
             {
-                Language.FSharp => new[]
-                {
-                    $"#r @\"{dllPath.FullName}\"",
-                    "typeof<Hello>.Name"
-                },
+                $"#r @\"{dllPath.FullName}\"",
+                "typeof<Hello>.Name"
+            },
 
-                Language.CSharp => new[]
-                {
-                    $"#r \"{dllPath.FullName}\"",
-                    "typeof(Hello).Name"
-                }
-            };
-
-            await SubmitCode(kernel, source);
-
-            KernelEvents.Should().NotContainErrors();
-
-            KernelEvents
-                .Should()
-                .ContainSingle<ReturnValueProduced>()
-                .Which
-                .Value
-                .Should()
-                .Be("Hello");
-        }
-
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        public async Task it_can_load_assembly_references_using_r_directive_with_relative_path(Language language)
-        {
-            var kernel = CreateKernel(language);
-
-            var dllName = CreateDllInCurrentDirectory();
-
-            var code = language switch
+            Language.CSharp => new[]
             {
-                Language.CSharp => $"#r \"{dllName.Name}\"",
-                Language.FSharp => $"#r \"{dllName.Name}\""
-            };
+                $"#r \"{dllPath.FullName}\"",
+                "typeof(Hello).Name"
+            }
+        };
 
-            var command = new SubmitCode(code);
+        await SubmitCode(kernel, source);
 
-            await kernel.SendAsync(command);
+        KernelEvents.Should().NotContainErrors();
 
-            KernelEvents.Should().NotContainErrors();
+        KernelEvents
+            .Should()
+            .ContainSingle<ReturnValueProduced>()
+            .Which
+            .Value
+            .Should()
+            .Be("Hello");
+    }
 
-            KernelEvents.Should()
-                        .ContainSingle<CommandSucceeded>(c => c.Command == command);
-        }
+    [Theory]
+    [InlineData(Language.CSharp)]
+    [InlineData(Language.FSharp)]
+    public async Task it_can_load_assembly_references_using_r_directive_with_relative_path(Language language)
+    {
+        var kernel = CreateKernel(language);
 
-        [Theory]
-        [InlineData(Language.CSharp)]
-        // [InlineData(Language.FSharp)] Not supported in F#
-        public async Task it_can_load_assembly_references_using_r_directive_with_relative_path_after_user_code_changes_current_directory(Language language)
+        var dllName = CreateDllInCurrentDirectory();
+
+        var code = language switch
         {
-            var currentDirectory = Directory.GetCurrentDirectory();
-            DisposeAfterTest(() => Directory.SetCurrentDirectory(currentDirectory));
+            Language.CSharp => $"#r \"{dllName.Name}\"",
+            Language.FSharp => $"#r \"{dllName.Name}\""
+        };
 
-            var kernel = CreateKernel(language);
+        var command = new SubmitCode(code);
 
-            //Even when a user changes the current directory, loading from a relative path is not affected.
-            await kernel.SendAsync(new SubmitCode("System.IO.Directory.SetCurrentDirectory(\"..\")"));
+        await kernel.SendAsync(command);
 
-            var dllName = CreateDllInCurrentDirectory();
+        KernelEvents.Should().NotContainErrors();
 
-            var code = language switch
-            {
-                Language.CSharp => $"#r \"{dllName.Name}\"\nnew Hello()",
-                Language.FSharp => $"#r \"{dllName.Name}\"\nnew Hello()"
-            };
+        KernelEvents.Should()
+            .ContainSingle<CommandSucceeded>(c => c.Command == command);
+    }
 
-            var command = new SubmitCode(code);
+    [Theory]
+    [InlineData(Language.CSharp)]
+    // [InlineData(Language.FSharp)] Not supported in F#
+    public async Task it_can_load_assembly_references_using_r_directive_with_relative_path_after_user_code_changes_current_directory(Language language)
+    {
+        var currentDirectory = Directory.GetCurrentDirectory();
+        DisposeAfterTest(() => Directory.SetCurrentDirectory(currentDirectory));
 
-            await kernel.SendAsync(command);
+        var kernel = CreateKernel(language);
 
-            KernelEvents.Should().NotContainErrors();
+        //Even when a user changes the current directory, loading from a relative path is not affected.
+        await kernel.SendAsync(new SubmitCode("System.IO.Directory.SetCurrentDirectory(\"..\")"));
 
-            KernelEvents.Should()
-                        .ContainSingle<CommandSucceeded>(c => c.Command == command);
-        }
+        var dllName = CreateDllInCurrentDirectory();
 
-        private FileInfo CreateDllInCurrentDirectory()
+        var code = language switch
         {
-            var assemblyName = Guid.NewGuid().ToString("N");
-            var dllName = assemblyName + ".dll";
+            Language.CSharp => $"#r \"{dllName.Name}\"\nnew Hello()",
+            Language.FSharp => $"#r \"{dllName.Name}\"\nnew Hello()"
+        };
 
-            var systemRefLocation = typeof(object).GetTypeInfo().Assembly.Location;
-            var systemReference = MetadataReference.CreateFromFile(systemRefLocation);
+        var command = new SubmitCode(code);
 
-            CSharpCompilation.Create(assemblyName)
-                             .WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
-                             .AddReferences(systemReference)
-                             .AddSyntaxTrees(CSharpSyntaxTree.ParseText("public class Hello { }"))
-                             .Emit(dllName);
+        await kernel.SendAsync(command);
 
-            return new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), dllName));
-        }
+        KernelEvents.Should().NotContainErrors();
+
+        KernelEvents.Should()
+            .ContainSingle<CommandSucceeded>(c => c.Command == command);
+    }
+
+    private FileInfo CreateDllInCurrentDirectory()
+    {
+        var assemblyName = Guid.NewGuid().ToString("N");
+        var dllName = assemblyName + ".dll";
+
+        var systemRefLocation = typeof(object).GetTypeInfo().Assembly.Location;
+        var systemReference = MetadataReference.CreateFromFile(systemRefLocation);
+
+        CSharpCompilation.Create(assemblyName)
+            .WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
+            .AddReferences(systemReference)
+            .AddSyntaxTrees(CSharpSyntaxTree.ParseText("public class Hello { }"))
+            .Emit(dllName);
+
+        return new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), dllName));
     }
 }

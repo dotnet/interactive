@@ -3,23 +3,22 @@
 
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.SqlServer.Tests
+namespace Microsoft.DotNet.Interactive.SqlServer.Tests;
+
+public sealed class MsSqlTheoryAttribute : TheoryAttribute
 {
-    public sealed class MsSqlTheoryAttribute : TheoryAttribute
+    private static readonly string _skipReason;
+
+    static MsSqlTheoryAttribute()
     {
-        private static readonly string _skipReason;
+        _skipReason = MsSqlFactAttribute.TestConnectionAndReturnSkipReason();
+    }
 
-        static MsSqlTheoryAttribute()
+    public MsSqlTheoryAttribute()
+    {
+        if (_skipReason is not null)
         {
-            _skipReason = MsSqlFactAttribute.TestConnectionAndReturnSkipReason();
-        }
-
-        public MsSqlTheoryAttribute()
-        {
-            if (_skipReason is not null)
-            {
-                Skip = _skipReason;
-            }
+            Skip = _skipReason;
         }
     }
 }

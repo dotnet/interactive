@@ -1,3 +1,7 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":null,"items":[{"name":"csharp","languageName":"C#","aliases":["c#","cs"]},{"name":"fsharp","languageName":"F#","aliases":["f#","fs"]},{"name":"pwsh","languageName":"PowerShell","aliases":["powershell"]},{"name":"javascript","languageName":"JavaScript","aliases":["js"]},{"name":"html","languageName":"HTML"},{"name":"sql","languageName":"SQL"},{"name":"kql","languageName":"KQL"},{"name":"mermaid","languageName":"Mermaid"},{"name":"http","languageName":"HTTP"},{"name":"value"}]}}
+
 #!csharp
 
 #r "nuget: Microsoft.DotNet.Interactive.Kql, *-*"
@@ -56,7 +60,11 @@ let languageMapping = dynamic(
        "d277670919a94ba361be1887d39852c3f31d7eed817343cbb70fcd8910841f86":"julia",
        "eca37636c0711d96f605f252e43a4f3d0811a2ce7495c004b43eea2a9f7216e8":"Perl",
        "f0c929a9e723bc62724e30c7e396e576019dfcb8cfd0a3f264ee5d72e64e49d1":"Perl",
-       "99f9df7b726d831976eb87646f4f89cc019dc122a2d4ddcd1f838f1dbfb340a2":"lisp"
+       "99f9df7b726d831976eb87646f4f89cc019dc122a2d4ddcd1f838f1dbfb340a2":"lisp",
+       "300264028c161bff5835271073e5d5dd5c77a20e74ec800a0eb3117e33b985a8":"SysML",
+       "f43b8a78baae3439cc492cbe037fab51052149b029a900a8b4568d2b09f83fbd":"SysML",
+       "8ae1251edbc3535c55721fcca5db6361375e90bd2d16c4abfe75aafd60188470":"SysML",
+       "f911b3e79594cd5ec195df509650912fb1a0ee9327f49d9c397847b00602c96f":"dotLang"
   });
  let mapKernel = (sha:string) { 
   let mapped = tostring(languageMapping[sha]);
@@ -287,6 +295,8 @@ loadd3(["d3"], (d3) => {
     notToTruncate.add("Python");
     notToTruncate.add("R");
     notToTruncate.add("julia");
+    notToTruncate.add("SysML");
+    notToTruncate.add("dotLang");
     
     function linkArc(d) {
       const r = Math.hypot(d.target.x - d.source.x, d.target.y - d.source.y);

@@ -5,20 +5,19 @@ using System;
 using System.Collections.Generic;
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Events
+namespace Microsoft.DotNet.Interactive.Events;
+
+public class DisplayedValueUpdated : DisplayEvent
 {
-    public class DisplayedValueUpdated : DisplayEvent
+    public DisplayedValueUpdated(
+        object value,
+        string valueId,
+        KernelCommand command,
+        IReadOnlyCollection<FormattedValue> formattedValues = null) : base(value, command, formattedValues, valueId)
     {
-        public DisplayedValueUpdated(
-            object value,
-            string valueId,
-            KernelCommand command,
-            IReadOnlyCollection<FormattedValue> formattedValues = null) : base(value, command, formattedValues, valueId)
+        if (string.IsNullOrWhiteSpace(valueId))
         {
-            if (string.IsNullOrWhiteSpace(valueId))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(valueId));
-            }
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(valueId));
         }
     }
 }

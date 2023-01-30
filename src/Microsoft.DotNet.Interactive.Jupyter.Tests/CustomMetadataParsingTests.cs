@@ -8,70 +8,69 @@ using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Tests
+namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
+
+public class CustomMetadataParsingTests
 {
-    public class CustomMetadataParsingTests
+    [Fact]
+    public void Input_cell_metadata_can_be_parsed_from_dotnet_interactive_metadata()
     {
-        [Fact]
-        public void Input_cell_metadata_can_be_parsed_from_dotnet_interactive_metadata()
+        var rawMetadata = new
         {
-            var rawMetadata = new
-            {
-                // the value specified is `language`, but in reality this was the kernel name
-                dotnet_interactive = new InputCellMetadata(language: "fsharp")
-            };
-            var rawMetadataJson = JsonSerializer.Serialize(rawMetadata);
-            var metadata = MetadataExtensions.DeserializeMetadataFromJsonString(rawMetadataJson);
-            metadata.Should()
-                .ContainKey("dotnet_interactive")
-                .WhoseValue
-                .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata(language: "fsharp"));
-        }
+            // the value specified is `language`, but in reality this was the kernel name
+            dotnet_interactive = new InputCellMetadata(language: "fsharp")
+        };
+        var rawMetadataJson = JsonSerializer.Serialize(rawMetadata);
+        var metadata = MetadataExtensions.DeserializeMetadataFromJsonString(rawMetadataJson);
+        metadata.Should()
+            .ContainKey("dotnet_interactive")
+            .WhoseValue
+            .Should()
+            .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata(language: "fsharp"));
+    }
 
-        [Fact]
-        public void Input_cell_metadata_can_be_parsed_from_polyglot_notebook_metadata()
+    [Fact]
+    public void Input_cell_metadata_can_be_parsed_from_polyglot_notebook_metadata()
+    {
+        var rawMetadata = new
         {
-            var rawMetadata = new
-            {
-                polyglot_notebook = new InputCellMetadata(kernelName: "fsharp")
-            };
-            var rawMetadataJson = JsonSerializer.Serialize(rawMetadata);
-            var metadata = MetadataExtensions.DeserializeMetadataFromJsonString(rawMetadataJson);
-            metadata.Should()
-                .ContainKey("polyglot_notebook")
-                .WhoseValue
-                .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata(kernelName: "fsharp"));
-        }
+            polyglot_notebook = new InputCellMetadata(kernelName: "fsharp")
+        };
+        var rawMetadataJson = JsonSerializer.Serialize(rawMetadata);
+        var metadata = MetadataExtensions.DeserializeMetadataFromJsonString(rawMetadataJson);
+        metadata.Should()
+            .ContainKey("polyglot_notebook")
+            .WhoseValue
+            .Should()
+            .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata(kernelName: "fsharp"));
+    }
 
-        [Fact]
-        public void Input_cell_metadata_can_be_parsed_with_no_fields()
+    [Fact]
+    public void Input_cell_metadata_can_be_parsed_with_no_fields()
+    {
+        var rawMetadata = new
         {
-            var rawMetadata = new
-            {
-                dotnet_interactive = new InputCellMetadata()
-            };
-            var rawMetadataJson = JsonSerializer.Serialize(rawMetadata);
-            var metadata = MetadataExtensions.DeserializeMetadataFromJsonString(rawMetadataJson);
-            metadata.Should()
-                .ContainKey("dotnet_interactive")
-                .WhoseValue
-                .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata());
-        }
+            dotnet_interactive = new InputCellMetadata()
+        };
+        var rawMetadataJson = JsonSerializer.Serialize(rawMetadata);
+        var metadata = MetadataExtensions.DeserializeMetadataFromJsonString(rawMetadataJson);
+        metadata.Should()
+            .ContainKey("dotnet_interactive")
+            .WhoseValue
+            .Should()
+            .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata());
+    }
 
-        [Fact]
-        public void Input_cell_metadata_is_not_parsed_when_not_present()
+    [Fact]
+    public void Input_cell_metadata_is_not_parsed_when_not_present()
+    {
+        var rawMetadata = new
         {
-            var rawMetadata = new
-            {
-                dotnet_interactive_but_not_the_right_shape = new InputCellMetadata(language: "fsharp")
-            };
-            var rawMetadataJson = JsonSerializer.Serialize(rawMetadata);
-            var metadata = MetadataExtensions.DeserializeMetadataFromJsonString(rawMetadataJson);
-            metadata.Should()
-                .NotContainKey("dotnet_interactive");
-        }
+            dotnet_interactive_but_not_the_right_shape = new InputCellMetadata(language: "fsharp")
+        };
+        var rawMetadataJson = JsonSerializer.Serialize(rawMetadata);
+        var metadata = MetadataExtensions.DeserializeMetadataFromJsonString(rawMetadataJson);
+        metadata.Should()
+            .NotContainKey("dotnet_interactive");
     }
 }
