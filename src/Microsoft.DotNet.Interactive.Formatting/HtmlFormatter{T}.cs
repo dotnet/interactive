@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -55,16 +55,18 @@ public class HtmlFormatter<T> : TypeFormatter<T>
 
     public override string MimeType => HtmlFormatter.MimeType;
 
-    internal static HtmlFormatter<T> CreateForAnyObject()
+    internal static HtmlFormatter<T> CreateTableFormatterForAnyObject()
     {
         var members = typeof(T).GetMembersToFormat()
                                .GetMemberAccessors<T>();
 
-        return new HtmlFormatter<T>((instance, context) =>
+        return new HtmlFormatter<T>((instance, context) => BuildTable(instance, context, members));
+
+        static bool BuildTable(T instance, FormatContext context, MemberAccessor<T>[] memberAccessors)
         {
             // Note the order of members is declaration order
-            var reducedMembers = 
-                members
+            var reducedMembers =
+                memberAccessors
                     .Take(Math.Max(0, HtmlFormatter.MaxProperties))
                     .ToArray();
 
@@ -77,22 +79,19 @@ public class HtmlFormatter<T> : TypeFormatter<T>
             else
             {
                 // Note, embeds the keys and values as arbitrary objects into the HTML content,
-                List<IHtmlContent> headers = 
+                List<IHtmlContent> headers =
                     reducedMembers.Select(m => (IHtmlContent)th(m.Member.Name))
-                        .ToList();
-                    
+                                  .ToList();
+
                 // Add a '..' column if we elided some members due to size limitations
-                if (reducedMembers.Length < members.Length)
+                if (reducedMembers.Length < memberAccessors.Length)
                 {
                     headers.Add(th(".."));
                 }
 
                 IEnumerable<object> values =
                     reducedMembers.Select(m => m.GetValueOrException(instance))
-                        .Select(v =>
-                        {
-                            return td(div[@class: "dni-plaintext"](pre(v.ToDisplayString(PlainTextFormatter.MimeType))));
-                        });
+                                  .Select(v => { return td(div[@class: "dni-plaintext"](pre(v.ToDisplayString(PlainTextFormatter.MimeType)))); });
 
                 PocketView t =
                     table(
@@ -107,10 +106,10 @@ public class HtmlFormatter<T> : TypeFormatter<T>
 
                 return true;
             }
-        });
+        }
     }
 
-    internal static HtmlFormatter<T> CreateForAnyEnumerable()
+    internal static HtmlFormatter<T> CreateTableFormatterForAnyEnumerable()
     {
         Func<T, IEnumerable> getKeys = null;
         Func<T, IEnumerable> getValues = instance => (IEnumerable) instance;
@@ -141,9 +140,9 @@ public class HtmlFormatter<T> : TypeFormatter<T>
 
             if (context.TableDepth > 1)
             {
-                // FIX: (CreateForAnyEnumerable) 
-                // HtmlFormatter.FormatAndStyleAsPlainText(source,  context);
-                // return true;
+                // FIX: (CreateForAnyEnumerable) change nested tree views
+                HtmlFormatter.FormatAndStyleAsPlainText(source,  context);
+                return true;
             }
 
             var canCountRemainder = source is ICollection;

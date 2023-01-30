@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -56,7 +56,7 @@ public static class PlainTextFormatter
         if (Formatter<T>.TypeIsValueTuple || 
             Formatter<T>.TypeIsTuple)
         {
-            return FormatAnyTuple;
+            return FormatTuple;
         }
 
         if (typeof(T).IsEnum)

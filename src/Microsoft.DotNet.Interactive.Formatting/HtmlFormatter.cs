@@ -59,10 +59,10 @@ public static class HtmlFormatter
     }
 
     internal static FormatterMapByType FormattersForAnyObject =
-        new(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyObject));
+        new(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateTableFormatterForAnyObject));
 
     internal static FormatterMapByType FormattersForAnyEnumerable =
-        new(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyEnumerable));
+        new(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateTableFormatterForAnyEnumerable));
 
     internal static readonly ITypeFormatter[] DefaultFormatters =
     {
