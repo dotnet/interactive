@@ -148,7 +148,7 @@ public class CommandLineParserTests : IDisposable
             logFileContents.Append(line);
         }
 
-        logFileContents.ToString().Should().Contain("CodeSubmissionReceived: 1+1");
+        logFileContents.ToString().Should().Contain("[KernelInvocationContext] [SubmitCode: 1+1] ");
     }
 
     [Fact]

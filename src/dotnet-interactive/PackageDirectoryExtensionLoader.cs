@@ -12,11 +12,11 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
-using static Pocket.Logger<Microsoft.DotNet.Interactive.PackageDirectoryExtensionLoader>;
+using static Pocket.Logger<Microsoft.DotNet.Interactive.App.PackageDirectoryExtensionLoader>;
 
-namespace Microsoft.DotNet.Interactive;
+namespace Microsoft.DotNet.Interactive.App;
 
-internal class PackageDirectoryExtensionLoader : IKernelExtensionLoader
+internal class PackageDirectoryExtensionLoader
 {
     private const string ExtensionScriptName = "extension.dib";
 
@@ -59,7 +59,7 @@ internal class PackageDirectoryExtensionLoader : IKernelExtensionLoader
             kernel,
             context);
 
-        await LoadFromScript(
+        await LoadFromExtensionDibScript(
             directory,
             kernel,
             context);
@@ -99,46 +99,38 @@ internal class PackageDirectoryExtensionLoader : IKernelExtensionLoader
         {
             var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(assemblyFile.FullName);
 
-            await LoadFromAssembly(assembly, kernel, context);
-        }
-    }
+            var extensionTypes = assembly
+                                 .ExportedTypes
+                                 .Where(t => t.CanBeInstantiated() && typeof(IKernelExtension).IsAssignableFrom(t))
+                                 .ToArray();
 
-    private static async Task LoadFromAssembly(
-        Assembly assembly,
-        Kernel kernel,
-        KernelInvocationContext context)
-    {
-        var extensionTypes = assembly
-                             .ExportedTypes
-                             .Where(t => t.CanBeInstantiated() && typeof(IKernelExtension).IsAssignableFrom(t))
-                             .ToArray();
-
-        if (extensionTypes.Any())
-        {
-            context.Display($"Loading extensions from `{assembly.Location}`");
-        }
-
-        foreach (var extensionType in extensionTypes)
-        {
-            var extension = (IKernelExtension)Activator.CreateInstance(extensionType);
-
-            try
+            if (extensionTypes.Any())
             {
-                await extension.OnLoadAsync(kernel);
-                context.Publish(new KernelExtensionLoaded(extension, context.Command));
+                context.Display($"Loading extensions from `{assembly.Location}`");
             }
-            catch (Exception e)
-            {
-                context.Publish(new ErrorProduced(
-                                    $"Failed to load kernel extension \"{extensionType.Name}\" from assembly {assembly.Location}",
-                                    context.Command));
 
-                context.Fail(context.Command, new KernelExtensionLoadException(e));
+            foreach (var extensionType in extensionTypes)
+            {
+                var extension = (IKernelExtension)Activator.CreateInstance(extensionType);
+
+                try
+                {
+                    await extension.OnLoadAsync(kernel);
+                    context.Publish(new KernelExtensionLoaded(extension, context.Command));
+                }
+                catch (Exception e)
+                {
+                    context.Publish(new ErrorProduced(
+                                        $"Failed to load kernel extension \"{extensionType.Name}\" from assembly {assembly.Location}",
+                                        context.Command));
+
+                    context.Fail(context.Command, new KernelExtensionLoadException(e));
+                }
             }
         }
     }
 
-    private async Task LoadFromScript(
+    private async Task LoadFromExtensionDibScript(
         DirectoryInfo directory,
         Kernel kernel,
         KernelInvocationContext context)
@@ -157,9 +149,7 @@ internal class PackageDirectoryExtensionLoader : IKernelExtensionLoader
 
             context.Display(logMessage);
 
-            var scriptContents = await IOExtensions.ReadAllTextAsync(extensionFile.FullName, Encoding.UTF8);
-
-            await kernel.SubmitCodeAsync(scriptContents);
+            await kernel.LoadAndRunInteractiveDocument(extensionFile);
         }
     }
 }

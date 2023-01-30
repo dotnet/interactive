@@ -27,7 +27,6 @@ public sealed class CompositeKernel :
 {
     private readonly ConcurrentQueue<PackageAdded> _packagesToCheckForExtensions = new();
     private readonly KernelCollection _childKernels;
-    private readonly PackageDirectoryExtensionLoader _extensionLoader = new();
     private string _defaultKernelName;
     private Command _connectDirective;
     private KernelHost _host;
@@ -36,16 +35,8 @@ public sealed class CompositeKernel :
     public CompositeKernel(string name = null) : base(name ?? ".NET")
     {
         _childKernels = new(this);
-
-        ListenForPackagesToScanForExtensions();
     }
 
-    private void ListenForPackagesToScanForExtensions() =>
-        RegisterForDisposal(KernelEvents
-            .OfType<PackageAdded>()
-            .Where(pa => pa?.PackageReference.PackageRoot is not null)
-            .Distinct(pa => pa.PackageReference.PackageRoot)
-            .Subscribe(added => _packagesToCheckForExtensions.Enqueue(added)));
 
     public string DefaultKernelName
     {
@@ -76,7 +67,6 @@ public sealed class CompositeKernel :
         kernel.ParentKernel = this;
         kernel.RootKernel = RootKernel;
 
-        kernel.AddMiddleware(LoadExtensions);
         kernel.SetScheduler(Scheduler);
 
         if (aliases is not null)
@@ -120,33 +110,6 @@ public sealed class CompositeKernel :
         }
 
         AddDirective(chooseKernelCommand);
-    }
-
-    private async Task LoadExtensions(
-        KernelCommand command,
-        KernelInvocationContext context,
-        KernelPipelineContinuation next)
-    {
-        await next(command, context);
-
-        while (_packagesToCheckForExtensions.TryDequeue(out var packageAdded))
-        {
-            var packageRootDir = packageAdded.PackageReference.PackageRoot;
-
-            var extensionDir =
-                new DirectoryInfo
-                (Path.Combine(
-                    packageRootDir,
-                    "interactive-extensions",
-                    "dotnet"));
-
-            if (extensionDir.Exists)
-            {
-                await LoadExtensionsFromDirectoryAsync(
-                    extensionDir,
-                    context);
-            }
-        }
     }
 
     public KernelCollection ChildKernels => _childKernels;
@@ -301,16 +264,6 @@ public sealed class CompositeKernel :
     public IEnumerator<Kernel> GetEnumerator() => _childKernels.GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-    public async Task LoadExtensionsFromDirectoryAsync(
-        DirectoryInfo directory,
-        KernelInvocationContext context)
-    {
-        await _extensionLoader.LoadFromDirectoryAsync(
-            directory,
-            this,
-            context);
-    }
 
     public void AddKernelConnector(ConnectKernelCommand connectionCommand)
     {

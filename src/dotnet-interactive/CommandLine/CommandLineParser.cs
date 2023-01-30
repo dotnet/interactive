@@ -9,7 +9,6 @@ using System.CommandLine.IO;
 using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
 using System.IO;
-using System.Net.Http;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
@@ -499,7 +498,8 @@ public static class CommandLineParser
             .UseDefaultMagicCommands()
             .UseLogMagicCommand()
             .UseAboutMagicCommand()
-            .UseImportMagicCommand();
+            .UseImportMagicCommand()
+            .UseNuGetExtensions();
 
         kernel.AddKernelConnector(new ConnectNamedPipeCommand());
         kernel.AddKernelConnector(new ConnectSignalRCommand());

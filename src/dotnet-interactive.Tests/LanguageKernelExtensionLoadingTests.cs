@@ -1,21 +1,22 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using FluentAssertions;
-using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Tests.Utility;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using FluentAssertions;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Http;
+using Microsoft.DotNet.Interactive.Tests;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Microsoft.DotNet.Interactive.Tests;
+namespace Microsoft.DotNet.Interactive.App.Tests;
 
 public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
 {
-
     public LanguageKernelExtensionLoadingTests(ITestOutputHelper output) : base(output)
     {
     }
@@ -41,7 +42,7 @@ public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
             code,
             dllDir);
 
-        var kernel = CreateKernel(language);
+        var kernel = CreateCompositeKernel(language);
 
         using var context = KernelInvocationContext.Establish(new SubmitCode(""));
 
@@ -52,9 +53,9 @@ public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
             context);
 
         events.Should()
-            .NotContain(e => e is CommandFailed)
-            .And
-            .ContainSingle<DisplayedValueProduced>(v => v.FormattedValues.Single().Value == $"{language} extension installed");
+              .NotContain(e => e is CommandFailed)
+              .And
+              .ContainSingle<DisplayedValueProduced>(v => v.FormattedValues.Single().Value == $"{language} extension installed");
     }
 
     [Theory]
@@ -71,7 +72,7 @@ public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
             "throw new Exception();",
             dllDir);
 
-        var kernel = CreateKernel(language);
+        var kernel = CreateCompositeKernel(language);
         using var context = KernelInvocationContext.Establish(new SubmitCode(""));
 
         using var events = context.KernelEvents.ToSubscribedList();
@@ -81,7 +82,7 @@ public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
             context);
 
         events.Should()
-            .ContainSingle<CommandFailed>(cf => cf.Exception is KernelExtensionLoadException);
+              .ContainSingle<CommandFailed>(cf => cf.Exception is KernelExtensionLoadException);
     }
 
     [Theory]
@@ -89,22 +90,21 @@ public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
     [InlineData(Language.FSharp)]
     public async Task It_loads_extensions_found_in_nuget_packages(Language language)
     {
-
         var extensionPackage = await KernelExtensionTestHelper.GetSimpleExtensionAsync();
 
-        var kernel = CreateKernel(language);
+        var kernel = CreateCompositeKernel(language);
 
         await kernel.SubmitCodeAsync($@"
 #i ""nuget:{extensionPackage.PackageLocation}""
 #r ""nuget:{extensionPackage.Name},{extensionPackage.Version}""");
 
         KernelEvents.Should()
-            .ContainSingle<ReturnValueProduced>()
-            .Which
-            .Value
-            .As<string>()
-            .Should()
-            .Contain("SimpleExtension");
+                    .ContainSingle<ReturnValueProduced>()
+                    .Which
+                    .Value
+                    .As<string>()
+                    .Should()
+                    .Contain("SimpleExtension");
     }
 
     [Theory]
@@ -121,11 +121,71 @@ public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
 #r ""nuget:{extensionPackage.Name},{extensionPackage.Version}""");
 
         KernelEvents.Should()
-            .ContainSingle<ReturnValueProduced>()
-            .Which
-            .Value
-            .As<string>()
-            .Should()
-            .Contain("ScriptExtension");
+                    .ContainSingle<ReturnValueProduced>()
+                    .Which
+                    .Value
+                    .As<string>()
+                    .Should()
+                    .Contain("ScriptExtension");
+    }
+
+    [Theory]
+    [InlineData(Language.CSharp)]
+    [InlineData(Language.FSharp)]
+    public async Task It_does_not_track_extensions_that_are_not_file_providers(Language language)
+    {
+        var kernel = CreateKernel(language);
+        var provider = new FileProvider(kernel, typeof(Program).Assembly);
+
+        var extensionPackage = await KernelExtensionTestHelper.GetSimpleExtensionAsync();
+
+        await kernel.SubmitCodeAsync($@"
+#i ""nuget:{extensionPackage.PackageLocation}""
+#r ""nuget:{extensionPackage.Name},{extensionPackage.Version}""            ");
+
+        Action action = () => provider.GetFileInfo("extensions/TestKernelExtension/resources/file.txt");
+
+        action.Should().Throw<StaticContentSourceNotFoundException>();
+    }
+
+    [Theory]
+    [InlineData(Language.CSharp)]
+    [InlineData(Language.FSharp)]
+    public async Task It_tracks_extensions_that_are_not_file_providers(Language language)
+    {
+        var kernel = CreateCompositeKernel(language);
+        var provider = new FileProvider(kernel, typeof(Program).Assembly);
+
+        var extensionPackage = await KernelExtensionTestHelper.GetFileProviderExtensionAsync();
+
+        await kernel.SubmitCodeAsync($@"
+#i ""nuget:{extensionPackage.PackageLocation}""
+#r ""nuget:{extensionPackage.Name},{extensionPackage.Version}""            ");
+
+        var file = provider.GetFileInfo("extensions/TestKernelExtension/resources/file.txt");
+
+        file.Should()
+            .NotBeNull();
+    }
+
+    [Theory]
+    [InlineData(Language.CSharp)]
+    [InlineData(Language.FSharp)]
+    public void it_cannot_resolve_unregistered_extensions(Language language)
+    {
+        var kernel = CreateKernel(language);
+        var provider = new FileProvider(kernel, typeof(Program).Assembly);
+
+        Action action
+            = () => provider.GetFileInfo("extensions/not_found/resources/file.txt");
+
+        action.Should().Throw<StaticContentSourceNotFoundException>();
+    }
+
+    protected override CompositeKernel CreateCompositeKernel(Language defaultKernelLanguage = Language.CSharp, bool openTestingNamespaces = false)
+    {
+        var kernel = base.CreateCompositeKernel(defaultKernelLanguage, openTestingNamespaces);
+        kernel.UseNuGetExtensions();
+        return kernel;
     }
 }

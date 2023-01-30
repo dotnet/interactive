@@ -36,7 +36,6 @@ Microsoft.DotNet.Interactive
     public System.Collections.Generic.IEnumerator<Kernel> GetEnumerator()
      Kernel GetHandlingKernel(Microsoft.DotNet.Interactive.Commands.KernelCommand command, KernelInvocationContext context)
      System.Threading.Tasks.Task HandleRequestKernelInfoAsync(Microsoft.DotNet.Interactive.Commands.RequestKernelInfo command, KernelInvocationContext context)
-    public System.Threading.Tasks.Task LoadExtensionsFromDirectoryAsync(System.IO.DirectoryInfo directory, KernelInvocationContext context)
     public System.Void SetDefaultTargetKernelNameForCommand(System.Type commandType, System.String kernelName)
     protected System.Void SetHandlingKernel(Microsoft.DotNet.Interactive.Commands.KernelCommand command, KernelInvocationContext context)
   public class DataDictionaryConverter : JsonConverter<System.Collections.Generic.IDictionary<System.String,System.Object>>
@@ -202,12 +201,10 @@ Microsoft.DotNet.Interactive
   public class KernelExtensionLoadException : System.Exception, System.Runtime.Serialization.ISerializable
     .ctor(System.Exception innerException)
   public static class KernelExtensions
-    public static Kernel FindKernel(System.String name)
     public static Kernel FindKernel(System.Func<Kernel,System.Boolean> predicate)
     public static Kernel FindKernelByName(System.String name)
     public static System.Collections.Generic.IEnumerable<Kernel> FindKernels(System.Func<Kernel,System.Boolean> predicate)
-    public static T LogCommandsToPocketLogger<T>()
-    public static T LogEventsToPocketLogger<T>()
+    public static System.Threading.Tasks.Task LoadAndRunInteractiveDocument(System.IO.FileInfo file)
     public static System.Collections.Generic.IEnumerable<Kernel> Subkernels(System.Boolean recursive = False)
     public static System.Collections.Generic.IEnumerable<Kernel> SubkernelsAndSelf(System.Boolean recursive = False)
     public static System.Threading.Tasks.Task<KernelCommandResult> SubmitCodeAsync(System.String code)

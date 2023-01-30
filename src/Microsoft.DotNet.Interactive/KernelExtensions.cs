@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.NamingConventionBinder;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
@@ -52,9 +51,6 @@ public static class KernelExtensions
         }
     }
 
-    [Obsolete("Use `FindKernelByName`")]
-    public static Kernel FindKernel(this Kernel kernel, string name) => FindKernelByName(kernel, name);
-
     public static Kernel FindKernelByName(this Kernel kernel, string name) => FindKernel(kernel, kernel => kernel.KernelInfo.NameAndAliases.Contains(name));
 
     public static Kernel FindKernel(this Kernel kernel, Func<Kernel, bool> predicate) => FindKernels(kernel, predicate).FirstOrDefault();
@@ -93,39 +89,46 @@ public static class KernelExtensions
     public static TKernel UseImportMagicCommand<TKernel>(this TKernel kernel)
         where TKernel : Kernel
     {
-        var command = new Command("#!import", "Runs another notebook or source code file inline.");
-        command.AddArgument(new Argument<FileInfo>("file").ExistingOnly());
-        command.Handler = CommandHandler.Create(
-            async (FileInfo file, KernelInvocationContext context) =>
-            {
-                var kernelInfoCollection = CreateKernelInfos(kernel.RootKernel as CompositeKernel);
-                var document = await InteractiveDocument.LoadAsync(
-                    file,
-                    kernelInfoCollection);
-                var lookup = kernelInfoCollection.ToDictionary(k => k.Name, StringComparer.OrdinalIgnoreCase);
-                
-                foreach (var element in document.Elements)
-                {
-                    if (lookup.TryGetValue(element.KernelName!, out var kernelInfo) && StringComparer.OrdinalIgnoreCase.Equals(kernelInfo.LanguageName, "markdown"))
-                    {
+        var fileArg = new Argument<FileInfo>("file").ExistingOnly();
+        var command = new Command("#!import", "Runs another notebook or source code file inline.")
+        {
+            fileArg
+        };
 
-                        var @event = new DisplayedValueProduced(element.Contents, context.Command, new[]
-                        {
-                                new FormattedValue("text/markdown", element.Contents)
-                            });
-                        context.Publish(@event);
-                    }
-                    else
-                    {
-                        await kernel.RootKernel.SendAsync(new SubmitCode(element.Contents, element.KernelName));
-                    }
-
-                }
-            });
+        command.SetHandler(async ctx =>
+        {
+            var file = ctx.ParseResult.GetValueForArgument(fileArg);
+            await LoadAndRunInteractiveDocument(kernel, file);
+        });
 
         kernel.AddDirective(command);
 
         return kernel;
+    }
+
+    public static async Task LoadAndRunInteractiveDocument(
+        this Kernel kernel,
+        FileInfo file)
+    {
+        var kernelInfoCollection = CreateKernelInfos(kernel.RootKernel as CompositeKernel);
+        var document = await InteractiveDocument.LoadAsync(
+                           file,
+                           kernelInfoCollection);
+        var lookup = kernelInfoCollection.ToDictionary(k => k.Name, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var element in document.Elements)
+        {
+            if (lookup.TryGetValue(element.KernelName!, out var kernelInfo) &&
+                StringComparer.OrdinalIgnoreCase.Equals(kernelInfo.LanguageName, "markdown"))
+            {
+                var formattedValue = new FormattedValue("text/markdown", element.Contents);
+                await kernel.SendAsync(new DisplayValue(formattedValue));
+            }
+            else
+            {
+                await kernel.RootKernel.SendAsync(new SubmitCode(element.Contents, element.KernelName));
+            }
+        }
 
         static KernelInfoCollection CreateKernelInfos(CompositeKernel kernel)
         {
@@ -139,7 +142,7 @@ public static class KernelExtensions
             if (!kernelInfos.Contains("markdown"))
             {
                 kernelInfos = kernelInfos.Clone();
-                kernelInfos.Add(new Documents.KernelInfo("markdown", languageName: "markdown", aliases: new[] { "md" }));
+                kernelInfos.Add(new Documents.KernelInfo("markdown", languageName: "Markdown"));
             }
 
             return kernelInfos;
@@ -153,7 +156,7 @@ public static class KernelExtensions
 
         var logStarted = false;
 
-        command.Handler = CommandHandler.Create((InvocationContext cmdLineContext) =>
+        command.SetHandler(cmdLineContext =>
         {
             if (logStarted)
             {
@@ -413,52 +416,6 @@ public static class KernelExtensions
                     context.Command,
                     FormattedValue.FromObject(currentVariables)));
         }
-    }
-
-    [DebuggerStepThrough]
-    public static T LogCommandsToPocketLogger<T>(this T kernel)
-        where T : Kernel
-    {
-        kernel.AddMiddleware(async (command, context, next) =>
-        {
-            using var _ = Logger.Log.OnEnterAndExit($"Command: {command.ToString().Replace(Environment.NewLine, " ")}");
-
-            await next(command, context);
-        });
-        return kernel;
-    }
-
-    [DebuggerStepThrough]
-    public static T LogEventsToPocketLogger<T>(this T kernel)
-        where T : Kernel
-    {
-        var disposables = new CompositeDisposable();
-
-        disposables.Add(
-            kernel.KernelEvents
-                .Subscribe(
-                    e =>
-                    {
-                        Logger.Log.Info("{kernel}: {event}",
-                            kernel.Name,
-                            e);
-                    }));
-
-        kernel.VisitSubkernels(k =>
-        {
-            disposables.Add(
-                k.KernelEvents.Subscribe(
-                    e =>
-                    {
-                        Logger.Log.Info("{kernel}: {event}",
-                            k.Name,
-                            e);
-                    }));
-        });
-
-        kernel.RegisterForDisposal(disposables);
-
-        return kernel;
     }
 
     public static void VisitSubkernels(
