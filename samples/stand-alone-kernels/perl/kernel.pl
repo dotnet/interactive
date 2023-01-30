@@ -36,6 +36,11 @@ sub test {
             print "    $name: " . getStringRepresentationOfValueName($name, $mimeType) . "\n";
         }
     }
+
+    print "type names\n";
+    foreach my $name (@names) {
+        print "    $name: " . getTypeNameOfValueName($name) . "\n";
+    }
 }
 
 sub main {
@@ -153,10 +158,24 @@ sub main {
                     #
                     #                                         RequestValueInfos
                     #
+                    $mimeType = $command->{'mimeType'};
                     my @valueInfos = ();
                     foreach my $valueName ( keys %main:: ) {
                         if (!$suppressedValues{$valueName}) {
-                            push(@valueInfos, { "name" => "$valueName" });
+                            $formattedValue = getStringRepresentationOfValueName($valueName, $mimeType);
+                            $typeName = getTypeNameOfValueName($valueName);
+                            push(@valueInfos, {
+                                "typeName" => $typeName,
+                                "name" => "$valueName",
+                                "formattedValue" => {
+                                    "mimeType" => $mimeType,
+                                    "value" => $formattedValue
+                                },
+                                "preferredMimeTypes" => [
+                                    "text/plain",
+                                    "application/json"
+                                ]
+                            });
                         }
                     }
                     publish({
@@ -275,6 +294,25 @@ sub main {
 
 sub publish {
     print encode_json(\%{$_[0]}) . "\n";
+}
+
+sub getTypeNameOfValueName {
+    my $valueName = shift;
+    my $rawValue = $main::{$valueName};
+    my @asArray = @{getArray($rawValue)};
+    my %asHash = %{getHash($rawValue)};
+    if (@asArray) {
+        return "array";
+    }
+    elsif (%asHash) {
+        return "HASH";
+    }
+    elsif ( length do { no warnings "numeric"; $$rawValue & '' }) {
+        return "number";
+    }
+    else {
+        return "scalar";
+    }
 }
 
 sub getStringRepresentationOfValueName {
