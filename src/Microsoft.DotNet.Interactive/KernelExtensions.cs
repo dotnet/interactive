@@ -215,17 +215,19 @@ public static class KernelExtensions
 
    
 
-    private static void HandleSetMagicCommand<T>(
-        T kernel, 
-        InvocationContext cmdLineContext, 
+    private static void HandleSetMagicCommand<T>(T kernel,
+        InvocationContext cmdLineContext,
         Option<bool> fromResultOption,
-        Option<string> nameOption, 
-        Option<string> fromValueOption) 
+        Option<string> nameOption,
+        Option<string> fromValueOption, 
+        Option<string> mimeTypeOption) 
         where T : Kernel
     {
         var fromResult = cmdLineContext.ParseResult.GetValueForOption(fromResultOption);
         var valueName = cmdLineContext.ParseResult.GetValueForOption(nameOption);
+        var mimeType = cmdLineContext.ParseResult.GetValueForOption(mimeTypeOption);
         var context = cmdLineContext.GetService<KernelInvocationContext>();
+       
 
         if (fromResult)
         {
@@ -241,14 +243,14 @@ public static class KernelExtensions
         }
         else
         {
-            SetValueFromValueProduced();
+            SetValueFromValueProduced(mimeType);
         }
 
         void SetValueFromReturnValueProduced(KernelInvocationContext c)
         {
             var returnValueProducedEvents = new List<ReturnValueProduced>();
             using var eventSubscription = context.KernelEvents.OfType<ReturnValueProduced>()
-                .Subscribe(e => returnValueProducedEvents.Add(e));
+                .Subscribe(returnValueProducedEvents.Add);
 
             var returnValueProduced = returnValueProducedEvents.SingleOrDefault();
 
@@ -261,20 +263,31 @@ public static class KernelExtensions
             }
         }
 
-        void SetValueFromValueProduced()
+        void SetValueFromValueProduced(string mimetype)
         {
             if (kernel.SupportsCommandType(typeof(SendValue)))
             {
                 var events = new List<ValueProduced>();
 
-                using var subscription = context.KernelEvents.OfType<ValueProduced>().Subscribe(e => events.Add(e));
+                using var subscription = context.KernelEvents.OfType<ValueProduced>().Subscribe(events.Add);
 
                 var valueProduced = events.SingleOrDefault();
 
 
                 if (valueProduced is { })
                 {
-                    SendValue(kernel,false,valueProduced, valueName)
+                    var referenceValue = mimetype is not null ? null : valueProduced.Value;
+                    var formattedValue = valueProduced.FormattedValue;
+
+                    if (mimeType is not null && formattedValue.MimeType != mimeType)
+                    {
+                        var fromKernelUri = new Uri(valueProduced.RoutingSlip.ToUriArray().First());
+                        var fromKernel = kernel.RootKernel.FindKernel(k => k.KernelInfo.Uri == fromKernelUri|| kernel.KernelInfo.RemoteUri == fromKernelUri
+                    );
+                        var v = GetValue(fromKernel, valueProduced.Name, mimeType).GetAwaiter().GetResult();
+                        formattedValue = v.FormattedValue;
+                    }
+                    SendValue(kernel, referenceValue, formattedValue, valueName)
                         .GetAwaiter().GetResult();
                 }
                 else
@@ -346,11 +359,12 @@ public static class KernelExtensions
             nameOption,
             fromResultOption,
             fromValueOption,
+            mimeTypeOption
         };
 
         set.SetHandler(cmdLineContext =>
         {
-            HandleSetMagicCommand(kernel, cmdLineContext, fromResultOption, nameOption, fromValueOption);
+            HandleSetMagicCommand(kernel, cmdLineContext, fromResultOption, nameOption, fromValueOption, mimeTypeOption);
         });
 
         kernel.AddDirective(set);
