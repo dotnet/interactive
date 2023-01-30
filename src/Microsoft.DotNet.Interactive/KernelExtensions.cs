@@ -213,11 +213,96 @@ public static class KernelExtensions
         return kernel;
     }
 
-    public static T UseSet<T>(this T kernel) where T : Kernel
+   
+
+    private static void HandleSetMagicCommand<T>(
+        T kernel, 
+        InvocationContext cmdLineContext, 
+        Option<bool> fromResultOption,
+        Option<string> nameOption, 
+        Option<string> fromValueOption) 
+        where T : Kernel
+    {
+        var fromResult = cmdLineContext.ParseResult.GetValueForOption(fromResultOption);
+        var valueName = cmdLineContext.ParseResult.GetValueForOption(nameOption);
+        var context = cmdLineContext.GetService<KernelInvocationContext>();
+
+        if (fromResult)
+        {
+            context.OnComplete((c) =>
+            {
+                if (c.IsFailed)
+                {
+                    return;
+                }
+
+                SetValueFromReturnValueProduced(c);
+            });
+        }
+        else
+        {
+            SetValueFromValueProduced();
+        }
+
+        void SetValueFromReturnValueProduced(KernelInvocationContext c)
+        {
+            var returnValueProducedEvents = new List<ReturnValueProduced>();
+            using var eventSubscription = context.KernelEvents.OfType<ReturnValueProduced>()
+                .Subscribe(e => returnValueProducedEvents.Add(e));
+
+            var returnValueProduced = returnValueProducedEvents.SingleOrDefault();
+
+            if (returnValueProduced is { })
+            {
+                SendValue(kernel, returnValueProduced.Value, returnValueProduced.FormattedValues.FirstOrDefault(), valueName).GetAwaiter().GetResult();}
+            else
+            {
+                c.Fail(c.Command, message: "The submission did not produce a return value.");
+            }
+        }
+
+        void SetValueFromValueProduced()
+        {
+            if (kernel.SupportsCommandType(typeof(SendValue)))
+            {
+                var events = new List<ValueProduced>();
+
+                using var subscription = context.KernelEvents.OfType<ValueProduced>().Subscribe(e => events.Add(e));
+
+                var valueProduced = events.SingleOrDefault();
+
+
+                if (valueProduced is { })
+                {
+                    SendValue(kernel,false,valueProduced, valueName)
+                        .GetAwaiter().GetResult();
+                }
+                else
+                {
+                    var interpolatedValue = cmdLineContext.ParseResult.GetValueForOption(fromValueOption);
+                    SendValue(kernel, interpolatedValue,null, valueName)
+                        .GetAwaiter().GetResult();
+                }
+            }
+            else
+            {
+                context.Fail(context.Command, new CommandNotSupportedException(typeof(SendValue), kernel));
+            }
+        }
+    }
+
+    public static T UseValueSharing<T>(this T kernel) where T : Kernel
+    {
+        ConfigureAndAddShareMagicCommand(kernel);
+        ConfigureAndAddSetMagicCommand(kernel);
+        return kernel;
+    }
+
+    private static void ConfigureAndAddSetMagicCommand<T>(T kernel) where T : Kernel
     {
         var fromResultOption = new Option<bool>(
             "--from-result",
-            description:"Captures the execution result.");
+            description: "Captures the execution result.");
 
 
         var fromValueOption = new Option<string>(
@@ -270,8 +355,6 @@ public static class KernelExtensions
 
         kernel.AddDirective(set);
 
-        return kernel;
-
         bool SetErrorIfAlsoUsed(Option otherOption, ArgumentResult result)
         {
             var otherOptionResult = result.FindResultFor(otherOption);
@@ -287,9 +370,9 @@ public static class KernelExtensions
             return false;
         }
 
-        bool SetErrorIfNoneAreUsed( ArgumentResult result, params Option[] options)
+        bool SetErrorIfNoneAreUsed(ArgumentResult result, params Option[] options)
         {
-            var otherOptionResults = options.Select( result.FindResultFor).Where(option => option is not null).ToList();
+            var otherOptionResults = options.Select(result.FindResultFor).Where(option => option is not null).ToList();
 
             if (otherOptionResults.Count == 0)
             {
@@ -303,105 +386,7 @@ public static class KernelExtensions
         }
     }
 
-    private static void HandleSetMagicCommand<T>(
-        T kernel, 
-        InvocationContext cmdLineContext, 
-        Option<bool> fromResultOption,
-        Option<string> nameOption, 
-        Option<string> fromValueOption) 
-        where T : Kernel
-    {
-        var fromResult = cmdLineContext.ParseResult.GetValueForOption(fromResultOption);
-        var valueName = cmdLineContext.ParseResult.GetValueForOption(nameOption);
-        var context = cmdLineContext.GetService<KernelInvocationContext>();
-
-        if (fromResult)
-        {
-            context.OnComplete((c) =>
-            {
-                if (c.IsFailed)
-                {
-                    return;
-                }
-
-                SetValueFromReturnValueProduced(c);
-            });
-        }
-        else
-        {
-            SetValueFromValueProduced();
-        }
-
-        void SetValueFromReturnValueProduced(KernelInvocationContext c)
-        {
-            var returnValueProducedEvents = new List<ReturnValueProduced>();
-            using var eventSubscription = context.KernelEvents.OfType<ReturnValueProduced>()
-                .Subscribe(e => returnValueProducedEvents.Add(e));
-
-            var returnValueProduced = returnValueProducedEvents.SingleOrDefault();
-
-            if (returnValueProduced is { })
-            {
-                if (kernel.SupportsCommandType(typeof(SendValue)))
-                {
-                    kernel.SendAsync(
-                            new SendValue(
-                                valueName,
-                                returnValueProduced.Value,
-                                returnValueProduced.FormattedValues.FirstOrDefault()))
-                        .GetAwaiter().GetResult();
-                }
-                else
-                {
-                    c.Fail(c.Command, new CommandNotSupportedException(typeof(SendValue), kernel));
-                }
-            }
-            else
-            {
-                c.Fail(c.Command, message: "The submission did not produce a return value.");
-            }
-        }
-
-        void SetValueFromValueProduced()
-        {
-            if (kernel.SupportsCommandType(typeof(SendValue)))
-            {
-                var events = new List<ValueProduced>();
-
-                using var subscription = context.KernelEvents.OfType<ValueProduced>().Subscribe(e => events.Add(e));
-
-                var valueProduced = events.SingleOrDefault();
-
-
-                if (valueProduced is { })
-                {
-                    kernel.SendAsync(
-                            new SendValue(
-                                valueName,
-                                valueProduced.Value,
-                                valueProduced.FormattedValue
-                            ))
-                        .GetAwaiter().GetResult();
-                }
-                else
-                {
-                    var interpolatedValue = cmdLineContext.ParseResult.GetValueForOption(fromValueOption);
-                    kernel.SendAsync(
-                            new SendValue(
-                                valueName,
-                                interpolatedValue
-                            ))
-                        .GetAwaiter().GetResult();
-                }
-            }
-            else
-            {
-                context.Fail(context.Command, new CommandNotSupportedException(typeof(SendValue), kernel));
-            }
-        }
-    }
-
-    public static T UseValueSharing<T>(this T kernel) where T : Kernel
+    private static void ConfigureAndAddShareMagicCommand<T>(T kernel) where T : Kernel
     {
         var sourceValueNameArg = new Argument<string>(
             "name",
@@ -451,15 +436,17 @@ public static class KernelExtensions
             return Array.Empty<CompletionItem>();
         });
 
-        var mimeTypeOption = new Option<string>("--mime-type", "Share the value as a string formatted to the specified MIME type.")
-            .AddCompletions(
-                JsonFormatter.MimeType,
-                HtmlFormatter.MimeType,
-                PlainTextFormatter.MimeType);
+        var mimeTypeOption =
+            new Option<string>("--mime-type", "Share the value as a string formatted to the specified MIME type.")
+                .AddCompletions(
+                    JsonFormatter.MimeType,
+                    HtmlFormatter.MimeType,
+                    PlainTextFormatter.MimeType);
 
         var asOption = new Option<string>("--as", "The name to give the the value in the importing kernel.");
 
-        var share = new Command("#!share", "Get a value from one kernel and create a copy (or a reference if the kernels are in the same process) in another.")
+        var share = new Command("#!share",
+            "Get a value from one kernel and create a copy (or a reference if the kernels are in the same process) in another.")
         {
             fromKernelOption,
             sourceValueNameArg,
@@ -490,8 +477,6 @@ public static class KernelExtensions
         });
 
         kernel.AddDirective(share);
-
-        return kernel;
     }
 
     internal static async Task GetValueAndSendTo(
@@ -501,37 +486,63 @@ public static class KernelExtensions
         string requestedMimeType,
         string toName)
     {
-        var supportedRequestValue = fromKernel.SupportsCommandType(typeof(RequestValue));
+        var valueProduced = await GetValue(fromKernel, fromName, requestedMimeType);
 
-        if (!supportedRequestValue)
-        {
-            throw new InvalidOperationException($"Kernel {fromKernel} does not support command {nameof(RequestValue)}");
-        }
-
-        var requestValueResult = await fromKernel.SendAsync(new RequestValue(fromName, mimeType: requestedMimeType));
-
-        if (requestValueResult.KernelEvents.ToEnumerable().OfType<ValueProduced>().SingleOrDefault() is { } valueProduced)
+        if (valueProduced is { } )
         {
             var declarationName = toName ?? fromName;
 
-            if (toKernel.SupportsCommandType(typeof(SendValue)))
-            {
-                var value =
-                    requestedMimeType is null
-                        ? valueProduced.Value
-                        : null;
-
-                await toKernel.SendAsync(
-                    new SendValue(
-                        declarationName,
-                        value,
-                        valueProduced.FormattedValue));
-            }
-            else
-            {
-                throw new CommandNotSupportedException(typeof(SendValue), toKernel);
-            }
+            await SendValue(toKernel, requestedMimeType is not null, valueProduced, declarationName);
         }
+    }
+
+    private static async Task SendValue(Kernel kernel, bool ignoreReferenceValue, ValueProduced valueProduced,
+        string declarationName)
+    {
+        if (kernel.SupportsCommandType(typeof(SendValue)))
+        {
+            var value =
+                ignoreReferenceValue
+                    ? null
+                    : valueProduced.Value;
+
+            await SendValue(kernel, value, valueProduced.FormattedValue, declarationName);
+        }
+        else
+        {
+            throw new CommandNotSupportedException(typeof(SendValue), kernel);
+        }
+    }
+
+    private static async Task SendValue(Kernel kernel,object value, FormattedValue formattedValue,
+        string declarationName)
+    {
+        if (kernel.SupportsCommandType(typeof(SendValue)))
+        {
+            await kernel.SendAsync(
+                new SendValue(
+                    declarationName,
+                    value,
+                    formattedValue));
+        }
+        else
+        {
+            throw new CommandNotSupportedException(typeof(SendValue), kernel);
+        }
+    }
+
+    private static async Task<ValueProduced> GetValue(Kernel kernel, string name, string requestedMimeType)
+    {
+        var supportedRequestValue = kernel.SupportsCommandType(typeof(RequestValue));
+
+        if (!supportedRequestValue)
+        {
+            throw new InvalidOperationException($"Kernel {kernel} does not support command {nameof(RequestValue)}");
+        }
+
+        var requestValueResult = await kernel.SendAsync(new RequestValue(name, mimeType: requestedMimeType));
+
+        return requestValueResult.KernelEvents.ToEnumerable().OfType<ValueProduced>().SingleOrDefault();
     }
 
     public static TKernel UseWho<TKernel>(this TKernel kernel)
