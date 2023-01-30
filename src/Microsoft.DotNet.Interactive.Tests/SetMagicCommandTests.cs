@@ -60,6 +60,7 @@ public class SetMagicCommandTests
         succeeded.Should().BeTrue();
         valueProduced.Value.Should().BeEquivalentTo("hello!");
     }
+
     [Fact]
     public async Task can_set_value_from_another_kernel()
     {
@@ -84,6 +85,32 @@ public class SetMagicCommandTests
 
         succeeded.Should().BeTrue();
         valueProduced.Value.Should().BeEquivalentTo(456);
+    }
+
+    [Fact]
+    public async Task when_mimetype_is_specified_reference_value_is_ignored()
+    {
+        var csharpKernel = CreateKernel(Language.CSharp);
+        var fsharpKernel = CreateKernel(Language.FSharp);
+
+        using var composite = new CompositeKernel
+        {
+            csharpKernel,
+            fsharpKernel
+        };
+
+        await fsharpKernel.SendAsync(new SubmitCode("let y = 456"));
+
+        await composite.SendAsync(new SubmitCode($@"
+#!set --name x --from-value @{fsharpKernel.Name}:y --mime-type text/plain
+1+3", targetKernelName: csharpKernel.Name));
+
+        var (succeeded, valueProduced) = await csharpKernel.TryRequestValueAsync("x");
+
+        using var _ = new AssertionScope();
+
+        succeeded.Should().BeTrue();
+        valueProduced.Value.Should().BeEquivalentTo("456");
     }
 
     [Fact]
@@ -132,7 +159,7 @@ throw new Exception(""custom error."");"));
     }
 
     [Fact]
-    public async Task set_requires_from_value_or_from_results_at_the_same_time()
+    public async Task set_requires_from_value_or_from_results()
     {
         using var kernel = CreateKernel(Language.CSharp);
 
